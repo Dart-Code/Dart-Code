@@ -38,20 +38,25 @@ export interface WritableWorkspaceConfig {
 	activateDevToolsEagerly?: boolean;
 	dartSdkHomeLinux?: string;
 	dartSdkHomeMac?: string;
-	devtoolsActivateScript?: string;
-	devtoolsRunScript?: string;
+	devtoolsActivateScript?: CustomScript;
+	devtoolsRunScript?: CustomScript;
 	disableAutomaticPackageGet?: boolean;
 	disableSdkUpdateChecks?: boolean;
-	flutterDaemonScript?: string;
-	flutterDoctorScript?: string;
-	flutterRunScript?: string;
+	flutterDaemonScript?: CustomScript;
+	flutterDoctorScript?: CustomScript;
+	flutterRunScript?: CustomScript;
+	flutterScript?: CustomScript;
 	flutterSdkHome?: string;
-	flutterTestScript?: string;
+	flutterTestScript?: CustomScript;
 	flutterVersionFile?: string;
 	useVmForTests?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
+export interface CustomScript {
+	script: string;
+	replacesArgs: number;
+}
 
 export interface StagehandTemplate {
 	readonly name: string;

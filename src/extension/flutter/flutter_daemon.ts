@@ -37,7 +37,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		const { binPath, binArgs } = usingCustomScript(
 			path.join(workspaceContext.sdks.flutter, flutterPath),
 			["daemon"],
-			{ customScript: workspaceContext.config?.flutterDaemonScript },
+			workspaceContext.config?.flutterDaemonScript || workspaceContext.config?.flutterScript,
 		);
 
 		const flutterAdditionalArgs = config.for(vs.Uri.file(folder)).flutterAdditionalArgs;
