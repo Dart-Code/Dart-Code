@@ -1,8 +1,5 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import * as util from "util";
-import { ProgressLocation, window } from "vscode";
 import { flutterSnapScript, isWin } from "../constants";
 import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
@@ -15,29 +12,9 @@ export function processKnownGitRepositories(logger: Logger, config: WritableWork
 	}
 }
 
-export async function processFlutterSnap(logger: Logger, config: WritableWorkspaceConfig, snapSdkRoot: string) {
-	// If the Flutter snap is installed but not initialised, initialise it now.
-	if (!fs.existsSync(snapSdkRoot + "/.git")) {
-		const displayMessage = "The Flutter snap is installed but not initialized. Would you like to initialize it now?";
-		const yesAction = "Yes";
-		const noAction = "No";
-		const selectedItem = await window.showInformationMessage(displayMessage, yesAction, noAction);
-		if (selectedItem === yesAction) {
-			await window.withProgress(
-				{
-					location: ProgressLocation.Notification,
-					title: "Initializing Flutter snap",
-				},
-				async () => {
-					await util.promisify(child_process.exec)(flutterSnapScript);
-				});
-		}
-	}
-
-	if (fs.existsSync(snapSdkRoot + "/.git")) {
-		config.flutterSdkHome = snapSdkRoot;
-		config.flutterScript = { replacesArgs: 0, script: flutterSnapScript };
-	}
+export function processFlutterSnap(logger: Logger, config: WritableWorkspaceConfig, snapSdkRoot: string) {
+	config.flutterSdkHome = snapSdkRoot;
+	config.flutterScript = { replacesArgs: 0, script: flutterSnapScript };
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
