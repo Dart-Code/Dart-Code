@@ -177,9 +177,9 @@ export class SdkUtils {
 		const workspaceConfig: WorkspaceConfig = {};
 		// Helper that searches for a specific folder/file up the tree and
 		// runs some specific processing.
-		const processWorkspaceType = async (search: (folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
+		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
 			for (const folder of topLevelFolders) {
-				const root = await search(folder);
+				const root = await search(this.logger, folder);
 				if (root) {
 					process(this.logger, workspaceConfig, root);
 					return root;
@@ -426,25 +426,28 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string | undefined
 	return packagePath;
 }
 
-async function findFuchsiaRoot(folder: string): Promise<string | undefined> {
+async function findFuchsiaRoot(logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".jiri_root");
 }
 
-async function findBazelWorkspaceRoot(folder: string): Promise<string | undefined> {
+async function findBazelWorkspaceRoot(logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, "WORKSPACE", true);
 }
 
-async function findGitRoot(folder: string): Promise<string | undefined> {
+async function findGitRoot(logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".git");
 }
 
-async function findFlutterSnapSdkRoot(folder: string): Promise<string | undefined> {
+async function findFlutterSnapSdkRoot(logger: Logger, folder: string): Promise<string | undefined> {
 	if (isLinux && fs.existsSync(flutterSnapScript)) {
+		logger.info(`Found Flutter snap script`);
 		const snapSdkRoot = path.join(os.homedir(), "/snap/flutter/common/flutter");
 
 		if (!fs.existsSync(snapSdkRoot + "/.git")) {
+			logger.info(`Flutter snap is not initialized, showing prompt`);
 			const selectedItem = await window.showInformationMessage(initializeSnapPrompt, yesAction, noAction);
 			if (selectedItem === yesAction) {
+				logger.info(`Running Flutter to initialize snap`);
 				await window.withProgress(
 					{
 						location: ProgressLocation.Notification,
@@ -454,10 +457,12 @@ async function findFlutterSnapSdkRoot(folder: string): Promise<string | undefine
 					// TODO: Handle errors/failures?
 					() => util.promisify(child_process.exec)(flutterSnapScript),
 				);
+				logger.info(`Flutter snap initialized!`);
 			}
 		}
 
 		if (fs.existsSync(snapSdkRoot + "/.git")) {
+			logger.info(`Returning ${snapSdkRoot} as Flutter snap SDK root`);
 			return snapSdkRoot;
 		}
 	}
