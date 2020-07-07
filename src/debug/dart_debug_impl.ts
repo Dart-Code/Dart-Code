@@ -751,12 +751,16 @@ export class DartDebugSession extends DebugSession {
 			this.updateProgress(debugTerminatingProgressId, "Terminating process");
 		}
 
+		// If we wait for terminate() to complete, VS code will report a timeout after 1000ms
+		// so we have to acknowledge the request even if it takes longer to complete.
+		super.terminateRequest(response, args);
+
 		try {
 			await this.terminate(false);
 		} catch (e) {
-			return this.errorResponse(response, `${e}`);
+			this.logger.error(e);
+			this.logToUser(e.message || e);
 		}
-		super.terminateRequest(response, args);
 	}
 
 	protected async disconnectRequest(
