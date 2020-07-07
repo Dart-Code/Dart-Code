@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { isWin } from "../constants";
-import { Logger, WritableWorkspaceConfig } from "../interfaces";
+import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processKnownGitRepositories(logger: Logger, config: WritableWorkspaceConfig, gitRoot: string) {
 	const isDartSdkRepo = fs.existsSync(path.join(gitRoot, "README.dart-sdk")) && fs.existsSync(path.join(gitRoot, ".packages"));
@@ -39,24 +39,33 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		const flutterConfigJson = fs.readFileSync(flutterConfigPath, "utf8");
 		const flutterConfig = JSON.parse(flutterConfigJson);
 
-		function makeFullPath(relOrAbsolute: string | undefined): string | undefined {
-			if (!relOrAbsolute)
-				return undefined;
+		function makeFullPath(relOrAbsolute: string): string {
 			if (path.isAbsolute(relOrAbsolute))
 				return relOrAbsolute;
 			return path.join(bazelWorkspaceRoot!, relOrAbsolute);
 		}
 
+		function makeScript(relOrAbsolute: string | undefined, replacesArgs = 1): CustomScript | undefined {
+			if (relOrAbsolute) {
+				return {
+					replacesArgs,
+					script: makeFullPath(relOrAbsolute),
+				};
+			}
+		}
+
 		config.activateDevToolsEagerly = !!flutterConfig.devtoolsActivateScript;
 		config.dartSdkHomeLinux = makeFullPath(flutterConfig.dartSdkHome?.linux);
 		config.dartSdkHomeMac = makeFullPath(flutterConfig.dartSdkHome?.macos);
-		config.devtoolsActivateScript = makeFullPath(flutterConfig.devtoolsActivateScript);
-		config.devtoolsRunScript = makeFullPath(flutterConfig.devtoolsRunScript);
-		config.flutterDaemonScript = makeFullPath(flutterConfig.daemonScript);
-		config.flutterDoctorScript = makeFullPath(flutterConfig.doctorScript);
-		config.flutterRunScript = makeFullPath(flutterConfig.runScript);
+		// This one replaces the args "global activate devtools"
+		config.devtoolsActivateScript = makeScript(flutterConfig.devtoolsActivateScript, 3);
+		// This one replaces the args "global run devtools"
+		config.devtoolsRunScript = makeScript(flutterConfig.devtoolsRunScript, 3);
+		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
+		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
+		config.flutterRunScript = makeScript(flutterConfig.runScript);
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);
-		config.flutterTestScript = makeFullPath(flutterConfig.testScript);
+		config.flutterTestScript = makeScript(flutterConfig.testScript);
 		config.flutterVersionFile = makeFullPath(flutterConfig.versionFile);
 	} catch (e) {
 		logger.error(e);

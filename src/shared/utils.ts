@@ -3,7 +3,7 @@ import * as path from "path";
 import * as semver from "semver";
 import { flutterExecutableName, isWin } from "./constants";
 import { LogCategory } from "./enums";
-import { Logger, SomeError } from "./interfaces";
+import { CustomScript, Logger, SomeError } from "./interfaces";
 
 export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
@@ -116,13 +116,10 @@ export function isStableSdk(sdkVersion?: string): boolean {
 	return !!(sdkVersion && !semver.prerelease(sdkVersion));
 }
 
-export function usingCustomScript(binPath: string, binArgs: string[], options?: { customScript?: string, customScriptReplacesNumArgs?: number }) {
-	if (options?.customScript) {
-		binPath = options.customScript;
-		const numArgsToRemove = options.customScriptReplacesNumArgs !== undefined
-			? options.customScriptReplacesNumArgs
-			: 1; // Default to removing one arg.
-		binArgs = binArgs.slice(numArgsToRemove);
+export function usingCustomScript(binPath: string, binArgs: string[], customScript: CustomScript | undefined) {
+	if (customScript) {
+		binPath = customScript.script;
+		binArgs = binArgs.slice(customScript.replacesArgs);
 	}
 
 	return { binPath, binArgs };
