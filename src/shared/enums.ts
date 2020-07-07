@@ -25,6 +25,7 @@ export enum VmServiceExtension {
 	DebugBanner = "ext.flutter.debugAllowBanner",
 	CheckElevations = "ext.flutter.debugCheckElevationsEnabled",
 	DebugPaint = "ext.flutter.debugPaint",
+	Driver = "ext.flutter.driver",
 	PaintBaselines = "ext.flutter.debugPaintBaselinesEnabled",
 	InspectorSelectMode = "ext.flutter.inspector.show",
 	InspectorSetPubRootDirectories = "ext.flutter.inspector.setPubRootDirectories",
