@@ -5,11 +5,21 @@ import { parseNumber } from "../utils/numbers";
 import { toRange } from "./utils";
 
 export class ColorRangeComputer {
-	private readonly materialNameColorPattern = new RegExp("Colors\\.([\\w_\\[\\]\\.]+)", "g");
-	private readonly cupertinoNameColorPattern = new RegExp("CupertinoColors\\.([\\w_\\[\\]\\.]+)", "g");
-	private readonly colorConstructorPattern = new RegExp("\\WColor\\(0x([\\w_]{8})\\)", "g");
-	private readonly colorConstructorPattern2 = new RegExp("\\WColor\\.fromRGBO\\(([\\w_]+), ([\\w_]+), ([\\w_]+), ([\\w_.]+)\\)", "g");
-	private readonly colorConstructorPattern3 = new RegExp("\\WColor\\.fromARGB\\(([\\w_]+), ([\\w_]+), ([\\w_]+), ([\\w_]+)\\)", "g");
+	private readonly materialNameColorPattern = "Colors\\.(?<mc>[\\w_\\[\\]\\.]+)";
+	private readonly cupertinoNameColorPattern = "CupertinoColors\\.(?<cc>[\\w_\\[\\]\\.]+)";
+	private readonly colorConstructorPattern = "\\bColor\\(\\s*0x(?<cons>[A-Fa-f0-9]{8}),{0,1}\\s*\\)";
+	private readonly colorConstructorRgbo = "\\bColor\\.fromRGBO\\(\\s*(?<rgboR>[\\w_]+),\\s*(?<rgboG>[\\w_]+),\\s*(?<rgboB>[\\w_]+),\\s*(?<rgboA>[\\w_.]+),{0,1}\\s*\\)";
+	private readonly colorConstructorArgb = "\\bColor\\.fromARGB\\(\\s*(?<argbA>[\\w_]+),\\s*(?<argbR>[\\w_]+),\\s*(?<argbG>[\\w_]+),\\s*(?<argbB>[\\w_]+),{0,1}\\s*\\)";
+
+	private readonly allColors = [
+		this.materialNameColorPattern,
+		this.cupertinoNameColorPattern,
+		this.colorConstructorPattern,
+		this.colorConstructorRgbo,
+		this.colorConstructorArgb,
+	];
+
+	private readonly allColorsPattern = new RegExp(`^.*?(?<range>${this.allColors.join("|")})`, "gm");
 
 	public compute(document: vs.TextDocument): { [key: string]: vs.Range[] } {
 		const text = document.getText();
@@ -18,101 +28,84 @@ export class ColorRangeComputer {
 		// colors so if any were removed, we will clear their decorations.
 		const decs: { [key: string]: vs.Range[] } = {};
 
-		// Handle named colors.
 		let result: RegExpExecArray | null;
+		this.allColorsPattern.lastIndex = -1;
 
-		// Material
 		// tslint:disable-next-line: no-conditional-assignment
-		while (result = this.materialNameColorPattern.exec(text)) {
-			const colorName = result[1].replace(/\.shade(\d+)/, "[$1]");
-
-			if (!(colorName in flutterMaterialColors || `${colorName}.primary` in flutterMaterialColors)) {
+		while (result = this.allColorsPattern.exec(text)) {
+			if (!result.groups)
 				continue;
+
+			let colorHex: string | undefined;
+
+			if (result.groups.mc)
+				colorHex = this.extractMaterialColor(result.groups.mc);
+			else if (result.groups.cc)
+				colorHex = this.extractCupertinoColor(result.groups.cc);
+			else if (result.groups.cons)
+				colorHex = result.groups.cons.toLowerCase();
+			else if (result.groups.rgboR && result.groups.rgboG && result.groups.rgboB && result.groups.rgboO)
+				colorHex = this.extractRgboColor(result.groups.rgboR, result.groups.rgboG, result.groups.rgboB, result.groups.rgboO);
+			else if (result.groups.argbA && result.groups.argbR && result.groups.argbG && result.groups.argbB)
+				colorHex = this.extractArgbColor(result.groups.argbA, result.groups.argbR, result.groups.argbG, result.groups.argbB);
+
+			if (colorHex) {
+				if (!decs[colorHex])
+					decs[colorHex] = [];
+
+				// We can't get the index of the captures yet (https://github.com/tc39/proposal-regexp-match-indices) but we do know
+				// - the length of the whole match
+				// - the length of the main capture
+				// - that the main capture ends at the same point as the whole match
+				// Therefore the index we want, is the (match index + match length - capture length).
+				const index = result.index + result[0].length - result.groups!.range.length;
+
+				decs[colorHex].push(toRange(document, index, result.groups!.range.length));
 			}
-
-			const colorHex = (flutterMaterialColors[colorName] || flutterMaterialColors[`${colorName}.primary`]).toLowerCase();
-
-			if (!decs[colorHex])
-				decs[colorHex] = [];
-
-			decs[colorHex].push(toRange(document, result.index, result[0].length));
-		}
-
-		// Cupertino
-		// tslint:disable-next-line: no-conditional-assignment
-		while (result = this.cupertinoNameColorPattern.exec(text)) {
-			const colorName = result[1].replace(/\.color/, "[$1]");
-
-			if (!(colorName in flutterCupertinoColors || `${colorName}.color` in flutterCupertinoColors)) {
-				console.log(`${colorName} missing`);
-				continue;
-			}
-
-			const colorHex = (flutterCupertinoColors[colorName] || flutterCupertinoColors[`${colorName}.color`]).toLowerCase();
-
-			if (!decs[colorHex])
-				decs[colorHex] = [];
-
-			decs[colorHex].push(toRange(document, result.index, result[0].length));
-		}
-
-		// Handle color constructors.
-		// tslint:disable-next-line: no-conditional-assignment
-		while (result = this.colorConstructorPattern.exec(text)) {
-			const colorHex = result[1].toLowerCase();
-
-			if (!decs[colorHex])
-				decs[colorHex] = [];
-
-			decs[colorHex].push(toRange(
-				document,
-				result.index + 1, // + 1 to account for space
-				result[0].length - 1, // -1 to account for the above
-			));
-		}
-		// tslint:disable-next-line: no-conditional-assignment
-		while (result = this.colorConstructorPattern2.exec(text)) {
-			const r = parseNumber(result[1]);
-			const g = parseNumber(result[2]);
-			const b = parseNumber(result[3]);
-			const opacity = parseFloat(result[4]);
-
-			if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(opacity))
-				continue;
-
-			const colorHex = asHexColor({ r, g, b, a: opacity * 255 });
-
-			if (!decs[colorHex])
-				decs[colorHex] = [];
-
-			decs[colorHex].push(toRange(
-				document,
-				result.index + 1, // + 1 to account for space
-				result[0].length - 1, // -1 to account for the above
-			));
-		}
-		// tslint:disable-next-line: no-conditional-assignment
-		while (result = this.colorConstructorPattern3.exec(text)) {
-			const a = parseNumber(result[1]);
-			const r = parseNumber(result[2]);
-			const g = parseNumber(result[3]);
-			const b = parseNumber(result[4]);
-
-			if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(a))
-				continue;
-
-			const colorHex = asHexColor({ a, r, g, b });
-
-			if (!decs[colorHex])
-				decs[colorHex] = [];
-
-			decs[colorHex].push(toRange(
-				document,
-				result.index + 1, // + 1 to account for space
-				result[0].length - 1, // -1 to account for the above
-			));
 		}
 
 		return decs;
+	}
+
+	private extractMaterialColor(input: string): string | undefined {
+		const colorName = input.replace(/\.shade(\d+)/, "[$1]");
+
+		if (!(colorName in flutterMaterialColors || `${colorName}.primary` in flutterMaterialColors))
+			return;
+
+		return (flutterMaterialColors[colorName] || flutterMaterialColors[`${colorName}.primary`]).toLowerCase();
+	}
+
+	private extractCupertinoColor(input: string): string | undefined {
+		const colorName = input.replace(/\.color/, "[$1]");
+
+		if (!(colorName in flutterCupertinoColors || `${colorName}.color` in flutterCupertinoColors))
+			return;
+
+		return (flutterCupertinoColors[colorName] || flutterCupertinoColors[`${colorName}.color`]).toLowerCase();
+	}
+
+	private extractRgboColor(inputR: string, inputG: string, inputB: string, inputO: string): string | undefined {
+		const r = parseNumber(inputR);
+		const g = parseNumber(inputG);
+		const b = parseNumber(inputB);
+		const opacity = parseFloat(inputO);
+
+		if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(opacity))
+			return;
+
+		return asHexColor({ r, g, b, a: opacity * 255 });
+	}
+
+	private extractArgbColor(inputA: string, inputR: string, inputG: string, inputB: string) {
+		const a = parseNumber(inputA);
+		const r = parseNumber(inputR);
+		const g = parseNumber(inputG);
+		const b = parseNumber(inputB);
+
+		if (isNaN(a) || isNaN(r) || isNaN(g) || isNaN(b))
+			return;
+
+		return asHexColor({ a, r, g, b });
 	}
 }
