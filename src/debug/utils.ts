@@ -1,4 +1,5 @@
 import { DebugProtocol } from "vscode-debugprotocol";
+import { WorkspaceConfig } from "../shared/interfaces";
 import { forceWindowsDriveLetterToUppercase } from "../shared/utils/fs";
 
 export function formatPathForVm(file: string): string {
@@ -62,8 +63,7 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	forceFlutterVerboseMode?: boolean;
 	flutterTrackWidgetCreation: boolean;
 	flutterPath: string;
-	flutterCustomRunScript: string | undefined;
-	flutterCustomTestScript: string | undefined;
+	workspaceConfig: WorkspaceConfig | undefined;
 	flutterMode?: "debug" | "profile" | "release";
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 	flutterRunLogFile?: string;

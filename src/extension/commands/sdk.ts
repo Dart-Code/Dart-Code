@@ -6,7 +6,7 @@ import { ProgressLocation, Uri, window } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
+import { CustomScript, DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { notUndefined, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -223,7 +223,7 @@ export class SdkCommands {
 		const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 		if (!fs.existsSync(tempDir))
 			fs.mkdirSync(tempDir);
-		return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, { customScript: this.workspace.config?.flutterDoctorScript });
+		return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, this.workspace.config?.flutterDoctorScript || this.workspace.config?.flutterScript);
 	}
 
 	private async flutterUpgrade() {
@@ -440,14 +440,14 @@ export class SdkCommands {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
 	}
 
-	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, options?: { customScript?: string, customScriptReplacesNumArgs?: number }): Thenable<number | undefined> {
+	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, customScript?: CustomScript): Thenable<number | undefined> {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 
 		const { binPath, binArgs } = usingCustomScript(
 			path.join(this.sdks.flutter, flutterPath),
 			args,
-			options,
+			customScript,
 		);
 
 		const allArgs = getGlobalFlutterArgs()
