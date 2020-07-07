@@ -65,6 +65,9 @@ export const flutterSurveyAnalyticsText = "By clicking on this link you agree to
 export const takeSurveyAction = "Take Survey";
 export const skipThisSurveyAction = "Skip This Survey";
 
+export const initializeSnapPrompt = "The Flutter snap is installed but not initialized. Would you like to initialize it now? This may take a few minutes.";
+export const initializingSnapMessage = "Initializing Flutter snap…";
+
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;
 export const tenMinutesInMs = 1000 * 60 * 10;
