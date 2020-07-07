@@ -362,9 +362,6 @@ export class DebugCommands {
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent): void {
-		this.vmServices.handleDebugEvent(e)
-			.catch((e) => this.logger.error(e));
-
 		if (this.handleCustomEvent(e))
 			return;
 
@@ -461,6 +458,9 @@ export class DebugCommands {
 	}
 
 	private async handleCustomEventWithSession(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent) {
+		this.vmServices.handleDebugEvent(session, e)
+			.catch((e) => this.logger.error(e));
+
 		if (e.event === "dart.webLaunchUrl") {
 			const launched = !!e.body.launched;
 			if (!launched) {
