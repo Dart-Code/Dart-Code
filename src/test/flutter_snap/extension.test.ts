@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { isLinux, wantToTryDevToolsPrompt, yesAction } from "../../shared/constants";
+import { initializeSnapPrompt, isLinux, yesAction } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, extApi, logger, sb } from "../helpers";
 import sinon = require("sinon");
@@ -25,13 +25,13 @@ describe("extension", () => {
 	});
 
 	it("initializes the snap and locates the SDK", async () => {
-		// Automatically approved the initialization.
+		// Automatically approve the initialization.
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-		const initializeSnapPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(yesAction);
+		const initializeSnapMessagePrompt = showInformationMessage.withArgs(initializeSnapPrompt, sinon.match.any).resolves(yesAction);
 
 		await activate();
 
-		assert.ok(initializeSnapPrompt.calledOnce);
+		assert.ok(initializeSnapMessagePrompt.calledOnce);
 
 		const workspaceContext = extApi.workspaceContext;
 
@@ -39,7 +39,6 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.dart);
 		assert.equal(workspaceContext.sdks.flutter, `${path.join(os.homedir(), "/snap/flutter/common/flutter")}`);
 		assert.ok(workspaceContext.config);
-		assert.equal(workspaceContext.config?.activateDevToolsEagerly, false);
 		assert.equal(workspaceContext.config?.dartSdkHomeLinux, undefined);
 		assert.equal(workspaceContext.config?.dartSdkHomeMac, undefined);
 		assert.deepStrictEqual(workspaceContext.config?.flutterScript, { script: "/snap/flutter/current/flutter.sh", replacesArgs: 0 });
