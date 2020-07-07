@@ -179,7 +179,7 @@
 			},
 			{
 				"command": "dart.startWithoutDebugging",
-				"title": "Start Without Debugging",
+				"title": "Run Without Debugging",
 				"category": "Dart"
 			},
 			{
@@ -189,7 +189,7 @@
 			},
 			{
 				"command": "dart.startWithoutDebuggingTest",
-				"title": "Start Without Debugging",
+				"title": "Run Without Debugging",
 				"category": "Dart"
 			},
 			{
