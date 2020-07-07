@@ -33,8 +33,11 @@ export async function processFlutterSnap(logger: Logger, config: WritableWorkspa
 				});
 		}
 	}
-	config.flutterSdkHome = snapSdkRoot;
-	config.flutterScript = { replacesArgs: 0, script: flutterSnapScript };
+
+	if (fs.existsSync(snapSdkRoot + "/.git")) {
+		config.flutterSdkHome = snapSdkRoot;
+		config.flutterScript = { replacesArgs: 0, script: flutterSnapScript };
+	}
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
