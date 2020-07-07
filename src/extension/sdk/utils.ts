@@ -1,13 +1,15 @@
+import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import { commands, ExtensionContext, window } from "vscode";
-import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isMac, isWin, showLogAction } from "../../shared/constants";
+import * as util from "util";
+import { commands, ExtensionContext, ProgressLocation, window } from "vscode";
+import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, isMac, isWin, showLogAction } from "../../shared/constants";
 import { Logger, WorkspaceConfig } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
-import { processBazelWorkspace, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
+import { processBazelWorkspace, processFlutterSnap, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -174,18 +176,22 @@ export class SdkUtils {
 		const workspaceConfig: WorkspaceConfig = {};
 		// Helper that searches for a specific folder/file up the tree and
 		// runs some specific processing.
-		const processWorkspaceType = (search: (folder: string) => string | undefined, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): string | undefined => {
-			let root: string | undefined;
-			topLevelFolders.forEach((folder) => root = root || search(folder));
-			if (root)
-				process(this.logger, workspaceConfig, root);
-			return root;
+		const processWorkspaceType = async (search: (folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
+			for (const folder of topLevelFolders) {
+				const root = await search(folder);
+				if (root) {
+					process(this.logger, workspaceConfig, root);
+					return root;
+				}
+			}
+			return undefined;
 		};
 
-		processWorkspaceType(findGitRoot, processKnownGitRepositories);
+		await processWorkspaceType(findGitRoot, processKnownGitRepositories);
 		// TODO: Remove this lambda when the preview flag is removed.
-		processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
-		const fuchsiaRoot = processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
+		await processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
+		const fuchsiaRoot = await processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
+		await processWorkspaceType(findFlutterSnapSdkRoot, processFlutterSnap);
 
 		// TODO: This has gotten very messy and needs tidying up...
 
@@ -419,16 +425,44 @@ function extractFlutterSdkPathFromPackagesFile(file: string): string | undefined
 	return packagePath;
 }
 
-function findFuchsiaRoot(folder: string): string | undefined {
+async function findFuchsiaRoot(folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".jiri_root");
 }
 
-function findBazelWorkspaceRoot(folder: string): string | undefined {
+async function findBazelWorkspaceRoot(folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, "WORKSPACE", true);
 }
 
-function findGitRoot(folder: string): string | undefined {
+async function findGitRoot(folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".git");
+}
+
+async function findFlutterSnapSdkRoot(folder: string): Promise<string | undefined> {
+	if (isLinux && fs.existsSync(flutterSnapScript)) {
+		const snapSdkRoot = process.env.HOME + "/snap/flutter/common/flutter";
+
+		if (!fs.existsSync(snapSdkRoot + "/.git")) {
+			const displayMessage = "The Flutter snap is installed but not initialized. Would you like to initialize it now?";
+			const yesAction = "Yes";
+			const noAction = "No";
+			const selectedItem = await window.showInformationMessage(displayMessage, yesAction, noAction);
+			if (selectedItem === yesAction) {
+				await window.withProgress(
+					{
+						location: ProgressLocation.Notification,
+						title: "Initializing Flutter snap",
+					},
+					async () => {
+						await util.promisify(child_process.exec)(flutterSnapScript);
+					});
+			}
+		}
+
+		if (fs.existsSync(snapSdkRoot + "/.git")) {
+			return snapSdkRoot;
+		}
+	}
+	return undefined;
 }
 
 function findRootContaining(folder: string, childName: string, expectFile = false): string | undefined {
