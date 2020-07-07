@@ -3,6 +3,7 @@ import { isWin, TRACK_WIDGET_CREATION_ENABLED } from "../../shared/constants";
 import { DebuggerType, VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
+import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
 
@@ -71,9 +72,9 @@ export class VmServiceExtensions {
 	}
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
-	public async handleDebugEvent(e: vs.DebugSessionCustomEvent): Promise<void> {
+	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {
 		if (e.event === "dart.serviceExtensionAdded") {
-			this.handleServiceExtensionLoaded(e.body.id);
+			this.handleServiceExtensionLoaded(session, e.body.id);
 
 			try {
 				// If the isWidgetCreationTracked extension loads, send a command to the debug adapter
@@ -175,7 +176,8 @@ export class VmServiceExtensions {
 	}
 
 	/// Tracks loaded service extensions and updates contexts to enable VS Code commands.
-	private handleServiceExtensionLoaded(id: VmServiceExtension) {
+	private handleServiceExtensionLoaded(session: DartDebugSessionInformation, id: VmServiceExtension) {
+		session.loadedServiceExtensions.push(id);
 		this.loadedServiceExtensions.push(id);
 		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, true);
 	}

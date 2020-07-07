@@ -14,7 +14,7 @@ import { WebTestDebugSession } from "../../debug/web_test_debug_impl";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
-import { DebuggerType } from "../../shared/enums";
+import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { filenameSafe } from "../../shared/utils";
@@ -23,7 +23,7 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
-import { LastDebugSession, LastTestDebugSession } from "../commands/debug";
+import { debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
@@ -215,6 +215,25 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 		logger.info(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
+		if (debugType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
+			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1);
+			if (runningInstrumentedApps.length === 0) {
+				return this.errorWithoutOpeningLaunchConfig("Could not find a running Flutter app that was instrumented with enableFlutterDriverExtension. Run your instrumented app before running driver tests.");
+			} else if (runningInstrumentedApps.length > 1) {
+				return this.errorWithoutOpeningLaunchConfig("More than one Flutter app instrumented with enableFlutterDriverExtension is running. Please run only one app before running driver tests.");
+			} else {
+				const app = runningInstrumentedApps[0];
+				// This shouldn't really be possible as we wouldn't find an instrumented app without having its VM Service connection.
+				if (!app.vmServiceUri)
+					return this.errorWithoutOpeningLaunchConfig("The Flutter app instrumented with enableFlutterDriverExtension is not fully initialised yet.");
+
+				// Restart the app for clean state before the test run.
+				await app.session.customRequest("hotRestart");
+				debugConfig.env = debugConfig.env || {};
+				debugConfig.env.VM_SERVICE_URL = app.vmServiceUri;
+			}
+		}
+
 		if (debugType === DebuggerType.WebTest) {
 			// TODO: IMPORTANT! When removing this if statement, add WebTest to
 			// the call to TestResultsProvider.flagSuiteStart below!
@@ -371,6 +390,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		return debugConfig;
+	}
+
+	private errorWithoutOpeningLaunchConfig(message: string) {
+		this.logger.error(message);
+		window.showErrorMessage(message);
+		return undefined; // undefined means silent (don't open launch.json).
 	}
 
 	private installDependencies(debugType: DebuggerType, pubGlobal: PubGlobal) {
