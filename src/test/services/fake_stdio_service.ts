@@ -6,8 +6,8 @@ export class FakeProcessStdIOService<T> extends StdIOService<T> {
 	public readonly notifications: T[] = [];
 	public readonly sentMessages: string[] = [];
 
-	constructor() {
-		super(logger, undefined);
+	constructor(treatCarriageReturnsAsNewlines = false) {
+		super(logger, undefined, undefined, undefined, treatCarriageReturnsAsNewlines, undefined);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

@@ -4,7 +4,7 @@ import { FakeProcessStdIOService } from "../../services/fake_stdio_service";
 describe("stdio_service", () => {
 
 	let service: FakeProcessStdIOService<unknown>;
-	beforeEach(() => service = new FakeProcessStdIOService<unknown>());
+	beforeEach(() => service = new FakeProcessStdIOService<unknown>(true));
 
 	const event1 = { event: "daemon.connected", params: { version: "0.5.3", pid: 4953 } };
 	const event2 = { event: "daemon.connected2", params: { version: "0.5.3", pid: 4953 } };
