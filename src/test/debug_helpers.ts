@@ -81,11 +81,11 @@ export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array
 			.then((_) => {
 				// Process one more iteration, in case the caller was also waiting for terminate as
 				// part of the batch.
-				setImmediate(() => {
+				setTimeout(() => {
 					if (didCompleteSuccessfully)
 						return;
 					throw new Error("Terminated while waiting for other promises!");
-				}, 100);
+				}, 500);
 			}),
 		Promise.all(promises).then(() => didCompleteSuccessfully = true),
 	]);
