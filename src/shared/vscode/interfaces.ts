@@ -49,6 +49,7 @@ export interface InternalExtensionApi {
 	};
 	debugCommands: DebugCommandHandler;
 	debugProvider: DebugConfigurationProvider;
+	debugSessions: Array<{ loadedServiceExtensions: VmServiceExtension[] }>;
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;
 	};
