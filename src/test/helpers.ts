@@ -98,6 +98,8 @@ export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorl
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
 export const flutterTestAnotherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/another_test.dart"));
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
+export const flutterTestDriverAppFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test_driver/app.dart"));
+export const flutterTestDriverTestFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test_driver/app_test.dart"));
 // Web
 export const webProjectContainerFolder = vs.Uri.file(path.join(testFolder, "test_projects/web"));
 export const webHelloWorldFolder = vs.Uri.file(path.join(fsPath(webProjectContainerFolder), "hello_world"));

@@ -32,7 +32,7 @@ import { LspMainCodeLensProvider } from "./code_lens/main_code_lens_provider_lsp
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { LspTestCodeLensProvider } from "./code_lens/test_code_lens_provider_lsp";
 import { AnalyzerCommands } from "./commands/analyzer";
-import { DebugCommands } from "./commands/debug";
+import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { DasEditCommands } from "./commands/edit_das";
 import { LspEditCommands } from "./commands/edit_lsp";
@@ -640,6 +640,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			dartCapabilities,
 			debugCommands,
 			debugProvider,
+			debugSessions,
 			envUtils,
 			fileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : (lspAnalyzer ? lspAnalyzer.fileTracker : undefined),
 			flutterCapabilities,

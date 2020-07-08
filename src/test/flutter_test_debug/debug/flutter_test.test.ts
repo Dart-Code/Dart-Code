@@ -2,11 +2,12 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { DebuggerType } from "../../../shared/enums";
+import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
+import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getPackages, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
+import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getPackages, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -178,6 +179,30 @@ describe("flutter test debugger", () => {
 			dc.assertErroringTest(`Hello world test`),
 			dc.assertOutput("stderr", "Test failed. See exception logs above.\n"),
 			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
+			dc.launch(config),
+		);
+	});
+
+	it("can run test_driver tests", async () => {
+		// Start the instrumented app.
+		const appDc = createDebugClient(DebuggerType.Flutter);
+		const appConfig = await startDebugger(appDc, flutterTestDriverAppFile);
+		appConfig.noDebug = true;
+		await waitAllThrowIfTerminates(appDc,
+			appDc.configurationSequence(),
+			appDc.launch(appConfig),
+		);
+
+		// Allow some time for the debug service to register its Driver extension so we can find it when
+		// looking for the app debug session later.
+		await waitFor(() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1));
+
+		// Run the integration tests
+		const config = await startDebugger(dc, flutterTestDriverTestFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertPassingTest(`Counter App increments the counter`),
 			dc.launch(config),
 		);
 	});
