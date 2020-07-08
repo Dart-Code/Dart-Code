@@ -11,6 +11,10 @@ import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestA
 
 describe("flutter test debugger", () => {
 
+	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
+	// `flutter create .`!
+	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
+	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", fsPath(flutterHelloWorldFolder)));
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterTestMainFile", async () => {
@@ -21,17 +25,12 @@ describe("flutter test debugger", () => {
 		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
-	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", fsPath(flutterHelloWorldFolder)));
-
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.FlutterTest);
 	});
 
-	it("runs a Flutter test script to completion", async () => {
+	it.only("runs a Flutter test script to completion", async () => {
 		const config = await startDebugger(dc, flutterTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
