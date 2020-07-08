@@ -30,7 +30,7 @@ describe("flutter test debugger", () => {
 		dc = createDebugClient(DebuggerType.FlutterTest);
 	});
 
-	it.only("runs a Flutter test script to completion", async () => {
+	it("runs a Flutter test script to completion", async () => {
 		const config = await startDebugger(dc, flutterTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
