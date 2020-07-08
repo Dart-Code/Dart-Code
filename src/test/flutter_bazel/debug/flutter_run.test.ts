@@ -5,7 +5,7 @@ import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger } from "../../debug_helpers";
+import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, defer, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -36,16 +36,16 @@ describe(`flutter run debugger`, () => {
 		const hasRunFile = prepareHasRunFile("flutter_run");
 
 		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 
 		ensureHasRunRecently(hasRunFile);
 	});
@@ -67,11 +67,11 @@ describe(`flutter run debugger`, () => {
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
 		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
 		assert.ok(openBrowserCommand.calledOnce);
@@ -82,10 +82,10 @@ describe(`flutter run debugger`, () => {
 		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 
 		ensureHasRunRecently(hasRunFile);
 	});

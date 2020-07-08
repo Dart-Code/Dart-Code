@@ -7,7 +7,7 @@ import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/ou
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import { makeRegexForTest } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient } from "../../debug_helpers";
+import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
 
 describe("dart test debugger", () => {
@@ -30,22 +30,22 @@ describe("dart test debugger", () => {
 
 	it("runs a Dart test script to completion", async () => {
 		const config = await startDebugger(helloWorldTestMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("receives the expected events from a Dart test script", async () => {
 		const config = await startDebugger(helloWorldTestMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
 			dc.assertPassingTest("String .split() splits the string on the delimiter"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("stops at a breakpoint", async () => {
@@ -60,11 +60,11 @@ describe("dart test debugger", () => {
 	it("stops on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it.skip("stops at the correct location on exception", async () => {
@@ -72,24 +72,24 @@ describe("dart test debugger", () => {
 		// as deemphasized.
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(helloWorldTestBrokenFile),
 			}),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
 			dc.launch(config),
-		]);
+		);
 
 		const variables = await dc.getTopFrameVariables("Exception") as DebugProtocol.Variable[];
 		assert.ok(variables);
@@ -111,23 +111,23 @@ describe("dart test debugger", () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
 		config!.noDebug = true;
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertFailingTest("might fail today"),
 			dc.assertOutput("stderr", `Expected: <2>\n  Actual: <1>`),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("builds the expected tree from a test run", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(helloWorldTestTreeFile);
 		config!.noDebug = true;
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 
 		const expectedResults = getExpectedResults();
 		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider, false)).join("\n");
@@ -143,11 +143,11 @@ describe("dart test debugger", () => {
 			await openFile(file);
 			const config = await startDebugger(file);
 			config!.noDebug = true;
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
 				dc.launch(config),
-			]);
+			);
 		}
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
@@ -167,11 +167,11 @@ describe("dart test debugger", () => {
 	it("runs all tests if given a folder", async () => {
 		const config = await startDebugger("./test/");
 		config!.noDebug = true;
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
@@ -270,11 +270,11 @@ describe("dart test debugger", () => {
 	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<any>>): Promise<void> {
 		await openFile(file);
 		const config = await startDebugger(file, { args, noDebug: true });
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			...otherEvents,
 			dc.launch(config),
-		]);
+		);
 	}
 });

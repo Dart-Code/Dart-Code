@@ -33,68 +33,68 @@ describe("flutter test debugger", () => {
 
 	it("runs a Flutter test script to completion", async () => {
 		const config = await startDebugger(dc, flutterTestMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("receives the expected events from a Flutter test script", async () => {
 		const config = await startDebugger(dc, flutterTestMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.assertPassingTest(`Hello world test`),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("successfully runs a Flutter test script with a relative path", async () => {
 		const config = await startDebugger(dc, flutterTestMainFile);
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Hello world test`),
 			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("runs the provided script regardless of what's open", async () => {
 		await openFile(flutterTestMainFile);
 		const config = await startDebugger(dc, flutterTestOtherFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("runs the open script if no file is provided", async () => {
 		await openFile(flutterTestOtherFile);
 		const config = await startDebugger(dc, undefined);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("runs all tests if given a folder", async () => {
 		const config = await startDebugger(dc, "./test/");
 		config.noDebug = true;
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 
 		const testFiles = [
 			flutterTestMainFile,
@@ -130,11 +130,11 @@ describe("flutter test debugger", () => {
 	it("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(dc, flutterTestBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it.skip("stops at the correct location on exception", async () => {
@@ -142,24 +142,24 @@ describe("flutter test debugger", () => {
 		// as deemphasized.
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(dc, flutterTestBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(flutterTestBrokenFile),
 			}),
 			dc.launch(config),
-		]);
+		);
 	});
 
 	it("provides exception details when stopped on exception", async () => {
 		await openFile(flutterTestBrokenFile);
 		const config = await startDebugger(dc, flutterTestBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
 			dc.launch(config),
-		]);
+		);
 
 		const variables = await dc.getTopFrameVariables("Exception") as DebugProtocol.Variable[];
 		assert.ok(variables);

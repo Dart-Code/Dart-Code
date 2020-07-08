@@ -75,9 +75,19 @@ function getDebugAdapterPath(debugType: DebuggerType) {
 
 /// Waits for all the provided promises, but throws if the debugger terminates before they complete.
 export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array<Promise<any>>) {
+	let didCompleteSuccessfully = false;
 	return Promise.race([
-		dc.waitForEvent("terminated").then((_) => { throw new Error("Terminated while waiting for other promises!"); }),
-		Promise.all(promises),
+		dc.waitForEvent("terminated")
+			.then((_) => {
+				// Process one more iteration, in case the caller was also waiting for terminate as
+				// part of the batch.
+				setImmediate(() => {
+					if (didCompleteSuccessfully)
+						return;
+					throw new Error("Terminated while waiting for other promises!");
+				}, 100);
+			}),
+		Promise.all(promises).then(() => didCompleteSuccessfully = true),
 	]);
 }
 

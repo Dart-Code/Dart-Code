@@ -6,7 +6,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
+import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, deferUntilLast, delay, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
@@ -60,19 +60,19 @@ describe("flutter run debugger (attach)", () => {
 		const vmServiceUri = await process.vmServiceUri;
 		const config = await attachDebugger(vmServiceUri);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
 			watchPromise("attaches_and_waits->launch", dc.launch(config)),
-		]);
+		);
 
 		// Ensure we're still responsive after 3 seconds.
 		await delay(3000);
 		await watchPromise("attaches_and_waits->threadsRequest", dc.threadsRequest());
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("attaches_and_waits->waitForEvent:terminated", dc.waitForEvent("terminated")),
 			watchPromise("attaches_and_waits->terminateRequest", dc.terminateRequest()),
-		]);
+		);
 	});
 
 	it("detaches without terminating the app", async () => {
@@ -80,15 +80,15 @@ describe("flutter run debugger (attach)", () => {
 		const vmServiceUri = await process.vmServiceUri;
 		const config = await attachDebugger(vmServiceUri);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
 			watchPromise("attaches_and_waits->launch", dc.launch(config)),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("attaches_and_waits->waitForEvent:terminated", dc.waitForEvent("terminated")),
 			watchPromise("attaches_and_waits->terminateRequest", dc.terminateRequest()),
-		]);
+		);
 
 		// Ensure the main process is still alive.
 		await delay(4000);

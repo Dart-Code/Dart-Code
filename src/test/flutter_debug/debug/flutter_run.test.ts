@@ -8,7 +8,7 @@ import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -41,20 +41,20 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("runs and remains active until told to quit", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		// Ensure we're still responsive after 3 seconds.
 		await delay(3000);
 		await dc.threadsRequest();
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	describe("prompts the user if trying to run with errors", () => {
@@ -66,20 +66,20 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("expected debugger services/extensions are available in debug mode", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
@@ -90,20 +90,20 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("expected debugger services/extensions are available in noDebug mode", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		config.noDebug = true;
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
@@ -141,17 +141,17 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			return this.skip();
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", "Hello, world!"),
 			dc.assertOutputContains("console", "Logging from dart:developer!"),
 			dc.launch(config),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("resolves relative paths", async () => {
@@ -167,81 +167,81 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			return this.skip();
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
-		]);
+		);
 
 		await watchPromise("hot_reloads_successfully->hotReload", dc.hotReload());
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
 			watchPromise("hot_reloads_successfully->terminateRequest", dc.terminateRequest()),
-		]);
+		);
 	});
 
 	it("hot reloads on save", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		// If we go too fast, things fail..
 		await delay(500);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForHotReload(),
 			saveTrivialChangeToFile(flutterHelloWorldMainFile),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("hot reloads on external modification of file", async () => {
 		await setConfigForTest("dart", "previewHotReloadOnSaveWatcher", true);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		// If we go too fast, things fail..
 		await delay(500);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForHotReload(),
 			makeTrivialChangeToFileDirectly(flutterHelloWorldMainFile),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("can hot restart", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		// If we restart too fast, things fail :-/
 		await delay(1000);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", "Restarted app"),
 			dc.customRequest("hotRestart"),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("resolves project program/cwds in sub-folders when the open file is in a project sub-folder", async () => {
@@ -265,11 +265,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
-		]);
+		);
 
 		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
 		assert.ok(openBrowserCommand.calledOnce);
@@ -280,10 +280,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	const numReloads = 1;
@@ -327,7 +327,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Reload and ensure we hit the breakpoint on each one.
 		for (let i = 0; i < numReloads; i++) {
 			await delay(2000); // TODO: Remove this attempt to see if reloading too fast is causing our flakes...
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->assertStoppedLocation:breakpoint`, dc.assertStoppedLocation("breakpoint", expectedLocation))
 					.then(async (_) => {
 						const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
@@ -343,13 +343,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					})
 					.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
-			]);
+			);
 		}
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("does not stop at a breakpoint in noDebug mode", async () => {
@@ -360,7 +360,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		let didStop = false;
 		// tslint:disable-next-line: no-floating-promises
 		dc.waitForEvent("stopped").then(() => didStop = true);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.setBreakpointWithoutHitting(config, {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
@@ -369,7 +369,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			})
 				.then(() => delay(2000))
 				.then(() => dc.terminateRequest()),
-		]);
+		);
 
 		assert.equal(didStop, false);
 	});
@@ -395,7 +395,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			line: printCall.line + 1,
 			path: fsPath(flutterHelloWorldMainFile),
 		});
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// SDK source will have no filename, because we download it
 				path: undefined,
@@ -408,12 +408,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("does not step into the SDK if debugSdkLibraries is false", async function () {
@@ -428,18 +428,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			line: printCall.line + 1,
 			path: fsPath(flutterHelloWorldMainFile),
 		});
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
 				path: fsPath(flutterHelloWorldMainFile),
 			}),
 			dc.stepIn(),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("steps into an external library if debugExternalLibraries is true", async function () {
@@ -455,7 +455,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			line: httpReadCall.line + 1,
 			path: fsPath(flutterHelloWorldHttpFile),
 		});
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
 				path: fsPath(uriFor(httpReadDef)),
@@ -467,12 +467,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				assert.equal(frame.source!.name, "package:http/http.dart");
 			}),
 			dc.stepIn(),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("does not step into an external library if debugExternalLibraries is false", async function () {
@@ -487,18 +487,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			line: httpReadCall.line,
 			path: fsPath(flutterHelloWorldHttpFile),
 		});
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
 				path: fsPath(flutterHelloWorldHttpFile),
 			}),
 			dc.stepIn(),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("steps into a local library even if debugExternalLibraries is false", async function () {
@@ -514,7 +514,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			line: printMyThingCall.line + 1,
 			path: fsPath(flutterHelloWorldLocalPackageFile),
 		});
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
 				path: fsPath(uriFor(printMyThingDef)),
@@ -526,12 +526,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
 			}),
 			dc.stepIn(),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("downloads SDK source code from the VM");
@@ -542,21 +542,21 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldThrowInSdkFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: false });
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
 			dc.waitForEvent("stopped"),
 			dc.launch(config),
-		]);
+		);
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the Dart SDK");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("correctly marks debuggable SDK frames when debugSdkLibraries is true", async function () {
@@ -565,21 +565,21 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldThrowInSdkFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: true });
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
 			dc.waitForEvent("stopped"),
 			dc.launch(config),
-		]);
+		);
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, undefined);
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("correctly marks non-debuggable external library frames when debugExternalLibraries is false", async function () {
@@ -588,21 +588,21 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalLibraries: false });
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
 			dc.waitForEvent("stopped"),
 			dc.launch(config),
-		]);
+		);
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from Pub packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("correctly marks debuggable external library frames when debugExternalLibraries is true", async function () {
@@ -611,21 +611,21 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalLibraries: true });
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
 			dc.waitForEvent("stopped"),
 			dc.launch(config),
-		]);
+		);
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, undefined);
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("correctly marks debuggable local library frames even when debugExternalLibraries is false", async function () {
@@ -634,21 +634,21 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldThrowInLocalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInLocalPackageFile, { debugExternalLibraries: false });
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
 			dc.waitForEvent("stopped"),
 			dc.launch(config),
-		]);
+		);
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isLocalPackage), undefined, undefined);
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
@@ -676,7 +676,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				// This may be too low for web.
 				expectation = dc.waitForEvent("initialized").then(() => delay(2000));
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.waitForEvent("initialized")
 					.then((_) => dc.setBreakpointsRequest({
@@ -690,7 +690,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					.then(() => dc.configurationDoneRequest()),
 				expectation.then(() => dc.terminateRequest()),
 				dc.launch(config),
-			]);
+			);
 
 			assert.equal(didStop, shouldStop);
 		};
@@ -715,7 +715,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// tslint:disable-next-line: no-floating-promises
 		dc.waitForEvent("stopped").then(() => didStop = true);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then((_) => dc.setBreakpointsRequest({
 					breakpoints: [{
@@ -732,7 +732,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 
 		assert.equal(didStop, false);
 	});
@@ -820,10 +820,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
 		}, dc);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async function () {
@@ -842,10 +842,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Ensure there were no others.
 		assert.equal(variables.length, 1);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("includes getters in variables when stopped at a breakpoint", async function () {
@@ -870,10 +870,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	// Currently skipped because we sometimes get different text from locals, eg.:
@@ -901,10 +901,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
 		}
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("evaluateName evaluates to the expected value", async function () {
@@ -942,10 +942,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
 		}
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	describe("can evaluate at breakpoint", function () {
@@ -957,54 +957,54 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		it("simple expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
 					path: fsPath(flutterHelloWorldMainFile),
 				}),
-			]);
+			);
 
 			const evaluateResult = await dc.evaluateForFrame(`"test"`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, `"test"`);
 			assert.equal(evaluateResult.variablesReference, 0);
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
-			]);
+			);
 		});
 
 		it("complex expression expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
 					path: fsPath(flutterHelloWorldMainFile),
 				}),
-			]);
+			);
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
-			]);
+			);
 		});
 
 		it("an expression that returns a variable", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
 					path: fsPath(flutterHelloWorldMainFile),
 				}),
-			]);
+			);
 
 			const evaluateResult = await dc.evaluateForFrame(`new DateTime.now()`);
 			const thisYear = new Date().getFullYear().toString();
@@ -1012,31 +1012,31 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
 			assert.ok(evaluateResult.variablesReference);
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
-			]);
+			);
 		});
 
 		it("complex expression expressions when in a top level function", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line,
 					path: fsPath(flutterHelloWorldMainFile),
 				}),
-			]);
+			);
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.variablesReference, 0);
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
-			]);
+			);
 		});
 	});
 
@@ -1049,10 +1049,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		it("simple expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
-			]);
+			);
 
 			const evaluateResult = await dc.evaluateRequest({ expression: `"test"` });
 			assert.ok(evaluateResult);
@@ -1060,19 +1060,19 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.equal(evaluateResult.body.result, `"test"`);
 			assert.equal(evaluateResult.body.variablesReference, 0);
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
-			]);
+			);
 		});
 
 		it("complex expression expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
-			]);
+			);
 
 			const evaluateResult = await dc.evaluateRequest({ expression: `(new DateTime.now()).year` });
 			assert.ok(evaluateResult);
@@ -1080,19 +1080,19 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.equal(evaluateResult.body.result, (new Date()).getFullYear());
 			assert.equal(evaluateResult.body.variablesReference, 0);
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
-			]);
+			);
 		});
 
 		it("an expression that returns a variable", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
-			]);
+			);
 
 			const evaluateResult = await dc.evaluateRequest({ expression: `new DateTime.now()` });
 			const thisYear = new Date().getFullYear().toString();
@@ -1101,10 +1101,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.ok(evaluateResult.body.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.body.result}' did not start with ${thisYear}`);
 			assert.ok(evaluateResult.body.variablesReference);
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
-			]);
+			);
 		});
 	});
 
@@ -1112,19 +1112,19 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it.skip("stops on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^Oops").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(flutterHelloWorldBrokenFile),
 			}),
 			dc.launch(config),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("does not stop on exception in noDebug mode", async () => {
@@ -1135,13 +1135,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		let didStop = false;
 		// tslint:disable-next-line: no-floating-promises
 		dc.waitForEvent("stopped").then(() => didStop = true);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence()
 				.then(() => delay(2000))
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 
 		assert.equal(didStop, false);
 	});
@@ -1150,37 +1150,37 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(flutterHelloWorldBrokenFile),
 			}),
 			dc.launch(config),
-		]);
+		);
 
 		const variables = await dc.getTopFrameVariables("Exception");
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("writes exception to stderr", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("moves known files from call stacks to metadata", async function () {
@@ -1190,7 +1190,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
@@ -1204,12 +1204,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					}),
 			),
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
-		]);
+		);
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 	});
 
 	it("renders correct output for structured errors", async function () {
@@ -1234,10 +1234,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		dc.on("output", handleOutput);
 		try {
 
-			await Promise.all([
+			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
-			]);
+			);
 
 			await waitForResult(
 				() => stderrOutput.toLowerCase().indexOf("exception caught by widgets library") !== -1
@@ -1249,10 +1249,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.removeListener("output", handleOutput);
 		}
 
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
-		]);
+		);
 
 		// Grab online the lines that form our error.
 		let stdErrLines = stderrOutput.split("\n").map((l) => l.trim());

@@ -3,7 +3,7 @@ import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, killFlutterTester } from "../../debug_helpers";
+import { createDebugClient, killFlutterTester, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, ensureHasRunRecently, flutterBazelHelloWorldFolder, flutterBazelTestMainFile, getLaunchConfiguration, getPackages, prepareHasRunFile } from "../../helpers";
 
 describe("flutter test debugger", () => {
@@ -42,11 +42,11 @@ describe("flutter test debugger", () => {
 		const hasRunFile = prepareHasRunFile("flutter_test");
 
 		const config = await startDebugger(flutterBazelTestMainFile);
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
-		]);
+		);
 
 		ensureHasRunRecently(hasRunFile);
 	});
