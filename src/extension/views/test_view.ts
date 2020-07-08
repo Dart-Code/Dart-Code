@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
-import { ErrorNotification, Group, GroupNotification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
+import { ErrorNotification, Group, GroupNotification, Notification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { flatMap, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath } from "../../shared/utils/fs";
@@ -243,7 +243,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.forEach((d) => d.dispose());
 	}
 
-	private async handleNotification(suitePath: string, evt: any): Promise<void> {
+	private async handleNotification(suitePath: string, evt: Notification): Promise<void> {
 		const suite = suites[suitePath];
 		switch (evt.type) {
 			// We won't get notifications that aren't directly tied to Suites because
@@ -307,6 +307,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		if (!existingTest)
 			suite.storeTest(evt.test.id, testNode);
 		testNode.test = evt.test;
+		testNode.testStartTime = evt.time;
 
 		// If this is a "loading" test then mark it as hidden because it looks wonky in
 		// the tree with a full path and we already have the "running" icon on the suite.
@@ -348,8 +349,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		else {
 			testNode.status = TestStatus.Unknown;
 		}
-		if (evt.time)
-			testNode.description = `${evt.time}ms`;
+		if (evt.time && testNode.testStartTime) {
+			testNode.description = `${evt.time - testNode.testStartTime}ms`;
+			testNode.testStartTime = undefined;
+		}
 
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
@@ -656,6 +659,7 @@ class GroupTreeItem extends TestItemTreeItem {
 class TestTreeItem extends TestItemTreeItem {
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	private _test: Test; // tslint:disable-line:variable-name
+	public testStartTime: number | undefined;
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name || "<unnamed>", vs.TreeItemCollapsibleState.None);
 		this.suiteRunNumber = suite.currentRunNumber;
