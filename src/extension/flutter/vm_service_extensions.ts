@@ -1,9 +1,8 @@
 import * as vs from "vscode";
 import { isWin, TRACK_WIDGET_CREATION_ENABLED } from "../../shared/constants";
-import { VmService, VmServiceExtension } from "../../shared/enums";
+import { DebuggerType, VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { DebuggerType } from "../providers/debug_config_provider";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
 

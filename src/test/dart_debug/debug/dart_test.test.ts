@@ -1,15 +1,14 @@
 import * as assert from "assert";
-import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { TestStatus } from "../../../shared/enums";
+import { DebuggerType, TestStatus } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import { makeRegexForTest } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient } from "../../debug_helpers";
-import { activate, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
+import { activate, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -18,7 +17,7 @@ describe("dart test debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/dart_test_debug_entry.js"));
+		dc = createDebugClient(DebuggerType.PubTest);
 	});
 
 	async function startDebugger(script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {

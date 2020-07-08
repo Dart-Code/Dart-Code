@@ -1,10 +1,10 @@
-import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
+import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, ext, flutterBazelHelloWorldFolder, flutterBazelTestMainFile, getLaunchConfiguration, getPackages, prepareHasRunFile } from "../../helpers";
+import { activate, ensureHasRunRecently, flutterBazelHelloWorldFolder, flutterBazelTestMainFile, getLaunchConfiguration, getPackages, prepareHasRunFile } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach(function () {
@@ -25,7 +25,7 @@ describe("flutter test debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/flutter_test_debug_entry.js"));
+		dc = createDebugClient(DebuggerType.FlutterTest);
 	});
 
 	afterEach(killFlutterTester);

@@ -14,6 +14,7 @@ import { WebTestDebugSession } from "../../debug/web_test_debug_impl";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
+import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { filenameSafe } from "../../shared/utils";
@@ -537,13 +538,4 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 	}
-}
-
-export enum DebuggerType {
-	Dart,
-	PubTest,
-	Flutter,
-	FlutterTest,
-	Web,
-	WebTest,
 }

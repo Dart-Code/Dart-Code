@@ -2,10 +2,11 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, killFlutterTester } from "../../debug_helpers";
-import { activate, deferUntilLast, ext, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getLaunchConfiguration, getPackages, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
+import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getPackages, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 
@@ -26,19 +27,11 @@ describe("flutter test debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/flutter_test_debug_entry.js"));
+		dc = createDebugClient(DebuggerType.FlutterTest);
 	});
 
-	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script);
-		if (!config)
-			throw new Error(`Could not get launch configuration (got ${config})`);
-		await dc.start(config.debugServer);
-		return config;
-	}
-
 	it("runs a Flutter test script to completion", async () => {
-		const config = await startDebugger(flutterTestMainFile);
+		const config = await startDebugger(dc, flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -47,7 +40,7 @@ describe("flutter test debugger", () => {
 	});
 
 	it("receives the expected events from a Flutter test script", async () => {
-		const config = await startDebugger(flutterTestMainFile);
+		const config = await startDebugger(dc, flutterTestMainFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Hello world test`),
@@ -58,7 +51,7 @@ describe("flutter test debugger", () => {
 	});
 
 	it("successfully runs a Flutter test script with a relative path", async () => {
-		const config = await startDebugger(flutterTestMainFile);
+		const config = await startDebugger(dc, flutterTestMainFile);
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
 		await Promise.all([
 			dc.configurationSequence(),
@@ -71,7 +64,7 @@ describe("flutter test debugger", () => {
 
 	it("runs the provided script regardless of what's open", async () => {
 		await openFile(flutterTestMainFile);
-		const config = await startDebugger(flutterTestOtherFile);
+		const config = await startDebugger(dc, flutterTestOtherFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
@@ -83,7 +76,7 @@ describe("flutter test debugger", () => {
 
 	it("runs the open script if no file is provided", async () => {
 		await openFile(flutterTestOtherFile);
-		const config = await startDebugger(undefined);
+		const config = await startDebugger(dc, undefined);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
@@ -94,7 +87,7 @@ describe("flutter test debugger", () => {
 	});
 
 	it("runs all tests if given a folder", async () => {
-		const config = await startDebugger("./test/");
+		const config = await startDebugger(dc, "./test/");
 		config.noDebug = true;
 		await Promise.all([
 			dc.configurationSequence(),
@@ -126,7 +119,7 @@ describe("flutter test debugger", () => {
 
 	it("stops at a breakpoint", async () => {
 		await openFile(flutterTestMainFile);
-		const config = await startDebugger(flutterTestMainFile);
+		const config = await startDebugger(dc, flutterTestMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(flutterTestMainFile),
@@ -135,7 +128,7 @@ describe("flutter test debugger", () => {
 
 	it("stops on exception", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
+		const config = await startDebugger(dc, flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -147,7 +140,7 @@ describe("flutter test debugger", () => {
 		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
 		// as deemphasized.
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
+		const config = await startDebugger(dc, flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
@@ -160,7 +153,7 @@ describe("flutter test debugger", () => {
 
 	it("provides exception details when stopped on exception", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
+		const config = await startDebugger(dc, flutterTestBrokenFile);
 		await Promise.all([
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -178,14 +171,14 @@ describe("flutter test debugger", () => {
 
 	it("send failure results for failing tests", async () => {
 		await openFile(flutterTestBrokenFile);
-		const config = await startDebugger(flutterTestBrokenFile);
+		const config = await startDebugger(dc, flutterTestBrokenFile);
 		config.noDebug = true;
-		await Promise.all([
+		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertErroringTest(`Hello world test`),
 			dc.assertOutput("stderr", "Test failed. See exception logs above.\n"),
 			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
 			dc.launch(config),
-		]);
+		);
 	});
 });

@@ -2,10 +2,11 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
+import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger } from "../../debug_helpers";
-import { activate, defer, ensureHasRunRecently, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, watchPromise } from "../../helpers";
+import { activate, defer, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -26,7 +27,7 @@ describe(`flutter run debugger`, () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/flutter_debug_entry.js"));
+		dc = createDebugClient(DebuggerType.Flutter);
 	});
 
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));

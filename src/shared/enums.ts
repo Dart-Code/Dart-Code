@@ -1,3 +1,11 @@
+export enum DebuggerType {
+	Dart,
+	PubTest,
+	Flutter,
+	FlutterTest,
+	Web,
+	WebTest,
+}
 
 export enum TestStatus {
 	// This should be in order such that the highest number is the one to show

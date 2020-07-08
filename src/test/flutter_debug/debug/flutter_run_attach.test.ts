@@ -3,10 +3,11 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess } from "../../debug_helpers";
-import { activate, deferUntilLast, delay, ext, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
+import { activate, deferUntilLast, delay, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("Skip attach tests for web devices", function () {
@@ -29,7 +30,7 @@ describe("flutter run debugger (attach)", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/flutter_debug_entry.js"));
+		dc = createDebugClient(DebuggerType.Flutter);
 	});
 
 	async function attachDebugger(vmServiceUri?: string): Promise<vs.DebugConfiguration> {

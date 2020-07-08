@@ -1,31 +1,21 @@
 import * as assert from "assert";
-import * as os from "os";
 import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
-import { LogCategory } from "../shared/enums";
+import { DebuggerType, LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, extApi, fileSafeCurrentTestName, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
+import { currentTestName, defer, delay, ext, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
 
 export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: { [key: string]: any }): Promise<DebugConfiguration> {
 	extraConfiguration = Object.assign(
-		{},
-		{
-			// Use pid-file as a convenient way of getting the test name into the command line args
-			// for easier debugging of processes that hang around on CI (we dump the process command
-			// line at the end of the test run).
-			args: extApi.flutterCapabilities.supportsPidFileForMachine
-				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
-				: [],
-			deviceId: flutterTestDeviceId,
-		},
+		{ deviceId: flutterTestDeviceId },
 		extraConfiguration,
 	);
 	const config = await getLaunchConfiguration(script, extraConfiguration);
@@ -35,7 +25,8 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 	return config;
 }
 
-export function createDebugClient(debugAdapterPath: string) {
+export function createDebugClient(debugType: DebuggerType) {
+	const debugAdapterPath = getDebugAdapterPath(debugType);
 	const dc = new DartDebugClient(process.execPath, debugAdapterPath, "dart", undefined, extApi.debugCommands, extApi.testTreeProvider);
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
@@ -43,7 +34,6 @@ export function createDebugClient(debugAdapterPath: string) {
 		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 		// a second request and that'll cause it to quit immediately.
-		const thisDc = dc;
 		defer(() => withTimeout(
 			Promise.all([
 				thisDc.terminateRequest().catch((e) => logger.error(e)),
@@ -56,6 +46,39 @@ export function createDebugClient(debugAdapterPath: string) {
 		defer(() => thisDc.stop());
 	}
 	return dc;
+}
+
+function getDebugAdapterPath(debugType: DebuggerType) {
+	let debugAdapterFile: string;
+	switch (debugType) {
+		case DebuggerType.Dart:
+			debugAdapterFile = "dart_debug_entry.js";
+			break;
+		case DebuggerType.PubTest:
+			debugAdapterFile = "dart_test_debug_entry.js";
+			break;
+		case DebuggerType.Flutter:
+			debugAdapterFile = "flutter_debug_entry.js";
+			break;
+		case DebuggerType.FlutterTest:
+			debugAdapterFile = "flutter_test_debug_entry.js";
+			break;
+		case DebuggerType.Web:
+			debugAdapterFile = "flutter_test_debug_entry.js";
+			break;
+		default:
+			throw new Error("Unknown debugger type!");
+	}
+
+	return path.join(ext.extensionPath, "out/extension/debug/", debugAdapterFile);
+}
+
+/// Waits for all the provided promises, but throws if the debugger terminates before they complete.
+export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array<Promise<any>>) {
+	return Promise.race([
+		dc.waitForEvent("terminated").then((_) => { throw new Error("Terminated while waiting for other promises!"); }),
+		Promise.all(promises),
+	]);
 }
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {

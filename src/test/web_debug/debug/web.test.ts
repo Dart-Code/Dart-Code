@@ -1,11 +1,11 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { VmService } from "../../../shared/enums";
+import { DebuggerType, VmService } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureVariable } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 // Skipped due to not quitting
 // https://github.com/dart-lang/webdev/issues/950
@@ -17,7 +17,7 @@ describe.skip("web debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/web_debug_entry.js"));
+		dc = createDebugClient(DebuggerType.Web);
 	});
 
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
