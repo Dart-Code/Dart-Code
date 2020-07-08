@@ -1,6 +1,6 @@
 // This comment is extracted by the test and compared to a text representation
 // built from the tree provider in the test. It must be maintained to match
-// the results from teh tests below.
+// the results from the tests below.
 // == EXPECTED RESULTS ==
 // MyItem (class.svg)
 //     build [(BuildContext context) → Widget] (method.svg)

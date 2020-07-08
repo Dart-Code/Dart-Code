@@ -2,7 +2,7 @@ import "package:test/test.dart";
 
 // This comment is extracted by the test and compared to a text representation
 // built from the tree provider in the test. It must be maintained to match
-// the results from teh tests below.
+// the results from the tests below.
 // == EXPECTED RESULTS ==
 // test/dupe_name_test.dart (fail.svg)
 //     group (fail.svg)
