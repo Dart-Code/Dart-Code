@@ -8,7 +8,8 @@ import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/ou
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import { makeRegexForTest } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
-import { activate, defer, delay, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, withTimeout } from "../../helpers";
+import { createDebugClient } from "../../debug_helpers";
+import { activate, ext, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -17,27 +18,7 @@ describe("dart test debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = new DartDebugClient(
-			process.execPath,
-			path.join(ext.extensionPath, "out/extension/debug/dart_test_debug_entry.js"),
-			"dart",
-			undefined,
-			extApi.debugCommands,
-			extApi.testTreeProvider,
-		);
-		dc.defaultTimeout = 60000;
-		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
-		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
-		// a second request and that'll cause it to quit immediately.
-		const thisDc = dc;
-		defer(() => withTimeout(
-			Promise.all([
-				thisDc.terminateRequest().catch((e) => logger.info(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => logger.info(e)),
-			]),
-			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
-			60,
-		));
+		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/dart_test_debug_entry.js"));
 	});
 
 	async function startDebugger(script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {

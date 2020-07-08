@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { flutterTestDeviceIsWeb, killFlutterTester, startDebugger } from "../../debug_helpers";
+import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger } from "../../debug_helpers";
 import { activate, defer, ensureHasRunRecently, ext, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -26,10 +26,7 @@ describe(`flutter run debugger`, () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/extension/debug/flutter_debug_entry.js"), "dart", undefined, extApi.debugCommands, undefined);
-		dc.defaultTimeout = 60000;
-		const thisDc = dc;
-		defer(() => thisDc.stop());
+		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/flutter_debug_entry.js"));
 	});
 
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));

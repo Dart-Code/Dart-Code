@@ -9,7 +9,7 @@ import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, extApi, fileSafeCurrentTestName, getLaunchConfiguration, logger, watchPromise } from "./helpers";
+import { currentTestName, defer, delay, extApi, fileSafeCurrentTestName, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -33,6 +33,29 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 		throw new Error(`Could not get launch configuration (got ${config})`);
 	await watchPromise("startDebugger->start", dc.start(config.debugServer));
 	return config;
+}
+
+export function createDebugClient(debugAdapterPath: string) {
+	const dc = new DartDebugClient(process.execPath, debugAdapterPath, "dart", undefined, extApi.debugCommands, extApi.testTreeProvider);
+	dc.defaultTimeout = 60000;
+	const thisDc = dc;
+	if (debugAdapterPath.indexOf("_test_") !== -1) {
+		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
+		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
+		// a second request and that'll cause it to quit immediately.
+		const thisDc = dc;
+		defer(() => withTimeout(
+			Promise.all([
+				thisDc.terminateRequest().catch((e) => logger.error(e)),
+				delay(500).then(() => thisDc.stop()).catch((e) => logger.error(e)),
+			]),
+			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
+			60,
+		));
+	} else {
+		defer(() => thisDc.stop());
+	}
+	return dc;
 }
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {

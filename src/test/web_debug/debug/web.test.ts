@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { VmService } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { ensureVariable } from "../../debug_helpers";
+import { createDebugClient, ensureVariable } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, delay, ext, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 // Skipped due to not quitting
@@ -17,10 +17,7 @@ describe.skip("web debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = new DartDebugClient(process.execPath, path.join(ext.extensionPath, "out/extension/debug/web_debug_entry.js"), "dart", undefined, extApi.debugCommands, undefined);
-		dc.defaultTimeout = 60000;
-		const thisDc = dc;
-		defer(() => thisDc.stop());
+		dc = createDebugClient(path.join(ext.extensionPath, "out/extension/debug/web_debug_entry.js"));
 	});
 
 	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
