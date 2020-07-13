@@ -50,6 +50,7 @@ export class DasFileTracker implements IAmDisposable {
 		this.updatePriorityFiles();
 		// tslint:disable-next-line: no-floating-promises
 		this.updateSubscriptions();
+		this.watchPubspec();
 	}
 
 	public async updatePriorityFiles() {
@@ -145,6 +146,15 @@ export class DasFileTracker implements IAmDisposable {
 		return this.pubRunTestSupport[fsPath(file)];
 	}
 
+	private watchPubspec() {
+		const clearCachedPubRunTestData = () => Object.keys(this.pubRunTestSupport).forEach((f) => delete this.pubRunTestSupport[f]);
+
+		const watcher = workspace.createFileSystemWatcher("**/pubspec.yaml");
+		this.disposables.push(watcher);
+		watcher.onDidChange(clearCachedPubRunTestData, this);
+		watcher.onDidCreate(clearCachedPubRunTestData, this);
+	}
+
 	public getFoldingRegionsFor(file: Uri): FoldingRegion[] | undefined {
 		return this.folding[fsPath(file)];
 	}
@@ -158,7 +168,7 @@ export class DasFileTracker implements IAmDisposable {
 	}
 
 	public dispose(): any {
-		// TODO: This (and others) should probably await, in case thye're promises.
+		// TODO: This (and others) should probably await, in case they're promises.
 		// And also not fail on first error.
 		this.disposables.forEach((d) => d.dispose());
 	}

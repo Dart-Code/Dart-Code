@@ -1,4 +1,4 @@
-import { Uri } from "vscode";
+import { Uri, workspace } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { EventEmitter } from "../../shared/events";
@@ -33,6 +33,7 @@ export class LspFileTracker implements IAmDisposable {
 				this.onFlutterOutlineEmitter.fire(n);
 			});
 		});
+		this.watchPubspec();
 	}
 
 	public getOutlineFor(file: { fsPath: string } | string): Outline | undefined {
@@ -55,8 +56,17 @@ export class LspFileTracker implements IAmDisposable {
 		return this.pubRunTestSupport[fsPath(file)];
 	}
 
+	private watchPubspec() {
+		const clearCachedPubRunTestData = () => Object.keys(this.pubRunTestSupport).forEach((f) => delete this.pubRunTestSupport[f]);
+
+		const watcher = workspace.createFileSystemWatcher("**/pubspec.yaml");
+		this.disposables.push(watcher);
+		watcher.onDidChange(clearCachedPubRunTestData, this);
+		watcher.onDidCreate(clearCachedPubRunTestData, this);
+	}
+
 	public dispose(): any {
-		// TODO: This (and others) should probably await, in case thye're promises.
+		// TODO: This (and others) should probably await, in case they're promises.
 		// And also not fail on first error.
 		this.disposables.forEach((d) => d.dispose());
 	}
