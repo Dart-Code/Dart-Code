@@ -90,6 +90,8 @@ function spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapab
 	const writer = new LoggingTransform(logger, "==>");
 	writer.pipe(process.stdin);
 
+	process.stderr.on("data", (data) => logger.error(data.toString()));
+
 	return Promise.resolve({ reader, writer });
 }
 
