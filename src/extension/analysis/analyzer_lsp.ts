@@ -82,7 +82,9 @@ function spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapab
 	const vmPath = path.join(sdks.dart, dartVMPath);
 	const args = getAnalyzerArgs(logger, sdks, dartCapabilities, true);
 
+	logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
 	const process = safeToolSpawn(undefined, vmPath, args);
+	logger.info(`    PID: ${process.pid}`);
 
 	const reader = process.stdout.pipe(new LoggingTransform(logger, "<=="));
 	const writer = new LoggingTransform(logger, "==>");
