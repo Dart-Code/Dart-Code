@@ -25,6 +25,12 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
+		// Check that the outline we got looks like it still matches the document.
+		// If the lengths are different, just bail without doing anything since
+		// there have probably been new edits and we'll get a new outline soon.
+		if (document.getText().length !== outline.length)
+			return;
+
 		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
 		const templates = getTemplatedLaunchConfigs(document, fileType);
 

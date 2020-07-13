@@ -27,6 +27,12 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
+		// Check that the outline we got looks like it still matches the document.
+		// If the lengths are different, just bail without doing anything since
+		// there have probably been new edits and we'll get a new outline soon.
+		if (document.getText().length !== outline.length)
+			return;
+
 		// We should only show the CodeLens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
 		if (!this.analyzer.fileTracker.supportsPubRunTest(document.uri))

@@ -4,7 +4,7 @@ import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
-import { lspToRange } from "../../shared/vscode/utils";
+import { lspToPosition, lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { isTestFile } from "../utils";
 
@@ -25,6 +25,12 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		// re-request anyway.
 		const outline = this.analyzer.fileTracker.getOutlineFor(document.uri);
 		if (!outline || !outline.children || !outline.children.length)
+			return;
+
+		// Check that the outline we got looks like it still matches the document.
+		// If the lengths are different, just bail without doing anything since
+		// there have probably been new edits and we'll get a new outline soon.
+		if (document.getText().length !== document.offsetAt(lspToPosition(outline.range.end)))
 			return;
 
 		// We should only show the CodeLens for projects we know can actually handle `pub run` (for ex. the
