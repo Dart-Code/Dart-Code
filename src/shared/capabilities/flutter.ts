@@ -15,7 +15,7 @@ export class FlutterCapabilities {
 	get supportsDevTools() { return versionIsAtLeast(this.version, "1.1.0"); }
 	get hasTestGroupFix() { return versionIsAtLeast(this.version, "1.3.4"); }
 	get hasEvictBug() { return !versionIsAtLeast(this.version, "1.2.2"); }
-	get hasUpdatedStructuredErrorsFormat() { return versionIsAtLeast(this.version, "1.8.0"); }
+	get hasUpdatedStructuredErrorsFormat() { return versionIsAtLeast(this.version, "1.18.0"); }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
 	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsWsDebugBackend() { return versionIsAtLeast(this.version, "1.20.0-8.0.pre"); }
