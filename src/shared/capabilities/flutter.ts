@@ -18,6 +18,7 @@ export class FlutterCapabilities {
 	get hasUpdatedStructuredErrorsFormat() { return versionIsAtLeast(this.version, "1.8.0"); }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
 	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.18.0-5"); }
+	get supportsWsDebugBackend() { return versionIsAtLeast(this.version, "1.20.0-8.0.pre"); }
 	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsDartDefine() { return versionIsAtLeast(this.version, "1.17.0"); }
 	// TODO: Figure this out.

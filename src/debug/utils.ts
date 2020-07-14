@@ -33,6 +33,7 @@ export interface DartSharedArgs {
 	showDartDeveloperLogs: boolean;
 	toolEnv?: { [key: string]: string | undefined };
 	useFlutterStructuredErrors: boolean;
+	debugExtensionBackendProtocol: "sse" | "ws";
 }
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, DartSharedArgs {

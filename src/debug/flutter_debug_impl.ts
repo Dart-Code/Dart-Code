@@ -221,6 +221,8 @@ export class FlutterDebugSession extends DartDebugSession {
 
 				if (this.flutterCapabilities.supportsWsVmService)
 					appArgs.push("--web-server-debug-protocol", "ws");
+				if (args.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsDebugBackend)
+					appArgs.push("--web-server-debug-backend-protocol", args.debugExtensionBackendProtocol);
 				if (this.flutterCapabilities.supportsExposeUrl)
 					appArgs.push("--web-allow-expose-url");
 			}
