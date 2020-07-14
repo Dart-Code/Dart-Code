@@ -1,5 +1,6 @@
 import * as path from "path";
 import { commands, DiagnosticSeverity, languages, Uri, workspace } from "vscode";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { restartReasonSave } from "../../shared/constants";
 import { VmService } from "../../shared/enums";
 import { IAmDisposable } from "../../shared/interfaces";
@@ -12,7 +13,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private hotReloadDelayTimer: NodeJS.Timer | undefined;
 
-	constructor(private readonly debugCommands: DebugCommands) {
+	constructor(private readonly debugCommands: DebugCommands, private readonly flutterCapabilities: FlutterCapabilities) {
 		// Non-FS-watcher version (onDidSave).
 		this.disposables.push(workspace.onDidSaveTextDocument((td) => {
 			// Bail if we're using fs-watcher instead. We still wire this
@@ -70,16 +71,22 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		if (hasErrors)
 			return;
 
-		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
-		// Hopefully we can improve in future: https://github.com/Microsoft/vscode/issues/42913
-		if (this.hotReloadDelayTimer) {
-			clearTimeout(this.hotReloadDelayTimer);
-		}
+		const args = { reason: restartReasonSave, debounce: this.flutterCapabilities.supportsRestartDebounce };
 
-		this.hotReloadDelayTimer = setTimeout(() => {
-			this.hotReloadDelayTimer = undefined;
-			commands.executeCommand(commandToRun, { reason: restartReasonSave });
-		}, 200);
+		if (this.flutterCapabilities.supportsRestartDebounce) {
+			commands.executeCommand(commandToRun, args);
+		} else {
+			// Debounce to avoid reloading multiple times during multi-file-save (Save All).
+			// Hopefully we can improve in future: https://github.com/microsoft/vscode/issues/86087
+			if (this.hotReloadDelayTimer) {
+				clearTimeout(this.hotReloadDelayTimer);
+			}
+
+			this.hotReloadDelayTimer = setTimeout(() => {
+				this.hotReloadDelayTimer = undefined;
+				commands.executeCommand(commandToRun, args);
+			}, 200);
+		}
 	}
 
 	public dispose(): void | Promise<void> {

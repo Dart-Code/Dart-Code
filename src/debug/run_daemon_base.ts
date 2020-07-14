@@ -95,8 +95,8 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 
 	// Request methods.
 
-	public restart(appId: string, pause: boolean, hotRestart: boolean, reason: string): Thenable<any> {
-		return this.sendRequest("app.restart", { appId, fullRestart: hotRestart === true, pause, reason });
+	public restart(appId: string, pause: boolean, hotRestart: boolean, { reason, debounce }: { reason: string, debounce?: boolean }): Thenable<any> {
+		return this.sendRequest("app.restart", { appId, fullRestart: hotRestart === true, pause, reason, debounce });
 	}
 
 	public detach(appId: string): Thenable<UnknownResponse> {
