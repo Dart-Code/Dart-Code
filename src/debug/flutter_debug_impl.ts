@@ -275,22 +275,23 @@ export class FlutterDebugSession extends DartDebugSession {
 	): Promise<void> {
 		this.sendEvent(new Event("dart.hotRestartRequest"));
 		this.sendEvent(new ContinuedEvent(0, true));
-		await this.performReload(true, restartReasonManual);
+		await this.performReload(true, { reason: restartReasonManual });
 		super.restartRequest(response, args);
 	}
 
-	private async performReload(hotRestart: boolean, reason: string): Promise<any> {
+	private async performReload(hotRestart: boolean, args: { reason: string, debounce?: boolean }): Promise<any> {
 		if (!this.appHasStarted || !this.currentRunningAppId || !this.runDaemon)
 			return;
 
-		if (this.isReloadInProgress) {
+		if (!this.flutterCapabilities.supportsRestartDebounce && this.isReloadInProgress) {
 			this.sendEvent(new OutputEvent("Reload already in progress, ignoring request", "stderr"));
 			return;
 		}
+
 		this.isReloadInProgress = true;
 		const restartType = hotRestart ? "hot-restart" : "hot-reload";
 		try {
-			await this.runDaemon.restart(this.currentRunningAppId, !this.noDebug, hotRestart, reason);
+			await this.runDaemon.restart(this.currentRunningAppId, !this.noDebug, hotRestart, args);
 		} catch (e) {
 			this.sendEvent(new OutputEvent(`Error running ${restartType}: ${e}\n`, "stderr"));
 		} finally {
@@ -325,13 +326,13 @@ export class FlutterDebugSession extends DartDebugSession {
 
 				case "hotReload":
 					if (this.currentRunningAppId)
-						await this.performReload(false, args && args.reason || restartReasonManual);
+						await this.performReload(false, args);
 					this.sendResponse(response);
 					break;
 
 				case "hotRestart":
 					if (this.currentRunningAppId)
-						await this.performReload(true, args && args.reason || restartReasonManual);
+						await this.performReload(true, args);
 					this.sendResponse(response);
 					break;
 

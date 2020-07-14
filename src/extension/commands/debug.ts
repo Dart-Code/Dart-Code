@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { devToolsPages, doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
+import { devToolsPages, doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, restartReasonManual } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -142,6 +142,7 @@ export class DebugCommands {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotReloadEmitter.fire();
+			args.reason = args.reason || restartReasonManual;
 			debugSessions.forEach((s) => s.session.customRequest("hotReload", args));
 			analytics.logDebuggerHotReload();
 		}));
@@ -149,6 +150,7 @@ export class DebugCommands {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotRestartEmitter.fire();
+			args.reason = args.reason || restartReasonManual;
 			debugSessions.forEach((s) => s.session.customRequest("hotRestart", args));
 			analytics.logDebuggerRestart();
 		}));
