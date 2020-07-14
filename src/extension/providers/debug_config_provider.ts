@@ -500,7 +500,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.dartVersion = this.dartCapabilities.version;
 		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = true;
-		debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
@@ -519,10 +518,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			? debugConfig.debugExternalLibraries
 			: config.debugExternalLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
-		debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;
 		if (isFlutter && this.wsContext.sdks.flutter) {
+			debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
+			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
+			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.flutterVersion = this.flutterCapabilities.version;
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
