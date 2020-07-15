@@ -579,16 +579,10 @@ describe("dart cli debugger", () => {
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)
-				expectation = expectation.then(() => dc.waitForEvent("stopped"));
+				expectation = expectation.then(() => dc.waitForEvent("stopped")).then(() => dc.terminateRequest());
 
 			if (expectedError)
 				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));
-
-			// If we don't have another expectation, then we need to keep running for some period
-			// after launch to ensure we didn't stop unexpectedly.
-			if (expectation === resolvedPromise)
-				// This may be too low for web.
-				expectation = dc.waitForEvent("initialized").then(() => delay(2000));
 
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
