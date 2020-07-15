@@ -602,7 +602,7 @@ describe("dart cli debugger", () => {
 						source: { path: fsPath(helloWorldMainFile) },
 					}))
 					.then(() => dc.configurationDoneRequest()),
-				expectation.then(() => dc.terminateRequest()),
+				expectation,
 				dc.launch(config),
 			);
 

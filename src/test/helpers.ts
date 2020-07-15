@@ -11,7 +11,7 @@ import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { BufferedLogger, escapeRegExp, filenameSafe, flatMap } from "../shared/utils";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
-import { waitFor } from "../shared/utils/promises";
+import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { SourceSortMembersCodeActionKind } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
@@ -389,7 +389,7 @@ afterEach("run deferred functions", async function () {
 			await watchPromise(`afterEach->deferred->${d.toString()}`, d(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
 			logger.error(`Error running deferred function: ${e}`);
-			// TODO: Add named for deferred functions instead...
+			// TODO: Add names for deferred functions instead...
 			logger.warn(d.toString());
 			firstError = firstError || e;
 		}
@@ -999,6 +999,7 @@ export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any
 		logger.info(`Resetting back to ${originalConfigs?.length} original launch configs`);
 		await launchConfig.update("configurations", originalConfigs.length ? originalConfigs : undefined);
 		logger.info(`Done resetting back to ${originalConfigs?.length} original launch configs!`);
+		await resolvedPromise;
 	});
 }
 
