@@ -34,6 +34,11 @@ jobs:
 
       - uses: actions/checkout@v1
 
+      - name: Check Conditions
+        id: should
+        outputs:
+          skip: matrix.dart-version != 'stable' && github.ref != 'refs/head/master'
+
       - name: Setup XVFB
         if: matrix.os == 'ubuntu-latest'
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -44,34 +49,34 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Setup Dart ${{ matrix.dart-version }}
-        if: "matrix.bot != 'flutter_snap'"
+        if: matrix.bot != 'flutter_snap'
         uses: DanTup/gh-actions/setup-dart@master
         with:
           channel: ${{ matrix.dart-version }}
 
       - name: Setup Flutter ${{ matrix.flutter-version }}
         id: flutter
-        if: "!startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'"
+        if: !startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'
         uses: DanTup/gh-actions/setup-flutter@master
         with:
           channel: ${{ matrix.flutter-version }}
 
       - run: sudo snap install flutter --classic
-        if: "matrix.bot == 'flutter_snap'"
+        if: matrix.bot == 'flutter_snap'
 
       - run: flutter update-packages
         if: matrix.bot == 'flutter_repo'
 
       - name: Print Dart version
-        if: "matrix.bot != 'flutter_snap'"
+        if: matrix.bot != 'flutter_snap'
         run: dart --version
 
       - name: Print Flutter version
-        if: "!startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'"
+        if: !startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'
         run: flutter --version
 
       - name: Enable Flutter web support
-        if: "startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'"
+        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter config --enable-web
 
       - run: |
@@ -82,7 +87,7 @@ jobs:
           pub global activate --no-executables meta 1.1.6
           pub global activate --no-executables pedantic 1.4.0
           pub global activate --no-executables json_annotation 1.2.0
-        if: "matrix.bot != 'flutter_snap'"
+        if: matrix.bot != 'flutter_snap'
         shell: pwsh
 
       - name: npm install
@@ -95,17 +100,18 @@ jobs:
         run: npm run build
 
       - name: pub get (hello_world)
-        if: "startsWith(matrix.bot, 'dart')"
+        if: startsWith(matrix.bot, 'dart')
         run: pub get
         working-directory: src/test/test_projects/hello_world
 
       - name: flutter pub get (flutter_hello_world)
-        if: "startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'"
+        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter packages get
         working-directory: src/test/test_projects/flutter_hello_world
 
       - name: npm test
         run: npm test
+        if: !steps.should.outputs.skip
         env:
           CI: true
           ELECTRON_NO_ATTACH_CONSOLE: 1
@@ -119,14 +125,14 @@ jobs:
 
       - name: Store logs
         uses: actions/upload-artifact@v1
-        if: always()
+        if: always() && !steps.should.outputs.skip
         with:
           name: test-logs-${{ matrix.os }}
           path: .dart_code_test_logs
 
       - name: Store test results
         uses: actions/upload-artifact@v1
-        if: always()
+        if: always() && !steps.should.outputs.skip
         with:
           name: test-results-${{ matrix.os }}
           path: .test_results
