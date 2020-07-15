@@ -20,8 +20,8 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	testEnv.TEST_XML_OUTPUT = path.join(testResultsFolder, `${testRunName}.xml`);
 	testEnv.TEST_CSV_SUMMARY = path.join(testResultsFolder, `${testRunName}_summary.csv`);
 
-	if (!fs.existsSync(testEnv.testResultsFolder))
-		fs.mkdirSync(testEnv.testResultsFolder);
+	if (!fs.existsSync(testResultsFolder))
+		fs.mkdirSync(testResultsFolder);
 	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
 
