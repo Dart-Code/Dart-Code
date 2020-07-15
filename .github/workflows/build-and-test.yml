@@ -56,7 +56,7 @@ jobs:
 
       - name: Setup Flutter ${{ matrix.flutter-version }}
         id: flutter
-        if: !startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'
+        if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
         uses: DanTup/gh-actions/setup-flutter@master
         with:
           channel: ${{ matrix.flutter-version }}
@@ -72,7 +72,7 @@ jobs:
         run: dart --version
 
       - name: Print Flutter version
-        if: !startsWith(matrix.bot, 'dart') && matrix.bot != 'flutter_snap'
+        if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
         run: flutter --version
 
       - name: Enable Flutter web support
