@@ -34,12 +34,6 @@ jobs:
 
       - uses: actions/checkout@v1
 
-      - name: Check Conditions
-        id: should
-        run: echo 'Checking conditions...'
-        outputs:
-          skip: matrix.dart-version != 'stable' && github.ref != 'refs/head/master'
-
       - name: Setup XVFB
         if: matrix.os == 'ubuntu-latest'
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -112,7 +106,6 @@ jobs:
 
       - name: npm test
         run: npm test
-        if: !steps.should.outputs.skip
         env:
           CI: true
           ELECTRON_NO_ATTACH_CONSOLE: 1
@@ -126,14 +119,14 @@ jobs:
 
       - name: Store logs
         uses: actions/upload-artifact@v1
-        if: always() && !steps.should.outputs.skip
+        if: always()
         with:
           name: test-logs-${{ matrix.os }}
           path: .dart_code_test_logs
 
       - name: Store test results
         uses: actions/upload-artifact@v1
-        if: always() && !steps.should.outputs.skip
+        if: always()
         with:
           name: test-results-${{ matrix.os }}
           path: .test_results

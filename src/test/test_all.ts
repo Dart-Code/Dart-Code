@@ -16,12 +16,9 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	testEnv.TEST_RUN_NAME = testRunName;
 	testEnv.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}`);
 	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}.json`);
-	const testResultsFolder = path.join(cwd, ".test_results");
-	testEnv.TEST_XML_OUTPUT = path.join(testResultsFolder, `${testRunName}.xml`);
-	testEnv.TEST_CSV_SUMMARY = path.join(testResultsFolder, `${testRunName}_summary.csv`);
+	testEnv.TEST_XML_OUTPUT = path.join(path.join(cwd, ".test_results"), `${testRunName}.xml`);
+	testEnv.TEST_CSV_SUMMARY = path.join(path.join(cwd, ".test_results"), `${testRunName}_summary.csv`);
 
-	if (!fs.existsSync(testResultsFolder))
-		fs.mkdirSync(testResultsFolder);
 	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
 
@@ -86,14 +83,6 @@ async function runAllTests(): Promise<void> {
 	if (!fs.existsSync(".dart_code_test_logs"))
 		fs.mkdirSync(".dart_code_test_logs");
 
-	// GitHub CI doesn't allow us to conditionally exclude some combinations of tests (eg.
-	// for non-master branch, skip running tests on dev builds) so we have to do this in code.
-	// - When running outside of CI, always run all tests
-	// - When using the stable versions, always run all tests
-	// - When running on the master branch, always run all tests
-	// - Otherwise, skip the slowest tests (debug tests) and only run the quick ones.
-	const allowSlowTests = !process.env.CI || process.env.DART_VERSION === "stable" || process.env.GITHUB_REF === "refs/head/master";
-
 	try {
 		if (!process.env.BOT || process.env.BOT === "dart") {
 			await runTests("dart", "hello_world");
@@ -111,37 +100,35 @@ async function runAllTests(): Promise<void> {
 		if (!process.env.BOT || process.env.BOT === "flutter_lsp") {
 			await runTests("flutter", "flutter_hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
 		}
-		if (allowSlowTests) {
-			if (!process.env.BOT || process.env.BOT === "dart_debug") {
-				await runTests("dart_debug", "hello_world");
-			}
-			if (!process.env.BOT || process.env.BOT === "dart_web_debug") {
-				await runTests("web_debug", "web");
-			}
-			if (!process.env.BOT || process.env.BOT === "flutter_debug") {
-				await runTests("flutter_debug", "flutter_hello_world");
-			}
-			if (!process.env.BOT || process.env.BOT === "flutter_debug_chrome") {
-				await runTests("flutter_debug", "flutter_hello_world", "chrome", { FLUTTER_TEST_DEVICE_ID: "chrome" });
-			}
-			if (!process.env.BOT || process.env.BOT === "flutter_test_debug") {
-				await runTests("flutter_test_debug", "flutter_hello_world");
-			}
-			if (!process.env.BOT || process.env.BOT === "misc") {
-				await runTests("dart_create_tests", "dart_create_tests.code-workspace");
-				await runTests("not_activated/dart_create", "empty");
-				await runTests("multi_root", "projects.code-workspace");
-				await runTests("multi_project_folder", "");
-				await runTests("not_activated/flutter_create", "empty");
-				await runTests("flutter_create_tests", "flutter_create_tests.code-workspace");
-			}
-			if (!process.env.BOT || process.env.BOT === "flutter_repo") {
-				if (process.env.FLUTTER_REPO_PATH) {
-					await runTests("flutter_repository", process.env.FLUTTER_REPO_PATH);
-				} else {
-					console.error("process.env.FLUTTER_REPO_PATH not set, not running flutter_repo tests");
-					exitCode = 1;
-				}
+		if (!process.env.BOT || process.env.BOT === "dart_debug") {
+			await runTests("dart_debug", "hello_world");
+		}
+		if (!process.env.BOT || process.env.BOT === "dart_web_debug") {
+			await runTests("web_debug", "web");
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_debug") {
+			await runTests("flutter_debug", "flutter_hello_world");
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_debug_chrome") {
+			await runTests("flutter_debug", "flutter_hello_world", "chrome", { FLUTTER_TEST_DEVICE_ID: "chrome" });
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_test_debug") {
+			await runTests("flutter_test_debug", "flutter_hello_world");
+		}
+		if (!process.env.BOT || process.env.BOT === "misc") {
+			await runTests("dart_create_tests", "dart_create_tests.code-workspace");
+			await runTests("not_activated/dart_create", "empty");
+			await runTests("multi_root", "projects.code-workspace");
+			await runTests("multi_project_folder", "");
+			await runTests("not_activated/flutter_create", "empty");
+			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace");
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_repo") {
+			if (process.env.FLUTTER_REPO_PATH) {
+				await runTests("flutter_repository", process.env.FLUTTER_REPO_PATH);
+			} else {
+				console.error("process.env.FLUTTER_REPO_PATH not set, not running flutter_repo tests");
+				exitCode = 1;
 			}
 		}
 	} catch (e) {
