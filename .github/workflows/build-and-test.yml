@@ -36,6 +36,7 @@ jobs:
 
       - name: Check Conditions
         id: should
+        run: echo 'Checking conditions...'
         outputs:
           skip: matrix.dart-version != 'stable' && github.ref != 'refs/head/master'
 
