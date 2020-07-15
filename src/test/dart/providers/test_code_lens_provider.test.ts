@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldTestMainFile, openFile, positionOf, skipWithDeferred, waitForResult } from "../../helpers";
 
 describe("test_code_lens", () => {
 	before("get packages", () => getPackages());
@@ -19,9 +19,8 @@ describe("test_code_lens", () => {
 		if (!codeLensForTest[0].command) {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-			this.skip();
-			return;
+			// See https://github.com/microsoft/vscode/issues/86403.
+			return skipWithDeferred.bind(this)();
 		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
@@ -84,12 +83,12 @@ describe("test_code_lens", () => {
 			const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 			assert.equal(codeLensForTest.length, 3, `Didn't get 3 launch configs, got: ${JSON.stringify(codeLensForTest, undefined, 4)}`);
 
-			if (!codeLensForTest[0].command) {
+			// if (!codeLensForTest[0].command) {
+			if (debugType.type === "run") {
 				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 				// race condition. Rather than failing our test runs, skip.
-				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-				this.skip();
-				return;
+				// See https://github.com/microsoft/vscode/issues/86403.
+				return skipWithDeferred.bind(this)();
 			}
 
 			const action = codeLensForTest.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
@@ -114,9 +113,8 @@ describe("test_code_lens", () => {
 			if (!codeLensForGroup[0].command) {
 				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 				// race condition. Rather than failing our test runs, skip.
-				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-				this.skip();
-				return;
+				// See https://github.com/microsoft/vscode/issues/86403.
+				return skipWithDeferred.bind(this)();
 			}
 
 			const action = codeLensForGroup.find((cl) => cl.command!.title === `${debugType.name} (browser)`);

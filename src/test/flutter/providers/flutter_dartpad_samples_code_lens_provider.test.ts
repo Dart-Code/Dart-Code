@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, extApi, getCodeLens, getPackages, openFile, positionOf, sb, waitForResult } from "../../helpers";
+import { activate, extApi, getCodeLens, getPackages, openFile, positionOf, sb, skipWithDeferred, waitForResult } from "../../helpers";
 
 describe("test_flutter_dartpad_samples", () => {
 	before("get packages", () => getPackages());
@@ -23,11 +23,8 @@ describe("test_flutter_dartpad_samples", () => {
 		if (!codeLens.command) {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if these issues get reliable fixes:
-			// - https://github.com/microsoft/vscode/issues/79805
-			// - https://github.com/microsoft/vscode/issues/86403
-			this.skip();
-			return;
+			// See https://github.com/microsoft/vscode/issues/86403.
+			return skipWithDeferred.bind(this)();
 		}
 
 		assert.equal(editor.document.getText(codeLens.range).startsWith("class AppBar extends StatefulWidget"), true);

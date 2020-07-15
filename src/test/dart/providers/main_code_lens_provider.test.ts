@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldMainFile, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldMainFile, helloWorldTestMainFile, openFile, positionOf, skipWithDeferred, waitForResult } from "../../helpers";
 
 describe("main_code_lens", () => {
 	before("get packages", () => getPackages());
@@ -20,9 +20,8 @@ describe("main_code_lens", () => {
 		if (!codeLensForMainFunction[0].command) {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-			this.skip();
-			return;
+			// See https://github.com/microsoft/vscode/issues/86403.
+			return skipWithDeferred.bind(this)();
 		}
 
 		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
@@ -71,9 +70,8 @@ describe("main_code_lens", () => {
 				if (!codeLensForMainFunction[0].command) {
 					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 					// race condition. Rather than failing our test runs, skip.
-					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-					this.skip();
-					return;
+					// See https://github.com/microsoft/vscode/issues/86403.
+					return skipWithDeferred.bind(this)();
 				}
 
 				const action = codeLensForMainFunction.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;

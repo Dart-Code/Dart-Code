@@ -382,7 +382,8 @@ before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 
 const deferredItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
 const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
-afterEach("run deferred functions", async function () {
+afterEach("run deferred functions", runDeferredFunctions);
+async function runDeferredFunctions(this: Mocha.Context): Promise<void> {
 	let firstError: any;
 	for (const d of [...deferredItems.reverse(), ...deferredToLastItems.reverse()]) {
 		try {
@@ -399,7 +400,16 @@ afterEach("run deferred functions", async function () {
 	// We delay throwing until the end so that other cleanup can run
 	if (firstError)
 		throw firstError;
-});
+}
+
+export async function skipWithDeferred(this: Mocha.Context): Promise<never> {
+	// When we skip a test, it won't run the afterEach hooks, so we need to manually
+	// run deferred functions to get cleanup.
+	// See https://github.com/mochajs/mocha/issues/4376.
+	await runDeferredFunctions.bind(this)();
+	this.skip();
+}
+
 export function defer(callback: (result?: "failed" | "passed") => Promise<any> | any): void {
 	deferredItems.push(callback);
 }
