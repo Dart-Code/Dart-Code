@@ -11,6 +11,7 @@
 	},
 	"rulesDirectory": "lints/",
 	"rules": {
+		"array-type": false,
 		"disallow-fspath": true,
 		"disallow-importing-non-shared-code": true,
 		"disallow-vscode": true,
