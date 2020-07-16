@@ -131,10 +131,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 		deviceAddedSubscription.dispose();
 		deviceRemovedSubscription.dispose();
 
-		if (selection) {
-			await this.selectDevice(selection);
+		if (selection && await this.selectDevice(selection))
 			return this.currentDevice;
-		}
 
 		return undefined;
 	}
@@ -176,15 +174,21 @@ export class FlutterDeviceManager implements vs.Disposable {
 					if (action === runFlutterCreateDotAction)
 						await vs.commands.executeCommand("_flutter.create");
 					else
-						break;
+						return false;
 				}
 				this.currentDevice = selection.device;
 				this.updateStatusBar();
 				break;
 		}
+
+		return true;
 	}
 
 	private shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
+
+	public getDevice(id: string | undefined) {
+		return this.devices.find((d) => d.id === id);
+	}
 
 	public async getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Promise<PickableDevice[]> {
 		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
