@@ -480,9 +480,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	if (dasAnalyzer)
-		context.subscriptions.push(new DasTestCommands(logger, dasAnalyzer.fileTracker));
+		context.subscriptions.push(new DasTestCommands(logger, workspaceContext, dasAnalyzer.fileTracker));
 	if (lspAnalyzer)
-		context.subscriptions.push(new LspTestCommands(logger, lspAnalyzer.fileTracker));
+		context.subscriptions.push(new LspTestCommands(logger, workspaceContext, lspAnalyzer.fileTracker));
 
 	if (lspClient && lspAnalyzer) {
 		// TODO: LSP equivs of the others...

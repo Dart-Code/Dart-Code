@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 
 export const dartCodeExtensionIdentifier = "Dart-Code.dart-code";
 export const flutterExtensionIdentifier = "Dart-Code.flutter";
@@ -114,6 +115,9 @@ export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-set
 export const openSettingsAction = "Open Settings File";
 export const reactivateDevToolsAction = "Reactivate DevTools";
 
+export const createTestFileAction = (file: string) => `Create ${path.basename(file)}`;
+export const defaultTestFileContents = (isFlutterProject: boolean) => isFlutterProject ? defaultFlutterTestFileContents : defaultDartTestFileContents;
+
 export const vmServiceListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
 export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
@@ -155,3 +159,24 @@ export const dartRecommendedConfig = {
 	// strings. This setting will prevent that.
 	"editor.wordBasedSuggestions": false,
 };
+
+export const defaultTestFileSelectionPlaceholder = "// TODO: Implement test";
+const defaultFlutterTestFileContents = `
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  testWidgets('Test ...', (tester) async {
+    ${defaultTestFileSelectionPlaceholder}
+  });
+}
+`;
+
+const defaultDartTestFileContents = `
+import 'package:test/test.dart';
+
+void main() {
+  test('Test ...', () async {
+    ${defaultTestFileSelectionPlaceholder}
+  });
+}
+`;
