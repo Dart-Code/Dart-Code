@@ -1,11 +1,14 @@
 import * as assert from "assert";
+import { commands, window } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
+import { runFlutterCreateDotAction, runFlutterCreateDotPrompt } from "../../shared/constants";
 import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
-import { logger } from "../helpers";
+import { logger, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../services/fake_stdio_service";
+import sinon = require("sinon");
 
 describe("device_manager", () => {
 	let dm: FlutterDeviceManager;
@@ -152,6 +155,31 @@ describe("device_manager", () => {
 		// Connecting desktop does not change the selected device.
 		await daemon.connect(desktop, true);
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
+	});
+
+	it("shows unsupported platforms and prompts to run flutter create if selected", async () => {
+		await daemon.connect(desktop, false);
+		const devices = await dm.getPickableDevices(["android"]);
+		const d = devices.find((e) => e.device.id === desktop.id);
+
+		if (!d)
+			throw new Error("Desktop device was missing");
+		assert.equal(d.label, `Enable ${desktop.name}`);
+
+		const runCreatePrompt = sb.stub(window, "showInformationMessage")
+			.withArgs(runFlutterCreateDotPrompt(desktop.name), sinon.match.any)
+			.resolves(runFlutterCreateDotAction);
+
+		const flutterCreateCommand = sb.stub(commands, "executeCommand")
+			.callThrough()
+			.withArgs("_flutter.create").resolves();
+
+		await dm.selectDevice(d);
+
+		// Check we prompted, and when we said yes, we called the command.
+		assert.equal(runCreatePrompt.called, true);
+		assert.equal(flutterCreateCommand.called, true);
+
 	});
 });
 
