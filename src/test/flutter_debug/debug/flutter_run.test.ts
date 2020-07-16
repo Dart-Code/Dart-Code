@@ -1240,7 +1240,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			);
 
 			await waitForResult(
-				() => stderrOutput.toLowerCase().indexOf("exception caught by widgets library") !== -1
+				() => stderrOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
 					&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
 				"Waiting for error output",
 				5000,
