@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, defer, emptyFile, ensureTestContent, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, skipWithDeferred, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
+import { activate, currentDoc, defer, emptyFile, ensureTestContent, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
 	beforeEach("activate", () => activate());
@@ -21,7 +21,8 @@ describe("fix_code_action_provider", () => {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
-			return skipWithDeferred.bind(this)();
+			this.skip();
+			return;
 		}
 
 		await (vs.commands.executeCommand(createMethodFix!.command!.command, ...createMethodFix!.command!.arguments || []));
@@ -48,7 +49,8 @@ describe("fix_code_action_provider", () => {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
-			return skipWithDeferred.bind(this)();
+			this.skip();
+			return;
 		}
 
 		await (vs.commands.executeCommand(createFileFix!.command!.command, ...createFileFix!.command!.arguments || []));
@@ -75,7 +77,8 @@ main() {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
-			return skipWithDeferred.bind(this)();
+			this.skip();
+			return;
 		}
 
 		await (vs.commands.executeCommand(createFunctionFix!.command!.command, ...createFunctionFix!.command!.arguments || []));
