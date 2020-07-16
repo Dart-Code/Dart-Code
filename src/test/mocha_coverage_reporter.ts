@@ -1,10 +1,10 @@
 import * as fs from "fs";
-import { reporters } from "mocha";
+import { reporters, Runner } from "mocha";
 
 declare const __coverage__: any;
 
 export class CoverageReporter extends reporters.Base {
-	constructor(runner: any, options: any) {
+	constructor(runner: Runner, options: any) {
 		super(runner);
 
 		runner.once("end", () => {

@@ -9,6 +9,7 @@ module.exports = {
 	run(testsRoot: string, cb: (error: any, failures?: number) => void): void {
 		// Create the mocha test
 		const mocha = new Mocha({
+			color: true,
 			forbidOnly: !!process.env.MOCHA_FORBID_ONLY,
 			reporter: MultiReporter,
 			reporterOptions: {
@@ -20,7 +21,6 @@ module.exports = {
 			timeout: 360000,   // increased timeout because starting up Code, Analyzer, Pub, etc. is slooow
 			ui: "bdd",        // the TDD UI is being used in extension.test.ts (suite, test, etc.)
 		});
-		mocha.useColors(true);
 
 		// Set up source map support.
 		require("source-map-support").install();

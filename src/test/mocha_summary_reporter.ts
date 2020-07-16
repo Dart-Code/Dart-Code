@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { ITest, reporters } from "mocha";
+import { reporters, Test } from "mocha";
 
 const isWin = /^win/.test(process.platform);
 const isMac = process.platform === "darwin";
@@ -13,15 +13,15 @@ export class SummaryReporter extends reporters.Base {
 	constructor(runner: any, private options: any) {
 		super(runner);
 
-		runner.on("pending", (test: ITest) => {
+		runner.on("pending", (test: Test) => {
 			this.skipped++;
 		});
 
-		runner.on("pass", (test: ITest) => {
+		runner.on("pass", (test: Test) => {
 			this.passed++;
 		});
 
-		runner.on("fail", (test: ITest) => {
+		runner.on("fail", (test: Test) => {
 			this.failed++;
 		});
 

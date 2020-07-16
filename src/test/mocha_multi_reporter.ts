@@ -1,10 +1,10 @@
-import { IRunner, reporters } from "mocha";
+import { reporters, Runner } from "mocha";
 import { CoverageReporter } from "./mocha_coverage_reporter";
 import { LoggingReporter } from "./mocha_logging_reporter";
 import { SummaryReporter } from "./mocha_summary_reporter";
 
 export class MultiReporter extends reporters.Base {
-	constructor(runner: IRunner, options: any) {
+	constructor(runner: Runner, options: any) {
 		// These have to be any because the TS defs don't have the options argument.
 		// TODO: Send a PR to fix?
 		const reporterConstructors: any[] = [];

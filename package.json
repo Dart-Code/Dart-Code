@@ -1971,7 +1971,7 @@
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/minimatch": "^3.0.3",
-		"@types/mocha": "^7.0.2",
+		"@types/mocha": "^8.0.0",
 		"@types/node": "^12.12.37",
 		"@types/semver": "^7.1.0",
 		"@types/sinon": "5.0.5",
@@ -1979,7 +1979,7 @@
 		"@types/ws": "^7.2.4",
 		"glob": "^7.1.6",
 		"istanbul-instrumenter-loader": "^3.0.1",
-		"mocha": "^6.2.3",
+		"mocha": "^8.0.1",
 		"nyc": "^15.0.1",
 		"sinon": "^7.5.0",
 		"source-map-support": "^0.5.19",
