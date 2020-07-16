@@ -1287,7 +1287,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.deepStrictEqual(stdErrLines.map((s) => s.toLowerCase()), expectedErrorLines.map((s) => s.toLowerCase()));
 	});
 
-	it("does not print original error if using structured errors", async function () {
+	// Skipped due to https://github.com/Dart-Code/Dart-Code/issues/2648.
+	it.skip("does not print original error if using structured errors", async function () {
 		if (!extApi.flutterCapabilities.hasUpdatedStructuredErrorsFormat)
 			return this.skip();
 
