@@ -1,11 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { createTestFileAction, defaultTestFileContents, defaultTestFileSelectionPlaceholder, noAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
-import { fsPath } from "../../shared/utils/fs";
+import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { getLaunchConfig } from "../../shared/utils/test";
+import { WorkspaceContext } from "../../shared/workspace";
 import { DasFileTracker } from "../analysis/file_tracker_das";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { isDartDocument } from "../editors";
@@ -21,7 +23,7 @@ export let isInImplementationFile = false;
 abstract class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(protected readonly logger: Logger) {
+	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
@@ -62,15 +64,46 @@ abstract class TestCommands implements vs.Disposable {
 		const e = vs.window.activeTextEditor;
 		if (e && e.document && isDartDocument(e.document)) {
 			const filePath = fsPath(e.document.uri);
-			const otherFile =
-				isTestFile(filePath)
-					? this.getImplementationFileForTest(filePath)
-					: this.getTestFileForImplementation(filePath);
+			const isTest = isTestFile(filePath);
+			const otherFile = isTest
+				? this.getImplementationFileForTest(filePath)
+				: this.getTestFileForImplementation(filePath);
 
-			if (otherFile) {
-				const document = await vs.workspace.openTextDocument(otherFile);
-				await vs.window.showTextDocument(document);
+			if (!otherFile)
+				return;
+
+			let selectionOffset: number | undefined;
+			let selectionLength: number | undefined;
+
+			// Offer to create test files.
+			if (!fs.existsSync(otherFile)) {
+				if (isTest)
+					return;
+
+				const relativePath = vs.workspace.asRelativePath(otherFile, false);
+				const yesAction = createTestFileAction(relativePath);
+				const response = await vs.window.showInformationMessage(
+					`Would you like to create a test file at ${relativePath}?`,
+					yesAction,
+					noAction,
+				);
+
+				if (response !== yesAction)
+					return;
+
+				mkDirRecursive(path.dirname(otherFile));
+				const testFileContents = defaultTestFileContents(this.wsContext.hasAnyFlutterProjects).trim();
+				fs.writeFileSync(otherFile, testFileContents);
+
+				selectionOffset = testFileContents.indexOf(defaultTestFileSelectionPlaceholder);
+				selectionLength = defaultTestFileSelectionPlaceholder.length;
 			}
+
+			const document = await vs.workspace.openTextDocument(otherFile);
+			const editor = await vs.window.showTextDocument(document);
+
+			if (selectionOffset && selectionLength)
+				editor.selection = new vs.Selection(document.positionAt(selectionOffset), document.positionAt(selectionOffset + selectionLength));
 		}
 	}
 
@@ -119,17 +152,14 @@ abstract class TestCommands implements vs.Disposable {
 
 		// Replace lib folder with test.
 		const libFolderIndex = pathSegments.lastIndexOf("lib");
-		if (libFolderIndex !== -1)
-			pathSegments[libFolderIndex] = "test";
+		if (libFolderIndex === -1)
+			return undefined;
+		pathSegments[libFolderIndex] = "test";
 
 		// Add _test to the filename.
 		pathSegments[pathSegments.length - 1] = pathSegments[pathSegments.length - 1].replace(/\.dart/, "_test.dart");
 
-		// Only return if the file exists.
-		const testFilePath = pathSegments.join(path.sep);
-		return fs.existsSync(testFilePath)
-			? testFilePath
-			: undefined;
+		return pathSegments.join(path.sep);
 	}
 
 	protected abstract testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined;
@@ -142,8 +172,8 @@ abstract class TestCommands implements vs.Disposable {
 }
 
 export class DasTestCommands extends TestCommands {
-	constructor(logger: Logger, private readonly fileTracker: DasFileTracker) {
-		super(logger);
+	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: DasFileTracker) {
+		super(logger, wsContext);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
@@ -173,8 +203,8 @@ export class DasTestCommands extends TestCommands {
 }
 
 export class LspTestCommands extends TestCommands {
-	constructor(logger: Logger, private readonly fileTracker: LspFileTracker) {
-		super(logger);
+	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: LspFileTracker) {
+		super(logger, wsContext);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): LspTestOutlineInfo | undefined {
