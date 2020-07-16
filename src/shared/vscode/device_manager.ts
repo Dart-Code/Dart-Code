@@ -2,9 +2,10 @@ import * as vs from "vscode";
 import { flatMap } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { cancelAction, runFlutterCreateDotAction, runFlutterCreateDotPrompt } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
-import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, IFlutterDaemon, Logger } from "../interfaces";
+import { CustomEmulator, CustomEmulatorDefinition, DisabledDevice, Emulator, EmulatorCreator, IFlutterDaemon, Logger } from "../interfaces";
 import { logProcess } from "../logging";
 import { safeSpawn } from "../processes";
 import { unique } from "../utils/array";
@@ -99,30 +100,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 		let quickPickIsValid = true;
 		let emulatorDevices: PickableDevice[];
-		const updatePickableDeviceList = () => {
+		const updatePickableDeviceList = async () => {
 			if (!quickPickIsValid)
 				return;
 
-			const pickableItems: PickableDevice[] = this.devices
-				.sort(this.deviceSortComparer.bind(this))
-				.filter((d) => this.isSupported(supportedTypes, d))
-				.map((d) => ({
-					description: d.category || d.platform,
-					device: d,
-					label: this.labelForDevice(d),
-				}));
-
-			// If we've got emulators, add them to the list.
-			if (emulatorDevices) {
-				// Fliter out any emulators we know are running.
-				const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
-
-				emulatorDevices
-					.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1)
-					.forEach((e) => pickableItems.push(e));
-			}
-
-			quickPick.items = pickableItems;
+			quickPick.items = await this.getPickableDevices(supportedTypes, emulatorDevices);
 		};
 
 		// Kick off a request to get emulators only once.
@@ -137,7 +119,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		const deviceRemovedSubscription = this.daemon.registerForDeviceRemoved((d) => updatePickableDeviceList());
 
 		// Build the initial list.
-		updatePickableDeviceList();
+		await updatePickableDeviceList();
 
 		const selection = await new Promise<PickableDevice>((resolve) => {
 			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
@@ -148,46 +130,97 @@ export class FlutterDeviceManager implements vs.Disposable {
 		quickPick.dispose();
 		deviceAddedSubscription.dispose();
 		deviceRemovedSubscription.dispose();
-		if (selection && selection.device) {
-			const emulatorTypeLabel = this.emulatorLabel(selection.device.platformType);
-			switch (selection.device.type) {
-				case "emulator-creator":
-					// Clear the current device so we can wait for the new one
-					// to connect.
-					this.currentDevice = undefined;
-					this.statusBarItem.text = `Creating ${emulatorTypeLabel}...`;
-					await this.createEmulator();
-					this.updateStatusBar();
-					break;
-				case "emulator":
-					// Clear the current device so we can wait for the new one
-					// to connect.
-					this.currentDevice = undefined;
-					this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
-					await this.launchEmulator(selection.device);
-					this.updateStatusBar();
-					break;
-				case "custom-emulator":
-					// Clear the current device so we can wait for the new one
-					// to connect.
-					this.currentDevice = undefined;
-					this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
-					await this.launchCustomEmulator(selection.device);
-					this.updateStatusBar();
-					break;
-				case "device":
-					this.currentDevice = selection.device;
-					this.updateStatusBar();
-					break;
-			}
 
+		if (selection) {
+			await this.selectDevice(selection);
 			return this.currentDevice;
 		}
 
 		return undefined;
 	}
 
+	public async selectDevice(selection: PickableDevice) {
+		const emulatorTypeLabel = this.emulatorLabel(selection.device.platformType);
+		switch (selection.device.type) {
+			case "emulator-creator":
+				// Clear the current device so we can wait for the new one
+				// to connect.
+				this.currentDevice = undefined;
+				this.statusBarItem.text = `Creating ${emulatorTypeLabel}...`;
+				await this.createEmulator();
+				this.updateStatusBar();
+				break;
+			case "emulator":
+				// Clear the current device so we can wait for the new one
+				// to connect.
+				this.currentDevice = undefined;
+				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
+				await this.launchEmulator(selection.device);
+				this.updateStatusBar();
+				break;
+			case "custom-emulator":
+				// Clear the current device so we can wait for the new one
+				// to connect.
+				this.currentDevice = undefined;
+				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
+				await this.launchCustomEmulator(selection.device);
+				this.updateStatusBar();
+				break;
+			case "device":
+				if (!selection.isSupported) {
+					const action = await vs.window.showInformationMessage(
+						runFlutterCreateDotPrompt(selection.device.name),
+						runFlutterCreateDotAction,
+						cancelAction,
+					);
+					if (action === runFlutterCreateDotAction)
+						await vs.commands.executeCommand("_flutter.create");
+					else
+						break;
+				}
+				this.currentDevice = selection.device;
+				this.updateStatusBar();
+				break;
+		}
+	}
+
 	private shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
+
+	public async getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Promise<PickableDevice[]> {
+		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
+
+		let pickableItems: PickableDevice[] = sortedDevices.filter((d) => this.isSupported(supportedTypes, d))
+			.map((d) => ({
+				description: d.category || d.platform,
+				device: d,
+				isSupported: true,
+				label: this.labelForDevice(d),
+			}));
+
+		// If we've got emulators, add them to the list.
+		if (emulatorDevices) {
+			// Fliter out any emulators we know are running.
+			const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
+
+			pickableItems = pickableItems.concat(
+				emulatorDevices.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1));
+		}
+
+		// Add any unsupported platforms that we have devices for (eg. things that could be
+		// enabled) to the bottom.
+		pickableItems = pickableItems.concat(
+			sortedDevices
+				.filter((d) => !this.isSupported(supportedTypes, d))
+				.map((d) => ({
+					device: d,
+					isSupported: false,
+					label: `Enable ${this.labelForDevice(d)}`,
+				})),
+		);
+
+		return pickableItems;
+	}
+
 	private async getSupportedPlatformsForWorkspace(): Promise<f.PlatformType[]> {
 		// To avoid triggering this lots of times at startup when lots of devices "connect" at
 		// the same time, we cache the results for 10 seconds. Every time we set the cache, we
@@ -369,6 +402,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				alwaysShow: false,
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
 				device: e,
+				isSupported: true,
 				label: showAsEmulators ? `Start ${e.name}` : e.name,
 			}));
 
@@ -377,6 +411,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			emulators.push({
 				alwaysShow: true,
 				device: { type: "emulator-creator", platformType: "android", name: "Create Android emulator" } as EmulatorCreator,
+				isSupported: true,
 				label: "Create Android emulator",
 			});
 		}
@@ -440,4 +475,4 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 }
 
-type PickableDevice = vs.QuickPickItem & { device: f.Device | Emulator | EmulatorCreator };
+type PickableDevice = vs.QuickPickItem & { device: f.Device | DisabledDevice | Emulator | EmulatorCreator, isSupported: boolean };

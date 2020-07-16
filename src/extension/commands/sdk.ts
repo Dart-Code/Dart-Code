@@ -238,7 +238,13 @@ export class SdkCommands {
 		await util.promptToReloadExtension();
 	}
 
-	private flutterCreate(projectPath: string, projectName?: string, sampleID?: string) {
+	private async flutterCreate(projectPath: string | undefined, projectName?: string, sampleID?: string) {
+		if (!projectPath) {
+			projectPath = await this.getFolderToRunCommandIn(`Select the folder to run "flutter create" in`, undefined, true);
+			if (!projectPath)
+				return;
+		}
+
 		const args = ["create"];
 		if (config.flutterCreateOffline) {
 			args.push("--offline");
