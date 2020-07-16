@@ -1286,4 +1286,51 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		assert.deepStrictEqual(stdErrLines.map((s) => s.toLowerCase()), expectedErrorLines.map((s) => s.toLowerCase()));
 	});
+
+	it("does not print original error if using structured errors", async function () {
+		if (!extApi.flutterCapabilities.hasUpdatedStructuredErrorsFormat)
+			return this.skip();
+
+		// Currently this test fails on Chrome because we always lose the race
+		// with enabling structured errors versus the error occurring
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
+		await openFile(flutterHelloWorldBrokenFile);
+		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
+
+		// Collect all output to stderr.
+		let stderrOutput = "";
+		const handleOutput = (event: DebugProtocol.OutputEvent) => {
+			if (event.body.category === "stderr") {
+				stderrOutput += event.body.output;
+			}
+		};
+		dc.on("output", handleOutput);
+		try {
+
+			await waitAllThrowIfTerminates(dc,
+				dc.configurationSequence(),
+				dc.launch(config),
+			);
+
+			await waitForResult(
+				() => stderrOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
+					&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
+				"Waiting for error output",
+				5000,
+			);
+
+			await delay(500); // Additional delay in case the stderr error arrives after the one detected above.
+		} finally {
+			dc.removeListener("output", handleOutput);
+		}
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+
+		assert.equal(stderrOutput.toLowerCase().indexOf("══╡ exception caught"), -1);
+	});
 });
