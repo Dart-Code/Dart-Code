@@ -526,7 +526,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.flutterVersion = this.flutterCapabilities.version;
 			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
-			debugConfig.forceFlutterVerboseMode = isLogging || isCI;
+			debugConfig.forceFlutterVerboseMode = isLogging;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
 				debugConfig.flutterTrackWidgetCreation !== undefined && debugConfig.flutterTrackWidgetCreation !== null
