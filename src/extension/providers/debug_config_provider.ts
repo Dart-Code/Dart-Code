@@ -267,17 +267,23 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (token && token.isCancellationRequested)
 			return;
 
-		let deviceToLaunchOn = this.deviceManager && this.deviceManager.currentDevice;
+		let deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId) || this.deviceManager?.currentDevice;
 
 		// Ensure we have a device if required.
 		if (debugType === DebuggerType.Flutter && this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
-			const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
+			let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
 				? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
 				: [];
 
 			// If the current device is not valid, prompt the user.
 			if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
 				deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms);
+
+			// Refresh the supported platforms, as the we may have enabled new platforms during
+			// the call to showDevicePicker.
+			supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
+				? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+				: [];
 
 			// If we still don't have a valid device, show an error.
 			if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn)) {
