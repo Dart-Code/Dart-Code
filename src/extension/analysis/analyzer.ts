@@ -27,8 +27,14 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 	let analyzerArgs = [];
 
 	// Optionally start the VM service for the analyzer.
-	if (config.analyzerVmServicePort)
+	if (config.analyzerVmServicePort) {
 		analyzerArgs.push(`--enable-vm-service=${config.analyzerVmServicePort}`);
+		// When using LSP, printing the VM Service URI will break the protocol and
+		// stop the client from working, so it needs to be hidden.
+		analyzerArgs.push(`-DSILENT_OBSERVATORY=true`);
+		analyzerArgs.push(`--disable-service-auth-codes`);
+		vs.window.showInformationMessage("The Dart LSP server is running with the debugger accessible. Please disable (unsetting the `dart.analyzerVmServicePort` setting) when no longer required.");
+	}
 
 	analyzerArgs.push(analyzerPath);
 
