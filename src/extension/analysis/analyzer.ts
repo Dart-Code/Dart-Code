@@ -33,7 +33,7 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 		// stop the client from working, so it needs to be hidden.
 		analyzerArgs.push(`-DSILENT_OBSERVATORY=true`);
 		analyzerArgs.push(`--disable-service-auth-codes`);
-		vs.window.showInformationMessage("The Dart LSP server is running with the debugger accessible. Please disable (unsetting the `dart.analyzerVmServicePort` setting) when no longer required.");
+		vs.window.showInformationMessage("The Dart LSP server is running with the debugger accessible. Please disable (unset the `dart.analyzerVmServicePort` setting) when no longer required.");
 	}
 
 	analyzerArgs.push(analyzerPath);
