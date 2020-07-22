@@ -41,7 +41,6 @@ export class DevToolsManager implements vs.Disposable {
 	public get devToolsActivation() { return this.devToolsActivationPromise; }
 	private service?: DevToolsService;
 	private capabilities = DevToolsCapabilities.empty;
-	public get shouldEmbed() { return config.previewEmbeddedDevTools && this.capabilities.supportsEmbedFlag; }
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
@@ -96,6 +95,10 @@ export class DevToolsManager implements vs.Disposable {
 			}, async (_) => this.startServer());
 		}
 
+		// If the launched versin of DevTools doesn't support embedding, remove the flag.
+		if (!this.capabilities.supportsEmbedFlag)
+			options.embed = false;
+
 		try {
 			const url = await this.devtoolsUrl;
 			await vs.window.withProgress({
@@ -104,7 +107,7 @@ export class DevToolsManager implements vs.Disposable {
 			}, async (_) => {
 
 				const canLaunchDevToolsThroughService = isRunningLocally
-					&& !this.shouldEmbed
+					&& !options.embed
 					&& !process.env.DART_CODE_IS_TEST_RUN
 					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
 
@@ -130,7 +133,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// When a new Debug session starts, we can reconnect any views that are still open
 	// in the disconnected state.
 	public async reconnectDisconnectedEmbeddedViews(session: DartDebugSessionInformation & { vmServiceUri: string }): Promise<void> {
-		if (!this.shouldEmbed || !this.devtoolsUrl)
+		if (!this.devtoolsUrl)
 			return;
 
 		for (const page of Object.keys(this.devToolsEmbeddedViews)) {
@@ -143,7 +146,7 @@ export class DevToolsManager implements vs.Disposable {
 			const reusablePanel = panels.find((p) => p.session.hasEnded);
 			if (reusablePanel) {
 				reusablePanel.session = session;
-				await this.launch(false, session, { page });
+				await this.launch(false, session, { embed: true, page });
 			}
 		}
 	}
@@ -158,7 +161,7 @@ export class DevToolsManager implements vs.Disposable {
 		const queryParams: { [key: string]: string | undefined } = {
 			hide: "debugger",
 			ide: "VSCode",
-			theme: config.useDevToolsDarkTheme && !this.shouldEmbed ? "dark" : undefined,
+			theme: config.useDevToolsDarkTheme && !options.embed ? "dark" : undefined,
 		};
 
 		// Try to launch via service if allowed.
@@ -168,10 +171,10 @@ export class DevToolsManager implements vs.Disposable {
 		// Otherwise, fall back to embedded or launching manually.
 		if (options.page)
 			queryParams.page = options.page;
-		if (this.shouldEmbed)
+		if (options.embed)
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
-		if (this.shouldEmbed)
+		if (options.embed)
 			// TODO: What should really we do it we don't have a page?
 			this.launchInEmbeddedWebView(fullUrl, session, options.page || "inspector");
 		else
@@ -251,7 +254,7 @@ export class DevToolsManager implements vs.Disposable {
 					this.logger.error(e);
 				}
 			}
-			this.service = new DevToolsService(this.logger, this.workspaceContext, this);
+			this.service = new DevToolsService(this.logger, this.workspaceContext, this.capabilities);
 			const service = this.service;
 			this.disposables.push(service);
 
@@ -314,7 +317,7 @@ export class DevToolsManager implements vs.Disposable {
 class DevToolsService extends StdIOService<UnknownNotification> {
 	private spawnedArgs?: string[];
 
-	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, private readonly manager: DevToolsManager) {
+	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, private readonly capabilities: DevToolsCapabilities) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
 		this.spawnedArgs = this.getDevToolsArgs();
@@ -345,7 +348,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	}
 
 	private getDevToolsArgs() {
-		const additionalArgs = this.manager.shouldEmbed
+		const additionalArgs = this.capabilities.supportsEmbedFlag
 			? ["--allow-embedding"]
 			: ["--enable-notifications"];
 		const args = ["global", "run", "devtools", "--machine", "--try-ports", "10"].concat(additionalArgs);
@@ -387,6 +390,7 @@ export interface ServerStartedNotification {
 }
 
 interface DevToolsOptions {
+	embed: boolean;
 	reuseWindows?: boolean;
 	notify?: boolean;
 	page?: string;
