@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
-import { CHROME_OS_DEVTOOLS_PORT, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
+import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, Logger, SomeError } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -99,6 +99,18 @@ export class DevToolsManager implements vs.Disposable {
 		if (!this.capabilities.supportsEmbedFlag)
 			options.embed = false;
 
+		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
+		// to open non-embedded view).
+		if (options.embed && !options.page) {
+			const choice = await this.promptForDevToolsPage();
+			if (!choice) // User cancelled
+				return;
+			else if (choice === "EXTERNAL")
+				options.embed = false;
+			else
+				options.page = choice.page;
+		}
+
 		try {
 			const url = await this.devtoolsUrl;
 			await vs.window.withProgress({
@@ -123,6 +135,25 @@ export class DevToolsManager implements vs.Disposable {
 			this.devToolsStatusBarItem.hide();
 			this.showError(e);
 		}
+	}
+
+	private async promptForDevToolsPage(): Promise<{ page: string } | "EXTERNAL" | undefined> {
+		const choices: Array<vs.QuickPickItem & { page?: string, isExternal?: boolean }> = [
+			...devToolsPages.map((page) => ({
+				label: `Open ${page} Page`,
+				page: page.toLowerCase(),
+			})),
+			{ label: `Open DevTools in Web Browser`, isExternal: true },
+		];
+		const choice = await vs.window.showQuickPick(choices, { placeHolder: "Which DevTools page?" });
+		if (!choice)
+			return undefined;
+		else if (choice.isExternal)
+			return "EXTERNAL";
+		else if (choice.page)
+			return { page: choice.page };
+		else
+			return undefined; // Shouldn't get here...
 	}
 
 	private showError(e: SomeError) {
