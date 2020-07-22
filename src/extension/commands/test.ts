@@ -26,6 +26,7 @@ abstract class TestCommands implements vs.Disposable {
 	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
+			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.commands.registerCommand("dart.debugTestAtCursor", () => this.runTestAtCursor(true), this),
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
@@ -60,10 +61,12 @@ abstract class TestCommands implements vs.Disposable {
 		}
 	}
 
-	private async goToTestOrImplementationFile(): Promise<void> {
-		const e = vs.window.activeTextEditor;
-		if (e && e.document && isDartDocument(e.document)) {
-			const filePath = fsPath(e.document.uri);
+	private async goToTestOrImplementationFile(resource?: vs.Uri): Promise<void> {
+		const doc = resource
+			? await vs.workspace.openTextDocument(resource)
+			: vs.window.activeTextEditor?.document;
+		if (doc && isDartDocument(doc)) {
+			const filePath = fsPath(doc.uri);
 			const isTest = isTestFile(filePath);
 			const otherFile = isTest
 				? this.getImplementationFileForTest(filePath)
