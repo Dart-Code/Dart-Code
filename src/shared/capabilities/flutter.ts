@@ -21,7 +21,7 @@ export class FlutterCapabilities {
 	get supportsWsDebugBackend() { return versionIsAtLeast(this.version, "1.20.0-8.0.pre"); }
 	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsDartDefine() { return versionIsAtLeast(this.version, "1.17.0"); }
-	get supportsRestartDebounce() { return versionIsAtLeast(this.version, "1.20.0-8.0.pre.125"); }
+	get supportsRestartDebounce() { return versionIsAtLeast(this.version, "1.21.0-0"); }
 	// TODO: Figure this out.
 	get webSupportsDebugging() { return false; }
 }
