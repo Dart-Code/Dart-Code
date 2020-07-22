@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
+import { devToolsPages, doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -103,7 +103,7 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
-		["Inspector", "Timeline", "Memory", "Performance", "Network", "Logging"].forEach((pageName) => {
+		devToolsPages.forEach((pageName) => {
 			context.subscriptions.push(vs.commands.registerCommand(`dart.openDevTools${pageName}`, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
 				options = Object.assign({}, options, { page: pageName.toLowerCase() });
 				return vs.commands.executeCommand("dart.openDevTools", options);
@@ -127,10 +127,8 @@ export class DebugCommands {
 			const reuseWindows = config.devToolsReuseWindows;
 			const page = options?.page;
 
-			const useEmbeddedDevTools = config.previewEmbeddedDevTools;
-
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { embed: useEmbeddedDevTools, reuseWindows, notify, page });
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { embed: config.previewEmbeddedDevTools, reuseWindows, notify, page });
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else {

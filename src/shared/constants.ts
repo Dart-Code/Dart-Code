@@ -125,6 +125,8 @@ export const runFlutterCreateDotPrompt = (deviceName: string) => `You must run '
 export const runFlutterCreateDotAction = "Run 'flutter create .'";
 export const cancelAction = "Cancel";
 
+export const devToolsPages = ["Inspector", "Timeline", "Memory", "Performance", "Network", "Logging"];
+
 export const dartRecommendedConfig = {
 	// Automatically format code on save and during typing of certain characters
 	// (like `;` and `}`).
