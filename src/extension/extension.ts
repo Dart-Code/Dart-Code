@@ -467,7 +467,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
 
 	// Register additional commands.
-	const analyzerCommands = new AnalyzerCommands(context, analyzer);
+	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer);
 	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, deviceManager);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
 

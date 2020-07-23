@@ -158,6 +158,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.restartAnalysisServer",
+				"title": "Restart Analysis Server",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.runTestAtCursor",
 				"title": "Run Test At Cursor",
 				"category": "Dart"
@@ -538,6 +543,10 @@
 				{
 					"command": "dart.rerunLastTestDebugSession",
 					"when": "dart-code:dartProjectLoaded && dart-code:hasLastTestDebugConfig"
+				},
+				{
+					"command": "dart.restartAnalysisServer",
+					"when": "dart-code:dartProjectLoaded"
 				},
 				{
 					"command": "dart.runTestAtCursor",

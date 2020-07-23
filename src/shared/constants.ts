@@ -55,6 +55,9 @@ export const debugTerminatingProgressId = "terminate";
 export const pubGlobalDocsUrl = "https://www.dartlang.org/tools/pub/cmd/pub-global";
 export const stagehandInstallationInstructionsUrl = "https://github.com/dart-lang/stagehand#installation";
 
+export const issueTrackerAction = "Issue Tracker";
+export const issueTrackerUri = "https://github.com/Dart-Code/Dart-Code/issues";
+
 export const wantToTryDevToolsPrompt = "Dart DevTools includes additional tools for debugging and profiling Flutter apps, including a Widget Inspector. Try it?";
 export const openDevToolsAction = "Open";
 export const alwaysOpenAction = "Always Open";
