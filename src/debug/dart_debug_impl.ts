@@ -1118,8 +1118,7 @@ export class DartDebugSession extends DebugSession {
 						if (this.isSimpleKind(instance.kind)) {
 							variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef, true));
 						} else if (instance.elements) {
-							const len = instance.elements.length;
-							const elementPromises = instance.elements.map(async (element, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element, len <= maxValuesToCallToString));
+							const elementPromises = instance.elements.map(async (element, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element, i <= maxValuesToCallToString));
 							// Add them in order.
 							const elementVariables = await Promise.all(elementPromises);
 							variables = variables.concat(elementVariables);
