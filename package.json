@@ -185,12 +185,14 @@
 			{
 				"command": "dart.startDebugging",
 				"title": "Start Debugging",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "$(debug-alt-small)"
 			},
 			{
 				"command": "dart.startWithoutDebugging",
 				"title": "Run Without Debugging",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "$(play)"
 			},
 			{
 				"command": "dart.startDebuggingTest",
@@ -848,6 +850,16 @@
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.outdated",
 					"group": "navigation@3"
+				},
+				{
+					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && dart-code:currentFileIsRunnable",
+					"command": "dart.startWithoutDebugging",
+					"group": "1_run@10"
+				},
+				{
+					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && dart-code:currentFileIsRunnable",
+					"command": "dart.startDebugging",
+					"group": "1_run@20"
 				}
 			],
 			"editor/context": [

@@ -14,9 +14,11 @@ import { config } from "../config";
 import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
+import { isValidEntryFile } from "../utils";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
+const CURRENT_FILE_RUNNABLE = "dart-code:currentFileIsRunnable";
 
 // Workaround for https://github.com/microsoft/vscode/issues/100115
 const dynamicDebugSessionName = "Dart ";
@@ -64,6 +66,7 @@ export class DebugCommands {
 		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
+		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)));
 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.vmServices.toggle(VmServiceExtension.PlatformOverride, "iOS", "android")));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.vmServices.toggle(VmServiceExtension.DebugPaint)));
@@ -570,5 +573,10 @@ export class DebugCommands {
 		debugSessions.forEach((session) => {
 			session.session.customRequest("serviceExtension", args);
 		});
+	}
+
+	private updateEditorContexts(e: vs.TextEditor | undefined): void {
+		const isRunnable = !!(e && e.document && e.document.uri.scheme === "file" && isValidEntryFile(fsPath(e.document.uri)));
+		vs.commands.executeCommand("setContext", CURRENT_FILE_RUNNABLE, isRunnable);
 	}
 }
