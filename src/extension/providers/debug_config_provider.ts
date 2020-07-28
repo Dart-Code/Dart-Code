@@ -40,16 +40,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
-	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
-		const isFlutter = isFlutterWorkspaceFolder(folder);
-		return [{
-			name: isFlutter ? "Flutter" : "Dart",
-			program: isFlutter ? undefined : "bin/main.dart",
-			request: "launch",
-			type: "dart",
-		}];
-	}
-
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
@@ -133,7 +123,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// If we still don't have an entry point, the user will have to provide it.
 			if (!debugConfig.program) {
 				logger.warn("No program was set in launch config");
-				window.showInformationMessage("Set the 'program' value in your launch config (eg 'bin/main.dart') then launch again");
+				const exampleEntryPoint = this.wsContext.hasAnyFlutterProjects ? "lib/main.dart" : "bin/main.dart";
+				window.showInformationMessage(`Set the 'program' value in your launch config (eg '${exampleEntryPoint}') then launch again`);
 				return null; // null means open launch.json.
 			}
 		}
@@ -568,5 +559,60 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				delete this.debugServers[type];
 			}
 		}
+	}
+}
+
+export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationProvider {
+	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
+		const isFlutter = isFlutterWorkspaceFolder(folder);
+		return [{
+			name: isFlutter ? "Flutter" : "Dart",
+			program: isFlutter ? "lib/main.dart" : "bin/main.dart",
+			request: "launch",
+			type: "dart",
+		}];
+	}
+}
+
+export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
+	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
+		const isFlutter = isFlutterWorkspaceFolder(folder);
+		const exists = (p: string) => folder && fs.existsSync(path.join(fsPath(folder.uri), p));
+		const results: DebugConfiguration[] = [];
+
+		if (isFlutter && exists("lib/main.dart")) {
+			results.push({
+				name: "Flutter app",
+				program: "lib/main.dart",
+				request: "launch",
+				type: "dart",
+			});
+		}
+		if (!isFlutter && exists("web")) {
+			results.push({
+				name: `Dart web app`,
+				program: "web",
+				request: "launch",
+				type: "dart",
+			});
+		}
+		if (exists("bin/main.dart")) {
+			results.push({
+				name: "Dart app",
+				program: "bin/main.dart",
+				request: "launch",
+				type: "dart",
+			});
+		}
+		if (exists("test")) {
+			const name = isFlutter ? "Flutter" : "Dart";
+			results.push({
+				name: `${name} tests`,
+				program: "test",
+				request: "launch",
+				type: "dart",
+			});
+		}
+		return results;
 	}
 }
