@@ -45,7 +45,8 @@
 		"onCommand:_dart.flutter.createSampleProject",
 		"onCommand:flutter.doctor",
 		"onCommand:flutter.upgrade",
-		"onUri"
+		"onUri",
+		"onDebugDynamicConfigurations"
 	],
 	"main": "./out/dist/extension",
 	"contributes": {
