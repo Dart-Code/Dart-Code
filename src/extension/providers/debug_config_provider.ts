@@ -29,7 +29,7 @@ import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { isDartFile, isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFile, isTestFileOrFolder, isTestFolder, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -412,8 +412,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	private guessBestEntryPoint(openFile: string | undefined, folder: string | undefined): string | undefined {
 		// For certain open files, assume the user wants to run them.
-		if (openFile && isDartFile(openFile) &&
-			(isTestFile(openFile) || (isInsideFolderNamed(openFile, "bin") || isInsideFolderNamed(openFile, "tool") || isInsideFolderNamed(openFile, "test_driver")))) {
+		if (isValidEntryFile(openFile)) {
 			this.logger.info(`Using open file as entry point: ${openFile}`);
 			return openFile;
 		}

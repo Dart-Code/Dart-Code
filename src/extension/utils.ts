@@ -174,6 +174,11 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 	return segments.indexOf(folderName.toLowerCase()) !== -1;
 }
 
+export function isValidEntryFile(file: string | undefined) {
+	return file && isDartFile(file) &&
+		(isTestFile(file) || (isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")));
+}
+
 export function getLatestSdkVersion(): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const options: https.RequestOptions = {
