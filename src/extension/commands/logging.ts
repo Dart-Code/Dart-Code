@@ -7,7 +7,7 @@ import { PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
 import { createFolderForFile } from "../utils";
-import { getLogHeader, userSelectableLogCategories } from "../utils/log";
+import { getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;
 
@@ -18,6 +18,7 @@ export class LoggingCommands implements vs.Disposable {
 	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.startLogging", this.startLogging, this),
+			vs.commands.registerCommand("dart.openExtensionLog", this.openExtensionLog, this),
 			vs.commands.registerCommand("dart.stopLogging", this.stopLogging, this),
 		);
 	}
@@ -69,6 +70,11 @@ export class LoggingCommands implements vs.Disposable {
 		await vs.window.showTextDocument(doc);
 
 		return logFilename;
+	}
+
+	private async openExtensionLog(): Promise<void> {
+		const doc = await vs.workspace.openTextDocument(vs.Uri.file(getExtensionLogPath()));
+		await vs.window.showTextDocument(doc);
 	}
 
 	private async stopLogging(): Promise<void> {

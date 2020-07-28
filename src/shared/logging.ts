@@ -24,11 +24,6 @@ export class EmittingLogger implements Logger, IAmDisposable {
 
 	private log(message: string, severity: LogSeverity, category = LogCategory.General): void {
 		this.onLogEmitter.fire(new LogMessageImpl(message, severity, category));
-		// TODO: ????
-		// // Warn/Error always go to General.
-		// if (category !== LogCategory.General && severity !== LogSeverity.Info) {
-		// 	onLogEmitter.fire(new LogMessage(`[${LogCategory[category]}] ${message}`, severity, LogCategory.General));
-		// }
 	}
 
 	public info(message: string, category?: LogCategory): void {

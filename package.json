@@ -216,6 +216,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.openExtensionLog",
+				"title": "Open Extension Log",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.stopLogging",
 				"title": "Stop Capturing Logs",
 				"category": "Dart"
