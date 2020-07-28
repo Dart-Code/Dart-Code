@@ -1,6 +1,7 @@
 import * as path from "path";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument, Uri } from "vscode";
 import { extensionPath, readJson } from "../../shared/vscode/extension_utils";
+import { config } from "../config";
 
 export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	private completions = new CompletionList();
@@ -30,6 +31,9 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	public provideCompletionItems(
 		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
 	): CompletionList | undefined {
+		if (!config.enableSnippets)
+			return;
+
 		const line = document.lineAt(position.line).text.slice(0, position.character);
 
 		if (!this.shouldAllowCompletion(line, context))

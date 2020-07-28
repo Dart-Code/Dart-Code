@@ -62,6 +62,7 @@ class Config {
 	get devToolsReuseWindows(): boolean { return this.getConfig<boolean>("devToolsReuseWindows", true); }
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
+	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): object { return this.getConfig<object>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
