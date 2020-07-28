@@ -176,7 +176,11 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 
 export function isValidEntryFile(file: string | undefined) {
 	return file && isDartFile(file) &&
-		(isTestFile(file) || (isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")));
+		(
+			isTestFile(file)
+			|| isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")
+			|| file.endsWith(`lib${path.sep}main.dart`)
+		);
 }
 
 export function getLatestSdkVersion(): Promise<string> {

@@ -32,6 +32,8 @@ abstract class TestCommands implements vs.Disposable {
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
 		);
+		// Run for current open editor.
+		this.updateEditorContexts(vs.window.activeTextEditor);
 
 		this.disposables.push(vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
 			vs.debug.startDebugging(
