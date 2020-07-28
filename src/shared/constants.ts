@@ -63,11 +63,14 @@ export const openDevToolsAction = "Open";
 export const alwaysOpenAction = "Always Open";
 export const notTodayAction = "Not Now";
 export const doNotAskAgainAction = "Never Ask";
+export const moreInfoAction = "More Info";
 
 export const flutterSurveyDataUrl = "https://flutter.dev/f/flutter-survey-metadata.json";
 export const flutterSurveyAnalyticsText = "By clicking on this link you agree to share feature usage along with the survey responses.";
 export const takeSurveyAction = "Take Survey";
 export const skipThisSurveyAction = "Skip This Survey";
+
+export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
 
 export const initializeSnapPrompt = "The Flutter snap is installed but not initialized. Would you like to initialize it now? This may take a few minutes.";
 export const initializingSnapMessage = "Initializing Flutter snap…";

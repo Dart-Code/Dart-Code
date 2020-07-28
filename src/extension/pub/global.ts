@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared/constants";
+import { moreInfoAction, noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
 import { CustomScript, DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -26,7 +26,6 @@ export class PubGlobal {
 		if (customActivateScript)
 			autoUpdate = true;
 
-		const moreInfo = "More Info";
 		const activateForMe = versionStatus === VersionStatus.NotInstalled ? `Activate ${packageName}` : `Update ${packageName}`;
 		const message = versionStatus === VersionStatus.NotInstalled
 			? `${packageName} needs to be installed with 'pub global activate ${packageID}' to use this feature.`
@@ -41,9 +40,9 @@ export class PubGlobal {
 			// clicked the activate button, otherwise prompt them.
 			autoUpdate && (versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable)
 				? activateForMe
-				: await vs.window.showWarningMessage(message, activateForMe, moreInfo);
+				: await vs.window.showWarningMessage(message, activateForMe, moreInfoAction);
 
-		if (action === moreInfo) {
+		if (action === moreInfoAction) {
 			await envUtils.openInBrowser(moreInfoLink);
 			return undefined;
 		} else if (action === activateForMe) {
@@ -55,8 +54,8 @@ export class PubGlobal {
 			if (await this.checkVersionStatus(packageID, installedVersion) === VersionStatus.Valid) {
 				return installedVersion;
 			} else {
-				action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfo);
-				if (action === moreInfo) {
+				action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfoAction);
+				if (action === moreInfoAction) {
 					await envUtils.openInBrowser(moreInfoLink);
 				}
 				return undefined;
