@@ -67,6 +67,8 @@ export class DebugCommands {
 		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
 		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)));
+		// Run for current open editor.
+		this.updateEditorContexts(vs.window.activeTextEditor);
 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.vmServices.toggle(VmServiceExtension.PlatformOverride, "iOS", "android")));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.vmServices.toggle(VmServiceExtension.DebugPaint)));
