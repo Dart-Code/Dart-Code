@@ -772,9 +772,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const shortdateListVariables = await dc.getVariables(variables.find((v) => v.name === "tenDates")!.variablesReference);
 		ensureVariable(shortdateListVariables, "tenDates[0]", "[0]", "DateTime (2005-01-01 00:00:00.000)");
 
-		const longdateListVariables = await dc.getVariables(variables.find((v) => v.name === "hundredDates")!.variablesReference);
-		ensureVariable(longdateListVariables, "hundredDates[0]", "[0]", "DateTime"); // This doesn't call toString() because it's a long list'.
-
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 		ensureVariable(mapVariables, undefined, "0", `"l" -> List (12 items)`);
 		ensureVariable(mapVariables, undefined, "1", `"longStrings" -> List (1 item)`);
