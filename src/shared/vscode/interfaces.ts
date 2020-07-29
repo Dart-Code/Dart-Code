@@ -33,8 +33,8 @@ export interface InternalExtensionApi {
 	context: Context;
 	currentAnalysis: () => Promise<void>;
 	cursorIsInTest: boolean;
-	isInTestFile: boolean;
-	isInImplementationFile: boolean;
+	isInTestFileThatHasImplementation: boolean;
+	isInImplementationFileThatCanHaveTest: boolean;
 	isLsp: boolean;
 	dartCapabilities: {
 		generatesCodeWithUnimplementedError: boolean;

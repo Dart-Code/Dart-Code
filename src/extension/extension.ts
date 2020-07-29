@@ -42,7 +42,7 @@ import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
-import { cursorIsInTest, DasTestCommands, isInImplementationFile, isInTestFile, LspTestCommands } from "./commands/test";
+import { cursorIsInTest, DasTestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation, LspTestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
@@ -646,8 +646,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			flutterCapabilities,
 			flutterOutlineTreeProvider,
 			get cursorIsInTest() { return cursorIsInTest; },
-			get isInImplementationFile() { return isInImplementationFile; },
-			get isInTestFile() { return isInTestFile; },
+			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
+			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
 			getLogHeader,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			isLsp: isUsingLsp,

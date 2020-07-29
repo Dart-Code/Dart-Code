@@ -17,8 +17,8 @@ const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
 // HACK: Used for testing since we can't read contexts?
 export let cursorIsInTest = false;
-export let isInTestFile = false;
-export let isInImplementationFile = false;
+export let isInTestFileThatHasImplementation = false;
+export let isInImplementationFileThatCanHaveTest = false;
 
 abstract class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
@@ -74,7 +74,7 @@ abstract class TestCommands implements vs.Disposable {
 				? this.getImplementationFileForTest(filePath)
 				: this.getTestFileForImplementation(filePath);
 
-			if (!otherFile)
+			if (!otherFile || (isTest && !fs.existsSync(otherFile)))
 				return;
 
 			let selectionOffset: number | undefined;
@@ -119,19 +119,21 @@ abstract class TestCommands implements vs.Disposable {
 	}
 
 	private updateEditorContexts(e: vs.TextEditor | undefined): void {
-		isInTestFile = false;
-		isInImplementationFile = false;
+		isInTestFileThatHasImplementation = false;
+		isInImplementationFileThatCanHaveTest = false;
 
 		if (e && e.document && isDartDocument(e.document)) {
 			const filePath = fsPath(e.document.uri);
 			if (isTestFile(filePath)) {
-				isInTestFile = !!this.getImplementationFileForTest(filePath);
+				// Implementation files must exist.
+				const implementationFilePath = this.getImplementationFileForTest(filePath);
+				isInTestFileThatHasImplementation = !!implementationFilePath && fs.existsSync(implementationFilePath);
 			} else {
-				isInImplementationFile = !!this.getTestFileForImplementation(filePath);
+				isInImplementationFileThatCanHaveTest = !!this.getTestFileForImplementation(filePath);
 			}
 		}
 
-		vs.commands.executeCommand("setContext", CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION, isInTestFile || isInImplementationFile);
+		vs.commands.executeCommand("setContext", CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION, isInTestFileThatHasImplementation || isInImplementationFileThatCanHaveTest);
 	}
 
 	private getImplementationFileForTest(filePath: string) {
@@ -145,11 +147,7 @@ abstract class TestCommands implements vs.Disposable {
 		// Remove _test from the filename.
 		pathSegments[pathSegments.length - 1] = pathSegments[pathSegments.length - 1].replace(/_test\.dart/, ".dart");
 
-		// Only return if the file exists.
-		const implementationFilePath = pathSegments.join(path.sep);
-		return fs.existsSync(implementationFilePath)
-			? implementationFilePath
-			: undefined;
+		return pathSegments.join(path.sep);
 	}
 
 	private getTestFileForImplementation(filePath: string) {
