@@ -172,9 +172,7 @@ export class Analytics {
 			av: extensionVersion,
 			cd1: isDevExtension,
 			cd10: config.showTodos ? "On" : "Off",
-			cd11: this.workspaceContext.hasAnyFlutterProjects
-				? config.flutterOutline ? "On" : "Off"
-				: null,
+			cd11: this.workspaceContext.config.useLsp ? "LSP" : "DAS",
 			cd12: this.formatter,
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",

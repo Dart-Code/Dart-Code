@@ -3,7 +3,6 @@ import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../share
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { WorkspaceContext } from "../../shared/workspace";
-import { isUsingLsp } from "../extension";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 import { DasAnalyzerClient } from "./analyzer_das";
@@ -84,8 +83,8 @@ export class DasFileTracker implements IAmDisposable {
 			await this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
 					CLOSING_LABELS: this.analyzer.capabilities.supportsClosingLabels ? openFiles : undefined,
-					FOLDING: isUsingLsp ? undefined : openFiles,
-					OCCURRENCES: isUsingLsp ? undefined : openFiles,
+					FOLDING: this.wsContext.config.useLsp ? undefined : openFiles,
+					OCCURRENCES: this.wsContext.config.useLsp ? undefined : openFiles,
 					OUTLINE: openFiles,
 				},
 			});

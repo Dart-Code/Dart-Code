@@ -5,7 +5,7 @@ import * as path from "path";
 import * as util from "util";
 import { commands, ExtensionContext, ProgressLocation, window } from "vscode";
 import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, initializingSnapMessage, isLinux, isMac, isWin, noAction, showLogAction, yesAction } from "../../shared/constants";
-import { Logger, WorkspaceConfig } from "../../shared/interfaces";
+import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
@@ -151,7 +151,7 @@ export class SdkUtils {
 		}
 	}
 
-	public async scanWorkspace(): Promise<WorkspaceContext> {
+	public async scanWorkspace(useLsp: boolean): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
 		const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
@@ -170,11 +170,11 @@ export class SdkUtils {
 				dart: config.sdkPath,
 				dartSdkIsFromFlutter: false,
 				flutter: undefined,
-			}, {}, false, false, false, false);
+			} as Sdks, {}, false, false, false, false);
 		}
 
 		// Certain types of workspaces will have special config, so read them here.
-		const workspaceConfig: WorkspaceConfig = {};
+		const workspaceConfig: WorkspaceConfig = { useLsp };
 		// Helper that searches for a specific folder/file up the tree and
 		// runs some specific processing.
 		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
@@ -289,7 +289,7 @@ export class SdkUtils {
 				dartVersion: getSdkVersion(this.logger, { sdkRoot: dartSdkPath }),
 				flutter: flutterSdkPath,
 				flutterVersion: getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, versionFile: workspaceConfig?.flutterVersionFile }),
-			},
+			} as Sdks,
 			workspaceConfig,
 			hasAnyFlutterMobileProject,
 			hasAnyWebProject,

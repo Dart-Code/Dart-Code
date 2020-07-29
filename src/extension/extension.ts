@@ -117,7 +117,6 @@ let analytics: Analytics;
 let showTodos: boolean | undefined;
 let previousSettings: string;
 const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
-export let isUsingLsp = false;
 
 const logger = new EmittingLogger();
 
@@ -165,7 +164,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const extensionStartTime = new Date();
 	util.logTime();
 	const sdkUtils = new SdkUtils(logger);
-	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
+	const isUsingLsp = !!(config.previewLsp || process.env.DART_CODE_FORCE_LSP);
+	const workspaceContextUnverified = await sdkUtils.scanWorkspace(isUsingLsp);
 	util.logTime("initWorkspace");
 
 	// Create log headers and set up all other log files.
@@ -188,10 +188,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		analytics.flutterSdkVersion = sdks.flutterVersion;
 	}
 
-	if (config.previewLsp || process.env.DART_CODE_FORCE_LSP) {
-		isUsingLsp = true;
-	}
-	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
+	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, workspaceContext.config.useLsp);
 
 	// Show the SDK version in the status bar.
 	if (sdks.dartVersion) {
@@ -615,7 +612,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(async (f) => {
 		// First check if something changed that will affect our SDK, in which case
 		// we'll perform a silent restart so that we do new SDK searches.
-		const newWorkspaceContext = await sdkUtils.scanWorkspace();
+		const newWorkspaceContext = await sdkUtils.scanWorkspace(isUsingLsp);
 		if (
 			newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
@@ -690,6 +687,7 @@ function buildLogHeaders(workspaceContext?: WorkspaceContext) {
 	if (workspaceContext) {
 		addToLogHeader(() => ``);
 		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
+		addToLogHeader(() => `Analyzer type: ${workspaceContext.config.useLsp ? "LSP" : "DAS"}`);
 		addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
 		const sdks = workspaceContext.sdks;
 		addToLogHeader(() => ``);
