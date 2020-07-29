@@ -448,7 +448,7 @@ export class DartDebugSession extends DebugSession {
 
 			const serviceInfo: { uri: string } = JSON.parse(serviceInfoJson);
 
-			this.logger.info(`Succesfully read JSON from ${this.vmServiceInfoFile}`);
+			this.logger.info(`Successfully read JSON from ${this.vmServiceInfoFile}`);
 
 			const url = new URL(serviceInfo.uri);
 			url.protocol = "ws";
