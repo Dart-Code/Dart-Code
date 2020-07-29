@@ -1,5 +1,4 @@
 import * as assert from "assert";
-import { log } from "console";
 import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
@@ -11,7 +10,7 @@ import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, defer, delay, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, logger, openFile, positionOf, sb, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, breakpointFor, closeAllOpenFiles, defer, delay, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -71,7 +70,6 @@ describe("dart cli debugger", () => {
 			assert(showErrorMessage.calledOnce);
 		});
 		it("and launches if they click Debug Anyway", async () => {
-			logger.info(`Creating!`);
 			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
@@ -91,7 +89,6 @@ describe("dart cli debugger", () => {
 			);
 		});
 		it("unless the errors are in test scripts", async () => {
-			log(`Creating!`);
 			await writeBrokenDartCodeIntoFileForTest(getTempTestFile());
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
@@ -1182,11 +1179,8 @@ insp=<inspected variable>
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(helloWorldMainFile),
 			});
-			log("Sending terminate request...");
 			await dc.terminateRequest();
-			log("Disconnected!");
 
-			log("Waiting for process to terminate...");
 			await process.exitCode;
 		});
 
