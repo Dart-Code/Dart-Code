@@ -516,12 +516,14 @@ export class DartDebugSession extends DebugSession {
 					if (!this.vmService)
 						return;
 
+					// Subscribe to streams before we get a list of active isolates, otherwise we could have a race
+					// between getting the list and then starting to listen for events.
+					await this.subscribeToStreams();
+
 					await this.vmService.getVM().then(async (vmResult): Promise<void> => {
 						if (!this.vmService)
 							return;
 						const vm: VM = vmResult.result as VM;
-
-						await this.subscribeToStreams();
 
 						// If we own this process (we launched it, didn't attach) and the PID we get from the VM service is different, then
 						// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
