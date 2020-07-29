@@ -93,6 +93,9 @@ export class Analytics {
 		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(e));
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(e));
 	}
+	public logAnalyzerRestart() {
+		this.event(Category.Analyzer, EventAction.Restart).catch((e) => this.logger.info(e));
+	}
 	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(e)); }
 	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.logger.info(e)); }
