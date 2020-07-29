@@ -279,7 +279,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		super.restartRequest(response, args);
 	}
 
-	private async performReload(hotRestart: boolean, args: { reason: string, debounce?: boolean }): Promise<any> {
+	private async performReload(hotRestart: boolean, args?: { reason: string, debounce?: boolean }): Promise<any> {
 		if (!this.appHasStarted || !this.currentRunningAppId || !this.runDaemon)
 			return;
 
