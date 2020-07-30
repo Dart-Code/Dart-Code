@@ -145,6 +145,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.configurationSequence(),
 			dc.assertOutputContains("stdout", "Hello, world!"),
 			dc.assertOutputContains("console", "Logging from dart:developer!"),
+			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.launch(config),
 		);
 

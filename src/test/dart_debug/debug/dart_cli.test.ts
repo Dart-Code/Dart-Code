@@ -129,6 +129,7 @@ describe("dart cli debugger", () => {
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
 			dc.assertOutputContains("console", `${grey("[log] ")}Logging from dart:developer!`),
+			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);

@@ -43,6 +43,7 @@ class MyHomePage extends StatelessWidget {
       print("Hello, world!");
     }
     log("Logging from dart:developer!");
+    log('${longStrings[0]} <<end_of_long_line>>');
     genericMethod<bool, double, int, String>();
 
     return Text(
