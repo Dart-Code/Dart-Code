@@ -24,7 +24,7 @@ jobs:
             flutter-version: stable
             code-version: stable
           - build-version: dev
-            dart-version: dev
+            dart-version: beta # TODO: Switch back to Dev when https://github.com/dart-lang/sdk/issues/42875 is addressed
             flutter-version: dev
             code-version: insiders
           - os: ubuntu-latest
