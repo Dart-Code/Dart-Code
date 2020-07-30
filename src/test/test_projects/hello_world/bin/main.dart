@@ -30,7 +30,7 @@ main() async {
 
   // Allow time for the log() call above to make it through before we just terminate
   // and cause the session to be torn down.
-  await Future.delayed(Duration(milliseconds: 100));
+  await Future.delayed(Duration(milliseconds: 500));
 }
 
 void genericMethod<TBool, TDouble, TInt, TString>() {
