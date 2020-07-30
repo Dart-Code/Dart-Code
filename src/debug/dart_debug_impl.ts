@@ -1595,8 +1595,7 @@ export class DartDebugSession extends DebugSession {
 				let indent = " ".repeat(logPrefix.length);
 
 				if (record.message) {
-					const message = (record.message.valueAsString || "<empty message>")
-						+ (record.message.valueAsStringIsTruncated ? "…" : "");
+					const message = await this.extractStringFromMessage(record.message, event.isolate);
 					const indentedMessage = `${grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
 					this.logToUser(`${indentedMessage.trimRight()}\n`);
 				}
@@ -1617,6 +1616,20 @@ export class DartDebugSession extends DebugSession {
 				}
 			}
 		}
+	}
+
+	private async extractStringFromMessage(message: VMInstanceRef, isolate: any): Promise<string> {
+		if (message.valueAsStringIsTruncated) {
+			const fullString = await this.fullValueAsString(isolate, message);
+			if (fullString) {
+				return fullString;
+			} else {
+				// fallback if dart execution ended before full value could be extracted
+				return message.valueAsString + "…";
+			}
+		}
+
+		return message.valueAsString ?? "";
 	}
 
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,

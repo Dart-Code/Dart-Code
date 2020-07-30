@@ -25,6 +25,7 @@ main() async {
     print("Hello, world!"); // BREAKPOINT1
   }
   log("Logging from dart:developer!");
+  log('${longStrings[0]} <<end_of_long_line>>');
   genericMethod<bool, double, int, String>();
 
   // Allow time for the log() call above to make it through before we just terminate
