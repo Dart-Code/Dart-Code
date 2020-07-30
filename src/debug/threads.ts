@@ -278,7 +278,7 @@ export class ThreadInfo {
 
 					const result = await this.manager.debugSession.vmService.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
 					const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
-					this.vmBps[uri].push(vmBp);
+					this.vmBps[uri]?.push(vmBp);
 					this.breakpoints[vmBp.id] = bp;
 					return vmBp;
 				} catch (e) {
