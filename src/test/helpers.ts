@@ -69,6 +69,7 @@ export const myPackageThingFile = vs.Uri.file(path.join(fsPath(myPackageFolder),
 // Dart tests
 export const helloWorldTestFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test"));
 export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "basic_test.dart"));
+export const helloWorldTestEmptyFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "empty_test.dart"));
 export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "tree_test.dart"));
 export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dupe_name_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));

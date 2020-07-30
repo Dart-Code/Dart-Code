@@ -1,12 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { createTestFileAction, defaultTestFileContents, defaultTestFileSelectionPlaceholder, noAction } from "../../shared/constants";
+import { noAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
+import { escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
 import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
-import { getLaunchConfig } from "../../shared/utils/test";
+import { createTestFileAction, defaultTestFileContents, getLaunchConfig } from "../../shared/utils/test";
 import { WorkspaceContext } from "../../shared/workspace";
 import { DasFileTracker } from "../analysis/file_tracker_das";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
@@ -97,11 +98,11 @@ abstract class TestCommands implements vs.Disposable {
 					return;
 
 				mkDirRecursive(path.dirname(otherFile));
-				const testFileContents = defaultTestFileContents(this.wsContext.hasAnyFlutterProjects).trim();
-				fs.writeFileSync(otherFile, testFileContents);
+				const testFileInfo = defaultTestFileContents(this.wsContext.hasAnyFlutterProjects, escapeDartString(generateTestNameFromFileName(relativePath)));
+				fs.writeFileSync(otherFile, testFileInfo.contents);
 
-				selectionOffset = testFileContents.indexOf(defaultTestFileSelectionPlaceholder);
-				selectionLength = defaultTestFileSelectionPlaceholder.length;
+				selectionOffset = testFileInfo.selectionOffset;
+				selectionLength = testFileInfo.selectionLength;
 			}
 
 			const document = await vs.workspace.openTextDocument(otherFile);

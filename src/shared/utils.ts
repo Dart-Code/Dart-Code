@@ -196,3 +196,11 @@ export function asHex(v: number) {
 export function clamp(v: number, min: number, max: number) {
 	return Math.min(Math.max(min, v), max);
 }
+
+export function generateTestNameFromFileName(input: string) {
+	return path.basename(input).replace("_test.dart", "").replace(/_/g, " ");
+}
+
+export function escapeDartString(input: string) {
+	return input.replace(/(['"\\])/g, "\\$1");
+}

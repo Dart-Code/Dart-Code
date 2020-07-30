@@ -156,3 +156,9 @@ export type SpawnedProcess = child_process.ChildProcess & {
 	stdout: stream.Readable,
 	stderr: stream.Readable,
 };
+
+export interface OpenedFileInformation {
+	readonly contents: string;
+	readonly selectionOffset: number;
+	readonly selectionLength: number;
+}

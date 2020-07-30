@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
-import { isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
+import { escapeDartString, generateTestNameFromFileName, isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
 import { applyColor, red } from "../../shared/utils/colors";
 
 describe("versionIsAtLeast", () => {
@@ -112,5 +112,17 @@ describe("applyColor", () => {
 	});
 	it("should work with leading and trailing whitespace", () => {
 		assert.equal(applyColor("\n \n This is a test \n \n", red), `\n \n ${redPrefix}This is a test${reset} \n \n`);
+	});
+});
+
+describe("generateTestNameFromFileName", () => {
+	it("generates expected names", () => {
+		assert.equal(generateTestNameFromFileName(path.join("test", "screens", "blank_test.dart")), "blank");
+	});
+});
+
+describe("escapeDartString", () => {
+	it("escapes expected characters", () => {
+		assert.equal(escapeDartString(`test's some quote"s and \\slashs`), `test\\'s some quote\\"s and \\\\slashs`);
 	});
 });

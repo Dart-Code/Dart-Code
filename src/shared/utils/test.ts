@@ -1,4 +1,6 @@
+import * as path from "path";
 import { escapeRegExp } from "../../shared/utils";
+import { OpenedFileInformation } from "../interfaces";
 
 export function getLaunchConfig(noDebug: boolean, path: string, testName: string | undefined, isGroup: boolean, template?: any | undefined) {
 	return Object.assign(
@@ -30,4 +32,43 @@ export function makeRegexForTest(name: string, isGroup: boolean) {
 	// is escaped but our wildcard is not.
 	const substitutedName = escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*");
 	return `${prefix}${substitutedName}${suffix}`;
+}
+
+export const createTestFileAction = (file: string) => `Create ${path.basename(file)}`;
+export const defaultTestFileContents = (isFlutterProject: boolean, dartEscapedTestName: string) => isFlutterProject ? defaultFlutterTestFileContents(dartEscapedTestName) : defaultDartTestFileContents(dartEscapedTestName);
+
+const defaultTestFileSelectionPlaceholder = "// TODO: Implement test";
+
+export function defaultFlutterTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
+	const contents = `
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  testWidgets('${dartEscapedTestName} ...', (tester) async {
+    ${defaultTestFileSelectionPlaceholder}
+  });
+}
+`.trim();
+	return {
+		contents,
+		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
+		selectionLength: defaultTestFileSelectionPlaceholder.length,
+	};
+}
+
+export function defaultDartTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
+	const contents = `
+import 'package:test/test.dart';
+
+void main() {
+  test('${dartEscapedTestName} ...', () async {
+    ${defaultTestFileSelectionPlaceholder}
+  });
+}
+`.trim();
+	return {
+		contents,
+		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
+		selectionLength: defaultTestFileSelectionPlaceholder.length,
+	};
 }
