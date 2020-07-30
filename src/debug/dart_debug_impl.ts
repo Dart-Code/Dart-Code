@@ -1594,42 +1594,23 @@ export class DartDebugSession extends DebugSession {
 				const logPrefix = `[${name || "log"}] `;
 				let indent = " ".repeat(logPrefix.length);
 
-				if (record.message) {
-					const message = await this.extractStringFromMessage(record.message, event.isolate);
-					const indentedMessage = `${grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
-					this.logToUser(`${indentedMessage.trimRight()}\n`);
+				const printLogRecord = async (event: VMEvent, instance: VMInstanceRef, logPrefix: string, indent: string, category: string = "console") => {
+					const message = await this.fullValueAsString(event.isolate, instance, true);
+					if (message) {
+						const indentedMessage = `${grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
+						this.logToUser(`${indentedMessage.trimRight()}\n`, category);
+					}
 				}
+
+				if (record.message && record.message.kind !== "Null")
+					await printLogRecord(event, record.message, logPrefix, indent);
 				indent += "  ";
-				if (record.error && record.error.kind !== "Null") {
-					const message = await this.fullValueAsString(event.isolate, record.error);
-					if (message) {
-						const indentedMessage = `${indent}${message.split("\n").join(`\n${indent}`)}`;
-						this.logToUser(`${indentedMessage.trimRight()}\n`, "stderr");
-					}
-				}
-				if (record.stackTrace && record.stackTrace.kind !== "Null") {
-					const message = await this.fullValueAsString(event.isolate, record.stackTrace);
-					if (message) {
-						const indentedMessage = `${indent}${message.split("\n").join(`\n${indent}`)}`;
-						this.logToUser(`${indentedMessage.trimRight()}\n`, "stderr");
-					}
-				}
+				if (record.error && record.error.kind !== "Null")
+					await printLogRecord(event, record.error, logPrefix, indent, "stderr");
+				if (record.stackTrace && record.stackTrace.kind !== "Null")
+					await printLogRecord(event, record.stackTrace, logPrefix, indent, "stderr");
 			}
 		}
-	}
-
-	private async extractStringFromMessage(message: VMInstanceRef, isolate: any): Promise<string> {
-		if (message.valueAsStringIsTruncated) {
-			const fullString = await this.fullValueAsString(isolate, message);
-			if (fullString) {
-				return fullString;
-			} else {
-				// fallback if dart execution ended before full value could be extracted
-				return message.valueAsString + "…";
-			}
-		}
-
-		return message.valueAsString ?? "";
 	}
 
 	// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException, Resume,
@@ -1788,6 +1769,8 @@ export class DartDebugSession extends DebugSession {
 			else
 				text = `${instanceRef.class.name} (${text})`;
 		}
+		if (!text)
+			text = instanceRef.valueAsString;
 		return text;
 	}
 
