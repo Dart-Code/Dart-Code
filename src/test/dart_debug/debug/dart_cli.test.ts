@@ -156,9 +156,6 @@ describe("dart cli debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.resume(),
 		);
-
-		// Ensure the terminal disappears.
-		await waitForResult(() => vs.window.terminals.find((t) => t.name === config.name) === undefined);
 	});
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
