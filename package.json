@@ -1950,15 +1950,6 @@
 						"type": "string"
 					}
 				}
-			},
-			{
-				"type": "flutter",
-				"required": [],
-				"properties": {
-					"command": {
-						"type": "string"
-					}
-				}
 			}
 		],
 		"problemMatchers": [

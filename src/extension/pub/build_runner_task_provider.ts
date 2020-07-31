@@ -10,6 +10,8 @@ import * as util from "../utils";
 import { getToolEnv } from "../utils/processes";
 
 export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
+	readonly type = "pub"; // also referenced in package.json
+
 	constructor(private sdks: Sdks) { }
 
 	public provideTasks(token?: vs.CancellationToken): vs.ProviderResult<vs.Task[]> {
@@ -30,7 +32,7 @@ export class PubBuildRunnerTaskProvider implements vs.TaskProvider {
 
 	private createBuildRunnerCommandBackgroundTask(folder: vs.WorkspaceFolder, subCommand: string, group: vs.TaskGroup) {
 		const isFlutter = util.isFlutterWorkspaceFolder(folder) && this.sdks.flutter;
-		const type = isFlutter ? "flutter" : "pub";
+		const type = this.type;
 		const program = isFlutter ? path.join(this.sdks.flutter!, flutterPath) : path.join(this.sdks.dart!, pubPath);
 		const args = isFlutter ? ["pub", "run", "build_runner", subCommand] : ["run", "build_runner", subCommand];
 		if (config.buildRunnerAdditionalArgs) {
