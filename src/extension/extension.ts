@@ -331,7 +331,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Task handlers.
 	if (config.previewBuildRunnerTasks) {
-		context.subscriptions.push(vs.tasks.registerTaskProvider("pub", new PubBuildRunnerTaskProvider(sdks)));
+		const provider = new PubBuildRunnerTaskProvider(sdks);
+		context.subscriptions.push(vs.tasks.registerTaskProvider(provider.type, provider));
 	}
 
 	// Snippets are language-specific
