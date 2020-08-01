@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { devToolsPages, doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, restartReasonManual } from "../../shared/constants";
+import { devToolsPages, doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -143,19 +143,17 @@ export class DebugCommands {
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.hotReload.touchBar", (args: any) => vs.commands.executeCommand("flutter.hotReload", args)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", (args: any) => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotReloadEmitter.fire();
-			args.reason = args.reason || restartReasonManual;
 			debugSessions.forEach((s) => s.session.customRequest("hotReload", args));
 			analytics.logDebuggerHotReload();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", (args: any) => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotRestartEmitter.fire();
-			args.reason = args.reason || restartReasonManual;
 			debugSessions.forEach((s) => s.session.customRequest("hotRestart", args));
 			analytics.logDebuggerRestart();
 		}));

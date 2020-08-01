@@ -163,7 +163,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
 
-	it("can hot reload", async function () {
+	it("can hot reload with customRequest", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
@@ -174,6 +174,24 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		await watchPromise("hot_reloads_successfully->hotReload", dc.hotReload());
+
+		await waitAllThrowIfTerminates(dc,
+			watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
+			watchPromise("hot_reloads_successfully->terminateRequest", dc.terminateRequest()),
+		);
+	});
+
+	it("can hot reload using command", async function () {
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		await waitAllThrowIfTerminates(dc,
+			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
+			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
+		);
+
+		await vs.commands.executeCommand("flutter.hotReload");
 
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
@@ -224,7 +242,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("can hot restart", async () => {
+	it("can hot restart using customRequest", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -237,6 +255,27 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", "Restarted app"),
 			dc.customRequest("hotRestart"),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
+	it("can hot restart using command", async () => {
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		// If we restart too fast, things fail :-/
+		await delay(1000);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.assertOutputContains("stdout", "Restarted app"),
+			vs.commands.executeCommand("flutter.hotRestart") as Promise<void>,
 		);
 
 		await waitAllThrowIfTerminates(dc,
