@@ -1,9 +1,11 @@
-import { Uri, workspace } from "vscode";
+import { CancellationToken, TextDocument, Uri, workspace } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
+import { waitFor } from "../../shared/utils/promises";
+import { lspToPosition } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
@@ -40,8 +42,24 @@ export class LspFileTracker implements IAmDisposable {
 		return this.outlines[fsPath(file)];
 	}
 
+	// TODO: Change this to withVersion when server sends versions.
+	public async waitForOutlineWithLength(document: TextDocument, length: number, token: CancellationToken): Promise<Outline | undefined> {
+		return waitFor(() => {
+			const outline = this.outlines[fsPath(document.uri)];
+			return outline && document.offsetAt(lspToPosition(outline.range.end)) === length ? outline : undefined;
+		}, 50, 5000, token);
+	}
+
 	public getFlutterOutlineFor(file: { fsPath: string } | string): FlutterOutline | undefined {
 		return this.flutterOutlines[fsPath(file)];
+	}
+
+	// TODO: Change this to withVersion when server sends versions.
+	public async waitForFlutterOutlineWithLength(document: TextDocument, length: number, token: CancellationToken): Promise<FlutterOutline | undefined> {
+		return waitFor(() => {
+			const outline = this.flutterOutlines[fsPath(document.uri)];
+			return outline && document.offsetAt(lspToPosition(outline.range.end)) === length ? outline : undefined;
+		}, 50, 5000, token);
 	}
 
 	public supportsPubRunTest(file: { fsPath: string } | string): boolean | undefined {

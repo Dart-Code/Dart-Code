@@ -17,18 +17,12 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		}));
 	}
 
-	public provideCodeLenses(document: TextDocument, token: CancellationToken): CodeLens[] | undefined {
-		// This method has to be FAST because it affects layout of the document (adds extra lines) so
-		// we don't already have an outline, we won't wait for one. A new outline arriving will trigger a
-		// re-request anyway.
-		const outline = this.analyzer.fileTracker.getOutlineFor(document.uri);
+	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[] | undefined> {
+		// Without version numbers, the best we have to tell if an outline is likely correct or stale is
+		// if its length matches the document exactly.
+		const expectedLength = document.getText().length;
+		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document.uri, expectedLength, token);
 		if (!outline || !outline.children || !outline.children.length)
-			return;
-
-		// Check that the outline we got looks like it still matches the document.
-		// If the lengths are different, just bail without doing anything since
-		// there have probably been new edits and we'll get a new outline soon.
-		if (document.getText().length !== outline.length)
 			return;
 
 		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";

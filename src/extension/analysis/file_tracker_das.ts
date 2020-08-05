@@ -1,7 +1,8 @@
-import { Disposable, TextDocument, Uri, window, workspace } from "vscode";
+import { CancellationToken, Disposable, TextDocument, Uri, window, workspace } from "vscode";
 import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
+import { waitFor } from "../../shared/utils/promises";
 import { WorkspaceContext } from "../../shared/workspace";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
@@ -125,8 +126,22 @@ export class DasFileTracker implements IAmDisposable {
 		return this.outlines[fsPath(file)];
 	}
 
+	public async waitForOutlineWithLength(file: Uri, length: number, token: CancellationToken): Promise<Outline | undefined> {
+		return waitFor(() => {
+			const outline = this.outlines[fsPath(file)];
+			return outline?.length === length ? outline : undefined;
+		}, 50, 5000, token);
+	}
+
 	public getFlutterOutlineFor(file: Uri): FlutterOutline | undefined {
 		return this.flutterOutlines[fsPath(file)];
+	}
+
+	public async waitForFlutterOutlineWithLength(file: Uri, length: number, token: CancellationToken): Promise<FlutterOutline | undefined> {
+		return waitFor(() => {
+			const outline = this.flutterOutlines[fsPath(file)];
+			return outline?.length === length ? outline : undefined;
+		}, 50, 5000, token);
 	}
 
 	public getOccurrencesFor(file: Uri): Occurrences[] | undefined {

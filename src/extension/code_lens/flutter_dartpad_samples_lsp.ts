@@ -29,16 +29,16 @@ export class LspFlutterDartPadSamplesCodeLensProvider implements CodeLensProvide
 		this.flutterPackagesFolder = path.join(sdks.flutter, "packages/flutter/lib/src/").toLowerCase();
 	}
 
-	public provideCodeLenses(document: TextDocument, token: CancellationToken): CodeLens[] | undefined {
+	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[] | undefined> {
 		// Ensure this file is a Flutter package file.
 		const filePath = fsPath(document.uri);
 		if (!filePath.toLowerCase().startsWith(this.flutterPackagesFolder))
 			return;
 
-		// This method should be FAST because it affects layout of the document (adds extra lines) so if
-		// we don't already have an outline, we won't wait for one. A new outline arriving will trigger a
-		// re-request anyway.
-		const outline = this.analyzer.fileTracker.getOutlineFor(document.uri);
+		// Without version numbers, the best we have to tell if an outline is likely correct or stale is
+		// if its length matches the document exactly.
+		const expectedLength = document.getText().length;
+		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document, expectedLength, token);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
