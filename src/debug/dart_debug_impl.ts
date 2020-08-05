@@ -81,7 +81,6 @@ export class DartDebugSession extends DebugSession {
 	private serviceInfoPollTimer?: NodeJS.Timer;
 	private remoteEditorTerminalLaunched?: Promise<RemoteEditorTerminalProcess>;
 	private serviceInfoFileCompleter?: PromiseCompleter<string>;
-	public debuggerHandlesPathsEverywhereForBreakpoints = false;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
@@ -155,7 +154,7 @@ export class DartDebugSession extends DebugSession {
 		// prior to VS Code sending (or, in the case of noDebug, due to not sending)
 		// the exception mode.
 		await this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
-		this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.program || args.cwd));
+		this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.program || args.cwd));
 		this.dartCapabilities.version = args.dartVersion;
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && this.dartCapabilities.supportsWriteServiceInfo;
 		this.supportsDebugInternalLibraries = this.dartCapabilities.supportsDebugInternalLibraries;
@@ -242,7 +241,6 @@ export class DartDebugSession extends DebugSession {
 
 	private readSharedArgs(args: DartLaunchRequestArguments | DartAttachRequestArguments) {
 		this.debugExternalLibraries = args.debugExternalLibraries;
-		this.debuggerHandlesPathsEverywhereForBreakpoints = this.dartCapabilities.handlesPathsEverywhereForBreakpoints;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
@@ -276,7 +274,7 @@ export class DartDebugSession extends DebugSession {
 				args.packages = args.cwd ? path.join(args.cwd, args.packages) : args.packages;
 
 			try {
-				this.packageMap = new PackageMap(PackageMap.findPackagesFile(args.packages));
+				this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.packages));
 			} catch (e) {
 				this.errorResponse(response, `Unable to load packages file: ${e}`);
 			}
@@ -551,7 +549,7 @@ export class DartDebugSession extends DebugSession {
 							// TODO: There's a race here if the isolate is not yet runnable, it might not have rootLib yet. We don't
 							// currently fill this in later.
 							if (rootIsolate && rootIsolate.rootLib)
-								this.packageMap = new PackageMap(PackageMap.findPackagesFile(this.convertVMUriToSourcePath(rootIsolate.rootLib.uri)));
+								this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(this.convertVMUriToSourcePath(rootIsolate.rootLib.uri)));
 						}
 
 						await Promise.all(isolates.map(async (response) => {
@@ -795,14 +793,10 @@ export class DartDebugSession extends DebugSession {
 		const source: DebugProtocol.Source = args.source;
 		const breakpoints: DebugProtocol.SourceBreakpoint[] = args.breakpoints || [];
 
-		// Format the path correctly for the VM. In older SDKs we had to use
-		// package: URIs in many places, however as of 2.2.2 (?) file URIs should
-		// work everywhere.
+		// Format the path correctly for the VM.
 		// TODO: The `|| source.name` stops a crash (#1566) but doesn't actually make
 		// the breakpoints work. This needs more work.
-		const uri = this.packageMap && !this.debuggerHandlesPathsEverywhereForBreakpoints
-			? (this.packageMap.convertFileToPackageUri(source.path) || formatPathForVm(source.path || source.name!)!)
-			: formatPathForVm(source.path || source.name!);
+		const uri = formatPathForVm(source.path || source.name!);
 
 		try {
 			const result = await this.threadManager.setBreakpoints(uri, breakpoints);
@@ -1950,7 +1944,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	public isExternalLibrary(uri: string) {
-		// If it's not a package URI, or we don't have a package map, so we assume not external. We don't want
+		// If it's not a package URI, or we don't have a package map, we assume not external. We don't want
 		// to ever disable debugging of something if we're not certain.
 		if (!uri.startsWith("package:") || !this.packageMap)
 			return false;

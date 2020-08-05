@@ -6,6 +6,7 @@ import * as util from "util";
 import { commands, ExtensionContext, ProgressLocation, window } from "vscode";
 import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, initializingSnapMessage, isLinux, isMac, isWin, noAction, showLogAction, yesAction } from "../../shared/constants";
 import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
+import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
@@ -251,7 +252,7 @@ export class SdkUtils {
 			fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
 			firstFlutterMobileProject,
-			firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(path.join(firstFlutterMobileProject, ".packages")),
+			firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(firstFlutterMobileProject),
 			firstFlutterMobileProject && path.join(firstFlutterMobileProject, ".flutter"),
 			firstFlutterMobileProject && path.join(firstFlutterMobileProject, "vendor/flutter"),
 			process.env.FLUTTER_ROOT,
@@ -387,11 +388,11 @@ export function referencesBuildRunner(folder?: string): boolean {
 	return false;
 }
 
-function extractFlutterSdkPathFromPackagesFile(file: string): string | undefined {
-	if (!fs.existsSync(file))
+function extractFlutterSdkPathFromPackagesFile(projectFolder: string): string | undefined {
+	if (!fs.existsSync(projectFolder))
 		return undefined;
 
-	let packagePath = new PackageMap(file).getPackagePath("flutter");
+	let packagePath = PackageMap.load(nullLogger, PackageMap.findPackagesFile(projectFolder)).getPackagePath("flutter");
 
 	if (!packagePath)
 		return undefined;

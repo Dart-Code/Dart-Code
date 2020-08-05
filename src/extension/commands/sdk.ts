@@ -19,7 +19,6 @@ import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
-import { DartHoverProvider } from "../providers/dart_hover_provider";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
 import { Stagehand } from "../pub/stagehand";
@@ -100,15 +99,12 @@ export class SdkCommands {
 		}
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
-		try {
-			if (util.isInsideFlutterProject(uri))
-				return this.runFlutter(["pub", "get"], uri);
-			else
-				return this.runPub(["get"], uri);
-		} finally {
-			// TODO: Move this to a reusable event.
-			DartHoverProvider.clearPackageMapCaches();
-		}
+
+
+		if (util.isInsideFlutterProject(uri))
+			return this.runFlutter(["pub", "get"], uri);
+		else
+			return this.runPub(["get"], uri);
 	}
 
 	private async listOutdatedPackages(uri: string | Uri | undefined) {
@@ -153,12 +149,7 @@ export class SdkCommands {
 			return this.runFlutter(["update-packages"], selection);
 		}
 
-		try {
-			return this.runFlutter(["pub", "get"], selection);
-		} finally {
-			// TODO: Move this to a reusable event.
-			DartHoverProvider.clearPackageMapCaches();
-		}
+		return this.runFlutter(["pub", "get"], selection);
 	}
 
 	private async flutterClean(selection: vs.Uri | undefined): Promise<number | undefined> {

@@ -41,14 +41,16 @@ export class PromiseCompleter<T> {
 	}
 }
 
-export function findFile(file: string, startLocation: string) {
+export function findFileInAncestor(files: string[], startLocation: string) {
 	let lastParent;
 	let parent = startLocation;
 
 	while (parent && parent.length > 1 && parent !== lastParent) {
-		const child = path.join(parent, file);
-		if (fs.existsSync(child))
-			return child;
+		for (const file of files) {
+			const child = path.join(parent, file);
+			if (fs.existsSync(child))
+				return child;
+		}
 		lastParent = parent;
 		parent = path.dirname(parent);
 	}

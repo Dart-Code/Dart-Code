@@ -1,22 +1,79 @@
 import * as fs from "fs";
 import * as path from "path";
-import { isWin } from "../constants";
-import { findFile, uriToFilePath } from "../utils";
-import { isWithinPath } from "../utils/fs";
+import * as url from "url";
+import { Logger } from "../interfaces";
+import { findFileInAncestor, uriToFilePath } from "../utils";
 
-export class PackageMap {
+export abstract class PackageMap {
 	public static findPackagesFile<T extends string | undefined>(entryPoint: T): string | (undefined extends T ? undefined : never) {
 		if (typeof entryPoint !== "string")
 			return undefined as (undefined extends T ? undefined : never);
 
-		return findFile(".packages", entryPoint) as string | (undefined extends T ? undefined : never);
+		const file = findFileInAncestor([path.join(".dart_tool/package_config.json"), ".packages"], entryPoint);
+		return file as string | (undefined extends T ? undefined : never);
 	}
 
+	public static load(logger: Logger, file: string | undefined): PackageMap {
+		if (!file)
+			return new MissingPackageMap();
+		try {
+			if (path.basename(file).toLowerCase() === ".packages")
+				return new DotPackagesPackageMap(file);
+			else
+				return new PackageConfigJsonPackageMap(logger, file);
+		} catch (e) {
+			logger.error(e);
+			return new MissingPackageMap();
+		}
+	}
+
+	abstract get packages(): { [name: string]: string };
+
+	public getPackagePath(name: string): string | undefined {
+		return this.packages[name];
+	}
+
+	public resolvePackageUri(uri: string): string | undefined {
+		if (!uri)
+			return undefined;
+
+		let name: string = uri;
+		if (name.startsWith("package:"))
+			name = name.substring(8);
+		const index = name.indexOf("/");
+		if (index === -1)
+			return undefined;
+
+		const rest = name.substring(index + 1);
+		name = name.substring(0, index);
+
+		const location = this.getPackagePath(name);
+		if (location)
+			return path.join(location, rest);
+		else
+			return undefined;
+	}
+}
+
+class MissingPackageMap extends PackageMap {
+	public get packages(): { [name: string]: string; } {
+		return {};
+	}
+	public getPackagePath(name: string): string | undefined {
+		return undefined;
+	}
+	public resolvePackageUri(uri: string): string | undefined {
+		return undefined;
+	}
+}
+
+class DotPackagesPackageMap extends PackageMap {
 	private map: { [name: string]: string } = {};
-	public readonly localPackageRoot: string | undefined;
+	private readonly localPackageRoot: string | undefined;
 	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
 
 	constructor(file?: string) {
+		super();
 		if (!file) return;
 		this.localPackageRoot = path.dirname(file);
 
@@ -40,49 +97,55 @@ export class PackageMap {
 		}
 	}
 
-	public getPackagePath(name: string): string {
-		return this.map[name];
+
+}
+
+class PackageConfigJsonPackageMap extends PackageMap {
+	private readonly map: { [name: string]: string } = {};
+	private readonly config: PackageJsonConfig;
+
+	constructor(private readonly logger: Logger, private readonly packageConfigPath: string) {
+		super();
+		const json = fs.readFileSync(this.packageConfigPath, "utf8");
+		this.config = JSON.parse(json);
+
+		for (const pkg of this.config.packages) {
+			try {
+				const packageConfigFolderPath = path.dirname(this.packageConfigPath);
+				const packageRootPath = this.getPathForUri(pkg.rootUri);
+				const packageLibPath = this.getPathForUri(pkg.packageUri);
+				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath ?? '', packageLibPath ?? '');
+			} catch (e) {
+				logger.error(`Failed to parse package record for ${pkg.name}: ${e}`);
+			}
+		}
 	}
 
-	public resolvePackageUri(uri: string): string | undefined {
+	private getPathForUri(uri: string): string | undefined {
 		if (!uri)
 			return undefined;
 
-		let name: string = uri;
-		if (name.startsWith("package:"))
-			name = name.substring(8);
-		const index = name.indexOf("/");
-		if (index === -1)
-			return undefined;
+		const parsedUri = uri.startsWith("file:")
+			? url.fileURLToPath(uri)
+			: unescape(uri);
 
-		const rest = name.substring(index + 1);
-		name = name.substring(0, index);
-
-		const location = this.getPackagePath(name);
-		if (location)
-			return path.join(location, rest);
-		else
-			return undefined;
+		return parsedUri.endsWith("/") ? parsedUri : `${parsedUri}/`;
 	}
 
-	public convertFileToPackageUri(file: string | undefined): string | undefined {
-		if (!file)
-			return;
-		for (const name of Object.keys(this.map)) {
-			const dir = this.map[name];
-			if (isWithinPath(file, dir)) {
-				let rest = file.substring(dir.length);
-				// package: uri should always use forward slashes.
-				if (isWin)
-					rest = rest.replace(/\\/g, "/");
-				// Ensure we don't start with a slash if the map didn't have a trailing slash,
-				// else we'll end up with doubles. See https://github.com/Dart-Code/Dart-Code/issues/398
-				if (rest.startsWith("/"))
-					rest = rest.substr(1);
-				return `package:${name}/${rest}`;
-			}
-		}
+	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
 
-		return undefined;
+	public getPackagePath(name: string): string | undefined {
+		return this.map[name];
 	}
+}
+
+interface PackageJsonConfig {
+	configVersion: number,
+	packages: PackageJsonConfigPackage[];
+}
+
+interface PackageJsonConfigPackage {
+	name: string;
+	rootUri: string;
+	packageUri: string;
 }

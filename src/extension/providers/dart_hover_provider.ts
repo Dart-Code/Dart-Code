@@ -1,7 +1,6 @@
 import { CancellationToken, Hover, HoverProvider, Position, Range, TextDocument, Uri } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
-import { PackageMap } from "../../shared/pub/package_map";
 import { fsPath } from "../../shared/utils/fs";
 import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
@@ -68,23 +67,5 @@ export class DartHoverProvider implements HoverProvider {
 			displayString: displayString.trim(),
 			documentation: documentation.trim(),
 		};
-	}
-
-	// TODO: Update this when things change?
-	private static packageMaps: { [key: string]: PackageMap } = {};
-	private static getPackageMapFor(uri: Uri): PackageMap | undefined {
-		const path = fsPath(uri);
-		if (this.packageMaps[path])
-			return this.packageMaps[path];
-
-		const packagesFile = PackageMap.findPackagesFile(path);
-		const map = packagesFile ? new PackageMap(packagesFile) : undefined;
-		if (map)
-			this.packageMaps[path] = map;
-		return map;
-	}
-	// TODO: Don't expose this publicly, subsribe to some event to clear it.
-	public static clearPackageMapCaches() {
-		this.packageMaps = {};
 	}
 }
