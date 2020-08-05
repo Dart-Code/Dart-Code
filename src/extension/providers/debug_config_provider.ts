@@ -18,7 +18,7 @@ import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { filenameSafe } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
+import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -29,7 +29,7 @@ import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { isFlutterProjectFolder, isFlutterWorkspaceFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
 
@@ -563,55 +563,77 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 }
 
 export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationProvider {
-	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
-		const isFlutter = isFlutterWorkspaceFolder(folder);
-		return [{
-			name: isFlutter ? "Flutter" : "Dart",
-			program: isFlutter ? "lib/main.dart" : "bin/main.dart",
-			request: "launch",
-			type: "dart",
-		}];
+
+	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
+		const rootFolder = folder ? fsPath(folder.uri) : undefined;
+		const projectFolders = rootFolder ? await findProjectFolders([rootFolder], { requirePubspec: true }) : [];
+		if (projectFolders.length) {
+			return projectFolders.map((projectFolder) => {
+				return {
+					name: path.basename(projectFolder),
+					cwd: rootFolder ? path.relative(rootFolder, projectFolder) : undefined,
+					request: "launch",
+					type: "dart",
+				};
+			});
+		} else {
+			return [{
+				name: "Dart & Flutter",
+				request: "launch",
+				type: "dart",
+			}];
+		};
 	}
 }
 
 export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
-	public provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): ProviderResult<DebugConfiguration[]> {
-		const isFlutter = isFlutterWorkspaceFolder(folder);
-		const exists = (p: string) => folder && fs.existsSync(path.join(fsPath(folder.uri), p));
+	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
 		const results: DebugConfiguration[] = [];
 
-		if (isFlutter && exists("lib/main.dart")) {
-			results.push({
-				name: "Flutter app",
-				program: "lib/main.dart",
-				request: "launch",
-				type: "dart",
-			});
-		}
-		if (!isFlutter && exists("web")) {
-			results.push({
-				name: `Dart web app`,
-				program: "web",
-				request: "launch",
-				type: "dart",
-			});
-		}
-		if (exists("bin/main.dart")) {
-			results.push({
-				name: "Dart app",
-				program: "bin/main.dart",
-				request: "launch",
-				type: "dart",
-			});
-		}
-		if (exists("test")) {
-			const name = isFlutter ? "Flutter" : "Dart";
-			results.push({
-				name: `${name} tests`,
-				program: "test",
-				request: "launch",
-				type: "dart",
-			});
+		const rootFolder = folder ? fsPath(folder.uri) : undefined;
+		const projectFolders = rootFolder ? await findProjectFolders([rootFolder], { requirePubspec: true }) : [];
+		for (const projectFolder of projectFolders) {
+			const isFlutter = isFlutterProjectFolder(projectFolder);
+			const name = path.basename(projectFolder);
+			const cwd = rootFolder ? path.relative(rootFolder, projectFolder) : undefined;
+			const exists = (p: string) => folder && fs.existsSync(path.join(projectFolder, p));
+
+			if (isFlutter && exists("lib/main.dart")) {
+				results.push({
+					name: `${name} (Flutter)`,
+					program: "lib/main.dart",
+					cwd,
+					request: "launch",
+					type: "dart",
+				});
+			}
+			if (!isFlutter && exists("web")) {
+				results.push({
+					name: `${name} (Dart Web)`,
+					program: "web",
+					cwd,
+					request: "launch",
+					type: "dart",
+				});
+			}
+			if (exists("bin/main.dart")) {
+				results.push({
+					name: `${name} (Dart)`,
+					program: "bin/main.dart",
+					cwd,
+					request: "launch",
+					type: "dart",
+				});
+			}
+			if (exists("test")) {
+				results.push({
+					name: `${name} (${isFlutter ? "Flutter" : "Dart"} Tests)`,
+					program: "test",
+					cwd,
+					request: "launch",
+					type: "dart",
+				});
+			}
 		}
 		return results;
 	}
