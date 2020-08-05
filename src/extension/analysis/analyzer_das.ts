@@ -72,6 +72,10 @@ export class DasAnalyzer extends Analyzer {
 	public getDiagnosticServerPort(): Promise<{ port: number; }> {
 		return this.client.diagnosticGetServerPort();
 	}
+
+	public async forceReanalyze(): Promise<void> {
+		await this.client.analysisReanalyze();
+	}
 }
 
 export class DasAnalyzerClient extends AnalyzerGen {

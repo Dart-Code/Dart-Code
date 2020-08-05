@@ -164,6 +164,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.forceReanalyze",
+				"title": "Reanalyze Project",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.runTestAtCursor",
 				"title": "Run Test At Cursor",
 				"category": "Dart"
@@ -554,6 +559,10 @@
 				},
 				{
 					"command": "dart.restartAnalysisServer",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.forceReanalyze",
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{

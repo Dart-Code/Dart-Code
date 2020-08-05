@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as stream from "stream";
+import { window } from "vscode";
 import { LanguageClient, LanguageClientOptions, Location, StreamInfo, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
@@ -38,6 +39,10 @@ export class LspAnalyzer extends Analyzer {
 
 	public async getDiagnosticServerPort(): Promise<{ port: number }> {
 		return this.client.sendRequest(DiagnosticServerRequest.type, undefined);
+	}
+
+	public async forceReanalyze(): Promise<void> {
+		window.showErrorMessage("Reanalyze is not currently available for LSP");
 	}
 
 	public async getSuper(params: TextDocumentPositionParams): Promise<Location | null> {
