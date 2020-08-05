@@ -569,9 +569,11 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 		const projectFolders = rootFolder ? await findProjectFolders([rootFolder], { requirePubspec: true }) : [];
 		if (projectFolders.length) {
 			return projectFolders.map((projectFolder) => {
+				// Compute cwd, using undefined instead of empty if rootFolder === projectFolder
+				const cwd = rootFolder ? path.relative(rootFolder, projectFolder) || undefined : undefined;
 				return {
 					name: path.basename(projectFolder),
-					cwd: rootFolder ? path.relative(rootFolder, projectFolder) : undefined,
+					cwd,
 					request: "launch",
 					type: "dart",
 				};
@@ -595,7 +597,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 		for (const projectFolder of projectFolders) {
 			const isFlutter = isFlutterProjectFolder(projectFolder);
 			const name = path.basename(projectFolder);
-			const cwd = rootFolder ? path.relative(rootFolder, projectFolder) : undefined;
+			const cwd = rootFolder ? path.relative(rootFolder, projectFolder) || undefined : undefined;
 			const exists = (p: string) => folder && fs.existsSync(path.join(projectFolder, p));
 
 			if (isFlutter && exists("lib/main.dart")) {
