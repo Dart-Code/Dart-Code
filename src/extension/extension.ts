@@ -727,20 +727,6 @@ function recalculateAnalysisRoots() {
 		addExcludeIfRequired(process.env.LOCALAPPDATA);
 	}
 
-	// For each workspace, handle excluded folders.
-	getDartWorkspaceFolders().forEach((f) => {
-		const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
-		const workspacePath = fsPath(f.uri);
-		if (excludedForWorkspace && Array.isArray(excludedForWorkspace)) {
-			excludedForWorkspace.forEach((folder) => {
-				// Handle both relative and absolute paths.
-				if (!path.isAbsolute(folder))
-					folder = path.join(workspacePath, folder);
-				excludeFolders.push(folder);
-			});
-		}
-	});
-
 	// tslint:disable-next-line: no-floating-promises
 	(analyzer as DasAnalyzer).client.analysisSetAnalysisRoots({
 		excluded: excludeFolders,

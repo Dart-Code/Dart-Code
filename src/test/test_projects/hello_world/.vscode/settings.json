@@ -5,9 +5,6 @@
 		"**/excluded/**",
 		"**/excluded_*.dart"
 	],
-	"dart.analysisExcludedFolders": [
-		"lib/excluded"
-	],
 	"dart.showIgnoreQuickFixes": true,
 	"dart.showDartDeveloperLogs": true
 }

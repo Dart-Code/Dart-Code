@@ -1134,15 +1134,6 @@
 					"description": "Whether to use folding data from the Dart analysis server instead of the built-in VS Code indent-based folding.",
 					"scope": "window"
 				},
-				"dart.analysisExcludedFolders": {
-					"type": "array",
-					"default": [],
-					"description": "An array of paths to be excluded from Dart analysis. This option should usually be set at the Workspace level.",
-					"items": {
-						"type": "string"
-					},
-					"scope": "resource"
-				},
 				"dart.flutterCustomEmulators": {
 					"type": "array",
 					"default": [],
