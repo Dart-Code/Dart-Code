@@ -916,6 +916,8 @@ export class DartDebugSession extends DebugSession {
 			const stackFrames: DebugProtocol.StackFrame[] = [];
 			const promises: Array<Promise<void>> = [];
 
+			const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.getNonDebuggableFrameReason(f.location?.script?.uri) === undefined);
+
 			vmFrames.forEach((frame: VMFrame) => {
 				const frameId = thread.storeData(frame);
 
@@ -962,18 +964,20 @@ export class DartDebugSession extends DebugSession {
 					canShowSource ? new Source(shortName, sourcePath, sourceReference, undefined, location.script) : undefined,
 					0, 0,
 				);
-				// The top frame is only allowed to be deemphasized when it's an exception (so the editor walks
-				// up the stack to user code). If the reson for stopping was a breakpoint, step, etc., then we
-				// should always leave the frame focusable.
+				// The top frame is only allowed to be deemphasized when it's an exception and there is some user-code in the
+				// stack (so the editor can walk up the stack to user code).
+				// If the reason for stopping was a breakpoint, step, etc., then we should always leave the frame focusable.
 				const isTopFrame = stackFrames.length === 0;
 				const isStoppedAtException = thread.exceptionReference !== 0;
-				const allowDeemphasizingFrame = !isTopFrame || isStoppedAtException;
+				const allowDeemphasizingFrame = !isTopFrame || (isStoppedAtException && hasAnyDebuggableFrames);
+
 				// If we wouldn't debug this source, then deemphasize in the stack.
 				if (stackFrame.source && allowDeemphasizingFrame) {
-					if (!this.isValidToDebug(uri) || (this.isSdkLibrary(uri) && !this.debugSdkLibraries)) {
+					const nonDebuggableFrameReason = this.getNonDebuggableFrameReason(uri);
+					if (nonDebuggableFrameReason === "SDK") {
 						stackFrame.source.origin = "from the Dart SDK";
 						stackFrame.source.presentationHint = "deemphasize";
-					} else if (this.isExternalLibrary(uri) && !this.debugExternalLibraries) {
+					} else if (nonDebuggableFrameReason === "PACKAGE") {
 						stackFrame.source.origin = uri.startsWith("package:flutter/") ? "from the Flutter framework" : "from Pub packages";
 						stackFrame.source.presentationHint = "deemphasize";
 					}
@@ -1002,6 +1006,16 @@ export class DartDebugSession extends DebugSession {
 				this.sendResponse(response);
 			});
 		}).catch((error) => this.errorResponse(response, `${error}`));
+	}
+
+	private getNonDebuggableFrameReason(uri: string): "SDK" | "PACKAGE" | undefined {
+		if (!this.isValidToDebug(uri) || (this.isSdkLibrary(uri) && !this.debugSdkLibraries)) {
+			return "SDK";
+		} else if (this.isExternalLibrary(uri) && !this.debugExternalLibraries) {
+			return "PACKAGE";
+		} else {
+			return undefined;
+		}
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
