@@ -1250,7 +1250,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("renders correct output for structured errors", async function () {
-		if (!extApi.flutterCapabilities.hasUpdatedStructuredErrorsFormat)
+		if (!extApi.flutterCapabilities.hasLatestStructuredErrorsWork)
 			return this.skip();
 
 		// Currently this test fails on Chrome because we always lose the race
@@ -1325,7 +1325,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("does not print original error if using structured errors", async function () {
-		if (!extApi.flutterCapabilities.hasUpdatedStructuredErrorsFormat)
+		if (!extApi.flutterCapabilities.hasLatestStructuredErrorsWork)
 			return this.skip();
 
 		// Currently this test fails on Chrome because we always lose the race
