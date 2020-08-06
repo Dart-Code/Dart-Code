@@ -2,7 +2,7 @@ import * as path from "path";
 import * as stream from "stream";
 import { window } from "vscode";
 import { LanguageClient, LanguageClientOptions, Location, StreamInfo, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
-import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath } from "../../shared/constants";
@@ -42,7 +42,11 @@ export class LspAnalyzer extends Analyzer {
 	}
 
 	public async forceReanalyze(): Promise<void> {
-		window.showErrorMessage("Reanalyze is not currently available for LSP");
+		try {
+			return await this.client.sendRequest(ReanalyzeRequest.type, undefined);
+		} catch (e) {
+			window.showErrorMessage("Reanalyze is not supported by this version of the Dart SDK's LSP server.");
+		}
 	}
 
 	public async getSuper(params: TextDocumentPositionParams): Promise<Location | null> {

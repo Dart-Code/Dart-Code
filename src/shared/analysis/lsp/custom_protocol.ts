@@ -28,6 +28,10 @@ export class DiagnosticServerRequest {
 	public static type = new RequestType<void, { port: number }, void, void>("dart/diagnosticServer");
 }
 
+export class ReanalyzeRequest {
+	public static type = new RequestType<void, void, void, void>("dart/reanalyze");
+}
+
 export class CompleteStatementRequest {
 	public static type = new RequestType<TextDocumentPositionParams, WorkspaceEdit | null, void, void>("dart/completeStatement");
 }
