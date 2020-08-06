@@ -1046,6 +1046,10 @@ export class DartDebugSession extends DebugSession {
 		const count = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
 
 		const data = this.threadManager.getStoredData(variablesReference);
+		if (!data) {
+			this.errorResponse(response, `Variable is no longer available (maybe debug session finished?)`);
+			return;
+		}
 		const thread = data.thread;
 
 		if (data.data.type === "Frame") {
