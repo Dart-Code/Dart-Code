@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { devToolsPages, doNotAskAgainAction, isInDebugSessionThatSupportsHotReloadContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
+import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -338,12 +338,7 @@ export class DebugCommands {
 			this.vmServices.resetToDefaults();
 		debugSessions.push(session);
 
-		// Temporary hack to allow controlling the Hot Reload button on the debug toolbar based on
-		// the session type, since the debug toolbar does not allow us to dynamically update
-		// when we see the extension load.
-		// https://github.com/microsoft/vscode/issues/69398
 		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.Web) {
-			vs.commands.executeCommand("setContext", isInDebugSessionThatSupportsHotReloadContext, true);
 			const mode: "debug" | "profile" | "release" = s.configuration.flutterMode;
 			if (mode === "debug")
 				vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
@@ -405,7 +400,6 @@ export class DebugCommands {
 			this.debugOptions.hide();
 			this.debugMetrics.hide();
 			for (const debugContext of [
-				isInDebugSessionThatSupportsHotReloadContext,
 				isInFlutterDebugModeDebugSessionContext,
 				isInFlutterProfileModeDebugSessionContext,
 			])

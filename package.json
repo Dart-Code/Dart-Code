@@ -804,7 +804,7 @@
 				{
 					"command": "flutter.hotReload",
 					"group": "navigation@59",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInDebugSessionThatSupportsHotReload"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources"
 				},
 				{
 					"command": "dart.openDevToolsInspector",
@@ -820,7 +820,7 @@
 			"touchBar": [
 				{
 					"command": "_flutter.hotReload.touchBar",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInDebugSessionThatSupportsHotReload",
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources",
 					"group": "9_debug@5"
 				},
 				{
