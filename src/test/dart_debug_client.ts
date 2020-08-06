@@ -4,8 +4,6 @@ import { Writable } from "stream";
 import { DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
-import { not } from "../shared/utils/array";
-import { isKnownInfrastructureThread } from "../shared/utils/debugger";
 import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler, TestResultsProvider } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
@@ -162,11 +160,10 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public async getMainThread(): Promise<DebugProtocol.Thread> {
-		// HACK: Take the first thread that doesn't look like pub/test.
-		const threads = await this.threadsRequest();
-		const userThreads = threads.body.threads.filter(not(isKnownInfrastructureThread));
-		assert.equal(userThreads.length, 1);
-		return userThreads[0];
+		const threadsResponse = await this.threadsRequest();
+		const threads = threadsResponse.body.threads;
+		assert.equal(threads.length, 1);
+		return threads[0];
 	}
 
 	public async resume(): Promise<DebugProtocol.ContinueResponse> {

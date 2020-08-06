@@ -3,7 +3,6 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { errorString, PromiseCompleter } from "../shared/utils";
-import { isKnownInfrastructureThread } from "../shared/utils/debugger";
 import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 
@@ -87,15 +86,7 @@ export class ThreadManager {
 			if (!thread.runnable || !this.debugSession.vmService)
 				return;
 
-			let threadMode = mode;
-
-			// If the mode is set to "All Exceptions" but the thread is a snapshot from pub
-			// then downgrade it to Uncaught because the user is unlikely to want to be stopping
-			// on internal exceptions such trying to parse versions.
-			if (mode === "All" && thread.isInfrastructure)
-				threadMode = "Unhandled";
-
-			await this.debugSession.vmService.setExceptionPauseMode(thread.ref.id, threadMode);
+			await this.debugSession.vmService.setExceptionPauseMode(thread.ref.id, mode);
 		}));
 	}
 
@@ -228,12 +219,6 @@ export class ThreadInfo {
 	public atAsyncSuspension: boolean = false;
 	public exceptionReference = 0;
 	public paused: boolean = false;
-
-	// Whether this thread is infrastructure (eg. not user code), useful for avoiding breaking
-	// on handled exceptions, etc.
-	get isInfrastructure(): boolean {
-		return this.ref && this.ref.name ? isKnownInfrastructureThread(this.ref) : false;
-	}
 
 	constructor(
 		public readonly manager: ThreadManager,
