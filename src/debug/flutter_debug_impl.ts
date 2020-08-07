@@ -2,6 +2,7 @@ import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
+import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
@@ -12,7 +13,6 @@ import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
 import { DebugAdapterLogger } from "./logging";
 import { RunDaemonBase, RunMode } from "./run_daemon_base";
-import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "./utils";
 
 const objectGroupName = "my-group";
 const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";
