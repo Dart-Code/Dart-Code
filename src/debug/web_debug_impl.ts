@@ -1,8 +1,8 @@
+import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { FlutterDebugSession } from "./flutter_debug_impl";
 import { RunDaemonBase, RunMode } from "./run_daemon_base";
-import { FlutterLaunchRequestArguments } from "./utils";
 import { WebRun } from "./web_run";
 
 export class WebDebugSession extends FlutterDebugSession {

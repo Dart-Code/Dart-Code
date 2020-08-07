@@ -1,5 +1,5 @@
+import { DartLaunchRequestArguments } from "../shared/debug/interfaces";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
-import { DartLaunchRequestArguments } from "./utils";
 
 export class WebTestDebugSession extends DartTestDebugSession {
 

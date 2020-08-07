@@ -1,8 +1,8 @@
+import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { usingCustomScript } from "../shared/utils";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
 import { DebugAdapterLogger } from "./logging";
-import { FlutterLaunchRequestArguments } from "./utils";
 
 export class FlutterTestDebugSession extends DartTestDebugSession {
 
