@@ -1,16 +1,8 @@
 import * as fs from "fs";
-import * as net from "net";
 import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
-import { DebugSession } from "vscode-debugadapter";
-import { DartDebugSession } from "../../debug/dart_debug_impl";
-import { DartTestDebugSession } from "../../debug/dart_test_debug_impl";
-import { FlutterDebugSession } from "../../debug/flutter_debug_impl";
-import { FlutterTestDebugSession } from "../../debug/flutter_test_debug_impl";
 import { FlutterLaunchRequestArguments } from "../../debug/utils";
-import { WebDebugSession } from "../../debug/web_debug_impl";
-import { WebTestDebugSession } from "../../debug/web_test_debug_impl";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, dartVMPath, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, pubPath, pubSnapshotPath, showErrorsAction } from "../../shared/constants";
@@ -36,8 +28,6 @@ import { TestResultsProvider } from "../views/test_view";
 const isCI = !!process.env.CI;
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	private debugServers: { [index: string]: net.Server } = {};
-
 	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
@@ -349,22 +339,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!didWarnAboutCwd && debugConfig.program && path.isAbsolute(debugConfig.program))
 			warnIfPathCaseMismatch(logger, debugConfig.program, "the launch script", "check the 'program' field in your launch configuration file (.vscode/launch.json)");
 
-		// Start port listener on launch of first debug session.
-		const debugServer = this.getDebugServer(debugType, debugConfig.debugServer);
-		const serverAddress = debugServer.address();
-
-		// Updated node bindings say address can be a string (used for pipes) but
-		// this should never be the case here. This check is to keep the types happy.
-		if (!serverAddress || typeof serverAddress === "string") {
-			logger.info("Debug server does not have a valid address");
-			window.showErrorMessage("Debug server does not have a valid address");
-			return undefined;
-		}
-
-		// Make VS Code connect to debug server instead of launching debug adapter.
-		// TODO: Why do we need this cast? The node-mock-debug does not?
-		(debugConfig as any).debugServer = serverAddress.port;
-
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest /*|| debugType === DebuggerType.WebTest*/ || debugType === DebuggerType.PubTest) {
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !argsHaveTestNameFilter);
@@ -444,40 +418,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return vmServiceUriOrPort;
 	}
 
-	private getDebugServer(debugType: DebuggerType, port?: number) {
-		switch (debugType) {
-			case DebuggerType.Flutter:
-				return this.spawnOrGetServer("flutter", port, () => new FlutterDebugSession());
-			case DebuggerType.FlutterTest:
-				return this.spawnOrGetServer("flutterTest", port, () => new FlutterTestDebugSession());
-			case DebuggerType.Web:
-				return this.spawnOrGetServer("web", port, () => new WebDebugSession());
-			case DebuggerType.WebTest:
-				return this.spawnOrGetServer("pubTest", port, () => new WebTestDebugSession());
-			case DebuggerType.Dart:
-				return this.spawnOrGetServer("dart", port, () => new DartDebugSession());
-			case DebuggerType.PubTest:
-				return this.spawnOrGetServer("pubTest", port, () => new DartTestDebugSession());
-			default:
-				throw new Error("Unknown debugger type");
-		}
-	}
-
-	private spawnOrGetServer(type: string, port: number = 0, create: () => DebugSession): net.Server {
-		// Start port listener on launch of first debug session.
-		if (!this.debugServers[type]) {
-			this.logger.info(`Spawning a new ${type} debugger`);
-			// Start listening on a random port.
-			this.debugServers[type] = net.createServer((socket) => {
-				const session = create();
-				session.setRunAsServer(true);
-				session.start(socket as NodeJS.ReadableStream, socket);
-			}).listen(port);
-		}
-
-		return this.debugServers[type];
-	}
-
 	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager) {
 		const conf = config.for(folder && folder.uri);
 
@@ -550,15 +490,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return logPath
 			? logPath.replace(/\${name}/, filenameSafe(args.name || "unnamed-session"))
 			: logPath;
-	}
-
-	public dispose() {
-		if (this.debugServers) {
-			for (const type of Object.keys(this.debugServers)) {
-				this.debugServers[type].close();
-				delete this.debugServers[type];
-			}
-		}
 	}
 }
 
