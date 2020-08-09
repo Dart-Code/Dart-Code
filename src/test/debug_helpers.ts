@@ -7,8 +7,9 @@ import { DebuggerType, LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { fsPath } from "../shared/utils/fs";
+import { getDebugAdapterPath } from "../shared/vscode/debugger";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, ext, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
+import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -26,7 +27,7 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 }
 
 export function createDebugClient(debugType: DebuggerType) {
-	const debugAdapterPath = getDebugAdapterPath(debugType);
+	const debugAdapterPath = getDebugAdapterPath((p) => extApi.asAbsolutePath(p), debugType);
 	const dc = new DartDebugClient(process.execPath, debugAdapterPath, "dart", undefined, extApi.debugCommands, extApi.testTreeProvider);
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
@@ -46,31 +47,6 @@ export function createDebugClient(debugType: DebuggerType) {
 		defer(() => thisDc.stop());
 	}
 	return dc;
-}
-
-function getDebugAdapterPath(debugType: DebuggerType) {
-	let debugAdapterFile: string;
-	switch (debugType) {
-		case DebuggerType.Dart:
-			debugAdapterFile = "dart_debug_entry.js";
-			break;
-		case DebuggerType.PubTest:
-			debugAdapterFile = "dart_test_debug_entry.js";
-			break;
-		case DebuggerType.Flutter:
-			debugAdapterFile = "flutter_debug_entry.js";
-			break;
-		case DebuggerType.FlutterTest:
-			debugAdapterFile = "flutter_test_debug_entry.js";
-			break;
-		case DebuggerType.Web:
-			debugAdapterFile = "flutter_test_debug_entry.js";
-			break;
-		default:
-			throw new Error("Unknown debugger type!");
-	}
-
-	return path.join(ext.extensionPath, "out/extension/debug/", debugAdapterFile);
 }
 
 /// Waits for all the provided promises, but throws if the debugger terminates before they complete.

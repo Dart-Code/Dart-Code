@@ -20,6 +20,7 @@ export interface DebugCommandHandler {
 }
 
 export interface InternalExtensionApi {
+	asAbsolutePath: (path: string) => string,
 	analyzerCapabilities?: {
 		supportsGetSignature: boolean;
 		isDart2: boolean;

@@ -632,6 +632,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	return {
 		...new DartExtensionApi(),
 		[internalApiSymbol]: {
+			asAbsolutePath: (p) => context.asAbsolutePath(p),
 			analyzer,
 			analyzerCapabilities: dasClient && dasClient.capabilities,
 			cancelAllAnalysisRequests: () => dasClient && dasClient.cancelAllRequests(),

@@ -1,5 +1,6 @@
 import * as path from "path";
 import { TextDocument, workspace } from "vscode";
+import { DebuggerType } from "../enums";
 import { escapeRegExp } from "../utils";
 import { fsPath, isWithinPath } from "../utils/fs";
 
@@ -37,6 +38,34 @@ export function isTemplateOfType(config: TemplatedLaunchConfig, templateType: st
 		(typeof template === "string" && template === templateType)
 		|| (Array.isArray(template) && template.indexOf(templateType) !== -1)
 	);
+}
+
+export function getDebugAdapterPath(asAbsolutePath: (path: string) => string, debugType: DebuggerType) {
+	let debuggerScript: string;
+	switch (debugType) {
+		case DebuggerType.Flutter:
+			debuggerScript = "flutter_debug_entry";
+			break;
+		case DebuggerType.FlutterTest:
+			debuggerScript = "flutter_test_debug_entry";
+			break;
+		case DebuggerType.Web:
+			debuggerScript = "web_debug_entry";
+			break;
+		case DebuggerType.WebTest:
+			debuggerScript = "web_test_debug_entry"
+			break;
+		case DebuggerType.Dart:
+			debuggerScript = "dart_debug_entry";
+			break;
+		case DebuggerType.PubTest:
+			debuggerScript = "dart_test_debug_entry";
+			break;
+		default:
+			throw new Error("Unknown debugger type");
+	}
+
+	return asAbsolutePath(`./out/src/debug/${debuggerScript}.js`);
 }
 
 export interface TemplatedLaunchConfig {
