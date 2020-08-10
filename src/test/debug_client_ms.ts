@@ -312,7 +312,7 @@ export class DebugClient extends ProtocolClient {
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
 				timeoutHandler = setTimeout(() => {
-					reject(new Error(`no event '${eventType}' received after ${timeout} ms`));
+					reject(new Error(`no event '${eventType}' received after ${timeout || this.defaultTimeout} ms`));
 				}, timeout || this.defaultTimeout);
 			}
 		});
