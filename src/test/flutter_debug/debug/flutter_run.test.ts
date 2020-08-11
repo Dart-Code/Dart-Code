@@ -398,8 +398,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
-		// tslint:disable-next-line: no-floating-promises
-		dc.waitForEvent("stopped").then(() => didStop = true);
+
+		dc.waitForEvent("stopped")
+			.then(() => didStop = true)
+			.catch((_) => {
+				// Swallow errors, as we don't care if this times out, we're only using it
+				// to tell if we stopped by the time we hit the end of this test.
+			});
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.setBreakpointWithoutHitting(config, {
@@ -700,8 +705,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
 			let didStop = false;
-			// tslint:disable-next-line: no-floating-promises
-			dc.waitForEvent("stopped").then(() => didStop = true);
+
+			dc.waitForEvent("stopped")
+				.then(() => didStop = true)
+				.catch((_) => {
+					// Swallow errors, as we don't care if this times out, we're only using it
+					// to tell if we stopped by the time we hit the end of this test.
+				});
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)
@@ -752,8 +762,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
 		let didStop = false;
-		// tslint:disable-next-line: no-floating-promises
-		dc.waitForEvent("stopped").then(() => didStop = true);
+
+		dc.waitForEvent("stopped")
+			.then(() => didStop = true)
+			.catch((_) => {
+				// Swallow errors, as we don't care if this times out, we're only using it
+				// to tell if we stopped by the time we hit the end of this test.
+			});
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
@@ -1170,8 +1185,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
-		// tslint:disable-next-line: no-floating-promises
-		dc.waitForEvent("stopped").then(() => didStop = true);
+
+		dc.waitForEvent("stopped")
+			.then(() => didStop = true)
+			.catch((_) => {
+				// Swallow errors, as we don't care if this times out, we're only using it
+				// to tell if we stopped by the time we hit the end of this test.
+			});
+
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence()
 				.then(() => delay(2000))
