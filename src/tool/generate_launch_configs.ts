@@ -42,11 +42,17 @@ async function main() {
 				"configurations": [
 					"Extension",
 					...debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name))
-				]
+				],
+				"presentation": {
+					"group": "",
+					"order": 1
+				},
+				"stopAll": true,
 			},
 			{
 				"name": "Debug Adapter Servers",
 				"configurations": debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name)),
+				"stopAll": true,
 			},
 		],
 	}

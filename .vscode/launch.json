@@ -600,7 +600,12 @@
 				"Flutter Test Debug Server",
 				"Web Debug Server",
 				"Web Test Debug Server"
-			]
+			],
+			"presentation": {
+				"group": "",
+				"order": 1
+			},
+			"stopAll": true
 		},
 		{
 			"name": "Debug Adapter Servers",
@@ -611,7 +616,8 @@
 				"Flutter Test Debug Server",
 				"Web Debug Server",
 				"Web Test Debug Server"
-			]
+			],
+			"stopAll": true
 		}
 	]
 }
