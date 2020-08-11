@@ -9,6 +9,9 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
+			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true"
+			},
 			"preLaunchTask": "npm: watch",
 			"request": "launch",
 			"outFiles": [
@@ -26,6 +29,120 @@
 			"cwd": "${workspaceFolder}",
 			"program": "${workspaceFolder}/src/tool/generate_launch_configs.ts",
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
+			"name": "Dart Debug Server",
+			"type": "node",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/debug/dart_debug_entry.ts",
+			"args": [
+				"--server=4715"
+			],
+			"preLaunchTask": "npm: watch",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
+			"name": "Dart Test Debug Server",
+			"type": "node",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/debug/dart_test_debug_entry.ts",
+			"args": [
+				"--server=4716"
+			],
+			"preLaunchTask": "npm: watch",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
+			"name": "Flutter Debug Server",
+			"type": "node",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/debug/flutter_debug_entry.ts",
+			"args": [
+				"--server=4711"
+			],
+			"preLaunchTask": "npm: watch",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
+			"name": "Flutter Test Debug Server",
+			"type": "node",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/debug/flutter_test_debug_entry.ts",
+			"args": [
+				"--server=4712"
+			],
+			"preLaunchTask": "npm: watch",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
+			"name": "Web Debug Server",
+			"type": "node",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/debug/web_debug_entry.ts",
+			"args": [
+				"--server=4713"
+			],
+			"preLaunchTask": "npm: watch",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
+			"name": "Web Test Debug Server",
+			"type": "node",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/debug/web_test_debug_entry.ts",
+			"args": [
+				"--server=4714"
+			],
+			"preLaunchTask": "npm: watch",
 			"request": "launch",
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
@@ -469,6 +586,31 @@
 			"skipFiles": [
 				"<node_internals>/**",
 				"**/app/out/vs/**"
+			]
+		}
+	],
+	"compounds": [
+		{
+			"name": "Extension + Debug Adapter Servers",
+			"configurations": [
+				"Extension",
+				"Dart Debug Server",
+				"Dart Test Debug Server",
+				"Flutter Debug Server",
+				"Flutter Test Debug Server",
+				"Web Debug Server",
+				"Web Test Debug Server"
+			]
+		},
+		{
+			"name": "Debug Adapter Servers",
+			"configurations": [
+				"Dart Debug Server",
+				"Dart Test Debug Server",
+				"Flutter Debug Server",
+				"Flutter Test Debug Server",
+				"Web Debug Server",
+				"Web Test Debug Server"
 			]
 		}
 	]

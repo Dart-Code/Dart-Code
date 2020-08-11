@@ -6,8 +6,8 @@ import { dartVMPath, isWin, vmServiceListeningBannerPattern } from "../shared/co
 import { DebuggerType, LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
+import { getDebugAdapterPath } from "../shared/utils/debug";
 import { fsPath } from "../shared/utils/fs";
-import { getDebugAdapterPath } from "../shared/vscode/debugger";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
 
