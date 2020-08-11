@@ -569,8 +569,13 @@ describe("dart cli debugger", () => {
 			const config = await startDebugger(helloWorldMainFile);
 
 			let didStop = false;
-			// tslint:disable-next-line: no-floating-promises
-			dc.waitForEvent("stopped").then(() => didStop = true);
+
+			dc.waitForEvent("stopped")
+				.then(() => didStop = true)
+				.catch((_) => {
+					// Swallow errors, as we don't care if this times out, we're only using it
+					// to tell if we stopped by the time we hit the end of this test.
+				});
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)

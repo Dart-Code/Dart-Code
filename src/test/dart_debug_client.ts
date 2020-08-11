@@ -146,7 +146,11 @@ export class DartDebugClient extends DebugClient {
 			await watchPromise(
 				"launch()->attach->terminate/resume",
 				Promise.race([
-					this.waitForEvent("terminated"),
+					this.waitForEvent("terminated")
+						.catch((_) => {
+							// Swallow errors, we're only using this to avoid waiting on a resume response forever.
+							// It's possible it'll time out after some period because the test finished more quickly/slowly.
+						}),
 					this.resume(),
 				]),
 			);
