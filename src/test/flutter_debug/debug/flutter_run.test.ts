@@ -163,10 +163,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
 
-	it("can hot reload with customRequest", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("can hot reload with customRequest", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
@@ -407,7 +404,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				path: fsPath(flutterHelloWorldMainFile),
 				verified: false,
 			})
-				.then(() => delay(2000))
+				.then(() => delay(20000))
 				.then(() => dc.terminateRequest()),
 		);
 
@@ -692,10 +689,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
-		return async function (this: Mocha.Context) {
-			if (flutterTestDeviceIsWeb)
-				return this.skip();
-
+		return async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
@@ -714,7 +708,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			// after launch to ensure we didn't stop unexpectedly.
 			if (expectation === resolvedPromise)
 				// This may be too low for web.
-				expectation = dc.waitForEvent("initialized").then(() => delay(2000));
+				expectation = dc.waitForEvent("initialized").then(() => delay(20000));
 
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
@@ -744,10 +738,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("does not stop at a breakpoint with a condition returning null", testBreakpointCondition("print('test');", false));
 	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, "Debugger failed to evaluate expression `1 + '1'`"));
 
-	it("logs expected text (and does not stop) at a logpoint", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
@@ -863,10 +854,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const debugConfig = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
@@ -885,10 +873,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("includes getters in variables when stopped at a breakpoint", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("includes getters in variables when stopped at a breakpoint", async () => {
 		await openFile(flutterHelloWorldGettersFile);
 		const config = await startDebugger(dc, flutterHelloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
@@ -915,10 +900,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	// Currently skipped because we sometimes get different text from locals, eg.:
 	// "StatelessElement" vs "StatelessElement (MyHomepage(dirty))" 🤔
-	it.skip("watch expressions provide same info as locals", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it.skip("watch expressions provide same info as locals", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(config, {
@@ -944,10 +926,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("evaluateName evaluates to the expected value", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("evaluateName evaluates to the expected value", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(config, {
@@ -985,12 +964,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	describe("can evaluate at breakpoint", function () {
-		this.beforeEach(function () {
-			if (flutterTestDeviceIsWeb)
-				this.skip();
-		});
-
+	describe("can evaluate at breakpoint", () => {
 		it("simple expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
@@ -1174,7 +1148,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		dc.waitForEvent("stopped").then(() => didStop = true);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence()
-				.then(() => delay(2000))
+				.then(() => delay(20000))
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
