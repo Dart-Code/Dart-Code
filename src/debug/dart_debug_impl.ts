@@ -212,9 +212,7 @@ export class DartDebugSession extends DebugSession {
 					// To reduce the chances of losing async logs, wait a short period
 					// before terminating.
 					await this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
-					// Add a small delay to allow for async events to complete first
-					// to reduce the chance of closing output.
-					setTimeout(() => this.sendEvent(new TerminatedEvent()), 250);
+					setImmediate(() => this.sendEvent(new TerminatedEvent()));
 				});
 			}
 
@@ -778,6 +776,11 @@ export class DartDebugSession extends DebugSession {
 		} catch (e) {
 			return this.errorResponse(response, `${e}`);
 		}
+		// If we call super.disconnectRequest before other async code finishes, the TerminatedEvent()
+		// might not be sent, so wait as least as long as the code in the processExit handler, which is
+		// just a setImmediate after the last logging event (capped at 500).
+		await this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
+		await new Promise((resolve) => setTimeout(resolve, 10));
 		super.disconnectRequest(response, args);
 	}
 
