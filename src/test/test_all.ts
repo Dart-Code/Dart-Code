@@ -84,6 +84,7 @@ async function runAllTests(): Promise<void> {
 		fs.mkdirSync(".dart_code_test_logs");
 
 	try {
+		// TODO: Generate this from shared code with generate_launch_configs.ts.
 		if (!process.env.BOT || process.env.BOT === "dart") {
 			await runTests("dart", "hello_world");
 		}
