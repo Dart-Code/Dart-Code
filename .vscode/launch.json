@@ -21,6 +21,22 @@
 			]
 		},
 		{
+			"name": "Generate launch.json",
+			"type": "node",
+			"cwd": "${workspaceFolder}",
+			"program": "${workspaceFolder}/src/tool/generate_launch_configs.ts",
+			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
 			"name": "Launch Tests (Multi-root)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
