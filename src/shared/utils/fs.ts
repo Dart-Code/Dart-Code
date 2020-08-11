@@ -31,7 +31,7 @@ export async function getChildFolders(parent: string, options?: { allowBin?: boo
 		.map((item) => path.join(parent, item.name));
 }
 
-function readDirAsync(folder: string): Promise<fs.Dirent[]> {
+export function readDirAsync(folder: string): Promise<fs.Dirent[]> {
 	return new Promise<fs.Dirent[]>((resolve, reject) => {
 		return fs.readdir(folder,
 			{ withFileTypes: true },
