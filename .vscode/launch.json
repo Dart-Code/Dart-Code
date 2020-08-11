@@ -5,15 +5,15 @@
 		{
 			"name": "Extension",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -23,7 +23,6 @@
 		{
 			"name": "Launch Tests (Multi-root)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/projects.code-workspace",
@@ -34,10 +33,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -47,7 +47,6 @@
 		{
 			"name": "Launch Tests (Dart: New Projects)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/dart_create_tests.code-workspace",
@@ -58,10 +57,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -71,7 +71,6 @@
 		{
 			"name": "Launch Tests (Flutter: New Project)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/flutter_create_tests.code-workspace",
@@ -82,10 +81,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -95,7 +95,6 @@
 		{
 			"name": "Launch Tests (Multi-project folder)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/",
@@ -106,10 +105,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -119,7 +119,6 @@
 		{
 			"name": "Launch Tests (Dart)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/hello_world",
@@ -130,10 +129,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -143,7 +143,6 @@
 		{
 			"name": "Launch Tests (Dart LSP)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/hello_world",
@@ -155,10 +154,11 @@
 				"DART_CODE_IS_TEST_RUN": "true",
 				"DART_CODE_FORCE_LSP": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -168,7 +168,6 @@
 		{
 			"name": "Launch Tests (Dart Debug)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/hello_world",
@@ -179,10 +178,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -192,7 +192,6 @@
 		{
 			"name": "Launch Tests (Dart Web Debug)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/web",
@@ -203,10 +202,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -216,7 +216,6 @@
 		{
 			"name": "Launch Tests (Flutter)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/flutter_hello_world",
@@ -227,10 +226,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -240,7 +240,6 @@
 		{
 			"name": "Launch Tests (Flutter Bazel)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/bazel_workspace/flutter_hello_world_bazel",
@@ -251,10 +250,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -264,7 +264,6 @@
 		{
 			"name": "Launch Tests (Flutter Linux Snap)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/empty",
@@ -275,10 +274,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -288,7 +288,6 @@
 		{
 			"name": "Launch Tests (Flutter LSP)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/flutter_hello_world",
@@ -300,10 +299,11 @@
 				"DART_CODE_IS_TEST_RUN": "true",
 				"DART_CODE_FORCE_LSP": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -313,7 +313,6 @@
 		{
 			"name": "Launch Tests (Flutter Debug)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/flutter_hello_world",
@@ -324,10 +323,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -337,7 +337,6 @@
 		{
 			"name": "Launch Tests (Flutter Debug - Chrome)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/flutter_hello_world",
@@ -349,10 +348,11 @@
 				"DART_CODE_IS_TEST_RUN": "true",
 				"FLUTTER_TEST_DEVICE_ID": "chrome"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -362,7 +362,6 @@
 		{
 			"name": "Launch Tests (Flutter Test Debug)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/flutter_hello_world",
@@ -373,10 +372,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -386,7 +386,6 @@
 		{
 			"name": "Launch Tests (Flutter Repository)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${env:FLUTTER_ROOT}",
@@ -397,10 +396,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -410,7 +410,6 @@
 		{
 			"name": "Launch Tests (Not Activated / Dart Create)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/empty",
@@ -421,10 +420,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
@@ -434,7 +434,6 @@
 		{
 			"name": "Launch Tests (Not Activated / Flutter Create)",
 			"type": "extensionHost",
-			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"${workspaceRoot}/src/test/test_projects/empty",
@@ -445,10 +444,11 @@
 			"env": {
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"outFiles": [
-				"${workspaceRoot}/out/**/*.js"
-			],
 			"preLaunchTask": "npm: watch-tests",
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
 			"smartStep": true,
 			"skipFiles": [
 				"<node_internals>/**",
