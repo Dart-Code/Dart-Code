@@ -721,13 +721,10 @@ export class DartDebugSession extends DebugSession {
 	// as it may never come. Returns true if the operation completed.
 	private async raceIgnoringErrors(action: () => Promise<any>, timeout: number = 250): Promise<boolean> {
 		try {
-			const didComplete = await Promise.race([
-				action()
-					.then((_) => true),
-				new Promise<boolean>((resolve) => setTimeout(() => resolve(), timeout))
-					.then((_) => false),
+			return await Promise.race([
+				action().then((_) => true),
+				new Promise<boolean>((resolve) => setTimeout(() => resolve(false), timeout)),
 			]);
-			return didComplete;
 		} catch (e) {
 			this.log(`Error while while waiting for action: ${e}`);
 			return false;
