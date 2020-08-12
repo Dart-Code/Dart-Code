@@ -720,17 +720,11 @@ export class DartDebugSession extends DebugSession {
 	// Run some code, but don't wait longer than a certain time period for the result
 	// as it may never come. Returns true if the operation completed.
 	private async raceIgnoringErrors(action: () => Promise<any>, timeout: number = 250): Promise<boolean> {
-		this.log(`Running raceIgnoringErrors with a timeout of ${timeout}`);
 		try {
-			const didComplete = await Promise.race([
-				action()
-					.then((_) => this.log("Action completed!"))
-					.then((_) => true),
-				new Promise<boolean>((resolve) => setTimeout(() => resolve(), timeout))
-					.then((_) => this.log("Timeout expired!"))
-					.then((_) => false),
+			return await Promise.race([
+				action().then((_) => true),
+				new Promise<boolean>((resolve) => setTimeout(() => resolve(false), timeout)),
 			]);
-			return didComplete;
 		} catch (e) {
 			this.log(`Error while while waiting for action: ${e}`);
 			return false;
