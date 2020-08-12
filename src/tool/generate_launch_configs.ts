@@ -8,25 +8,25 @@ const debuggerFolder = "src/debug";
 const testFolder = "out/src/test";
 const testProjectsFolder = "src/test/test_projects";
 
-const testConfigs = [
-	{ testFolder: "multi_root", project: "projects.code-workspace" },
-	{ testFolder: "dart_create_tests", project: "dart_create_tests.code-workspace" },
-	{ testFolder: "flutter_create_tests", project: "flutter_create_tests.code-workspace" },
-	{ testFolder: "multi_project_folder", project: "" },
+const testConfigs: TestConfig[] = [
 	{ testFolder: "dart", project: "hello_world" },
 	{ testFolder: "dart", project: "hello_world", lsp: true },
 	{ testFolder: "dart_debug", project: "hello_world" },
 	{ testFolder: "web_debug", project: "web" },
 	{ testFolder: "flutter", project: "flutter_hello_world" },
-	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel" },
-	{ testFolder: "flutter_snap", project: "empty" },
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world" },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", chrome: true },
 	{ testFolder: "flutter_test_debug", project: "flutter_hello_world" },
-	{ testFolder: "flutter_repository", project: "${env:FLUTTER_ROOT}" },
+	{ testFolder: "multi_root", project: "projects.code-workspace" },
+	{ testFolder: "multi_project_folder", project: "" },
+	{ testFolder: "dart_create_tests", project: "dart_create_tests.code-workspace" },
 	{ testFolder: "not_activated/dart_create", project: "empty" },
+	{ testFolder: "flutter_create_tests", project: "flutter_create_tests.code-workspace" },
 	{ testFolder: "not_activated/flutter_create", project: "empty" },
+	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel" },
+	{ testFolder: "flutter_snap", project: "empty" },
+	{ testFolder: "flutter_repository", project: "${env:FLUTTER_ROOT}" },
 ];
 
 async function main() {
@@ -38,26 +38,34 @@ async function main() {
 			getExtensionConfig(),
 			getGenerateLaunchConfigConfig(),
 			...debugAdapters.map((dirent) => getDebugServerConfig(dirent.name, dirent.name)),
-			...testConfigs.map((test) => getTestsConfig(test.testFolder, test.project, test.lsp, test.chrome)),
+			...testConfigs.map(getTestsConfig),
 		],
 		"compounds": [
 			{
-				"name": "Extension + Debug Adapter Servers",
+				"name": "Extension + DA Servers",
 				"configurations": [
 					"Extension",
 					...debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name))
 				],
 				"presentation": {
-					"group": "",
 					"order": 1
 				},
 				"stopAll": true,
 			},
-			{
-				"name": "Debug Adapter Servers",
-				"configurations": debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name)),
-				"stopAll": true,
-			},
+			...testConfigs.map((test) => {
+				const testConfigName = getTestConfigName(test);
+				return {
+					"name": `${testConfigName} + DA Servers`,
+					"configurations": [
+						testConfigName,
+						...debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name))
+					],
+					"presentation": {
+						"order": 3
+					},
+					"stopAll": true,
+				};
+			})
 		],
 	}
 
@@ -80,11 +88,20 @@ const template = {
 
 function getConfigName(input: string) {
 	input = input.replace("_debug_entry.ts", "");
-	return input.split("_").map(titleCase).join(" ");
+	return input.replace("/", "_/_").split("_").map(titleCase).join(" ");
 }
 
 function getDebugServerConfigName(input: string) {
 	return `${getConfigName(input)} Debug Server`;
+}
+
+function getTestConfigName(test: TestConfig) {
+	let name = getConfigName(test.testFolder);
+	if (test.lsp)
+		name = `${name} LSP`;
+	if (test.chrome)
+		name = `${name} Chrome`;
+	return `${name} Tests`;
 }
 
 function titleCase(input: string) {
@@ -103,6 +120,9 @@ function getExtensionConfig() {
 			"DART_CODE_USE_DEBUG_SERVERS": "true",
 		},
 		"preLaunchTask": "npm: watch",
+		"presentation": {
+			"hidden": true,
+		}
 	}, template);
 }
 
@@ -113,6 +133,9 @@ function getGenerateLaunchConfigConfig() {
 		"cwd": "${workspaceFolder}",
 		"program": "${workspaceFolder}/src/tool/generate_launch_configs.ts",
 		"preLaunchTask": "npm: watch-tests",
+		"presentation": {
+			"order": 2,
+		}
 	}, template);
 }
 
@@ -127,32 +150,41 @@ function getDebugServerConfig(filename: string, source: string) {
 			`--server=${port}`
 		],
 		"preLaunchTask": "npm: watch",
+		"presentation": {
+			"hidden": true,
+		}
 	}, template);
 }
 
-function getTestsConfig(testPath: string, project: string, lsp = false, chrome = false) {
-	let name = getConfigName(testPath);
-	if (lsp)
-		name = `${name} LSP`;
-	if (chrome)
-		name = `${name} Chrome`;
+function getTestsConfig(test: TestConfig) {
+	const name = getTestConfigName(test);
 	return Object.assign({
-		"name": `Launch Tests (${name})`,
+		"name": name,
 		"type": "extensionHost",
 		"runtimeExecutable": "${execPath}",
 		"args": [
-			project.startsWith("${env:") ? project : `\${workspaceFolder}/${testProjectsFolder}/${project}`,
+			test.project.startsWith("${env:") ? test.project : `\${workspaceFolder}/${testProjectsFolder}/${test.project}`,
 			"--extensionDevelopmentPath=${workspaceFolder}",
-			`--extensionTestsPath=\${workspaceFolder}/${testFolder}/${testPath}`,
+			`--extensionTestsPath=\${workspaceFolder}/${testFolder}/${test.testFolder}`,
 			"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 		],
 		"env": {
 			"DART_CODE_IS_TEST_RUN": "true",
-			"DART_CODE_FORCE_LSP": lsp ? "true" : undefined,
-			"FLUTTER_TEST_DEVICE_ID": chrome ? "chrome" : undefined,
+			"DART_CODE_FORCE_LSP": test.lsp ? "true" : undefined,
+			"FLUTTER_TEST_DEVICE_ID": test.chrome ? "chrome" : undefined,
 		},
 		"preLaunchTask": "npm: watch-tests",
+		"presentation": {
+			"hidden": true,
+		}
 	}, template);
+}
+
+interface TestConfig {
+	testFolder: string;
+	project: string;
+	lsp?: boolean;
+	chrome?: boolean;
 }
 
 // tslint:disable-next-line: no-floating-promises
