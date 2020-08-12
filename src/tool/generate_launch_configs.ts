@@ -8,6 +8,27 @@ const debuggerFolder = "src/debug";
 const testFolder = "out/src/test";
 const testProjectsFolder = "src/test/test_projects";
 
+const testConfigs = [
+	{ testFolder: "multi_root", project: "projects.code-workspace" },
+	{ testFolder: "dart_create_tests", project: "dart_create_tests.code-workspace" },
+	{ testFolder: "flutter_create_tests", project: "flutter_create_tests.code-workspace" },
+	{ testFolder: "multi_project_folder", project: "" },
+	{ testFolder: "dart", project: "hello_world" },
+	{ testFolder: "dart", project: "hello_world", lsp: true },
+	{ testFolder: "dart_debug", project: "hello_world" },
+	{ testFolder: "web_debug", project: "web" },
+	{ testFolder: "flutter", project: "flutter_hello_world" },
+	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel" },
+	{ testFolder: "flutter_snap", project: "empty" },
+	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world" },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", chrome: true },
+	{ testFolder: "flutter_test_debug", project: "flutter_hello_world" },
+	{ testFolder: "flutter_repository", project: "${env:FLUTTER_ROOT}" },
+	{ testFolder: "not_activated/dart_create", project: "empty" },
+	{ testFolder: "not_activated/flutter_create", project: "empty" },
+];
+
 async function main() {
 	const debugAdapters = (await readDirAsync(debuggerFolder))
 		.filter((dirent) => dirent.isFile && dirent.name.endsWith("_entry.ts"));
@@ -17,24 +38,7 @@ async function main() {
 			getExtensionConfig(),
 			getGenerateLaunchConfigConfig(),
 			...debugAdapters.map((dirent) => getDebugServerConfig(dirent.name, dirent.name)),
-			getTestsConfig("multi_root", "projects.code-workspace"),
-			getTestsConfig("dart_create_tests", "dart_create_tests.code-workspace"),
-			getTestsConfig("flutter_create_tests", "flutter_create_tests.code-workspace"),
-			getTestsConfig("multi_project_folder", ""),
-			getTestsConfig("dart", "hello_world"),
-			getTestsConfig("dart", "hello_world", true),
-			getTestsConfig("dart_debug", "hello_world"),
-			getTestsConfig("web_debug", "web"),
-			getTestsConfig("flutter", "flutter_hello_world"),
-			getTestsConfig("flutter_bazel", "bazel_workspace/flutter_hello_world_bazel"),
-			getTestsConfig("flutter_snap", "empty"),
-			getTestsConfig("flutter", "flutter_hello_world", true),
-			getTestsConfig("flutter_debug", "flutter_hello_world"),
-			getTestsConfig("flutter_debug", "flutter_hello_world", false, true),
-			getTestsConfig("flutter_test_debug", "flutter_hello_world"),
-			getTestsConfig("flutter_repository", "${env:FLUTTER_ROOT}"),
-			getTestsConfig("not_activated/dart_create", "empty"),
-			getTestsConfig("not_activated/flutter_create", "empty"),
+			...testConfigs.map((test) => getTestsConfig(test.testFolder, test.project, test.lsp, test.chrome)),
 		],
 		"compounds": [
 			{
