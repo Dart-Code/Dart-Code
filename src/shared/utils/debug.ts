@@ -1,3 +1,4 @@
+import * as path from "path";
 import { DebuggerType } from "../enums";
 
 export function getDebugAdapterPath(asAbsolutePath: (path: string) => string, debugType: DebuggerType) {
@@ -29,6 +30,8 @@ export function getDebugAdapterPath(asAbsolutePath: (path: string) => string, de
 }
 
 export function getDebugAdapterPort(debuggerScript: string) {
+	// Get filename without extension.
+	debuggerScript = path.basename(debuggerScript).split(".")[0];
 	const debugAdapterScripts = [
 		"flutter_debug_entry",
 		"flutter_test_debug_entry",

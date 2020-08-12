@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as path from "path";
 import { getDebugAdapterPort } from "../shared/utils/debug";
 import { readDirAsync } from "../shared/utils/fs";
 
@@ -37,7 +36,7 @@ async function main() {
 		"configurations": [
 			getExtensionConfig(),
 			getGenerateLaunchConfigConfig(),
-			...debugAdapters.map((dirent) => getDebugServerConfig(dirent.name, dirent.name)),
+			...debugAdapters.map((dirent) => getDebugServerConfig(dirent.name)),
 			...testConfigs.map(getTestsConfig),
 		],
 		"compounds": [
@@ -139,13 +138,13 @@ function getGenerateLaunchConfigConfig() {
 	}, template);
 }
 
-function getDebugServerConfig(filename: string, source: string) {
-	const port = getDebugAdapterPort(path.basename(source).split(".")[0]);
+function getDebugServerConfig(filename: string) {
+	const port = getDebugAdapterPort(filename);
 	return Object.assign({
 		"name": getDebugServerConfigName(filename),
 		"type": "node",
 		"cwd": "${workspaceFolder}",
-		"program": `\${workspaceFolder}/${debuggerFolder}/${source}`,
+		"program": `\${workspaceFolder}/${debuggerFolder}/${filename}`,
 		"args": [
 			`--server=${port}`
 		],
@@ -169,6 +168,7 @@ function getTestsConfig(test: TestConfig) {
 			"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 		],
 		"env": {
+			"DART_CODE_USE_DEBUG_SERVERS": "true",
 			"DART_CODE_IS_TEST_RUN": "true",
 			"DART_CODE_FORCE_LSP": test.lsp ? "true" : undefined,
 			"FLUTTER_TEST_DEVICE_ID": test.chrome ? "chrome" : undefined,

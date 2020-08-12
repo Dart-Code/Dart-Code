@@ -25,7 +25,7 @@ describe("dart cli debugger", () => {
 	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
 		const config = (await getLaunchConfiguration(script, extraConfiguration))!;
 		if (config) {
-			await dc.start(config.debugServer);
+			await dc.start();
 		}
 		return config;
 	}
@@ -34,7 +34,7 @@ describe("dart cli debugger", () => {
 		const config = await getAttachConfiguration(Object.assign({ vmServiceUri }, extraConfiguration));
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
-		await dc.start(config.debugServer);
+		await dc.start();
 		return config;
 	}
 

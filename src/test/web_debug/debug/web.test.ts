@@ -26,7 +26,7 @@ describe.skip("web debugger", () => {
 		});
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
-		await watchPromise("startDebugger->start", dc.start(config.debugServer));
+		await watchPromise("startDebugger->start", dc.start());
 		return config;
 	}
 

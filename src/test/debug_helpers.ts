@@ -6,7 +6,7 @@ import { dartVMPath, isWin, vmServiceListeningBannerPattern } from "../shared/co
 import { DebuggerType, LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
-import { getDebugAdapterPath } from "../shared/utils/debug";
+import { getDebugAdapterPath, getDebugAdapterPort } from "../shared/utils/debug";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
@@ -22,13 +22,18 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 	const config = await getLaunchConfiguration(script, extraConfiguration);
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);
-	await watchPromise("startDebugger->start", dc.start(config.debugServer));
+	await watchPromise("startDebugger->start", dc.start());
 	return config;
 }
 
 export function createDebugClient(debugType: DebuggerType) {
 	const debugAdapterPath = getDebugAdapterPath((p) => extApi.asAbsolutePath(p), debugType);
-	const dc = new DartDebugClient(process.execPath, debugAdapterPath, "dart", undefined, extApi.debugCommands, extApi.testTreeProvider);
+	const debugAdapterPort = getDebugAdapterPort(debugAdapterPath);
+
+	const dc = process.env.DART_CODE_USE_DEBUG_SERVERS
+		? new DartDebugClient({ port: debugAdapterPort }, extApi.debugCommands, extApi.testTreeProvider)
+		: new DartDebugClient({ runtime: "node", executable: debugAdapterPath }, extApi.debugCommands, extApi.testTreeProvider);
+
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
 	if (debugAdapterPath.indexOf("_test_") !== -1) {

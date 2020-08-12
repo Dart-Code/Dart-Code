@@ -188,6 +188,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -215,6 +216,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true",
 				"DART_CODE_FORCE_LSP": "true"
 			},
@@ -243,6 +245,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -270,6 +273,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -297,6 +301,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -324,6 +329,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true",
 				"DART_CODE_FORCE_LSP": "true"
 			},
@@ -352,6 +358,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -379,6 +386,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true",
 				"FLUTTER_TEST_DEVICE_ID": "chrome"
 			},
@@ -407,6 +415,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -434,6 +443,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -461,6 +471,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -488,6 +499,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -515,6 +527,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -542,6 +555,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -569,6 +583,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -596,6 +611,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -623,6 +639,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",
@@ -650,6 +667,7 @@
 				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
 			],
 			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch-tests",

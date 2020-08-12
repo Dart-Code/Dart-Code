@@ -1,5 +1,4 @@
 import * as assert from "assert";
-import { SpawnOptionsWithoutStdio } from "child_process";
 import { Writable } from "stream";
 import { DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -11,10 +10,15 @@ import { delay, logger, watchPromise, withTimeout } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl"];
 
+type DebugClientArgs = { runtime: string, executable: string, port?: undefined } | { runtime?: undefined, executable?: undefined, port: number };
+
 export class DartDebugClient extends DebugClient {
+	private readonly port: number | undefined;
 	private currentSession?: DebugSession;
-	constructor(runtime: string, executable: string, debugType: string, spawnOptions: SpawnOptionsWithoutStdio | undefined, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
-		super(runtime, executable, debugType, spawnOptions, true);
+
+	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
+		super(args.runtime, args.executable, "dart", undefined, true);
+		this.port = args.port;
 
 		// HACK to handle incoming requests..
 		const me = (this as unknown as { dispatch(body: string): void });
@@ -69,6 +73,12 @@ export class DartDebugClient extends DebugClient {
 			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionCustomEvent(e));
 			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testProvider.handleDebugSessionEnd(this.currentSession!));
 		}
+	}
+
+	public start(port?: number): Promise<void> {
+		if (port)
+			throw new Error('Do not provide a port to DartDebugClient.start!');
+		return super.start(this.port);
 	}
 
 	private sendResponse(request: DebugProtocol.Request, body: any): void {

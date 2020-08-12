@@ -46,7 +46,7 @@ describe("flutter run debugger (attach)", () => {
 		});
 		if (!config)
 			throw new Error(`Could not get attach configuration (got ${config})`);
-		await dc.start(config.debugServer);
+		await dc.start();
 		// Make sure any stdErr is logged to console + log file for debugging.
 		dc.on("output", (event: DebugProtocol.OutputEvent) => {
 			if (event.body.category === "stderr")

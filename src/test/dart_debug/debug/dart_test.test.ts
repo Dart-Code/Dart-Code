@@ -24,7 +24,7 @@ describe("dart test debugger", () => {
 		const config = await getLaunchConfiguration(script, extraConfiguration);
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
-		await dc.start(config.debugServer);
+		await dc.start();
 		return config;
 	}
 
