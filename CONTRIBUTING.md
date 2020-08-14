@@ -95,6 +95,21 @@ Debug adapters run out-of-process but the generated launch configurations will r
   - Use arrow functions over anonymous function expressions
   - Only surround arrow function parameters with parens when necessary
 
+
+## Issue Triage
+
+If an issue doesn't have enough information to investigate, the required information should be noted on the issue and the **awaiting info** label applied. Issues with this tag will automatically be commented on and closed by a bot after 30 + 10 days with no updates.
+
+Issues blocked by an upstream change (for example Dart, Flutter or VS Code) should be labelled with **blocked on xxx**.
+
+Issues that have been fixed by changes upstream (for example Dart, Flutter or VS Code) should be labelled with **fixed in xxx**.
+
+The green **in xxx** labels should be used to categorise the area the issue exists in. Read the label descriptions for specifics.
+
+The blue **is xxx** labels should describe the type of issue (bug, enhancement, performance, automated testing).
+
+If an issue appears to be specific to a platform, the appropriate lime **on xxx** platform label should be added.
+
 ## Release Procedure
 
 ### Testing
