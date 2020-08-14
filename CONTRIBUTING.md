@@ -73,7 +73,7 @@ All tests will be run on all supported platforms via GitHub Actions when you sub
 
 ## Debugging the Debug Adapters
 
-Debug adapters currently run in-process and debugging them is the same as any other extension code.
+Debug adapters run out-of-process but the generated launch configurations will run them in server-mode and attach the debugger so that they can be debugged simultaneously with the extension code (this also applies to running automated tests).
 
 ## Code Etiquette and Style
 
