@@ -46,6 +46,10 @@ This folder contains all shared code that can be used by `extension`, `debug` an
 
 Code for automated tests, including some test projects (in `src/test/test_projects`) required by the tests. Code here should not be imported into any files outside of this folder.
 
+### src/tool
+
+Util scripts for helping with project maintenance. For example, a script to generate the `launch.json` file because it contains a lot of boilerplate for a large number of launch configurations.
+
 
 ## Cloning and Running Dart Code
 
