@@ -1542,6 +1542,7 @@ export class DartDebugSession extends DebugSession {
 				// directly to the VM and not via Flutter's run daemon.
 				case "serviceExtension":
 				case "checkPlatformOverride":
+				case "checkBrightnessOverride":
 				case "checkIsWidgetCreationTracked":
 				case "hotReload":
 				case "hotRestart":

@@ -24,6 +24,7 @@ const toggleExtensionStateKeys: { [key: string]: string } = {
 	[VmServiceExtension.DebugPaint]: keyEnabled,
 	[VmServiceExtension.PaintBaselines]: keyEnabled,
 	[VmServiceExtension.InspectorSelectMode]: keyEnabled,
+	[VmServiceExtension.BrightnessOverride]: keyValue,
 	[VmServiceExtension.RepaintRainbow]: keyEnabled,
 	[VmServiceExtension.PerformanceOverlay]: keyEnabled,
 	[VmServiceExtension.SlowAnimations]: keyTimeDilation,
@@ -40,6 +41,7 @@ const defaultToggleExtensionState: { [key: string]: any } = {
 	[VmServiceExtension.DebugPaint]: false,
 	[VmServiceExtension.PaintBaselines]: false,
 	[VmServiceExtension.InspectorSelectMode]: false,
+	[VmServiceExtension.BrightnessOverride]: null,
 	[VmServiceExtension.RepaintRainbow]: false,
 	[VmServiceExtension.PerformanceOverlay]: false,
 	[VmServiceExtension.SlowAnimations]: timeDilationNormal,
@@ -86,6 +88,8 @@ export class VmServiceExtensions {
 					// If it's the PlatformOverride, send a request to get the current value.
 				} else if (e.body.id === VmServiceExtension.PlatformOverride) {
 					await e.session.customRequest("checkPlatformOverride");
+				} else if (e.body.id === VmServiceExtension.BrightnessOverride) {
+					await e.session.customRequest("checkBrightnessOverride");
 				} else if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
 					// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
 					// works for open packages too.
@@ -118,6 +122,8 @@ export class VmServiceExtensions {
 			vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
 		} else if (e.event === "dart.flutter.updatePlatformOverride") {
 			this.currentExtensionState[VmServiceExtension.PlatformOverride] = e.body.platform;
+		} else if (e.event === "dart.flutter.updateBrightnessOverride") {
+			this.currentExtensionState[VmServiceExtension.BrightnessOverride] = e.body.brightness;
 		} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
 			this.handleRemoteValueUpdate(e.body.extension, e.body.value);
 		}

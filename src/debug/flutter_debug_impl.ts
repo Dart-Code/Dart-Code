@@ -316,6 +316,14 @@ export class FlutterDebugSession extends DartDebugSession {
 					this.sendResponse(response);
 					break;
 
+				case "checkBrightnessOverride":
+					if (this.currentRunningAppId && this.runDaemon) {
+						const result = await this.runDaemon.callServiceExtension(this.currentRunningAppId, "ext.flutter.brightnessOverride", undefined);
+						this.sendEvent(new Event("dart.flutter.updateBrightnessOverride", { brightness: result.value }));
+					}
+					this.sendResponse(response);
+					break;
+
 				case "checkIsWidgetCreationTracked":
 					if (this.currentRunningAppId && this.runDaemon) {
 						const result = await this.runDaemon.callServiceExtension(this.currentRunningAppId, "ext.flutter.inspector.isWidgetCreationTracked", undefined);
