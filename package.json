@@ -318,6 +318,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.toggleBrightness",
+				"title": "Toggle Brightness",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.toggleRepaintRainbow",
 				"title": "Toggle Repaint Rainbow",
 				"category": "Flutter"
@@ -670,6 +675,10 @@
 				{
 					"command": "flutter.togglePlatform",
 					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.platformOverride"
+				},
+				{
+					"command": "flutter.toggleBrightness",
+					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.brightnessOverride"
 				},
 				{
 					"command": "flutter.toggleRepaintRainbow",
