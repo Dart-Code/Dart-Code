@@ -150,10 +150,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			&& !isInsideFolderNamed(debugConfig.program, "tool")
 			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
 			// Check if we're a Flutter or Web project.
-			if (isInsideFolderNamed(debugConfig.program, "web") && !isInsideFolderNamed(debugConfig.program, "test")) {
-				debugType = DebuggerType.Web;
-			} else if (isFlutterProjectFolder(debugConfig.cwd as string))
+			if (isFlutterProjectFolder(debugConfig.cwd as string)) {
 				debugType = DebuggerType.Flutter;
+			} else if (isInsideFolderNamed(debugConfig.program, "web") && !isInsideFolderNamed(debugConfig.program, "test"))
+				debugType = DebuggerType.Web;
 			else
 				logger.info(`Project (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
 		}
