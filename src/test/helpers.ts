@@ -1039,9 +1039,11 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 	return item.label || path.basename(fsPath(item.resourceUri!));
 }
 
-export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, provider: vs.TreeDataProvider<vs.TreeItem>, includeDescription = true, buffer: string[] = [], indent = 0): Promise<string[]> {
+export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, provider: vs.TreeDataProvider<vs.TreeItem>, buffer: string[] = [], indent = 0): Promise<string[]> {
 	const parentNode = parent instanceof vs.TreeItem ? parent : undefined;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
+
+	const durationPattern = /\d+ms/;
 
 	const items = (await provider.getChildren(parentNode))!
 		// Filter to only the suite we were given (though includes all children).
@@ -1057,7 +1059,7 @@ export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, pro
 				fsPath(item.resourceUri!),
 			).replace("\\", "/")
 			: item.label;
-		const expectedDesc = includeDescription && item.description ? ` [${item.description}]` : "";
+		const expectedDesc = ` [${item.description?.toString().replace(durationPattern, "{duration}ms")}]`;
 		const iconUri = item.iconPath instanceof vs.Uri
 			? item.iconPath
 			: "dark" in (item.iconPath as any)
@@ -1065,7 +1067,7 @@ export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, pro
 				: undefined;
 		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("_stale", "").replace("-dark", "") : "<unknown icon>";
 		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel}${expectedDesc} (${iconFile})`);
-		await makeTextTree(item, provider, includeDescription, buffer, indent + 1);
+		await makeTextTree(item, provider, buffer, indent + 1);
 	}
 	return buffer;
 }

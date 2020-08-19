@@ -130,7 +130,7 @@ describe("dart test debugger", () => {
 		);
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider, false)).join("\n");
+		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
@@ -187,7 +187,7 @@ describe("dart test debugger", () => {
 		async function checkResults(description: string): Promise<void> {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider, false)).join("\n");
+			const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -227,7 +227,7 @@ describe("dart test debugger", () => {
 		async function checkResults(description: string): Promise<void> {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider, false)).join("\n");
+			const actualResults = (await makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
