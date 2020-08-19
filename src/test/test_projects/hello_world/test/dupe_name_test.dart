@@ -4,14 +4,14 @@ import "package:test/test.dart";
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// test/dupe_name_test.dart (fail.svg)
-//     group (fail.svg)
-//         test (pass.svg)
-//         test (fail.svg)
-//     group (fail.svg)
-//         test 1 (pass.svg)
-//         test 1 (fail.svg)
-//         test 2 (skip.svg)
+// test/dupe_name_test.dart [2/5 passed, {duration}ms] (fail.svg)
+//     group [1/2 passed, {duration}ms] (fail.svg)
+//         test [{duration}ms] (pass.svg)
+//         test [{duration}ms] (fail.svg)
+//     group [1/3 passed, {duration}ms] (fail.svg)
+//         test 1 [{duration}ms] (pass.svg)
+//         test 1 [{duration}ms] (fail.svg)
+//         test 2 [{duration}ms] (skip.svg)
 // == /EXPECTED RESULTS ==
 
 void main() {

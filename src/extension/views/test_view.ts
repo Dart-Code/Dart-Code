@@ -4,7 +4,7 @@ import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_T
 import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { ErrorNotification, Group, GroupNotification, Notification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
-import { flatMap, uniq } from "../../shared/utils";
+import { flatMap, notUndefined, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
@@ -236,6 +236,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			node.iconPath = getIconPath(node.status, false);
 			this.updateNode(node);
 		}
+
+		node.description = `${node.testPassCount}/${node.testCount} passed, ${node.duration}ms`;
+
 		return node.status;
 	}
 
@@ -350,7 +353,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			testNode.status = TestStatus.Unknown;
 		}
 		if (evt.time && testNode.testStartTime) {
-			testNode.description = `${evt.time - testNode.testStartTime}ms`;
+			testNode.duration = evt.time - testNode.testStartTime;
+			testNode.description = `${testNode.duration}ms`;
 			testNode.testStartTime = undefined;
 		}
 
@@ -535,6 +539,11 @@ export abstract class TestItemTreeItem extends vs.TreeItem {
 	public suiteRunNumber = 0;
 	public isPotentiallyDeleted = false;
 
+	public abstract testCount: number;
+	public abstract testPassCount: number;
+
+	public abstract duration: number | undefined;
+
 	get status(): TestStatus {
 		return this._status;
 	}
@@ -571,6 +580,23 @@ export class SuiteTreeItem extends TestItemTreeItem {
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
 
+	get testCount(): number {
+		return this.children.map((t) => t.testCount)
+			.reduce((total, value) => total + value, 0);
+	}
+
+	get testPassCount(): number {
+		return this.children.map((t) => t.testPassCount)
+			.reduce((total, value) => total + value, 0);
+	}
+
+	get duration(): number | undefined {
+		return this.children
+			.map((t) => t.duration)
+			.filter(notUndefined)
+			.reduce((total, value) => total + value, 0);
+	}
+
 	constructor(public readonly suite: Suite) {
 		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Collapsed);
 		this.contextValue = DART_TEST_SUITE_NODE_CONTEXT;
@@ -597,6 +623,23 @@ class GroupTreeItem extends TestItemTreeItem {
 	private _group: Group; // tslint:disable-line:variable-name
 	public readonly groups: GroupTreeItem[] = [];
 	public readonly tests: TestTreeItem[] = [];
+
+	get testCount(): number {
+		return this.children.map((t) => t.testCount)
+			.reduce((total, value) => total + value, 0);
+	}
+
+	get testPassCount(): number {
+		return this.children.map((t) => t.testPassCount)
+			.reduce((total, value) => total + value, 0);
+	}
+
+	get duration(): number | undefined {
+		return this.children
+			.map((t) => t.duration)
+			.filter(notUndefined)
+			.reduce((total, value) => total + value, 0);
+	}
 
 	constructor(public suite: SuiteData, group: Group) {
 		super(group.name || "<unnamed>", vs.TreeItemCollapsibleState.Collapsed);
@@ -660,6 +703,8 @@ class TestTreeItem extends TestItemTreeItem {
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	private _test: Test; // tslint:disable-line:variable-name
 	public testStartTime: number | undefined;
+	public duration: number | undefined;
+
 	constructor(public suite: SuiteData, test: Test, public hidden = false) {
 		super(test.name || "<unnamed>", vs.TreeItemCollapsibleState.None);
 		this.suiteRunNumber = suite.currentRunNumber;
@@ -670,6 +715,14 @@ class TestTreeItem extends TestItemTreeItem {
 		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_test_${this.test.id}`;
 		this.status = TestStatus.Unknown;
 		this.command = { command: "_dart.displayTest", arguments: [this], title: "" };
+	}
+
+	get testCount(): number {
+		return 1;
+	}
+
+	get testPassCount(): number {
+		return this.status === TestStatus.Passed ? 1 : 0;
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {
