@@ -9,6 +9,27 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
+			"preLaunchTask": "npm: watch",
+			"presentation": {
+				"order": 0
+			},
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
+			"name": "Extension (Debuggable)",
+			"type": "extensionHost",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true"
 			},
@@ -693,9 +714,9 @@
 	],
 	"compounds": [
 		{
-			"name": "Extension + DAs",
+			"name": "Extension (Debuggable) + DAs",
 			"configurations": [
-				"Extension",
+				"Extension (Debuggable)",
 				"Dart Debug Server",
 				"Dart Test Debug Server",
 				"Web Debug Server",
@@ -704,7 +725,7 @@
 				"Flutter Test Debug Server"
 			],
 			"presentation": {
-				"order": 1
+				"order": 0
 			},
 			"stopAll": true
 		},

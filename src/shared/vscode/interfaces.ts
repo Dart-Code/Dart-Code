@@ -4,7 +4,7 @@ import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server
 import { Analyzer } from "../analyzer";
 import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
-import { SpawnedProcess } from "../interfaces";
+import { CustomScript, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
@@ -76,7 +76,7 @@ export interface InternalExtensionApi {
 	nextAnalysis: () => Promise<void>;
 	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {
-		promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink?: string, requiredVersion?: string, customActivateScript?: string, autoUpdate?: boolean): Promise<string | undefined>;
+		promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink?: string, requiredVersion?: string, customActivateScript?: CustomScript, autoUpdate?: boolean): Promise<string | undefined>;
 		checkVersionStatus(packageID: string, installedVersion: string | undefined, requiredVersion?: string): Promise<VersionStatus>;
 		getInstalledVersion(packageName: string, packageID: string): Promise<string | undefined>;
 		uninstall(packageID: string): Promise<void>;

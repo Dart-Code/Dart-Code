@@ -30,6 +30,8 @@ export function createDebugClient(debugType: DebuggerType) {
 	const debugAdapterName = getDebugAdapterName(debugType);
 	const debugAdapterPort = getDebugAdapterPort(debugAdapterName);
 
+	// TODO: Change this to go through DartDebugAdapterDescriptorFactory to ensure we don't have tests that pass
+	// if we've broken the real implementation.
 	const dc = process.env.DART_CODE_USE_DEBUG_SERVERS
 		? new DartDebugClient({ port: debugAdapterPort }, extApi.debugCommands, extApi.testTreeProvider)
 		: new DartDebugClient({ runtime: "node", executable: debugAdapterPath, args: [debugAdapterName] }, extApi.debugCommands, extApi.testTreeProvider);
