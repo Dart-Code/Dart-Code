@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "watch-ext",
+			"script": "watch",
 			"problemMatcher": [
 				"$ts-webpack-watch"
 			],
@@ -11,13 +11,9 @@
 			"presentation": {
 				"reveal": "never"
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"runOptions": {
-				"runOn": "folderOpen",
-			}
+			"dependsOn": [
+				"npm: watch-non-ext"
+			]
 		},
 		{
 			"type": "npm",
@@ -29,10 +25,6 @@
 			"presentation": {
 				"reveal": "never"
 			},
-			"group": "build",
-			"runOptions": {
-				"runOn": "folderOpen",
-			}
 		}
 	]
 }
