@@ -1747,7 +1747,7 @@
 			{
 				"type": "dart",
 				"label": "Dart & Flutter",
-				"program": "./out/src/extension/debug/dart_debug_entry.js",
+				"program": "./out/src/dist/debug.js",
 				"runtime": "node",
 				"languages": [
 					"dart"

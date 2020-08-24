@@ -1,9 +1,10 @@
 import * as fs from "fs";
+import { flatMap } from "../shared/utils";
+import { unique } from "../shared/utils/array";
 import { getDebugAdapterPort } from "../shared/utils/debug";
-import { readDirAsync } from "../shared/utils/fs";
 
 const launchConfigPath = ".vscode/launch.json";
-const debuggerFolder = "src/debug";
+const debuggerEntry = "out/dist/debug.js";
 const testFolder = "out/src/test";
 const testProjectsFolder = "src/test/test_projects";
 
@@ -29,14 +30,13 @@ const testConfigs: TestConfig[] = [
 ];
 
 async function main() {
-	const debugAdapters = (await readDirAsync(debuggerFolder))
-		.filter((dirent) => dirent.isFile && dirent.name.endsWith("_entry.ts"));
+	const debugAdapters = unique(flatMap(testConfigs, (t) => t.debugAdapters || []));
 	const launchConfig = {
 		"version": "0.1.0",
 		"configurations": [
 			getExtensionConfig(),
 			getGenerateLaunchConfigConfig(),
-			...debugAdapters.map((dirent) => getDebugServerConfig(dirent.name)),
+			...debugAdapters.map((name) => getDebugServerConfig(name)),
 			...testConfigs.map(getTestsConfig),
 		],
 		"compounds": [
@@ -44,7 +44,7 @@ async function main() {
 				"name": "Extension + DAs",
 				"configurations": [
 					"Extension",
-					...debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name))
+					...debugAdapters.map((name) => getDebugServerConfigName(name))
 				],
 				"presentation": {
 					"order": 1
@@ -54,12 +54,12 @@ async function main() {
 			...testConfigs.map((test) => {
 				const testConfigName = getTestConfigName(test);
 				return {
-					"name": `${testConfigName}${test.debugAdapters ? " + DAs" : ""}`,
+					"name": `${testConfigName} + DAs`,
 					"configurations": [
-						`${testConfigName} (hidden)`,
+						`${testConfigName}`,
 						...debugAdapters
-							.filter((dirent) => test.debugAdapters?.find((da) => dirent.name === `${da}_debug_entry.ts`))
-							.map((dirent) => getDebugServerConfigName(dirent.name))
+							.filter((name) => test.debugAdapters?.find((da) => name === da))
+							.map((name) => getDebugServerConfigName(name))
 					],
 					"presentation": {
 						"order": 3
@@ -88,12 +88,11 @@ const template = {
 };
 
 function getConfigName(input: string) {
-	input = input.replace("_debug_entry.ts", "");
 	return input.replace("/", "_/_").split("_").map(titleCase).join(" ");
 }
 
-function getDebugServerConfigName(input: string) {
-	return `${getConfigName(input)} Debug Server`;
+function getDebugServerConfigName(debugType: string) {
+	return `${getConfigName(debugType)} Debug Server`;
 }
 
 function getTestConfigName(test: TestConfig) {
@@ -133,20 +132,22 @@ function getGenerateLaunchConfigConfig() {
 		"type": "node",
 		"cwd": "${workspaceFolder}",
 		"program": "${workspaceFolder}/src/tool/generate_launch_configs.ts",
+		"preLaunchTask": "npm: watch",
 		"presentation": {
 			"order": 2,
 		}
 	}, template);
 }
 
-function getDebugServerConfig(filename: string) {
-	const port = getDebugAdapterPort(filename);
+function getDebugServerConfig(debugType: string) {
+	const port = getDebugAdapterPort(debugType);
 	return Object.assign({
-		"name": getDebugServerConfigName(filename),
+		"name": getDebugServerConfigName(debugType),
 		"type": "node",
 		"cwd": "${workspaceFolder}",
-		"program": `\${workspaceFolder}/${debuggerFolder}/${filename}`,
+		"program": `\${workspaceFolder}/${debuggerEntry}`,
 		"args": [
+			debugType,
 			`--server=${port}`
 		],
 		"preLaunchTask": "npm: watch",
@@ -159,7 +160,7 @@ function getDebugServerConfig(filename: string) {
 function getTestsConfig(test: TestConfig) {
 	const name = getTestConfigName(test);
 	return Object.assign({
-		"name": `${name} (hidden)`,
+		"name": name,
 		"type": "extensionHost",
 		"runtimeExecutable": "${execPath}",
 		"args": [

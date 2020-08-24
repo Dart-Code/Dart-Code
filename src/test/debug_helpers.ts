@@ -2,11 +2,11 @@ import * as assert from "assert";
 import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { dartVMPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
+import { dartVMPath, debugAdapterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
 import { DebuggerType, LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
-import { getDebugAdapterPath, getDebugAdapterPort } from "../shared/utils/debug";
+import { getDebugAdapterName, getDebugAdapterPort } from "../shared/utils/debug";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
@@ -27,12 +27,12 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 }
 
 export function createDebugClient(debugType: DebuggerType) {
-	const debugAdapterPath = getDebugAdapterPath((p) => extApi.asAbsolutePath(p), debugType);
-	const debugAdapterPort = getDebugAdapterPort(debugAdapterPath);
+	const debugAdapterName = getDebugAdapterName(debugType);
+	const debugAdapterPort = getDebugAdapterPort(debugAdapterName);
 
 	const dc = process.env.DART_CODE_USE_DEBUG_SERVERS
 		? new DartDebugClient({ port: debugAdapterPort }, extApi.debugCommands, extApi.testTreeProvider)
-		: new DartDebugClient({ runtime: "node", executable: debugAdapterPath }, extApi.debugCommands, extApi.testTreeProvider);
+		: new DartDebugClient({ runtime: "node", executable: debugAdapterPath, args: [debugAdapterName] }, extApi.debugCommands, extApi.testTreeProvider);
 
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;

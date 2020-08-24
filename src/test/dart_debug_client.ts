@@ -10,14 +10,14 @@ import { delay, logger, watchPromise, withTimeout } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl"];
 
-type DebugClientArgs = { runtime: string, executable: string, port?: undefined } | { runtime?: undefined, executable?: undefined, port: number };
+type DebugClientArgs = { runtime: string, executable: string, args: string[], port?: undefined } | { runtime?: undefined, executable?: undefined, args?: undefined, port: number };
 
 export class DartDebugClient extends DebugClient {
 	private readonly port: number | undefined;
 	private currentSession?: DebugSession;
 
 	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
-		super(args.runtime, args.executable, "dart", undefined, true);
+		super(args.runtime, args.executable, args.args, "dart", undefined, true);
 		this.port = args.port;
 
 		// HACK to handle incoming requests..

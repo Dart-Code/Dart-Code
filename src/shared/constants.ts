@@ -2,6 +2,7 @@ import * as fs from "fs";
 
 export const dartCodeExtensionIdentifier = "Dart-Code.dart-code";
 export const flutterExtensionIdentifier = "Dart-Code.flutter";
+export const debugAdapterPath = 'out/dist/debug.js';
 
 export const isWin = /^win/.test(process.platform);
 export const isMac = process.platform === "darwin";

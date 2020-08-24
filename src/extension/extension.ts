@@ -404,7 +404,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
-	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", new DartDebugAdapterDescriptorFactory(context)));
+	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", new DartDebugAdapterDescriptorFactory()));
 	// Also the providers for the initial configs.
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new InitialLaunchJsonDebugConfigProvider(), vs.DebugConfigurationProviderTriggerKind.Initial));
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(), vs.DebugConfigurationProviderTriggerKind.Dynamic));
@@ -632,7 +632,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	return {
 		...new DartExtensionApi(),
 		[internalApiSymbol]: {
-			asAbsolutePath: (p) => context.asAbsolutePath(p),
 			analyzer,
 			analyzerCapabilities: dasClient && dasClient.capabilities,
 			cancelAllAnalysisRequests: () => dasClient && dasClient.cancelAllRequests(),
