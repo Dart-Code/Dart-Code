@@ -35,19 +35,20 @@ async function main() {
 		"version": "0.1.0",
 		"configurations": [
 			getExtensionConfig(),
+			getDebuggableExtensionConfig(),
 			getGenerateLaunchConfigConfig(),
 			...debugAdapters.map((name) => getDebugServerConfig(name)),
 			...testConfigs.map(getTestsConfig),
 		],
 		"compounds": [
 			{
-				"name": "Extension + DAs",
+				"name": "Extension (Debuggable) + DAs",
 				"configurations": [
-					"Extension",
+					"Extension (Debuggable)",
 					...debugAdapters.map((name) => getDebugServerConfigName(name))
 				],
 				"presentation": {
-					"order": 1
+					"order": 0
 				},
 				"stopAll": true,
 			},
@@ -108,9 +109,9 @@ function titleCase(input: string) {
 	return `${input[0].toUpperCase()}${input.slice(1)}`;
 }
 
-function getExtensionConfig() {
+function getDebuggableExtensionConfig() {
 	return Object.assign({
-		"name": "Extension",
+		"name": "Extension (Debuggable)",
 		"type": "extensionHost",
 		"runtimeExecutable": "${execPath}",
 		"args": [
@@ -122,6 +123,21 @@ function getExtensionConfig() {
 		"preLaunchTask": "npm: watch",
 		"presentation": {
 			"hidden": true,
+		}
+	}, template);
+}
+
+function getExtensionConfig() {
+	return Object.assign({
+		"name": "Extension",
+		"type": "extensionHost",
+		"runtimeExecutable": "${execPath}",
+		"args": [
+			"--extensionDevelopmentPath=${workspaceFolder}"
+		],
+		"preLaunchTask": "npm: watch",
+		"presentation": {
+			"order": 0,
 		}
 	}, template);
 }
