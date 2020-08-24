@@ -133,3 +133,7 @@ export function areSameFolder(folder1: string, folder2: string) {
 
 	return folder1 === folder2;
 }
+
+export function normalizeSlashes(p: string) {
+	return p.replace(/[\\/]/g, path.sep);
+}

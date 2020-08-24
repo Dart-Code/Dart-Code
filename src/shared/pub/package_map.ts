@@ -3,6 +3,7 @@ import * as path from "path";
 import * as url from "url";
 import { Logger } from "../interfaces";
 import { findFileInAncestor, uriToFilePath } from "../utils";
+import { normalizeSlashes } from "../utils/fs";
 
 export abstract class PackageMap {
 	public static findPackagesFile<T extends string | undefined>(entryPoint: T): string | (undefined extends T ? undefined : never) {
@@ -125,11 +126,13 @@ class PackageConfigJsonPackageMap extends PackageMap {
 		if (!uri)
 			return undefined;
 
-		const parsedUri = uri.startsWith("file:")
-			? url.fileURLToPath(uri)
-			: unescape(uri);
+		const parsedPath = normalizeSlashes(
+			uri.startsWith("file:")
+				? url.fileURLToPath(uri)
+				: unescape(uri),
+		);
 
-		return parsedUri.endsWith("/") ? parsedUri : `${parsedUri}/`;
+		return parsedPath.endsWith(path.sep) ? parsedPath : `${parsedPath}${path.sep}`;
 	}
 
 	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
