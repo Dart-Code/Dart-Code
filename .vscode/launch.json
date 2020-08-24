@@ -12,7 +12,7 @@
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true"
 			},
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: watch-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -31,7 +31,6 @@
 			"type": "node",
 			"cwd": "${workspaceFolder}",
 			"program": "${workspaceFolder}/src/tool/generate_launch_configs.ts",
-			"preLaunchTask": "npm: watch-tests",
 			"presentation": {
 				"order": 2
 			},
@@ -53,7 +52,7 @@
 			"args": [
 				"--server=4715"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -75,7 +74,7 @@
 			"args": [
 				"--server=4716"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -97,7 +96,7 @@
 			"args": [
 				"--server=4711"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -119,7 +118,7 @@
 			"args": [
 				"--server=4712"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -141,7 +140,7 @@
 			"args": [
 				"--server=4713"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -163,7 +162,7 @@
 			"args": [
 				"--server=4714"
 			],
-			"preLaunchTask": "npm: watch",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -191,7 +190,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -220,7 +219,7 @@
 				"DART_CODE_IS_TEST_RUN": "true",
 				"DART_CODE_FORCE_LSP": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -248,7 +247,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -276,7 +275,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -304,7 +303,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -333,7 +332,7 @@
 				"DART_CODE_IS_TEST_RUN": "true",
 				"DART_CODE_FORCE_LSP": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -361,7 +360,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -390,7 +389,7 @@
 				"DART_CODE_IS_TEST_RUN": "true",
 				"FLUTTER_TEST_DEVICE_ID": "chrome"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -418,7 +417,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -446,7 +445,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -474,7 +473,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -502,7 +501,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -530,7 +529,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -558,7 +557,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -586,7 +585,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -614,7 +613,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -642,7 +641,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},
@@ -670,7 +669,7 @@
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true"
 			},
-			"preLaunchTask": "npm: watch-tests",
+			"preLaunchTask": "npm: watch-non-ext",
 			"presentation": {
 				"hidden": true
 			},

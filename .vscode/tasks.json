@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "watch",
+			"script": "watch-ext",
 			"problemMatcher": [
 				"$ts-webpack-watch"
 			],
@@ -21,7 +21,7 @@
 		},
 		{
 			"type": "npm",
-			"script": "watch-tests",
+			"script": "watch-non-ext",
 			"problemMatcher": [
 				"$tsc-watch"
 			],

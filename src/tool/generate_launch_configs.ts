@@ -120,7 +120,7 @@ function getExtensionConfig() {
 		"env": {
 			"DART_CODE_USE_DEBUG_SERVERS": "true",
 		},
-		"preLaunchTask": "npm: watch",
+		"preLaunchTask": "npm: watch-ext",
 		"presentation": {
 			"hidden": true,
 		}
@@ -133,7 +133,6 @@ function getGenerateLaunchConfigConfig() {
 		"type": "node",
 		"cwd": "${workspaceFolder}",
 		"program": "${workspaceFolder}/src/tool/generate_launch_configs.ts",
-		"preLaunchTask": "npm: watch-tests",
 		"presentation": {
 			"order": 2,
 		}
@@ -150,7 +149,7 @@ function getDebugServerConfig(filename: string) {
 		"args": [
 			`--server=${port}`
 		],
-		"preLaunchTask": "npm: watch",
+		"preLaunchTask": "npm: watch-non-ext",
 		"presentation": {
 			"hidden": true,
 		}
@@ -175,7 +174,7 @@ function getTestsConfig(test: TestConfig) {
 			"DART_CODE_FORCE_LSP": test.lsp ? "true" : undefined,
 			"FLUTTER_TEST_DEVICE_ID": test.chrome ? "chrome" : undefined,
 		},
-		"preLaunchTask": "npm: watch-tests",
+		"preLaunchTask": "npm: watch-non-ext",
 		"presentation": {
 			"hidden": true,
 		}
