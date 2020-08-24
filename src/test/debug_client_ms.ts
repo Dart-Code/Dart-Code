@@ -39,6 +39,7 @@ export class DebugClient extends ProtocolClient {
 
 	private _runtime: string | undefined;
 	private _executable: string | undefined;
+	private _args: string[] | undefined;
 	private _adapterProcess?: cp.ChildProcess;
 	private _spawnOptions?: cp.SpawnOptionsWithoutStdio;
 	private _enableStderr: boolean;
@@ -65,10 +66,11 @@ export class DebugClient extends ProtocolClient {
 	 *     return dc.hitBreakpoint({ program: 'test.js' }, 'test.js', 15);
 	 * });
 	 */
-	constructor(runtime: string | undefined, executable: string | undefined, debugType: string, spawnOptions?: cp.SpawnOptionsWithoutStdio, enableStderr?: boolean) {
+	constructor(runtime: string | undefined, executable: string | undefined, args: string[] | undefined, debugType: string, spawnOptions?: cp.SpawnOptionsWithoutStdio, enableStderr?: boolean) {
 		super();
 		this._runtime = runtime;
 		this._executable = executable;
+		this._args = args;
 		this._spawnOptions = spawnOptions;
 		this._enableStderr = !!enableStderr;
 		this._debugType = debugType;
@@ -102,7 +104,7 @@ export class DebugClient extends ProtocolClient {
 					resolve();
 				});
 			} else {
-				this._adapterProcess = cp.spawn(this._runtime!, [this._executable!], this._spawnOptions);
+				this._adapterProcess = cp.spawn(this._runtime!, [this._executable!, ...(this._args || [])], this._spawnOptions);
 				const sanitize = (s: string) => s.toString().replace(/\r?\n$/mg, '');
 				this._adapterProcess.stderr!.on('data', (data: string) => {
 					if (this._enableStderr) {

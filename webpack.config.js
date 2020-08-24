@@ -25,7 +25,10 @@ module.exports = env => {
 	 */
 	const config = {
 		devtool: "source-map",
-		entry: "./src/extension/extension.ts",
+		entry: {
+			extension: "./src/extension/extension.ts",
+			debug: "./src/debug/debug_entry.ts"
+		},
 		// https://webpack.js.org/configuration/externals/
 		externals: {
 			vscode: "commonjs vscode",
@@ -39,7 +42,6 @@ module.exports = env => {
 		},
 		output: {
 			devtoolModuleFilenameTemplate: "../../[resource-path]",
-			filename: "extension.js",
 			libraryTarget: "commonjs2",
 			path: path.resolve(__dirname, "out/dist"),
 		},
