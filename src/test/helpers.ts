@@ -1059,7 +1059,7 @@ export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, pro
 				fsPath(item.resourceUri!),
 			).replace("\\", "/")
 			: item.label;
-		const expectedDesc = ` [${item.description?.toString().replace(durationPattern, "{duration}ms")}]`;
+		const expectedDesc = item.description ? ` [${item.description?.toString().replace(durationPattern, "{duration}ms")}]` : "";
 		const iconUri = item.iconPath instanceof vs.Uri
 			? item.iconPath
 			: "dark" in (item.iconPath as any)
