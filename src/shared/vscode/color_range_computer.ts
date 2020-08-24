@@ -1,7 +1,6 @@
 import * as vs from "vscode";
 import { flutterCupertinoColors, flutterMaterialColors } from "../flutter/colors";
 import { asHexColor } from "../utils";
-import { parseNumber } from "../utils/numbers";
 import { toRange } from "./utils";
 
 export class ColorRangeComputer {
@@ -86,9 +85,9 @@ export class ColorRangeComputer {
 	}
 
 	private extractRgboColor(inputR: string, inputG: string, inputB: string, inputO: string): string | undefined {
-		const r = parseNumber(inputR);
-		const g = parseNumber(inputG);
-		const b = parseNumber(inputB);
+		const r = parseInt(inputR);
+		const g = parseInt(inputG);
+		const b = parseInt(inputB);
 		const opacity = parseFloat(inputO);
 
 		if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(opacity))
@@ -98,10 +97,10 @@ export class ColorRangeComputer {
 	}
 
 	private extractArgbColor(inputA: string, inputR: string, inputG: string, inputB: string) {
-		const a = parseNumber(inputA);
-		const r = parseNumber(inputR);
-		const g = parseNumber(inputG);
-		const b = parseNumber(inputB);
+		const a = parseInt(inputA);
+		const r = parseInt(inputR);
+		const g = parseInt(inputG);
+		const b = parseInt(inputB);
 
 		if (isNaN(a) || isNaN(r) || isNaN(g) || isNaN(b))
 			return;
