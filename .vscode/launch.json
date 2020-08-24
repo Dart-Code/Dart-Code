@@ -178,7 +178,7 @@
 			]
 		},
 		{
-			"name": "Dart Tests",
+			"name": "Dart Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -206,7 +206,7 @@
 			]
 		},
 		{
-			"name": "Dart LSP Tests",
+			"name": "Dart LSP Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -235,7 +235,7 @@
 			]
 		},
 		{
-			"name": "Dart Debug Tests",
+			"name": "Dart Debug Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -263,7 +263,7 @@
 			]
 		},
 		{
-			"name": "Web Debug Tests",
+			"name": "Web Debug Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -291,7 +291,7 @@
 			]
 		},
 		{
-			"name": "Flutter Tests",
+			"name": "Flutter Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -319,7 +319,7 @@
 			]
 		},
 		{
-			"name": "Flutter LSP Tests",
+			"name": "Flutter LSP Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -348,7 +348,7 @@
 			]
 		},
 		{
-			"name": "Flutter Debug Tests",
+			"name": "Flutter Debug Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -376,7 +376,7 @@
 			]
 		},
 		{
-			"name": "Flutter Debug Chrome Tests",
+			"name": "Flutter Debug Chrome Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -405,7 +405,7 @@
 			]
 		},
 		{
-			"name": "Flutter Test Debug Tests",
+			"name": "Flutter Test Debug Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -433,7 +433,7 @@
 			]
 		},
 		{
-			"name": "Multi Root Tests",
+			"name": "Multi Root Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -461,7 +461,7 @@
 			]
 		},
 		{
-			"name": "Multi Project Folder Tests",
+			"name": "Multi Project Folder Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -489,7 +489,7 @@
 			]
 		},
 		{
-			"name": "Dart Create Tests Tests",
+			"name": "Dart Create Tests Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -517,7 +517,7 @@
 			]
 		},
 		{
-			"name": "Not Activated / Dart Create Tests",
+			"name": "Not Activated / Dart Create Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -545,7 +545,7 @@
 			]
 		},
 		{
-			"name": "Flutter Create Tests Tests",
+			"name": "Flutter Create Tests Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -573,7 +573,7 @@
 			]
 		},
 		{
-			"name": "Not Activated / Flutter Create Tests",
+			"name": "Not Activated / Flutter Create Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -601,7 +601,7 @@
 			]
 		},
 		{
-			"name": "Flutter Bazel Tests",
+			"name": "Flutter Bazel Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -629,7 +629,7 @@
 			]
 		},
 		{
-			"name": "Flutter Snap Tests",
+			"name": "Flutter Snap Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -657,7 +657,7 @@
 			]
 		},
 		{
-			"name": "Flutter Repository Tests",
+			"name": "Flutter Repository Tests (hidden)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -687,7 +687,7 @@
 	],
 	"compounds": [
 		{
-			"name": "Extension + DA Servers",
+			"name": "Extension + DAs",
 			"configurations": [
 				"Extension",
 				"Dart Debug Server",
@@ -703,13 +703,41 @@
 			"stopAll": true
 		},
 		{
-			"name": "Dart Tests + DA Servers",
+			"name": "Dart Tests",
 			"configurations": [
-				"Dart Tests",
+				"Dart Tests (hidden)"
+			],
+			"presentation": {
+				"order": 3
+			},
+			"stopAll": true
+		},
+		{
+			"name": "Dart LSP Tests",
+			"configurations": [
+				"Dart LSP Tests (hidden)"
+			],
+			"presentation": {
+				"order": 3
+			},
+			"stopAll": true
+		},
+		{
+			"name": "Dart Debug Tests + DAs",
+			"configurations": [
+				"Dart Debug Tests (hidden)",
 				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
+				"Dart Test Debug Server"
+			],
+			"presentation": {
+				"order": 3
+			},
+			"stopAll": true
+		},
+		{
+			"name": "Web Debug Tests + DAs",
+			"configurations": [
+				"Web Debug Tests (hidden)",
 				"Web Debug Server",
 				"Web Test Debug Server"
 			],
@@ -719,15 +747,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Dart LSP Tests + DA Servers",
+			"name": "Flutter Tests",
 			"configurations": [
-				"Dart LSP Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -735,15 +757,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Dart Debug Tests + DA Servers",
+			"name": "Flutter LSP Tests",
 			"configurations": [
-				"Dart Debug Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter LSP Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -751,15 +767,10 @@
 			"stopAll": true
 		},
 		{
-			"name": "Web Debug Tests + DA Servers",
+			"name": "Flutter Debug Tests + DAs",
 			"configurations": [
-				"Web Debug Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Debug Tests (hidden)",
+				"Flutter Debug Server"
 			],
 			"presentation": {
 				"order": 3
@@ -767,15 +778,10 @@
 			"stopAll": true
 		},
 		{
-			"name": "Flutter Tests + DA Servers",
+			"name": "Flutter Debug Chrome Tests + DAs",
 			"configurations": [
-				"Flutter Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Debug Chrome Tests (hidden)",
+				"Flutter Debug Server"
 			],
 			"presentation": {
 				"order": 3
@@ -783,15 +789,10 @@
 			"stopAll": true
 		},
 		{
-			"name": "Flutter LSP Tests + DA Servers",
+			"name": "Flutter Test Debug Tests + DAs",
 			"configurations": [
-				"Flutter LSP Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Test Debug Tests (hidden)",
+				"Flutter Test Debug Server"
 			],
 			"presentation": {
 				"order": 3
@@ -799,15 +800,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Flutter Debug Tests + DA Servers",
+			"name": "Multi Root Tests",
 			"configurations": [
-				"Flutter Debug Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Multi Root Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -815,15 +810,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Flutter Debug Chrome Tests + DA Servers",
+			"name": "Multi Project Folder Tests",
 			"configurations": [
-				"Flutter Debug Chrome Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Multi Project Folder Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -831,15 +820,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Flutter Test Debug Tests + DA Servers",
+			"name": "Dart Create Tests Tests",
 			"configurations": [
-				"Flutter Test Debug Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Dart Create Tests Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -847,15 +830,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Multi Root Tests + DA Servers",
+			"name": "Not Activated / Dart Create Tests",
 			"configurations": [
-				"Multi Root Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Not Activated / Dart Create Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -863,15 +840,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Multi Project Folder Tests + DA Servers",
+			"name": "Flutter Create Tests Tests",
 			"configurations": [
-				"Multi Project Folder Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Create Tests Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -879,15 +850,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Dart Create Tests Tests + DA Servers",
+			"name": "Not Activated / Flutter Create Tests",
 			"configurations": [
-				"Dart Create Tests Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Not Activated / Flutter Create Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -895,15 +860,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Not Activated / Dart Create Tests + DA Servers",
+			"name": "Flutter Bazel Tests",
 			"configurations": [
-				"Not Activated / Dart Create Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Bazel Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -911,15 +870,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Flutter Create Tests Tests + DA Servers",
+			"name": "Flutter Snap Tests",
 			"configurations": [
-				"Flutter Create Tests Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Snap Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3
@@ -927,63 +880,9 @@
 			"stopAll": true
 		},
 		{
-			"name": "Not Activated / Flutter Create Tests + DA Servers",
+			"name": "Flutter Repository Tests",
 			"configurations": [
-				"Not Activated / Flutter Create Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter Bazel Tests + DA Servers",
-			"configurations": [
-				"Flutter Bazel Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter Snap Tests + DA Servers",
-			"configurations": [
-				"Flutter Snap Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter Repository Tests + DA Servers",
-			"configurations": [
-				"Flutter Repository Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server",
-				"Web Debug Server",
-				"Web Test Debug Server"
+				"Flutter Repository Tests (hidden)"
 			],
 			"presentation": {
 				"order": 3

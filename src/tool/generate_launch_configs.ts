@@ -10,13 +10,13 @@ const testProjectsFolder = "src/test/test_projects";
 const testConfigs: TestConfig[] = [
 	{ testFolder: "dart", project: "hello_world" },
 	{ testFolder: "dart", project: "hello_world", lsp: true },
-	{ testFolder: "dart_debug", project: "hello_world" },
-	{ testFolder: "web_debug", project: "web" },
+	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"] },
+	{ testFolder: "web_debug", project: "web", debugAdapters: ["web", "web_test"] },
 	{ testFolder: "flutter", project: "flutter_hello_world" },
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world" },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world", chrome: true },
-	{ testFolder: "flutter_test_debug", project: "flutter_hello_world" },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"] },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], chrome: true },
+	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", debugAdapters: ["flutter_test"] },
 	{ testFolder: "multi_root", project: "projects.code-workspace" },
 	{ testFolder: "multi_project_folder", project: "" },
 	{ testFolder: "dart_create_tests", project: "dart_create_tests.code-workspace" },
@@ -41,7 +41,7 @@ async function main() {
 		],
 		"compounds": [
 			{
-				"name": "Extension + DA Servers",
+				"name": "Extension + DAs",
 				"configurations": [
 					"Extension",
 					...debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name))
@@ -54,10 +54,12 @@ async function main() {
 			...testConfigs.map((test) => {
 				const testConfigName = getTestConfigName(test);
 				return {
-					"name": `${testConfigName} + DA Servers`,
+					"name": `${testConfigName}${test.debugAdapters ? " + DAs" : ""}`,
 					"configurations": [
-						testConfigName,
-						...debugAdapters.map((dirent) => getDebugServerConfigName(dirent.name))
+						`${testConfigName} (hidden)`,
+						...debugAdapters
+							.filter((dirent) => test.debugAdapters?.find((da) => dirent.name === `${da}_debug_entry.ts`))
+							.map((dirent) => getDebugServerConfigName(dirent.name))
 					],
 					"presentation": {
 						"order": 3
@@ -158,7 +160,7 @@ function getDebugServerConfig(filename: string) {
 function getTestsConfig(test: TestConfig) {
 	const name = getTestConfigName(test);
 	return Object.assign({
-		"name": name,
+		"name": `${name} (hidden)`,
 		"type": "extensionHost",
 		"runtimeExecutable": "${execPath}",
 		"args": [
@@ -183,6 +185,7 @@ function getTestsConfig(test: TestConfig) {
 interface TestConfig {
 	testFolder: string;
 	project: string;
+	debugAdapters?: string[];
 	lsp?: boolean;
 	chrome?: boolean;
 }
