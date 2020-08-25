@@ -9,7 +9,7 @@ import { logProcess } from "../shared/logging";
 import { getDebugAdapterName, getDebugAdapterPort } from "../shared/utils/debug";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
+import { currentTestName, defer, delay, ext, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -29,12 +29,14 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 export function createDebugClient(debugType: DebuggerType) {
 	const debugAdapterName = getDebugAdapterName(debugType);
 	const debugAdapterPort = getDebugAdapterPort(debugAdapterName);
+	const debuggerExecutablePath = path.join(fsPath(ext.extensionUri), debugAdapterPath);
+	const debuggerArgs = [debugAdapterName];
 
 	// TODO: Change this to go through DartDebugAdapterDescriptorFactory to ensure we don't have tests that pass
 	// if we've broken the real implementation.
 	const dc = process.env.DART_CODE_USE_DEBUG_SERVERS
 		? new DartDebugClient({ port: debugAdapterPort }, extApi.debugCommands, extApi.testTreeProvider)
-		: new DartDebugClient({ runtime: "node", executable: debugAdapterPath, args: [debugAdapterName] }, extApi.debugCommands, extApi.testTreeProvider);
+		: new DartDebugClient({ runtime: "node", executable: debuggerExecutablePath, args: debuggerArgs }, extApi.debugCommands, extApi.testTreeProvider);
 
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
