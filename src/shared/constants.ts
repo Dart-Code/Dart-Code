@@ -73,7 +73,7 @@ export const skipThisSurveyAction = "Skip This Survey";
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
 
 export const initializeSnapPrompt = "The Flutter snap is installed but not initialized. Would you like to initialize it now? This may take a few minutes.";
-export const initializingSnapMessage = "Initializing Flutter snap…";
+export const initializingFlutterMessage = "Initializing Flutter…";
 
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;
