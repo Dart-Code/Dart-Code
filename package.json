@@ -1670,10 +1670,10 @@
 					"description": "Whether to register Pub Build Runner tasks with VS Code.",
 					"scope": "window"
 				},
-				"dart.previewEmbeddedDevTools": {
+				"dart.embedDevTools": {
 					"type": "boolean",
-					"default": false,
-					"description": "EXPERIMENTAL: Whether to load DevTools embedded inside VS Code.",
+					"default": true,
+					"description": "Whether to load DevTools embedded inside VS Code.",
 					"scope": "window"
 				},
 				"dart.updateImportsOnRename": {

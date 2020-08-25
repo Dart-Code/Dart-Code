@@ -134,7 +134,7 @@ export class DebugCommands {
 			const page = options?.page;
 
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { embed: config.previewEmbeddedDevTools, reuseWindows, notify, page });
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { embed: config.embedDevTools, reuseWindows, notify, page });
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else {

@@ -61,6 +61,7 @@ class Config {
 	get devToolsPort(): undefined | number { return this.getConfig<null | number>("devToolsPort", null); }
 	get devToolsReuseWindows(): boolean { return this.getConfig<boolean>("devToolsReuseWindows", true); }
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
+	get embedDevTools(): boolean { return this.getConfig<boolean>("embedDevTools", true); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): object { return this.getConfig<object>("env", {}); }
@@ -90,7 +91,6 @@ class Config {
 	get openTestView(): Array<"testRunStart" | "testFailure"> { return this.getConfig<Array<"testRunStart" | "testFailure">>("openTestView", ["testRunStart"]); }
 	get previewBazelWorkspaceCustomScripts(): boolean { return this.getConfig<boolean>("previewBazelWorkspaceCustomScripts", false); }
 	get previewBuildRunnerTasks(): boolean { return this.getConfig<boolean>("previewBuildRunnerTasks", false); }
-	get previewEmbeddedDevTools(): boolean { return this.getConfig<boolean>("previewEmbeddedDevTools", false); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
