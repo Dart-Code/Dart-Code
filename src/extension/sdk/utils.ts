@@ -1,10 +1,8 @@
-import * as child_process from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as util from "util";
-import { commands, ExtensionContext, ProgressLocation, window } from "vscode";
-import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, initializingSnapMessage, isLinux, isMac, isWin, noAction, showLogAction, yesAction } from "../../shared/constants";
+import { commands, ExtensionContext, window } from "vscode";
+import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, isLinux, isMac, isWin, showLogAction } from "../../shared/constants";
 import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
@@ -18,6 +16,7 @@ import { Analytics } from "../analytics";
 import { config } from "../config";
 import { ringLog } from "../extension";
 import { getSdkVersion, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
+import { initializeFlutterSdk } from "./flutter";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
 export class SdkUtils {
@@ -174,27 +173,6 @@ export class SdkUtils {
 			} as Sdks, {}, false, false, false, false);
 		}
 
-		// Certain types of workspaces will have special config, so read them here.
-		const workspaceConfig: WorkspaceConfig = { useLsp };
-		// Helper that searches for a specific folder/file up the tree and
-		// runs some specific processing.
-		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
-			for (const folder of topLevelFolders) {
-				const root = await search(this.logger, folder);
-				if (root) {
-					process(this.logger, workspaceConfig, root);
-					return root;
-				}
-			}
-			return undefined;
-		};
-
-		await processWorkspaceType(findGitRoot, processKnownGitRepositories);
-		// TODO: Remove this lambda when the preview flag is removed.
-		await processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
-		const fuchsiaRoot = await processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
-		await processWorkspaceType(findFlutterSnapSdkRoot, processFlutterSnap);
-
 		// TODO: This has gotten very messy and needs tidying up...
 
 		let firstFlutterMobileProject: string | undefined;
@@ -239,6 +217,27 @@ export class SdkUtils {
 			hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspecFile);
 		}
 
+		// Certain types of workspaces will have special config, so read them here.
+		const workspaceConfig: WorkspaceConfig = { useLsp };
+		// Helper that searches for a specific folder/file up the tree and
+		// runs some specific processing.
+		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
+			for (const folder of topLevelFolders) {
+				const root = await search(this.logger, folder);
+				if (root) {
+					process(this.logger, workspaceConfig, root);
+					return root;
+				}
+			}
+			return undefined;
+		};
+
+		await processWorkspaceType(findGitRoot, processKnownGitRepositories);
+		// TODO: Remove this lambda when the preview flag is removed.
+		await processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
+		const fuchsiaRoot = await processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
+		await processWorkspaceType(findFlutterSnapSdkRoot, processFlutterSnap);
+
 		if (fuchsiaRoot) {
 			this.logger.info(`Found Fuchsia root at ${fuchsiaRoot}`);
 			if (hasAnyStandardDartProject)
@@ -282,6 +281,15 @@ export class SdkUtils {
 		const dartSdkPath = this.findDartSdk(dartSdkSearchPaths);
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
+
+		// If we're a Flutter workspace but we couldn't get the version, try running Flutter to initialise it first.
+		if (hasAnyFlutterProject && flutterSdkPath) {
+			const flutterNeedsInitializing = !getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, versionFile: workspaceConfig?.flutterVersionFile })
+				|| !fs.existsSync(path.join(flutterSdkPath, "bin/cache/dart-sdk"));
+
+			if (flutterNeedsInitializing)
+				await initializeFlutterSdk(this.logger, path.join(flutterSdkPath, flutterPath));
+		}
 
 		return new WorkspaceContext(
 			{
@@ -446,20 +454,7 @@ async function findFlutterSnapSdkRoot(logger: Logger, folder: string): Promise<s
 
 		if (!fs.existsSync(snapSdkRoot + "/.git")) {
 			logger.info(`Flutter snap is not initialized, showing prompt`);
-			const selectedItem = await window.showInformationMessage(initializeSnapPrompt, yesAction, noAction);
-			if (selectedItem === yesAction) {
-				logger.info(`Running Flutter to initialize snap`);
-				await window.withProgress(
-					{
-						location: ProgressLocation.Notification,
-						title: initializingSnapMessage,
-					},
-					// TODO: Can we show the user better progress and/or include this in logs?
-					// TODO: Handle errors/failures?
-					() => util.promisify(child_process.exec)(flutterSnapScript),
-				);
-				logger.info(`Flutter snap initialized!`);
-			}
+			await initializeFlutterSdk(logger, flutterSnapScript, initializeSnapPrompt);
 		}
 
 		if (fs.existsSync(snapSdkRoot + "/.git")) {
@@ -469,6 +464,8 @@ async function findFlutterSnapSdkRoot(logger: Logger, folder: string): Promise<s
 	}
 	return undefined;
 }
+
+
 
 function findRootContaining(folder: string, childName: string, expectFile = false): string | undefined {
 	if (folder) {
