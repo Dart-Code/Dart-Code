@@ -506,10 +506,17 @@ export class SdkCommands {
 				channels.runProcessInChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, proc);
-				proc.on("close", (code) => {
-					if (code)
+
+				// If we complete with a non-zero code, or don't complete within 10s, we should show
+				// the output pane.
+				const completedWithErrorPromise = new Promise((resolve) => proc.on("close", resolve));
+				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), 10000));
+				// tslint:disable-next-line: no-floating-promises
+				Promise.race([completedWithErrorPromise, timedOutPromise]).then((showOutput) => {
+					if (showOutput)
 						channel.show(true);
 				});
+
 				return proc;
 			}, existingProcess);
 			this.runningCommands[commandId] = process;
