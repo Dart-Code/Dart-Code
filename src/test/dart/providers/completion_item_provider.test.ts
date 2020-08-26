@@ -282,7 +282,7 @@ main() {
 		it("includes auto-import notes on unimported symbols", async () => {
 			await setTestContent(`
 main() {
-  ProcessInf
+  final a = ProcessInf
 }
 		`);
 			const completions = await getCompletionsAt("ProcessInf^", undefined, 5000);
@@ -295,7 +295,7 @@ main() {
 		it("insert imports automatically when completing unimported symbols", async () => {
 			await setTestContent(`
 main() {
-  ProcessInf
+  final a = ProcessInf
 }
 		`);
 			select(rangeOf("ProcessInf||"));
@@ -305,7 +305,7 @@ main() {
 import 'dart:io';
 
 main() {
-  ProcessInfo^
+  final a = ProcessInfo^
 }
 		`);
 		});
@@ -316,7 +316,7 @@ main() {
 part of 'part_wrapper.dart';
 
 main() {
-  ProcessInf
+  final a = ProcessInf
 }
 		`);
 			select(rangeOf("ProcessInf||"));
@@ -326,7 +326,7 @@ main() {
 part of 'part_wrapper.dart';
 
 main() {
-  ProcessInfo^
+  final a = ProcessInfo^
 }
 		`);
 
