@@ -121,7 +121,6 @@ main() {
 		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
 		assert.notEqual(cl.preselect, true);
 		ensureRanges(cl.range, "|ret|urn str", "|return| str");
-		assert.equal(cl.sortText, "998943"); // TODO: This may be fragile...
 	});
 
 	it("does not include auto-import notes on an in-scope completion", async () => {
@@ -214,7 +213,6 @@ main() {
 			assert.equal(completion.label, "ProcessInfo");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Process|Inf", "|ProcessInf|");
-			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
 		it("fully populates a completion for a undeclared constructor in an unimported library", async () => {
@@ -245,7 +243,6 @@ main() {
 			assert.equal(completion.label, "ProcessInfo()");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Process|Inf", "|ProcessInf|");
-			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
 		it("fully populates a completion for a declared constructor in an unimported library", async () => {
@@ -280,7 +277,6 @@ main() {
 			assert.equal(completion.label, "HashMap(…)");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Hash|Ma", "|HashMa|");
-			assert.equal(completion.sortText, "999997"); // TODO: This may be fragile...
 		});
 
 		it("includes auto-import notes on unimported symbols", async () => {
@@ -357,7 +353,6 @@ foo(Theme theme) {
 			// 1100 from boost
 			//    8 from includedSuggestionSet
 			// TODO: Find a reliable way to test ranking.
-			// assert.equal(completion.sortText, "998995"); // TODO: This might be fragile!
 		});
 
 		it("correctly filters (includes enum constants in methods)", async () => {
