@@ -1658,6 +1658,12 @@
 					"description": "Whether to show a warning when modifying files outside of the workspace.",
 					"scope": "window"
 				},
+				"dart.warnWhenEditingFilesInPubCache": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show a warning when modifying files in Pub's cache folder.",
+					"scope": "window"
+				},
 				"dart.showIgnoreQuickFixes": {
 					"type": "boolean",
 					"default": true,

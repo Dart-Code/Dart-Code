@@ -1,3 +1,4 @@
+import * as path from "path";
 import * as vs from "vscode";
 import { modifyingFilesOutsideWorkspaceInfoUrl, moreInfoAction } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
@@ -28,9 +29,16 @@ export class FileChangeWarnings implements vs.Disposable {
 			&& !util.isWithinWorkspace(filePath)
 			&& !this.filesWarnedAbout.has(filePath)) {
 
-			const shouldWarn = config.warnWhenEditingFilesOutsideWorkspace;
-			const promptText = "You are modifying a file outside of your open folders";
-			const dontShowAgainSetter = () => config.setWarnWhenEditingFilesOutsideWorkspace(false);
+			const isInPubCache = filePath.indexOf(`${path.sep}hosted${path.sep}pub.dartlang.org${path.sep}`) !== -1;
+			const shouldWarn = isInPubCache
+				? config.warnWhenEditingFilesInPubCache
+				: config.warnWhenEditingFilesOutsideWorkspace;
+			const promptText = isInPubCache
+				? "You are modifying a file in the Pub cache!"
+				: "You are modifying a file outside of your open folders";
+			const dontShowAgainSetter = isInPubCache
+				? () => config.setWarnWhenEditingFilesInPubCache(false)
+				: () => config.setWarnWhenEditingFilesOutsideWorkspace(false);
 			const dontShowAgainAction = "Don't Warn Me";
 
 			if (shouldWarn) {
