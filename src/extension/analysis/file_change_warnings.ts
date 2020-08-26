@@ -1,0 +1,52 @@
+import * as vs from "vscode";
+import { modifyingFilesOutsideWorkspaceInfoUrl, moreInfoAction } from "../../shared/constants";
+import { fsPath } from "../../shared/utils/fs";
+import { envUtils } from "../../shared/vscode/utils";
+import { config } from "../config";
+import * as util from "../utils";
+
+export class FileChangeWarnings implements vs.Disposable {
+	private readonly disposables: vs.Disposable[] = [];
+	private readonly filesWarnedAbout = new Set<string>();
+	constructor() {
+		this.disposables.push(
+			vs.workspace.onDidChangeTextDocument((e) => this.onDidChangeTextDocument(e))
+		);
+	}
+
+	public onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
+		if (!util.isAnalyzable(e.document))
+			return;
+
+		if (e.contentChanges.length === 0) // This event fires for metadata changes (dirty?) so don't need to notify AS then.
+			return;
+
+		const filePath = fsPath(e.document.uri);
+
+		if (vs.workspace.workspaceFolders
+			&& vs.workspace.workspaceFolders.length // Only prompt if we actually have workspace folders open
+			&& !util.isWithinWorkspace(filePath)
+			&& !this.filesWarnedAbout.has(filePath)) {
+
+			const shouldWarn = config.warnWhenEditingFilesOutsideWorkspace;
+			const promptText = "You are modifying a file outside of your open folders";
+			const dontShowAgainSetter = () => config.setWarnWhenEditingFilesOutsideWorkspace(false);
+			const dontShowAgainAction = "Don't Warn Me";
+
+			if (shouldWarn) {
+				vs.window.showWarningMessage(promptText, moreInfoAction, dontShowAgainAction)
+					.then(async (action) => {
+						if (action === moreInfoAction) {
+							await envUtils.openInBrowser(modifyingFilesOutsideWorkspaceInfoUrl);
+						} else if (action === dontShowAgainAction)
+							dontShowAgainSetter();
+					});
+				this.filesWarnedAbout.add(filePath);
+			}
+		}
+	}
+
+	public dispose(): any {
+		this.disposables.forEach((d) => d.dispose());
+	}
+}

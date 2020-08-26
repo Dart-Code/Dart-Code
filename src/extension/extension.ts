@@ -23,6 +23,7 @@ import { DasAnalyzer } from "./analysis/analyzer_das";
 import { LspAnalyzer } from "./analysis/analyzer_lsp";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
+import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
@@ -349,6 +350,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (dasClient)
 		// tslint:disable-next-line: no-unused-expression
 		new AnalyzerStatusReporter(logger, dasClient, workspaceContext, analytics);
+
+	context.subscriptions.push(new FileChangeWarnings());
 
 	// Set up diagnostics.
 	if (!isUsingLsp && dasClient) {
