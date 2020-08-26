@@ -5,7 +5,7 @@ import { DebuggerType, VmService } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureVariable, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, delay, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 // Skipped due to not quitting
 // https://github.com/dart-lang/webdev/issues/950
@@ -176,11 +176,13 @@ describe.skip("web debugger", () => {
 		assert.equal(config!.cwd, fsPath(webHelloWorldExampleSubFolder));
 	});
 
-	it("can launch DevTools", async function () {
+	it("can launch DevTools externally", async function () {
 		if (!extApi.dartCapabilities.supportsDevTools) {
 			this.skip();
 			return;
 		}
+
+		await setConfigForTest("dart", "embedDevTools", false);
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 

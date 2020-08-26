@@ -6,7 +6,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, defer, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, watchPromise } from "../../helpers";
+import { activate, defer, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, setConfigForTest, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -57,11 +57,13 @@ describe(`flutter run debugger`, () => {
 		ensureHasRunRecently("devtools_activate", 60 * 10);
 	});
 
-	it("can launch DevTools using custom script", async function () {
+	it("can launch DevTools externally using custom script", async function () {
 		const hasRunFile = prepareHasRunFile("devtools_run");
 
 		if (!extApi.flutterCapabilities.supportsDevTools)
 			return this.skip();
+
+		await setConfigForTest("dart", "embedDevTools", false);
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 

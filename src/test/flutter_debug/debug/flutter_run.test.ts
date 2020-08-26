@@ -295,9 +295,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.cwd, fsPath(flutterHelloWorldExampleSubFolder));
 	});
 
-	it("can launch DevTools", async function () {
+	it("can launch DevTools externally", async function () {
 		if (!extApi.flutterCapabilities.supportsDevTools)
 			return this.skip();
+
+		await setConfigForTest("dart", "embedDevTools", false);
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
