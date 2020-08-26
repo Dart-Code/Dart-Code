@@ -23,10 +23,10 @@ jobs:
             dart-version: stable
             flutter-version: stable
             code-version: stable
-          # - build-version: dev
-          #   dart-version: dev
-          #   flutter-version: dev
-          #   code-version: insiders
+          - build-version: dev
+            dart-version: dev
+            flutter-version: dev
+            code-version: insiders
           - os: ubuntu-latest
             bot: flutter_snap
 
