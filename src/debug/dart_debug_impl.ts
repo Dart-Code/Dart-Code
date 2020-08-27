@@ -719,9 +719,10 @@ export class DartDebugSession extends DebugSession {
 
 	// Run some code, but don't wait longer than a certain time period for the result
 	// as it may never come. Returns true if the operation completed.
-	private async raceIgnoringErrors(action: () => Promise<any>, timeout: number = 250): Promise<boolean> {
+	private async raceIgnoringErrors(action: () => Promise<any>, timeoutMilliseconds: number = 250): Promise<boolean> {
 		try {
-			return await this.withTimeout(action().then((_) => true));
+			await this.withTimeout(action(), timeoutMilliseconds);
+			return true;
 		} catch (e) {
 			this.log(`Error while while waiting for action: ${e}`);
 			return false;
@@ -1466,18 +1467,21 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private withTimeout<T>(promise: Thenable<T>, milliseconds: number = 1000): Promise<T> {
+	private withTimeout<T>(promise: Promise<T>, milliseconds: number = 1000): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			// Set a timeout to reject the promise after the timeout period.
 			const timeoutTimer = setTimeout(() => {
 				reject(new Error(`<timed out>`));
 			}, milliseconds);
 
-			// When the main promise completes, cancel the timeout and return its result.
-			promise.then((result) => {
-				clearTimeout(timeoutTimer);
-				resolve(result);
-			});
+			promise
+				// When the main promise completes, cancel the timeout and return its result.
+				.then((result) => {
+					clearTimeout(timeoutTimer);
+					resolve(result);
+				})
+				// And if it errors, pass that up.
+				.catch(reject);
 		});
 	}
 
