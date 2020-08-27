@@ -721,10 +721,7 @@ export class DartDebugSession extends DebugSession {
 	// as it may never come. Returns true if the operation completed.
 	private async raceIgnoringErrors(action: () => Promise<any>, timeout: number = 250): Promise<boolean> {
 		try {
-			return await Promise.race([
-				action().then((_) => true),
-				new Promise<boolean>((resolve) => setTimeout(() => resolve(false), timeout)),
-			]);
+			return await this.withTimeout(action().then((_) => true));
 		} catch (e) {
 			this.log(`Error while while waiting for action: ${e}`);
 			return false;
@@ -1403,10 +1400,7 @@ export class DartDebugSession extends DebugSession {
 				//      https://github.com/Microsoft/vscode/issues/52317
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
-				result = await Promise.race([
-					this.vmService!.evaluate(thread.ref.id, rootLib.id, expression, true),
-					new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
-				]);
+				result = await this.withTimeout(this.vmService!.evaluate(thread.ref.id, rootLib.id, expression, true));
 			} else {
 				const frame = data.data as VMFrame;
 				if ((expression === "$e" || expression.startsWith("$e.")) && thread.exceptionReference) {
@@ -1433,10 +1427,7 @@ export class DartDebugSession extends DebugSession {
 					//      https://github.com/Microsoft/vscode/issues/52317
 					//   2. The VM sometimes doesn't respond to your requests at all
 					//      https://github.com/flutter/flutter/issues/18595
-					result = await Promise.race([
-						this.vmService!.evaluateInFrame(thread.ref.id, frame.index, expression, true),
-						new Promise<never>((resolve, reject) => setTimeout(() => reject(new Error("<timed out>")), 1000)),
-					]);
+					result = await this.withTimeout(this.vmService!.evaluateInFrame(thread.ref.id, frame.index, expression, true));
 				}
 			}
 
@@ -1473,6 +1464,21 @@ export class DartDebugSession extends DebugSession {
 			else
 				this.errorResponse(response, `${e}`);
 		}
+	}
+
+	private withTimeout<T>(promise: Thenable<T>, milliseconds: number = 1000): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			// Set a timeout to reject the promise after the timeout period.
+			const timeoutTimer = setTimeout(() => {
+				reject(new Error(`<timed out>`));
+			}, milliseconds);
+
+			// When the main promise completes, cancel the timeout and return its result.
+			promise.then((result) => {
+				clearTimeout(timeoutTimer);
+				resolve(result);
+			});
+		});
 	}
 
 	private urlExposeCompleters: { [key: string]: PromiseCompleter<{ url: string }> } = {};
