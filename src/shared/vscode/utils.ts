@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { URL } from "url";
 import * as vs from "vscode";
 import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
-import * as lsp from "vscode-languageclient";
+import * as lsp from "vscode-languageclient/node";
 import { dartCodeExtensionIdentifier } from "../constants";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";

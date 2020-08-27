@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { TextDocumentEdit, WorkspaceEdit } from "vscode-languageclient";
+import { TextDocumentEdit, WorkspaceEdit } from "vscode-languageclient/node";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 
 export class LspEditCommands implements vs.Disposable {

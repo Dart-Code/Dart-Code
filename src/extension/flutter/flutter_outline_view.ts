@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import * as lsp from "vscode-languageclient";
+import * as lsp from "vscode-languageclient/node";
 import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
 import * as as from "../../shared/analysis_server_types";
 import { nullLogger } from "../../shared/logging";

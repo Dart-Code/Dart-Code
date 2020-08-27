@@ -1,4 +1,4 @@
-import { Location, NotificationType, Range, RequestType, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
+import { Location, NotificationType, Range, RequestType, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient/node";
 
 export class AnalyzerStatusNotification {
 	public static type = new NotificationType<AnalyzerStatusParams, void>("$/analyzerStatus");

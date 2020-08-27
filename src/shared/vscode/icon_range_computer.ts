@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import * as lsc from "vscode-languageclient";
+import * as lsc from "vscode-languageclient/node";
 import * as das from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
 import { FlutterOutlineVisitor, FlutterOutlineVisitorLsp } from "../../shared/utils/flutter_outline";

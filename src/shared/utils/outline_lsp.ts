@@ -1,4 +1,4 @@
-import { Range } from "vscode-languageclient";
+import { Range } from "vscode-languageclient/node";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { Logger } from "../interfaces";
 import { TestOutlineInfo } from "./outline_das";

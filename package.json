@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart",
 	"description": "Dart language support and debugger for Visual Studio Code.",
-	"version": "3.14.0-dev",
+	"version": "3.14.0-dev.semantic-tokens",
 	"publisher": "Dart-Code",
 	"engines": {
 		"vscode": "^1.47.0"
@@ -62,7 +62,7 @@
 				"configuration": "./syntaxes/dart-language-configuration.json"
 			}
 		],
-		"grammars": [
+		"grammarsDISABLED": [
 			{
 				"language": "dart",
 				"scopeName": "source.dart",
@@ -2018,7 +2018,7 @@
 		"semver": "^7.3.2",
 		"vscode-debugadapter": "^1.41.1",
 		"vscode-debugprotocol": "^1.41.0",
-		"vscode-languageclient": "^6.1.3",
+		"vscode-languageclient": "^7.0.0-next.9",
 		"ws": "^7.3.1"
 	},
 	"devDependencies": {
