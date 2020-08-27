@@ -18,6 +18,7 @@ export class DartCapabilities {
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
 	get supportsDebugInternalLibraries() { return versionIsAtLeast(this.version, "2.9.0-a"); }
 	get supportsPubOutdated() { return versionIsAtLeast(this.version, "2.8.0-a"); }
+	get hasUpdatedCompletionRanking() { return versionIsAtLeast(this.version, "2.10.0-0"); }
 	// TODO: Update this (along with Flutter) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return false; }

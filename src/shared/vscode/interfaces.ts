@@ -42,6 +42,7 @@ export interface InternalExtensionApi {
 		includesSourceForSdkLibs: boolean;
 		handlesBreakpointsInPartFiles: boolean;
 		hasDocumentationInCompletions: boolean;
+		hasUpdatedCompletionRanking: boolean;
 		supportsDisableServiceTokens: boolean;
 		supportsPubOutdated: boolean;
 		webSupportsDebugging: boolean;

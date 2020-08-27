@@ -6,8 +6,15 @@ import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
 import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureInsertReplaceRanges as ensureRanges, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
+	let parensIfNewCompletionRanking = "";
 
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
+	beforeEach("set parentsIfNewCompletionRanking", () => {
+		// TODO: Remove this when Dart v2.10 hit stable and we can always
+		// assume these parens in the tests.
+		if (extApi.dartCapabilities.hasUpdatedCompletionRanking)
+			parensIfNewCompletionRanking = "()";
+	})
 
 	// This is not implemented. Turns out it's hard to detect this without having false positives
 	// since we can't easily tell we're in a show/hide reliably.
@@ -305,7 +312,7 @@ main() {
 import 'dart:io';
 
 main() {
-  final a = ProcessInfo^
+  final a = ProcessInfo${parensIfNewCompletionRanking}^
 }
 		`);
 		});
@@ -326,7 +333,7 @@ main() {
 part of 'part_wrapper.dart';
 
 main() {
-  final a = ProcessInfo^
+  final a = ProcessInfo${parensIfNewCompletionRanking}^
 }
 		`);
 
