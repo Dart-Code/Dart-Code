@@ -335,7 +335,16 @@ export class DartDebugSession extends DebugSession {
 				if (response.success) {
 					this.log(`    PID: ${process.pid}`);
 					const resp = response as DebugProtocol.RunInTerminalResponse;
-					resolve(new RemoteEditorTerminalProcess(resp.body.processId || resp.body.shellProcessId));
+
+					// Do not fall back to `resp.body.shellProcessId` here, as terminating the shell
+					// during shutdown will result in an error on Windows being shown to the user.
+					// https://github.com/Dart-Code/Dart-Code/issues/2750
+					//
+					// When running in debug mode, we should have the real PID via the VM Service
+					// anyway, and when not running in debug mode we "terminate" immediately and
+					// would not be showing a debug toolbar for the user to terminate anyway (any
+					// disconnect event we get is because the process already finished).
+					resolve(new RemoteEditorTerminalProcess(resp.body.processId));
 				} else {
 					reject(response.message);
 				}
