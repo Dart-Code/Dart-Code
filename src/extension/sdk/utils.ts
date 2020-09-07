@@ -410,6 +410,10 @@ function extractFlutterSdkPathFromPackagesFile(projectFolder: string): string | 
 		packagePath = packagePath.replace(/\\/g, "/");
 	}
 
+	// Make sure ends with a slash.
+	if (!packagePath.endsWith("/"))
+		packagePath = packagePath + "/";
+
 	// Trim suffix we don't need.
 	const pathSuffix = "/packages/flutter/lib/";
 	if (packagePath.endsWith(pathSuffix)) {
