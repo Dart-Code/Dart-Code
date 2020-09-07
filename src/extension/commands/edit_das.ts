@@ -218,10 +218,6 @@ export class DasEditCommands implements vs.Disposable {
 		// Ensure original document is the active one.
 		await vs.window.showTextDocument(initiatingDocument);
 	}
-
-	private snippetStringEscape(value: string): string {
-		return value.replace(/\$|}|\\|,/g, "\\$&");
-	}
 }
 
 export function hasOverlappingEdits(change: as.SourceChange) {
