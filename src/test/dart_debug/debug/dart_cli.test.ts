@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { debugAnywayAction, platformEol, showErrorsAction } from "../../../shared/constants";
+import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
@@ -637,7 +637,7 @@ describe("dart cli debugger", () => {
 				});
 			}).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""${platformEol}`),
+			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 			dc.launch(config),
 		);
 	});

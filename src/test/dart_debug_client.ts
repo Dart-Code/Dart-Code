@@ -224,12 +224,14 @@ export class DartDebugClient extends DebugClient {
 	public assertOutputContains(category: string, text: string): Promise<DebugProtocol.OutputEvent> {
 		let output = "";
 		let cleanup = () => { }; // tslint:disable-line: no-empty
+		const textLF = text.replace(/\r/g, "");
+		const textCRLF = textLF.replace(/\n/g, "\r\n");
 		return withTimeout(
 			new Promise<DebugProtocol.OutputEvent>((resolve) => {
 				function handleOutput(event: DebugProtocol.OutputEvent) {
 					if (event.body.category === category) {
 						output += event.body.output;
-						if (output.indexOf(text) !== -1) {
+						if (output.indexOf(textLF) !== -1 || output.indexOf(textCRLF) !== -1) {
 							resolve(event);
 						}
 					}
