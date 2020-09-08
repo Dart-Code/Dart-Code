@@ -890,7 +890,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("includes getters in variables when stopped at a breakpoint", async () => {
+	it("includes getters in variables when stopped at a breakpoint", async function () {
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
 		await openFile(flutterHelloWorldGettersFile);
 		const config = await startDebugger(dc, flutterHelloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
