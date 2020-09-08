@@ -228,7 +228,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("Process^Inf", undefined, 5000);
+			const completions = await getCompletionsAt("ProcessIn^f", undefined, extApi.isLsp ? 5000 : 50000); // non-LSP doesn't filter so we need to resolve more :(
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
@@ -249,7 +249,7 @@ main() {
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
 			assert.equal(completion.label, "ProcessInfo()");
 			assert.notEqual(completion.preselect, true);
-			ensureRanges(completion.range, "|Process|Inf", "|ProcessInf|");
+			ensureRanges(completion.range, "|ProcessIn|f", "|ProcessInf|");
 		});
 
 		it("fully populates a completion for a declared constructor in an unimported library", async () => {
