@@ -49,6 +49,7 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 		const def = p.defaultValue
 			? ` = ${p.defaultValue}`
 			: "";
-		return `${p.type} ${p.name}${def}`;
+		const prefix = p.kind === "REQUIRED_NAMED" ? "required " : "";
+		return `${prefix}${p.type} ${p.name}${def}`;
 	}
 }
