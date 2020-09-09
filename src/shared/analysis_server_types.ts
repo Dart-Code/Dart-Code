@@ -5181,9 +5181,15 @@ export interface ParameterInfo {
  * An enumeration of the types of parameters.
  */
 export type ParameterKind =
+	// Old
 	"NAMED"
 	| "OPTIONAL"
-	| "REQUIRED";
+	| "REQUIRED"
+	// New
+	| "OPTIONAL_NAMED"
+	| "OPTIONAL_POSITIONAL"
+	| "REQUIRED_NAMED"
+	| "REQUIRED_POSITIONAL";
 
 /**
  * A position within a file.

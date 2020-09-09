@@ -32,9 +32,9 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 	}
 
 	private getSignatureLabel(resp: AnalysisGetSignatureResponse): string {
-		const req = resp.parameters.filter((p) => p.kind === "REQUIRED");
-		const opt = resp.parameters.filter((p) => p.kind === "OPTIONAL");
-		const named = resp.parameters.filter((p) => p.kind === "NAMED");
+		const req = resp.parameters.filter((p) => p.kind === "REQUIRED" || p.kind === "REQUIRED_POSITIONAL");
+		const opt = resp.parameters.filter((p) => p.kind === "OPTIONAL" || p.kind === "OPTIONAL_POSITIONAL");
+		const named = resp.parameters.filter((p) => p.kind === "NAMED" || p.kind === "OPTIONAL_NAMED" || p.kind === "REQUIRED_NAMED");
 		const params = [];
 		if (req.length)
 			params.push(req.map(this.getLabel).join(", "));
