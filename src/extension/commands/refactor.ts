@@ -149,7 +149,7 @@ export class RefactorCommands implements vs.Disposable {
 		}
 		this.isProcessingMoveEvent = true;
 		try {
-			const filesToRename = flatMap(e.files, (f) => this.getFilesToRename({ oldPath: fsPath(f.oldUri), newPath: fsPath(f.newUri) }));
+			const filesToRename = flatMap(e.files, (f) => this.getResourcesToRename({ oldPath: fsPath(f.oldUri), newPath: fsPath(f.newUri) }));
 			const edits = this.getRenameEdits(filesToRename);
 			e.waitUntil(edits.finally(() => this.isProcessingMoveEvent = false));
 		} catch (e) {
@@ -210,8 +210,10 @@ export class RefactorCommands implements vs.Disposable {
 		return changes;
 	}
 
-	private getFilesToRename(rename: { oldPath: string, newPath: string }): Array<{ oldPath: string, newPath: string }> {
-		// TODO: Support folders?
+	private getResourcesToRename(rename: { oldPath: string, newPath: string }): Array<{ oldPath: string, newPath: string }> {
+		if (this.analyzer.capabilities.supportsRenameFolder)
+			return [rename];
+
 		const filesToRename: Array<{ oldPath: string, newPath: string }> = [];
 		if (fs.statSync(rename.oldPath).isFile()) {
 			// TODO: if (isAnalyzableAndInWorkspace(rename.oldPath))

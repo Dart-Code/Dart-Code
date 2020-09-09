@@ -43,6 +43,7 @@ export class AnalyzerCapabilities {
 	get hasNewHoverLibraryFormat() { return versionIsAtLeast(this.version, "1.27.1"); }
 	get supportsAvailableSuggestions() { return versionIsAtLeast(this.version, "1.26.0"); }
 	get supportsIncludedImports() { return versionIsAtLeast(this.version, "1.27.1"); }
+	get supportsRenameFolder() { return false; } // TODO: !!!!!!!!
 }
 
 export class DasAnalyzer extends Analyzer {
