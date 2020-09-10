@@ -9,7 +9,7 @@ import { activate, closeAllOpenFiles, defer, delay, extApi, getLaunchConfigurati
 
 // Skipped due to not quitting
 // https://github.com/dart-lang/webdev/issues/950
-describe.skip("web debugger", () => {
+describe("web debugger", () => {
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
 	before("get packages (1)", () => getPackages(webBrokenIndexFile));
 
@@ -123,10 +123,6 @@ describe.skip("web debugger", () => {
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
-			// TODO: Remove this when we're not forced into noDebug mode, which
-			// results in InitializedEvent coming immediately, before the debugger
-			// is ready to accept reloads.
-			dc.waitForEvent("dart.launched"),
 		);
 
 		await watchPromise("hot_reloads_successfully->hotReload", dc.hotReload());
@@ -142,10 +138,6 @@ describe.skip("web debugger", () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
-			// TODO: Remove this when we're not forced into noDebug mode, which
-			// results in InitializedEvent coming immediately, before the debugger
-			// is ready to accept reloads.
-			dc.waitForEvent("dart.launched"),
 		);
 
 		// If we restart too fast, things fail :-/
