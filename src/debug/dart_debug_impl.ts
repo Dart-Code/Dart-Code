@@ -539,7 +539,10 @@ export class DartDebugSession extends DebugSession {
 							this.recordAdditionalPid(vm.pid);
 						}
 
-						const isolates = await Promise.all(vm.isolates.map((isolateRef) => this.vmService!.getIsolate(isolateRef.id)));
+						const isolates = (await Promise.all(vm.isolates.map((isolateRef) => this.vmService!.getIsolate(isolateRef.id))))
+							// Filter to just Isolates, in case we got an collected Sentinels.
+							// https://github.com/flutter/devtools/issues/2324#issuecomment-690128227
+							.filter((resp) => resp.result.type === "Isolate");
 
 						// TODO: Is it valid to assume the first (only?) isolate with a rootLib is the one we care about here?
 						// If it's always the first, could we even just query the first instead of getting them all before we
