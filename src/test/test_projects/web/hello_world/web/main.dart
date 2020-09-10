@@ -1,6 +1,16 @@
-import 'package:angular/angular.dart';
-import 'package:hello_world/app_component.template.dart' as ng;
+import 'dart:html';
 
 void main() {
-  runApp(ng.AppComponentNgFactory);
+  genericMethod<bool, double, int, String>();
+  querySelector('#output').text = 'Your Dart app is running.';
+  // BREAKPOINT1^
+}
+
+void genericMethod<TBool, TDouble, TInt, TString>() {
+  var a = 1;
+  print(a);
+  print('TBool: ' + TBool.toString()); // BREAKPOINT2
+  print('TDouble: ' + TDouble.toString());
+  print('TInt: ' + TInt.toString());
+  print('TString: ' + TString.toString());
 }

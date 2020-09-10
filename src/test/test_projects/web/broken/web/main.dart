@@ -1,6 +1,10 @@
-import 'package:angular/angular.dart';
-import 'package:broken/app_component.template.dart' as ng;
+import 'dart:html';
 
 void main() {
-  runApp(ng.AppComponentNgFactory);
+  methodThatThrows();
+  querySelector('#output').text = 'Your Dart app is running.';
+}
+
+void methodThatThrows() {
+  throw Exception("Oops");
 }
