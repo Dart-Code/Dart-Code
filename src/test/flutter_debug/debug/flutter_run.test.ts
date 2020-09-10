@@ -179,7 +179,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("can hot reload using command", async function () {
-		if (flutterTestDeviceIsWeb)
+		if (flutterTestDeviceIsWeb && !extApi.flutterCapabilities.webSupportsHotReload)
 			return this.skip();
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);

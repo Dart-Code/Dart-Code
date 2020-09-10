@@ -48,6 +48,7 @@ export interface InternalExtensionApi {
 		version: string;
 		webSupportsDebugging: boolean;
 		webSupportsEvaluation: boolean;
+		webSupportsHotReload: boolean;
 	};
 	debugCommands: DebugCommandHandler;
 	debugProvider: DebugConfigurationProvider;
@@ -69,6 +70,8 @@ export interface InternalExtensionApi {
 		hasEvictBug: boolean;
 		hasLatestStructuredErrorsWork: boolean;
 		webSupportsDebugging: boolean;
+		webSupportsEvaluation: boolean;
+		webSupportsHotReload: boolean;
 	};
 	flutterOutlineTreeProvider: TreeDataProvider<TreeItem> | undefined;
 	getLogHeader: () => string;
