@@ -7,9 +7,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureVariable, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, delay, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
-// Skipped due to not quitting
-// https://github.com/dart-lang/webdev/issues/950
-describe("web debugger", () => {
+describe.skip("web debugger", () => {
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
 	before("get packages (1)", () => getPackages(webBrokenIndexFile));
 
