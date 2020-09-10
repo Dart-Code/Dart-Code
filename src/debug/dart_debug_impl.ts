@@ -959,7 +959,7 @@ export class DartDebugSession extends DebugSession {
 
 				// Download the source if from a "dart:" uri.
 				let sourceReference: number | undefined;
-				if (uri.startsWith("dart:")) {
+				if (uri.startsWith("dart:") || uri.startsWith("org-dartlang-app:")) {
 					sourcePath = undefined;
 					sourceReference = thread.storeData(location.script);
 					canShowSource = true;
@@ -1888,7 +1888,9 @@ export class DartDebugSession extends DebugSession {
 		const sep = uri.indexOf("/") === -1 && uri.indexOf("\\") !== -1 ? "\\" : "/";
 		const parts = uri.split(sep);
 		if (parts.length > 3) {
-			return [parts[0], "…", parts[parts.length - 2], parts[parts.length - 1]].join(sep);
+			return parts[0] === "org-dartlang-app"
+				? ["…", parts[parts.length - 2], parts[parts.length - 1]].join(sep)
+				: [parts[0], "…", parts[parts.length - 2], parts[parts.length - 1]].join(sep);
 		} else {
 			return uri;
 		}
