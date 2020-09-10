@@ -1717,7 +1717,7 @@ export class DartDebugSession extends DebugSession {
 		} else {
 			// PauseStart, PauseExit, PauseBreakpoint, PauseInterrupted, PauseException
 			let reason = "pause";
-			let exceptionText;
+			let exceptionText: string | undefined;
 			let shouldRemainedStoppedOnBreakpoint = true;
 
 			if (kind === "PauseBreakpoint" && event.pauseBreakpoints && event.pauseBreakpoints.length) {
