@@ -2,4 +2,4 @@ android/
 build/
 ios/
 macos/
-web/
+flutter**/web/
