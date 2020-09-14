@@ -468,12 +468,7 @@ describe("dart cli debugger", () => {
 	it("downloads SDK source code from the VM", async function () {
 		if (!extApi.dartCapabilities.includesSourceForSdkLibs) {
 			this.skip();
-		}
-
-		// This is currently broken in v2.10 dev builds.
-		// https://github.com/dart-lang/sdk/issues/43207
-		if (extApi.dartCapabilities.version.startsWith("2.10.0-")) {
-			this.skip();
+			return;
 		}
 
 		await openFile(helloWorldMainFile);
