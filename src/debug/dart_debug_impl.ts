@@ -25,9 +25,11 @@ const maxValuesToCallToString = 100;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
-const stackFrameWithUriPattern = new RegExp(`(.*#\\d+.*)\\(((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\)\\s*$`, "m");
-const webStackFrameWithUriPattern = new RegExp(`((?:package|dart|file):.*\\.dart) (\\d+):(\\d+)\\s*(\\S+)\\s*$`, "m");
-const messageWithUriPattern = new RegExp(`(.*?)((?:package|dart|file):.*\\.dart):(\\d+):(\\d+)\\s*$`, "m");
+const pathPartPattern = `(dart:\\S*|(?:package:|file:)?.*\\.dart)`;
+const optionalLineColPartPattern = `(?:(\\d+):(\\d+))?`;
+const stackFrameWithUriPattern = new RegExp(`(.*#\\d+.*)\\(${pathPartPattern}:${optionalLineColPartPattern}\\)\\s*$`, "m");
+const webStackFrameWithUriPattern = new RegExp(`${pathPartPattern} ${optionalLineColPartPattern}\\s*(\\S+)\\s*$`, "m");
+const messageWithUriPattern = new RegExp(`(.*?)${pathPartPattern}:${optionalLineColPartPattern}\\s*$`, "m");
 const trailingSemicolonPattern = new RegExp(`;\\s*$`, "m");
 
 // TODO: supportsSetVariable
@@ -2045,8 +2047,8 @@ export class DartDebugSession extends DebugSession {
 		if (match) {
 			// TODO: Handle dart: uris (using source references)?
 			return {
-				col: parseInt(match[4], 10),
-				line: parseInt(match[3], 10),
+				col: match[4] !== undefined ? parseInt(match[4], 10) : undefined,
+				line: match[3] !== undefined ? parseInt(match[3], 10) : undefined,
 				prefix: match[1],
 				sourceUri: match[2],
 			};
@@ -2059,8 +2061,8 @@ export class DartDebugSession extends DebugSession {
 		if (match) {
 			// TODO: Handle dart: uris (using source references)?
 			return {
-				col: parseInt(match[3], 10),
-				line: parseInt(match[2], 10),
+				col: match[3] !== undefined ? parseInt(match[3], 10) : undefined,
+				line: match[2] !== undefined ? parseInt(match[2], 10) : undefined,
 				prefix: match[4],
 				sourceUri: match[1],
 			};
@@ -2072,8 +2074,8 @@ export class DartDebugSession extends DebugSession {
 		const match = message && messageWithUriPattern.exec(message);
 		if (match) {
 			return {
-				col: parseInt(match[4], 10),
-				line: parseInt(match[3], 10),
+				col: match[4] !== undefined ? parseInt(match[4], 10) : undefined,
+				line: match[3] !== undefined ? parseInt(match[3], 10) : undefined,
 				prefix: match[1],
 				sourceUri: match[2],
 			};
@@ -2124,12 +2126,15 @@ export class DartDebugSession extends DebugSession {
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
 		// it clickable.
 		if (frame) {
-			const sourcePath: string | undefined = this.convertVMUriToSourcePath(frame.sourceUri);
+			let sourcePath: string | undefined = this.convertVMUriToSourcePath(frame.sourceUri);
+			if (!path.isAbsolute(sourcePath) && this.cwd)
+				sourcePath = path.join(this.cwd, sourcePath);
 			const canShowSource = sourcePath && sourcePath !== frame.sourceUri && fs.existsSync(sourcePath);
 			const shortName = this.formatUriForShortDisplay(frame.sourceUri);
 			const source = canShowSource ? new Source(shortName, sourcePath, undefined, undefined, undefined) : undefined;
 
-			let text = `${frame.prefix} (${frame.sourceUri}:${frame.line}:${frame.col})`;
+			const suffix = frame.line !== undefined && frame.col !== undefined ? `:${frame.line}:${frame.col})` : "";
+			let text = `${frame.prefix} (${frame.sourceUri}${suffix})`;
 			if (source) {
 				output.body.source = source;
 				output.body.line = frame.line;
@@ -2160,8 +2165,8 @@ export interface InstanceWithEvaluateName extends VMInstanceRef {
 export type VmExceptionMode = "None" | "Unhandled" | "All";
 
 interface MessageWithUriData {
-	col: number;
-	line: number;
+	col: number | undefined;
+	line: number | undefined;
 	prefix: string;
 	sourceUri: string;
 }
