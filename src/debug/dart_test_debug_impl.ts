@@ -145,8 +145,8 @@ export class DartTestDebugSession extends DartDebugSession {
 				break;
 			case "error":
 				const error = notification as ErrorNotification;
-				this.sendEvent(new OutputEvent(`${error.error}\n`, "stderr"));
-				this.sendEvent(new OutputEvent(`${error.stackTrace}\n`, "stderr"));
+				this.logToUser(`${error.error}\n`, "stderr");
+				this.logToUser(`${error.stackTrace}\n`, "stderr");
 				break;
 		}
 	}
