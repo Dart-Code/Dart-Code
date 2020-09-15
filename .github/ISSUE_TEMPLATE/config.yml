@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Flutter Bug Report
+    url: https://github.com/flutter/flutter/issues/new
+    about: Issues relating to Flutter that also occur in IntelliJ/Android Studio or from the command line should be reported in the Flutter SDK
+  - name: Dart Bug Report
+    url: https://github.com/dart-lang/sdk/issues/new
+    about: Issues relating to Dart language that also occur in IntelliJ/Android Studio should be reported in the Dart SDK
