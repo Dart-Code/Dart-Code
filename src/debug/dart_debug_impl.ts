@@ -2127,7 +2127,7 @@ export class DartDebugSession extends DebugSession {
 		// it clickable.
 		if (frame) {
 			let sourcePath: string | undefined = this.convertVMUriToSourcePath(frame.sourceUri);
-			if (!path.isAbsolute(sourcePath) && this.cwd)
+			if (sourcePath && !path.isAbsolute(sourcePath) && this.cwd)
 				sourcePath = path.join(this.cwd, sourcePath);
 			const canShowSource = sourcePath && sourcePath !== frame.sourceUri && fs.existsSync(sourcePath);
 			const shortName = this.formatUriForShortDisplay(frame.sourceUri);
