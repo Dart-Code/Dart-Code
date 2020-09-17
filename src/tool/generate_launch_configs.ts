@@ -17,7 +17,7 @@ const testConfigs: TestConfig[] = [
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"] },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], chrome: true },
-	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", debugAdapters: ["flutter_test"] },
+	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", debugAdapters: ["flutter", "flutter_test"] },
 	{ testFolder: "multi_root", project: "projects.code-workspace" },
 	{ testFolder: "multi_project_folder", project: "" },
 	{ testFolder: "dart_create_tests", project: "dart_create_tests.code-workspace" },

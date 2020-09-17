@@ -819,6 +819,7 @@
 			"name": "Flutter Test Debug Tests + DAs",
 			"configurations": [
 				"Flutter Test Debug Tests",
+				"Flutter Debug Server",
 				"Flutter Test Debug Server"
 			],
 			"presentation": {
