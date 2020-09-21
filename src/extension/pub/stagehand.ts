@@ -4,6 +4,7 @@ import { pubPath, stagehandInstallationInstructionsUrl } from "../../shared/cons
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
+import { cleanPubOutput } from "../../shared/pub/utils";
 import { safeToolSpawn } from "../utils/processes";
 import { PubGlobal } from "./global";
 
@@ -23,7 +24,7 @@ export class Stagehand {
 	}
 
 	private async getTemplateJson(): Promise<string> {
-		return this.runCommandWithProgress("Fetching Stagehand templates...", ["global", "run", "stagehand", "--machine"]);
+		return cleanPubOutput(await this.runCommandWithProgress("Fetching Stagehand templates...", ["global", "run", "stagehand", "--machine"]));
 	}
 
 	private runCommandWithProgress(title: string, args: string[]): Thenable<string> {
