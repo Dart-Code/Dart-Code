@@ -18,6 +18,7 @@ import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_sam
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
+import { appendTaskExecutionInfo, DartTaskDefinition, DartTaskProvider } from "../dart/dart_task_provider";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
@@ -52,6 +53,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
+		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", this.runTaskDartdoc, this));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => {
@@ -124,15 +126,39 @@ export class SdkCommands {
 	}
 
 	private async upgradePackages(uri: string | Uri | undefined) {
-		// TODO: Doesn't this instanceof mean passing a string can't work?
-		if (!uri || !(uri instanceof Uri))
+		if (!uri || !(uri instanceof Uri)) {
 			uri = await this.getFolderToRunCommandIn("Select which folder to upgrade packages in");
+			// If the user cancelled, bail out (otherwise we'll prompt them again below).
+			if (!uri)
+				return;
+		}
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 		if (util.isInsideFlutterProject(uri))
 			return this.runFlutter(["pub", "upgrade"], uri);
 		else
 			return this.runPub(["upgrade"], uri);
+	}
+
+	private async runTaskDartdoc(uri: string | Uri | undefined) {
+		return this.runTaskImpl(uri, "dartdoc");
+	}
+
+	private async runTaskImpl(uri: string | Uri | undefined, command: string) {
+		if (!uri || !(uri instanceof Uri)) {
+			uri = await this.getFolderToRunCommandIn("Select which project to generate documentation for");
+			// If the user cancelled, bail out (otherwise we'll prompt them again below).
+			if (!uri)
+				return;
+		}
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+		const folder = vs.workspace.getWorkspaceFolder(uri);
+
+		const def = { command, type: DartTaskProvider.type } as DartTaskDefinition;
+		const task = new vs.Task(def, folder, command, DartTaskProvider.type);
+		appendTaskExecutionInfo(this.sdks, task);
+		return vs.tasks.executeTask(task);
 	}
 
 	private async flutterGetPackages(selection: vs.Uri | undefined): Promise<number | undefined> {

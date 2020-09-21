@@ -106,6 +106,15 @@
 				}
 			},
 			{
+				"command": "dart.task.dartdoc",
+				"title": "Generate Documentation",
+				"category": "Dart",
+				"icon": {
+					"light": "./media/commands/documentation.svg",
+					"dark": "./media/commands/documentation-inverse.svg"
+				}
+			},
+			{
 				"command": "pub.upgrade",
 				"title": "Upgrade Packages",
 				"category": "Pub",
@@ -539,6 +548,10 @@
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
+					"command": "dart.task.dartdoc",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
 					"command": "pub.upgrade",
 					"when": "dart-code:dartProjectLoaded"
 				},
@@ -876,6 +889,11 @@
 					"group": "navigation@3"
 				},
 				{
+					"when": "resourceFilename == dartdoc_options.yaml && dart-code:dartProjectLoaded",
+					"command": "dart.task.dartdoc",
+					"group": "navigation@1"
+				},
+				{
 					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && dart-code:currentFileIsRunnable",
 					"command": "dart.startWithoutDebugging",
 					"group": "1_run@10"
@@ -910,6 +928,10 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "flutter.packages.outdated"
+				},
+				{
+					"when": "resourceFilename == dartdoc_options.yaml && dart-code:dartProjectLoaded",
+					"command": "dart.task.dartdoc"
 				}
 			],
 			"explorer/context": [
@@ -936,6 +958,10 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "flutter.packages.outdated"
+				},
+				{
+					"when": "resourceFilename == dartdoc_options.yaml && dart-code:dartProjectLoaded",
+					"command": "dart.task.dartdoc"
 				},
 				{
 					"when": "resourceLangId == dart && dart-code:dartProjectLoaded",
@@ -1974,6 +2000,15 @@
 		"taskDefinitions": [
 			{
 				"type": "pub",
+				"required": [],
+				"properties": {
+					"command": {
+						"type": "string"
+					}
+				}
+			},
+			{
+				"type": "dart",
 				"required": [],
 				"properties": {
 					"command": {

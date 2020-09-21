@@ -1,0 +1,6 @@
+dartdoc:
+  include:
+    - everything
+  ignore:
+    - unknown-file
+    - no-library-level-docs

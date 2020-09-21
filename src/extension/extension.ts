@@ -46,6 +46,7 @@ import { SdkCommands } from "./commands/sdk";
 import { cursorIsInTest, DasTestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation, LspTestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
+import { DartTaskProvider } from "./dart/dart_task_provider";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterColorDecorations } from "./decorations/flutter_color_decorations";
 import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decorations_das";
@@ -348,6 +349,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		const provider = new PubBuildRunnerTaskProvider(sdks);
 		context.subscriptions.push(vs.tasks.registerTaskProvider(provider.type, provider));
 	}
+	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(sdks)));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));

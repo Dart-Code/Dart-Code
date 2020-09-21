@@ -1,5 +1,6 @@
 android/
 build/
+**/doc/api
 ios/
 macos/
 flutter**/web/
