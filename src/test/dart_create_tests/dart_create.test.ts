@@ -6,17 +6,15 @@ import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { internalApiSymbol } from "../../shared/symbols";
 import { fsPath } from "../../shared/utils/fs";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
-import { sb, waitForResult } from "../helpers";
+import { waitForResult } from "../helpers";
 import sinon = require("sinon");
 
 describe("dart", () => {
 	it("created a templated project", async () => {
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
-
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders![0].uri);
 		const expectedString = "Hello world";
 		const mainFile = path.join(sampleProjectFolder, "bin", "dart_create_template.dart");
+		const packagesFile = path.join(sampleProjectFolder, ".dart_tool", "package_config.json");
 
 		// Creating the sample may be a little slow, so allow up to 60 seconds for it.
 		await waitForResult(() => fs.existsSync(mainFile), "bin/dart_create_template.dart did not exist", 60000);
@@ -32,9 +30,7 @@ describe("dart", () => {
 			assert.fail(`Did not find "${expectedString}'" in the templated file:\n\n${contents}`);
 
 		// Ensure we fetched packages too.
-		await waitForResult(() => {
-			return getPackagesCommand.calledOnce;
-		}, "Get Packages was not called after creating the project", 40000);
+		await waitForResult(() => fs.existsSync(packagesFile), ".dart_tool/package_config.json did not exist", 10000);
 	});
 
 	it("did not trigger Flutter mode", () => {
