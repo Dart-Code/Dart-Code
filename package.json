@@ -1211,8 +1211,14 @@
 				"dart.enableCompletionCommitCharacters": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to automatically commit the selected completion item when pressing certain keys such as . , ( and [.",
+					"description": "Whether to automatically commit the selected completion item when pressing certain keys such as . , ( and [. This setting does not currently apply to LSP, see dart.previewCommitCharacters.",
 					"scope": "resource"
+				},
+				"dart.previewCommitCharacters": {
+					"type": "boolean",
+					"default": false,
+					"description": "EXPERIMENTAL: Whether to enable commit characters for the LSP server. In a future release, the dart.enableCompletionCommitCharacters setting will also apply to LSP.",
+					"scope": "window"
 				},
 				"dart.triggerSignatureHelpAutomatically": {
 					"type": "boolean",
