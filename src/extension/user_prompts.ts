@@ -140,11 +140,6 @@ function error(err: any) {
 }
 
 export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
-	// HACK: In order for tests to be able to intercept these commands we need to
-	// ensure they don't start before the test is running, so insert a delay when
-	// running tests.
-	if (process.env.DART_CODE_IS_TEST_RUN)
-		await new Promise((resolve) => setTimeout(resolve, 5000));
 	await Promise.all(getDartWorkspaceFolders().map(async (wf) => {
 		try {
 			await handleStagehandTrigger(logger, wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
