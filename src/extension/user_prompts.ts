@@ -15,9 +15,6 @@ import { markProjectCreationEnded, markProjectCreationStarted } from "./commands
 import { promptToReloadExtension } from "./utils";
 
 export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, workspaceContext: WorkspaceContext): Promise<void> {
-	// tslint:disable-next-line: no-floating-promises
-	handleNewProjects(logger, context);
-
 	function shouldSuppress(key: string): boolean {
 		const stateKey = `${userPromptContextPrefix}${key}`;
 		return context.get(stateKey) === true;
@@ -142,65 +139,73 @@ function error(err: any) {
 	vs.window.showErrorMessage(err.message);
 }
 
-async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
+export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
 	// HACK: In order for tests to be able to intercept these commands we need to
 	// ensure they don't start before the test is running, so insert a delay when
 	// running tests.
 	if (process.env.DART_CODE_IS_TEST_RUN)
 		await new Promise((resolve) => setTimeout(resolve, 5000));
-	getDartWorkspaceFolders().forEach((wf) => {
-		// tslint:disable-next-line: no-floating-promises
-		handleStagehandTrigger(logger, wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
-		// tslint:disable-next-line: no-floating-promises
-		handleFlutterCreateTrigger(wf);
-	});
+	await Promise.all(getDartWorkspaceFolders().map(async (wf) => {
+		try {
+			await handleStagehandTrigger(logger, wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
+			await handleFlutterCreateTrigger(wf);
+		} catch (e) {
+			logger.error("Failed to create project");
+			logger.error(e);
+			vs.window.showErrorMessage("Failed to create project");
+		}
+	}));
 }
 
 async function handleStagehandTrigger(logger: Logger, wf: vs.WorkspaceFolder, triggerFilename: string): Promise<void> {
 	const triggerFile = path.join(fsPath(wf.uri), triggerFilename);
-	if (fs.existsSync(triggerFile)) {
-		const templateJson = fs.readFileSync(triggerFile).toString().trim();
-		let template: StagehandTemplate;
-		try {
-			template = JSON.parse(templateJson);
-		} catch (e) {
-			vs.window.showErrorMessage("Failed to run Stagehand to create project");
-			return;
-		}
-		fs.unlinkSync(triggerFile);
-		logger.info(`Creating Dart project for ${fsPath(wf.uri)}`, LogCategory.CommandProcesses);
-		try {
-			markProjectCreationStarted();
+	if (!fs.existsSync(triggerFile))
+		return;
 
-			const success = await createDartProject(fsPath(wf.uri), template.name);
-			if (success) {
-				logger.info(`Fetching packages for newly-created project`, LogCategory.CommandProcesses);
-				await vs.commands.executeCommand("dart.getPackages", wf.uri);
-				handleDartWelcome(wf, template);
-				logger.info(`Finished creating new project!`, LogCategory.CommandProcesses);
-			} else {
-				logger.info(`Failed to create new project`, LogCategory.CommandProcesses);
-			}
-		} finally {
-			markProjectCreationEnded();
+	const templateJson = fs.readFileSync(triggerFile).toString().trim();
+	let template: StagehandTemplate;
+	try {
+		template = JSON.parse(templateJson);
+	} catch (e) {
+		logger.error("Failed to get Stagehand templates");
+		logger.error(e);
+		vs.window.showErrorMessage("Failed to run Stagehand to create project");
+		return;
+	}
+	fs.unlinkSync(triggerFile);
+	logger.info(`Creating Dart project for ${fsPath(wf.uri)}`, LogCategory.CommandProcesses);
+	try {
+		markProjectCreationStarted();
+
+		const success = await createDartProject(fsPath(wf.uri), template.name);
+		if (success) {
+			logger.info(`Fetching packages for newly-created project`, LogCategory.CommandProcesses);
+			await vs.commands.executeCommand("dart.getPackages", wf.uri);
+			handleDartWelcome(wf, template);
+			logger.info(`Finished creating new project!`, LogCategory.CommandProcesses);
+		} else {
+			logger.info(`Failed to create new project`, LogCategory.CommandProcesses);
 		}
+	} finally {
+		markProjectCreationEnded();
 	}
 }
 
 async function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder): Promise<void> {
 	const flutterTriggerFile = path.join(fsPath(wf.uri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
-	if (fs.existsSync(flutterTriggerFile)) {
-		let sampleID: string | undefined = fs.readFileSync(flutterTriggerFile).toString().trim();
-		sampleID = sampleID ? sampleID : undefined;
-		fs.unlinkSync(flutterTriggerFile);
-		try {
-			markProjectCreationStarted();
-			const success = await createFlutterProject(fsPath(wf.uri), sampleID);
-			if (success)
-				handleFlutterWelcome(wf, sampleID);
-		} finally {
-			markProjectCreationEnded();
-		}
+	if (!fs.existsSync(flutterTriggerFile))
+		return;
+
+	let sampleID: string | undefined = fs.readFileSync(flutterTriggerFile).toString().trim();
+	sampleID = sampleID ? sampleID : undefined;
+	fs.unlinkSync(flutterTriggerFile);
+	try {
+		markProjectCreationStarted();
+		const success = await createFlutterProject(fsPath(wf.uri), sampleID);
+		if (success)
+			handleFlutterWelcome(wf, sampleID);
+	} finally {
+		markProjectCreationEnded();
 	}
 }
 

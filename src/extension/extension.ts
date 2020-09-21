@@ -87,7 +87,7 @@ import { PubGlobal } from "./pub/global";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
-import { showUserPrompts } from "./user_prompts";
+import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeToolSpawn } from "./utils/processes";
@@ -201,6 +201,18 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext, isUsingLsp));
 	}
 	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
+
+	const pubApi = new PubApi(webClient);
+	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
+	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, deviceManager);
+	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
+
+	// Handle new projects before creating the analyer to avoid a few issues with
+	// showing errors while packages are fetched, plus issues like
+	// https://github.com/Dart-Code/Dart-Code/issues/2793 which occur if the analyzer
+	// is created too early.
+	if (!isRestart)
+		await handleNewProjects(logger, extContext);
 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
@@ -401,8 +413,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	util.logTime("All other stuff before debugger..");
 
-	const pubApi = new PubApi(webClient);
-	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
+	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);
@@ -470,11 +481,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
-
-	// Register additional commands.
-	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
-	const sdkCommands = new SdkCommands(logger, context, workspaceContext, sdkUtils, pubGlobal, flutterCapabilities, deviceManager);
-	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, analytics, pubGlobal);
 
 	// Wire up handling of Hot Reload on Save.
 	context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands, flutterCapabilities));
