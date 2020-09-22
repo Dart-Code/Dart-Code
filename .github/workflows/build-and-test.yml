@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
         node-version: [10]
         build-version: [stable]
         bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
