@@ -48,7 +48,7 @@ export class DartTaskProvider implements vs.TaskProvider {
 
 export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): vs.Task {
 	if (!task?.definition?.command)
-		return undefined;
+		return task;
 
 	const binaryPath = task?.definition?.command === "dartdoc"
 		? dartDocPath
@@ -63,7 +63,7 @@ export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): vs.Task
 		case vs.TaskScope.Global:
 		case vs.TaskScope.Workspace:
 			// We don't know how to handle these.
-			return undefined;
+			return task;
 		default:
 			cwd = task.scope?.uri ? fsPath(task.scope.uri) : undefined;
 	}
