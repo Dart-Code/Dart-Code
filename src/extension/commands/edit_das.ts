@@ -206,7 +206,10 @@ export class DasEditCommands implements vs.Disposable {
 				snippet.appendText(documentText.substring(currentPos, p.offset));
 			// Add the choices / placeholder.
 			if (p.choices && p.choices.length > 1)
-				snippet.appendChoice(p.choices, p.placeholderNumber);
+				// TODO: Change this back to appendChoice when it handles commas correctly
+				// https://github.com/microsoft/vscode/issues/107220
+				// snippet.appendChoice(p.choices, p.placeholderNumber);
+				snippet.value += "${" + p.placeholderNumber + "|" + p.choices.map((c) => this.snippetStringEscape(c)).join(",") + "|}";
 			else
 				snippet.appendPlaceholder(p.defaultValue, p.placeholderNumber);
 			currentPos = p.offset + p.length;
@@ -217,6 +220,10 @@ export class DasEditCommands implements vs.Disposable {
 
 		// Ensure original document is the active one.
 		await vs.window.showTextDocument(initiatingDocument);
+	}
+
+	private snippetStringEscape(value: string): string {
+		return value.replace(/\$|}|\\|,/g, "\\$&");
 	}
 }
 
