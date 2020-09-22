@@ -154,6 +154,8 @@ export class SdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 		const folder = vs.workspace.getWorkspaceFolder(uri);
+		if (!folder)
+			return;
 
 		const def = { command, type: DartTaskProvider.type } as DartTaskDefinition;
 		const task = new vs.Task(def, folder, command, DartTaskProvider.type);

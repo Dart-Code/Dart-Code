@@ -41,14 +41,14 @@ export class DartTaskProvider implements vs.TaskProvider {
 	}
 
 	public resolveTask(task: DartTask, token?: vs.CancellationToken): vs.Task {
-		return appendTaskExecutionInfo(this.sdks, task);
+		appendTaskExecutionInfo(this.sdks, task);
+		return task;
 	}
-
 }
 
-export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): vs.Task {
+export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): void {
 	if (!task?.definition?.command)
-		return task;
+		return;
 
 	const binaryPath = task?.definition?.command === "dartdoc"
 		? dartDocPath
@@ -63,7 +63,7 @@ export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): vs.Task
 		case vs.TaskScope.Global:
 		case vs.TaskScope.Workspace:
 			// We don't know how to handle these.
-			return task;
+			return;
 		default:
 			cwd = task.scope?.uri ? fsPath(task.scope.uri) : undefined;
 	}
@@ -73,6 +73,4 @@ export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): vs.Task
 		args || [],
 		{ cwd, env: getToolEnv() },
 	);
-
-	return task;
 }
