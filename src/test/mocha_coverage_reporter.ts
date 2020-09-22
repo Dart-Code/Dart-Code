@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import * as fs from "fs";
 import { reporters, Runner } from "mocha";
 

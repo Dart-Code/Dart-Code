@@ -17,6 +17,7 @@
 // It appears to be safe to ignore these as they're being loaded in a try{} block
 // and are optional.
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require("path");
 
 module.exports = (env) => {

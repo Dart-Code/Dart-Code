@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase */
 import * as assert from "assert";
 import { Writable } from "stream";
 import { DebugSession, DebugSessionCustomEvent, window } from "vscode";

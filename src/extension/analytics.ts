@@ -50,6 +50,7 @@ export class Analytics {
 	public analysisServerVersion?: string;
 	private readonly formatter: string;
 	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
 
 	constructor(private readonly logger: Logger, public workspaceContext: WorkspaceContext) {
