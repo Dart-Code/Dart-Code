@@ -260,6 +260,7 @@ export class DebugCommands {
 
 					input = input.trim();
 
+					// eslint-disable-next-line id-blacklist
 					if (Number.isInteger(parseFloat(input)))
 						return;
 

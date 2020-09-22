@@ -30,7 +30,7 @@ export class ColorRangeComputer {
 		let result: RegExpExecArray | null;
 		this.allColorsPattern.lastIndex = -1;
 
-		// tslint:disable-next-line: no-conditional-assignment
+		// eslint-disable-next-line no-cond-assign
 		while (result = this.allColorsPattern.exec(text)) {
 			if (!result.groups)
 				continue;

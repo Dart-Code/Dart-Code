@@ -362,6 +362,7 @@ export function deleteDirectoryRecursive(folder: string) {
 
 export let currentTestName = "unknown";
 export let fileSafeCurrentTestName: string = "unknown";
+// eslint-disable-next-line prefer-arrow-callback
 beforeEach("stash current test name", function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
 	fileSafeCurrentTestName = filenameSafe(currentTestName);
@@ -521,7 +522,7 @@ export function rangesOf(searchText: string): vs.Range[] {
 	const results = [];
 	let searchRange: vs.Range | undefined;
 	let range: vs.Range | undefined;
-	// tslint:disable-next-line: no-conditional-assignment
+	// eslint-disable-next-line no-cond-assign
 	while (range = rangeOf(searchText, searchRange, true)) {
 		results.push(range);
 		// Next time, search starting from after this range.

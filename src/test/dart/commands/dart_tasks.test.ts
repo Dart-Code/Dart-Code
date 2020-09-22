@@ -13,12 +13,11 @@ describe("dart tasks", () => {
 	it("dart.task.dartdoc causes documentation to be generated", async () => {
 		assert.ok(!fs.existsSync(dartDocOutputPath));
 		await new Promise(async (resolve, reject) => {
-			let taskExecution: vs.TaskExecution | undefined;
 			vs.tasks.onDidEndTaskProcess((task) => {
 				if (task.execution === taskExecution)
 					task.exitCode ? reject(new Error(`Task quit with code ${task.exitCode}`)) : resolve();
 			});
-			taskExecution = await vs.commands.executeCommand("dart.task.dartdoc") as vs.TaskExecution;
+			const taskExecution = await vs.commands.executeCommand("dart.task.dartdoc") as vs.TaskExecution;
 		});
 		assert.ok(fs.existsSync(dartDocOutputPath));
 		await delay(10000);

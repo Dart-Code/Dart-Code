@@ -29,7 +29,7 @@ export class DartDocumentSymbolProvider implements DocumentSymbolProvider {
 			toRange(document, location.offset, location.length),
 		);
 
-		// tslint:disable-next-line: no-bitwise
+		// eslint-disable-next-line no-bitwise
 		if (outline.element.flags & 0x20)
 			symbol.tags = [SymbolTag.Deprecated];
 

@@ -4,7 +4,7 @@
 // Original source:
 // https://raw.githubusercontent.com/microsoft/vscode-debugadapter-node/master/testSupport/src/debugClient.ts
 
-/* tslint:disable */
+/* eslint-disable */
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.

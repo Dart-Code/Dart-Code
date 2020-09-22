@@ -56,29 +56,17 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", this.runTaskDartdoc, this));
 
 		// Pub commands.
-		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => {
-			return vs.commands.executeCommand("dart.getPackages", selection);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => {
-			return vs.commands.executeCommand("dart.upgradePackages", selection);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("pub.outdated", (selection) => {
-			return vs.commands.executeCommand("dart.listOutdatedPackages", selection);
-		}));
+		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
+		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
+		context.subscriptions.push(vs.commands.registerCommand("pub.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
 
 		// Flutter commands.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", this.flutterGetPackages, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.clean", this.flutterClean, this));
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => {
-			return vs.commands.executeCommand("flutter.screenshot", args);
-		}));
+		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => {
-			return vs.commands.executeCommand("dart.upgradePackages", selection);
-		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => {
-			return vs.commands.executeCommand("dart.listOutdatedPackages", selection);
-		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
@@ -733,7 +721,9 @@ class ChainedProcess {
 	public readonly completed = this.completer.promise;
 	public process: SpawnedProcess | undefined;
 	private isCancelled = false;
-	public get hasStarted() { return this.process !== undefined; }
+	public get hasStarted() {
+		return this.process !== undefined;
+	}
 
 	constructor(private readonly spawn: () => SpawnedProcess, parent: ChainedProcess | undefined) {
 		// We'll either start immediately, or if given a parent process only when it completes.
