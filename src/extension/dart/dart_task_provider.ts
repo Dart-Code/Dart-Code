@@ -47,7 +47,9 @@ export class DartTaskProvider implements vs.TaskProvider {
 		// https://github.com/microsoft/vscode/issues/58836#issuecomment-696620105
 		return new vs.Task(
 			task.definition,
-			task.scope,
+			// This should never be undefined, but the type allows it but the constructor
+			// arg does not.
+			task.scope || vs.TaskScope.Workspace,
 			task.name,
 			task.source,
 			createTaskExecution(this.sdks, task.definition, cwd),
