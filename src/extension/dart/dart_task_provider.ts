@@ -41,34 +41,33 @@ export class DartTaskProvider implements vs.TaskProvider {
 	}
 
 	public resolveTask(task: DartTask, token?: vs.CancellationToken): vs.Task {
-		appendTaskExecutionInfo(this.sdks, task);
-		return task;
+		const cwd = task.scope instanceof vs.Uri ? fsPath(task.scope) : undefined;
+		// We *must* return a new Task here, otherwise the task cannot be customised
+		// in task.json.
+		// https://github.com/microsoft/vscode/issues/58836#issuecomment-696620105
+		return new vs.Task(
+			task.definition,
+			task.scope,
+			task.name,
+			task.source,
+			createTaskExecution(this.sdks, task.definition, cwd),
+		);
 	}
 }
 
-export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): void {
-	if (!task?.definition?.command)
+export function createTaskExecution(sdks: DartSdks, definition: DartTaskDefinition, cwd: string | undefined): vs.ProcessExecution | undefined {
+	if (!definition.command)
 		return;
 
-	const binaryPath = task?.definition?.command === "dartdoc"
+	const binaryPath = definition.command === "dartdoc"
 		? dartDocPath
 		: dartVMPath;
 	const program = path.join(sdks.dart, binaryPath);
-	const args = task?.definition?.command === "dartdoc"
-		? task.definition.args
-		: [task?.definition?.command, ...(task.definition.args || [])];
+	const args = definition.command === "dartdoc"
+		? definition.args
+		: [definition.command, ...(definition.args || [])];
 
-	let cwd: string | undefined;
-	switch (task.scope) {
-		case vs.TaskScope.Global:
-		case vs.TaskScope.Workspace:
-			// We don't know how to handle these.
-			return;
-		default:
-			cwd = task.scope?.uri ? fsPath(task.scope.uri) : undefined;
-	}
-
-	task.execution = new vs.ProcessExecution(
+	return new vs.ProcessExecution(
 		program,
 		args || [],
 		{ cwd, env: getToolEnv() },

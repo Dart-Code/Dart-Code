@@ -18,7 +18,7 @@ import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_sam
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
-import { appendTaskExecutionInfo, DartTaskDefinition, DartTaskProvider } from "../dart/dart_task_provider";
+import { createTaskExecution, DartTaskDefinition, DartTaskProvider } from "../dart/dart_task_provider";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
@@ -158,8 +158,7 @@ export class SdkCommands {
 			return;
 
 		const def = { command, type: DartTaskProvider.type } as DartTaskDefinition;
-		const task = new vs.Task(def, folder, command, DartTaskProvider.type);
-		appendTaskExecutionInfo(this.sdks, task);
+		const task = new vs.Task(def, folder, command, DartTaskProvider.type, createTaskExecution(this.sdks, def, fsPath(folder.uri)));
 		return vs.tasks.executeTask(task);
 	}
 
