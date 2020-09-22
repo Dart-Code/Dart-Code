@@ -70,7 +70,7 @@ export function appendTaskExecutionInfo(sdks: DartSdks, task: DartTask): vs.Task
 
 	task.execution = new vs.ProcessExecution(
 		program,
-		args,
+		args || [],
 		{ cwd, env: getToolEnv() },
 	);
 
