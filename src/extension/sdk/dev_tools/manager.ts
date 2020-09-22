@@ -121,6 +121,7 @@ export class DevToolsManager implements vs.Disposable {
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !options.embed
 					&& !process.env.DART_CODE_IS_TEST_RUN
+					&& config.devToolsBrowser === "chrome"
 					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
 
 				await this.launch(!!canLaunchDevToolsThroughService, session, options);

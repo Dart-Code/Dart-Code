@@ -1315,6 +1315,15 @@
 					"description": "The theme to use for Dart DevTools.",
 					"scope": "window"
 				},
+				"dart.devToolsBrowser": {
+					"enum": [
+						"chrome",
+						"default"
+					],
+					"default": "chrome",
+					"description": "Whether to launch external DevTools windows using Chrome or the system default browser.",
+					"scope": "window"
+				},
 				"dart.doNotFormat": {
 					"type": "array",
 					"default": [],
