@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest]
         node-version: [10]
         build-version: [stable]
         bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
@@ -163,11 +163,6 @@ jobs:
         with:
           name: test-results-windows-latest
           path: .test_results/win
-      - name: Fetch macOS test results
-        uses: actions/download-artifact@v1
-        with:
-          name: test-results-macOS-latest
-          path: .test_results/osx
       - name: Fetch Linux test logs
         uses: actions/download-artifact@v1
         with:
@@ -178,11 +173,6 @@ jobs:
         with:
           name: test-logs-windows-latest
           path: .test_logs/win
-      - name: Fetch macOS test logs
-        uses: actions/download-artifact@v1
-        with:
-          name: test-logs-macOS-latest
-          path: .test_logs/osx
 
       - name: Combine summary files
         run: find .test_results -name '*_summary.csv' -exec cat {} + > .test_results/summary.csv
