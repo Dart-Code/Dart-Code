@@ -2024,7 +2024,7 @@
 						"type": "string"
 					},
 					"args": {
-						"type":"array",
+						"type": "array",
 						"items": {
 							"type": "string"
 						}
