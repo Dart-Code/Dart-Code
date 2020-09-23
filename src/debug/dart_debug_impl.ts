@@ -25,7 +25,7 @@ const maxValuesToCallToString = 100;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
-const pathPartPattern = `(dart:\\S*|(?:package:|file:)?.*\\.dart)`;
+const pathPartPattern = `(dart:\\S*|\\S*\\.dart)`;
 const optionalLineColPartPattern = `(?:(\\d+):(\\d+))?`;
 const stackFrameWithUriPattern = new RegExp(`(.*#\\d+.*)\\(${pathPartPattern}:${optionalLineColPartPattern}\\)\\s*$`, "m");
 const webStackFrameWithUriPattern = new RegExp(`${pathPartPattern} ${optionalLineColPartPattern}\\s*(\\S+)\\s*$`, "m");
