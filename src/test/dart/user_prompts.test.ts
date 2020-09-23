@@ -160,7 +160,7 @@ describe("Survey notification", async () => {
 		assert.equal(context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 		// Marked as shown within the last 10 seconds.
 		const lastShown = context.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
-		assert.equal(lastShown && lastShown! > Date.now() - 10000 && lastShown! <= Date.now(), true);
+		assert.equal(lastShown && lastShown > Date.now() - 10000 && lastShown <= Date.now(), true);
 	});
 
 	it("shows and updates context values when already seen", async () => {
@@ -184,7 +184,7 @@ describe("Survey notification", async () => {
 		assert.equal(context.getFlutterSurveyNotificationDoNotShow(flutterTestSurveyID), true);
 		// Marked as shown within the last 10 seconds.
 		const lastShown = context.getFlutterSurveyNotificationLastShown(flutterTestSurveyID);
-		assert.equal(lastShown && lastShown! > Date.now() - 10000 && lastShown! <= Date.now(), true);
+		assert.equal(lastShown && lastShown > Date.now() - 10000 && lastShown <= Date.now(), true);
 	});
 
 	it("does not show if shown in the last 40 hours", async () => {

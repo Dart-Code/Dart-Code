@@ -66,7 +66,7 @@ describe("command", () => {
 		assert.ok(sampleFolderUri);
 		assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);
-		const triggerFile = path.join(fsPath(sampleFolderUri!), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
+		const triggerFile = path.join(fsPath(sampleFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
 		const recordedSampleId = fs.readFileSync(triggerFile).toString().trim();
 		// TODO: Remove next line and uncomment the following one after the next stable Flutter release (the one after v1.2).

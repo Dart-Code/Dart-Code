@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import { reporters, Test } from "mocha";
 
-const isWin = /^win/.test(process.platform);
+const isWin = process.platform.startsWith("win");
 const isMac = process.platform === "darwin";
 const osName = isWin ? "win" : isMac ? "osx" : "linux";
 

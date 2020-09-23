@@ -160,7 +160,7 @@ describe("dart cli debugger", () => {
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
 		const config = await startDebugger(helloWorldMainFile);
-		config!.vmAdditionalArgs = ["--fake-flag"];
+		config.vmAdditionalArgs = ["--fake-flag"];
 		await waitAllThrowIfTerminates(dc,
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
 			// resolve this properly.
@@ -619,18 +619,16 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(helloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized").then((event) => {
-				return dc.setBreakpointsRequest({
-					// positionOf is 0-based, but seems to want 1-based
-					breakpoints: [{
-						line: positionOf("^// BREAKPOINT1").line + 1,
-						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
-						// we have examples of both (as well as "escaped" brackets).
-						logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
-					}],
-					source: { path: fsPath(helloWorldMainFile) },
-				});
-			}).then((response) => dc.configurationDoneRequest()),
+			dc.waitForEvent("initialized").then((event) => dc.setBreakpointsRequest({
+				// positionOf is 0-based, but seems to want 1-based
+				breakpoints: [{
+					line: positionOf("^// BREAKPOINT1").line + 1,
+					// VS Code says to use {} for expressions, but we want to support Dart's native too, so
+					// we have examples of both (as well as "escaped" brackets).
+					logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
+				}],
+				source: { path: fsPath(helloWorldMainFile) },
+			})).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
 			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 			dc.launch(config),
@@ -1075,7 +1073,7 @@ insp=<inspected variable>
 	it("writes exception to stderr", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stderr", "Unhandled exception:"),
@@ -1087,7 +1085,7 @@ insp=<inspected variable>
 	it("moves known files from call stacks to metadata", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(helloWorldBrokenFile);
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			watchPromise(

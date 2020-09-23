@@ -1,7 +1,6 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { DebugProtocol } from "vscode-debugprotocol";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
@@ -104,7 +103,7 @@ describe("flutter test debugger", () => {
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes!.length, testFiles.length);
+		assert.equal(topLevelNodes.length, testFiles.length);
 
 		for (const file of testFiles) {
 			await openFile(file);
@@ -160,11 +159,10 @@ describe("flutter test debugger", () => {
 			dc.launch(config),
 		);
 
-		const variables = await dc.getTopFrameVariables("Exception") as DebugProtocol.Variable[];
+		const variables = await dc.getTopFrameVariables("Exception");
 		assert.ok(variables);
-		let v = variables.find((v) => v.name === "message");
+		const v = variables.find((v) => v.name === "message");
 		assert.ok(v);
-		v = v!;
 		assert.equal(v.evaluateName, "$e.message");
 		assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
 	});

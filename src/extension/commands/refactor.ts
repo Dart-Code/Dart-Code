@@ -61,8 +61,7 @@ export class RefactorCommands implements vs.Disposable {
 		refactorKind: as.RefactoringKind,
 		range: vs.Range,
 		validateOnly: boolean,
-		options?: as.RefactoringOptions)
-		: Promise<as.EditGetRefactoringResponse> {
+		options?: as.RefactoringOptions): Promise<as.EditGetRefactoringResponse> {
 
 		let remainingTries = 3;
 		while (true) {

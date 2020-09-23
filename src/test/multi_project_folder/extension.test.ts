@@ -30,6 +30,6 @@ describe("extension", () => {
 		);
 
 		assert.ok(resolvedConfig);
-		assert.equal(resolvedConfig!.cwd, fsPath(helloWorldFolder));
+		assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
 	});
 });

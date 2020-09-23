@@ -323,9 +323,9 @@ export type CommonOutline = {
 	};
 	kind: string;
 } & (
-		{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range?: lsp.Range } }
-		| { offset: number, length: number, codeOffset: number, codeLength: number, dartElement?: { location?: { offset?: number } } }
-	);
+	{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range?: lsp.Range } }
+	| { offset: number, length: number, codeOffset: number, codeLength: number, dartElement?: { location?: { offset?: number } } }
+);
 
 export class FlutterWidgetItem extends vs.TreeItem {
 	public children: FlutterWidgetItem[] = [];

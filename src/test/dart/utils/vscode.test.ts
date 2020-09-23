@@ -29,12 +29,10 @@ describe("exposeUrl", () => {
 
 	describe("when asExternalUri forces https", () => {
 		beforeEach(() => {
-			sb.stub(vs.env, "asExternalUri").callsFake((uri: vs.Uri) => {
-				return uri.with({
-					authority: uri.authority.replace("localhost", "localhostmapped").replace(":", ":8"),
-					scheme: "https",
-				});
-			});
+			sb.stub(vs.env, "asExternalUri").callsFake((uri: vs.Uri) => uri.with({
+				authority: uri.authority.replace("localhost", "localhostmapped").replace(":", ":8"),
+				scheme: "https",
+			}));
 		});
 		it("returns correct secure protocols for all URLs", async () => {
 			await testMap("http://localhost/test", "https://localhostmapped:880/test");

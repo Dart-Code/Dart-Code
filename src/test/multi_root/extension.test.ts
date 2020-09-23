@@ -40,6 +40,6 @@ describe("extension", () => {
 		const sdks: Sdks = extApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
-		assert.notEqual(sdks.dart!.indexOf("flutter"), -1);
+		assert.notEqual(sdks.dart.indexOf("flutter"), -1);
 	});
 });

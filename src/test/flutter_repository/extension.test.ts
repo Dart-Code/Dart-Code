@@ -42,12 +42,10 @@ describe("extension", () => {
 				`Expected no errors, but got some:\n`
 				+ filesWithErrors
 					.slice(0, Math.min(10, filesWithErrors.length))
-					.map((file) => {
-						return "    "
+					.map((file) => "    "
 							+ path.basename(fsPath(file[0]))
 							+ ": "
-							+ file[1].find(warningOrError)!.message;
-					})
+							+ file[1].find(warningOrError)!.message)
 					.join("\n"),
 			);
 		}

@@ -47,7 +47,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		function makeFullPath(relOrAbsolute: string): string {
 			if (path.isAbsolute(relOrAbsolute))
 				return relOrAbsolute;
-			return path.join(bazelWorkspaceRoot!, relOrAbsolute);
+			return path.join(bazelWorkspaceRoot, relOrAbsolute);
 		}
 
 		function makeScript(relOrAbsolute: string | undefined, replacesArgs = 1): CustomScript | undefined {

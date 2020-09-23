@@ -936,22 +936,22 @@ export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
 // Watches a promise and reports every 10s while it's unresolved. This is to aid tracking
 // down hangs in test runs where multiple promises can be spawned together and generate
 // lots of log output, making it hard to keep track of which did not complete.
-export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
+export function watchPromise<T>(name: string, promise: Promise<T> | any): Promise<T> | any {
 	// For convenience, this method might get wrapped around things that are not
 	// promises.
-	if (!promise.then || !promise.catch)
+	if (!promise || !promise.then || !promise.catch)
 		return promise;
 	let didComplete = false;
 	// We'll log completion of the promise only if we'd logged that it was still in
 	// progress at some point.
 	let logCompletion = false;
 	// tslint:disable-next-line: no-floating-promises
-	promise.then((_) => {
+	promise.then(() => {
 		didComplete = true;
 		if (logCompletion)
 			logger.info(`Promise ${name} resolved!`, LogCategory.CI);
 	});
-	promise.catch((_) => {
+	promise.catch(() => {
 		didComplete = true;
 		if (logCompletion)
 			logger.warn(`Promise ${name} rejected!`, LogCategory.CI);

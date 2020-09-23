@@ -17,7 +17,7 @@ describe("fix_code_action_provider", () => {
 		const createMethodFix = fixResults.find((r) => r.title.indexOf("Create method 'createNonExistentMethod'") !== -1);
 		assert.ok(createMethodFix);
 
-		if (!createMethodFix!.command) {
+		if (!createMethodFix.command) {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
@@ -25,7 +25,7 @@ describe("fix_code_action_provider", () => {
 			return;
 		}
 
-		await (vs.commands.executeCommand(createMethodFix!.command!.command, ...createMethodFix!.command!.arguments || []));
+		await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments || []));
 
 		const fileA = await openFile(helloWorldCreateMethodClassAFile);
 		const fileB = await openFile(helloWorldCreateMethodClassBFile);
@@ -45,7 +45,7 @@ describe("fix_code_action_provider", () => {
 		const createFileFix = fixResults.find((r) => r.title.indexOf("Create file 'missing.dart'") !== -1);
 		assert.ok(createFileFix, "Fix was not found");
 
-		if (!createFileFix!.command) {
+		if (!createFileFix.command) {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
@@ -53,7 +53,7 @@ describe("fix_code_action_provider", () => {
 			return;
 		}
 
-		await (vs.commands.executeCommand(createFileFix!.command!.command, ...createFileFix!.command!.arguments || []));
+		await (vs.commands.executeCommand(createFileFix.command.command, ...createFileFix.command.arguments || []));
 
 		assert.ok(fs.existsSync(fsPath(missingFile)));
 	});
@@ -73,7 +73,7 @@ main() {
 		const createFunctionFix = fixResults.find((r) => r.title.indexOf("Create function 'missing'") !== -1);
 		assert.ok(createFunctionFix, "Fix was not found");
 
-		if (!createFunctionFix!.command) {
+		if (!createFunctionFix.command) {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
@@ -81,7 +81,7 @@ main() {
 			return;
 		}
 
-		await (vs.commands.executeCommand(createFunctionFix!.command!.command, ...createFunctionFix!.command!.arguments || []));
+		await (vs.commands.executeCommand(createFunctionFix.command.command, ...createFunctionFix.command.arguments || []));
 
 		await ensureTestContent(`
 main() {

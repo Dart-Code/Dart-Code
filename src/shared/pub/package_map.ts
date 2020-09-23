@@ -115,7 +115,7 @@ class PackageConfigJsonPackageMap extends PackageMap {
 				const packageConfigFolderPath = path.dirname(this.packageConfigPath);
 				const packageRootPath = this.getPathForUri(pkg.rootUri);
 				const packageLibPath = this.getPathForUri(pkg.packageUri);
-				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath ?? '', packageLibPath ?? '');
+				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath ?? "", packageLibPath ?? "");
 			} catch (e) {
 				logger.error(`Failed to resolve path for package ${pkg.name}: ${e}`);
 			}

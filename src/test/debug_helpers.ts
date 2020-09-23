@@ -83,13 +83,12 @@ export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
 	assert.ok(variables && variables.length, "No variables given to search");
-	let v = variables.find((v) => v.name === name);
+	const v = variables.find((v) => v.name === name);
 	assert.ok(
 		v,
 		`Couldn't find variable ${name} in\n`
 		+ variables.map((v) => `        ${v.name}: ${v.value}`).join("\n"),
 	);
-	v = v!;
 	assert.equal(v.evaluateName, evaluateName);
 	if (typeof value === "string")
 		assert.equal(v.value, value);
@@ -128,8 +127,8 @@ export async function ensureMapEntry(mapEntries: DebugProtocol.Variable[], entry
 	await Promise.all(mapEntries.map(async (mapEntry) => {
 		const variable = await dc.getVariables(mapEntry.variablesReference);
 
-		const key = variable[0] as DebugProtocol.Variable;
-		const value = variable[1] as DebugProtocol.Variable;
+		const key = variable[0];
+		const value = variable[1];
 		assert.ok(key, "Didn't get Key variable");
 		assert.ok(value, "Didn't get Value variable");
 		if (key.name === entry.key.name
@@ -255,16 +254,16 @@ export function isExternalPackage(frame: DebugProtocol.StackFrame) {
 export function isLocalPackage(frame: DebugProtocol.StackFrame) {
 	return frame.source && frame.source.name && frame.source.name.startsWith("package:") &&
 		// Packages known to be local (from our test projects).
-		(frame.source!.name.startsWith("package:my_package")
-			|| frame.source!.name.startsWith("package:hello_world")
-			|| frame.source!.name.startsWith("package:example"));
+		(frame.source.name.startsWith("package:my_package")
+			|| frame.source.name.startsWith("package:hello_world")
+			|| frame.source.name.startsWith("package:example"));
 }
 
 export function isUserCode(frame: DebugProtocol.StackFrame) {
 	return frame.source
 		&& frame.source.name
 		&& !frame.source.name.startsWith("dart:")
-		&& (!frame.source!.name.startsWith("package:") || frame.source!.name.startsWith("package:hello_world"));
+		&& (!frame.source.name.startsWith("package:") || frame.source.name.startsWith("package:hello_world"));
 }
 
 export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presentationHint: string | undefined, origin: string | undefined) {

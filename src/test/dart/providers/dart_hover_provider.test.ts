@@ -158,9 +158,9 @@ describe("dart_hover_provider", () => {
 		const hover = await getHoverAt("http.Cli^ent");
 		assert.equal(hover.displayText, "abstract class Client");
 		if (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
-			assert.ok(hover.documentation!.indexOf("*package:http/src/client.dart*") === 0);
+			assert.ok(hover.documentation!.startsWith("*package:http/src/client.dart*"));
 		else
-			assert.ok(hover.documentation!.indexOf("*package:http*") === 0);
+			assert.ok(hover.documentation!.startsWith("*package:http*"));
 		assert.deepStrictEqual(hover.range, rangeOf("http.|Client|"));
 	});
 
@@ -168,9 +168,9 @@ describe("dart_hover_provider", () => {
 		const hover = await getHoverAt("Fut^ure<String>");
 		assert.equal(hover.displayText, "abstract class Future<T>");
 		if (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
-			assert.ok(hover.documentation!.indexOf("*dart:async*") === 0);
+			assert.ok(hover.documentation!.startsWith("*dart:async*"));
 		else
-			assert.ok(hover.documentation!.indexOf("*dart.async*") === 0);
+			assert.ok(hover.documentation!.startsWith("*dart.async*"));
 		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
 

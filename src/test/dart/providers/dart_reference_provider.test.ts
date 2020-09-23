@@ -26,7 +26,7 @@ describe("dart_reference_provider", () => {
 	it("returns expected location for references of field reference", async () => {
 		const references = await getReferencesFor("void meth^odTakingString(String a)");
 		assert.ok(references);
-		assert.equal(references!.length, 3);
+		assert.equal(references.length, 3);
 		const expectedUri = currentDoc().uri;
 		ensureLocation(references, expectedUri, rangeOf(`b.|methodTakingString|("Hello")`));
 		ensureLocation(references, expectedUri, rangeOf(`b.|methodTakingString|("World!")`));

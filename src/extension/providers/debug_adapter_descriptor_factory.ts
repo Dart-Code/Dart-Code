@@ -18,7 +18,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		}
 
 		const args = [this.extensionContext.asAbsolutePath(debugAdapterPath), debuggerName];
-		this.logger.info(`Running debugger via node with ${args.join('    ')}`);
+		this.logger.info(`Running debugger via node with ${args.join("    ")}`);
 		return new DebugAdapterExecutable("node", args);
 	}
 }

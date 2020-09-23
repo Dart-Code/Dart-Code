@@ -77,7 +77,7 @@ export class DartDebugClient extends DebugClient {
 
 	public start(port?: number): Promise<void> {
 		if (port)
-			throw new Error('Do not provide a port to DartDebugClient.start!');
+			throw new Error("Do not provide a port to DartDebugClient.start!");
 		return super.start(this.port);
 	}
 
@@ -200,7 +200,7 @@ export class DartDebugClient extends DebugClient {
 		const scopes = await this.scopesRequest({ frameId: stack.body.stackFrames[0].id });
 		const exceptionScope = scopes.body.scopes.find((s) => s.name === scope);
 		assert.ok(exceptionScope);
-		return this.getVariables(exceptionScope!.variablesReference);
+		return this.getVariables(exceptionScope.variablesReference);
 	}
 
 	public async getVariables(variablesReference: number): Promise<DebugProtocol.Variable[]> {
@@ -271,7 +271,7 @@ export class DartDebugClient extends DebugClient {
 	public async waitForTestNotification<T extends Notification>(type: string, filter: (notification: T) => boolean): Promise<void> {
 		await this.waitForCustomEvent<{ suitePath: string, notification: T }>(
 			"dart.testRunNotification",
-			(event) => event.notification.type === type && filter(event.notification as T),
+			(event) => event.notification.type === type && filter(event.notification),
 		);
 	}
 	public async tryWaitUntilGlobalEvaluationIsAvailable(): Promise<void> {

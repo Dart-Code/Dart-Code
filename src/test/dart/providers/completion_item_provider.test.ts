@@ -14,7 +14,7 @@ describe("completion_item_provider", () => {
 		// assume these parens in the tests.
 		if (extApi.dartCapabilities.hasUpdatedCompletionRanking)
 			parensIfNewCompletionRanking = "()";
-	})
+	});
 
 	// This is not implemented. Turns out it's hard to detect this without having false positives
 	// since we can't easily tell we're in a show/hide reliably.

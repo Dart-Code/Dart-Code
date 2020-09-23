@@ -36,7 +36,7 @@ describe("go to test/implementation file", () => {
 
 	it("can create a test file that doesn't already exist", async () => {
 		const testFilePath = fsPath(helloWorldTestEmptyFile);
-		const testFileRelativePath = 'test/empty_test.dart';
+		const testFileRelativePath = "test/empty_test.dart";
 		tryDeleteFile(testFilePath);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");

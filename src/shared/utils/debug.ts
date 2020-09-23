@@ -13,7 +13,7 @@ export function getDebugAdapterName(debugType: DebuggerType) {
 			debuggerName = "web";
 			break;
 		case DebuggerType.WebTest:
-			debuggerName = "web_test"
+			debuggerName = "web_test";
 			break;
 		case DebuggerType.Dart:
 			debuggerName = "dart";

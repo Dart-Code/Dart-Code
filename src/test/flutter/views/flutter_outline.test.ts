@@ -20,7 +20,7 @@ describe("flutter_outline", () => {
 		});
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTextTree(undefined, extApi.flutterOutlineTreeProvider!)).join("\n");
+		const actualResults = (await makeTextTree(undefined, extApi.flutterOutlineTreeProvider)).join("\n");
 
 		assert.ok(expectedResults, "Expected results were empty");
 		assert.ok(actualResults, "Actual results were empty");

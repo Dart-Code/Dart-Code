@@ -26,10 +26,9 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 						logger.error(`Failed to initialize Flutter: Process exited with code ${code}.`);
 						window.showErrorMessage(`Failed to initialize Flutter: Process exited with code ${code}.`);
 						reject();
-					}
-					else
+					} else
 						resolve();
-				}))
+				}));
 			},
 		);
 		logger.info(`Flutter initialized!`);

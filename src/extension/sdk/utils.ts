@@ -432,7 +432,7 @@ function extractFlutterSdkPathFromPackagesFile(projectFolder: string): string | 
 	// Set windows paths back.
 	if (isWin) {
 		packagePath = packagePath.replace(/\//g, "\\");
-		if (packagePath[0] === "\\")
+		if (packagePath.startsWith("\\"))
 			packagePath = packagePath.substring(1);
 	}
 
@@ -468,7 +468,6 @@ async function findFlutterSnapSdkRoot(logger: Logger, folder: string): Promise<s
 	}
 	return undefined;
 }
-
 
 
 function findRootContaining(folder: string, childName: string, expectFile = false): string | undefined {
