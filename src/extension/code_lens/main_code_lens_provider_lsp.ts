@@ -12,7 +12,7 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
 
 	constructor(private readonly logger: Logger, private readonly analyzer: LspAnalyzer) {
-		this.disposables.push(this.analyzer.fileTracker.onOutline.listen((_) => {
+		this.disposables.push(this.analyzer.fileTracker.onOutline.listen(() => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 	}

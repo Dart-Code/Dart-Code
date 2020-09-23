@@ -125,7 +125,7 @@ export class DartDebugClient extends DebugClient {
 		};
 		this.debugCommands.handleDebugSessionStart(this.currentSession);
 		// tslint:disable-next-line: no-floating-promises
-		this.waitForEvent("terminated").then((_) => this.debugCommands.handleDebugSessionEnd(this.currentSession!));
+		this.waitForEvent("terminated").then(() => this.debugCommands.handleDebugSessionEnd(this.currentSession!));
 
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching
@@ -157,7 +157,7 @@ export class DartDebugClient extends DebugClient {
 				"launch()->attach->terminate/resume",
 				Promise.race([
 					this.waitForEvent("terminated")
-						.catch((_) => {
+						.catch(() => {
 							// Swallow errors, we're only using this to avoid waiting on a resume response forever.
 							// It's possible it'll time out after some period because the test finished more quickly/slowly.
 						}),
@@ -305,7 +305,7 @@ export class DartDebugClient extends DebugClient {
 					}
 				},
 			),
-		]).then((_) => undefined);
+		]).then(() => undefined);
 	}
 
 	public assertPassingTest(testName: string) {

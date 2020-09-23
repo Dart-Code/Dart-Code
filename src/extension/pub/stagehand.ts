@@ -31,7 +31,7 @@ export class Stagehand {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title,
-		}, (_) => this.runCommand(args));
+		}, () => this.runCommand(args));
 	}
 
 	private runCommand(args: string[]): Thenable<string> {

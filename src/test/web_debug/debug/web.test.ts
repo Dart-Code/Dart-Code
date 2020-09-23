@@ -243,7 +243,7 @@ describe.skip("web debugger", () => {
 				// TODO: Remove the last parameter here (and the other things above and below) when we are mapping breakpoints in org-dartland-app
 				// URIs back to the correct file system paths.
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->assertStoppedLocation:breakpoint`, dc.assertStoppedLocation("breakpoint", /* expectedLocation,*/ {}))
-					.then(async (_) => {
+					.then(async () => {
 						// TODO: Put these back (and the ones below) when the above is fixed.
 						// const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
 						// const frames = stack.body.stackFrames;
@@ -251,7 +251,7 @@ describe.skip("web debugger", () => {
 						// assert.equal(frames[0].source!.path, expectedLocation.path);
 						// assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 					})
-					.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
+					.then(() => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
 			);
 		}
@@ -391,7 +391,7 @@ describe.skip("web debugger", () => {
 		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(webHelloWorldIndexFile));
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
-				.then((event) => watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
+				.then(() => watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
 					breakpoints: [{
 						line: positionOf("^// BREAKPOINT1").line,
 						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
@@ -399,7 +399,7 @@ describe.skip("web debugger", () => {
 						logMessage: "The \\{year} is {(new DateTime.now()).year}",
 					}],
 					source: { path: fsPath(webHelloWorldMainFile) },
-				}))).then((response) => watchPromise("logs_expected_text->configurationDoneRequest", dc.configurationDoneRequest())),
+				}))).then(() => watchPromise("logs_expected_text->configurationDoneRequest", dc.configurationDoneRequest())),
 			watchPromise("logs_expected_text->assertOutputContainsYear", dc.assertOutputContains("stdout", `The {year} is ${(new Date()).getFullYear()}\n`)),
 			watchPromise("logs_expected_text->launch", dc.launch(config)),
 		);

@@ -36,7 +36,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			});
 		});
 
-		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((_) => this.update()));
+		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor(() => this.update()));
 		this.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => {
 			const filePath = fsPath(td.uri);
 			delete this.closingLabels[filePath];

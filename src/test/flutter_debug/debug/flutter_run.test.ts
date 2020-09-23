@@ -368,7 +368,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await delay(2000); // TODO: Remove this attempt to see if reloading too fast is causing our flakes...
 			await waitAllThrowIfTerminates(dc,
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->assertStoppedLocation:breakpoint`, dc.assertStoppedLocation("breakpoint", expectedLocation))
-					.then(async (_) => {
+					.then(async () => {
 						const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
 						const frames = stack.body.stackFrames;
 						// Web/Flutter have slightly different representations of this
@@ -380,7 +380,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 						assert.equal(frames[0].source!.path, expectedLocation.path);
 						assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 					})
-					.then((_) => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
+					.then(() => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
 			);
 		}
@@ -400,7 +400,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		dc.waitForEvent("stopped")
 			.then(() => didStop = true)
-			.catch((_) => {
+			.catch(() => {
 				// Swallow errors, as we don't care if this times out, we're only using it
 				// to tell if we stopped by the time we hit the end of this test.
 			});
@@ -704,7 +704,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 			dc.waitForEvent("stopped")
 				.then(() => didStop = true)
-				.catch((_) => {
+				.catch(() => {
 					// Swallow errors, as we don't care if this times out, we're only using it
 					// to tell if we stopped by the time we hit the end of this test.
 				});
@@ -725,7 +725,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.waitForEvent("initialized")
-					.then((_) => dc.setBreakpointsRequest({
+					.then(() => dc.setBreakpointsRequest({
 						// positionOf is 0-based, but seems to want 1-based
 						breakpoints: [{
 							condition,
@@ -758,14 +758,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		dc.waitForEvent("stopped")
 			.then(() => didStop = true)
-			.catch((_) => {
+			.catch(() => {
 				// Swallow errors, as we don't care if this times out, we're only using it
 				// to tell if we stopped by the time we hit the end of this test.
 			});
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
-				.then((_) => dc.setBreakpointsRequest({
+				.then(() => dc.setBreakpointsRequest({
 					breakpoints: [{
 						line: positionOf("^// BREAKPOINT1").line,
 						// VS Code says to use {} for expressions, but we want to support Dart's native too, so
@@ -1167,7 +1167,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		dc.waitForEvent("stopped")
 			.then(() => didStop = true)
-			.catch((_) => {
+			.catch(() => {
 				// Swallow errors, as we don't care if this times out, we're only using it
 				// to tell if we stopped by the time we hit the end of this test.
 			});

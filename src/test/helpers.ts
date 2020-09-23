@@ -22,7 +22,7 @@ export let logger: Logger = new BufferedLogger();
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 export const fakeCancellationToken: vs.CancellationToken = {
 	isCancellationRequested: false,
-	onCancellationRequested: (_) => ({ dispose: () => undefined }),
+	onCancellationRequested: () => ({ dispose: () => undefined }),
 };
 
 if (!ext) {

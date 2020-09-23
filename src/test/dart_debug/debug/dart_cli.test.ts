@@ -575,7 +575,7 @@ describe("dart cli debugger", () => {
 
 			dc.waitForEvent("stopped")
 				.then(() => didStop = true)
-				.catch((_) => {
+				.catch(() => {
 					// Swallow errors, as we don't care if this times out, we're only using it
 					// to tell if we stopped by the time we hit the end of this test.
 				});
@@ -590,7 +590,7 @@ describe("dart cli debugger", () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
 				dc.waitForEvent("initialized")
-					.then((_) => dc.setBreakpointsRequest({
+					.then(() => dc.setBreakpointsRequest({
 						// positionOf is 0-based, but seems to want 1-based
 						breakpoints: [{
 							condition,

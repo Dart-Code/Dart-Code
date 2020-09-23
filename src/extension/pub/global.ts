@@ -119,7 +119,7 @@ export class PubGlobal {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title,
-		}, (_) => this.runCommand(packageName, args, customScript));
+		}, () => this.runCommand(packageName, args, customScript));
 	}
 
 	private runCommand(packageName: string, args: string[], customScript?: CustomScript): Thenable<string> {

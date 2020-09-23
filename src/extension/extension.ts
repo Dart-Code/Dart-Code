@@ -145,7 +145,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	util.logTime("Code called activate");
 
 	// Wire up a reload command that will re-initialise everything.
-	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (_) => {
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async () => {
 		logger.info("Performing silent extension reload...");
 		await deactivate(true);
 		const toDispose = context.subscriptions.slice();
@@ -352,7 +352,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(sdks)));
 
 	// Snippets are language-specific
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", (_) => true)));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", () => true)));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));

@@ -64,7 +64,7 @@ export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array
 	return Promise.race([
 		new Promise(async (resolve, reject) => {
 			await dc.waitForEvent("terminated")
-				.catch((_) => {
+				.catch(() => {
 					// Swallow errors, as we don't care if this times out, we're only using it
 					// to tell if we stopped by the time we hit the end of this test.
 				});

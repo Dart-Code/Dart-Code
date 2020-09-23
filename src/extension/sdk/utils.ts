@@ -28,19 +28,19 @@ export class SdkUtils {
 		// in a Flutter project (eg. we ran Flutter Doctor without the extension activated) then
 		// this code will not be run as the extension will activate normally, and then the command-handling
 		// code for each command will detect the missing Flutter SDK and respond appropriately.
-		context.subscriptions.push(commands.registerCommand("flutter.createProject", (_) => {
+		context.subscriptions.push(commands.registerCommand("flutter.createProject", () => {
 			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.createProject");
 		}));
-		context.subscriptions.push(commands.registerCommand("dart.createProject", (_) => {
+		context.subscriptions.push(commands.registerCommand("dart.createProject", () => {
 			this.showRelevantActivationFailureMessage(analytics, workspaceContext, false, "dart.createProject");
 		}));
-		context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", (_) => {
+		context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", () => {
 			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "_dart.flutter.createSampleProject");
 		}));
-		context.subscriptions.push(commands.registerCommand("flutter.doctor", (_) => {
+		context.subscriptions.push(commands.registerCommand("flutter.doctor", () => {
 			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.doctor");
 		}));
-		context.subscriptions.push(commands.registerCommand("flutter.upgrade", (_) => {
+		context.subscriptions.push(commands.registerCommand("flutter.upgrade", () => {
 			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.upgrade");
 		}));
 		// Wait a while before showing the error to allow the code above to have run if it will.
@@ -369,7 +369,7 @@ export class SdkUtils {
 		this.logger.info("    Candidate paths to be post-filtered:");
 		for (const p of sdkPaths)
 			this.logger.info(`        ${p}`);
-		const sdkPath = sdkPaths.find(postFilter || ((_) => true));
+		const sdkPath = sdkPaths.find(postFilter || (() => true));
 
 		if (sdkPath)
 			this.logger.info(`    Found at ${sdkPath}`);

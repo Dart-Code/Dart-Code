@@ -872,7 +872,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		this.vmService.pause(thread.ref.id)
-			.then((_) => this.sendResponse(response))
+			.then(() => this.sendResponse(response))
 			.catch((error) => this.errorResponse(response, `${error}`));
 	}
 
@@ -1010,9 +1010,9 @@ export class DartDebugSession extends DebugSession {
 				totalFrames,
 			};
 
-			Promise.all(promises).then((_) => {
+			Promise.all(promises).then(() => {
 				this.sendResponse(response);
-			}).catch((_) => {
+			}).catch(() => {
 				this.sendResponse(response);
 			});
 		}).catch((error) => this.errorResponse(response, `${error}`));
@@ -1320,7 +1320,7 @@ export class DartDebugSession extends DebugSession {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
 		}
-		thread.resume().then((_) => {
+		thread.resume().then(() => {
 			response.body = { allThreadsContinued: false };
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
@@ -1333,7 +1333,7 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 		const type = thread.atAsyncSuspension ? "OverAsyncSuspension" : "Over";
-		thread.resume(type).then((_) => {
+		thread.resume(type).then(() => {
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
@@ -1344,7 +1344,7 @@ export class DartDebugSession extends DebugSession {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
 		}
-		thread.resume("Into").then((_) => {
+		thread.resume("Into").then(() => {
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
@@ -1355,7 +1355,7 @@ export class DartDebugSession extends DebugSession {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
 			return;
 		}
-		thread.resume("Out").then((_) => {
+		thread.resume("Out").then(() => {
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
@@ -1373,7 +1373,7 @@ export class DartDebugSession extends DebugSession {
 		const thread = data.thread;
 		const frame: VMFrame = data.data as VMFrame;
 
-		thread.resume("Rewind", frame.index).then((_) => {
+		thread.resume("Rewind", frame.index).then(() => {
 			this.sendResponse(response);
 		}).catch((error) => this.errorResponse(response, `${error}`));
 	}
