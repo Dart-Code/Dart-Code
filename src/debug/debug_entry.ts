@@ -22,5 +22,5 @@ const dbg = debugType ? debuggers[debugType] : undefined;
 if (dbg) {
 	DebugSession.run(dbg);
 } else {
-	throw new Error(`Debugger type must be one of ${Object.keys(debuggers).join(", ")} but got ${debugType}`);
+	throw new Error(`Debugger type must be one of ${Object.keys(debuggers).join(", ")} but got ${debugType}.\n  argv: ${process.argv.join("    ")}`);
 }
