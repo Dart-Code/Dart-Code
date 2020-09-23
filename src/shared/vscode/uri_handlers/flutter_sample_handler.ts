@@ -5,7 +5,7 @@ import { createFlutterSampleInTempFolder } from "../flutter_samples";
 export class FlutterSampleUriHandler {
 	constructor(private flutterCapabilities: FlutterCapabilities) { }
 
-	public async handle(sampleID: string): Promise<void> {
+	public handle(sampleID: string): void {
 		if (!this.isValidSampleName(sampleID)) {
 			vs.window.showErrorMessage(`${sampleID} is not a valid Flutter sample identifier`);
 			return;

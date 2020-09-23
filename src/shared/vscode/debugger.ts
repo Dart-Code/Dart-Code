@@ -22,7 +22,7 @@ export function getTemplatedLaunchConfigs(document: TextDocument, fileType: stri
 		for (const launchConfig of relevantLaunchConfigs) {
 			runFileTemplates.push({
 				...launchConfig,
-				name: (launchConfig.codeLens?.title || launchConfig.name || "${debugType}").replace(debugTypeTokenRegex, templateType.indexOf("run-") === 0 ? "Run" : "Debug"),
+				name: (launchConfig.codeLens?.title || launchConfig.name || "${debugType}").replace(debugTypeTokenRegex, templateType.startsWith("run-") ? "Run" : "Debug"),
 				template: templateType,
 			});
 		}

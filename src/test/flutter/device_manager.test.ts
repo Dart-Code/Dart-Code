@@ -45,7 +45,7 @@ describe("device_manager", () => {
 		// then looking it up).
 		await daemon.connect(emulatedAndroidMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatedAndroidMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice!), androidEmulator.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), androidEmulator.name);
 	});
 
 	it("uses the standard device name for iOS simulator devices", async () => {
@@ -55,7 +55,7 @@ describe("device_manager", () => {
 		// instead of "iPhone X" etc.
 		await daemon.connect(emulatediOSMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatediOSMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice!), emulatediOSMobile.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), emulatediOSMobile.name);
 	});
 
 	it("includes custom emulators", async () => {
@@ -159,7 +159,7 @@ describe("device_manager", () => {
 
 	it("shows unsupported platforms and prompts to run flutter create if selected", async () => {
 		await daemon.connect(desktop, false);
-		const devices = await dm.getPickableDevices(["android"]);
+		const devices = dm.getPickableDevices(["android"]);
 		const d = devices.find((e) => e.device.id === desktop.id);
 
 		if (!d)

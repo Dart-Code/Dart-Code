@@ -1293,7 +1293,7 @@ export class DartDebugSession extends DebugSession {
 				let evalResult: VMInstanceRef = result.result as VMInstanceRef;
 
 				if (evalResult.valueAsStringIsTruncated && getFullString) {
-					const result = await this.vmService!.getObject(isolate.id, evalResult.id);
+					const result = await this.vmService.getObject(isolate.id, evalResult.id);
 					evalResult = result.result as VMInstanceRef;
 				}
 
@@ -1415,7 +1415,7 @@ export class DartDebugSession extends DebugSession {
 				//      https://github.com/Microsoft/vscode/issues/52317
 				//   2. The VM sometimes doesn't respond to your requests at all
 				//      https://github.com/flutter/flutter/issues/18595
-				result = await this.withTimeout(this.vmService!.evaluate(thread.ref.id, rootLib.id, expression, true));
+				result = await this.withTimeout(this.vmService.evaluate(thread.ref.id, rootLib.id, expression, true));
 			} else {
 				const frame = data.data as VMFrame;
 				if ((expression === "$e" || expression.startsWith("$e.")) && thread.exceptionReference) {
@@ -1617,7 +1617,7 @@ export class DartDebugSession extends DebugSession {
 
 	// Logging
 	private lastLoggingEvent = Promise.resolve();
-	public async handleLoggingEvent(event: VMEvent): Promise<void> {
+	public handleLoggingEvent(event: VMEvent): void {
 		// Logging may involve async operations (for ex. fetching exception text
 		// and call stacks) so we must ensure each log is not processed until
 		// the previous one has been processed.
@@ -1641,7 +1641,7 @@ export class DartDebugSession extends DebugSession {
 						const indentedMessage = `${grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
 						this.logToUser(`${indentedMessage.trimRight()}\n`, category);
 					}
-				}
+				};
 
 				if (record.message && record.message.kind !== "Null")
 					await printLogRecord(event, record.message, logPrefix, indent);

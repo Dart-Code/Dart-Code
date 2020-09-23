@@ -9,11 +9,11 @@ export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
 }
 
-export function flatMap<T1, T2>(input: ReadonlyArray<T1>, f: (input: T1) => ReadonlyArray<T2>): T2[] {
+export function flatMap<T1, T2>(input: readonly T1[], f: (input: T1) => readonly T2[]): T2[] {
 	return input.reduce((acc, x) => acc.concat(f(x)), [] as T2[]);
 }
 
-export async function flatMapAsync<T1, T2>(input: T1[], f: (input: T1) => Promise<ReadonlyArray<T2>>): Promise<T2[]> {
+export async function flatMapAsync<T1, T2>(input: T1[], f: (input: T1) => Promise<readonly T2[]>): Promise<T2[]> {
 	let res: T2[] = [];
 	for (const x of input)
 		res = res.concat(await f(x));
@@ -69,10 +69,10 @@ export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): 
 	// Windows fixup.
 	if (returnWindowsPath) {
 		filePath = filePath.replace(/\//g, "\\");
-		if (filePath[0] === "\\")
+		if (filePath.startsWith("\\"))
 			filePath = filePath.substring(1);
 	} else {
-		if (filePath[0] !== "/")
+		if (!filePath.startsWith("/"))
 			filePath = `/${filePath}`;
 	}
 

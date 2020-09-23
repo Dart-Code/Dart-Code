@@ -2,9 +2,9 @@ import * as fs from "fs";
 
 export const dartCodeExtensionIdentifier = "Dart-Code.dart-code";
 export const flutterExtensionIdentifier = "Dart-Code.flutter";
-export const debugAdapterPath = 'out/dist/debug.js';
+export const debugAdapterPath = "out/dist/debug.js";
 
-export const isWin = /^win/.test(process.platform);
+export const isWin = process.platform.startsWith("win");
 export const isMac = process.platform === "darwin";
 export const isLinux = !isWin && !isMac;
 export const isChromeOS = isLinux && fs.existsSync("/dev/.cros_milestone");

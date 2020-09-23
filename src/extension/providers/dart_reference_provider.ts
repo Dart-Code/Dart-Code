@@ -22,12 +22,10 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 		if (token && token.isCancellationRequested)
 			return;
 
-		const locations = resp.results.map((result) => {
-			return new Location(
-				Uri.file(result.location.file),
-				toRangeOnLine(result.location),
-			);
-		});
+		const locations = resp.results.map((result) => new Location(
+			Uri.file(result.location.file),
+			toRangeOnLine(result.location),
+		));
 
 		return definitions
 			? locations.concat(definitions.map((dl) => new Location(dl.targetUri, dl.targetRange)))
@@ -44,21 +42,19 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 		if (token && token.isCancellationRequested)
 			return;
 
-		const definitions = flatMap(resp.regions, (region) => {
-			return region.targets.map((targetIndex) => {
-				const target = resp.targets[targetIndex];
-				// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.
-				//     See https://github.com/Dart-Code/Dart-Code/issues/200
-				if (target.startColumn === 0)
-					target.startColumn = 1;
+		const definitions = flatMap(resp.regions, (region) => region.targets.map((targetIndex) => {
+			const target = resp.targets[targetIndex];
+			// HACK: We sometimes get a startColumn of 0 (should be 1-based). Just treat this as 1 for now.
+			//     See https://github.com/Dart-Code/Dart-Code/issues/200
+			if (target.startColumn === 0)
+				target.startColumn = 1;
 
-				return {
-					originSelectionRange: toRange(document, region.offset, region.length),
-					targetRange: toRangeOnLine(target),
-					targetUri: Uri.file(resp.files[target.fileIndex]),
-				} as DefinitionLink;
-			});
-		});
+			return {
+				originSelectionRange: toRange(document, region.offset, region.length),
+				targetRange: toRangeOnLine(target),
+				targetUri: Uri.file(resp.files[target.fileIndex]),
+			} as DefinitionLink;
+		}));
 
 		// For some locations (for example on the "var" keyword ), we'll get multiple results
 		// where some of them are the location we invoked at, or the name of the variable. If

@@ -245,9 +245,7 @@ export class ThreadInfo {
 		for (const uri of Object.keys(this.vmBps)) {
 			removeBreakpointPromises.push(this.removeBreakpointsAtUri(uri));
 		}
-		return Promise.all(removeBreakpointPromises).then((results) => {
-			return [].concat.apply([], results);
-		});
+		return Promise.all(removeBreakpointPromises);
 	}
 
 	public async setBreakpoints(logger: Logger, uri: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<Array<VMBreakpoint | undefined>> {

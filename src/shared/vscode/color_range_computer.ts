@@ -57,9 +57,9 @@ export class ColorRangeComputer {
 				// - the length of the main capture
 				// - that the main capture ends at the same point as the whole match
 				// Therefore the index we want, is the (match index + match length - capture length).
-				const index = result.index + result[0].length - result.groups!.range.length;
+				const index = result.index + result[0].length - result.groups.range.length;
 
-				decs[colorHex].push(toRange(document, index, result.groups!.range.length));
+				decs[colorHex].push(toRange(document, index, result.groups.range.length));
 			}
 		}
 

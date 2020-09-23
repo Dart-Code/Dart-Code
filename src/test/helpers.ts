@@ -362,7 +362,7 @@ export function deleteDirectoryRecursive(folder: string) {
 
 export let currentTestName = "unknown";
 export let fileSafeCurrentTestName: string = "unknown";
-beforeEach("stash current test name", async function () {
+beforeEach("stash current test name", function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
 	fileSafeCurrentTestName = filenameSafe(currentTestName);
 
@@ -464,10 +464,8 @@ export async function executeSortMembersCodeAction() {
 
 export async function getCodeActions({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
 	const codeActions = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, range) as Thenable<vs.CodeAction[]>);
-	const matchingActions = codeActions.filter((ca) => {
-		return (!kind || kind.contains(ca.kind!))
-			&& (!title || ca.title === title);
-	});
+	const matchingActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!))
+		&& (!title || ca.title === title));
 	return matchingActions;
 }
 export async function executeCodeAction({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
@@ -621,7 +619,7 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 }
 
 export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string | undefined, uriOrMatch: vs.Uri | { endsWith?: string }): void {
-	let symbol = symbols.find((f) =>
+	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
 		&& (f.containerName || "") === (containerName || ""),
@@ -631,7 +629,6 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 		`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${containerName} in\n`
 		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.containerName}`).join("\n"),
 	);
-	symbol = symbol!;
 	if (uriOrMatch instanceof vs.Uri)
 		assert.equal(fsPath(symbol.location.uri), fsPath(uriOrMatch));
 	else if (uriOrMatch.endsWith)
@@ -646,7 +643,7 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 }
 
 export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>, name: string, kind: vs.SymbolKind, parentName?: string): void {
-	let symbol = symbols.find((f) =>
+	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
 		&& (f.parent ? f.parent.name : "") === (parentName || ""),
@@ -656,7 +653,6 @@ export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent
 		`Couldn't find symbol for ${name}/${vs.SymbolKind[kind]}/${parentName} in\n`
 		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.parent ? s.parent.name : ""}`).join("\n"),
 	);
-	symbol = symbol!;
 	const range = symbol.range;
 	assert.ok(range);
 	assert.ok(range.start);
@@ -718,7 +714,7 @@ export async function getSnippetCompletionsAt(searchText: string, triggerCharact
 }
 
 export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): vs.CompletionItem {
-	let completion = items.find((item) =>
+	const completion = items.find((item) =>
 		item.label === label
 		&& (item.filterText === filterText || (item.filterText === undefined && filterText === label))
 		&& item.kind === kind,
@@ -728,7 +724,6 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 		`Couldn't find completion for ${label}/${filterText} in\n`
 		+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${item.label}/${item.filterText}`).join("\n"),
 	);
-	completion = completion!;
 	if (documentation) {
 		assert.equal((completion.documentation as any).value.trim(), documentation);
 	}
@@ -772,7 +767,7 @@ export async function ensureTestContent(expected: string, allowNewMismatches = f
 	assert.equal(normalise(doc.getText()), normalise(expected));
 }
 
-export async function ensureTestSelection(expected: vs.Range): Promise<void> {
+export function ensureTestSelection(expected: vs.Range): void {
 	const editor = currentEditor();
 	assert.equal(editor.selection.isEqual(expected), true, `actual: ${rangeString(editor.selection)} (${editor.document.getText(editor.selection)}) vs expected: ${rangeString(expected)} (${editor.document.getText(expected)})`);
 }
@@ -780,12 +775,12 @@ export async function ensureTestSelection(expected: vs.Range): Promise<void> {
 export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
 	await ensureTestContent(expected.replace(/\^/g, ""));
 	const pos = positionOf(expected);
-	await ensureTestSelection(new vs.Range(pos, pos));
+	ensureTestSelection(new vs.Range(pos, pos));
 }
 
 export async function ensureTestContentWithSelection(expected: string): Promise<void> {
 	await ensureTestContent(expected.replace(/\|/g, ""));
-	await ensureTestSelection(rangeOf(expected));
+	ensureTestSelection(rangeOf(expected));
 }
 
 export function delay(milliseconds: number): Promise<void> {
@@ -944,7 +939,7 @@ export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
 export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 	// For convenience, this method might get wrapped around things that are not
 	// promises.
-	if (!promise || !promise.then || !promise.catch)
+	if (!promise.then || !promise.catch)
 		return promise;
 	let didComplete = false;
 	// We'll log completion of the promise only if we'd logged that it was still in
@@ -965,8 +960,7 @@ export function watchPromise<T>(name: string, promise: Promise<T>): Promise<T> {
 	const initialCheck = 3000;
 	const subsequentCheck = 10000;
 	const maxTime = 60000;
-	let checkResult: (timeMS: number) => void;
-	checkResult = (timeMS: number) => {
+	const checkResult = (timeMS: number) => {
 		if (didComplete)
 			return;
 		logCompletion = true;

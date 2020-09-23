@@ -425,15 +425,13 @@ export class VmServiceConnection {
 	}
 
 	public addBreakpointWithScriptUri(isolateId: string, scriptUri: string, line: number, column?: number): Promise<DebuggerResult> {
-		let data: {
+		interface BreakpointData {
 			isolateId: string,
 			scriptUri: string,
 			line: number,
 			column?: number,
-		};
-		data = { isolateId, scriptUri, line };
-		if (column)
-			data.column = column;
+		}
+		const data: BreakpointData = { isolateId, scriptUri, line, column };
 		return this.callMethod("addBreakpointWithScriptUri", data);
 	}
 
@@ -466,17 +464,13 @@ export class VmServiceConnection {
 	}
 
 	public getObject(isolateId: string, objectId: string, offset?: number, count?: number): Promise<DebuggerResult> {
-		let data: {
+		interface ObjectData {
 			isolateId: string,
 			objectId: string,
 			offset?: number,
 			count?: number,
 		};
-		data = { isolateId, objectId };
-		if (offset)
-			data.offset = offset;
-		if (count)
-			data.count = count;
+		const data: ObjectData = { isolateId, objectId, offset, count };
 		return this.callMethod("getObject", data);
 	}
 
@@ -534,7 +528,7 @@ export class VmServiceConnection {
 
 	public handleData(data: string) {
 		this.logTraffic(`<== ${data}\n`);
-		let json: {
+		interface JsonData {
 			id: string,
 			error: {
 				code: number,
@@ -548,7 +542,7 @@ export class VmServiceConnection {
 				event: VMEvent,
 			},
 		};
-		json = JSON.parse(data);
+		const json: JsonData = JSON.parse(data);
 		const id = json.id;
 		const method = json.method;
 		const error = json.error;

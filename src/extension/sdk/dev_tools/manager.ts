@@ -67,7 +67,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string, dispose: () => void } | undefined> {
+	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
 		// If we're mid-silent-activation, wait until that's finished.
@@ -92,7 +92,7 @@ export class DevToolsManager implements vs.Disposable {
 			this.devtoolsUrl = vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 				title: "Starting Dart DevTools...",
-			}, async (_) => this.startServer());
+			}, async () => this.startServer());
 		}
 
 		// If the launched versin of DevTools doesn't support embedding, remove the flag.
@@ -116,7 +116,7 @@ export class DevToolsManager implements vs.Disposable {
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 				title: "Opening Dart DevTools...",
-			}, async (_) => {
+			}, async () => {
 
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !options.embed
@@ -139,7 +139,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private async promptForDevToolsPage(): Promise<{ page: string } | "EXTERNAL" | undefined> {
-		const choices: Array<vs.QuickPickItem & { page?: string, isExternal?: boolean }> = [
+		const choices: Array<vs.QuickPickItem & { page?: string; isExternal?: boolean }> = [
 			...devToolsPages.map((page) => ({
 				label: `Open ${page} Page`,
 				page: page.toLowerCase(),
@@ -213,10 +213,10 @@ export class DevToolsManager implements vs.Disposable {
 			await envUtils.openInBrowser(fullUrl.toString(), this.logger);
 	}
 
-	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined; }, session: DartDebugSessionInformation & { vmServiceUri: string; }, url: string) {
+	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, session: DartDebugSessionInformation & { vmServiceUri: string }, url: string) {
 		const paramsString = Object.keys(queryParams)
 			.filter((key) => queryParams[key] !== undefined)
-			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key]!)}`)
+			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] || "")}`)
 			.join("&");
 		const vmServiceUri = vs.Uri.parse(session.vmServiceUri);
 		const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
@@ -241,10 +241,10 @@ export class DevToolsManager implements vs.Disposable {
 	private async launchThroughService(
 		session: DartDebugSessionInformation & { vmServiceUri: string },
 		params: {
-			notify?: boolean,
-			page?: string,
-			queryParams: { [key: string]: string | undefined },
-			reuseWindows?: boolean,
+			notify?: boolean;
+			page?: string;
+			queryParams: { [key: string]: string | undefined };
+			reuseWindows?: boolean;
 		},
 	): Promise<boolean> {
 		try {
@@ -294,10 +294,11 @@ export class DevToolsManager implements vs.Disposable {
 				// When a new debug session starts, we need to wait for its VM
 				// Service, then register it with this server.
 				this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(async (session) => {
-					service.vmRegister({ uri: session.vmServiceUri! });
-					// Also reconnect any orphaned DevTools views.
-					if (session.vmServiceUri)
+					if (session.vmServiceUri) {
+						service.vmRegister({ uri: session.vmServiceUri });
+						// Also reconnect any orphaned DevTools views.
 						await this.reconnectDisconnectedEmbeddedViews(session as DartDebugSessionInformation & { vmServiceUri: string });
+					}
 				}));
 
 				// And send any existing sessions we have.
@@ -310,7 +311,7 @@ export class DevToolsManager implements vs.Disposable {
 				resolve(`http://${n.host}:${n.port}/`);
 			});
 
-			service.process!.on("close", async (code) => {
+			service.process?.on("close", async (code) => {
 				this.devtoolsUrl = undefined;
 				this.devToolsStatusBarItem.hide();
 				if (code && code !== 0) {

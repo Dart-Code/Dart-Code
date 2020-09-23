@@ -100,11 +100,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 		let quickPickIsValid = true;
 		let emulatorDevices: PickableDevice[];
-		const updatePickableDeviceList = async () => {
+		const updatePickableDeviceList = () => {
 			if (!quickPickIsValid)
 				return;
 
-			quickPick.items = await this.getPickableDevices(supportedTypes, emulatorDevices);
+			quickPick.items = this.getPickableDevices(supportedTypes, emulatorDevices);
 		};
 
 		// Kick off a request to get emulators only once.
@@ -119,7 +119,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		const deviceRemovedSubscription = this.daemon.registerForDeviceRemoved((d) => updatePickableDeviceList());
 
 		// Build the initial list.
-		await updatePickableDeviceList();
+		updatePickableDeviceList();
 
 		const selection = await new Promise<PickableDevice>((resolve) => {
 			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
@@ -190,7 +190,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.devices.find((d) => d.id === id);
 	}
 
-	public async getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Promise<PickableDevice[]> {
+	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): PickableDevice[] {
 		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
 
 		let pickableItems: PickableDevice[] = sortedDevices.filter((d) => this.isSupported(supportedTypes, d))

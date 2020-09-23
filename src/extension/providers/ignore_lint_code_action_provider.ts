@@ -25,15 +25,13 @@ export class IgnoreLintCodeActionProvider implements RankedCodeActionProvider {
 		if (!config.showIgnoreQuickFixes || !context || !context.diagnostics || !context.diagnostics.length)
 			return;
 
-		const lintErrors = context.diagnostics.filter((d) => {
-			return d.range.intersection(range)
-				&& (
-					// Non-LSP:
-					(d instanceof DartDiagnostic && (d.type === "LINT" || d.type === "HINT")
-						// LSP:
-						|| (d.source === "dart" && d.severity === DiagnosticSeverity.Information))
-				);
-		});
+		const lintErrors = context.diagnostics.filter((d) => d.range.intersection(range)
+			&& (
+				// Non-LSP:
+				(d instanceof DartDiagnostic && (d.type === "LINT" || d.type === "HINT")
+					// LSP:
+					|| (d.source === "dart" && d.severity === DiagnosticSeverity.Information))
+			));
 		if (!lintErrors.length)
 			return;
 
