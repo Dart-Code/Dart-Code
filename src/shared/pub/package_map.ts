@@ -14,6 +14,19 @@ export abstract class PackageMap {
 		return file as string | (undefined extends T ? undefined : never);
 	}
 
+	public static loadForProject(logger: Logger, projectFolder: string): PackageMap {
+		const paths = [
+			".dart_tool/package_config.json",
+			".packages",
+		];
+		for (const p of paths) {
+			const fullP = path.join(projectFolder, p);
+			if (fs.existsSync(fullP))
+				return this.load(logger, fullP);
+		}
+		return new MissingPackageMap();
+	}
+
 	public static load(logger: Logger, file: string | undefined): PackageMap {
 		if (!file)
 			return new MissingPackageMap();
