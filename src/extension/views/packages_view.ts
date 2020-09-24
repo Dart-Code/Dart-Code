@@ -9,8 +9,7 @@ import { areSameFolder, findProjectFolders, fsPath } from "../../shared/utils/fs
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 
-export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
-	private readonly watcher: vs.FileSystemWatcher;
+export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 
@@ -85,10 +84,6 @@ export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<
 		});
 
 		return [...folders, ...files];
-	}
-
-	public dispose() {
-		this.watcher.dispose();
 	}
 }
 

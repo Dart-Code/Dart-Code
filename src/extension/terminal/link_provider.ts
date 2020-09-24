@@ -35,10 +35,12 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 	}
 
 	private isKnownPackage(packageName: string) {
-		return !!Object.values(this.packageMaps).find((m) => m.packages[packageName]);
+		return this.packageMaps && !!Object.values(this.packageMaps).find((m) => m.packages[packageName]);
 	}
 
 	private resolvePackageUri(uri: string): string | undefined {
+		if (!this.packageMaps)
+			return undefined;
 		for (var packageMap of Object.values(this.packageMaps)) {
 			const filePath = packageMap.resolvePackageUri(uri);
 			if (filePath)
@@ -55,7 +57,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 		packageUriPattern.lastIndex = -1;
 		let result: RegExpExecArray | null;
 		// tslint:disable-next-line: no-conditional-assignment
-		while (result = packageUriPattern.exec(context.line)) {
+		while ((result = packageUriPattern.exec(context.line)) && result.groups) {
 			let uri: vs.Uri | undefined;
 			try {
 				uri = vs.Uri.parse(result.groups.uri, true);
