@@ -88,6 +88,7 @@ import { PubGlobal } from "./pub/global";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
+import { DartTerminalLinkProvider } from "./terminal/link_provider";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
@@ -513,6 +514,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	} else if (lspClient && lspAnalyzer) {
 		context.subscriptions.push(new LspEditCommands(lspAnalyzer));
 	}
+
+	context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartTerminalLinkProvider(logger, workspaceContext)));
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext);
