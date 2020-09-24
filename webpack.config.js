@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 "use strict";
 
@@ -19,7 +19,7 @@
 
 const path = require("path");
 
-module.exports = env => {
+module.exports = (env) => {
 	/**
 	 * @type {import("webpack").Configuration}
 	 */
@@ -27,7 +27,7 @@ module.exports = env => {
 		devtool: "source-map",
 		entry: {
 			extension: "./src/extension/extension.ts",
-			debug: "./src/debug/debug_entry.ts"
+			debug: "./src/debug/debug_entry.ts",
 		},
 		// https://webpack.js.org/configuration/externals/
 		externals: {

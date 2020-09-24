@@ -10,7 +10,7 @@ export function fsPath(uri: { fsPath: string } | string) {
 }
 
 export function forceWindowsDriveLetterToUppercase(p: string): string {
-	if (p && isWin && path.isAbsolute(p) && p.charAt(0) === p.charAt(0).toLowerCase())
+	if (p && isWin && path.isAbsolute(p) && p.startsWith(p.charAt(0).toLowerCase()))
 		p = p.substr(0, 1).toUpperCase() + p.substr(1);
 	return p;
 }
@@ -20,7 +20,7 @@ export function isWithinPath(file: string, folder: string) {
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
-export async function getChildFolders(parent: string, options?: { allowBin?: boolean, allowCache?: boolean }): Promise<string[]> {
+export async function getChildFolders(parent: string, options?: { allowBin?: boolean; allowCache?: boolean }): Promise<string[]> {
 	if (!fs.existsSync(parent))
 		return [];
 	const files = await readDirAsync(parent);
@@ -32,17 +32,15 @@ export async function getChildFolders(parent: string, options?: { allowBin?: boo
 }
 
 export function readDirAsync(folder: string): Promise<fs.Dirent[]> {
-	return new Promise<fs.Dirent[]>((resolve, reject) => {
-		return fs.readdir(folder,
-			{ withFileTypes: true },
-			(err, files) => {
-				if (err)
-					reject(err);
-				else
-					resolve(files);
-			},
-		);
-	});
+	return new Promise<fs.Dirent[]>((resolve, reject) => fs.readdir(folder,
+		{ withFileTypes: true },
+		(err, files) => {
+			if (err)
+				reject(err);
+			else
+				resolve(files);
+		},
+	));
 }
 
 export function hasPackagesFile(folder: string): boolean {
@@ -79,19 +77,17 @@ async function fileExists(p: string): Promise<boolean> {
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
-export async function findProjectFolders(roots: string[], options: { sort?: boolean, requirePubspec?: boolean } = {}): Promise<string[]> {
+export async function findProjectFolders(roots: string[], options: { sort?: boolean; requirePubspec?: boolean } = {}): Promise<string[]> {
 	const level2Folders = await flatMapAsync(roots, getChildFolders);
 	const level3Folders = await flatMapAsync(level2Folders, getChildFolders);
 	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders);
 
-	const projectFolderPromises = allPossibleFolders.map(async (folder) => {
-		return {
-			exists: options && options.requirePubspec
-				? await hasPubspecAsync(folder)
-				: await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
-			folder,
-		};
-	});
+	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
+		exists: options && options.requirePubspec
+			? await hasPubspecAsync(folder)
+			: await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
+		folder,
+	}));
 	const projectFoldersChecks = await Promise.all(projectFolderPromises);
 	const projectFolders = projectFoldersChecks
 		.filter((res) => res.exists)
@@ -107,7 +103,7 @@ export function tryDeleteFile(filePath: string) {
 		try {
 			fs.unlinkSync(filePath);
 		} catch {
-			console.warn(`Failed to delete file $path.`);
+			console.warn(`Failed to delete file ${path}.`);
 		}
 	}
 }

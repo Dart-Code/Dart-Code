@@ -40,7 +40,7 @@ export class SdkCommands {
 	private readonly sdks: DartSdks;
 	private flutterScreenshotPath?: string;
 	// A map of any in-progress commands so we can terminate them if we want to run another.
-	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined; } = {};
+	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined } = {};
 
 	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
 		this.sdks = workspace.sdks;
@@ -310,7 +310,7 @@ export class SdkCommands {
 		const filePath = fsPath(uri);
 
 		// Never do anything for files inside hidden or build folders.
-		if (filePath.indexOf(`${path.sep}.`) !== -1 || filePath.indexOf(`${path.sep}build${path.sep}`) !== -1) {
+		if (filePath.includes(`${path.sep}.`) || filePath.includes(`${path.sep}build${path.sep}`)) {
 			this.logger.info(`Skipping pubspec change for ignored folder ${filePath}`);
 			return;
 		}
@@ -706,7 +706,7 @@ export class SdkCommands {
 		if (!packageNameRegex.test(input))
 			return "Dart project names should be all lowercase, with underscores to separate words";
 		const bannedNames = ["dart", "test"];
-		if (bannedNames.indexOf(input) !== -1)
+		if (bannedNames.includes(input))
 			return `You may not use ${input} as the name for a dart project`;
 	}
 
@@ -714,7 +714,7 @@ export class SdkCommands {
 		if (!packageNameRegex.test(input))
 			return "Flutter project names should be all lowercase, with underscores to separate words";
 		const bannedNames = ["flutter", "flutter_test", "test"];
-		if (bannedNames.indexOf(input) !== -1)
+		if (bannedNames.includes(input))
 			return `You may not use ${input} as the name for a flutter project`;
 	}
 }
