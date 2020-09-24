@@ -25,10 +25,12 @@ export class EditCommands implements vs.Disposable {
 
 		const doc = await vs.workspace.openTextDocument(uri);
 		const editor = await vs.window.showTextDocument(doc, column, inOtherEditorColumn);
-		if (lineNumber && columnNumber) {
+		if (lineNumber) {
 			const line = doc.lineAt(lineNumber > 0 ? lineNumber - 1 : 0);
-			const firstChar = line.range.start.translate({ characterDelta: line.firstNonWhitespaceCharacterIndex });
-			showCode(editor, line.range, line.range, new vs.Range(firstChar, firstChar));
+			if (!columnNumber || columnNumber > line.range.end.character)
+				columnNumber = line.firstNonWhitespaceCharacterIndex;
+			const char = line.range.start.translate({ characterDelta: columnNumber });
+			showCode(editor, line.range, line.range, new vs.Range(char, char));
 		}
 	}
 
