@@ -5,7 +5,7 @@ import { safeSpawn } from "../../shared/processes";
 import { nullToUndefined } from "./misc";
 
 // Environment used when spawning Dart and Flutter processes.
-let toolEnv: /*{ [key: string]: string | undefined }*/ any = {};
+let toolEnv: /* { [key: string]: string | undefined } */ any = {};
 let globalFlutterArgs: string[] = [];
 
 export function getToolEnv() {

@@ -15,7 +15,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 
 	constructor(private readonly logger: Logger, private readonly context: WorkspaceContext) {
 		context.events.onPackageMapChange.listen(() => {
-			this.onDidChangeTreeDataEmitter.fire(undefined)
+			this.onDidChangeTreeDataEmitter.fire(undefined);
 		});
 	}
 

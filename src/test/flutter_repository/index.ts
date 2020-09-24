@@ -1,3 +1,3 @@
-import * as test_runner from "../test_runner";
+import * as testRunner from "../test_runner";
 
-module.exports = test_runner;
+module.exports = testRunner;

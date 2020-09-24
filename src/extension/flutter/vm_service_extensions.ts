@@ -116,8 +116,11 @@ export class VmServiceExtensions {
 			this.handleServiceRegistered(e.body.service, e.body.method);
 		} else if (e.event === "dart.flutter.firstFrame") {
 			// Send all values back to the VM on the first frame so that they persist across restarts.
-			for (const extension in VmServiceExtension)
+			for (const extension in VmServiceExtension) {
+				if (!isNaN(Number(extension)))
+					continue;
 				this.sendValueToVM(extension as VmServiceExtension);
+			}
 		} else if (e.event === "dart.flutter.updateIsWidgetCreationTracked") {
 			vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
 		} else if (e.event === "dart.flutter.updatePlatformOverride") {

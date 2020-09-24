@@ -340,7 +340,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			warnIfPathCaseMismatch(logger, debugConfig.program, "the launch script", "check the 'program' field in your launch configuration file (.vscode/launch.json)");
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
-		if (debugType === DebuggerType.FlutterTest /*|| debugType === DebuggerType.WebTest*/ || debugType === DebuggerType.PubTest) {
+		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.PubTest) {
 			TestResultsProvider.flagSuiteStart(debugConfig.program, !argsHaveTestNameFilter);
 		}
 

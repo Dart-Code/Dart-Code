@@ -11,7 +11,7 @@ import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { config } from "../config";
 import { hasOverlappingEdits } from "./edit_das";
 
-const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions } = {
+const refactorOptions: { [key: string]: (feedback?: as.RefactoringFeedback) => as.RefactoringOptions | Promise<as.RefactoringOptions> } = {
 	EXTRACT_LOCAL_VARIABLE: getExtractLocalVariableArgs,
 	EXTRACT_METHOD: getExtractMethodArgs,
 	EXTRACT_WIDGET: getExtractWidgetArgs,
