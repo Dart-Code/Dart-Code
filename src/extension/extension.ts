@@ -16,7 +16,7 @@ import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { envUtils, getDartWorkspaceFolders, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { createWatcher, envUtils, getDartWorkspaceFolders, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
@@ -515,7 +515,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	}
 
 	// Register our view providers.
-	const dartPackagesProvider = new DartPackagesProvider(logger);
+	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext);
 	const packagesTreeView = vs.window.createTreeView("dartPackages", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(
 		dartPackagesProvider,
@@ -635,10 +635,14 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			return;
 		}
 
-		dartPackagesProvider.refresh();
+		workspaceContext.events.onPackageMapChange.fire();
 		recalculateAnalysisRoots();
 		checkForPackages();
 	}));
+
+	context.subscriptions.push(createWatcher("**/.packages", workspaceContext.events.onPackageMapChange));
+	context.subscriptions.push(createWatcher("**/.dart_tool/package_config.json", workspaceContext.events.onPackageMapChange));
+	workspaceContext.events.onPackageMapChange.fire();
 
 	return {
 		...new DartExtensionApi(),

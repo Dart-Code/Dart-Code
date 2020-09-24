@@ -4,6 +4,7 @@ import * as vs from "vscode";
 import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
 import * as lsp from "vscode-languageclient";
 import { dartCodeExtensionIdentifier } from "../constants";
+import { EventEmitter } from "../events";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { notUndefined } from "../utils";
@@ -160,4 +161,12 @@ export function firstEditorColumn(): vs.ViewColumn | undefined {
 		if (usedColumns.has(i))
 			return i;
 	}
+}
+
+export function createWatcher(pattern: string, emitter: EventEmitter<vs.Uri | void>) {
+	const watcher = vs.workspace.createFileSystemWatcher(pattern);
+	watcher.onDidChange((uri) => emitter.fire(uri));
+	watcher.onDidCreate((uri) => emitter.fire(uri));
+	watcher.onDidDelete((uri) => emitter.fire(uri));
+	return watcher;
 }

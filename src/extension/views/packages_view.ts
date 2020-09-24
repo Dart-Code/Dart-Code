@@ -7,21 +7,17 @@ import { PackageMap } from "../../shared/pub/package_map";
 import { sortBy } from "../../shared/utils/array";
 import { areSameFolder, findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { WorkspaceContext } from "../../shared/workspace";
 
 export class DartPackagesProvider implements vs.Disposable, vs.TreeDataProvider<PackageDep> {
 	private readonly watcher: vs.FileSystemWatcher;
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 
-	constructor(private readonly logger: Logger) {
-		this.watcher = vs.workspace.createFileSystemWatcher("**/.packages");
-		this.watcher.onDidChange(this.refresh, this);
-		this.watcher.onDidCreate(this.refresh, this);
-		this.watcher.onDidDelete(this.refresh, this);
-	}
-
-	public refresh(): void {
-		this.onDidChangeTreeDataEmitter.fire(undefined);
+	constructor(private readonly logger: Logger, private readonly context: WorkspaceContext) {
+		context.events.onPackageMapChange.listen(() => {
+			this.onDidChangeTreeDataEmitter.fire(undefined)
+		});
 	}
 
 	public getTreeItem(element: PackageDep): vs.TreeItem {
