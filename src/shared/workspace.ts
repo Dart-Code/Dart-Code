@@ -1,7 +1,9 @@
-import { Sdks, WorkspaceConfig } from "./interfaces";
+import { EventEmitter } from "./events";
+import { IAmDisposable, Sdks, WorkspaceConfig } from "./interfaces";
 
-export class WorkspaceContext {
+export class WorkspaceContext implements IAmDisposable {
 	public readonly workspaceTypeDescription: string;
+	public readonly events = new WorkspaceEvents();
 	// TODO: Move things from Sdks to this class that aren't related to the SDKs.
 	constructor(
 		public readonly sdks: Sdks,
@@ -43,6 +45,18 @@ export class WorkspaceContext {
 		return types.join(", ");
 	}
 
+	public dispose(): any {
+		this.events.dispose();
+	}
+
 	// TODO: Since this class is passed around, we may need to make it update itself
 	// (eg. if the last Flutter project is removed from the multi-root workspace)?
+}
+
+class WorkspaceEvents implements IAmDisposable {
+	public readonly onPackageMapChange = new EventEmitter<void>();
+
+	public dispose(): any {
+		this.onPackageMapChange.dispose();
+	}
 }
