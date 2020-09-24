@@ -400,7 +400,7 @@ function extractFlutterSdkPathFromPackagesFile(projectFolder: string): string | 
 	if (!fs.existsSync(projectFolder))
 		return undefined;
 
-	let packagePath = PackageMap.load(nullLogger, PackageMap.findPackagesFile(projectFolder)).getPackagePath("flutter");
+	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder).getPackagePath("flutter");
 
 	if (!packagePath)
 		return undefined;
