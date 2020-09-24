@@ -118,6 +118,7 @@ export class DartDebugClient extends DebugClient {
 		this.currentSession = {
 			configuration,
 			customRequest: (cmd, args) => this.customRequest(cmd, args),
+			getDebugProtocolBreakpoint: () => { throw Error("Not implemented for tests"); },
 			id: "INTEGRATION-TEST",
 			name: configuration.name,
 			type: configuration.type,
