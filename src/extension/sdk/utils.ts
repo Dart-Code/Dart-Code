@@ -79,8 +79,8 @@ export class SdkUtils {
 		// tslint:disable-next-line: no-floating-promises
 		promptToReloadExtension("Could not find Dart in your Flutter SDK. " +
 			"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
-			"Reload",
-			true,
+			"Reload", // eslint-disable-line @typescript-eslint/indent
+			true, // eslint-disable-line @typescript-eslint/indent
 		);
 	}
 	public showFlutterActivationFailure(commandToReRun?: string) {

@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
