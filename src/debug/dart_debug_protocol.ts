@@ -469,7 +469,7 @@ export class VmServiceConnection {
 			objectId: string,
 			offset?: number,
 			count?: number,
-		};
+		}
 		const data: ObjectData = { isolateId, objectId, offset, count };
 		return this.callMethod("getObject", data);
 	}
@@ -541,7 +541,7 @@ export class VmServiceConnection {
 				streamId: string,
 				event: VMEvent,
 			},
-		};
+		}
 		const json: JsonData = JSON.parse(data);
 		const id = json.id;
 		const method = json.method;

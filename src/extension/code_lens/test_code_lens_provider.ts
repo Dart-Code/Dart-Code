@@ -44,33 +44,31 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		return flatMap(
 			visitor.tests
 				.filter((test) => test.offset && test.length)
-				.map((test) => {
-					return [
-						new CodeLens(
-							toRange(document, test.offset, test.length),
-							{
-								arguments: [test],
-								command: "_dart.startWithoutDebuggingTestFromOutline",
-								title: "Run",
-							},
-						),
-						new CodeLens(
-							toRange(document, test.offset, test.length),
-							{
-								arguments: [test],
-								command: "_dart.startDebuggingTestFromOutline",
-								title: "Debug",
-							},
-						),
-					].concat(templates.map((t) => new CodeLens(
+				.map((test) => [
+					new CodeLens(
 						toRange(document, test.offset, test.length),
 						{
-							arguments: [test, t],
-							command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
-							title: t.name,
+							arguments: [test],
+							command: "_dart.startWithoutDebuggingTestFromOutline",
+							title: "Run",
 						},
-					)));
-				}),
+					),
+					new CodeLens(
+						toRange(document, test.offset, test.length),
+						{
+							arguments: [test],
+							command: "_dart.startDebuggingTestFromOutline",
+							title: "Debug",
+						},
+					),
+				].concat(templates.map((t) => new CodeLens(
+					toRange(document, test.offset, test.length),
+					{
+						arguments: [test, t],
+						command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
+						title: t.name,
+					},
+				)))),
 			(x) => x,
 		);
 	}

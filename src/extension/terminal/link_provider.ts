@@ -24,7 +24,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 		}
 		this.packageMapDiscovery = new Promise(async (resolve) => {
 			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
-			const projectFolders = (await findProjectFolders(topLevelFolders, { requirePubspec: true }))
+			const projectFolders = (await findProjectFolders(topLevelFolders, { requirePubspec: true }));
 			this.packageMaps = {};
 			for (const projectFolder of projectFolders) {
 				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);
@@ -41,7 +41,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 	private resolvePackageUri(uri: string): string | undefined {
 		if (!this.packageMaps)
 			return undefined;
-		for (var packageMap of Object.values(this.packageMaps)) {
+		for (const packageMap of Object.values(this.packageMaps)) {
 			const filePath = packageMap.resolvePackageUri(uri);
 			if (filePath)
 				return filePath;
@@ -68,7 +68,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 			if (!uri)
 				continue;
 
-			const packageName = uri.path.split('/')[0];
+			const packageName = uri.path.split("/")[0];
 			if (!this.isKnownPackage(packageName))
 				continue;
 			const line = result.groups.line ? parseInt(result.groups.line) : undefined;
@@ -79,7 +79,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 			results.push({
 				startIndex,
 				length,
-				tooltip: 'Open file in editor',
+				tooltip: "Open file in editor",
 				packageName,
 				uri: result.groups.uri,
 				line,

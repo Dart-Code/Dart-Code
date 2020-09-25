@@ -44,33 +44,31 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		return flatMap(
 			visitor.tests
 				.filter((test) => test.range)
-				.map((test) => {
-					return [
-						new CodeLens(
-							lspToRange(test.range),
-							{
-								arguments: [test],
-								command: "_dart.startWithoutDebuggingTestFromOutline",
-								title: "Run",
-							},
-						),
-						new CodeLens(
-							lspToRange(test.range),
-							{
-								arguments: [test],
-								command: "_dart.startDebuggingTestFromOutline",
-								title: "Debug",
-							},
-						),
-					].concat(templates.map((t) => new CodeLens(
+				.map((test) => [
+					new CodeLens(
 						lspToRange(test.range),
 						{
-							arguments: [test, t],
-							command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
-							title: t.name,
+							arguments: [test],
+							command: "_dart.startWithoutDebuggingTestFromOutline",
+							title: "Run",
 						},
-					)));
-				}),
+					),
+					new CodeLens(
+						lspToRange(test.range),
+						{
+							arguments: [test],
+							command: "_dart.startDebuggingTestFromOutline",
+							title: "Debug",
+						},
+					),
+				].concat(templates.map((t) => new CodeLens(
+					lspToRange(test.range),
+					{
+						arguments: [test, t],
+						command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
+						title: t.name,
+					},
+				)))),
 			(x) => x,
 		);
 	}

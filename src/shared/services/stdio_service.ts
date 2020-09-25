@@ -10,7 +10,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	public process?: SpawnedProcess;
 	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
-	private readonly activeRequests: { [key: string]: [(result: any) => void, (error: any) => void, string] | "CANCELLED" } = {};
+	private readonly activeRequests: { [key: string]: [(result: any) => void | Promise<void>, (error: any) => void | Promise<void>, string] | "CANCELLED" } = {};
 	private messageBuffers: Buffer[] = [];
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;

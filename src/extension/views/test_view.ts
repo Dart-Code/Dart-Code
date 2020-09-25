@@ -104,9 +104,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			);
 		}));
 
-		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteTreeItem) => {
-			return vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path));
-		}));
+		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteTreeItem) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path))));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupTreeItem) => {
 			if (!treeNode.group.url && !treeNode.group.root_url)
 				return;
@@ -496,10 +494,8 @@ class SuiteData {
 	}
 	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllGroups().filter((g) => {
-			return g.group.name === group.name
-				&& g.suiteRunNumber !== currentSuiteRunNumber;
-		});
+		const matches = this.getAllGroups().filter((g) => g.group.name === group.name
+				&& g.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
 		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.group.line || 0) - (group.line || 0)) - Math.abs((g2.group.line || 0) - (group.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
@@ -512,10 +508,8 @@ class SuiteData {
 	}
 	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): TestTreeItem | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllTests().filter((t) => {
-			return t.test.name === test.name
-				&& t.suiteRunNumber !== currentSuiteRunNumber;
-		});
+		const matches = this.getAllTests().filter((t) => t.test.name === test.name
+				&& t.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
 		const sortedMatches = sortBy(matches, (t) => Math.abs((t.test.line || 0) - (test.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
@@ -659,10 +653,8 @@ class GroupTreeItem extends TestItemTreeItem {
 
 	get hidden(): boolean {
 		// If every child is hidden, we are hidden.
-		return this.children.every((c) => {
-			return (c instanceof GroupTreeItem && c.hidden)
-				|| (c instanceof TestTreeItem && c.hidden);
-		});
+		return this.children.every((c) => (c instanceof GroupTreeItem && c.hidden)
+				|| (c instanceof TestTreeItem && c.hidden));
 	}
 
 	get parent(): SuiteTreeItem | GroupTreeItem {

@@ -923,7 +923,7 @@ export async function saveTrivialChangeToFile(uri: vs.Uri) {
 export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
 	return new Promise((resolve, reject) => {
 		const filePath = fsPath(uri);
-		const originalContents = fs.readFileSync(filePath);
+		const originalContents = fs.readFileSync(filePath).toString();
 		fs.writeFile(filePath, originalContents + " // test", (error) => {
 			if (error)
 				reject(error);

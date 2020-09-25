@@ -694,15 +694,13 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		const otherFilesEdits = change.edits.filter((e) => e.file !== filePath);
 
 		if (thisFilesEdits.length) {
-			completionItem.additionalTextEdits = flatMap(thisFilesEdits, (edit) => {
-				return edit.edits.map((edit) => {
-					const range = new vs.Range(
-						document.positionAt(edit.offset),
-						document.positionAt(edit.offset + edit.length),
-					);
-					return new vs.TextEdit(range, edit.replacement);
-				});
-			});
+			completionItem.additionalTextEdits = flatMap(thisFilesEdits, (edit) => edit.edits.map((edit) => {
+				const range = new vs.Range(
+					document.positionAt(edit.offset),
+					document.positionAt(edit.offset + edit.length),
+				);
+				return new vs.TextEdit(range, edit.replacement);
+			}));
 		}
 		if (otherFilesEdits.length) {
 			const filteredSourceChange: as.SourceChange = {

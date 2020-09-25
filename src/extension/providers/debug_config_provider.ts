@@ -515,7 +515,7 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 				request: "launch",
 				type: "dart",
 			}];
-		};
+		}
 	}
 }
 

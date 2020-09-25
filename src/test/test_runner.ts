@@ -17,10 +17,10 @@ module.exports = {
 				summaryFile: process.env.TEST_CSV_SUMMARY,
 				testRunName: process.env.TEST_RUN_NAME,
 			},
+			retries: 1,        // Retry failing tests to reduce flakes
 			slow: 20000,       // increased threshold before marking a test as slow
 			timeout: 360000,   // increased timeout because starting up Code, Analyzer, Pub, etc. is slooow
 			ui: "bdd",         // the TDD UI is being used in extension.test.ts (suite, test, etc.)
-			retries: 1,        // Retry failing tests to reduce flakes
 		});
 
 		// Set up source map support.
