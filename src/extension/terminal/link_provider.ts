@@ -77,13 +77,13 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 			const length = result[0].length;
 
 			results.push({
-				startIndex,
-				length,
-				tooltip: "Open file in editor",
-				packageName,
-				uri: result.groups.uri,
-				line,
 				col,
+				length,
+				line,
+				packageName,
+				startIndex,
+				tooltip: "Open file in editor",
+				uri: result.groups.uri,
 			});
 		}
 

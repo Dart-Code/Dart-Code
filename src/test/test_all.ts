@@ -6,7 +6,7 @@ let exitCode = 0;
 const cwd = process.cwd();
 const testEnv = Object.create(process.env);
 
-async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: {}): Promise<void> {
+async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: any): Promise<void> {
 	console.log(
 		`Running ${testFolder} tests folder in workspace ${workspaceFolder}`);
 

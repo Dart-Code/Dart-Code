@@ -16,7 +16,7 @@ export function getGlobalFlutterArgs() {
 	return globalFlutterArgs;
 }
 
-export function setupToolEnv(envOverrides?: object) {
+export function setupToolEnv(envOverrides?: any) {
 	toolEnv = {};
 	globalFlutterArgs = [];
 

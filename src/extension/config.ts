@@ -65,7 +65,7 @@ class Config {
 	get embedDevTools(): boolean { return this.getConfig<boolean>("embedDevTools", true); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
-	get env(): object { return this.getConfig<object>("env", {}); }
+	get env(): any { return this.getConfig<any>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
 	get flutterAdbConnectOnChromeOs(): boolean { return this.getConfig<boolean>("flutterAdbConnectOnChromeOs", false); }

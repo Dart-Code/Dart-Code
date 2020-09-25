@@ -228,9 +228,9 @@ export class Analytics {
 								else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
 									this.logger.warn(c.toString());
 								else
-									this.logger.warn("Unexpected GA debug response: " + c.toString());
+									this.logger.warn(`Unexpected GA debug response: ${c?.toString()}`);
 							} catch (e) {
-								this.logger.warn("Error in GA debug response: " + c.toString());
+								this.logger.warn(`Error in GA debug response: ${c?.toString()}`);
 							}
 						});
 

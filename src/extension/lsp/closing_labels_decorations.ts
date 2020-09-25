@@ -54,7 +54,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 		if (!this.closingLabels[filePath])
 			return;
 
-		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: {} } } } = [];
+		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: { contentText: string } } } } = [];
 		for (const r of this.closingLabels[filePath].labels) {
 			const labelRange = this.analyzer.protocol2CodeConverter.asRange(r.range);
 

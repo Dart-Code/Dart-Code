@@ -80,7 +80,7 @@ export class DartDiagnosticProvider {
 						return DiagnosticSeverity.Information;
 				}
 			default:
-				throw new Error("Unknown severity type: " + severity);
+				throw new Error(`Unknown severity type: ${severity}`);
 		}
 	}
 

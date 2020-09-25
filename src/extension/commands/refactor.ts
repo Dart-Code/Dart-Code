@@ -159,7 +159,7 @@ export class RefactorCommands implements vs.Disposable {
 	/// Server only supports one refactoring at a time, so we need to ensure we
 	/// wait for any previous one to finish before sending this.
 	private inProgressRefactor: Promise<any> = resolvedPromise;
-	private async runSequentially<T>(func: () => Promise<T>) {
+	private async runSequentially<T>(func: () => Promise<T>): Promise<T> {
 		this.inProgressRefactor = this.inProgressRefactor.then(() => func());
 		return this.inProgressRefactor;
 	}

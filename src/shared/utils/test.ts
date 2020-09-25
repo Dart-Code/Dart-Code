@@ -51,8 +51,8 @@ void main() {
 `.trim();
 	return {
 		contents,
-		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
 		selectionLength: defaultTestFileSelectionPlaceholder.length,
+		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
 	};
 }
 
@@ -68,7 +68,7 @@ void main() {
 `.trim();
 	return {
 		contents,
-		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
 		selectionLength: defaultTestFileSelectionPlaceholder.length,
+		selectionOffset: contents.indexOf(defaultTestFileSelectionPlaceholder),
 	};
 }

@@ -209,7 +209,7 @@ export class DasEditCommands implements vs.Disposable {
 				// TODO: Change this back to appendChoice when it handles commas correctly
 				// https://github.com/microsoft/vscode/issues/107220
 				// snippet.appendChoice(p.choices, p.placeholderNumber);
-				snippet.value += "${" + p.placeholderNumber + "|" + p.choices.map((c) => this.snippetStringEscape(c)).join(",") + "|}";
+				snippet.value += "${" + p.placeholderNumber.toString() + "|" + p.choices.map((c) => this.snippetStringEscape(c)).join(",") + "|}";
 			else
 				snippet.appendPlaceholder(p.defaultValue, p.placeholderNumber);
 			currentPos = p.offset + p.length;
