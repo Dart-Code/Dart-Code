@@ -29,6 +29,12 @@ module.exports = {
 				"allowSingleLine": true
 			}
 		],
+		"camelcase": [
+			"error",
+			{
+				"allow": ["child_process"]
+			}
+		],
 		"comma-dangle": [
 			"error",
 			"always-multiline"
@@ -136,13 +142,6 @@ module.exports = {
 				}
 			}
 		],
-		"@typescript-eslint/camelcase": [
-			"error",
-			{
-				"allow": ["child_process"]
-			}
-		],
-
 		"@typescript-eslint/consistent-type-definitions": "error",
 		"@typescript-eslint/explicit-function-return-type": "off",
 		// "@typescript-eslint/explicit-member-accessibility": [
@@ -151,6 +150,8 @@ module.exports = {
 		// 		"accessibility": "explicit"
 		// 	}
 		// ],
+		// TODO: Enable this when fixed
+		"@typescript-eslint/explicit-module-boundary-types": "off",
 		"@typescript-eslint/indent": [
 			"error",
 			"tab",
@@ -183,6 +184,16 @@ module.exports = {
 		"@typescript-eslint/no-empty-interface": "off",
 		"@typescript-eslint/no-explicit-any": "off",
 		// TODO: Re-enable this when fixed.
+		"@typescript-eslint/no-floating-promises": "off",
+		// TODO: Re-enable this when fixed.
+		"@typescript-eslint/no-unsafe-assignment": "off",
+		// TODO: Re-enable this when fixed.
+		"@typescript-eslint/no-unsafe-call": "off",
+		// TODO: Re-enable this when fixed.
+		"@typescript-eslint/no-unsafe-member-access": "off",
+		// TODO: Re-enable this when fixed.
+		"@typescript-eslint/no-unsafe-return": "off",
+		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-inferrable-types": "off",
 		"@typescript-eslint/no-misused-promises": [
 			"error",
@@ -200,6 +211,8 @@ module.exports = {
 		"@typescript-eslint/prefer-function-type": "error",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/prefer-includes": "off",
+		// TODO: Enable this when fixed
+		"@typescript-eslint/restrict-template-expressions": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/require-await": "off",
 		"@typescript-eslint/quotes": [
@@ -249,7 +262,6 @@ module.exports = {
 			}
 		]
 	}
-	// TODO: No floating promises
 	// TODO: no unused expression
 	// "max-line-length": false,
 	// "ordered-imports": false,
