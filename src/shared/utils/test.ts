@@ -2,7 +2,11 @@ import * as path from "path";
 import { escapeRegExp } from "../../shared/utils";
 import { OpenedFileInformation } from "../interfaces";
 
-export function getLaunchConfig(noDebug: boolean, path: string, testName: string | undefined, isGroup: boolean, template?: any | undefined) {
+export function getLaunchConfig(noDebug: boolean, path: string, testNames: string[] | undefined, isGroup: boolean, template?: any | undefined) {
+	const templateArgs = template?.args || [];
+	const testNameArgs = testNames
+		? ["--name", makeRegexForTests(testNames, isGroup)]
+		: [];
 	return Object.assign(
 		{
 			// Trailing space is a workaround for https://github.com/microsoft/vscode/issues/100115
@@ -13,25 +17,30 @@ export function getLaunchConfig(noDebug: boolean, path: string, testName: string
 		},
 		template,
 		{
-			args: (template ? (template.args || []) : []).concat(testName ? ["--name", makeRegexForTest(testName, isGroup)] : []),
+			args: templateArgs.concat(testNameArgs),
 			program: path,
 		},
 	);
 }
 
 const regexEscapedInterpolationExpressionPattern = /\\\$(?:(?:\w+)|(?:\\\{.*\\\}))/g;
-export function makeRegexForTest(name: string, isGroup: boolean) {
-	const prefix = "^";
-	// We can't anchor to the end for groups, as we want them to run all children.
-	const suffix = isGroup ? "" : "$";
-	const escapedName = escapeRegExp(name);
+export function makeRegexForTests(names: string[], isGroup: boolean) {
+	const regexSegments: string[] = [];
+	for (const name of names) {
+		const prefix = "^";
+		// We can't anchor to the end for groups, as we want them to run all children.
+		const suffix = isGroup ? "" : "$";
+		const escapedName = escapeRegExp(name);
 
-	// If a test name contains interpolated expressions, passing the exact
-	// name won't match. So we just replace them out with wildcards. We'll need
-	// to do this after escaping for regex, to ensure the original expression
-	// is escaped but our wildcard is not.
-	const substitutedName = escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*");
-	return `${prefix}${substitutedName}${suffix}`;
+		// If a test name contains interpolated expressions, passing the exact
+		// name won't match. So we just replace them out with wildcards. We'll need
+		// to do this after escaping for regex, to ensure the original expression
+		// is escaped but our wildcard is not.
+		const substitutedName = escapedName.replace(regexEscapedInterpolationExpressionPattern, ".*");
+		regexSegments.push(`${prefix}${substitutedName}${suffix}`);
+	}
+
+	return regexSegments.join("|");
 }
 
 export const createTestFileAction = (file: string) => `Create ${path.basename(file)}`;

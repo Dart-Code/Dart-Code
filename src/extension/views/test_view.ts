@@ -73,36 +73,16 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			const testName = treeNode instanceof TestTreeItem
-				? treeNode.test.name
-				: treeNode instanceof GroupTreeItem
-					? treeNode.group.name
-					: undefined;
-			vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
-				getLaunchConfig(
-					false,
-					fsPath(treeNode.resourceUri!),
-					testName,
-					treeNode instanceof GroupTreeItem,
-				),
-			);
+			this.runTests(treeNode, true, false);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			const testName = treeNode instanceof TestTreeItem
-				? treeNode.test.name
-				: treeNode instanceof GroupTreeItem
-					? treeNode.group.name
-					: undefined;
-			vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
-				getLaunchConfig(
-					true,
-					fsPath(treeNode.resourceUri!),
-					testName,
-					treeNode instanceof GroupTreeItem,
-				),
-			);
+			this.runTests(treeNode, false, false);
+		}));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
+			this.runTests(treeNode, true, true);
+		}));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
+			this.runTests(treeNode, false, true);
 		}));
 
 		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteTreeItem) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path))));
@@ -128,6 +108,46 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				treeNode.test.root_column || treeNode.test.column,
 			);
 		}));
+	}
+
+	private runTests(treeNode: GroupTreeItem | SuiteTreeItem | TestTreeItem, debug: boolean, failedOnly: boolean) {
+		const testNames = this.getTestNames(treeNode, failedOnly);
+		vs.debug.startDebugging(
+			vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
+			getLaunchConfig(
+				!debug,
+				fsPath(treeNode.resourceUri!),
+				testNames,
+				treeNode instanceof GroupTreeItem
+			)
+		);
+	}
+
+	private getTestNames(treeNode: TestItemTreeItem, failedOnly: boolean): string[] | undefined {
+		// If we're not running failed only, we can just use the test name/group name (or undefined for suite)
+		// directly.
+		if (!failedOnly) {
+			const testName = treeNode instanceof TestTreeItem && treeNode.test.name !== undefined
+				? [treeNode.test.name]
+				: treeNode instanceof GroupTreeItem && treeNode.group.name !== undefined
+					? [treeNode.group.name]
+					: undefined;
+			return testName;
+		}
+		// Otherwise, collect all descendants tests that are failed.
+		let names: string[] = [];
+		if (treeNode instanceof SuiteTreeItem || treeNode instanceof GroupTreeItem) {
+			for (const child of treeNode.children) {
+				const childNames = this.getTestNames(child, failedOnly);
+				if (childNames)
+					names = names.concat(childNames);
+			}
+		} else if (treeNode instanceof TestTreeItem && (treeNode.status === TestStatus.Errored || treeNode.status === TestStatus.Failed)) {
+			if (treeNode.test.name !== undefined)
+				names.push(treeNode.test.name);
+		}
+
+		return names;
 	}
 
 	private async writeTestOutput(treeNode: TestTreeItem, forceShow = false) {

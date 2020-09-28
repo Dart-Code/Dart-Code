@@ -4,7 +4,7 @@ import { DebuggerType, TestStatus } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
-import { makeRegexForTest } from "../../../shared/utils/test";
+import { makeRegexForTests } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
@@ -204,7 +204,7 @@ describe("dart test debugger", () => {
 			// Run the test.
 			await runWithoutDebugging(
 				helloWorldTestTreeFile,
-				["--name", makeRegexForTest(test.fullName, test.isGroup)],
+				["--name", makeRegexForTests([test.fullName], test.isGroup)],
 				// Ensure the output contained the test name as a sanity check
 				// that it ran. Because some tests have variables added to the
 				// end, just stop at the $ to avoid failing on them.
@@ -249,12 +249,12 @@ describe("dart test debugger", () => {
 				await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
 			// Re-run each test.
 			for (const test of visitor.tests.filter((t) => !t.isGroup)) {
-				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(test.fullName, test.isGroup)]);
+				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTests([test.fullName], test.isGroup)]);
 				await checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
 			}
 			// Re-run each group.
 			for (const group of visitor.tests.filter((t) => t.isGroup)) {
-				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTest(group.fullName, group.isGroup)]);
+				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", makeRegexForTests([group.fullName], group.isGroup)]);
 				await checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
 			}
 		}

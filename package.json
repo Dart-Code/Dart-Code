@@ -220,6 +220,16 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.startDebuggingFailedTests",
+				"title": "Debug Failed",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.startWithoutDebuggingFailedTests",
+				"title": "Run Failed",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.sortMembers",
 				"title": "Sort Members",
 				"category": "Dart"
@@ -609,6 +619,14 @@
 				},
 				{
 					"command": "dart.startWithoutDebuggingTest",
+					"when": "false"
+				},
+				{
+					"command": "dart.startDebuggingFailedTests",
+					"when": "false"
+				},
+				{
+					"command": "dart.startWithoutDebuggingFailedTests",
 					"when": "false"
 				},
 				{
@@ -1056,7 +1074,17 @@
 				{
 					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testSuiteNode",
 					"command": "dart.startWithoutDebuggingTest",
-					"group": "4.5_exec@1"
+					"group": "4.5_exec@2"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testSuiteNode",
+					"command": "dart.startDebuggingFailedTests",
+					"group": "4.5_exec@3"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testSuiteNode",
+					"command": "dart.startWithoutDebuggingFailedTests",
+					"group": "4.5_exec@4"
 				},
 				{
 					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testGroupNode",
@@ -1066,7 +1094,7 @@
 				{
 					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testGroupNode",
 					"command": "dart.startWithoutDebuggingTest",
-					"group": "4.5_exec@1"
+					"group": "4.5_exec@2"
 				},
 				{
 					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testTestNode",
@@ -1076,7 +1104,7 @@
 				{
 					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testTestNode",
 					"command": "dart.startWithoutDebuggingTest",
-					"group": "4.5_exec@1"
+					"group": "4.5_exec@2"
 				}
 			]
 		},
