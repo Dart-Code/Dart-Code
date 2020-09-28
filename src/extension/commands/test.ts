@@ -39,13 +39,13 @@ abstract class TestCommands implements vs.Disposable {
 		this.disposables.push(vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
-				getLaunchConfig(false, test.file, test.fullName, test.isGroup, launchTemplate),
+				getLaunchConfig(false, test.file, [test.fullName], test.isGroup, launchTemplate),
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
-				getLaunchConfig(true, test.file, test.fullName, test.isGroup, launchTemplate),
+				getLaunchConfig(true, test.file, [test.fullName], test.isGroup, launchTemplate),
 			);
 		}));
 	}
