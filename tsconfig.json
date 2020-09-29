@@ -15,7 +15,6 @@
 		".vscode-test",
 		"node_modules",
 		"out",
-		"src/extension",
-		"src/debug",
+		// tsconfig.build.json excludes more
 	]
 }
