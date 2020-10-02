@@ -35,7 +35,27 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
 
-		return debugConfig;
+		// Temporary workaround for Theia missing resolveDebugConfigurationWithSubstitutedVariables.
+		function resolveVariables(input?: string): string | undefined {
+			const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
+				? fsPath(window.activeTextEditor.document.uri)
+				: undefined;
+
+			if (!input)
+				return input;
+			if (openFile)
+				input = input.replace(/\${file}/gi, openFile);
+			if (folder) {
+				const folderPath = fsPath(folder.uri);
+				input = input.replace(/\${(workspaceFolder|workspaceRoot)}/gi, folderPath);
+			}
+			return input;
+		}
+
+		debugConfig.program = resolveVariables(debugConfig.program);
+		debugConfig.cwd = resolveVariables(debugConfig.cwd);
+
+		return this.resolveDebugConfigurationWithSubstitutedVariables(folder, debugConfig, token);
 	}
 
 	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
