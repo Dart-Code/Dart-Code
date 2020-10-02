@@ -1876,11 +1876,11 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private notifyServiceExtensionAvailable(id: string, isolateId: string | undefined) {
+	protected notifyServiceExtensionAvailable(id: string, isolateId: string | undefined) {
 		this.sendEvent(new Event("dart.serviceExtensionAdded", { id, isolateId }));
 	}
 
-	private notifyServiceRegistered(service: string, method: string | undefined) {
+	protected notifyServiceRegistered(service: string, method: string | undefined) {
 		this.sendEvent(new Event("dart.serviceRegistered", { service, method }));
 	}
 

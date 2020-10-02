@@ -42,6 +42,7 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	deviceName?: string;
 	forceFlutterVerboseMode?: boolean;
 	flutterTrackWidgetCreation: boolean;
+	flutterDisableVmServiceExperimental?: boolean;
 	flutterPath: string;
 	workspaceConfig: WorkspaceConfig | undefined;
 	flutterMode?: "debug" | "profile" | "release";
