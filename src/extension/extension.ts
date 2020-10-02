@@ -517,7 +517,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new LspEditCommands(lspAnalyzer));
 	}
 
-	context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartTerminalLinkProvider(logger, workspaceContext)));
+	if (vs.window.registerTerminalLinkProvider) // Temporary workaround for GitPod/Theia not having this.
+		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartTerminalLinkProvider(logger, workspaceContext)));
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext);
