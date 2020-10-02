@@ -908,6 +908,11 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
+		if (!thread.paused) {
+			this.errorResponse(response, `Thread ${args.threadId} is not paused`);
+			return;
+		}
+
 		if (!this.vmService) {
 			this.errorResponse(response, `No VM service connection`);
 			return;
@@ -1395,11 +1400,16 @@ export class DartDebugSession extends DebugSession {
 		const data = frameId ? this.threadManager.getStoredData(frameId) : undefined;
 		const thread = data ? data.thread : this.threadManager.threads[0];
 
+		if (!thread || !thread.paused) {
+			this.errorResponse(response, `evaluation requires a paused thread`);
+			return;
+		}
+
 		try {
 			let result: DebuggerResult | undefined;
 			if (!data) {
-				if (!this.vmService || !thread) {
-					this.errorResponse(response, "global evaluation requires a thread to have been loaded");
+				if (!this.vmService) {
+					this.errorResponse(response, "No VM Service connection");
 					return;
 				}
 
