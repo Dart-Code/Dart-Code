@@ -1400,16 +1400,11 @@ export class DartDebugSession extends DebugSession {
 		const data = frameId ? this.threadManager.getStoredData(frameId) : undefined;
 		const thread = data ? data.thread : this.threadManager.threads[0];
 
-		if (!thread || !thread.paused) {
-			this.errorResponse(response, `evaluation requires a paused thread`);
-			return;
-		}
-
 		try {
 			let result: DebuggerResult | undefined;
 			if (!data) {
-				if (!this.vmService) {
-					this.errorResponse(response, "No VM Service connection");
+				if (!this.vmService || !thread) {
+					this.errorResponse(response, "Global evaluation requires a thread to have been loaded");
 					return;
 				}
 
