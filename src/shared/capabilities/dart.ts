@@ -11,7 +11,9 @@ export class DartCapabilities {
 
 	get generatesCodeWithUnimplementedError() { return versionIsAtLeast(this.version, "2.8.0-dev.0.0"); }
 	get supportsDevTools() { return versionIsAtLeast(this.version, "2.1.0"); }
-	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1"); }
+	// This is also missing in v2.10, but assume it will be back in v2.11.
+	// https://github.com/dart-lang/sdk/issues/43207
+	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1") && !this.version.startsWith("2.10."); }
 	get handlesBreakpointsInPartFiles() { return versionIsAtLeast(this.version, "2.2.1-edge"); }
 	get hasDocumentationInCompletions() { return !versionIsAtLeast(this.version, "2.5.1"); }
 	get supportsDisableServiceTokens() { return versionIsAtLeast(this.version, "2.2.1-dev.4.2"); }
