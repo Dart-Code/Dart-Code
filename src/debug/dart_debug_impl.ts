@@ -1064,8 +1064,9 @@ export class DartDebugSession extends DebugSession {
 
 		// implement paged arrays
 		// let filter = args.filter; // optional; either "indexed" or "named"
-		const start = args.start || 0; // (optional) index of the first variable to return; if omitted children start at 0
-		const count = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
+		const requestedStart = args.start; // (optional) index of the first variable to return; if omitted children start at 0
+		const startNumeric = requestedStart || 0;
+		const requestedCount = args.count; // (optional) number of variables to return. If count is missing or 0, all variables are returned
 
 		const data = this.threadManager.getStoredData(variablesReference);
 		if (!data) {
@@ -1132,7 +1133,7 @@ export class DartDebugSession extends DebugSession {
 			const instanceRef = data.data as InstanceWithEvaluateName;
 
 			try {
-				const result = await this.vmService.getObject(thread.ref.id, instanceRef.id, start, count);
+				const result = await this.vmService.getObject(thread.ref.id, instanceRef.id, requestedStart, requestedCount);
 				let variables: DebugProtocol.Variable[] = [];
 				// If we're the top-level exception, or our parent has an evaluateName of undefined (its children)
 				// we cannot evaluate (this will disable "Add to Watch" etc).
@@ -1154,7 +1155,7 @@ export class DartDebugSession extends DebugSession {
 						if (this.isSimpleKind(instance.kind)) {
 							variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef, true));
 						} else if (instance.elements) {
-							const elementPromises = instance.elements.map(async (element, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + start}]`, `[${i + start}]`, element, i <= maxValuesToCallToString));
+							const elementPromises = instance.elements.map(async (element, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + startNumeric}]`, `[${i + startNumeric}]`, element, i <= maxValuesToCallToString));
 							// Add them in order.
 							const elementVariables = await Promise.all(elementPromises);
 							variables = variables.concat(elementVariables);
@@ -1180,7 +1181,7 @@ export class DartDebugSession extends DebugSession {
 								}
 
 								variables.push({
-									name: `${i + start}`,
+									name: `${i + startNumeric}`,
 									type: `${keyName} -> ${valueName}`,
 									value: `${keyName} -> ${valueName}`,
 									variablesReference,
