@@ -20,7 +20,9 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 					logger.info(`User canceled!`);
 					proc.kill();
 				});
-				logProcess(logger, LogCategory.CommandProcesses, proc);
+				// Log this to general as it's startup stuff that can't be captured with
+				// Capture Logs so log it to the main log file.
+				logProcess(logger, LogCategory.General, proc);
 				return new Promise((resolve, reject) => proc.on("exit", (code) => {
 					if (code) {
 						logger.error(`Failed to initialize Flutter: Process exited with code ${code}.`);
