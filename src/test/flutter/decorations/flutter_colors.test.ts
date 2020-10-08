@@ -11,7 +11,12 @@ describe("flutter_color_decorations", () => {
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoColors;
 
+class NotMaterialColors {
+  static const white = null;
+}
+
 final ThemeData base2 = ThemeData(
+  accentColor: NotMaterialColors.white,
   indicatorColor: Colors.white,
   toggleableActiveColor: const Color(
       0xFF1E88E5),
@@ -55,23 +60,23 @@ var formats = [
 			assert.ok(results[hex], `No results for ${hex}`);
 			assert.deepStrictEqual(results[hex].map(rangeString), ranges.map(rangeString), `Incorrect ranges for ${hex}`);
 		};
-		ensureColor("ffffffff", rangesOf("|Colors.white|"));
-		ensureColor("ff1e88e5", rangesOf("|Color(\n      0xFF1E88E5)|"));
-		ensureColor("42000000", rangesOf("|Colors.black26|"));
-		ensureColor("ffb00020", rangesOf("|Color(0xFFB00020)|"));
-		ensureColor("ffff4081", rangesOf("|Colors.pinkAccent|"));
-		ensureColor("ffd500f9", rangesOf("|Colors.purpleAccent.shade400|"));
-		ensureColor("ffffe57f", rangesOf("|Colors.amberAccent[100]|"));
+		ensureColor("ffffffff", rangesOf(" |Colors.white|"));
+		ensureColor("ff1e88e5", rangesOf(" |Color(\n      0xFF1E88E5)|"));
+		ensureColor("42000000", rangesOf(" |Colors.black26|"));
+		ensureColor("ffb00020", rangesOf(" |Color(0xFFB00020)|"));
+		ensureColor("ffff4081", rangesOf(" |Colors.pinkAccent|"));
+		ensureColor("ffd500f9", rangesOf(" |Colors.purpleAccent.shade400|"));
+		ensureColor("ffffe57f", rangesOf(" |Colors.amberAccent[100]|"));
 
-		ensureColor("ffff9500", rangesOf("|CupertinoColors.activeOrange|,"));
-		ensureColor("ffff9f0a", rangesOf("|CupertinoColors.activeOrange.darkColor|"));
-		ensureColor("ffff3b30", rangesOf("|CupertinoColors.destructiveRed|"));
-		ensureColor("ffffcc00", rangesOf("|CupertinoColors.systemYellow|,"));
-		ensureColor("ffffd426", rangesOf("|CupertinoColors.systemYellow.darkHighContrastElevatedColor|"));
+		ensureColor("ffff9500", rangesOf(" |CupertinoColors.activeOrange|,"));
+		ensureColor("ffff9f0a", rangesOf(" |CupertinoColors.activeOrange.darkColor|"));
+		ensureColor("ffff3b30", rangesOf(" |CupertinoColors.destructiveRed|"));
+		ensureColor("ffffcc00", rangesOf(" |CupertinoColors.systemYellow|,"));
+		ensureColor("ffffd426", rangesOf(" |CupertinoColors.systemYellow.darkHighContrastElevatedColor|"));
 
 		ensureColor("ff1e1e1e", [
-			rangeOf("|Color.fromARGB(255, 30,\n        30, 30)|"),
-			rangeOf("|Color.fromARGB(\n      255,\n      0x1e,\n      0x1e,\n      0x1e,\n    )|"),
+			rangeOf(" |Color.fromARGB(255, 30,\n        30, 30)|"),
+			rangeOf(" |Color.fromARGB(\n      255,\n      0x1e,\n      0x1e,\n      0x1e,\n    )|"),
 		]);
 	});
 });
