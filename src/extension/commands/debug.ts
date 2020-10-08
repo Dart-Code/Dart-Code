@@ -503,7 +503,13 @@ export class DebugCommands {
 			}
 		} else if (e.event === "dart.progressStart") {
 			vs.window.withProgress(
-				{ location: vs.ProgressLocation.Window },
+				// TODO: This was previously Window to match what we'd get using DAP progress
+				// notifications but users prefer larger notifications as they're easier to
+				// see (especially when it comes to things like waiting for debug extension).
+				// https://github.com/Dart-Code/Dart-Code/issues/2597
+				// If this is changed back, ensure the waiting-for-debug-extension notification
+				// is still displayed with additional description.
+				{ location: vs.ProgressLocation.Notification },
 				(progress) => {
 					// Complete any existing one with this ID.
 					session.progress[e.body.progressID]?.complete();

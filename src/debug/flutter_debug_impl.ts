@@ -172,13 +172,15 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.logToUser(msg, this.outputCategory);
 			this.outputCategory = "stdout";
 		} else {
+			this.logToUser(msg, forceErrorCategory ? "stderr" : this.outputCategory);
 			// This text comes through as stdout and not Progress, so map it over
 			// to progress indicator.
 			if (msg.indexOf("Waiting for connection from") !== -1) {
-				this.updateProgress(debugLaunchProgressId, msg.trim());
+				const instructions = "Please click the Dart Debug extension button in the spawned browser window";
+				this.updateProgress(debugLaunchProgressId, instructions);
+				// Send this delayed, so it appears after the rest of the help text.
+				setTimeout(() => this.logToUser(`${instructions}\n`, forceErrorCategory ? "stderr" : this.outputCategory), 10);
 			}
-
-			this.logToUser(msg, forceErrorCategory ? "stderr" : this.outputCategory);
 		}
 	}
 
