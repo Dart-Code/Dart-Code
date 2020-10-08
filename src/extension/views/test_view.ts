@@ -4,16 +4,18 @@ import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_T
 import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { ErrorNotification, Group, GroupNotification, Notification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
-import { flatMap, notUndefined, uniq } from "../../shared/utils";
+import { disposeAll, flatMap, notUndefined, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { brightRed, yellow } from "../../shared/utils/colors";
-import { fsPath } from "../../shared/utils/fs";
+import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 
 // TODO: Refactor all of this crazy logic out of test_view into its own class, so that consuming the test results is much
 // simpler and disconnected from the view!
 const suites: { [key: string]: SuiteData } = {};
+
+type SuiteWithFailures = [SuiteTreeItem, string[]];
 
 export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<TestItemTreeItem> {
 	private disposables: vs.Disposable[] = [];
@@ -72,18 +74,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	constructor(private readonly logger: Logger) {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			this.runTests(treeNode, true, false);
-		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			this.runTests(treeNode, false, false);
-		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			this.runTests(treeNode, true, true);
-		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => {
-			this.runTests(treeNode, false, true);
-		}));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, undefined, true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, undefined, false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, this.getFailedTestNames(treeNode), true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, this.getFailedTestNames(treeNode), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteTreeItem) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path))));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupTreeItem) => {
@@ -110,39 +105,81 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}));
 	}
 
-	private runTests(treeNode: GroupTreeItem | SuiteTreeItem | TestTreeItem, debug: boolean, failedOnly: boolean) {
-		const testNames = this.getTestNames(treeNode, failedOnly);
-		vs.debug.startDebugging(
-			vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
-			getLaunchConfig(
-				!debug,
-				fsPath(treeNode.resourceUri!),
-				testNames,
-				treeNode instanceof GroupTreeItem
-			)
+	private runAllFailedTests() {
+		const topLevelNodes = this.getChildren() || [];
+		const suitesWithFailures = topLevelNodes
+			.filter((node) => node instanceof SuiteTreeItem && node.hasFailures)
+			.map((m) => [m as SuiteTreeItem, this.getFailedTestNames(m)] as SuiteWithFailures);
+		if (suitesWithFailures.length === 0)
+			return;
+
+		const percentProgressPerTest = 99 / suitesWithFailures.map((swf) => swf[1].length).reduce((a, b) => a + b);
+		vs.window.withProgress(
+			{
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: "Re-running failed tests",
+			},
+			async (progress, token) => {
+				progress.report({ increment: 1 });
+				for (const suite of suitesWithFailures) {
+					const node = suite[0];
+					const failedTestNames = suite[1];
+					if (token.isCancellationRequested)
+						break;
+					const suiteName = path.basename(fsPath(node.resourceUri!));
+					progress.report({ message: suiteName });
+					await this.runTests(node, failedTestNames, false, true, token);
+					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
+				}
+			},
 		);
 	}
 
-	private getTestNames(treeNode: TestItemTreeItem, failedOnly: boolean): string[] | undefined {
-		// If we're not running failed only, we can just use the test name/group name (or undefined for suite)
-		// directly.
-		if (!failedOnly) {
-			const testName = treeNode instanceof TestTreeItem && treeNode.test.name !== undefined
-				? [treeNode.test.name]
-				: treeNode instanceof GroupTreeItem && treeNode.group.name !== undefined
-					? [treeNode.group.name]
-					: undefined;
-			return testName;
-		}
-		// Otherwise, collect all descendants tests that are failed.
+	private async runTests(treeNode: GroupTreeItem | SuiteTreeItem | TestTreeItem, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, token?: vs.CancellationToken) {
+		const subs: vs.Disposable[] = [];
+		return new Promise(async (resolve, reject) => {
+			// Construct a unique ID for this session so we can track when it completes.
+			const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+			if (token) {
+				subs.push(vs.debug.onDidStartDebugSession((e) => {
+					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
+						subs.push(token.onCancellationRequested(() => e.customRequest("disconnect")));
+				}));
+			}
+			subs.push(vs.debug.onDidTerminateDebugSession((e) => {
+				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
+					resolve();
+			}));
+			const programPath = fsPath(treeNode.resourceUri!);
+			const didStart = await vs.debug.startDebugging(
+				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
+				{
+					dartCodeDebugSessionID,
+					suppressPromptOnErrors,
+					...getLaunchConfig(
+						!debug,
+						programPath,
+						testNames,
+						treeNode instanceof GroupTreeItem
+					),
+					name: `Tests ${path.basename(programPath)}`,
+				}
+			);
+			if (!didStart)
+				reject();
+		}).finally(() => disposeAll(subs));
+	}
+
+	private getFailedTestNames(treeNode: TestItemTreeItem): string[] {
 		let names: string[] = [];
 		if (treeNode instanceof SuiteTreeItem || treeNode instanceof GroupTreeItem) {
 			for (const child of treeNode.children) {
-				const childNames = this.getTestNames(child, failedOnly);
+				const childNames = this.getFailedTestNames(child);
 				if (childNames)
 					names = names.concat(childNames);
 			}
-		} else if (treeNode instanceof TestTreeItem && (treeNode.status === TestStatus.Errored || treeNode.status === TestStatus.Failed)) {
+		} else if (treeNode instanceof TestTreeItem && treeNode.hasFailures) {
 			if (treeNode.test.name !== undefined)
 				names.push(treeNode.test.name);
 		}
@@ -592,6 +629,10 @@ export abstract class TestItemTreeItem extends vs.TreeItem {
 			this.isPotentiallyDeleted = false;
 			this._sort = getTestSortOrder(status);
 		}
+	}
+
+	get hasFailures(): boolean {
+		return this._status === TestStatus.Errored || this._status === TestStatus.Failed;
 	}
 
 	get isStale(): boolean {

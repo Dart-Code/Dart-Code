@@ -3,7 +3,7 @@ import * as path from "path";
 import * as semver from "semver";
 import { flutterExecutableName, isWin } from "./constants";
 import { LogCategory } from "./enums";
-import { CustomScript, Logger, SomeError } from "./interfaces";
+import { CustomScript, IAmDisposable, Logger, SomeError } from "./interfaces";
 
 export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
@@ -205,4 +205,14 @@ export function generateTestNameFromFileName(input: string) {
 
 export function escapeDartString(input: string) {
 	return input.replace(/(['"\\])/g, "\\$1");
+}
+
+export function disposeAll(disposables: IAmDisposable[]) {
+	for (const d of disposables) {
+		try {
+			d.dispose();
+		} catch (e) {
+			console.warn(e);
+		}
+	}
 }

@@ -158,6 +158,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.runAllFailedTestsWithoutDebugging",
+				"title": "Re-Run All Failed Tests",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.rerunLastDebugSession",
 				"title": "Rerun Last Debug Session",
 				"category": "Dart"
@@ -575,6 +580,10 @@
 				},
 				{
 					"command": "dart.runAllTestsWithoutDebugging",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.runAllFailedTestsWithoutDebugging",
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
