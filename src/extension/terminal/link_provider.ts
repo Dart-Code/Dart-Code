@@ -5,7 +5,7 @@ import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 
-const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?::(?<line>\\d+):(?<col>\\d+))?", "mg");
+const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?:[: ](?<line>\\d+):(?<col>\\d+))?", "mg");
 
 export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTerminalLink> {
 	packageMaps: { [key: string]: PackageMap } | undefined;
@@ -74,7 +74,10 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 			const line = result.groups.line ? parseInt(result.groups.line) : undefined;
 			const col = result.groups.col ? parseInt(result.groups.col) : undefined;
 			const startIndex = result.index;
-			const length = result[0].length;
+			// TODO: This should be "result[0].length" but including the line/col can cause
+			// the tooltip not to render correctly, so we only highlight the uri for now.
+			// https://github.com/microsoft/vscode/issues/108301
+			const length = result.groups.uri.length;
 
 			results.push({
 				col,
