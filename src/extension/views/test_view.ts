@@ -6,10 +6,10 @@ import { Logger } from "../../shared/interfaces";
 import { ErrorNotification, Group, GroupNotification, Notification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
 import { flatMap, notUndefined, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
+import { brightRed, yellow } from "../../shared/utils/colors";
 import { fsPath } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
-import { getChannel } from "../commands/channels";
 
 // TODO: Refactor all of this crazy logic out of test_view into its own class, so that consuming the test results is much
 // simpler and disconnected from the view!
@@ -24,6 +24,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private onFirstFailureEmitter: vs.EventEmitter<TestItemTreeItem> = new vs.EventEmitter<TestItemTreeItem>();
 	public readonly onFirstFailure: vs.Event<TestItemTreeItem> = this.onFirstFailureEmitter.event;
 	private currentSelectedNode: TestItemTreeItem | undefined;
+	private currentTestTerminal: [vs.Terminal, vs.EventEmitter<string>] | undefined;
 
 	// Set this flag we know when a new run starts so we can show the tree; however
 	// we can't show it until we render a node (we can only call reveal on a node) so
@@ -129,33 +130,50 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}));
 	}
 
-	private writeTestOutput(treeNode: TestTreeItem, forceShow = false) {
-		const output = getChannel("Test Output");
-		output.clear();
-		if (forceShow)
-			output.show(true);
-
-		output.appendLine(`${treeNode.test.name}:\n`);
-
-		if (!treeNode.outputEvents.length)
-			output.appendLine(`(no output)`);
-
-		for (const o of treeNode.outputEvents) {
-			this.appendTestOutput(o, output);
+	private async writeTestOutput(treeNode: TestTreeItem, forceShow = false) {
+		if (this.currentTestTerminal) {
+			this.currentTestTerminal[0].dispose();
+			this.currentTestTerminal = undefined;
 		}
+
+		const emitter = new vs.EventEmitter<string>();
+		const pseudoterminal: vs.Pseudoterminal = {
+			close: () => { },
+			onDidWrite: emitter.event,
+			open: () => {
+				emitter.fire(`Output for ${treeNode.fullName}\r\n`);
+
+				if (!treeNode.outputEvents.length)
+					emitter.fire(`(no output)\r\n`);
+
+				for (const o of treeNode.outputEvents) {
+					this.appendTestOutput(o, emitter);
+				}
+			},
+		};
+		this.currentTestTerminal = [
+			vs.window.createTerminal({ name: "Test Output", pty: pseudoterminal }),
+			emitter,
+		];
+		this.currentTestTerminal[0].show();
 	}
 
-	private appendTestOutput(event: PrintNotification | ErrorNotification, output = getChannel("Test Output")) {
+	private appendTestOutput(event: PrintNotification | ErrorNotification, emitter = this.currentTestTerminal ? this.currentTestTerminal[1] : undefined) {
+		if (!emitter)
+			return;
+		let output: string | undefined;
 		if (event.type === "error") {
 			event = event as ErrorNotification;
-			output.appendLine(`ERROR: ${event.error}`);
-			output.appendLine(event.stackTrace);
+			output = brightRed(`${event.error}\n${event.stackTrace}\n`);
 		} else if (event.type === "print") {
 			event = event as PrintNotification;
-			output.appendLine(event.message);
+			output = `${event.message}\n`;
 		} else {
-			output.appendLine(`Unknown message type '${event.type}'.`);
+			output = yellow(`Unknown message type '${event.type}'.\n`);
 		}
+
+		if (output)
+			emitter.fire(output.replace(/\n/g, "\r\n"));
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent) {
