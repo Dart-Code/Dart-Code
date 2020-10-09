@@ -439,10 +439,9 @@ export async function uncommentTestFile(): Promise<void> {
 	await setTestContent(currentDoc().getText().replace(/\n\/\/ /mg, "\n"));
 }
 
-export function getExpectedResults() {
+export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
 	const start = positionOf("// == EXPECTED RESULTS ==^");
 	const end = positionOf("^// == /EXPECTED RESULTS ==");
-	const doc = vs.window.activeTextEditor!.document;
 	const results = doc.getText(new vs.Range(start, end));
 	return results.split("\n")
 		.map((l) => l.trim())
@@ -1037,7 +1036,7 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 	return item.label || path.basename(fsPath(item.resourceUri!));
 }
 
-export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, provider: vs.TreeDataProvider<vs.TreeItem>, buffer: string[] = [], indent = 0): Promise<string[]> {
+export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, provider: vs.TreeDataProvider<vs.TreeItem>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
 	const parentNode = parent instanceof vs.TreeItem ? parent : undefined;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
 
@@ -1063,9 +1062,15 @@ export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, pro
 			: "dark" in (item.iconPath as any)
 				? (item.iconPath as any).dark
 				: undefined;
+		const isStale = iconUri instanceof vs.Uri && iconUri.toString().includes("_stale");
+		const isFailure = iconUri instanceof vs.Uri && iconUri.toString().includes("fail");
 		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("_stale", "").replace("-dark", "") : "<unknown icon>";
-		buffer.push(`${" ".repeat(indent * 4)}${expectedLabel}${expectedDesc} (${iconFile})`);
-		await makeTextTree(item, provider, buffer, indent + 1);
+		let includeNode = true;
+		if ((isStale && onlyActive) || (!isFailure && onlyFailures))
+			includeNode = false;
+		if (includeNode)
+			buffer.push(`${" ".repeat(indent * 4)}${expectedLabel}${expectedDesc} (${iconFile})`);
+		await makeTextTree(item, provider, { buffer, indent: indent + 1, onlyFailures, onlyActive });
 	}
 	return buffer;
 }
