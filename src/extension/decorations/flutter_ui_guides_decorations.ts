@@ -113,9 +113,9 @@ export abstract class FlutterUiGuideDecorations implements vs.Disposable {
 					before: {
 						color,
 						contentText: tabAdjustedDecorationString.join(""),
+						fontStyle: "normal",
 						margin: "0 3px 0 -3px",
 						width: "0",
-						fontStyle: "normal",
 					},
 				},
 			});
