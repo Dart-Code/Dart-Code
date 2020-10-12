@@ -38,27 +38,33 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		TestResultsProvider.isNewTestRun = true;
 		TestResultsProvider.nextFailureIsFirst = true;
 
-		// When running the whole suite, we flag all tests as being potentially deleted
-		// and then any tests that aren't run are removed from the tree. This is to ensure
-		// if a test is renamed, we don't keep the old version of it in the test tree forever
-		// since we don't have the necessary information to know the test was renamed.
-		if (isRunningWholeSuite && suitePath && path.isAbsolute(suitePath)) {
+		if (suitePath && path.isAbsolute(suitePath)) {
 			const suite = suites[fsPath(suitePath)];
 			if (suite) {
-				suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
-				suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
+
+				// Mark all test for this suite as "stale" which will make them faded, so that results from
+				// the "new" run are more obvious in the tree.
+				suite.getAllGroups().forEach((g) => g.isStale = true);
+				suite.getAllTests().forEach((t) => t.isStale = true);
+
+				// When running the whole suite, we flag all tests as being potentially deleted
+				// and then any tests that aren't run are removed from the tree. This is to ensure
+				// if a test is renamed, we don't keep the old version of it in the test tree forever
+				// since we don't have the necessary information to know the test was renamed.
+				if (isRunningWholeSuite) {
+					if (suite) {
+						suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
+						suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
+					}
+				}
 			}
 		}
 
-		// Mark all tests everywhere as "stale" which will make them faded, so that results from
-		// the "new" run are more obvious in the tree.
-		// All increase the currentRunNumber to ensure we know all results are from
+		// Also increase the currentRunNumber to ensure we know all results are from
 		// the newest run.
 		Object.keys(suites).forEach((p) => {
 			const suite = suites[fsPath(p)];
 			suite.currentRunNumber++;
-			suite.getAllGroups().forEach((g) => g.isStale = true);
-			suite.getAllTests().forEach((t) => t.isStale = true);
 		});
 	}
 
