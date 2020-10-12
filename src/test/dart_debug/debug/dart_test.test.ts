@@ -7,7 +7,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import { makeRegexForTests } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, delay, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
+import { activate, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -275,7 +275,6 @@ describe("dart test debugger", () => {
 
 		// Now re-run only failed tests.
 		await vs.commands.executeCommand("dart.runAllFailedTestsWithoutDebugging");
-		await delay(5000); // TODO: Find a way for this to wait for the tree to update reliably.
 
 		for (const file of testFiles) {
 			await openFile(file);

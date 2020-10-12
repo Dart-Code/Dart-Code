@@ -102,7 +102,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}));
 	}
 
-	private runAllFailedTests() {
+	private async runAllFailedTests(): Promise<void> {
 		const topLevelNodes = this.getChildren() || [];
 		const suitesWithFailures = topLevelNodes
 			.filter((node) => node instanceof SuiteTreeItem && node.hasFailures)
@@ -111,7 +111,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			return;
 
 		const percentProgressPerTest = 99 / suitesWithFailures.map((swf) => swf[1].length).reduce((a, b) => a + b);
-		vs.window.withProgress(
+		await vs.window.withProgress(
 			{
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
