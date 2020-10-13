@@ -6,7 +6,7 @@ import { LogCategory } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { activate, logger, sb, waitForResult } from "../../helpers";
 
-describe("capture logs command", () => {
+describe.only("capture logs command", () => {
 	beforeEach("activate", () => activate());
 
 	async function configureLog(...logCategories: LogCategory[]) {
@@ -18,7 +18,7 @@ describe("capture logs command", () => {
 			showQuickPick.resolves(undefined);
 
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
-		const loggingCommand = vs.commands.executeCommand("dart.startLogging") as Thenable<string>;
+		const loggingCommand = vs.commands.executeCommand("dart.startLoggingViaPicker") as Thenable<string>;
 
 		// Wait until the command has called for the filename and options (otherwise we'll send our log before
 		// the logger is set up because the above call is async).

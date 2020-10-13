@@ -7,7 +7,7 @@ import { PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
 import { createFolderForFile } from "../utils";
-import { getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
+import { analysisServerLogCategories, extensionsLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;
 
@@ -17,17 +17,15 @@ export class LoggingCommands implements vs.Disposable {
 
 	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
 		this.disposables.push(
-			vs.commands.registerCommand("dart.startLogging", this.startLogging, this),
+			vs.commands.registerCommand("dart.startLoggingViaPicker", this.startLoggingViaPicker, this),
+			vs.commands.registerCommand("dart.startLoggingAnalysisServer", this.startLoggingAnalysisServer, this),
+			vs.commands.registerCommand("dart.startLoggingExtensionOnly", this.startLoggingExtensionOnly, this),
 			vs.commands.registerCommand("dart.openExtensionLog", this.openExtensionLog, this),
 			vs.commands.registerCommand("dart.stopLogging", this.stopLogging, this),
 		);
 	}
 
-	private async startLogging(): Promise<string | undefined> {
-		const logFilename = path.join(forceWindowsDriveLetterToUppercase(this.extensionLogPath), this.generateFilename());
-		const logUri = vs.Uri.file(logFilename);
-		createFolderForFile(logFilename);
-
+	private async startLoggingViaPicker(): Promise<string | undefined> {
 		const selectedLogCategories = await vs.window.showQuickPick(
 			Object.keys(userSelectableLogCategories).map((k) => ({
 				label: k,
@@ -42,7 +40,26 @@ export class LoggingCommands implements vs.Disposable {
 		if (!selectedLogCategories || !selectedLogCategories.length)
 			return;
 
-		const allLoggedCategories = [LogCategory.General].concat(selectedLogCategories.map((s) => s.logCategory));
+		this.startLogging(selectedLogCategories.map((s) => s.logCategory));
+	}
+
+	private async startLoggingAnalysisServer(): Promise<string | undefined> {
+		return this.startLogging(analysisServerLogCategories);
+	}
+
+	private async startLoggingExtensionOnly(): Promise<string | undefined> {
+		return this.startLogging(extensionsLogCategories);
+	}
+
+	private async startLogging(categoriesToLog: LogCategory[]): Promise<string | undefined> {
+		if (!categoriesToLog || !categoriesToLog.length)
+			return;
+
+		const logFilename = path.join(forceWindowsDriveLetterToUppercase(this.extensionLogPath), this.generateFilename());
+		const logUri = vs.Uri.file(logFilename);
+		createFolderForFile(logFilename);
+
+		const allLoggedCategories = [LogCategory.General].concat(categoriesToLog);
 
 		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), config.maxLogLineLength, allLoggedCategories);
 		isLogging = true;
