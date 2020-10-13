@@ -34,5 +34,7 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 			},
 		);
 		logger.info(`Flutter initialized!`);
+	} else {
+		logger.info(`User cancelled Flutter initialization`);
 	}
 }

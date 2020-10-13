@@ -27,7 +27,7 @@ describe("extension", () => {
 	it("initializes the snap and locates the SDK", async () => {
 		// Automatically approve the initialization.
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-		const initializeSnapMessagePrompt = showInformationMessage.withArgs(initializeSnapPrompt, sinon.match.any).resolves(yesAction);
+		const initializeSnapMessagePrompt = showInformationMessage.withArgs(initializeSnapPrompt, sinon.match.any, sinon.match.any).resolves(yesAction);
 
 		await activate();
 
