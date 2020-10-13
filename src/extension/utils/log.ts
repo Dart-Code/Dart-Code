@@ -22,6 +22,20 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Web Daemon": LogCategory.WebDaemon,
 };
 
+export const analysisServerLogCategories = [
+	LogCategory.Analyzer,
+	LogCategory.CommandProcesses,
+];
+
+export const extensionsLogCategories = [
+	LogCategory.CommandProcesses,
+	LogCategory.DevTools,
+	LogCategory.FlutterDaemon,
+];
+
+export const debuggingLogCategories = Object.values(userSelectableLogCategories)
+	.filter((c) => c !== LogCategory.Analyzer);
+
 const logHeader: string[] = [];
 export function clearLogHeader() {
 	logHeader.length = 0;
