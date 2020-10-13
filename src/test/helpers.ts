@@ -1050,7 +1050,7 @@ export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, pro
 		// fabricate one here that can be compared in the test. Note: For simplity we always use
 		// forward slashes in these names, since the comparison is against hard-coded comments
 		// in the file that can only be on way.
-		const expectedLabel = item.contextValue === DART_TEST_SUITE_NODE_CONTEXT
+		const expectedLabel = item.contextValue?.startsWith(DART_TEST_SUITE_NODE_CONTEXT)
 			? path.relative(
 				fsPath(vs.workspace.getWorkspaceFolder(item.resourceUri!)!.uri),
 				fsPath(item.resourceUri!),

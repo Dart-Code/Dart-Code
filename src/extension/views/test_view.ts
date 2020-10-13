@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
+import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { ErrorNotification, Group, GroupNotification, Notification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
@@ -692,6 +692,13 @@ export class SuiteTreeItem extends TestItemTreeItem {
 			...this.groups.filter((g) => !g.isPhantomGroup && !g.hidden),
 			...this.tests.filter((t) => !t.hidden),
 		];
+	}
+
+	set status(status: TestStatus) {
+		super.status = status;
+		this.contextValue = this.hasFailures
+			? DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT
+			: DART_TEST_SUITE_NODE_CONTEXT;
 	}
 }
 
