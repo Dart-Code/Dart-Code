@@ -7,7 +7,7 @@ import { PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
 import { createFolderForFile } from "../utils";
-import { analysisServerLogCategories, extensionsLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
+import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;
 
@@ -17,7 +17,8 @@ export class LoggingCommands implements vs.Disposable {
 
 	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
 		this.disposables.push(
-			vs.commands.registerCommand("dart.startLoggingViaPicker", this.startLoggingViaPicker, this),
+			vs.commands.registerCommand("dart.startLogging", this.startLoggingViaPicker, this),
+			vs.commands.registerCommand("dart.startLoggingDebugging", this.startLoggingDebugging, this),
 			vs.commands.registerCommand("dart.startLoggingAnalysisServer", this.startLoggingAnalysisServer, this),
 			vs.commands.registerCommand("dart.startLoggingExtensionOnly", this.startLoggingExtensionOnly, this),
 			vs.commands.registerCommand("dart.openExtensionLog", this.openExtensionLog, this),
@@ -40,7 +41,11 @@ export class LoggingCommands implements vs.Disposable {
 		if (!selectedLogCategories || !selectedLogCategories.length)
 			return;
 
-		this.startLogging(selectedLogCategories.map((s) => s.logCategory));
+		return this.startLogging(selectedLogCategories.map((s) => s.logCategory));
+	}
+
+	private async startLoggingDebugging(): Promise<string | undefined> {
+		return this.startLogging(debuggingLogCategories);
 	}
 
 	private async startLoggingAnalysisServer(): Promise<string | undefined> {
@@ -52,9 +57,6 @@ export class LoggingCommands implements vs.Disposable {
 	}
 
 	private async startLogging(categoriesToLog: LogCategory[]): Promise<string | undefined> {
-		if (!categoriesToLog || !categoriesToLog.length)
-			return;
-
 		const logFilename = path.join(forceWindowsDriveLetterToUppercase(this.extensionLogPath), this.generateFilename());
 		const logUri = vs.Uri.file(logFilename);
 		createFolderForFile(logFilename);
