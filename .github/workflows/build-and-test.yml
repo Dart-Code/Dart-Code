@@ -16,17 +16,17 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         node-version: [10]
-        build-version: [stable]
+        build-version: [stable, dev]
         bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc]
         include:
           - build-version: stable
             dart-version: stable
             flutter-version: stable
             code-version: stable
-        #   - build-version: dev
-        #     dart-version: dev
-        #     flutter-version: dev
-        #     code-version: insiders
+          - build-version: dev
+            dart-version: dev
+            flutter-version: dev
+            code-version: insiders
           - os: ubuntu-latest
             bot: flutter_snap
 
