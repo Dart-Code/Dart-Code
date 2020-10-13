@@ -24,7 +24,10 @@ describe("extension", () => {
 			this.skip();
 	});
 
-	it("initializes the snap and locates the SDK", async () => {
+	// TODO: Unskip this when this issue is fixed (or determined to be WAI and
+	// we need to change).
+	// https://github.com/microsoft/vscode/issues/108578
+	it.skip("initializes the snap and locates the SDK", async () => {
 		// Automatically approve the initialization.
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 		const initializeSnapMessagePrompt = showInformationMessage.withArgs(initializeSnapPrompt, sinon.match.any, sinon.match.any).resolves(yesAction);
