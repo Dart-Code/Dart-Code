@@ -700,6 +700,10 @@ export class SuiteTreeItem extends TestItemTreeItem {
 			? DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT
 			: DART_TEST_SUITE_NODE_CONTEXT;
 	}
+
+	get status(): TestStatus {
+		return super.status;
+	}
 }
 
 class GroupTreeItem extends TestItemTreeItem {
