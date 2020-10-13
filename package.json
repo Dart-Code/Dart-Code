@@ -240,13 +240,18 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.startLoggingViaPicker",
+				"command": "dart.startLogging",
 				"title": "Capture Logs",
 				"category": "Dart"
 			},
 			{
 				"command": "dart.startLoggingAnalysisServer",
 				"title": "Capture Analysis Server Logs",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.startLoggingDebugging",
+				"title": "Capture Debugging Logs",
 				"category": "Dart"
 			},
 			{
@@ -561,11 +566,15 @@
 					"command": "dart.createProject"
 				},
 				{
-					"command": "dart.startLoggingViaPicker",
+					"command": "dart.startLogging",
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
 					"command": "dart.startLoggingAnalysisServer",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.startLoggingDebugging",
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{

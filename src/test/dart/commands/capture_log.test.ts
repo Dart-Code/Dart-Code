@@ -6,7 +6,7 @@ import { LogCategory } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { activate, logger, sb, waitForResult } from "../../helpers";
 
-describe.only("capture logs command", () => {
+describe("capture logs command", () => {
 	beforeEach("activate", () => activate());
 
 	async function configureLog(...logCategories: LogCategory[]) {
@@ -18,11 +18,25 @@ describe.only("capture logs command", () => {
 			showQuickPick.resolves(undefined);
 
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
-		const loggingCommand = vs.commands.executeCommand("dart.startLoggingViaPicker") as Thenable<string>;
+		const loggingCommand = vs.commands.executeCommand("dart.startLogging") as Thenable<string>;
 
 		// Wait until the command has called for the filename and options (otherwise we'll send our log before
 		// the logger is set up because the above call is async).
 		await waitForResult(() => showQuickPick.called);
+
+		return {
+			loggingCommand,
+			stopLogging: async () => {
+				await vs.commands.executeCommand("dart.stopLogging");
+				// Wait for the logging command to finish.
+				return loggingCommand;
+			},
+		};
+	}
+
+	async function logWithCommand(command: string) {
+		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
+		const loggingCommand = vs.commands.executeCommand(command) as Thenable<string>;
 
 		return {
 			loggingCommand,
@@ -69,7 +83,7 @@ describe.only("capture logs command", () => {
 
 		logger.info("This is a test"); // Should be logged
 		logger.info("This is an analyzer event", LogCategory.Analyzer); // Should be logged
-		logger.info("This is an flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
+		logger.info("This is a flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
 
 		const logFilename = await log.stopLogging();
 
@@ -77,6 +91,55 @@ describe.only("capture logs command", () => {
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
 		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
 		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), `Did not find 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon event") === -1), `Found 'This is a flutter daemon event' in ${platformEol}${lines.join(platformEol)}`);
+	});
+
+	it("only logs analyzer when using Analyzer logging", async () => {
+		const log = await logWithCommand("dart.startLoggingAnalysisServer");
+
+		logger.info("This is a test"); // Should be logged
+		logger.info("This is an analyzer event", LogCategory.Analyzer); // Should be logged
+		logger.info("This is a flutter daemon event", LogCategory.FlutterDaemon); // Should not be logged
+
+		const logFilename = await log.stopLogging();
+
+		assert.ok(fs.existsSync(logFilename));
+		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
+		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), `Did not find 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon event") === -1), `Found 'This is a flutter daemon event' in ${platformEol}${lines.join(platformEol)}`);
+	});
+
+	it("only logs debugging when using Debugging logging", async () => {
+		const log = await logWithCommand("dart.startLoggingDebugging");
+
+		logger.info("This is a test"); // Should be logged
+		logger.info("This is a vm service event", LogCategory.VmService); // Should be logged
+		logger.info("This is an analyzer event", LogCategory.Analyzer); // Should not be logged
+
+		const logFilename = await log.stopLogging();
+
+		assert.ok(fs.existsSync(logFilename));
+		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
+		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is a vm service event") !== -1), `Did not find 'This is a vm service event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") === -1), `Found 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
+	});
+
+	it("only logs extension when using ExtensionOnly logging", async () => {
+		const log = await logWithCommand("dart.startLoggingExtensionOnly");
+
+		logger.info("This is a test"); // Should be logged
+		logger.info("This is a devtools event", LogCategory.DevTools); // Should be logged
+		logger.info("This is an analyzer event", LogCategory.Analyzer); // Should not be logged
+
+		const logFilename = await log.stopLogging();
+
+		assert.ok(fs.existsSync(logFilename));
+		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
+		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is a devtools event") !== -1), `Did not find 'This is a devtools event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") === -1), `Found 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 
 	it("always logs WARN and ERROR log to General", async () => {
