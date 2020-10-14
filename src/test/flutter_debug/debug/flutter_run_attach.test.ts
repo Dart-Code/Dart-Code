@@ -35,12 +35,21 @@ describe("flutter run debugger (attach)", () => {
 
 	async function attachDebugger(vmServiceUri?: string): Promise<vs.DebugConfiguration> {
 		const config = await getAttachConfiguration({
-			// Use pid-file as a convenient way of getting the test name into the command line args
-			// for easier debugging of processes that hang around on CI (we dump the process command
-			// line at the end of the test run).
-			args: extApi.flutterCapabilities.supportsPidFileForMachine
-				? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
-				: [],
+			args: [
+				// Disable DDS when connecting, because we launch processes with `flutter run` which
+				// connects a VM Service client, which will prevent DDS from connecting. This should not
+				// be required if the app was started as a native app (as would usually be the case, outside
+				// of tests).
+				"--disable-dds",
+			]
+				// Use pid-file as a convenient way of getting the test name into the command line args
+				// for easier debugging of processes that hang around on CI (we dump the process command
+				// line at the end of the test run).
+				.concat(
+					extApi.flutterCapabilities.supportsPidFileForMachine
+						? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
+						: []
+				),
 			deviceId: flutterTestDeviceId,
 			vmServiceUri,
 		});
