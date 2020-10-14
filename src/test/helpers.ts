@@ -194,7 +194,7 @@ function setupTestLogging(): boolean {
 		// For debugger tests, the analyzer log is just noise, so we filter it out.
 		const excludeLogCategories = process.env.BOT && process.env.BOT.indexOf("debug") !== -1
 			? [LogCategory.Analyzer]
-			: undefined;
+			: [];
 		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000, excludeLogCategories, true);
 
 		deferUntilLast(async (testResult?: "passed" | "failed") => {

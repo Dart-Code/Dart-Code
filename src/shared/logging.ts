@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { platformEol } from "./constants";
 import { LogCategory, LogSeverity } from "./enums";
 import { IAmDisposable, Logger, LogMessage, SomeError, SpawnedProcess } from "./interfaces";
 import { errorString } from "./utils";
@@ -104,14 +105,18 @@ export function logToConsole(logger: EmittingLogger): void {
 	});
 }
 
-export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories?: LogCategory[], excludeLogCategories = false): ({ dispose: () => Promise<void> | void }) {
+export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories: LogCategory[], excludeLogCategories = false): ({ dispose: () => Promise<void> | void }) {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = (detailed = false) => detailed ? `[${(new Date()).toTimeString()}] ` : `[${(new Date()).toLocaleTimeString()}] `;
 	let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
 	if (header)
 		logStream.write(header);
-	logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file started${os.EOL}`);
+
+	const categoryNames = logCategories.map((c) => LogCategory[c]);
+	logStream.write(`Logging Categories:${platformEol}    ${categoryNames.join(", ")}${platformEol}${platformEol}`);
+
+	logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file started${platformEol}`);
 	let fileLogger: IAmDisposable | undefined = logger.onLog((e) => {
 		if (!logStream)
 			return;
@@ -120,12 +125,9 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		// - We don't have a category filter; or
 		// - The category filter includes this category; or
 		// - The log is WARN/ERROR (they get logged everywhere).
-		const shouldLog = !logCategories
-			|| (
-				excludeLogCategories
-					? logCategories.indexOf(e.category) === -1
-					: logCategories.indexOf(e.category) !== -1
-			)
+		const shouldLog = (excludeLogCategories
+			? logCategories.indexOf(e.category) === -1
+			: logCategories.indexOf(e.category) !== -1)
 			|| e.severity === LogSeverity.Warn
 			|| e.severity === LogSeverity.Error;
 		if (!shouldLog)
