@@ -26,8 +26,6 @@ import { isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTest
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 import { TestResultsProvider } from "../views/test_view";
 
-const isCI = !!process.env.CI;
-
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
