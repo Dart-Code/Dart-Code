@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { parseStackFrame } from "../../../shared/utils/stack_trace";
+import { maxStackFrameMessageLength, parseStackFrame } from "../../../shared/utils/stack_trace";
 
 const texts = [
 	"",
@@ -44,15 +44,27 @@ function getValidStackFrames(prefix: string, uri: string, withLineCol: boolean):
 		];
 }
 
-describe("stack trace", () => {
-	it("parses large strings quickly", () => {
-		const largeString = "A".repeat(50000);
+describe("stack trace parser", () => {
+	it(`parses strings over ${maxStackFrameMessageLength} characters quickly`, () => {
+		// Strings over 1000 characters skip the stack parsing regex.
+		const largeString = "A".repeat(maxStackFrameMessageLength + 1);
 		const startTime = Date.now();
-		const result = parseStackFrame(largeString);
+		parseStackFrame(largeString);
 		const endTime = Date.now();
-		const timeTakenSeconds = (endTime - startTime) / 1000;
-		console.log(`Took ${timeTakenSeconds}s to parse ${largeString.length} character string`);
-		assert.ok(timeTakenSeconds < 10);
+		const timeTakenMilliseconds = endTime - startTime;
+		console.log(`Took ${timeTakenMilliseconds}ms to parse ${largeString.length} character string`);
+		assert.ok(timeTakenMilliseconds < 50);
+	});
+
+	it(`parses strings of ${maxStackFrameMessageLength} characters quickly`, () => {
+		// Strings under 1000 characters are run through the regex.
+		const largeString = "A".repeat(maxStackFrameMessageLength - 1);
+		const startTime = Date.now();
+		parseStackFrame(largeString);
+		const endTime = Date.now();
+		const timeTakenMilliseconds = endTime - startTime;
+		console.log(`Took ${timeTakenMilliseconds}ms to parse ${largeString.length} character string`);
+		assert.ok(timeTakenMilliseconds < 50);
 	});
 
 	describe("parses", () => {
