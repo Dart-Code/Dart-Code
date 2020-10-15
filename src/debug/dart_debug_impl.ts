@@ -16,6 +16,7 @@ import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt } from "../shared/utils/fs";
+import { parseStackFrame } from "../shared/utils/stack_trace";
 import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -25,12 +26,8 @@ const maxValuesToCallToString = 100;
 // Prefix that appears at the start of stack frame names that are unoptimized
 // which we'd prefer not to show to the user.
 const unoptimizedPrefix = "[Unoptimized] ";
-const pathPartPattern = `(dart:\\S*|\\S*\\.dart)`;
-const optionalLineColPartPattern = `(?:(\\d+):(\\d+))?`;
-const stackFrameWithUriPattern = new RegExp(`(.*#\\d+.*)\\(${pathPartPattern}:${optionalLineColPartPattern}\\)\\s*$`, "m");
-const webStackFrameWithUriPattern = new RegExp(`${pathPartPattern} ${optionalLineColPartPattern}\\s*(\\S+)\\s*$`, "m");
-const messageWithUriPattern = new RegExp(`(.*?)${pathPartPattern}:${optionalLineColPartPattern}\\s*$`, "m");
 const trailingSemicolonPattern = new RegExp(`;\\s*$`, "m");
+const logDapTraffic = false;
 
 // TODO: supportsSetVariable
 // TODO: class variables?
@@ -1481,7 +1478,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private withTimeout<T>(promise: Promise<T>, milliseconds: number = 1000): Promise<T> {
+	private withTimeout<T>(promise: Promise<T>, milliseconds: number = 100000): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			// Set a timeout to reject the promise after the timeout period.
 			const timeoutTimer = setTimeout(() => {
@@ -2042,47 +2039,6 @@ export class DartDebugSession extends DebugSession {
 			setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs).unref();
 	}
 
-	private getStackFrameData(message: string): MessageWithUriData | undefined {
-		const match = message && stackFrameWithUriPattern.exec(message);
-		if (match) {
-			// TODO: Handle dart: uris (using source references)?
-			return {
-				col: match[4] !== undefined ? parseInt(match[4], 10) : undefined,
-				line: match[3] !== undefined ? parseInt(match[3], 10) : undefined,
-				prefix: match[1],
-				sourceUri: match[2],
-			};
-		}
-		return undefined;
-	}
-
-	private getWebStackFrameData(message: string): MessageWithUriData | undefined {
-		const match = message && webStackFrameWithUriPattern.exec(message);
-		if (match) {
-			// TODO: Handle dart: uris (using source references)?
-			return {
-				col: match[3] !== undefined ? parseInt(match[3], 10) : undefined,
-				line: match[2] !== undefined ? parseInt(match[2], 10) : undefined,
-				prefix: match[4],
-				sourceUri: match[1],
-			};
-		}
-		return undefined;
-	}
-
-	private getMessageWithUriData(message: string): MessageWithUriData | undefined {
-		const match = message && messageWithUriPattern.exec(message);
-		if (match) {
-			return {
-				col: match[4] !== undefined ? parseInt(match[4], 10) : undefined,
-				line: match[3] !== undefined ? parseInt(match[3], 10) : undefined,
-				prefix: match[1],
-				sourceUri: match[2],
-			};
-		}
-		return undefined;
-	}
-
 	/// Buffers text and sends to the user when a newline is recieved. This is to handle stderr/stdout which
 	/// might arrive in chunks but we need to process in lines.
 	///    [5:01:50 PM] [General] [Info] [stderr] tion: Oop
@@ -2111,7 +2067,7 @@ export class DartDebugSession extends DebugSession {
 	// provide them!
 	protected logToUser(message: string, category?: string, colorText = (s: string) => s) {
 		// Extract stack frames from the message so we can do nicer formatting of them.
-		const frame = this.getStackFrameData(message) || this.getWebStackFrameData(message) || this.getMessageWithUriData(message);
+		const frame = parseStackFrame(message);
 
 		// If we get a multi-line message that contains an error/stack trace, process each
 		// line individually, so we can attach location metadata to individual lines.
@@ -2134,13 +2090,13 @@ export class DartDebugSession extends DebugSession {
 			const source = canShowSource ? new Source(shortName, sourcePath, undefined, undefined, undefined) : undefined;
 
 			const suffix = frame.line !== undefined && frame.col !== undefined ? `:${frame.line}:${frame.col})` : "";
-			let text = `${frame.prefix} (${frame.sourceUri}${suffix})`;
+			let text = `${frame.text} (${frame.sourceUri}${suffix})`;
 			if (source) {
 				output.body.source = source;
 				output.body.line = frame.line;
 				output.body.column = frame.col;
 				// Replace the output to only the text part to avoid the duplicated uri.
-				text = frame.prefix;
+				text = frame.text;
 			}
 
 			// Colour based on whether it's framework code or not.
@@ -2163,13 +2119,6 @@ export interface InstanceWithEvaluateName extends VMInstanceRef {
 }
 
 export type VmExceptionMode = "None" | "Unhandled" | "All";
-
-interface MessageWithUriData {
-	col: number | undefined;
-	line: number | undefined;
-	prefix: string;
-	sourceUri: string;
-}
 
 class RemoteEditorTerminalProcess {
 	public killed = false;
