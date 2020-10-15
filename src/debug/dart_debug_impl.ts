@@ -2089,8 +2089,7 @@ export class DartDebugSession extends DebugSession {
 			const shortName = this.formatUriForShortDisplay(frame.sourceUri);
 			const source = canShowSource ? new Source(shortName, sourcePath, undefined, undefined, undefined) : undefined;
 
-			const suffix = frame.line !== undefined && frame.col !== undefined ? `:${frame.line}:${frame.col})` : "";
-			let text = `${frame.text} (${frame.sourceUri}${suffix})`;
+			let text = message.trim();
 			if (source) {
 				output.body.source = source;
 				output.body.line = frame.line || 1;

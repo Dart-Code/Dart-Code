@@ -16,6 +16,7 @@ const texts = [
 ];
 const uris = [
 	"dart:async",
+	"package:test_api",
 	"dart:isolate-patch/isolate_patch.dart",
 	"package:foo/foo.dart",
 	"package:flutter/src/scheduler/binding.dart",
@@ -67,17 +68,23 @@ describe("stack trace parser", () => {
 		assert.ok(timeTakenMilliseconds < 50);
 	});
 
+	it(`retains URIs in the middle of lines`, () => {
+		const line = "Launching lib/foo.dart on Chrome device";
+		const result = parseStackFrame(line);
+		assert.equal(result?.text, line);
+	});
+
 	describe("parses", () => {
 		for (const text of texts) {
 			for (const uri of uris) {
 				for (const withLineCol of [true, false]) {
 					const validStackFrames = getValidStackFrames(text, uri, withLineCol);
 					for (const validStackFrame of validStackFrames) {
-						const result = parseStackFrame(validStackFrame);
 						it(validStackFrame, () => {
 							const result = parseStackFrame(validStackFrame);
 							assert.ok(result);
-							assert.equal(result.text, text.trim());
+							const expectedText = withLineCol && text.trim() ? text.trim() : validStackFrame.trim();
+							assert.equal(result.text, expectedText);
 							assert.equal(result.sourceUri, uri);
 							assert.equal(result.line, withLineCol ? line : undefined);
 							assert.equal(result.col, withLineCol ? col : undefined);

@@ -1,5 +1,5 @@
 export const maxStackFrameMessageLength = 1000;
-const stackFramePattern = new RegExp(`\\(*(dart:[\\w\\-]+|\\S*\\.dart)(?:[: ](\\d+):(\\d+))?\\)*(\\s+.*)?$`, "m");
+const stackFramePattern = new RegExp(`\\(*((?:dart|package):[\\w\\-]+|\\S*\\.dart)(?:[: ](\\d+):(\\d+))?\\)*(\\s+.*)?$`, "m");
 
 export function parseStackFrame(message: string): MessageWithUriData | undefined {
 	// Messages over 1000 characters are unlikely to be stack frames, so short-cut
@@ -9,13 +9,23 @@ export function parseStackFrame(message: string): MessageWithUriData | undefined
 
 	const match = stackFramePattern.exec(message);
 	if (match) {
-		const prefix = message.substr(0, match.index);
-		const suffix = match[4] || "";
+		const prefix = message.substr(0, match.index).trim();
+		const suffix = (match[4] || "").trim();
+		const col = match[3] !== undefined ? parseInt(match[3]) : undefined;
+		const line = match[2] !== undefined ? parseInt(match[2]) : undefined;
+
+		// Text should only be replaced if there was a line/col and only one of prefix/suffix, to avoid
+		// replacing user prints of filenames or text like "Launching lib/foo.dart on Chrome".
+		const textReplacement = (!!prefix !== !!suffix && line && col)
+			? (prefix || suffix)
+			: undefined;
+		const text = `${textReplacement || message}`.trim();
+
 		return {
-			col: match[3] !== undefined ? parseInt(match[3]) : undefined,
-			line: match[2] !== undefined ? parseInt(match[2]) : undefined,
+			col,
+			line,
 			sourceUri: match[1],
-			text: `${prefix} ${suffix}`.trim(),
+			text,
 		} as MessageWithUriData;
 	}
 	return undefined;
