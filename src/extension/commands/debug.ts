@@ -83,11 +83,7 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false)));
 
 		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
-			if (!debugSessions.length)
-				return;
-			const session = debugSessions.length === 1
-				? debugSessions[0]
-				: await this.promptForDebugSession();
+			const session = await this.getDebugSession();
 			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
 				await envUtils.openInBrowser(session.observatoryUri);
 				analytics.logDebuggerOpenObservatory();
@@ -96,11 +92,7 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
-			if (!debugSessions.length)
-				return;
-			const session = debugSessions.length === 1
-				? debugSessions[0]
-				: await this.promptForDebugSession();
+			const session = await this.getDebugSession();
 			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
 				await envUtils.openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
 				analytics.logDebuggerOpenTimeline();
@@ -117,14 +109,13 @@ export class DebugCommands {
 		});
 		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length) {
+				this.logger.warn("No active debug sessions found, so unable to launch DevTools");
 				vs.window.showInformationMessage("You must have an active debug session to start DevTools.");
 				return;
 			}
 			const session = options && options.debugSessionId
 				? debugSessions.find((s) => s.session.id === options.debugSessionId)
-				: debugSessions.length === 1
-					? debugSessions[0]
-					: await this.promptForDebugSession();
+				: await this.getDebugSession();
 			if (!session)
 				return; // User cancelled or specified session was gone
 
@@ -286,6 +277,31 @@ export class DebugCommands {
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
 		this.debugOptions.tooltip = `Controls whether to step into or stop at breakpoints in only files in this workspace or also those in SDK and/or external Pub packages`;
 		this.debugOptions.command = "_dart.toggleDebugOptions";
+	}
+
+	private async getDebugSession(): Promise<DartDebugSessionInformation | undefined> {
+		if (debugSessions.length === 0) {
+			this.logger.info("No debug session to use!");
+			return undefined;
+		} else if (debugSessions.length === 1) {
+			this.logger.info("Using only available debug session");
+			return debugSessions[0];
+		} else {
+			this.logger.info("Multiple debug sessions available, prompting user");
+			const selectedItem = await vs.window.showQuickPick(
+				debugSessions.map((s) => ({
+					description: s.session.workspaceFolder ? s.session.workspaceFolder.name : undefined,
+					detail: s.session.configuration.deviceName || `Started ${s.sessionStart.toLocaleTimeString()}`,
+					label: s.session.name,
+					session: s,
+				})),
+				{
+					placeHolder: "Which debug session?",
+				},
+			);
+
+			return selectedItem && selectedItem.session;
+		}
 	}
 
 	public handleBreakpointChange(e: vs.BreakpointsChangeEvent): void {
@@ -553,22 +569,6 @@ export class DebugCommands {
 				debugSdkLibraries,
 			});
 		});
-	}
-
-	private async promptForDebugSession(): Promise<DartDebugSessionInformation | undefined> {
-		const selectedItem = await vs.window.showQuickPick(
-			debugSessions.map((s) => ({
-				description: s.session.workspaceFolder ? s.session.workspaceFolder.name : undefined,
-				detail: s.session.configuration.deviceName || `Started ${s.sessionStart.toLocaleTimeString()}`,
-				label: s.session.name,
-				session: s,
-			})),
-			{
-				placeHolder: "Which debug session?",
-			},
-		);
-
-		return selectedItem && selectedItem.session;
 	}
 
 	private sendServiceSetting(args: ServiceExtensionArgs) {
