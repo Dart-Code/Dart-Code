@@ -2093,8 +2093,8 @@ export class DartDebugSession extends DebugSession {
 			let text = `${frame.text} (${frame.sourceUri}${suffix})`;
 			if (source) {
 				output.body.source = source;
-				output.body.line = frame.line;
-				output.body.column = frame.col;
+				output.body.line = frame.line || 1;
+				output.body.column = frame.col || 1;
 				// Replace the output to only the text part to avoid the duplicated uri.
 				text = frame.text;
 			}
