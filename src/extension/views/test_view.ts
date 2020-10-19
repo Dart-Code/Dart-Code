@@ -52,7 +52,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestNode) => {
-			this.writeTestOutput(treeNode, true);
+			this.writeTestOutput(treeNode);
 			if (!treeNode.test.url && !treeNode.test.root_url)
 				return;
 			return vs.commands.executeCommand(
@@ -146,7 +146,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		return names;
 	}
 
-	private async writeTestOutput(treeNode: TestNode, forceShow = false) {
+	private async writeTestOutput(treeNode: TestNode) {
 		if (this.currentTestTerminal) {
 			this.currentTestTerminal[0].dispose();
 			this.currentTestTerminal = undefined;
