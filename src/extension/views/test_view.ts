@@ -67,10 +67,22 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		if (analyzer) {
 			this.disposables.push(analyzer.fileTracker.onOutline.listen((outline) => {
-				const filePath = fsPath(vs.Uri.parse(outline.uri));
-				if (isTestFile(filePath)) {
+				const suitePath = fsPath(vs.Uri.parse(outline.uri));
+				if (isTestFile(suitePath)) {
 					// Force creation of a node.
-					const suite = this.locateOrCreateNode(filePath, -1);
+					const [suite, didCreate] = this.data.findOrCreateSuite(suitePath);
+
+					if (didCreate) {
+						// TODO: Create a heirarchical visitor to create groups/tests
+						// and add them similar to findOrCreateSuite above.
+						// const visitor = new LspTestOutlineVisitor(this.logger, suitePath);
+						// visitor.visit(outline.outline);
+
+						// for (const test of visitor.tests) {
+						// 	test.
+						// }
+					}
+
 					this.updateNode(suite.node);
 					this.updateNode();
 				}
@@ -338,17 +350,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}
 	}
 
-	private locateOrCreateNode(suitePath: string, id: number): SuiteData {
-		let suite = this.data.suites[suitePath];
-		if (!suite) {
-			suite = new SuiteData({ id, path: suitePath, platform: "" });
-			this.data.suites[suitePath] = suite;
-		}
-		return suite;
-	}
-
 	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
-		const suite = this.locateOrCreateNode(evt.suite.path, evt.suite.id);
+		const [suite, didCreate] = this.data.findOrCreateSuite(evt.suite.path, evt.suite.id);
 		suite.node.status = TestStatus.Waiting;
 		this.updateNode(suite.node);
 		this.updateNode();
