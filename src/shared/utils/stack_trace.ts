@@ -14,15 +14,21 @@ export function parseStackFrame(message: string): MessageWithUriData | undefined
 		const col = match[3] !== undefined ? parseInt(match[3]) : undefined;
 		const line = match[2] !== undefined ? parseInt(match[2]) : undefined;
 
+		// Only consider this a stack frame if this has either a prefix or suffix, otherwise
+		// it's likely just a printed filename or a line like "Launching lib/foo.dart on ...".
+		const isStackFrame = !!prefix !== !!suffix;
+
 		// Text should only be replaced if there was a line/col and only one of prefix/suffix, to avoid
 		// replacing user prints of filenames or text like "Launching lib/foo.dart on Chrome".
-		const textReplacement = (!!prefix !== !!suffix && line && col)
+		const textReplacement = (isStackFrame && line && col)
 			? (prefix || suffix)
 			: undefined;
 		const text = `${textReplacement || message}`.trim();
 
+
 		return {
 			col,
+			isStackFrame,
 			line,
 			sourceUri: match[1],
 			text,
@@ -33,6 +39,7 @@ export function parseStackFrame(message: string): MessageWithUriData | undefined
 
 export interface MessageWithUriData {
 	col: number | undefined;
+	isStackFrame: boolean;
 	line: number | undefined;
 	text: string;
 	sourceUri: string;

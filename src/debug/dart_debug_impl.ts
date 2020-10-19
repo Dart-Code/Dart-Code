@@ -17,7 +17,7 @@ import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt } from "../shared/utils/fs";
-import { parseStackFrame } from "../shared/utils/stack_trace";
+import { parseStackFrame as extractLocationInfo } from "../shared/utils/stack_trace";
 import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -2162,7 +2162,7 @@ export class DartDebugSession extends DebugSession {
 	// provide them!
 	protected logToUser(message: string, category?: string, colorText = (s: string) => s) {
 		// Extract stack frames from the message so we can do nicer formatting of them.
-		const frame = parseStackFrame(message);
+		const frame = extractLocationInfo(message);
 
 		// If we get a multi-line message that contains an error/stack trace, process each
 		// line individually, so we can attach location metadata to individual lines.
@@ -2197,7 +2197,10 @@ export class DartDebugSession extends DebugSession {
 			const isFramework = this.isSdkLibrary(frame.sourceUri)
 				|| (this.isExternalLibrary(frame.sourceUri) && (frame.sourceUri.startsWith("package:flutter/") || frame.sourceUri.startsWith("package:flutter_test/")));
 
-			const colouredText = isFramework ? applyColor(text, grey) : applyColor(text, grey2);
+			// Only colour stack-frame text.
+			const colouredText = !frame.isStackFrame
+				? text
+				: (isFramework ? applyColor(text, grey) : applyColor(text, grey2));
 			output.body.output = `${colouredText}\n`;
 		} else if (category === "stderr" && output.body.output.trim().startsWith("<async") && output.body.output.trim().endsWith(">")) {
 			output.body.output = `${applyColor(output.body.output.trimRight(), grey)}\n`;
