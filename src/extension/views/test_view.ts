@@ -541,7 +541,7 @@ class TreeItemBuilder {
 		treeItem.id = `suite_${node.suite.path}_${node.suiteRunNumber}_${node.suite.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description || true;
-		treeItem.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
+		treeItem.command = { command: "_dart.displaySuite", arguments: [node], title: "" };
 		return treeItem;
 	}
 
@@ -553,7 +553,7 @@ class TreeItemBuilder {
 		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_group_${node.group.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
-		treeItem.command = { command: "_dart.displayGroup", arguments: [this], title: "" };
+		treeItem.command = { command: "_dart.displayGroup", arguments: [node], title: "" };
 		return treeItem;
 	}
 
@@ -564,7 +564,7 @@ class TreeItemBuilder {
 		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_test_${node.test.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
-		treeItem.command = { command: "_dart.displayTest", arguments: [this], title: "" };
+		treeItem.command = { command: "_dart.displayTest", arguments: [node], title: "" };
 		return treeItem;
 	}
 }
