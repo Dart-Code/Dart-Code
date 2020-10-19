@@ -148,17 +148,18 @@ describe("dart test debugger", () => {
 			);
 		}
 
-		const topLevelNodes = await extApi.testTreeProvider.getChildren();
-		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 4);
+		const topLevelNodes = await extApi.testTreeProvider.getChildren() || [];
+		const topLevelTreeItems = await Promise.all(topLevelNodes?.map((child) => extApi.testTreeProvider.getTreeItem(child)));
+		assert.ok(topLevelTreeItems);
+		assert.equal(topLevelTreeItems.length, 4);
 
-		assert.equal(topLevelNodes[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
+		assert.equal(topLevelTreeItems[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
 		assert.equal(topLevelNodes[0].status, TestStatus.Failed);
-		assert.equal(topLevelNodes[1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
+		assert.equal(topLevelTreeItems[1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
 		assert.equal(topLevelNodes[1].status, TestStatus.Failed);
-		assert.equal(topLevelNodes[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
+		assert.equal(topLevelTreeItems[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
 		assert.equal(topLevelNodes[2].status, TestStatus.Passed);
-		assert.equal(topLevelNodes[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
+		assert.equal(topLevelTreeItems[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
 		assert.equal(topLevelNodes[3].status, TestStatus.Skipped);
 	});
 
