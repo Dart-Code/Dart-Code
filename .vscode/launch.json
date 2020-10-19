@@ -890,7 +890,9 @@
 		{
 			"name": "Flutter Bazel Tests + DAs",
 			"configurations": [
-				"Flutter Bazel Tests"
+				"Flutter Bazel Tests",
+				"Flutter Debug Server",
+				"Flutter Test Debug Server"
 			],
 			"presentation": {
 				"order": 3
