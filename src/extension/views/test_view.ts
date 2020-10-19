@@ -10,6 +10,8 @@ import { brightRed, yellow } from "../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
+import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { isTestFile } from "../utils";
 
 type SuiteWithFailures = [SuiteNode, string[]];
 
@@ -30,7 +32,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 	private owningDebugSessions: { [key: string]: vs.DebugSession | undefined } = {};
 
-	constructor(private readonly logger: Logger, private readonly data: TestTreeModel) {
+	constructor(private readonly logger: Logger, private readonly data: TestTreeModel, analyzer: LspAnalyzer | undefined) {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, undefined, true, false)));
@@ -62,6 +64,18 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				treeNode.test.root_column || treeNode.test.column,
 			);
 		}));
+
+		if (analyzer) {
+			this.disposables.push(analyzer.fileTracker.onOutline.listen((outline) => {
+				const filePath = fsPath(vs.Uri.parse(outline.uri));
+				if (isTestFile(filePath)) {
+					// Force creation of a node.
+					const suite = this.locateOrCreateNode(filePath, -1);
+					this.updateNode(suite.node);
+					this.updateNode();
+				}
+			}));
+		}
 	}
 
 	private async runAllFailedTests(): Promise<void> {
