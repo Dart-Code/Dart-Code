@@ -885,12 +885,12 @@
 				{
 					"command": "dart.openDevToolsInspector",
 					"group": "navigation@90",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterDebugModeDebugSession"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterDebugModeDebugSession && config.dart.showDevToolsDebugToolBarButtons"
 				},
 				{
 					"command": "dart.openDevToolsTimeline",
 					"group": "navigation@90",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterProfileModeDebugSession"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterProfileModeDebugSession && config.dart.showDevToolsDebugToolBarButtons"
 				}
 			],
 			"touchBar": [
@@ -1386,6 +1386,12 @@
 					],
 					"default": "chrome",
 					"description": "Whether to launch external DevTools windows using Chrome or the system default browser.",
+					"scope": "window"
+				},
+				"dart.showDevToolsDebugToolBarButtons": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to show DevTools buttons in the Debug ToolBar.",
 					"scope": "window"
 				},
 				"dart.doNotFormat": {
