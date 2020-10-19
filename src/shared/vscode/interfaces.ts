@@ -2,10 +2,11 @@ import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, Deb
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
-import { TestStatus, VersionStatus, VmService, VmServiceExtension } from "../enums";
+import { VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { CustomScript, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
+import { TreeNode } from "../test/tree_model";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
 
@@ -72,7 +73,7 @@ export interface InternalExtensionApi {
 		webSupportsEvaluation: boolean;
 		webSupportsHotReload: boolean;
 	};
-	flutterOutlineTreeProvider: TreeDataProvider<TreeItem> | undefined;
+	flutterOutlineTreeProvider: TreeDataProvider<TreeNode> | undefined;
 	getLogHeader: () => string;
 	initialAnalysis: Promise<void>;
 	logger: EmittingLogger;
@@ -92,13 +93,9 @@ export interface InternalExtensionApi {
 	workspaceContext: WorkspaceContext;
 }
 
-export interface TestResultsProvider extends TreeDataProvider<TestItemTreeItem> {
+export interface TestResultsProvider extends TreeDataProvider<TreeNode> {
 	handleDebugSessionEnd(session: DebugSession): void;
 	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
-}
-
-export interface TestItemTreeItem extends TreeItem {
-	status: TestStatus;
 }
 
 export interface DelayedCompletionItem extends LazyCompletionItem {

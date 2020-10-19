@@ -10,6 +10,7 @@ import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IFlutterDae
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
+import { TestTreeModel } from "../shared/test/tree_model";
 import { uniq } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -94,7 +95,7 @@ import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeToolSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
-import { TestItemTreeItem, TestResultsProvider } from "./views/test_view";
+import { TestResultsProvider } from "./views/test_view";
 
 const DART_MODE = { language: "dart", scheme: "file" };
 const HTML_MODE = { language: "html", scheme: "file" };
@@ -416,10 +417,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	util.logTime("All other stuff before debugger..");
 
+	const testTreeModel = new TestTreeModel();
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);
+	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, testTreeModel, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", new DartDebugAdapterDescriptorFactory(logger, context)));
 	// Also the providers for the initial configs.
@@ -526,7 +528,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(
 		packagesTreeView,
 	);
-	const testTreeProvider = new TestResultsProvider(logger);
+	const testTreeProvider = new TestResultsProvider(logger, testTreeModel);
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	context.subscriptions.push(
 		testTreeProvider,
@@ -540,7 +542,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 				testTreeView.reveal(node);
 		}),
 		testTreeView.onDidChangeSelection((e) => {
-			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] as TestItemTreeItem : undefined);
+			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
 		}),
 	);
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;

@@ -3,88 +3,44 @@ import * as vs from "vscode";
 import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
-import { ErrorNotification, Group, GroupNotification, Notification, PrintNotification, Suite, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
-import { disposeAll, flatMap, notUndefined, uniq } from "../../shared/utils";
-import { sortBy } from "../../shared/utils/array";
+import { GroupNode, SuiteData, SuiteNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/tree_model";
+import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../../shared/test_protocol";
+import { disposeAll } from "../../shared/utils";
 import { brightRed, yellow } from "../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 
-// TODO: Refactor all of this crazy logic out of test_view into its own class, so that consuming the test results is much
-// simpler and disconnected from the view!
-const suites: { [key: string]: SuiteData } = {};
+type SuiteWithFailures = [SuiteNode, string[]];
 
-type SuiteWithFailures = [SuiteTreeItem, string[]];
-
-export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<TestItemTreeItem> {
+export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<TreeNode> {
 	private disposables: vs.Disposable[] = [];
-	private onDidChangeTreeDataEmitter: vs.EventEmitter<TestItemTreeItem | undefined> = new vs.EventEmitter<TestItemTreeItem | undefined>();
-	public readonly onDidChangeTreeData: vs.Event<TestItemTreeItem | undefined> = this.onDidChangeTreeDataEmitter.event;
-	private onDidStartTestsEmitter: vs.EventEmitter<TestItemTreeItem> = new vs.EventEmitter<TestItemTreeItem>();
-	public readonly onDidStartTests: vs.Event<TestItemTreeItem> = this.onDidStartTestsEmitter.event;
-	private onFirstFailureEmitter: vs.EventEmitter<TestItemTreeItem> = new vs.EventEmitter<TestItemTreeItem>();
-	public readonly onFirstFailure: vs.Event<TestItemTreeItem> = this.onFirstFailureEmitter.event;
-	private currentSelectedNode: TestItemTreeItem | undefined;
+	private onDidChangeTreeDataEmitter: vs.EventEmitter<TreeNode | undefined> = new vs.EventEmitter<TreeNode | undefined>();
+	public readonly onDidChangeTreeData: vs.Event<TreeNode | undefined> = this.onDidChangeTreeDataEmitter.event;
+	private onDidStartTestsEmitter: vs.EventEmitter<TreeNode> = new vs.EventEmitter<TreeNode>();
+	public readonly onDidStartTests: vs.Event<TreeNode> = this.onDidStartTestsEmitter.event;
+	private onFirstFailureEmitter: vs.EventEmitter<TreeNode> = new vs.EventEmitter<TreeNode>();
+	public readonly onFirstFailure: vs.Event<TreeNode> = this.onFirstFailureEmitter.event;
+	private currentSelectedNode: TreeNode | undefined;
 	private currentTestTerminal: [vs.Terminal, vs.EventEmitter<string>] | undefined;
 
-	// Set this flag we know when a new run starts so we can show the tree; however
-	// we can't show it until we render a node (we can only call reveal on a node) so
-	// we need to delay this until the suite starts.
-	private static isNewTestRun = true;
-	private static nextFailureIsFirst = true;
-
-	public static flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
-		TestResultsProvider.isNewTestRun = true;
-		TestResultsProvider.nextFailureIsFirst = true;
-
-		if (suitePath && path.isAbsolute(suitePath)) {
-			const suite = suites[fsPath(suitePath)];
-			if (suite) {
-
-				// Mark all test for this suite as "stale" which will make them faded, so that results from
-				// the "new" run are more obvious in the tree.
-				suite.getAllGroups().forEach((g) => g.isStale = true);
-				suite.getAllTests().forEach((t) => t.isStale = true);
-
-				// When running the whole suite, we flag all tests as being potentially deleted
-				// and then any tests that aren't run are removed from the tree. This is to ensure
-				// if a test is renamed, we don't keep the old version of it in the test tree forever
-				// since we don't have the necessary information to know the test was renamed.
-				if (isRunningWholeSuite) {
-					if (suite) {
-						suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
-						suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
-					}
-				}
-			}
-		}
-
-		// Also increase the currentRunNumber to ensure we know all results are from
-		// the newest run.
-		Object.keys(suites).forEach((p) => {
-			const suite = suites[fsPath(p)];
-			suite.currentRunNumber++;
-		});
-	}
-
-	public setSelectedNodes(item: TestItemTreeItem | undefined): void {
+	public setSelectedNodes(item: TreeNode | undefined): void {
 		this.currentSelectedNode = item;
 	}
 
 	private owningDebugSessions: { [key: string]: vs.DebugSession | undefined } = {};
 
-	constructor(private readonly logger: Logger) {
+	constructor(private readonly logger: Logger, private readonly data: TestTreeModel) {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, undefined, true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, undefined, false, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, this.getFailedTestNames(treeNode), true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteTreeItem | GroupTreeItem | TestTreeItem) => this.runTests(treeNode, this.getFailedTestNames(treeNode), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, undefined, true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, undefined, false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getFailedTestNames(treeNode), true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getFailedTestNames(treeNode), false, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
-		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteTreeItem) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suite.path))));
-		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupTreeItem) => {
+		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteNode) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suiteData.path))));
+		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupNode) => {
 			if (!treeNode.group.url && !treeNode.group.root_url)
 				return;
 			return vs.commands.executeCommand(
@@ -95,7 +51,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				treeNode.group.root_column || treeNode.group.column,
 			);
 		}));
-		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestTreeItem) => {
+		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestNode) => {
 			this.writeTestOutput(treeNode, true);
 			if (!treeNode.test.url && !treeNode.test.root_url)
 				return;
@@ -111,8 +67,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private async runAllFailedTests(): Promise<void> {
 		const topLevelNodes = this.getChildren() || [];
 		const suitesWithFailures = topLevelNodes
-			.filter((node) => node instanceof SuiteTreeItem && node.hasFailures)
-			.map((m) => [m as SuiteTreeItem, this.getFailedTestNames(m)] as SuiteWithFailures);
+			.filter((node) => node instanceof SuiteNode && node.hasFailures)
+			.map((m) => [m as SuiteNode, this.getFailedTestNames(m)] as SuiteWithFailures);
 		if (suitesWithFailures.length === 0)
 			return;
 
@@ -130,7 +86,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 					const failedTestNames = suite[1];
 					if (token.isCancellationRequested)
 						break;
-					const suiteName = path.basename(fsPath(node.resourceUri!));
+					const suiteName = path.basename(node.suite.path);
 					progress.report({ message: suiteName });
 					await this.runTests(node, failedTestNames, false, true, token);
 					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
@@ -139,7 +95,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		);
 	}
 
-	private async runTests(treeNode: GroupTreeItem | SuiteTreeItem | TestTreeItem, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, token?: vs.CancellationToken) {
+	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, token?: vs.CancellationToken) {
 		const subs: vs.Disposable[] = [];
 		return new Promise(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
@@ -154,9 +110,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
 					resolve();
 			}));
-			const programPath = fsPath(treeNode.resourceUri!);
+			const programPath = fsPath(treeNode.suiteData.path);
 			const didStart = await vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(treeNode.resourceUri!),
+				vs.workspace.getWorkspaceFolder(vs.Uri.file(treeNode.suiteData.path)),
 				{
 					dartCodeDebugSessionID,
 					suppressPromptOnErrors,
@@ -164,7 +120,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 						!debug,
 						programPath,
 						testNames,
-						treeNode instanceof GroupTreeItem
+						treeNode instanceof GroupNode
 					),
 					name: `Tests ${path.basename(programPath)}`,
 				}
@@ -174,15 +130,15 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}).finally(() => disposeAll(subs));
 	}
 
-	private getFailedTestNames(treeNode: TestItemTreeItem): string[] {
+	private getFailedTestNames(treeNode: TreeNode): string[] {
 		let names: string[] = [];
-		if (treeNode instanceof SuiteTreeItem || treeNode instanceof GroupTreeItem) {
+		if (treeNode instanceof SuiteNode || treeNode instanceof GroupNode) {
 			for (const child of treeNode.children) {
 				const childNames = this.getFailedTestNames(child);
 				if (childNames)
 					names = names.concat(childNames);
 			}
-		} else if (treeNode instanceof TestTreeItem && treeNode.hasFailures) {
+		} else if (treeNode instanceof TestNode && treeNode.hasFailures) {
 			if (treeNode.test.name !== undefined)
 				names.push(treeNode.test.name);
 		}
@@ -190,7 +146,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		return names;
 	}
 
-	private async writeTestOutput(treeNode: TestTreeItem, forceShow = false) {
+	private async writeTestOutput(treeNode: TestNode, forceShow = false) {
 		if (this.currentTestTerminal) {
 			this.currentTestTerminal[0].dispose();
 			this.currentTestTerminal = undefined;
@@ -247,14 +203,22 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}
 	}
 
-	public getTreeItem(element: vs.TreeItem): vs.TreeItem {
-		return element;
+	public getTreeItem(element: TreeNode): vs.TreeItem {
+		if (element instanceof SuiteNode) {
+			return treeItemBuilder.createSuiteNode(element);
+		} else if (element instanceof GroupNode) {
+			return treeItemBuilder.createGroupNode(element);
+		} else if (element instanceof TestNode) {
+			return treeItemBuilder.createTestNode(element);
+		} else {
+			throw `Unrecognised tree node type: ${element}`;
+		}
 	}
 
-	public getChildren(element?: vs.TreeItem): TestItemTreeItem[] {
+	public getChildren(element?: TreeNode): TreeNode[] {
 		let items = !element
-			? Object.keys(suites).map((k) => suites[k].node)
-			: (element instanceof SuiteTreeItem || element instanceof GroupTreeItem)
+			? Object.values(this.data.suites).map((suite) => suite.node)
+			: (element instanceof SuiteNode || element instanceof GroupNode)
 				? element.children
 				: [];
 		items = items.filter((item) => item);
@@ -265,8 +229,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				if (a.sort > b.sort) return 1;
 				if (a.sort < b.sort) return -1;
 				// If they're the same, sort by label.
-				const aLabel = a.label || (a.resourceUri ? a.resourceUri.toString() : "");
-				const bLabel = b.label || (b.resourceUri ? b.resourceUri.toString() : "");
+				const aLabel = a.label || (a.suiteData.path || "");
+				const bLabel = b.label || (b.suiteData.path || "");
 				if (aLabel > bLabel) return 1;
 				if (aLabel < bLabel) return -1;
 				return 0;
@@ -275,12 +239,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		return items;
 	}
 
-	public getParent?(element: vs.TreeItem): SuiteTreeItem | GroupTreeItem | undefined {
-		if (element instanceof TestTreeItem || element instanceof GroupTreeItem)
+	public getParent?(element: vs.TreeItem): SuiteNode | GroupNode | undefined {
+		if (element instanceof TestNode || element instanceof GroupNode)
 			return element.parent;
 	}
 
-	private updateNode(node?: TestItemTreeItem): void {
+	private updateNode(node?: TreeNode): void {
 		this.onDidChangeTreeDataEmitter.fire(node);
 	}
 
@@ -292,15 +256,15 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.updateNode();
 	}
 
-	private updateStatusFromChildren(node: SuiteTreeItem | GroupTreeItem): TestStatus {
+	private updateStatusFromChildren(node: SuiteNode | GroupNode): TestStatus {
 		const childStatuses = node.children.length
 			? node.children.filter((c) =>
-				(c instanceof GroupTreeItem && !c.isPhantomGroup)
-				|| (c instanceof TestTreeItem && !c.hidden),
+				(c instanceof GroupNode && !c.isPhantomGroup)
+				|| (c instanceof TestNode && !c.hidden),
 			).map((c) => {
-				if (c instanceof GroupTreeItem)
+				if (c instanceof GroupNode)
 					return this.updateStatusFromChildren(c);
-				if (c instanceof TestTreeItem)
+				if (c instanceof TestNode)
 					return c.status;
 				return TestStatus.Unknown;
 			})
@@ -309,7 +273,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		const newStatus = Math.max(...childStatuses);
 		if (newStatus !== node.status) {
 			node.status = newStatus;
-			node.iconPath = getIconPath(node.status, false);
 			this.updateNode(node);
 		}
 
@@ -323,7 +286,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	}
 
 	private async handleNotification(suitePath: string, evt: Notification): Promise<void> {
-		const suite = suites[suitePath];
+		const suite = this.data.suites[suitePath];
 		switch (evt.type) {
 			// We won't get notifications that aren't directly tied to Suites because
 			// of how the DA works.
@@ -361,27 +324,32 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}
 	}
 
-	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
-		let suite = suites[evt.suite.path];
+	private locateOrCreateNode(suitePath: string, id: number): SuiteData {
+		let suite = this.data.suites[suitePath];
 		if (!suite) {
-			suite = new SuiteData(suitePath, new SuiteTreeItem(evt.suite));
-			suites[evt.suite.path] = suite;
+			suite = new SuiteData({ id: -1, path: suitePath, platform: "" });
+			this.data.suites[suitePath] = suite;
 		}
+		return suite;
+	}
+
+	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
+		const suite = this.locateOrCreateNode(evt.suite.path, evt.suite.id);
 		suite.node.status = TestStatus.Waiting;
 		this.updateNode(suite.node);
 		this.updateNode();
 		// If this is the first suite, we've started a run and can show the tree.
 		// We need to wait for the tree node to have been rendered though so setTimeout :(
-		if (TestResultsProvider.isNewTestRun) {
-			TestResultsProvider.isNewTestRun = false;
+		if (this.data.isNewTestRun) {
+			this.data.isNewTestRun = false;
 			this.onDidStartTestsEmitter.fire(suite.node);
 		}
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
-		let oldParent: SuiteTreeItem | GroupTreeItem | undefined;
+		let oldParent: SuiteNode | GroupNode | undefined;
 		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(suite.currentRunNumber, evt.test, (parent) => oldParent = parent);
-		const testNode = existingTest || new TestTreeItem(suite, evt.test);
+		const testNode = existingTest || new TestNode(suite, evt.test);
 
 		if (!existingTest)
 			suite.storeTest(evt.test.id, testNode);
@@ -390,7 +358,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		// If this is a "loading" test then mark it as hidden because it looks wonky in
 		// the tree with a full path and we already have the "running" icon on the suite.
-		if (testNode.test.name && testNode.test.name.startsWith("loading ") && testNode.parent instanceof SuiteTreeItem)
+		if (testNode.test.name && testNode.test.name.startsWith("loading ") && testNode.parent instanceof SuiteNode)
 			testNode.hidden = true;
 		else
 			testNode.hidden = false;
@@ -438,16 +406,16 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.updateNode(testNode.parent);
 		this.updateAllStatuses(suite);
 
-		if ((testNode.status === TestStatus.Failed || testNode.status === TestStatus.Errored) && TestResultsProvider.nextFailureIsFirst) {
-			TestResultsProvider.nextFailureIsFirst = false;
+		if ((testNode.status === TestStatus.Failed || testNode.status === TestStatus.Errored) && this.data.nextFailureIsFirst) {
+			this.data.nextFailureIsFirst = false;
 			this.onFirstFailureEmitter.fire(testNode);
 		}
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
-		let oldParent: SuiteTreeItem | GroupTreeItem | undefined;
+		let oldParent: SuiteNode | GroupNode | undefined;
 		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(suite.currentRunNumber, evt.group, (parent) => oldParent = parent);
-		const groupNode = existingGroup || new GroupTreeItem(suite, evt.group);
+		const groupNode = existingGroup || new GroupNode(suite, evt.group);
 
 		if (!existingGroup)
 			suite.storeGroup(evt.group.id, groupNode);
@@ -480,7 +448,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		// End them all and remove from the lookup.
 		for (const suitePath of suitePaths) {
-			this.handleSuiteEnd(suites[suitePath]);
+			this.handleSuiteEnd(this.data.suites[suitePath]);
 			this.owningDebugSessions[suitePath] = undefined;
 			delete this.owningDebugSessions[suitePath];
 		}
@@ -525,321 +493,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	}
 }
 
-class SuiteData {
-	// To avoid collissions in IDs across runs, we increment this number on every
-	// run of this suite and then use it as a prefix when looking up IDs. This allows
-	// older (stale) results not to be looked up when using IDs.
-	public currentRunNumber = 1;
-	private readonly groups: { [key: string]: GroupTreeItem } = {};
-	private readonly tests: { [key: string]: TestTreeItem } = {};
-	constructor(public readonly path: string, public readonly node: SuiteTreeItem) { }
 
-	public getAllGroups(includeHidden = false) {
-		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
-		// so that stale nodes can still look up their parents.
-		return uniq(
-			Object.keys(this.groups)
-				.map((gKey) => this.groups[gKey])
-				.filter((g) => includeHidden || (!g.hidden && !g.isPhantomGroup)),
-		);
-	}
-	public getAllTests(includeHidden = false) {
-		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
-		// so that stale nodes can still look up their parents.
-		return uniq(
-			Object.keys(this.tests)
-				.map((tKey) => this.tests[tKey])
-				.filter((t) => includeHidden || !t.hidden),
-		);
-	}
-	public getCurrentGroup(id: number) {
-		return this.groups[`${this.currentRunNumber}_${id}`];
-	}
-	public getCurrentTest(id: number) {
-		return this.tests[`${this.currentRunNumber}_${id}`];
-	}
-	public getMyGroup(suiteRunNumber: number, id: number) {
-		return this.groups[`${suiteRunNumber}_${id}`];
-	}
-	public getMyTest(suiteRunNumber: number, id: number) {
-		return this.tests[`${suiteRunNumber}_${id}`];
-	}
-	public storeGroup(id: number, node: GroupTreeItem) {
-		return this.groups[`${this.currentRunNumber}_${id}`] = node;
-	}
-	public storeTest(id: number, node: TestTreeItem) {
-		return this.tests[`${this.currentRunNumber}_${id}`] = node;
-	}
-	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): GroupTreeItem | undefined {
-		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllGroups().filter((g) => g.group.name === group.name
-			&& g.suiteRunNumber !== currentSuiteRunNumber);
-		// Reuse the one nearest to the source position.
-		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.group.line || 0) - (group.line || 0)) - Math.abs((g2.group.line || 0) - (group.line || 0)));
-		const match = sortedMatches.length ? sortedMatches[0] : undefined;
-		if (match) {
-			handleOldParent(match.parent);
-			match.suiteRunNumber = this.currentRunNumber;
-			this.storeGroup(group.id, match);
-		}
-		return match;
-	}
-	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test, handleOldParent: (parent: SuiteTreeItem | GroupTreeItem) => void): TestTreeItem | undefined {
-		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllTests().filter((t) => t.test.name === test.name
-			&& t.suiteRunNumber !== currentSuiteRunNumber);
-		// Reuse the one nearest to the source position.
-		const sortedMatches = sortBy(matches, (t) => Math.abs((t.test.line || 0) - (test.line || 0)));
-		const match = sortedMatches.length ? sortedMatches[0] : undefined;
-		if (match) {
-			handleOldParent(match.parent);
-			match.suiteRunNumber = this.currentRunNumber;
-			this.storeTest(test.id, match);
-		}
-		return match;
-	}
-}
 
-export abstract class TestItemTreeItem extends vs.TreeItem {
-	private _isStale = false; // tslint:disable-line:variable-name
-	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
-	// To avoid the sort changing on every status change (stale, running, etc.) this
-	// field will be the last status the user would care about (pass/fail/skip).
-	// Default to Passed just so things default to the most likely (hopefully) place. This should
-	// never be used for rendering; only sorting.
-	private _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
-	public suiteRunNumber = 0;
-	public isPotentiallyDeleted = false;
-
-	public abstract testCount: number;
-	public abstract testPassCount: number;
-
-	public abstract duration: number | undefined;
-
-	get status(): TestStatus {
-		return this._status;
-	}
-
-	set status(status: TestStatus) {
-		this._status = status;
-		this.iconPath = getIconPath(status, this.isStale);
-		this.description = undefined; // Clear old run duration.
-
-		if (status === TestStatus.Errored || status === TestStatus.Failed
-			|| status === TestStatus.Passed
-			|| status === TestStatus.Skipped) {
-			this.isStale = false;
-			this.isPotentiallyDeleted = false;
-			this._sort = getTestSortOrder(status);
-		}
-	}
-
-	get hasFailures(): boolean {
-		return this._status === TestStatus.Errored || this._status === TestStatus.Failed;
-	}
-
-	get isStale(): boolean {
-		return this._isStale;
-	}
-
-	set isStale(isStale: boolean) {
-		this._isStale = isStale;
-		this.iconPath = getIconPath(this.status, this.isStale);
-	}
-
-	get sort(): TestSortOrder {
-		return this._sort;
-	}
-}
-
-export class SuiteTreeItem extends TestItemTreeItem {
-	public readonly groups: GroupTreeItem[] = [];
-	public readonly tests: TestTreeItem[] = [];
-
-	get testCount(): number {
-		return this.children.map((t) => t.testCount)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	get testPassCount(): number {
-		return this.children.map((t) => t.testPassCount)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	get duration(): number | undefined {
-		return this.children
-			.map((t) => t.duration)
-			.filter(notUndefined)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	constructor(public readonly suite: Suite) {
-		super(vs.Uri.file(suite.path), vs.TreeItemCollapsibleState.Collapsed);
-		this.contextValue = DART_TEST_SUITE_NODE_CONTEXT;
-		this.resourceUri = vs.Uri.file(suite.path);
-		this.description = true;
-		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_${this.suite.id}`;
-		this.status = TestStatus.Unknown;
-		this.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
-	}
-
-	get children(): TestItemTreeItem[] {
-		// Children should be:
-		// 1. All children of any of our phantom groups
-		// 2. Our children excluding our phantom groups
-		return [
-			...flatMap(this.groups.filter((g) => g.isPhantomGroup), (g) => g.children),
-			...this.groups.filter((g) => !g.isPhantomGroup && !g.hidden),
-			...this.tests.filter((t) => !t.hidden),
-		];
-	}
-
-	set status(status: TestStatus) {
-		super.status = status;
-		this.contextValue = this.hasFailures
-			? DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT
-			: DART_TEST_SUITE_NODE_CONTEXT;
-	}
-
-	get status(): TestStatus {
-		return super.status;
-	}
-}
-
-class GroupTreeItem extends TestItemTreeItem {
-	private _group: Group; // tslint:disable-line:variable-name
-	public readonly groups: GroupTreeItem[] = [];
-	public readonly tests: TestTreeItem[] = [];
-
-	get testCount(): number {
-		return this.children.map((t) => t.testCount)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	get testPassCount(): number {
-		return this.children.map((t) => t.testPassCount)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	get duration(): number | undefined {
-		return this.children
-			.map((t) => t.duration)
-			.filter(notUndefined)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	constructor(public suite: SuiteData, group: Group) {
-		super(group.name || "<unnamed>", vs.TreeItemCollapsibleState.Collapsed);
-		this.suiteRunNumber = suite.currentRunNumber;
-		this._group = group; // Keep TS happy, but then we need to call the setter.
-		this.group = group;
-		this.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
-		this.resourceUri = vs.Uri.file(suite.path);
-		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_group_${this.group.id}`;
-		this.status = TestStatus.Unknown;
-		this.command = { command: "_dart.displayGroup", arguments: [this], title: "" };
-	}
-
-	get isPhantomGroup() {
-		return !this.group.name && this.parent instanceof SuiteTreeItem;
-	}
-
-	get hidden(): boolean {
-		// If every child is hidden, we are hidden.
-		return this.children.every((c) => (c instanceof GroupTreeItem && c.hidden)
-			|| (c instanceof TestTreeItem && c.hidden));
-	}
-
-	get parent(): SuiteTreeItem | GroupTreeItem {
-		const parent = this.group.parentID
-			? this.suite.getMyGroup(this.suiteRunNumber, this.group.parentID)
-			: this.suite.node;
-
-		// If our parent is a phantom group at the top level, then just bounce over it.
-		if (parent instanceof GroupTreeItem && parent.isPhantomGroup)
-			return parent.parent;
-		return parent;
-	}
-
-	get children(): TestItemTreeItem[] {
-		return ([] as TestItemTreeItem[])
-			.concat(this.groups.filter((t) => !t.hidden))
-			.concat(this.tests.filter((t) => !t.hidden));
-	}
-
-	get group(): Group {
-		return this._group;
-	}
-
-	set group(group: Group) {
-		this._group = group;
-		const parent = this.parent;
-		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && group.name && group.name.startsWith(`${parent.fullName} `)
-			? group.name.substr(parent.fullName.length + 1) // +1 because of the space (included above).
-			: group.name;
-	}
-
-	get fullName(): string | undefined {
-		return this._group.name;
-	}
-}
-
-class TestTreeItem extends TestItemTreeItem {
-	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
-	private _test: Test; // tslint:disable-line:variable-name
-	public testStartTime: number | undefined;
-	public duration: number | undefined;
-
-	constructor(public suite: SuiteData, test: Test, public hidden = false) {
-		super(test.name || "<unnamed>", vs.TreeItemCollapsibleState.None);
-		this.suiteRunNumber = suite.currentRunNumber;
-		this._test = test; // Keep TS happy, but then we need to call the setter.
-		this.test = test;
-		this.contextValue = DART_TEST_TEST_NODE_CONTEXT;
-		this.resourceUri = vs.Uri.file(suite.path);
-		this.id = `suite_${this.suite.path}_${this.suiteRunNumber}_test_${this.test.id}`;
-		this.status = TestStatus.Unknown;
-		this.command = { command: "_dart.displayTest", arguments: [this], title: "" };
-	}
-
-	get testCount(): number {
-		return 1;
-	}
-
-	get testPassCount(): number {
-		return this.status === TestStatus.Passed ? 1 : 0;
-	}
-
-	get parent(): SuiteTreeItem | GroupTreeItem {
-		const parent = this.test.groupIDs && this.test.groupIDs.length
-			? this.suite.getMyGroup(this.suiteRunNumber, this.test.groupIDs[this.test.groupIDs.length - 1])
-			: this.suite.node;
-
-		// If our parent is a phantom group at the top level, then just bounce over it.
-		if (parent instanceof GroupTreeItem && parent.isPhantomGroup)
-			return parent.parent;
-		return parent;
-	}
-
-	get test(): Test {
-		return this._test;
-	}
-
-	set test(test: Test) {
-		this._test = test;
-		this.outputEvents.length = 0;
-
-		// Update the label.
-		const parent = this.parent;
-		this.label = parent && parent instanceof GroupTreeItem && parent.fullName && test.name && test.name.startsWith(`${parent.fullName} `)
-			? test.name.substr(parent.fullName.length + 1) // +1 because of the space (included above).
-			: (test.name || "<unnamed>");
-	}
-
-	get fullName(): string | undefined {
-		return this._test.name;
-	}
-}
 
 function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 	let file: string | undefined;
@@ -873,17 +528,45 @@ function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 		: undefined;
 }
 
-enum TestSortOrder {
-	Top, // Fails
-	Middle, // Passes
-	Bottom, // Skips
-}
 
-function getTestSortOrder(status: TestStatus): TestSortOrder {
-	if (status === TestStatus.Failed || status === TestStatus.Errored)
-		return TestSortOrder.Top;
-	// https://github.com/Dart-Code/Dart-Code/issues/1125
-	// if (status === TestStatus.Skipped)
-	// 	return TestSortOrder.Bottom;
-	return TestSortOrder.Middle;
+
+class TreeItemBuilder {
+	public createSuiteNode(node: SuiteNode): vs.TreeItem {
+		// TODO: children is quite expensive, we should add a faster way.
+		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
+		const treeItem = new vs.TreeItem(vs.Uri.file(node.suite.path), collapseState);
+		treeItem.contextValue = node.hasFailures
+			? DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT
+			: DART_TEST_SUITE_NODE_CONTEXT;
+		treeItem.id = `suite_${node.suite.path}_${node.suiteRunNumber}_${node.suite.id}`;
+		treeItem.iconPath = getIconPath(node.status, node.isStale);
+		treeItem.description = node.description || true;
+		treeItem.command = { command: "_dart.displaySuite", arguments: [this], title: "" };
+		return treeItem;
+	}
+
+	public createGroupNode(node: GroupNode): vs.TreeItem {
+		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
+		const treeItem = new vs.TreeItem(node.label || "<unnamed>", collapseState);
+		treeItem.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
+		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
+		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_group_${node.group.id}`;
+		treeItem.iconPath = getIconPath(node.status, node.isStale);
+		treeItem.description = node.description;
+		treeItem.command = { command: "_dart.displayGroup", arguments: [this], title: "" };
+		return treeItem;
+	}
+
+	public createTestNode(node: TestNode): vs.TreeItem {
+		const treeItem = new vs.TreeItem(node.label || "<unnamed>", vs.TreeItemCollapsibleState.None);
+		treeItem.contextValue = DART_TEST_TEST_NODE_CONTEXT;
+		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
+		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_test_${node.test.id}`;
+		treeItem.iconPath = getIconPath(node.status, node.isStale);
+		treeItem.description = node.description;
+		treeItem.command = { command: "_dart.displayTest", arguments: [this], title: "" };
+		return treeItem;
+	}
 }
+const treeItemBuilder = new TreeItemBuilder();
+

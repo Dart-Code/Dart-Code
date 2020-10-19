@@ -10,6 +10,7 @@ import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
+import { TestTreeModel } from "../../shared/test/tree_model";
 import { filenameSafe } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
@@ -24,10 +25,9 @@ import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
-import { TestResultsProvider } from "../views/test_view";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testTreeModel: TestTreeModel, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		debugConfig.type = debugConfig.type || "dart";
@@ -340,7 +340,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.PubTest) {
-			TestResultsProvider.flagSuiteStart(debugConfig.program, !argsHaveTestNameFilter);
+			this.testTreeModel.flagSuiteStart(debugConfig.program, !argsHaveTestNameFilter);
 		}
 
 		debugConfig.debuggerType = debugType;

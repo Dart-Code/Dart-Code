@@ -9,6 +9,7 @@ import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
+import { TreeNode } from "../shared/test/tree_model";
 import { BufferedLogger, escapeRegExp, filenameSafe, flatMap } from "../shared/utils";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
@@ -1036,31 +1037,35 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 	return item.label || path.basename(fsPath(item.resourceUri!));
 }
 
-export async function makeTextTree(parent: vs.TreeItem | vs.Uri | undefined, provider: vs.TreeDataProvider<vs.TreeItem>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
-	const parentNode = parent instanceof vs.TreeItem ? parent : undefined;
+export async function makeTextTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+	const parentNode = parent instanceof vs.Uri ? undefined : parent;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
 
 	const durationPattern = /\d+ms/;
 
-	const items = (await provider.getChildren(parentNode))!
-		// Filter to only the suite we were given (though includes all children).
-		.filter((item) => !parentResourceUri || fsPath(item.resourceUri!) === fsPath(parentResourceUri));
+	const items = await provider.getChildren(parentNode) || [];
+
 	for (const item of items) {
+		const treeItem = await provider.getTreeItem(item);
+		// Filter to only the suite we were given (though includes all children).
+		if (parentResourceUri && fsPath(treeItem.resourceUri!) !== fsPath(parentResourceUri))
+			continue;
+
 		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
 		// fabricate one here that can be compared in the test. Note: For simplity we always use
 		// forward slashes in these names, since the comparison is against hard-coded comments
 		// in the file that can only be on way.
-		const expectedLabel = item.contextValue?.startsWith(DART_TEST_SUITE_NODE_CONTEXT)
+		const expectedLabel = treeItem.contextValue?.startsWith(DART_TEST_SUITE_NODE_CONTEXT)
 			? path.relative(
-				fsPath(vs.workspace.getWorkspaceFolder(item.resourceUri!)!.uri),
-				fsPath(item.resourceUri!),
+				fsPath(vs.workspace.getWorkspaceFolder(treeItem.resourceUri!)!.uri),
+				fsPath(treeItem.resourceUri!),
 			).replace("\\", "/")
-			: item.label;
-		const expectedDesc = item.description ? ` [${item.description?.toString().replace(durationPattern, "{duration}ms")}]` : "";
-		const iconUri = item.iconPath instanceof vs.Uri
-			? item.iconPath
-			: "dark" in (item.iconPath as any)
-				? (item.iconPath as any).dark
+			: treeItem.label;
+		const expectedDesc = treeItem.description ? ` [${treeItem.description?.toString().replace(durationPattern, "{duration}ms")}]` : "";
+		const iconUri = treeItem.iconPath instanceof vs.Uri
+			? treeItem.iconPath
+			: "dark" in (treeItem.iconPath as any)
+				? (treeItem.iconPath as any).dark
 				: undefined;
 		const isStale = iconUri instanceof vs.Uri && iconUri.toString().includes("_stale");
 		const isFailure = iconUri instanceof vs.Uri && iconUri.toString().includes("fail");
