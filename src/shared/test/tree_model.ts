@@ -252,6 +252,16 @@ export class TestTreeModel {
 		// the newest run.
 		Object.values(this.suites).forEach((suite) => suite.currentRunNumber++);
 	}
+
+	public findOrCreateSuite(suitePath: string, id: number = -1): [SuiteData, boolean] {
+		let suite = this.suites[suitePath];
+		if (!suite) {
+			suite = new SuiteData({ id, path: suitePath, platform: "" });
+			this.suites[suitePath] = suite;
+			return [suite, true];
+		}
+		return [suite, false];
+	}
 }
 
 export class SuiteData {
