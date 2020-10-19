@@ -1,7 +1,11 @@
 {
 	"extends": "./tsconfig.json",
 	"exclude": [
+		".vscode-test",
+		"node_modules",
+		"out",
+		"src/debug",
 		"src/extension",
-		"src/debug"
+		"src/test/test_projects"
 	]
 }
