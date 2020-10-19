@@ -255,6 +255,7 @@ export class SdkUtils {
 			firstFlutterMobileProject && path.join(firstFlutterMobileProject, ".flutter"),
 			firstFlutterMobileProject && path.join(firstFlutterMobileProject, "vendor/flutter"),
 			process.env.FLUTTER_ROOT,
+			"~/snap/flutter/common/flutter",
 		].concat(paths).filter(notUndefined);
 
 		const flutterSdkPath = this.findFlutterSdk(flutterSdkSearchPaths);
