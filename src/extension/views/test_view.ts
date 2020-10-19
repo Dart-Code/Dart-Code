@@ -327,7 +327,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private locateOrCreateNode(suitePath: string, id: number): SuiteData {
 		let suite = this.data.suites[suitePath];
 		if (!suite) {
-			suite = new SuiteData({ id: -1, path: suitePath, platform: "" });
+			suite = new SuiteData({ id, path: suitePath, platform: "" });
 			this.data.suites[suitePath] = suite;
 		}
 		return suite;
