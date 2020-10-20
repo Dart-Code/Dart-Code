@@ -218,7 +218,7 @@ describe("dart test debugger", () => {
 	it("merges same name groups but not tests from the same run", async () => {
 		// This test is similar to above but contains adjacent tests with the same name.
 		// In a single run the tests must not be merged (groups are ok). When individual tests
-		// are re-run we may re-use nodes, but always pick the cloest one (source line number)
+		// are re-run we may re-use nodes, but always pick the closest one (source line number)
 		// and only never a node that's already been "claimed" by the current run.
 		// We re-run the groups as well as tests, to ensure consistent results when running
 		// multiple of the duplicated tests.
