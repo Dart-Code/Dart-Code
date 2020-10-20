@@ -9,7 +9,7 @@ import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { TreeNode } from "../shared/test/tree_model";
+import { TreeNode } from "../shared/test/test_model";
 import { BufferedLogger, escapeRegExp, filenameSafe, flatMap } from "../shared/utils";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";

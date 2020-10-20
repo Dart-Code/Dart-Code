@@ -58,7 +58,7 @@ export function findFileInAncestor(files: string[], startLocation: string) {
 	return undefined;
 }
 
-// TODO: Remove this, or document why we need it as well as fsPath().
+/// Converts a file URI to file path without a dependency on vs.Uri.
 export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): string {
 	let filePath = uri;
 	if (uri.startsWith("file://"))

@@ -3,9 +3,10 @@ import * as assert from "assert";
 import { Writable } from "stream";
 import { DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { TestSessionCoordindator } from "../shared/test/coordindator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { waitFor } from "../shared/utils/promises";
-import { DebugCommandHandler, TestResultsProvider } from "../shared/vscode/interfaces";
+import { DebugCommandHandler } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, logger, watchPromise, withTimeout } from "./helpers";
 
@@ -17,7 +18,7 @@ export class DartDebugClient extends DebugClient {
 	private readonly port: number | undefined;
 	private currentSession?: DebugSession;
 
-	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testProvider: TestResultsProvider | undefined) {
+	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testCoordinator: TestSessionCoordindator | undefined) {
 		super(args.runtime, args.executable, args.args, "dart", undefined, true);
 		this.port = args.port;
 
@@ -70,9 +71,9 @@ export class DartDebugClient extends DebugClient {
 		// If we were given a test provider, forward the test notifications on to
 		// it as it won't receive the events normally because this is not a Code-spawned
 		// debug session.
-		if (testProvider) {
-			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testProvider.handleDebugSessionCustomEvent(e));
-			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testProvider.handleDebugSessionEnd(this.currentSession!));
+		if (testCoordinator) {
+			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(e));
+			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id));
 		}
 	}
 

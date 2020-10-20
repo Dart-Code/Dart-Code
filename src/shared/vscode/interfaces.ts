@@ -6,7 +6,8 @@ import { VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { CustomScript, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
-import { TreeNode } from "../test/tree_model";
+import { TestSessionCoordindator } from "../test/coordindator";
+import { TreeNode } from "../test/test_model";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
 
@@ -88,14 +89,10 @@ export interface InternalExtensionApi {
 	};
 	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
-	testTreeProvider: TestResultsProvider;
+	testTreeProvider: TreeDataProvider<TreeNode>;
+	testCoordinator: TestSessionCoordindator;
 	webClient: WebClient;
 	workspaceContext: WorkspaceContext;
-}
-
-export interface TestResultsProvider extends TreeDataProvider<TreeNode> {
-	handleDebugSessionEnd(session: DebugSession): void;
-	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
 }
 
 export interface DelayedCompletionItem extends LazyCompletionItem {

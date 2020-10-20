@@ -10,7 +10,8 @@ import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IFlutterDae
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
-import { TestTreeModel } from "../shared/test/tree_model";
+import { TestSessionCoordindator } from "../shared/test/coordindator";
+import { TestTreeModel } from "../shared/test/test_model";
 import { uniq } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -418,6 +419,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	util.logTime("All other stuff before debugger..");
 
 	const testTreeModel = new TestTreeModel();
+	const testCoordinator = new TestSessionCoordindator(logger, testTreeModel);
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
@@ -528,16 +530,16 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(
 		packagesTreeView,
 	);
-	const testTreeProvider = new TestResultsProvider(logger, testTreeModel, lspAnalyzer);
+	const testTreeProvider = new TestResultsProvider(logger, testTreeModel, testCoordinator, lspAnalyzer);
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	context.subscriptions.push(
 		testTreeProvider,
 		testTreeView,
-		testTreeProvider.onDidStartTests((node) => {
+		testCoordinator.onDidStartTests.listen((node) => {
 			if (config.openTestViewOnStart)
 				testTreeView.reveal(node);
 		}),
-		testTreeProvider.onFirstFailure((node) => {
+		testCoordinator.onFirstFailure.listen((node) => {
 			if (config.openTestViewOnFailure)
 				testTreeView.reveal(node);
 		}),
@@ -682,6 +684,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			renameProvider,
 			safeToolSpawn,
 			testTreeProvider,
+			testCoordinator,
 			webClient,
 			workspaceContext,
 		} as InternalExtensionApi,
