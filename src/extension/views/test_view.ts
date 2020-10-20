@@ -11,8 +11,6 @@ import { brightRed, yellow } from "../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
-import { isTestFile } from "../utils";
 
 type SuiteWithFailures = [SuiteNode, string[]];
 
@@ -27,7 +25,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.currentSelectedNode = item;
 	}
 
-	constructor(private readonly logger: Logger, private readonly data: TestTreeModel, private readonly coordindator: TestSessionCoordindator, analyzer: LspAnalyzer | undefined) {
+	constructor(private readonly logger: Logger, private readonly data: TestTreeModel, private readonly coordindator: TestSessionCoordindator) {
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
 
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
@@ -60,30 +58,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				treeNode.column,
 			);
 		}));
-
-		if (analyzer) {
-			this.disposables.push(analyzer.fileTracker.onOutline.listen((outline) => {
-				const suitePath = fsPath(vs.Uri.parse(outline.uri));
-				if (isTestFile(suitePath)) {
-					// Force creation of a node.
-					const [suite, didCreate] = this.data.getOrCreateSuite(suitePath);
-
-					if (didCreate) {
-						// TODO: Create a heirarchical visitor to create groups/tests
-						// and add them similar to findOrCreateSuite above.
-						// const visitor = new LspTestOutlineVisitor(this.logger, suitePath);
-						// visitor.visit(outline.outline);
-
-						// for (const test of visitor.tests) {
-						// 	test.
-						// }
-					}
-
-					this.updateNode(suite.node);
-					this.updateNode();
-				}
-			}));
-		}
 	}
 
 	public handleDebugSessionCustomEvent(e: { session: vs.DebugSession; event: string; body?: any; }) {
@@ -165,7 +139,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		// directly.
 		if (!failedOnly) {
 			if ((treeNode instanceof TestNode || treeNode instanceof GroupNode) && treeNode.name !== undefined)
-				return [treeNode.name]
+				return [treeNode.name];
 			return undefined;
 		}
 
@@ -231,8 +205,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			emitter.fire(output.replace(/\n/g, "\r\n"));
 	}
 
-
-
 	public getTreeItem(element: TreeNode): vs.TreeItem {
 		if (element instanceof SuiteNode) {
 			return treeItemBuilder.createSuiteNode(element);
@@ -241,7 +213,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		} else if (element instanceof TestNode) {
 			return treeItemBuilder.createTestNode(element);
 		} else {
-			throw `Unrecognised tree node type: ${element}`;
+			throw new Error(`Unrecognised tree node type: ${element}`);
 		}
 	}
 
@@ -275,21 +247,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			return element.parent;
 	}
 
-	private updateNode(node?: TreeNode): void {
-		this.onDidChangeTreeDataEmitter.fire(node);
-	}
-
-
-
 	public dispose(): any {
 		this.disposables.forEach((d) => d.dispose());
 	}
-
-
 }
-
-
-
 
 function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 	let file: string | undefined;
@@ -322,8 +283,6 @@ function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 		? vs.Uri.file(path.join(extensionPath, `media/icons/tests/${file}.svg`))
 		: undefined;
 }
-
-
 
 class TreeItemBuilder {
 	public createSuiteNode(node: SuiteNode): vs.TreeItem {

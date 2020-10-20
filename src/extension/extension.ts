@@ -62,6 +62,7 @@ import { HotReloadOnSaveHandler } from "./flutter/hot_reload_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToSuperCommand } from "./lsp/go_to_super";
+import { TestDiscoverer } from "./lsp/test_discoverer";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
@@ -530,7 +531,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(
 		packagesTreeView,
 	);
-	const testTreeProvider = new TestResultsProvider(logger, testTreeModel, testCoordinator, lspAnalyzer);
+	if (lspAnalyzer)
+		context.subscriptions.push(new TestDiscoverer(lspAnalyzer.fileTracker, testTreeModel));
+	const testTreeProvider = new TestResultsProvider(logger, testTreeModel, testCoordinator);
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	context.subscriptions.push(
 		testTreeProvider,
@@ -683,8 +686,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			pubGlobal,
 			renameProvider,
 			safeToolSpawn,
-			testTreeProvider,
 			testCoordinator,
+			testTreeProvider,
 			webClient,
 			workspaceContext,
 		} as InternalExtensionApi,

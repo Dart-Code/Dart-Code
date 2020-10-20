@@ -172,7 +172,7 @@ export class TestNode extends TreeNode {
 	get label(): string {
 		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.name} `)
 			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
-			: (this.name || "<unnamed>")
+			: (this.name || "<unnamed>");
 	}
 
 	get testCount(): number {
