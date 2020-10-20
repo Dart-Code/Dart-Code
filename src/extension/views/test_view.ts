@@ -43,14 +43,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteNode) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suiteData.path))));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupNode) => {
-			if (!treeNode.group.url && !treeNode.group.root_url)
+			if (!treeNode.path)
 				return;
 			return vs.commands.executeCommand(
 				"_dart.jumpToLineColInUri",
-				// TODO: These are the opposite way to tests, this seems likely a bug?
-				vs.Uri.parse((treeNode.group.url || treeNode.group.root_url)!),
-				treeNode.group.root_line || treeNode.group.line,
-				treeNode.group.root_column || treeNode.group.column,
+				vs.Uri.file(treeNode.path),
+				treeNode.line,
+				treeNode.column,
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestNode) => {
@@ -112,7 +111,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 					const failedTestNames = suite[1];
 					if (token.isCancellationRequested)
 						break;
-					const suiteName = path.basename(node.suite.path);
+					const suiteName = path.basename(node.suiteData.path);
 					progress.report({ message: suiteName });
 					await this.runTests(node, failedTestNames, false, true, token);
 					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
@@ -254,15 +253,18 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	}
 
 	public getChildren(element?: TreeNode): TreeNode[] {
-		let items = !element
-			? Object.values(this.data.suites).map((suite) => suite.node)
-			: (element instanceof SuiteNode || element instanceof GroupNode)
-				? element.children
-				: [];
-		items = items.filter((item) => item);
-		// Only sort suites, as tests may have a useful order themselves.
-		if (!element) {
-			items = items.sort((a, b) => {
+		// Nodes with children.
+		if (element instanceof SuiteNode || element instanceof GroupNode)
+			return element.children;
+
+		// Notes without children (TestNode, or other unknown).
+		if (element)
+			return [];
+
+		// All top-level suites.
+		return Object.values(this.data.suites)
+			.map((suite) => suite.node)
+			.sort((a, b) => {
 				// Sort by .sort first.
 				if (a.sort > b.sort) return 1;
 				if (a.sort < b.sort) return -1;
@@ -273,8 +275,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				if (aLabel < bLabel) return -1;
 				return 0;
 			});
-		}
-		return items;
 	}
 
 	public getParent?(element: vs.TreeItem): SuiteNode | GroupNode | undefined {
@@ -444,14 +444,25 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
 		let oldParent: SuiteNode | GroupNode | undefined;
 		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(suite.currentRunNumber, evt.group, (parent) => oldParent = parent);
-		const groupNode = existingGroup || new GroupNode(suite, evt.group);
+		const parent = evt.group.parentID ? suite.getMyGroup(suite.currentRunNumber, evt.group.parentID) : suite.node;
+		const path = (evt.group.root_url || evt.group.url) ? fsPath(vs.Uri.parse(evt.group.root_url || evt.group.url!)) : undefined;
+		const line = evt.group.root_line || evt.group.line;
+		const column = evt.group.root_column || evt.group.column;
+		const groupNode = existingGroup || new GroupNode(suite, parent, evt.group.id, evt.group.name, path, line, column);
 
-		if (!existingGroup)
+		if (!existingGroup) {
 			suite.storeGroup(evt.group.id, groupNode);
-		groupNode.group = evt.group;
+		} else {
+			groupNode.parent = parent;
+			groupNode.id = evt.group.id;
+			groupNode.name = evt.group.name;
+			groupNode.path = path;
+			groupNode.line = line;
+			groupNode.column = column;
+		}
 
 		// Remove from old parent if required
-		const hasChangedParent = oldParent && oldParent !== groupNode.parent;
+		const hasChangedParent = oldParent !== parent;
 		if (oldParent && hasChangedParent) {
 			oldParent.groups.splice(oldParent.groups.indexOf(groupNode), 1);
 			this.updateNode(oldParent);
@@ -563,11 +574,11 @@ class TreeItemBuilder {
 	public createSuiteNode(node: SuiteNode): vs.TreeItem {
 		// TODO: children is quite expensive, we should add a faster way.
 		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
-		const treeItem = new vs.TreeItem(vs.Uri.file(node.suite.path), collapseState);
+		const treeItem = new vs.TreeItem(vs.Uri.file(node.suiteData.path), collapseState);
 		treeItem.contextValue = node.hasFailures
 			? DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT
 			: DART_TEST_SUITE_NODE_CONTEXT;
-		treeItem.id = `suite_${node.suite.path}_${node.suiteRunNumber}_${node.suite.id}`;
+		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description || true;
 		treeItem.command = { command: "_dart.displaySuite", arguments: [node], title: "" };
@@ -579,7 +590,7 @@ class TreeItemBuilder {
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", collapseState);
 		treeItem.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
-		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_group_${node.group.id}`;
+		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_group_${node.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displayGroup", arguments: [node], title: "" };

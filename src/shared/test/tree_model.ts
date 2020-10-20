@@ -1,6 +1,6 @@
 import * as path from "path";
 import { TestStatus } from "../enums";
-import { ErrorNotification, Group, PrintNotification, Suite, Test } from "../test_protocol";
+import { ErrorNotification, Group, PrintNotification, Test } from "../test_protocol";
 import { flatMap, notUndefined, uniq } from "../utils";
 import { sortBy } from "../utils/array";
 import { fsPath } from "../utils/fs";
@@ -73,7 +73,7 @@ export class SuiteNode extends TreeNode {
 	public readonly groups: GroupNode[] = [];
 	public readonly tests: TestNode[] = [];
 
-	constructor(suiteData: SuiteData, public readonly suite: Suite) {
+	constructor(suiteData: SuiteData) {
 		super(suiteData);
 	}
 
@@ -112,15 +112,14 @@ export class GroupNode extends TreeNode {
 	public readonly groups: GroupNode[] = [];
 	public readonly tests: TestNode[] = [];
 
-	// TODO: Flatten group into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public group: Group) {
+	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public line: number | undefined, public column: number | undefined) {
 		super(suiteData);
 	}
 
 	get label(): string {
-		return this.parent && this.parent instanceof GroupNode && this.parent.fullName && this.group.name && this.group.name.startsWith(`${this.parent.fullName} `)
-			? this.group.name.substr(this.parent.fullName.length + 1) // +1 because of the space (included above).
-			: this.group.name || "<unnamed>";
+		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.fullName} `)
+			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
+			: this.name || "<unnamed>";
 	}
 
 	get testCount(): number {
@@ -142,24 +141,13 @@ export class GroupNode extends TreeNode {
 
 	// TODO: Remove phatom groups from this model, and handle only in the test notification handler.
 	get isPhantomGroup() {
-		return !this.group.name && this.parent instanceof SuiteNode;
+		return !this.name && this.parent instanceof SuiteNode;
 	}
 
 	get hidden(): boolean {
 		// If every child is hidden, we are hidden.
 		return this.children.every((c) => (c instanceof GroupNode && c.hidden)
 			|| (c instanceof TestNode && c.hidden));
-	}
-
-	get parent(): SuiteNode | GroupNode {
-		const parent = this.group.parentID
-			? this.suiteData.getMyGroup(this.suiteRunNumber, this.group.parentID)
-			: this.suiteData.node;
-
-		// If our parent is a phantom group at the top level, then just bounce over it.
-		if (parent instanceof GroupNode && parent.isPhantomGroup)
-			return parent.parent;
-		return parent;
 	}
 
 	get children(): TreeNode[] {
@@ -169,7 +157,7 @@ export class GroupNode extends TreeNode {
 	}
 
 	get fullName(): string | undefined {
-		return this.group.name;
+		return this.name;
 	}
 }
 
@@ -257,7 +245,7 @@ export class TestTreeModel {
 	public findOrCreateSuite(suitePath: string, id: number = -1): [SuiteData, boolean] {
 		let suite = this.suites[suitePath];
 		if (!suite) {
-			suite = new SuiteData({ id, path: suitePath, platform: "" });
+			suite = new SuiteData(suitePath);
 			this.suites[suitePath] = suite;
 			return [suite, true];
 		}
@@ -274,9 +262,9 @@ export class SuiteData {
 	public readonly node: SuiteNode;
 	private readonly groups: { [key: string]: GroupNode } = {};
 	private readonly tests: { [key: string]: TestNode } = {};
-	constructor(suite: Suite) {
-		this.path = suite.path;
-		this.node = new SuiteNode(this, suite);
+	constructor(suitePath: string) {
+		this.path = suitePath;
+		this.node = new SuiteNode(this);
 	}
 
 	public getAllGroups(includeHidden = false) {
@@ -320,7 +308,7 @@ export class SuiteData {
 		const matches = this.getAllGroups(true).filter((g) => g.name === group.name
 			&& g.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.group.line || 0) - (group.line || 0)) - Math.abs((g2.group.line || 0) - (group.line || 0)));
+		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.line || 0) - (group.line || 0)) - Math.abs((g2.line || 0) - (group.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
