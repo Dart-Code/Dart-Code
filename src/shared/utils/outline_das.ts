@@ -1,5 +1,6 @@
 import * as as from "../analysis_server_types";
 import { Logger } from "../interfaces";
+import { extractTestNameFromOutline } from "./test";
 
 export abstract class OutlineVisitor {
 	constructor(private logger: Logger) { }
@@ -140,7 +141,7 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	}
 
 	private addTest(outline: as.Outline, base: (outline: as.Outline) => void) {
-		const name = this.extractTestName(outline.element.name);
+		const name = extractTestNameFromOutline(outline.element.name);
 		if (!name || !outline.element.location)
 			return;
 		this.names.push(name);
@@ -158,28 +159,6 @@ export class TestOutlineVisitor extends OutlineVisitor {
 		} finally {
 			this.names.pop();
 		}
-	}
-
-	private extractTestName(elementName: string): string | undefined {
-		if (!elementName)
-			return;
-		// Strip off the function name/parent like test( or testWidget(
-		const openParen = elementName.indexOf("(");
-		const closeParen = elementName.lastIndexOf(")");
-		if (openParen === -1 || closeParen === -1 || openParen >= closeParen)
-			return;
-
-		elementName = elementName
-			.substring(openParen + 2, closeParen - 1);
-
-		// For tests with variables, we often end up with additional quotes wrapped
-		// around them...
-		if ((elementName.startsWith("'") || elementName.startsWith('"'))
-			&& (elementName.endsWith("'") || elementName.endsWith('"')))
-			elementName = elementName
-				.substring(1, elementName.length - 1);
-
-		return elementName;
 	}
 }
 

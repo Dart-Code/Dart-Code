@@ -320,11 +320,11 @@ export class SuiteData {
 	public getMyTest(suiteRunNumber: number, id: number) {
 		return this.tests[`${suiteRunNumber}_${id}`];
 	}
-	public storeGroup(id: number, node: GroupNode) {
-		return this.groups[`${this.currentRunNumber}_${id}`] = node;
+	public storeGroup(node: GroupNode) {
+		return this.groups[`${this.currentRunNumber}_${node.id}`] = node;
 	}
-	public storeTest(id: number, node: TestNode) {
-		return this.tests[`${this.currentRunNumber}_${id}`] = node;
+	public storeTest(node: TestNode) {
+		return this.tests[`${this.currentRunNumber}_${node.id}`] = node;
 	}
 	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteNode | GroupNode) => void): GroupNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
@@ -335,8 +335,9 @@ export class SuiteData {
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
+			match.id = group.id;
 			match.suiteRunNumber = this.currentRunNumber;
-			this.storeGroup(group.id, match);
+			this.storeGroup(match);
 		}
 		return match;
 	}
@@ -349,8 +350,9 @@ export class SuiteData {
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
+			match.id = test.id;
 			match.suiteRunNumber = this.currentRunNumber;
-			this.storeTest(test.id, match);
+			this.storeTest(match);
 		}
 		return match;
 	}
