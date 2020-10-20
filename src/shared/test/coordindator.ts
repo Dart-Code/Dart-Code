@@ -86,7 +86,7 @@ export class TestSessionCoordindator implements IAmDisposable {
 	}
 
 	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
-		const [suite, didCreate] = this.data.findOrCreateSuite(evt.suite.path, evt.suite.id);
+		const [suite, didCreate] = this.data.getOrCreateSuite(evt.suite.path);
 		suite.node.status = TestStatus.Waiting;
 		this.data.updateNode(suite.node);
 		this.data.updateNode();

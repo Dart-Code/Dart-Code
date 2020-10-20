@@ -66,7 +66,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				const suitePath = fsPath(vs.Uri.parse(outline.uri));
 				if (isTestFile(suitePath)) {
 					// Force creation of a node.
-					const [suite, didCreate] = this.data.findOrCreateSuite(suitePath);
+					const [suite, didCreate] = this.data.getOrCreateSuite(suitePath);
 
 					if (didCreate) {
 						// TODO: Create a heirarchical visitor to create groups/tests
@@ -196,7 +196,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			close: () => { },
 			onDidWrite: emitter.event,
 			open: () => {
-				emitter.fire(`Output for ${treeNode.fullName}\r\n`);
+				emitter.fire(`Output for ${treeNode.name}\r\n`);
 
 				if (!treeNode.outputEvents.length)
 					emitter.fire(`(no output)\r\n`);
