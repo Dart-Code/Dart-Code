@@ -12,6 +12,8 @@
 		"strict": true
 	},
 	"exclude": [
+		".dart_code_test_data_dir",
+		".dart_code_test_logs",
 		".vscode-test",
 		"node_modules",
 		"out",
