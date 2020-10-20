@@ -108,7 +108,7 @@ export class TestSessionCoordindator implements IAmDisposable {
 		const testNode = existingTest || new TestNode(suite, parent, evt.test.id, evt.test.name, path, line, column);
 
 		if (!existingTest) {
-			suite.storeTest(evt.test.id, testNode);
+			suite.storeTest(testNode);
 		} else {
 			testNode.parent = parent;
 			testNode.id = evt.test.id;
@@ -185,7 +185,7 @@ export class TestSessionCoordindator implements IAmDisposable {
 		const groupNode = existingGroup || new GroupNode(suite, parent, evt.group.id, evt.group.name, path, line, column);
 
 		if (!existingGroup) {
-			suite.storeGroup(evt.group.id, groupNode);
+			suite.storeGroup(groupNode);
 		} else {
 			groupNode.parent = parent;
 			groupNode.id = evt.group.id;
