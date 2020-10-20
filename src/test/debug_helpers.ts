@@ -35,8 +35,8 @@ export function createDebugClient(debugType: DebuggerType) {
 	// TODO: Change this to go through DartDebugAdapterDescriptorFactory to ensure we don't have tests that pass
 	// if we've broken the real implementation.
 	const dc = process.env.DART_CODE_USE_DEBUG_SERVERS
-		? new DartDebugClient({ port: debugAdapterPort }, extApi.debugCommands, extApi.testTreeProvider)
-		: new DartDebugClient({ runtime: "node", executable: debuggerExecutablePath, args: debuggerArgs }, extApi.debugCommands, extApi.testTreeProvider);
+		? new DartDebugClient({ port: debugAdapterPort }, extApi.debugCommands, extApi.testCoordinator)
+		: new DartDebugClient({ runtime: "node", executable: debuggerExecutablePath, args: debuggerArgs }, extApi.debugCommands, extApi.testCoordinator);
 
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;

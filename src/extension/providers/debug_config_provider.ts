@@ -10,7 +10,7 @@ import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
-import { TestTreeModel } from "../../shared/test/tree_model";
+import { TestTreeModel } from "../../shared/test/test_model";
 import { filenameSafe } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";

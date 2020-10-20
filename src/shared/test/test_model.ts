@@ -1,5 +1,6 @@
 import * as path from "path";
 import { TestStatus } from "../enums";
+import { Event, EventEmitter } from "../events";
 import { ErrorNotification, Group, PrintNotification, Test } from "../test_protocol";
 import { flatMap, notUndefined, uniq } from "../utils";
 import { sortBy } from "../utils/array";
@@ -209,7 +210,10 @@ export class TestTreeModel {
 	public isNewTestRun = true;
 	public nextFailureIsFirst = true;
 
-	// TODO: Make private
+	private onDidChangeDataEmitter: EventEmitter<TreeNode | undefined> = new EventEmitter<TreeNode | undefined>();
+	public readonly onDidChangeTreeData: Event<TreeNode | undefined> = this.onDidChangeDataEmitter.event;
+
+	// TODO: Make private?
 	public readonly suites: { [key: string]: SuiteData } = {};
 
 	public flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
@@ -251,6 +255,43 @@ export class TestTreeModel {
 			return [suite, true];
 		}
 		return [suite, false];
+	}
+
+	public updateNode(node?: TreeNode) {
+		this.onDidChangeDataEmitter.fire(node);
+	}
+
+	public updateSuiteStatuses(suite: SuiteData) {
+		// Walk the tree to get the status.
+		this.updateStatusFromChildren(suite.node);
+
+		// Update top level list, as we could've changed order.
+		this.updateNode();
+	}
+
+	private updateStatusFromChildren(node: SuiteNode | GroupNode): TestStatus {
+		const childStatuses = node.children.length
+			? node.children.filter((c) =>
+				(c instanceof GroupNode && !c.isPhantomGroup)
+				|| (c instanceof TestNode && !c.hidden),
+			).map((c) => {
+				if (c instanceof GroupNode)
+					return this.updateStatusFromChildren(c);
+				if (c instanceof TestNode)
+					return c.status;
+				return TestStatus.Unknown;
+			})
+			: [TestStatus.Unknown];
+
+		const newStatus = Math.max(...childStatuses);
+		if (newStatus !== node.status) {
+			node.status = newStatus;
+			this.updateNode(node);
+		}
+
+		node.description = `${node.testPassCount}/${node.testCount} passed, ${node.duration}ms`;
+
+		return node.status;
 	}
 }
 
