@@ -140,6 +140,7 @@ export class GroupNode extends TreeNode {
 			.reduce((total, value) => total + value, 0);
 	}
 
+	// TODO: Remove phatom groups from this model, and handle only in the test notification handler.
 	get isPhantomGroup() {
 		return !this.group.name && this.parent instanceof SuiteNode;
 	}
@@ -316,7 +317,7 @@ export class SuiteData {
 	}
 	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteNode | GroupNode) => void): GroupNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllGroups().filter((g) => g.group.name === group.name
+		const matches = this.getAllGroups(true).filter((g) => g.name === group.name
 			&& g.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
 		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.group.line || 0) - (group.line || 0)) - Math.abs((g2.group.line || 0) - (group.line || 0)));
