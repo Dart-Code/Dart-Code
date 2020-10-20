@@ -35,10 +35,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	constructor(private readonly logger: Logger, private readonly data: TestTreeModel, analyzer: LspAnalyzer | undefined) {
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, undefined, true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, undefined, false, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getFailedTestNames(treeNode), true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getFailedTestNames(treeNode), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, false), true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, false), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, true), true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, true), false, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteNode) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suiteData.path))));
@@ -94,7 +94,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		const topLevelNodes = this.getChildren() || [];
 		const suitesWithFailures = topLevelNodes
 			.filter((node) => node instanceof SuiteNode && node.hasFailures)
-			.map((m) => [m as SuiteNode, this.getFailedTestNames(m)] as SuiteWithFailures);
+			.map((m) => [m as SuiteNode, this.getTestNames(m, true)] as SuiteWithFailures);
 		if (suitesWithFailures.length === 0)
 			return;
 
@@ -156,11 +156,23 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}).finally(() => disposeAll(subs));
 	}
 
-	private getFailedTestNames(treeNode: TreeNode): string[] {
+	private getTestNames(treeNode: TreeNode, failedOnly: boolean): string[] | undefined {
+		// If we're not running failed only, we can just use the test name/group name (or undefined for suite)
+		// directly.
+		if (!failedOnly) {
+			const testName = treeNode instanceof TestNode && treeNode.test.name !== undefined
+				? [treeNode.test.name]
+				: treeNode instanceof GroupNode && treeNode.name !== undefined
+					? [treeNode.name]
+					: undefined;
+			return testName;
+		}
+		// Otherwise, collect all descendants tests that are failed.
+
 		let names: string[] = [];
 		if (treeNode instanceof SuiteNode || treeNode instanceof GroupNode) {
 			for (const child of treeNode.children) {
-				const childNames = this.getFailedTestNames(child);
+				const childNames = this.getTestNames(child, failedOnly);
 				if (childNames)
 					names = names.concat(childNames);
 			}
