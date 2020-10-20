@@ -156,10 +156,6 @@ export class GroupNode extends TreeNode {
 			.concat(this.groups.filter((t) => !t.hidden))
 			.concat(this.tests.filter((t) => !t.hidden));
 	}
-
-	get fullName(): string | undefined {
-		return this.name;
-	}
 }
 
 export class TestNode extends TreeNode {
@@ -185,21 +181,6 @@ export class TestNode extends TreeNode {
 
 	get testPassCount(): number {
 		return this.status === TestStatus.Passed ? 1 : 0;
-	}
-
-	// get parent(): SuiteNode | GroupNode {
-	// 	const parent = this.test.groupIDs && this.test.groupIDs.length
-	// 		? this.suiteData.getMyGroup(this.suiteRunNumber, this.test.groupIDs[this.test.groupIDs.length - 1])
-	// 		: this.suiteData.node;
-
-	// 	// If our parent is a phantom group at the top level, then just bounce over it.
-	// 	if (parent instanceof GroupNode && parent.isPhantomGroup)
-	// 		return parent.parent;
-	// 	return parent;
-	// }
-
-	get fullName(): string | undefined {
-		return this.name;
 	}
 }
 
@@ -247,7 +228,7 @@ export class TestTreeModel {
 		Object.values(this.suites).forEach((suite) => suite.currentRunNumber++);
 	}
 
-	public findOrCreateSuite(suitePath: string, id: number = -1): [SuiteData, boolean] {
+	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
 		let suite = this.suites[suitePath];
 		if (!suite) {
 			suite = new SuiteData(suitePath);
