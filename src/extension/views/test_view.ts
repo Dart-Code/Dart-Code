@@ -294,7 +294,7 @@ class TreeItemBuilder {
 			: DART_TEST_SUITE_NODE_CONTEXT;
 		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
-		treeItem.description = node.description || true;
+		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displaySuite", arguments: [node], title: "" };
 		return treeItem;
 	}
