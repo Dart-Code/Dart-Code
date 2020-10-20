@@ -42,7 +42,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteNode) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suiteData.path))));
-		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupNode) => {
+		this.disposables.push(vs.commands.registerCommand("_dart.displayGroupOrTest", (treeNode: GroupNode) => {
 			if (!treeNode.path)
 				return;
 			return vs.commands.executeCommand(
@@ -50,17 +50,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				vs.Uri.file(treeNode.path),
 				treeNode.line,
 				treeNode.column,
-			);
-		}));
-		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestNode) => {
-			this.writeTestOutput(treeNode);
-			if (!treeNode.test.url && !treeNode.test.root_url)
-				return;
-			return vs.commands.executeCommand(
-				"_dart.jumpToLineColInUri",
-				vs.Uri.parse((treeNode.test.root_url || treeNode.test.url)!),
-				treeNode.test.root_line || treeNode.test.line,
-				treeNode.test.root_column || treeNode.test.column,
 			);
 		}));
 
@@ -159,15 +148,12 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		// If we're not running failed only, we can just use the test name/group name (or undefined for suite)
 		// directly.
 		if (!failedOnly) {
-			const testName = treeNode instanceof TestNode && treeNode.test.name !== undefined
-				? [treeNode.test.name]
-				: treeNode instanceof GroupNode && treeNode.name !== undefined
-					? [treeNode.name]
-					: undefined;
-			return testName;
+			if ((treeNode instanceof TestNode || treeNode instanceof GroupNode) && treeNode.name !== undefined)
+				return [treeNode.name]
+			return undefined;
 		}
-		// Otherwise, collect all descendants tests that are failed.
 
+		// Otherwise, collect all descendants tests that are failed.
 		let names: string[] = [];
 		if (treeNode instanceof SuiteNode || treeNode instanceof GroupNode) {
 			for (const child of treeNode.children) {
@@ -176,8 +162,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 					names = names.concat(childNames);
 			}
 		} else if (treeNode instanceof TestNode && treeNode.hasFailures) {
-			if (treeNode.test.name !== undefined)
-				names.push(treeNode.test.name);
+			if (treeNode.name !== undefined)
+				names.push(treeNode.name);
 		}
 
 		return names;
@@ -378,16 +364,27 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
 		let oldParent: SuiteNode | GroupNode | undefined;
 		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(suite.currentRunNumber, evt.test, (parent) => oldParent = parent);
-		const testNode = existingTest || new TestNode(suite, evt.test);
+		const parent = evt.test.groupIDs?.length ? suite.getMyGroup(suite.currentRunNumber, evt.test.groupIDs[evt.test.groupIDs.length - 1]) : suite.node;
+		const path = (evt.test.root_url || evt.test.url) ? fsPath(vs.Uri.parse(evt.test.root_url || evt.test.url!)) : undefined;
+		const line = evt.test.root_line || evt.test.line;
+		const column = evt.test.root_column || evt.test.column;
+		const testNode = existingTest || new TestNode(suite, parent, evt.test.id, evt.test.name, path, line, column);
 
-		if (!existingTest)
+		if (!existingTest) {
 			suite.storeTest(evt.test.id, testNode);
-		testNode.test = evt.test;
+		} else {
+			testNode.parent = parent;
+			testNode.id = evt.test.id;
+			testNode.name = evt.test.name;
+			testNode.path = path;
+			testNode.line = line;
+			testNode.column = column;
+		}
 		testNode.testStartTime = evt.time;
 
 		// If this is a "loading" test then mark it as hidden because it looks wonky in
 		// the tree with a full path and we already have the "running" icon on the suite.
-		if (testNode.test.name && testNode.test.name.startsWith("loading ") && testNode.parent instanceof SuiteNode)
+		if (testNode.name && testNode.name.startsWith("loading ") && testNode.parent instanceof SuiteNode)
 			testNode.hidden = true;
 		else
 			testNode.hidden = false;
@@ -593,7 +590,7 @@ class TreeItemBuilder {
 		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_group_${node.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
-		treeItem.command = { command: "_dart.displayGroup", arguments: [node], title: "" };
+		treeItem.command = { command: "_dart.displayGroupOrTest", arguments: [node], title: "" };
 		return treeItem;
 	}
 
@@ -601,10 +598,10 @@ class TreeItemBuilder {
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", vs.TreeItemCollapsibleState.None);
 		treeItem.contextValue = DART_TEST_TEST_NODE_CONTEXT;
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
-		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_test_${node.test.id}`;
+		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_test_${node.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
-		treeItem.command = { command: "_dart.displayTest", arguments: [node], title: "" };
+		treeItem.command = { command: "_dart.displayGroupOrTest", arguments: [node], title: "" };
 		return treeItem;
 	}
 }

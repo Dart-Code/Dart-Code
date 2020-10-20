@@ -117,7 +117,7 @@ export class GroupNode extends TreeNode {
 	}
 
 	get label(): string {
-		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.fullName} `)
+		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.name} `)
 			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
 			: this.name || "<unnamed>";
 	}
@@ -165,16 +165,17 @@ export class TestNode extends TreeNode {
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
 	public duration: number | undefined;
+	public hidden = false;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public test: Test, public hidden = false) {
+	constructor(public suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public line: number | undefined, public column: number | undefined) {
 		super(suiteData);
 	}
 
 	get label(): string {
-		return this.parent && this.parent instanceof GroupNode && this.parent.fullName && this.test.name && this.test.name.startsWith(`${this.parent.fullName} `)
-			? this.test.name.substr(this.parent.fullName.length + 1) // +1 because of the space (included above).
-			: (this.test.name || "<unnamed>")
+		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.name} `)
+			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
+			: (this.name || "<unnamed>")
 	}
 
 	get testCount(): number {
@@ -185,19 +186,19 @@ export class TestNode extends TreeNode {
 		return this.status === TestStatus.Passed ? 1 : 0;
 	}
 
-	get parent(): SuiteNode | GroupNode {
-		const parent = this.test.groupIDs && this.test.groupIDs.length
-			? this.suiteData.getMyGroup(this.suiteRunNumber, this.test.groupIDs[this.test.groupIDs.length - 1])
-			: this.suiteData.node;
+	// get parent(): SuiteNode | GroupNode {
+	// 	const parent = this.test.groupIDs && this.test.groupIDs.length
+	// 		? this.suiteData.getMyGroup(this.suiteRunNumber, this.test.groupIDs[this.test.groupIDs.length - 1])
+	// 		: this.suiteData.node;
 
-		// If our parent is a phantom group at the top level, then just bounce over it.
-		if (parent instanceof GroupNode && parent.isPhantomGroup)
-			return parent.parent;
-		return parent;
-	}
+	// 	// If our parent is a phantom group at the top level, then just bounce over it.
+	// 	if (parent instanceof GroupNode && parent.isPhantomGroup)
+	// 		return parent.parent;
+	// 	return parent;
+	// }
 
 	get fullName(): string | undefined {
-		return this.test.name;
+		return this.name;
 	}
 }
 
@@ -319,10 +320,10 @@ export class SuiteData {
 	}
 	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test, handleOldParent: (parent: SuiteNode | GroupNode) => void): TestNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllTests().filter((t) => t.test.name === test.name
+		const matches = this.getAllTests().filter((t) => t.name === test.name
 			&& t.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = sortBy(matches, (t) => Math.abs((t.test.line || 0) - (test.line || 0)));
+		const sortedMatches = sortBy(matches, (t) => Math.abs((t.line || 0) - (test.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			handleOldParent(match.parent);
