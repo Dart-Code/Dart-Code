@@ -174,7 +174,7 @@ describe("dart test debugger", () => {
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 5);
+		assert.equal(topLevelNodes.length, 6);
 	});
 
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {
