@@ -292,7 +292,6 @@ class TreeItemBuilder {
 		treeItem.contextValue = node.hasFailures
 			? DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT
 			: DART_TEST_SUITE_NODE_CONTEXT;
-		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displaySuite", arguments: [node], title: "" };
@@ -304,7 +303,6 @@ class TreeItemBuilder {
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", collapseState);
 		treeItem.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
-		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_group_${node.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displayGroup", arguments: [node], title: "" };
@@ -315,7 +313,6 @@ class TreeItemBuilder {
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", vs.TreeItemCollapsibleState.None);
 		treeItem.contextValue = DART_TEST_TEST_NODE_CONTEXT;
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
-		treeItem.id = `suite_${node.suiteData.path}_${node.suiteRunNumber}_test_${node.id}`;
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displayTest", arguments: [node], title: "" };
