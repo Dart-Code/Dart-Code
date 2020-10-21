@@ -29,7 +29,7 @@ export abstract class TreeNode {
 	// Default to Passed just so things default to the most likely (hopefully) place. This should
 	// never be used for rendering; only sorting.
 	private _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
-	public suiteRunNumber = 0; // TODO: Readonly?
+	public suiteRunNumber = 1;
 	public isPotentiallyDeleted = false;
 
 	public abstract label: string | undefined;
@@ -40,9 +40,7 @@ export abstract class TreeNode {
 	public abstract duration: number | undefined;
 	public description: string | boolean | undefined;
 
-	constructor(public readonly suiteData: SuiteData) {
-		this.suiteRunNumber = suiteData.currentRunNumber;
-	}
+	constructor(public readonly suiteData: SuiteData) { }
 
 	get status(): TestStatus {
 		return this._status;
@@ -225,7 +223,7 @@ export class TestTreeModel {
 
 		// Also increase the currentRunNumber to ensure we know all results are from
 		// the newest run.
-		Object.values(this.suites).forEach((suite) => suite.currentRunNumber++);
+		Object.values(this.suites).forEach((suite) => suite.node.suiteRunNumber++);
 	}
 
 	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
@@ -277,10 +275,7 @@ export class TestTreeModel {
 }
 
 export class SuiteData {
-	// To avoid collisions in IDs across runs, we increment this number on every
-	// run of this suite and then use it as a prefix when looking up IDs. This allows
-	// older (stale) results not to be looked up when using IDs.
-	public currentRunNumber = 1;
+	public get currentRunNumber() { return this.node.suiteRunNumber; }
 	public readonly path: string;
 	public readonly node: SuiteNode;
 	private readonly groups: { [key: string]: GroupNode } = {};
