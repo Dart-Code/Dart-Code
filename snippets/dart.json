@@ -126,6 +126,13 @@
 				"  $0",
 				"});"
 			]
+		},
+		"todo": {
+			"prefix": "todo",
+			"description": "Insert a TODO comment.",
+			"body": [
+				"// TODO($1): $0"
+			]
 		}
 	}
 }
