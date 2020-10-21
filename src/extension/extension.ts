@@ -11,7 +11,7 @@ import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/lo
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordindator } from "../shared/test/coordindator";
-import { TestTreeModel } from "../shared/test/test_model";
+import { TestTreeModel, TreeNode } from "../shared/test/test_model";
 import { uniq } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -535,16 +535,24 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new TestDiscoverer(logger, lspAnalyzer.fileTracker, testTreeModel));
 	const testTreeProvider = new TestResultsProvider(logger, testTreeModel, testCoordinator);
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
+	const tryReveal = async (node: TreeNode) => {
+		try {
+			await testTreeView.reveal(node);
+		} catch {
+			// Reveal can fail if something else triggers an update to the tree
+			// while it's asynchronously locating the node. These errors can just be discarded.
+		}
+	};
 	context.subscriptions.push(
 		testTreeProvider,
 		testTreeView,
-		testCoordinator.onDidStartTests.listen((node) => {
+		testCoordinator.onDidStartTests.listen(async (node) => {
 			if (config.openTestViewOnStart)
-				testTreeView.reveal(node);
+				tryReveal(node);
 		}),
-		testCoordinator.onFirstFailure.listen((node) => {
+		testCoordinator.onFirstFailure.listen(async (node) => {
 			if (config.openTestViewOnFailure)
-				testTreeView.reveal(node);
+				tryReveal(node);
 		}),
 		testTreeView.onDidChangeSelection((e) => {
 			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
