@@ -121,7 +121,9 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		}
 
 		this.createProcess(undefined, binaryPath, processArgs, { toolEnv: getToolEnv() });
-		this.process?.on("exit", (code, signal) => this.notify(this.serverTerminatedSubscriptions, undefined));
+		this.process?.on("exit", (code, signal) => {
+			this.handleAnalyzerTerminated();
+		});
 
 		this.registerForServerStatus((n) => {
 			if (n.analysis) {
@@ -157,10 +159,15 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			const serverHasStarted = !!this.version;
-			reportAnalyzerTerminated(!serverHasStarted);
+			this.handleAnalyzerTerminated();
 			throw e;
 		}
+	}
+
+	private handleAnalyzerTerminated() {
+		const serverHasStarted = !!this.version;
+		reportAnalyzerTerminated(!serverHasStarted);
+		this.notify(this.serverTerminatedSubscriptions, undefined);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
