@@ -11,6 +11,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
+import { reportAnalyzerTerminated } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
 import { LspFileTracker } from "./file_tracker_lsp";
@@ -100,6 +101,7 @@ function spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapab
 	writer.pipe(process.stdin);
 
 	process.stderr.on("data", (data) => logger.error(data.toString()));
+	process.on("exit", () => reportAnalyzerTerminated());
 
 	return Promise.resolve({ reader, writer });
 }
