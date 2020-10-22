@@ -11,7 +11,8 @@ import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { escapeShell, promptToReloadExtension } from "../utils";
+import { escapeShell } from "../utils";
+import { reportAnalyzerTerminated } from "../utils/misc";
 import { getToolEnv } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
@@ -156,11 +157,8 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			const message = this.version
-				? "The Dart Analyzer has terminated."
-				: "The Dart Analyzer could not be started.";
-			// tslint:disable-next-line: no-floating-promises
-			promptToReloadExtension(message, undefined, true);
+			const serverHasStarted = !!this.version;
+			reportAnalyzerTerminated(!serverHasStarted);
 			throw e;
 		}
 	}

@@ -221,7 +221,7 @@ export function escapeShell(args: string[]) {
 	return ret.join(" ");
 }
 
-export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean) {
+export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean): Promise<void> {
 	const restartAction = buttonText || "Restart";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
 	const ringLogContents = ringLog.toString();
