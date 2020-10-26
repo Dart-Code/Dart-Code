@@ -552,7 +552,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}),
 		testCoordinator.onFirstFailure.listen(async (node) => {
 			if (config.openTestViewOnFailure)
-				tryReveal(node);
+				// HACK: Because the tree update is async, this code may fire before
+				// the tree has been re-sorted, so wait a short period before revealing
+				// to let the tree update complete.
+				setTimeout(() => tryReveal(node), 100);
 		}),
 		testTreeView.onDidChangeSelection((e) => {
 			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
