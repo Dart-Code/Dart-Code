@@ -4,9 +4,11 @@ import { firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 
 const devToolsPageNames: { [key: string]: string } = {
-	inspector: "Flutter Widget Inspector",
-	memory: "Flutter Memory View",
-	performance: "Flutter Performance View",
+	inspector: "Widget Inspector",
+	logging: "Logging View",
+	memory: "Memory View",
+	network: "Network View",
+	performance: "Performance View",
 	timeline: "Flutter Timeline",
 };
 
