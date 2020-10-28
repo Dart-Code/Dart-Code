@@ -8,7 +8,7 @@ export function nullToUndefined<T>(value: T): NullAsUndefined<T> {
 
 let isShowingAnalyzerError = false;
 
-export function reportAnalyzerTerminated(duringStartup: boolean = false) {
+export function reportAnalyzerTerminatedWithError(duringStartup: boolean = false) {
 	if (isShowingAnalyzerError)
 		return;
 	isShowingAnalyzerError = true;

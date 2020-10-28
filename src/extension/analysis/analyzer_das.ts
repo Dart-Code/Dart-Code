@@ -12,7 +12,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { escapeShell } from "../utils";
-import { reportAnalyzerTerminated } from "../utils/misc";
+import { reportAnalyzerTerminatedWithError as reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { getToolEnv } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
@@ -122,7 +122,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 
 		this.createProcess(undefined, binaryPath, processArgs, { toolEnv: getToolEnv() });
 		this.process?.on("exit", (code, signal) => {
-			this.handleAnalyzerTerminated();
+			this.handleAnalyzerTerminated(!!code);
 		});
 
 		this.registerForServerStatus((n) => {
@@ -159,14 +159,15 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			this.handleAnalyzerTerminated();
+			this.handleAnalyzerTerminated(true);
 			throw e;
 		}
 	}
 
-	private handleAnalyzerTerminated() {
+	private handleAnalyzerTerminated(withError: boolean) {
 		const serverHasStarted = !!this.version;
-		reportAnalyzerTerminated(!serverHasStarted);
+		if (withError)
+			reportAnalyzerTerminatedWithError(!serverHasStarted);
 		this.notify(this.serverTerminatedSubscriptions, undefined);
 	}
 
