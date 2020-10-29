@@ -285,7 +285,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, deviceToLaunchOn, this.deviceManager);
+		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, isTest, deviceToLaunchOn, this.deviceManager);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -417,7 +417,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return vmServiceUriOrPort;
 	}
 
-	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager) {
+	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager) {
 		const conf = config.for(folder && folder.uri);
 
 		// Attach any properties that weren't explicitly set.
@@ -460,7 +460,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.flutterVersion = this.flutterCapabilities.version;
-			debugConfig.args = conf.flutterAdditionalArgs.concat(debugConfig.args);
+			debugConfig.args = conf.flutterAdditionalArgs.concat(isTest ? conf.flutterTestAdditionalArgs : []).concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.

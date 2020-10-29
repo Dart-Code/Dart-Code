@@ -1337,6 +1337,15 @@
 						"type": "string"
 					}
 				},
+				"dart.flutterTestAdditionalArgs": {
+					"type": "array",
+					"default": [],
+					"description": "Additional args to pass to flutter test command.",
+					"scope": "resource",
+					"items": {
+						"type": "string"
+					}
+				},
 				"dart.evaluateGettersInDebugViews": {
 					"type": "boolean",
 					"default": true,
