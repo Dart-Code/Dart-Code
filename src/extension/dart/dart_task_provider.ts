@@ -60,7 +60,8 @@ export class DartTaskProvider implements vs.TaskProvider {
 	}
 
 	public async resolveTask(task: DartTask, token?: vs.CancellationToken): Promise<vs.Task> {
-		const cwd = task.scope instanceof vs.Uri ? fsPath(task.scope) : undefined;
+		const scope: any = task.scope;
+		const cwd = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
 
 		// We *must* return a new Task here, otherwise the task cannot be customised
 		// in task.json.
