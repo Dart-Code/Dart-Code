@@ -19,3 +19,7 @@ export function unique<T>(items: T[]): T[] {
 export function arraysEqual<T>(items1: T[], items2: T[]) {
 	return items1.length === items2.length && items1.every((val, i) => val === items2[i]);
 }
+
+export function arrayStartsWith<T>(items1: T[], items2: T[]) {
+	return items1.length >= items2.length && items1.slice(0, items2.length).every((val, i) => val === items2[i]);
+}

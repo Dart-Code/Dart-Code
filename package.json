@@ -2102,9 +2102,11 @@
 		],
 		"problemMatchers": [
 			{
-				"name": "dart-pub-build_runner",
-				"label": "Pub: build_runner",
-				"source": "pub",
+				"name": "dart-build_runner",
+				"label": "Dart: build_runner",
+				"owner": "dart",
+				"source": "dart",
+				"fileLocation": "relative",
 				"pattern": [
 					{
 						"regexp": "^\\[SEVERE\\] \\w+ on (.*?)(?: \\(cached\\))?:$",

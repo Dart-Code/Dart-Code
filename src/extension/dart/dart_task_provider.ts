@@ -3,36 +3,35 @@ import * as vs from "vscode";
 import { getExecutableName } from "../../shared/constants";
 import { DartSdks } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
+import { arrayStartsWith } from "../../shared/utils/array";
 import { fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { referencesBuildRunner } from "../sdk/utils";
-import { isFlutterWorkspaceFolder } from "../utils";
+import { isFlutterProjectFolder, isFlutterWorkspaceFolder } from "../utils";
 import { getToolEnv } from "../utils/processes";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 
 export type DartTaskDefinition = vs.TaskDefinition & { command?: string, args?: string[], runtimeArgs?: DartTaskRuntimeArgs };
 type DartTask = vs.Task & { definition?: DartTaskDefinition };
 type DartTaskRuntimeArgs = () => Promise<string[] | undefined> | string[] | undefined;
-interface DartTaskOptions { isBackground?: boolean, group?: vs.TaskGroup, problemMatchers?: string[] | string, runtimeArgs?: DartTaskRuntimeArgs }
-const buildRunnerBuildOptions: DartTaskOptions = { problemMatchers: "$dart-pub-build_runner", isBackground: true, group: vs.TaskGroup.Build, runtimeArgs: () => config.buildRunnerAdditionalArgs };
-const buildRunnerTestOptions: DartTaskOptions = { problemMatchers: "$dart-pub-build_runner", isBackground: true, group: vs.TaskGroup.Test, runtimeArgs: () => config.buildRunnerAdditionalArgs };
+interface DartTaskOptions { isBackground?: boolean, group?: vs.TaskGroup, problemMatchers?: string[], runtimeArgs?: DartTaskRuntimeArgs }
+
+const buildRunnerProblemMatcher = "$dart-build_runner";
+const buildRunnerBuildOptions: DartTaskOptions = { problemMatchers: [buildRunnerProblemMatcher], isBackground: true, group: vs.TaskGroup.Build, runtimeArgs: () => config.buildRunnerAdditionalArgs };
+const buildRunnerTestOptions: DartTaskOptions = { problemMatchers: [buildRunnerProblemMatcher], isBackground: true, group: vs.TaskGroup.Test, runtimeArgs: () => config.buildRunnerAdditionalArgs };
+
+const taskOptions: Array<[string[], DartTaskOptions]> = [
+	// test must come first so it matches before the next catch-all one
+	[["pub", "run", "build_runner", "test"], buildRunnerTestOptions],
+	[["pub", "run", "build_runner"], buildRunnerBuildOptions],
+];
 
 export class DartTaskProvider implements vs.TaskProvider {
 	static readonly type = "dart"; // also referenced in package.json
 
 	constructor(private readonly context: vs.ExtensionContext, private sdks: DartSdks) {
-		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri) => this.runImmediately(this.createDartDocTask(uri))));
-	}
-
-	private createDartDocTask(folder: vs.WorkspaceFolder | vs.Uri) {
-		return this.createTask(folder, "dartdoc", []);
-	}
-
-	private async runImmediately(task: Promise<vs.Task | undefined>) {
-		const t = await task;
-		if (t)
-			return vs.tasks.executeTask(t);
+		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri) => this.runTask(uri, "dartdoc", [])));
 	}
 
 	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
@@ -41,7 +40,7 @@ export class DartTaskProvider implements vs.TaskProvider {
 		const promises: Array<Promise<vs.Task | undefined>> = [];
 		dartProjects.forEach((folder) => {
 			const isFlutter = isFlutterWorkspaceFolder(folder);
-			promises.push(this.createDartDocTask(folder));
+			promises.push(this.createTask(folder, "dartdoc", []));
 			promises.push(this.createPubTask(folder, isFlutter, ["get"]));
 			promises.push(this.createPubTask(folder, isFlutter, ["upgrade"]));
 			if (referencesBuildRunner(fsPath(folder.uri))) {
@@ -60,48 +59,9 @@ export class DartTaskProvider implements vs.TaskProvider {
 		return tasks;
 	}
 
-	private createPubTask(folder: vs.WorkspaceFolder, isFlutter: boolean, args: string[], options: DartTaskOptions = {}) {
-		return this.createTask(
-			folder,
-			isFlutter ? "flutter" : "pub",
-			isFlutter ? ["pub", ...args] : args,
-			options,
-		);
-	}
-
-	private async createTask(folderOrPrompt: vs.WorkspaceFolder | vs.Uri | undefined, command: string, args: string[], options: DartTaskOptions = {}) {
-		if (folderOrPrompt instanceof vs.Uri || !folderOrPrompt) {
-			const folder = await getFolderToRunCommandIn("Select which project to generate documentation for");
-			if (!folder)
-				return;
-			const wf = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
-			if (!wf)
-				return;
-			folderOrPrompt = wf;
-		}
-
-		const task = new vs.Task(
-			{
-				args,
-				command,
-				runtimeArgs: options.runtimeArgs,
-				type: DartTaskProvider.type,
-			} as DartTaskDefinition,
-			folderOrPrompt,
-			(command === "dart" || command === "flutter" ? args : [command, ...args]).join(" "),
-			DartTaskProvider.type,
-			undefined,
-			options.problemMatchers,
-		);
-
-		task.isBackground = options.isBackground ?? false;
-		task.group = options.group;
-
-		return this.resolveTask(task);
-	}
-
 	public async resolveTask(task: DartTask, token?: vs.CancellationToken): Promise<vs.Task> {
 		const cwd = task.scope instanceof vs.Uri ? fsPath(task.scope) : undefined;
+
 		// We *must* return a new Task here, otherwise the task cannot be customised
 		// in task.json.
 		// https://github.com/microsoft/vscode/issues/58836#issuecomment-696620105
@@ -112,34 +72,96 @@ export class DartTaskProvider implements vs.TaskProvider {
 			task.scope || vs.TaskScope.Workspace,
 			task.name,
 			task.source,
-			await createTaskExecution(this.sdks, task.definition, cwd),
-			task.problemMatchers,
+			await this.createTaskExecution(this.sdks, task.definition, cwd),
+			undefined,
 		);
 
-		newTask.group = task.group;
-		newTask.isBackground = task.isBackground;
+		const options = this.getOptions(task.definition);
+
+		newTask.problemMatchers = (newTask.problemMatchers && newTask.problemMatchers.length ? newTask.problemMatchers : options?.problemMatchers) ?? [];
+		newTask.group = task.group ?? options?.group;
+		newTask.isBackground = task.isBackground || (options?.isBackground ?? false);
+
+		// Pub commands should be run through Flutter if a Flutter project.
+		if (task.definition.command === "pub" && isFlutterProjectFolder(cwd)) {
+			newTask.definition.command = "flutter";
+			newTask.definition.args = ["pub", ...newTask.definition.args];
+		}
 
 		return newTask;
 	}
-}
 
-export async function createTaskExecution(sdks: DartSdks, definition: DartTaskDefinition, cwd: string | undefined): Promise<vs.ProcessExecution | undefined> {
-	if (!definition.command)
-		return;
-
-	const sdk = definition.command === "flutter" && sdks.flutter ? sdks.flutter : sdks.dart;
-	const executable = getExecutableName(definition.command);
-	const program = path.join(sdk, "bin", executable);
-	let args = definition.args ?? [];
-	if (definition.runtimeArgs) {
-		const runtimeArgs = await definition.runtimeArgs();
-		if (runtimeArgs)
-			args = args.concat(runtimeArgs);
+	private getOptions(def: DartTaskDefinition): DartTaskOptions | undefined {
+		let taskCommand = [def.command, ...(def.args ?? [])];
+		// Strip "flutter" from the front for easier matching.
+		if (taskCommand[0] === "flutter")
+			taskCommand = taskCommand.slice(1);
+		for (const knownOption of taskOptions) {
+			const [command, options] = knownOption;
+			if (arrayStartsWith(taskCommand, command))
+				return options;
+		}
 	}
 
-	return new vs.ProcessExecution(
-		program,
-		args || [],
-		{ cwd, env: getToolEnv() },
-	);
+	private createTaskStub(folder: vs.WorkspaceFolder, command: string, args: string[]) {
+		return new vs.Task(
+			{ type: DartTaskProvider.type, command, args } as DartTaskDefinition,
+			folder,
+			[command, ...args].join(" "),
+			DartTaskProvider.type,
+			undefined,
+			undefined
+		);
+	}
+
+	private createPubTask(folder: vs.WorkspaceFolder, isFlutter: boolean, args: string[], options: DartTaskOptions = {}) {
+		return this.createTask(
+			folder,
+			isFlutter ? "flutter" : "pub",
+			isFlutter ? ["pub", ...args] : args,
+		);
+	}
+
+	private async createTask(wf: vs.WorkspaceFolder, command: string, args: string[]) {
+		const task = this.createTaskStub(wf, command, args);
+		return this.resolveTask(task);
+	}
+
+	private async runTask(uri: vs.Uri, command: string, args: string[]) {
+		let folder = uri ? vs.workspace.getWorkspaceFolder(uri) : undefined;
+		if (!folder) {
+			const folderPath = await getFolderToRunCommandIn("Select which project to run the command for");
+			if (!folderPath)
+				return;
+			folder = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderPath));
+		}
+		if (!folder)
+			return;
+
+		const task = this.createTaskStub(folder, command, args);
+
+		return vs.tasks.executeTask(task);
+	}
+
+	private async createTaskExecution(sdks: DartSdks, definition: DartTaskDefinition, cwd: string | undefined): Promise<vs.ProcessExecution | undefined> {
+		if (!definition.command)
+			return;
+
+		const sdk = definition.command === "flutter" && sdks.flutter ? sdks.flutter : sdks.dart;
+		const executable = getExecutableName(definition.command);
+		const program = path.join(sdk, "bin", executable);
+		let args = definition.args ?? [];
+		if (definition.runtimeArgs) {
+			const runtimeArgs = await definition.runtimeArgs();
+			if (runtimeArgs)
+				args = args.concat(runtimeArgs);
+		}
+
+		return new vs.ProcessExecution(
+			program,
+			args || [],
+			{ cwd, env: getToolEnv() },
+		);
+	}
+
 }
