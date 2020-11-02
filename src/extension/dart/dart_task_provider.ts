@@ -63,31 +63,36 @@ export class DartTaskProvider implements vs.TaskProvider {
 		const scope: any = task.scope;
 		const cwd = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
 
+		const newDefinition = { ...task.definition };
+
+		// Pub commands should be run through Flutter if a Flutter project.
+		if (newDefinition.command === "pub" && isFlutterProjectFolder(cwd)) {
+			newDefinition.command = "flutter";
+			newDefinition.args = ["pub", ...(newDefinition.args ?? [])];
+		}
+
+		const options = this.getOptions(newDefinition);
+		if (options?.runtimeArgs) {
+			newDefinition.args = (newDefinition.args ?? []).concat((await options?.runtimeArgs()) ?? []);
+		}
+
 		// We *must* return a new Task here, otherwise the task cannot be customised
 		// in task.json.
 		// https://github.com/microsoft/vscode/issues/58836#issuecomment-696620105
-		const newTask = new vs.Task(
-			task.definition,
+		const newTask: DartTask = new vs.Task(
+			newDefinition,
 			// This should never be undefined, but the type allows it but the constructor
 			// arg does not.
 			task.scope || vs.TaskScope.Workspace,
 			task.name,
 			task.source,
-			await this.createTaskExecution(this.sdks, task.definition, cwd),
+			await this.createTaskExecution(this.sdks, newDefinition, cwd),
 			undefined,
 		);
-
-		const options = this.getOptions(task.definition);
 
 		newTask.problemMatchers = (newTask.problemMatchers && newTask.problemMatchers.length ? newTask.problemMatchers : options?.problemMatchers) ?? [];
 		newTask.group = task.group ?? options?.group;
 		newTask.isBackground = task.isBackground || (options?.isBackground ?? false);
-
-		// Pub commands should be run through Flutter if a Flutter project.
-		if (task.definition.command === "pub" && isFlutterProjectFolder(cwd)) {
-			newTask.definition.command = "flutter";
-			newTask.definition.args = ["pub", ...newTask.definition.args];
-		}
 
 		return newTask;
 	}
