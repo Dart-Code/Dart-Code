@@ -2109,14 +2109,14 @@
 				"fileLocation": "relative",
 				"pattern": [
 					{
-						"regexp": "^\\[SEVERE\\] \\w+ on (.*?)(?: \\(cached\\))?:$",
+						"regexp": "^\\[SEVERE\\] .+ on (.+?)(?: \\(cached\\))?:$",
 						"file": 1
 					},
 					{
-						"regexp": "^Error running .*$"
+						"regexp": "^$"
 					},
 					{
-						"regexp": "^(.*)$",
+						"regexp": "^(.+)$",
 						"message": 1
 					},
 					{
