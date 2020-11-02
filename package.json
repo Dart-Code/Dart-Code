@@ -1790,12 +1790,6 @@
 					"description": "Whether to show quick fixes for ignoring hints and lints.",
 					"scope": "window"
 				},
-				"dart.previewBuildRunnerTasks": {
-					"type": "boolean",
-					"default": false,
-					"description": "Whether to register Pub Build Runner tasks with VS Code.",
-					"scope": "window"
-				},
 				"dart.embedDevTools": {
 					"type": "boolean",
 					"default": true,

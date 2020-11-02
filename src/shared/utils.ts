@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
-import { flutterExecutableName, isWin } from "./constants";
+import { executableNames, isWin } from "./constants";
 import { LogCategory } from "./enums";
 import { CustomScript, IAmDisposable, Logger, SomeError } from "./interfaces";
 
@@ -81,7 +81,7 @@ export function uriToFilePath(uri: string, returnWindowsPath: boolean = isWin): 
 
 export function isDartSdkFromFlutter(dartSdkPath: string) {
 	const possibleFlutterSdkPath = path.join(path.dirname(path.dirname(path.dirname(dartSdkPath))), "bin");
-	return fs.existsSync(path.join(possibleFlutterSdkPath, flutterExecutableName));
+	return fs.existsSync(path.join(possibleFlutterSdkPath, executableNames.flutter));
 }
 
 export function versionIsAtLeast(inputVersion: string, requiredVersion: string): boolean {

@@ -8,7 +8,7 @@ import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJEC
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { notUndefined, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
+import { PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { findProjectFolders, fsPath, mkDirRecursive } from "../../shared/utils/fs";
@@ -18,8 +18,6 @@ import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_sam
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
-import { createTaskExecution, DartTaskDefinition, DartTaskProvider } from "../dart/dart_task_provider";
-import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
 import { Stagehand } from "../pub/stagehand";
@@ -28,6 +26,7 @@ import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
 import { getGlobalFlutterArgs, safeToolSpawn } from "../utils/processes";
+import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import * as channels from "./channels";
 
 const packageNameRegex = new RegExp("^[a-z][a-z0-9_]*$");
@@ -53,7 +52,6 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
-		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", this.runTaskDartdoc, this));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
@@ -82,7 +80,7 @@ export class SdkCommands {
 
 	private async getPackages(uri: string | Uri | undefined) {
 		if (!uri || !(uri instanceof Uri)) {
-			uri = await this.getFolderToRunCommandIn("Select which folder to get packages for");
+			uri = await getFolderToRunCommandIn("Select which folder to get packages for");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -99,7 +97,7 @@ export class SdkCommands {
 
 	private async listOutdatedPackages(uri: string | Uri | undefined) {
 		if (!uri || !(uri instanceof Uri)) {
-			uri = await this.getFolderToRunCommandIn("Select which folder to check for outdated packages");
+			uri = await getFolderToRunCommandIn("Select which folder to check for outdated packages");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -115,7 +113,7 @@ export class SdkCommands {
 
 	private async upgradePackages(uri: string | Uri | undefined) {
 		if (!uri || !(uri instanceof Uri)) {
-			uri = await this.getFolderToRunCommandIn("Select which folder to upgrade packages in");
+			uri = await getFolderToRunCommandIn("Select which folder to upgrade packages in");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -128,32 +126,10 @@ export class SdkCommands {
 			return this.runPub(["upgrade"], uri);
 	}
 
-	private async runTaskDartdoc(uri: string | Uri | undefined) {
-		return this.runTaskImpl(uri, "dartdoc");
-	}
-
-	private async runTaskImpl(uri: string | Uri | undefined, command: string) {
-		if (!uri || !(uri instanceof Uri)) {
-			uri = await this.getFolderToRunCommandIn("Select which project to generate documentation for");
-			// If the user cancelled, bail out (otherwise we'll prompt them again below).
-			if (!uri)
-				return;
-		}
-		if (typeof uri === "string")
-			uri = vs.Uri.file(uri);
-		const folder = vs.workspace.getWorkspaceFolder(uri);
-		if (!folder)
-			return;
-
-		const def = { command, type: DartTaskProvider.type } as DartTaskDefinition;
-		const task = new vs.Task(def, folder, command, DartTaskProvider.type, createTaskExecution(this.sdks, def, fsPath(folder.uri)));
-		return vs.tasks.executeTask(task);
-	}
-
 	private async flutterGetPackages(selection: vs.Uri | undefined): Promise<number | undefined> {
 		// TODO: This should just bounce to dart.getPackages, and ensure that handles all of the cases here.
 		if (!selection) {
-			const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection);
+			const path = await getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection);
 			if (!path)
 				return;
 			selection = vs.Uri.file(path);
@@ -169,7 +145,7 @@ export class SdkCommands {
 
 	private async flutterClean(selection: vs.Uri | undefined): Promise<number | undefined> {
 		if (!selection) {
-			const path = await this.getFolderToRunCommandIn(`Select the folder to run "flutter clean" in`, selection, true);
+			const path = await getFolderToRunCommandIn(`Select the folder to run "flutter clean" in`, selection, true);
 			if (!path)
 				return;
 			selection = vs.Uri.file(path);
@@ -246,7 +222,7 @@ export class SdkCommands {
 
 	private async flutterCreate(projectPath: string | undefined, projectName?: string, sampleID?: string) {
 		if (!projectPath) {
-			projectPath = await this.getFolderToRunCommandIn(`Select the folder to run "flutter create" in`, undefined, true);
+			projectPath = await getFolderToRunCommandIn(`Select the folder to run "flutter create" in`, undefined, true);
 			if (!projectPath)
 				return;
 		}
@@ -385,7 +361,7 @@ export class SdkCommands {
 		selection: vs.Uri | undefined,
 		alwaysShowOutput = false,
 	): Promise<number | undefined> {
-		const folderToRunCommandIn = await this.getFolderToRunCommandIn(placeHolder, selection);
+		const folderToRunCommandIn = await getFolderToRunCommandIn(placeHolder, selection);
 		if (!folderToRunCommandIn)
 			return;
 
@@ -402,52 +378,6 @@ export class SdkCommands {
 			|| path.basename(folderToRunCommandIn);
 
 		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput);
-	}
-
-	private async getFolderToRunCommandIn(placeHolder: string, selection?: vs.Uri, flutterOnly = false): Promise<string | undefined> {
-		// Attempt to find a project based on the supplied folder of active file.
-		let file = selection && fsPath(selection);
-		file = file || (vs.window.activeTextEditor && fsPath(vs.window.activeTextEditor.document.uri));
-		const folder = file && locateBestProjectRoot(file);
-
-		if (folder)
-			return folder;
-
-		// Otherwise look for what projects we have.
-		const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-		const selectableFolders = (await findProjectFolders(topLevelFolders, { requirePubspec: true, sort: true }))
-			.filter(flutterOnly ? util.isFlutterProjectFolder : () => true);
-
-		if (!selectableFolders || !selectableFolders.length) {
-			const projectTypes = flutterOnly ? "Flutter" : "Dart/Flutter";
-			vs.window.showWarningMessage(`No ${projectTypes} projects were found.`);
-			return undefined;
-		}
-
-		return this.showFolderPicker(selectableFolders, placeHolder); // TODO: What if the user didn't pick anything?
-	}
-
-	private async showFolderPicker(folders: string[], placeHolder: string): Promise<string | undefined> {
-		// No point asking the user if there's only one.
-		if (folders.length === 1) {
-			return folders[0];
-		}
-
-		const items = folders.map((f) => {
-			const workspaceFolder = vs.workspace.getWorkspaceFolder(Uri.file(f));
-			if (!workspaceFolder)
-				return undefined;
-
-			const workspacePathParent = path.dirname(fsPath(workspaceFolder.uri));
-			return {
-				description: util.homeRelativePath(workspacePathParent),
-				label: path.relative(workspacePathParent, f),
-				path: f,
-			} as vs.QuickPickItem & { path: string };
-		}).filter(notUndefined);
-
-		const selectedFolder = await vs.window.showQuickPick(items, { placeHolder });
-		return selectedFolder && selectedFolder.path;
 	}
 
 	private runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {

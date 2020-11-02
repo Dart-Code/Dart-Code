@@ -86,7 +86,6 @@ import { RankingCodeActionProvider } from "./providers/ranking_code_action_provi
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
-import { PubBuildRunnerTaskProvider } from "./pub/build_runner_task_provider";
 import { PubGlobal } from "./pub/global";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
@@ -349,11 +348,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
 	// Task handlers.
-	if (config.previewBuildRunnerTasks) {
-		const provider = new PubBuildRunnerTaskProvider(sdks);
-		context.subscriptions.push(vs.tasks.registerTaskProvider(provider.type, provider));
-	}
-	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(sdks)));
+	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(context, sdks)));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", () => true)));
@@ -833,7 +828,6 @@ function getSettingsThatRequireRestart() {
 		+ config.analysisServerFolding
 		+ config.showMainCodeLens
 		+ config.showTestCodeLens
-		+ config.previewBuildRunnerTasks
 		+ config.updateImportsOnRename
 		+ config.previewBazelWorkspaceCustomScripts
 		+ config.flutterOutline

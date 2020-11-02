@@ -15,17 +15,20 @@ export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
 export const platformDisplayName = isWin ? "win" : isMac ? "mac" : isChromeOS ? "chromeos" : "linux";
 export const platformEol = isWin ? "\r\n" : "\n";
 
-export const dartExecutableName = isWin ? "dart.exe" : "dart";
-export const dartDocExecutableName = isWin ? "dartdoc.bat" : "dartdoc";
-export const pubExecutableName = isWin ? "pub.bat" : "pub";
-export const flutterExecutableName = isWin ? "flutter.bat" : "flutter";
 export const androidStudioExecutableNames = isWin ? ["studio64.exe"] : ["studio.sh", "studio"];
-export const dartVMPath = "bin/" + dartExecutableName;
-export const dartDocPath = "bin/" + dartDocExecutableName;
-export const pubPath = "bin/" + pubExecutableName;
+export const executableNames = {
+	dart: isWin ? "dart.exe" : "dart",
+	dartdoc: isWin ? "dartdoc.bat" : "dartdoc",
+	flutter: isWin ? "flutter.bat" : "flutter",
+	pub: isWin ? "pub.bat" : "pub",
+};
+export const getExecutableName = (cmd: string) => (executableNames as { [key: string]: string | undefined })[cmd] ?? cmd;
+export const dartVMPath = "bin/" + executableNames.dart;
+export const dartDocPath = "bin/" + executableNames.dartdoc;
+export const pubPath = "bin/" + executableNames.pub;
+export const flutterPath = "bin/" + executableNames.flutter;
 export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
-export const flutterPath = "bin/" + flutterExecutableName;
 export const flutterSnapScript = "/snap/flutter/current/flutter.sh";
 export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/" + s);
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";

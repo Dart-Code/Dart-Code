@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
-import { analyzerSnapshotPath, dartExecutableName, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, flutterExecutableName, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, isLinux, isMac, isWin, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, isLinux, isMac, isWin, showLogAction } from "../../shared/constants";
 import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
@@ -309,11 +309,11 @@ export class SdkUtils {
 	}
 
 	private findDartSdk(folders: string[]) {
-		return this.searchPaths(folders, dartExecutableName, (p) => this.hasExecutable(p, dartVMPath) && hasDartAnalysisServer(p));
+		return this.searchPaths(folders, executableNames.dart, (p) => this.hasExecutable(p, dartVMPath) && hasDartAnalysisServer(p));
 	}
 
 	private findFlutterSdk(folders: string[]) {
-		return this.searchPaths(folders, flutterExecutableName, (p) => this.hasExecutable(p, flutterPath));
+		return this.searchPaths(folders, executableNames.flutter, (p) => this.hasExecutable(p, flutterPath));
 	}
 
 	private hasExecutable(folder: string, executablePath: string) {
