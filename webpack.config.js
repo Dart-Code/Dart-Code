@@ -46,6 +46,9 @@ module.exports = (env) => {
 			libraryTarget: "commonjs2",
 			path: path.resolve(__dirname, "out/dist"),
 		},
+		optimization: {
+			minimize: false,
+		},
 		resolve: {
 			extensions: [".ts", ".js"],
 		},
