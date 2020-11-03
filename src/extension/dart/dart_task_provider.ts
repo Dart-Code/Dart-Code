@@ -144,7 +144,7 @@ export class DartTaskProvider implements vs.TaskProvider {
 		if (!folder)
 			return;
 
-		const task = this.createTaskStub(folder, command, args);
+		const task = await this.createTask(folder, command, args);
 
 		return vs.tasks.executeTask(task);
 	}

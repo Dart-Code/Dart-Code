@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, delay, deleteDirectoryRecursive, helloWorldFolder } from "../../helpers";
+import { activate, deleteDirectoryRecursive, helloWorldFolder } from "../../helpers";
 
 describe("dart tasks", () => {
 	beforeEach("activate", () => activate());
@@ -20,6 +20,5 @@ describe("dart tasks", () => {
 			const taskExecution = await vs.commands.executeCommand("dart.task.dartdoc") as vs.TaskExecution;
 		});
 		assert.ok(fs.existsSync(dartDocOutputPath));
-		await delay(10000);
 	});
 });
