@@ -129,6 +129,7 @@ class Config {
 	public setGlobalDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value, ConfigurationTarget.Global); }
 	public setGlobalDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value, ConfigurationTarget.Global); }
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
+	public setPreviewLsp(value: boolean): Thenable<void> { return this.setConfig("previewLsp", value, ConfigurationTarget.Global); }
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Thenable<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
 	public setSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }

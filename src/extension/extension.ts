@@ -55,6 +55,7 @@ import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decoration
 import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decorations_lsp";
 import { FlutterUiGuideDecorationsDas } from "./decorations/flutter_ui_guides_decorations_das";
 import { FlutterUiGuideDecorationsLsp } from "./decorations/flutter_ui_guides_decorations_lsp";
+import { getExperiments, KnownExperiments } from "./experiments";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { DasFlutterOutlineProvider, FlutterOutlineProvider, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
@@ -122,9 +123,11 @@ let analytics: Analytics;
 
 let showTodos: boolean | undefined;
 let previousSettings: string;
+
+let experiments: KnownExperiments;
+
 const loggers: IAmDisposable[] = [];
 let ringLogger: IAmDisposable | undefined;
-
 const logger = new EmittingLogger();
 
 // Keep a running in-memory buffer of last 200 log events we can give to the
@@ -133,7 +136,7 @@ export const ringLog: RingLog = new RingLog(200);
 
 export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
 	// Ring logger is only set up once and presist over silent restarts.
-	if (!isRestart)
+	if (!ringLogger)
 		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(500)));
 
 	if (isDevExtension)
@@ -193,6 +196,13 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (sdks.flutterVersion) {
 		flutterCapabilities.version = sdks.flutterVersion;
 		analytics.flutterSdkVersion = sdks.flutterVersion;
+	}
+
+	try {
+		if (!experiments)
+			experiments = getExperiments(logger, workspaceContext, extContext);
+	} catch (e) {
+		logger.error(e);
 	}
 
 	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, workspaceContext.config.useLsp);
