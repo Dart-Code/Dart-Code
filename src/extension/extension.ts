@@ -6,7 +6,7 @@ import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/
 import { dartPlatformName, flutterExtensionIdentifier, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IFlutterDaemon, Logger, Sdks } from "../shared/interfaces";
+import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
@@ -122,7 +122,8 @@ let analytics: Analytics;
 
 let showTodos: boolean | undefined;
 let previousSettings: string;
-const loggers: Array<{ dispose: () => Promise<void> | void }> = [];
+const loggers: IAmDisposable[] = [];
+let ringLogger: IAmDisposable | undefined;
 
 const logger = new EmittingLogger();
 
@@ -131,12 +132,12 @@ const logger = new EmittingLogger();
 export const ringLog: RingLog = new RingLog(200);
 
 export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
-	if (!isRestart) {
-		if (isDevExtension)
-			logToConsole(logger);
+	// Ring logger is only set up once and presist over silent restarts.
+	if (!isRestart)
+		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(500)));
 
-		logger.onLog((message) => ringLog.log(message.toLine(500)));
-	}
+	if (isDevExtension)
+		context.subscriptions.push(logToConsole(logger));
 
 	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
@@ -838,15 +839,17 @@ function getSettingsThatRequireRestart() {
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false);
 	await analyzer?.dispose();
+	if (loggers) {
+		await Promise.all(loggers.map((logger) => logger.dispose()));
+		loggers.length = 0;
+	}
 	vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
 	if (!isRestart) {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
 		vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
 		await analytics.logExtensionShutdown();
-		if (loggers) {
-			await Promise.all(loggers.map((logger) => logger.dispose()));
-			loggers.length = 0;
-		}
+		ringLogger?.dispose();
+		logger.dispose();
 	}
 }
 
