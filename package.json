@@ -1200,7 +1200,7 @@
 				"dart.allowTestsOutsideTestFolder": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Whether to consider files ending `_test.dart` that are outside of the test folder as tests. This should be enabled if you put tests inside the `lib` folder of your Flutter app so they will be run with `flutter test` and not `flutter run`.",
+					"markdownDescription": "Whether to consider files ending `_test.dart` that are outside of the test directory as tests. This should be enabled if you put tests inside the `lib` directory of your Flutter app so they will be run with `flutter test` and not `flutter run`.",
 					"scope": "window"
 				},
 				"dart.enableSdkFormatter": {
@@ -1400,13 +1400,13 @@
 				"dart.showDevToolsDebugToolBarButtons": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show DevTools buttons in the Debug Toolbar.",
+					"description": "Whether to show DevTools buttons in the Debug toolbar.",
 					"scope": "window"
 				},
 				"dart.doNotFormat": {
 					"type": "array",
 					"default": [],
-					"markdownDescription": "An array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use `**/test/**` to skip formatting for all test folders.",
+					"markdownDescription": "An array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use `**/test/**` to skip formatting for all test directories.",
 					"items": {
 						"type": "string"
 					},
@@ -1712,7 +1712,7 @@
 						"string"
 					],
 					"default": null,
-					"markdownDescription": "The path to a log file for `flutter run`, which is used to launch Flutter applications from VS Code. This is useful when trying to diagnose issues with applications launching (or failing to) on simulators and devices. Use `${name}` in the log file name to prevent concurrent debug sessions overwriting each others logs.",
+					"markdownDescription": "The path to a log file for `flutter run`, which is used to launch Flutter apps from VS Code. This is useful when trying to diagnose issues with apps launching (or failing to) on simulators and devices. Use `${name}` in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "machine-overridable"
 				},
 				"dart.flutterTestLogFile": {
@@ -1754,7 +1754,7 @@
 						"string"
 					],
 					"default": null,
-					"markdownDescription": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web applications. Use `${name`} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
+					"markdownDescription": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web apps. Use `${name`} in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "machine-overridable"
 				},
 				"dart.vmAdditionalArgs": {
@@ -1790,7 +1790,7 @@
 				"dart.warnWhenEditingFilesInPubCache": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to show a warning when modifying files in Pub's cache folder.",
+					"markdownDescription": "Whether to show a warning when modifying files in the [system package cache](https://dart.dev/tools/pub/glossary#system-cache) directory.",
 					"scope": "window"
 				},
 				"dart.showIgnoreQuickFixes": {
@@ -1802,13 +1802,13 @@
 				"dart.embedDevTools": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to load DevTools embedded inside VS Code.",
+					"markdownDescription": "Whether to load [Dart DevTools](https://dart.dev/tools/dart-devtools) embedded inside VS Code.",
 					"scope": "window"
 				},
 				"dart.updateImportsOnRename": {
 					"type": "boolean",
 					"default": true,
-					"description": "Whether to automatically update imports when moving/renaming files. Currently only works for single-file moves/renames.",
+					"description": "Whether to automatically update imports when moving or renaming files. Currently only supports single file moves / renames.",
 					"scope": "window"
 				},
 				"dart.flutterGutterIcons": {
@@ -1898,27 +1898,27 @@
 									"terminal"
 								],
 								"default": "debugConsole",
-								"description": "Whether to run applications in the debug console (which does not support reading user input) or a VS Code terminal (which does). Running in a terminal is only supported for Dart SDKs from v2.7.1."
+								"description": "Whether to run apps in the debug console (which does not support reading user input) or a VS Code terminal (which does)."
 							},
 							"enableAsserts": {
 								"type": "boolean",
-								"description": "Run the VM with --asserts-enabled.",
+								"markdownDescription": "Run the VM with `--asserts-enabled`.",
 								"default": true
 							},
 							"program": {
 								"type": "string",
-								"description": "Path to the script to start (eg. bin/main.dart or lib/main.dart) or optionally a test folder to run a whole suite."
+								"markdownDescription": "Path to the script to start (e.g. `bin/main.dart` or `lib/main.dart`) or optionally a test directory to run a whole suite."
 							},
 							"runTestsOnDevice": {
 								"type": "boolean",
-								"description": "Whether to run Flutter test scipts on a device using 'flutter run' instead of 'flutter test'. Only works for whole scripts, not individual tests."
+								"markdownDescription": "Whether to run Flutter test scripts on a device using `flutter run` instead of `flutter test`. Only works for whole scripts, not individual tests."
 							},
 							"showMemoryUsage": {
 								"type": "boolean",
 								"description": "Show memory usage for your Flutter app in the status bar during debug sessions (if not set, will automatically show for profile builds).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage."
 							},
 							"flutterMode": {
-								"description": "The mode for launching the Flutter application:\n\ndebug: Turns on all assertions, includes all debug information, enables all debugger aids and optimizes for fast dev cycles\n\nrelease: Turns off all assertions, strips as much debug information as possible, turns of debugger aids and optimises for fast startup, fast execution and small package sizes.\n\nprofile: Same as release mode exept profiling aids and tracing are enabled.",
+								"description": "The mode for launching the Flutter app:\n\ndebug: Turns on all assertions, includes all debug information, enables all debugger aids and optimizes for fast dev cycles\n\nrelease: Turns off all assertions, strips as much debug information as possible, turns of debugger aids and optimises for fast startup, fast execution and small package sizes.\n\nprofile: Same as release mode exept profiling aids and tracing are enabled.",
 								"enum": [
 									"debug",
 									"release",
@@ -1927,7 +1927,7 @@
 								"default": "debug"
 							},
 							"flutterPlatform": {
-								"description": "Passes the --target-platform option to the flutter run command. Ignored on iOS.",
+								"markdownDescription": "Passes the `--target-platform` option to the `flutter run` command. Ignored on iOS.",
 								"enum": [
 									"default",
 									"android-arm",
@@ -1949,7 +1949,7 @@
 								],
 								"properties": {
 									"title": {
-										"description": "Text for the CodeLens link. ${debugType} will be replaced with 'Run' or 'Debug' depending on the link type (see 'for' property).",
+										"markdownDescription": "Text for the CodeLens link. `${debugType}` will be replaced with 'Run' or 'Debug' depending on the link type (see 'for' property).",
 										"type": "string"
 									},
 									"path": {
@@ -1980,12 +1980,12 @@
 								}
 							},
 							"env": {
-								"description": "Environment variables passed to the Dart/Flutter process."
+								"description": "Environment variables passed to the Dart / Flutter process."
 							},
 							"vmAdditionalArgs": {
 								"type": "array",
 								"default": [],
-								"description": "Additional args to pass to the Dart VM when running/debugging command line apps.",
+								"description": "Additional args to pass to the Dart VM when running / debugging command line apps.",
 								"items": {
 									"type": "string"
 								}
@@ -2016,7 +2016,7 @@
 							},
 							"serviceInfoFile": {
 								"type": "string",
-								"description": "File to read (expected to be written with --write-service-info) VM service details from if vmServiceUri is not supplied."
+								"markdownDescription": "File to read (expected to be written with `--write-service-info`) VM service details from if `vmServiceUri` is not supplied."
 							}
 						}
 					}
@@ -2024,7 +2024,7 @@
 				"configurationSnippets": [
 					{
 						"label": "Dart: Launch",
-						"description": "Launch and debug Dart applications",
+						"description": "Launch and debug Dart apps",
 						"body": {
 							"name": "Dart",
 							"type": "dart",
@@ -2034,7 +2034,7 @@
 					},
 					{
 						"label": "Dart: Attach",
-						"description": "Debug an already-running Dart application",
+						"description": "Debug an already-running Dart app",
 						"body": {
 							"name": "Dart: Attach to Process",
 							"type": "dart",
@@ -2043,7 +2043,7 @@
 					},
 					{
 						"label": "Dart: Run all Tests",
-						"description": "Run all tests in a Dart application",
+						"description": "Run all tests in a Dart app",
 						"body": {
 							"name": "Dart: Run all Tests",
 							"type": "dart",
@@ -2053,7 +2053,7 @@
 					},
 					{
 						"label": "Flutter: Launch",
-						"description": "Launch and debug Flutter applications",
+						"description": "Launch and debug Flutter apps",
 						"body": {
 							"name": "Flutter",
 							"type": "dart",
@@ -2072,7 +2072,7 @@
 					},
 					{
 						"label": "Flutter: Run all Tests",
-						"description": "Run all tests in a Flutter application",
+						"description": "Run all tests in a Flutter app",
 						"body": {
 							"name": "Flutter: Run all Tests",
 							"type": "dart",
