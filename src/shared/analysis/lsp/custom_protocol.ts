@@ -1,7 +1,7 @@
 import { Location, NotificationType, Range, RequestType, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
 
 export class AnalyzerStatusNotification {
-	public static type = new NotificationType<AnalyzerStatusParams, void>("$/analyzerStatus");
+	public static type = new NotificationType<AnalyzerStatusParams>("$/analyzerStatus");
 }
 
 export interface AnalyzerStatusParams {
@@ -9,31 +9,31 @@ export interface AnalyzerStatusParams {
 }
 
 export class PublishClosingLabelsNotification {
-	public static type = new NotificationType<ClosingLabelsParams, void>("dart/textDocument/publishClosingLabels");
+	public static type = new NotificationType<ClosingLabelsParams>("dart/textDocument/publishClosingLabels");
 }
 
 export class PublishOutlineNotification {
-	public static type = new NotificationType<OutlineParams, void>("dart/textDocument/publishOutline");
+	public static type = new NotificationType<OutlineParams>("dart/textDocument/publishOutline");
 }
 
 export class PublishFlutterOutlineNotification {
-	public static type = new NotificationType<FlutterOutlineParams, void>("dart/textDocument/publishFlutterOutline");
+	public static type = new NotificationType<FlutterOutlineParams>("dart/textDocument/publishFlutterOutline");
 }
 
 export class SuperRequest {
-	public static type = new RequestType<TextDocumentPositionParams, Location | null, void, void>("dart/textDocument/super");
+	public static type = new RequestType<TextDocumentPositionParams, Location | null, void>("dart/textDocument/super");
 }
 
 export class DiagnosticServerRequest {
-	public static type = new RequestType<void, { port: number }, void, void>("dart/diagnosticServer");
+	public static type = new RequestType<void, { port: number }, void>("dart/diagnosticServer");
 }
 
 export class ReanalyzeRequest {
-	public static type = new RequestType<void, void, void, void>("dart/reanalyze");
+	public static type = new RequestType<void, void, void>("dart/reanalyze");
 }
 
 export class CompleteStatementRequest {
-	public static type = new RequestType<TextDocumentPositionParams, WorkspaceEdit | null, void, void>("dart/completeStatement");
+	public static type = new RequestType<TextDocumentPositionParams, WorkspaceEdit | null, void>("dart/completeStatement");
 }
 
 export interface ClosingLabelsParams {
