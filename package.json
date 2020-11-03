@@ -2147,7 +2147,7 @@
 		"vscode:prepublish": "npm run ensure-icon-submodule && webpack --mode production",
 		"build": "webpack --mode development",
 		"build-with-instrumentation": "webpack --env.instrumentation --mode development",
-		"watch": "webpack --mode development --watch --info-verbosity verbose",
+		"watch": "webpack --mode development --watch",
 		"build-tests": "tsc -p ./tsconfig.build.json",
 		"watch-non-ext": "tsc -p ./tsconfig.build.json --watch --extendedDiagnostics",
 		"lint": "eslint -c .eslintrc.js --ext .ts .",
