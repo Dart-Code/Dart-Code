@@ -837,7 +837,7 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false);
-	await analyzer.dispose();
+	await analyzer?.dispose();
 	vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
 	if (!isRestart) {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
