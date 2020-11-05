@@ -1292,12 +1292,6 @@
 					"markdownDescription": "Whether to use Flutter's [structured error support](https://medium.com/flutter/improving-flutters-error-messages-e098513cecf9) for improved error display.",
 					"scope": "resource"
 				},
-				"dart.flutterAndroidX": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Whether to pass the `--androidx` flag when running the 'Flutter: New Project' command.",
-					"scope": "window"
-				},
 				"dart.enableCompletionCommitCharacters": {
 					"type": "boolean",
 					"default": false,
