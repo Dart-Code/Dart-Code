@@ -193,9 +193,9 @@ export class DartDebugClient extends DebugClient {
 		return this.stepInRequest({ threadId: thread.id });
 	}
 
-	public async getStack(): Promise<DebugProtocol.StackTraceResponse> {
+	public async getStack(startFrame?: number, levels?: number): Promise<DebugProtocol.StackTraceResponse> {
 		const thread = await this.getMainThread();
-		return this.stackTraceRequest({ threadId: thread.id });
+		return this.stackTraceRequest({ threadId: thread.id, startFrame, levels });
 	}
 
 	public async getTopFrameVariables(scope: "Exception" | "Locals"): Promise<DebugProtocol.Variable[]> {
