@@ -26,7 +26,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 	public async getChildren(element?: PackageDep): Promise<PackageDep[]> {
 		if (!element) {
 			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
-			const allProjects = await findProjectFolders(topLevelFolders, { requirePubspec: true });
+			const allProjects = await findProjectFolders(this.logger, topLevelFolders, { requirePubspec: true });
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
 			// If there's only one, just skip over to the deps.

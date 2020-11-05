@@ -493,10 +493,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 }
 
 export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationProvider {
+	constructor(private readonly logger: Logger) { }
 
 	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders([rootFolder], { requirePubspec: true }) : [];
+		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], { requirePubspec: true }) : [];
 		if (projectFolders.length) {
 			return projectFolders.map((projectFolder) => {
 				// Compute cwd, using undefined instead of empty if rootFolder === projectFolder
@@ -519,11 +520,13 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 }
 
 export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
+	constructor(private readonly logger: Logger) { }
+
 	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
 		const results: DebugConfiguration[] = [];
 
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders([rootFolder], { requirePubspec: true }) : [];
+		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], { requirePubspec: true }) : [];
 		for (const projectFolder of projectFolders) {
 			const isFlutter = isFlutterProjectFolder(projectFolder);
 			const name = path.basename(projectFolder);

@@ -236,7 +236,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 		this.shortCacheForSupportedPlatforms = new Promise(async (resolve) => {
 			const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-			const projectFolders = await findProjectFolders(topLevelFolders, { requirePubspec: true });
+			const projectFolders = await findProjectFolders(this.logger, topLevelFolders, { requirePubspec: true });
 			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
 			const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));

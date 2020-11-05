@@ -31,7 +31,7 @@ abstract class SdkManager {
 		for (const sdkPath of sdkPaths.filter(fs.existsSync)) {
 			allPaths.push(sdkPath);
 			// Add immediate children to support folders-of-SDKs.
-			allPaths = allPaths.concat(await getChildFolders(sdkPath));
+			allPaths = allPaths.concat(await getChildFolders(this.logger, sdkPath));
 		}
 
 		// Add in the current path if it's not there.

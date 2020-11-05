@@ -359,7 +359,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
 	// Task handlers.
-	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(context, sdks)));
+	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(logger, context, sdks)));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", () => true)));
@@ -435,8 +435,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", new DartDebugAdapterDescriptorFactory(logger, context)));
 	// Also the providers for the initial configs.
 	if (vs.DebugConfigurationProviderTriggerKind) { // Temporary workaround for GitPod/Theia not having this enum.
-		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new InitialLaunchJsonDebugConfigProvider(), vs.DebugConfigurationProviderTriggerKind.Initial));
-		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(), vs.DebugConfigurationProviderTriggerKind.Dynamic));
+		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new InitialLaunchJsonDebugConfigProvider(logger), vs.DebugConfigurationProviderTriggerKind.Initial));
+		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger), vs.DebugConfigurationProviderTriggerKind.Dynamic));
 	}
 
 	if (config.flutterGutterIcons)

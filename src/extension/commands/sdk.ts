@@ -80,7 +80,7 @@ export class SdkCommands {
 
 	private async getPackages(uri: string | Uri | undefined) {
 		if (!uri || !(uri instanceof Uri)) {
-			uri = await getFolderToRunCommandIn("Select which folder to get packages for");
+			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to get packages for");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -97,7 +97,7 @@ export class SdkCommands {
 
 	private async listOutdatedPackages(uri: string | Uri | undefined) {
 		if (!uri || !(uri instanceof Uri)) {
-			uri = await getFolderToRunCommandIn("Select which folder to check for outdated packages");
+			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to check for outdated packages");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -113,7 +113,7 @@ export class SdkCommands {
 
 	private async upgradePackages(uri: string | Uri | undefined) {
 		if (!uri || !(uri instanceof Uri)) {
-			uri = await getFolderToRunCommandIn("Select which folder to upgrade packages in");
+			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages in");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -129,7 +129,7 @@ export class SdkCommands {
 	private async flutterGetPackages(selection: vs.Uri | undefined): Promise<number | undefined> {
 		// TODO: This should just bounce to dart.getPackages, and ensure that handles all of the cases here.
 		if (!selection) {
-			const path = await getFolderToRunCommandIn(`Select the folder to run "flutter packages get" in`, selection);
+			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter packages get" in`, selection);
 			if (!path)
 				return;
 			selection = vs.Uri.file(path);
@@ -145,7 +145,7 @@ export class SdkCommands {
 
 	private async flutterClean(selection: vs.Uri | undefined): Promise<number | undefined> {
 		if (!selection) {
-			const path = await getFolderToRunCommandIn(`Select the folder to run "flutter clean" in`, selection, true);
+			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, selection, true);
 			if (!path)
 				return;
 			selection = vs.Uri.file(path);
@@ -222,7 +222,7 @@ export class SdkCommands {
 
 	private async flutterCreate(projectPath: string | undefined, projectName?: string, sampleID?: string) {
 		if (!projectPath) {
-			projectPath = await getFolderToRunCommandIn(`Select the folder to run "flutter create" in`, undefined, true);
+			projectPath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, undefined, true);
 			if (!projectPath)
 				return;
 		}
@@ -334,7 +334,7 @@ export class SdkCommands {
 			//   1 - then just do that one
 			//   more than 1 - prompt to do all
 			const topLevelFolders = getDartWorkspaceFolders().map((wf) => fsPath(wf.uri));
-			const folders = await findProjectFolders(topLevelFolders, { requirePubspec: true });
+			const folders = await findProjectFolders(this.logger, topLevelFolders, { requirePubspec: true });
 			const foldersRequiringPackageGet = uniq(folders)
 				.map(vs.Uri.file)
 				.filter((uri) => config.for(uri).promptToGetPackages)
@@ -358,7 +358,7 @@ export class SdkCommands {
 		selection: vs.Uri | undefined,
 		alwaysShowOutput = false,
 	): Promise<number | undefined> {
-		const folderToRunCommandIn = await getFolderToRunCommandIn(placeHolder, selection);
+		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, selection);
 		if (!folderToRunCommandIn)
 			return;
 

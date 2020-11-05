@@ -181,7 +181,7 @@ export class DebugCommands {
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
 			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
-			const testFolders = (await findProjectFolders(topLevelFolders, { requirePubspec: true }))
+			const testFolders = (await findProjectFolders(logger, topLevelFolders, { requirePubspec: true }))
 				.map((project) => path.join(project, "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
 			if (testFolders.length === 0) {

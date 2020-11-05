@@ -24,7 +24,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 		}
 		this.packageMapDiscovery = new Promise(async (resolve) => {
 			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
-			const projectFolders = (await findProjectFolders(topLevelFolders, { requirePubspec: true }));
+			const projectFolders = (await findProjectFolders(this.logger, topLevelFolders, { requirePubspec: true }));
 			this.packageMaps = {};
 			for (const projectFolder of projectFolders) {
 				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);

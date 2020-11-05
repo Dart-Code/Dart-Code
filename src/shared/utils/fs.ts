@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
+import { Logger } from "../interfaces";
 import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
 
@@ -20,10 +21,10 @@ export function isWithinPath(file: string, folder: string) {
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
-export async function getChildFolders(parent: string, options?: { allowBin?: boolean; allowCache?: boolean }): Promise<string[]> {
+export async function getChildFolders(logger: Logger, parent: string, options?: { allowBin?: boolean; allowCache?: boolean }): Promise<string[]> {
 	if (!fs.existsSync(parent))
 		return [];
-	const files = await readDirAsync(parent);
+	const files = await readDirAsync(logger, parent);
 
 	return files.filter((f) => f.isDirectory())
 		.filter((f) => f.name !== "bin" || (options && options.allowBin)) // Don't look in bin folders
@@ -31,14 +32,18 @@ export async function getChildFolders(parent: string, options?: { allowBin?: boo
 		.map((item) => path.join(parent, item.name));
 }
 
-export function readDirAsync(folder: string): Promise<fs.Dirent[]> {
+export function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
 	return new Promise<fs.Dirent[]>((resolve, reject) => fs.readdir(folder,
 		{ withFileTypes: true },
 		(err, files) => {
-			if (err)
-				reject(err);
-			else
+			// We will generate errors if we don't have access to this folder
+			// so just skip over it.
+			if (err) {
+				logger.warn(`Skipping folder ${folder} due to error: ${err}`);
+				resolve([]);
+			} else {
 				resolve(files);
+			}
 		},
 	));
 }
@@ -77,9 +82,9 @@ async function fileExists(p: string): Promise<boolean> {
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
-export async function findProjectFolders(roots: string[], options: { sort?: boolean; requirePubspec?: boolean } = {}): Promise<string[]> {
-	const level2Folders = await flatMapAsync(roots, getChildFolders);
-	const level3Folders = await flatMapAsync(level2Folders, getChildFolders);
+export async function findProjectFolders(logger: Logger, roots: string[], options: { sort?: boolean; requirePubspec?: boolean } = {}): Promise<string[]> {
+	const level2Folders = await flatMapAsync(roots, (f) => getChildFolders(logger, f));
+	const level3Folders = await flatMapAsync(level2Folders, (f) => getChildFolders(logger, f));
 	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders);
 
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({

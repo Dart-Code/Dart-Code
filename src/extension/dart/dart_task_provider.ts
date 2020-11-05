@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { getExecutableName } from "../../shared/constants";
-import { DartSdks } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
 import { arrayStartsWith } from "../../shared/utils/array";
 import { fsPath } from "../../shared/utils/fs";
@@ -30,7 +30,7 @@ const taskOptions: Array<[string[], DartTaskOptions]> = [
 export class DartTaskProvider implements vs.TaskProvider {
 	static readonly type = "dart"; // also referenced in package.json
 
-	constructor(private readonly context: vs.ExtensionContext, private sdks: DartSdks) {
+	constructor(private readonly logger: Logger, readonly context: vs.ExtensionContext, private sdks: DartSdks) {
 		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri) => this.runTask(uri, "dartdoc", [])));
 	}
 
@@ -136,7 +136,7 @@ export class DartTaskProvider implements vs.TaskProvider {
 	private async runTask(uri: vs.Uri, command: string, args: string[]) {
 		let folder = uri ? vs.workspace.getWorkspaceFolder(uri) : undefined;
 		if (!folder) {
-			const folderPath = await getFolderToRunCommandIn("Select which project to run the command for");
+			const folderPath = await getFolderToRunCommandIn(this.logger, "Select which project to run the command for");
 			if (!folderPath)
 				return;
 			folder = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderPath));
