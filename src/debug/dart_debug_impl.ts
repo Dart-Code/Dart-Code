@@ -951,7 +951,7 @@ export class DartDebugSession extends DebugSession {
 		this.logDapRequest("stackTraceRequest", args);
 		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		const startFrame = args.startFrame || 0;
-		let levels = args.levels;
+		const levels = args.levels;
 
 		if (!thread) {
 			this.errorResponse(response, `No thread with id ${args.threadId}`);
@@ -968,16 +968,26 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		this.vmService.getStack(thread.ref.id).then((result: DebuggerResult) => {
+		// Newer VM Service allows us to cap the frames to avoid fetching more than we need.
+		// They do not support an offset, however earlier frames will be internally cached
+		// so fetching 40 frames if we've already had 0-20 should only incur the cost of the
+		// new 20.
+		const supportsGetStackLimit = this.vmServiceCapabilities.supportsGetStackLimit;
+		const limit = supportsGetStackLimit && levels
+			? startFrame + levels
+			: undefined;
+
+		this.vmService.getStack(thread.ref.id, limit).then((result: DebuggerResult) => {
 			const stack: VMStack = result.result as VMStack;
 			let vmFrames = stack.asyncCausalFrames || stack.frames;
-			const totalFrames = vmFrames.length;
+			const framesRecieved = vmFrames.length;
 
-			if (!levels)
-				levels = totalFrames;
-			if (startFrame + levels > totalFrames)
-				levels = totalFrames - startFrame;
-			vmFrames = vmFrames.slice(startFrame, startFrame + levels);
+			// Drop frames that are earlier than what we wanted.
+			vmFrames = vmFrames.slice(startFrame);
+
+			// Drop off any that are after where we wanted.
+			if (levels && vmFrames.length > levels)
+				vmFrames = vmFrames.slice(0, levels);
 
 			const stackFrames: DebugProtocol.StackFrame[] = [];
 			const promises: Array<Promise<void>> = [];
@@ -1061,6 +1071,13 @@ export class DartDebugSession extends DebugSession {
 				promises.push(promise);
 			});
 
+			const totalFrames = supportsGetStackLimit
+				// If the stack was truncated, we should say there are 20 more frames, otherwise use the real count.
+				? stack.truncated ? framesRecieved + 20 : framesRecieved
+				// If we don't support limit, the number recieved is always correct.
+				: framesRecieved;
+
+			this.logToUser(`Sending ${startFrame} to +${levels} (claiming ${totalFrames} (${stack.truncated}))\n`);
 			response.body = {
 				stackFrames,
 				totalFrames,

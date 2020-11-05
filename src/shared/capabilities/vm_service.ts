@@ -8,4 +8,5 @@ export class VmServiceCapabilities {
 	get hasInvoke() { return versionIsAtLeast(this.version, "3.10.0"); }
 	get hasLoggingStream() { return versionIsAtLeast(this.version, "3.17.0"); }
 	get serviceStreamIsPublic() { return versionIsAtLeast(this.version, "3.22.0"); }
+	get supportsGetStackLimit() { return versionIsAtLeast(this.version, "3.42.0"); }
 }

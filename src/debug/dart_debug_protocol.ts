@@ -69,6 +69,7 @@ export interface VMObjectRef extends VMResponse {
 export interface VMStack extends VMResponse {
 	frames: VMFrame[];
 	asyncCausalFrames?: VMFrame[];
+	truncated: boolean | undefined;
 }
 
 export interface VMHeapSpace extends VMResponse {
@@ -454,8 +455,8 @@ export class VmServiceConnection {
 		return this.callMethod("resume", { isolateId, step, frameIndex });
 	}
 
-	public getStack(isolateId: string): Promise<DebuggerResult> {
-		return this.callMethod("getStack", { isolateId });
+	public getStack(isolateId: string, limit: number | undefined): Promise<DebuggerResult> {
+		return this.callMethod("getStack", { isolateId, limit });
 	}
 
 	// TODO: Make these strongly-typed - DebuggerResult -> SourceReport? DebuggerResult<SourceReport>?
