@@ -1077,7 +1077,6 @@ export class DartDebugSession extends DebugSession {
 				// If we don't support limit, the number recieved is always correct.
 				: framesRecieved;
 
-			this.logToUser(`Sending ${startFrame} to +${levels} (claiming ${totalFrames} (${stack.truncated}))\n`);
 			response.body = {
 				stackFrames,
 				totalFrames,
