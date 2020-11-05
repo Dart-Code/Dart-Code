@@ -33,7 +33,7 @@ export async function getChildFolders(logger: Logger, parent: string, options?: 
 }
 
 export function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
-	return new Promise<fs.Dirent[]>((resolve, reject) => fs.readdir(folder,
+	return new Promise<fs.Dirent[]>((resolve) => fs.readdir(folder,
 		{ withFileTypes: true },
 		(err, files) => {
 			// We will generate errors if we don't have access to this folder
