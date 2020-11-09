@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Setup Dart ${{ matrix.dart-version }}
-        if: matrix.bot != 'flutter_snap'
+        if: startsWith(matrix.bot, 'dart')
         uses: DanTup/gh-actions/setup-dart@v1.0.0
         with:
           channel: ${{ matrix.dart-version }}
