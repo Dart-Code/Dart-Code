@@ -13,7 +13,7 @@ describe("pub outdated", () => {
 
 	it("runs and prints output", async () => {
 		const captureCommand = extApi.dartCapabilities.supportsDartPub ? "dart" : "pub";
-		const commandToRun = extApi.dartCapabilities.supportsDartPub ? "dart pub outdated" : "pub oudated";
+		const commandToRun = extApi.dartCapabilities.supportsDartPub ? "dart pub outdated" : "pub outdated";
 
 		const buffer = captureOutput(captureCommand);
 		const exitCode = await vs.commands.executeCommand("pub.outdated");
