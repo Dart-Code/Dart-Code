@@ -404,7 +404,7 @@ export class SdkCommands {
 
 	private runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Thenable<number | undefined> {
 		if (!this.sdks.dart)
-			throw new Error("Flutter SDK not available");
+			throw new Error("Dart SDK not available");
 
 		const binPath = path.join(this.sdks.dart, pubPath);
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
