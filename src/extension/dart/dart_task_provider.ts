@@ -27,7 +27,7 @@ const taskOptions: Array<[string[], DartTaskOptions]> = [
 	// test must come first so it matches before the next catch-all one
 	[["pub", "run", "build_runner", "test"], buildRunnerTestOptions],
 	[["pub", "run", "build_runner"], buildRunnerBuildOptions],
-	[["flutter", "build"], flutterBuildOptions],
+	[["build"], flutterBuildOptions],
 ];
 
 abstract class BaseTaskProvider implements vs.TaskProvider {
@@ -93,8 +93,8 @@ abstract class BaseTaskProvider implements vs.TaskProvider {
 
 	private getOptions(def: DartTaskDefinition): DartTaskOptions | undefined {
 		let taskCommand = [def.command, ...(def.args ?? [])];
-		// Strip "flutter" from the front for easier matching.
-		if (taskCommand[0] === "flutter")
+		// Strip ""dart" or flutter" from the front for easier matching.
+		if (taskCommand[0] === "flutter" || taskCommand[0] === "dart")
 			taskCommand = taskCommand.slice(1);
 		for (const knownOption of taskOptions) {
 			const [command, options] = knownOption;
