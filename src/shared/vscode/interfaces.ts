@@ -47,6 +47,7 @@ export interface InternalExtensionApi {
 		hasUpdatedCompletionRanking: boolean;
 		supportsDisableServiceTokens: boolean;
 		supportsPubOutdated: boolean;
+		supportsDartPub: boolean;
 		version: string;
 		webSupportsDebugging: boolean;
 		webSupportsEvaluation: boolean;

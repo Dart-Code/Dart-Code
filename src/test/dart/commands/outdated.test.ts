@@ -12,12 +12,15 @@ describe("pub outdated", () => {
 	});
 
 	it("runs and prints output", async () => {
-		const buffer = captureOutput("pub");
+		const captureCommand = extApi.dartCapabilities.supportsDartPub ? "dart" : "pub";
+		const commandToRun = extApi.dartCapabilities.supportsDartPub ? "dart pub outdated" : "pub oudated";
+
+		const buffer = captureOutput(captureCommand);
 		const exitCode = await vs.commands.executeCommand("pub.outdated");
 		assert.equal(exitCode, 0);
 
 		const output = buffer.buffer.join("").trim();
-		assert.equal(output.startsWith(`[hello_world] pub outdated`), true);
+		assert.equal(output.startsWith(`[hello_world] ${commandToRun}`), true);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });
