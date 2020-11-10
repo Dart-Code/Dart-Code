@@ -567,7 +567,11 @@ describe("dart cli debugger", () => {
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
-	it("can fetch slices of stack frames", async () => {
+	it("can fetch slices of stack frames", async function () {
+		// TODO: Remove this once https://github.com/dart-lang/sdk/issues/44138 is fixed/responded.
+		if (extApi.dartCapabilities.version.startsWith("2.12.") && extApi.dartCapabilities.version.endsWith(".dev"))
+			this.skip();
+
 		// TODO: This might be unreliable until dev channel gets this.
 		const expectFullCount = !versionIsAtLeast(extApi.dartCapabilities.version, "2.12.0-a");
 
