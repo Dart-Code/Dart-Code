@@ -3,8 +3,9 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
+import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -41,7 +42,7 @@ export class SdkCommands {
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined } = {};
 
-	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
+	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
 		this.sdks = workspace.sdks;
 		const dartSdkManager = new DartSdkManager(this.logger, this.workspace.sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
@@ -406,7 +407,14 @@ export class SdkCommands {
 		if (!this.sdks.dart)
 			throw new Error("Dart SDK not available");
 
-		const binPath = path.join(this.sdks.dart, pubPath);
+		let binPath: string;
+
+		if (this.dartCapabilities.supportsDartPub) {
+			binPath = path.join(this.sdks.dart, dartVMPath);
+			args = ["pub"].concat(args);
+		} else {
+			binPath = path.join(this.sdks.dart, pubPath);
+		}
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
 	}
