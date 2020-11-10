@@ -2079,15 +2079,6 @@
 		],
 		"taskDefinitions": [
 			{
-				"type": "pub",
-				"required": [],
-				"properties": {
-					"command": {
-						"type": "string"
-					}
-				}
-			},
-			{
 				"type": "dart",
 				"required": [],
 				"properties": {
