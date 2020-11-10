@@ -580,21 +580,28 @@ describe("dart cli debugger", () => {
 
 		// Get the total stack size we should expect and ensure it's a little over the expected 60
 		// (don't hard-code the exact value as it may change with SDK releases).
-		const expectedFullCount = (await dc.getStack(0, 10000)).body.totalFrames ?? 0;
-		assert.ok(expectedFullCount >= 60 && expectedFullCount <= 70);
+		const fullStack = await dc.getStack(0, 10000);
+		const fullStackFrameCount = fullStack.body.totalFrames ?? 0;
+		const expectedMin = 60;
+		const expectedMax = 80;
+		assert.ok(
+			fullStackFrameCount >= expectedMin && fullStackFrameCount <= expectedMax,
+			`Expected ${expectedMin}-${expectedMax} frames but got ${fullStackFrameCount}:
+			${fullStack.body.stackFrames.map((f, i) => `   ${i}: ${f.name}`).join("\n")}`,
+		);
 
 		const stack1 = await dc.getStack(0, 1); // frame 0
 		const stack2 = await dc.getStack(1, 9); // frame 1-10
 		const stack3 = await dc.getStack(10, 10); // frame 10-19
 		const stack4 = await dc.getStack(20, 1000); // rest
 		assert.strictEqual(stack1.body.stackFrames.length, 1);
-		assert.strictEqual(stack1.body.totalFrames, expectFullCount ? expectedFullCount : 21); // Expect n + 20
+		assert.strictEqual(stack1.body.totalFrames, expectFullCount ? fullStackFrameCount : 21); // Expect n + 20
 		assert.strictEqual(stack2.body.stackFrames.length, 9);
-		assert.strictEqual(stack2.body.totalFrames, expectFullCount ? expectedFullCount : 30); // offset+length+20
+		assert.strictEqual(stack2.body.totalFrames, expectFullCount ? fullStackFrameCount : 30); // offset+length+20
 		assert.strictEqual(stack3.body.stackFrames.length, 10);
-		assert.strictEqual(stack3.body.totalFrames, expectFullCount ? expectedFullCount : 40); // offset+length+20
-		assert.strictEqual(stack4.body.stackFrames.length, expectedFullCount - 20); // Full minus the 20 already fetched.
-		assert.strictEqual(stack4.body.totalFrames, expectedFullCount); // Always expect full count for rest
+		assert.strictEqual(stack3.body.totalFrames, expectFullCount ? fullStackFrameCount : 40); // offset+length+20
+		assert.strictEqual(stack4.body.stackFrames.length, fullStackFrameCount - 20); // Full minus the 20 already fetched.
+		assert.strictEqual(stack4.body.totalFrames, fullStackFrameCount); // Always expect full count for rest
 		const frameNames = [
 			...stack1.body.stackFrames,
 			...stack2.body.stackFrames,
