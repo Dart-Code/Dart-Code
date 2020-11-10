@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { getExecutableName } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
@@ -161,7 +162,7 @@ abstract class BaseTaskProvider implements vs.TaskProvider {
 export class DartTaskProvider extends BaseTaskProvider {
 	static readonly type = "dart"; // also referenced in package.json
 
-	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks) {
+	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) {
 		super(logger, context, sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri) => this.runTask(uri, "dartdoc", [])));
 	}
@@ -187,11 +188,10 @@ export class DartTaskProvider extends BaseTaskProvider {
 	}
 
 	protected createPubTask(folder: vs.WorkspaceFolder, args: string[]) {
-		return this.createTask(
-			folder,
-			"pub",
-			args
-		);
+		if (this.dartCapabilities.supportsDartPub)
+			return this.createTask(folder, "dart", ["pub", ...args]);
+		else
+			return this.createTask(folder, "pub", args);
 	}
 }
 
@@ -226,10 +226,6 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 	}
 
 	protected createPubTask(folder: vs.WorkspaceFolder, args: string[]) {
-		return this.createTask(
-			folder,
-			"flutter",
-			["pub", ...args]
-		);
+		return this.createTask(folder, "flutter", ["pub", ...args]);
 	}
 }
