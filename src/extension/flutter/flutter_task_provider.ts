@@ -23,12 +23,14 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 		dartProjects.forEach((folder) => {
 			const isFlutter = isFlutterWorkspaceFolder(folder);
 			if (isFlutter) {
-				promises = promises.concat(this.createSharedTasks(folder));
+				promises = promises.concat(this.createCommonTasks(folder));
 
 				promises.push(this.createTask(folder, "flutter", ["build", "apk"]));
 				promises.push(this.createTask(folder, "flutter", ["build", "ios"]));
 				promises.push(this.createTask(folder, "flutter", ["build", "macos"]));
 				promises.push(this.createTask(folder, "flutter", ["build", "web"]));
+
+				promises.push(this.createTask(folder, "flutter", ["install"]));
 			}
 		});
 

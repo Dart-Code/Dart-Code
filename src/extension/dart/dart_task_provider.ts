@@ -36,12 +36,12 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 
 	public abstract provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]>;
 
+	/// Tasks that will either be run by Dart or Flutter depending on the project type.
 	protected createSharedTasks(folder: vs.WorkspaceFolder): Array<Promise<vs.Task>> {
 		const promises: Array<Promise<vs.Task>> = [];
 
 		promises.push(this.createPubTask(folder, ["get"]));
 		promises.push(this.createPubTask(folder, ["upgrade"]));
-		promises.push(this.createTask(folder, "dartdoc", []));
 		if (referencesBuildRunner(fsPath(folder.uri))) {
 			promises.push(this.createPubTask(folder, ["run", "build_runner", "watch"]));
 			promises.push(this.createPubTask(folder, ["run", "build_runner", "build"]));
@@ -176,6 +176,7 @@ export class DartTaskProvider extends BaseTaskProvider {
 			const isFlutter = isFlutterWorkspaceFolder(folder);
 			if (!isFlutter)
 				promises = promises.concat(this.createSharedTasks(folder));
+			promises.push(this.createTask(folder, "dartdoc", []));
 
 			// For testing...
 			// tasks.push(this.createTask(folder, "--version"));
