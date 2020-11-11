@@ -3,7 +3,6 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { getExecutableName } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
-import { notUndefined } from "../../shared/utils";
 import { arrayStartsWith } from "../../shared/utils/array";
 import { fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -30,7 +29,7 @@ const taskOptions: Array<[string[], DartTaskOptions]> = [
 	[["build"], flutterBuildOptions],
 ];
 
-abstract class BaseTaskProvider implements vs.TaskProvider {
+export abstract class BaseTaskProvider implements vs.TaskProvider {
 	constructor(private readonly logger: Logger, readonly context: vs.ExtensionContext, private sdks: DartSdks) { }
 
 	abstract get type(): string;
@@ -192,40 +191,5 @@ export class DartTaskProvider extends BaseTaskProvider {
 			return this.createTask(folder, "dart", ["pub", ...args]);
 		else
 			return this.createTask(folder, "pub", args);
-	}
-}
-
-export class FlutterTaskProvider extends BaseTaskProvider {
-	static readonly type = "flutter"; // also referenced in package.json
-
-	get type() { return FlutterTaskProvider.type; }
-
-	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks) {
-		super(logger, context, sdks);
-	}
-
-	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
-		const dartProjects = getDartWorkspaceFolders();
-
-		let promises: Array<Promise<vs.Task | undefined>> = [];
-		dartProjects.forEach((folder) => {
-			const isFlutter = isFlutterWorkspaceFolder(folder);
-			if (isFlutter) {
-				promises = promises.concat(this.createSharedTasks(folder));
-
-				promises.push(this.createTask(folder, "flutter", ["build", "apk"]));
-				promises.push(this.createTask(folder, "flutter", ["build", "ios"]));
-				promises.push(this.createTask(folder, "flutter", ["build", "macos"]));
-				promises.push(this.createTask(folder, "flutter", ["build", "web"]));
-			}
-		});
-
-		const tasks = (await Promise.all(promises)).filter(notUndefined);
-
-		return tasks;
-	}
-
-	protected createPubTask(folder: vs.WorkspaceFolder, args: string[]) {
-		return this.createTask(folder, "flutter", ["pub", ...args]);
 	}
 }
