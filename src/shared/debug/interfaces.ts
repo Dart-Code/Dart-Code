@@ -23,7 +23,6 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	enableAsserts: boolean;
 	console: "debugConsole" | "terminal";
 	dartSdkPath: string;
-	globalFlutterArgs: string[] | undefined;
 	env?: { [key: string]: string | undefined };
 	program: string;
 	args: string[];
@@ -40,13 +39,13 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	forceFlutterVerboseMode?: boolean;
 	flutterTrackWidgetCreation: boolean;
 	flutterDisableVmServiceExperimental?: boolean;
-	flutterPath: string;
+	flutterSdkPath: string;
+	globalFlutterArgs: string[] | undefined;
 	workspaceConfig: WorkspaceConfig | undefined;
 	flutterMode?: "debug" | "profile" | "release";
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 	flutterRunLogFile?: string;
 	flutterTestLogFile?: string;
-	flutterVersion: string;
 }
 
 export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments, DartSharedArgs {

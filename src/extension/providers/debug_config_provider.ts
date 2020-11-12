@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, showErrorsAction } from "../../shared/constants";
+import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, showErrorsAction } from "../../shared/constants";
 import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
@@ -453,10 +453,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;
 		if (isFlutter && this.wsContext.sdks.flutter) {
+			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
 			debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
 			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
-			debugConfig.flutterVersion = this.flutterCapabilities.version;
 			debugConfig.args = conf.flutterAdditionalArgs.concat(isTest ? conf.flutterTestAdditionalArgs : []).concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging;
 			debugConfig.flutterTrackWidgetCreation =
@@ -467,7 +467,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					conf.flutterTrackWidgetCreation;
 			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
 			debugConfig.flutterPlatform = debugConfig.flutterPlatform || "default";
-			debugConfig.flutterPath = debugConfig.flutterPath || path.join(this.wsContext.sdks.flutter, flutterPath);
 			debugConfig.workspaceConfig = this.wsContext.config;
 			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);

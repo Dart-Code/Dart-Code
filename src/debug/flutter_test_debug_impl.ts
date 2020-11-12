@@ -1,3 +1,5 @@
+import * as path from "path";
+import { flutterPath } from "../shared/constants";
 import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { usingCustomScript } from "../shared/utils";
@@ -21,7 +23,7 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 			appArgs.push(this.sourceFileForArgs(args));
 
 		const { binPath, binArgs } = usingCustomScript(
-			args.flutterPath,
+			path.join(args.flutterSdkPath, flutterPath),
 			["test", "--machine"],
 			args.workspaceConfig?.flutterTestScript || args.workspaceConfig?.flutterScript,
 		);

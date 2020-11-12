@@ -2,7 +2,8 @@ import * as assert from "assert";
 import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { dartVMPath, debugAdapterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
+import { dartVMPath, debugAdapterPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
+import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { DebuggerType, LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
@@ -185,16 +186,16 @@ export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string
 }
 
 export async function spawnFlutterProcess(script: string | Uri): Promise<DartProcess> {
-	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
+	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" }) as FlutterLaunchRequestArguments;
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);
 	const process = extApi.safeToolSpawn(
 		config.cwd,
-		config.flutterPath,
+		path.join(config.flutterSdkPath, flutterPath),
 		[
 			"run",
 			"-d",
-			config.deviceId,
+			config.deviceId!,
 			"--disable-dds",
 		],
 	);

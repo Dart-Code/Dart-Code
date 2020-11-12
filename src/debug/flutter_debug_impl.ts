@@ -8,6 +8,7 @@ import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger } from "../shared/interfaces";
 import { grey, grey2 } from "../shared/utils/colors";
+import { getSdkVersion } from "../shared/utils/fs";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
@@ -59,7 +60,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): Promise<void> {
-		this.flutterCapabilities.version = args.flutterVersion;
+		this.flutterCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.flutterSdkPath }) ?? this.flutterCapabilities.version;
 		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation;
 		this.outputCategory = "stdout";
 
@@ -250,7 +251,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs.push("-v");
 		}
 
-		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterPath, args.workspaceConfig, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterSdkPath, args.workspaceConfig, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 
 	private async connectToVmServiceIfReady() {
