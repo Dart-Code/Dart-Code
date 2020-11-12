@@ -20,28 +20,28 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	type: string;
 	request: string;
 	cwd?: string;
-	enableAsserts: boolean;
-	console: "debugConsole" | "terminal";
+	enableAsserts?: boolean;
+	console?: "debugConsole" | "terminal";
 	dartSdkPath: string;
 	env?: { [key: string]: string | undefined };
 	program: string;
-	args: string[];
-	vmAdditionalArgs: string[];
-	vmServicePort: number;
+	args?: string[];
+	vmAdditionalArgs?: string[];
+	vmServicePort?: number;
 	webDaemonLogFile?: string;
 	pubTestLogFile?: string;
-	showMemoryUsage: boolean;
+	showMemoryUsage?: boolean;
 }
 
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {
 	deviceId?: string;
 	deviceName?: string;
 	forceFlutterVerboseMode?: boolean;
-	flutterTrackWidgetCreation: boolean;
+	flutterTrackWidgetCreation?: boolean;
 	flutterDisableVmServiceExperimental?: boolean;
 	flutterSdkPath: string;
-	globalFlutterArgs: string[] | undefined;
-	workspaceConfig: WorkspaceConfig | undefined;
+	globalFlutterArgs?: string[];
+	workspaceConfig?: WorkspaceConfig;
 	flutterMode?: "debug" | "profile" | "release";
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 	flutterRunLogFile?: string;
