@@ -7,7 +7,7 @@ import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { findProjectFolders, fsPath, hasPubspec } from "../../shared/utils/fs";
+import { findProjectFolders, fsPath, getSdkVersion, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processFlutterSnap, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -15,7 +15,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { ringLog } from "../extension";
-import { getSdkVersion, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
+import { openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
 import { initializeFlutterSdk } from "./flutter";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
