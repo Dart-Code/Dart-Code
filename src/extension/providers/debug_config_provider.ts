@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, pubPath, showErrorsAction } from "../../shared/constants";
+import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, flutterPath, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, showErrorsAction } from "../../shared/constants";
 import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
@@ -432,7 +432,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.name = "Dart";
 			}
 		}
-		debugConfig.dartVersion = this.dartCapabilities.version;
 		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = true;
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
@@ -443,7 +442,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
 		debugConfig.webDaemonLogFile = this.insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
-		debugConfig.pubPath = debugConfig.pubPath || path.join(this.wsContext.sdks.dart!, pubPath);
 		debugConfig.pubTestLogFile = this.insertSessionName(debugConfig, debugConfig.pubTestLogFile || conf.pubTestLogFile);
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries

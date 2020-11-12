@@ -103,6 +103,28 @@ export async function findProjectFolders(logger: Logger, roots: string[], option
 		: projectFolders;
 }
 
+export function getSdkVersion(logger: Logger, { sdkRoot, versionFile }: { sdkRoot?: string, versionFile?: string }): string | undefined {
+	if (!sdkRoot && !versionFile)
+		return undefined;
+	if (!versionFile)
+		versionFile = path.join(sdkRoot!, "version");
+	if (!fs.existsSync(versionFile))
+		return undefined;
+	try {
+		return fs
+			.readFileSync(versionFile, "utf8")
+			.trim()
+			.split("\n")
+			.filter((l) => l)
+			.filter((l) => l.trim().substr(0, 1) !== "#")
+			.join("\n")
+			.trim();
+	} catch (e) {
+		logger.error(e);
+		return undefined;
+	}
+}
+
 export function tryDeleteFile(filePath: string) {
 	if (fs.existsSync(filePath)) {
 		try {

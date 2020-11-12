@@ -16,7 +16,7 @@ import { PackageMap } from "../shared/pub/package_map";
 import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
-import { getRandomInt } from "../shared/utils/fs";
+import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
 import { parseStackFrame as extractLocationInfo } from "../shared/utils/stack_trace";
 import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
@@ -178,7 +178,7 @@ export class DartDebugSession extends DebugSession {
 		// the exception mode.
 		await this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.program || args.cwd));
-		this.dartCapabilities.version = args.dartVersion;
+		this.dartCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.dartSdkPath }) ?? this.dartCapabilities.version;
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && this.dartCapabilities.supportsWriteServiceInfo;
 		this.supportsDebugInternalLibraries = this.dartCapabilities.supportsDebugInternalLibraries;
 		this.readSharedArgs(args);
