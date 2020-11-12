@@ -1,6 +1,6 @@
 import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
-import { debugTerminatingProgressId, vmServiceHttpLinkPattern } from "../shared/constants";
+import { dartVMPath, debugTerminatingProgressId, pubSnapshotPath, vmServiceHttpLinkPattern } from "../shared/constants";
 import { DartLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
@@ -44,7 +44,8 @@ export class DartTestDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.vmAdditionalArgs);
 		}
 
-		appArgs.push(args.pubSnapshotPath);
+		const dartPath = path.join(args.dartSdkPath, dartVMPath);
+		appArgs.push(path.join(args.dartSdkPath, pubSnapshotPath));
 		appArgs = appArgs.concat(["run", "test", "-r", "json"]);
 		appArgs.push("-j1"); // Only run single-threaded in the runner.
 
@@ -56,7 +57,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		}
 
 		const logger = new DebugAdapterLogger(this, LogCategory.PubTest);
-		return this.createRunner(args.dartPath, args.cwd, args.program, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(dartPath, args.cwd, args.program, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
 	}
 
 	protected createRunner(executable: string, projectFolder: string | undefined, program: string, args: string[], envOverrides: { [key: string]: string | undefined } | undefined, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {

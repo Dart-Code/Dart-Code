@@ -22,7 +22,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	cwd?: string;
 	enableAsserts: boolean;
 	console: "debugConsole" | "terminal";
-	dartPath: string;
+	dartSdkPath: string;
 	globalFlutterArgs: string[] | undefined;
 	env?: { [key: string]: string | undefined };
 	program: string;
@@ -31,7 +31,6 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	vmServicePort: number;
 	webDaemonLogFile?: string;
 	pubPath: string;
-	pubSnapshotPath: string;
 	pubTestLogFile?: string;
 	showMemoryUsage: boolean;
 	dartVersion: string;

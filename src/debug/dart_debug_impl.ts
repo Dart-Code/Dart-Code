@@ -7,7 +7,7 @@ import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, Stac
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
-import { debugLaunchProgressId, debugTerminatingProgressId, pleaseReportBug, vmServiceListeningBannerPattern } from "../shared/constants";
+import { dartVMPath, debugLaunchProgressId, debugTerminatingProgressId, pleaseReportBug, vmServiceListeningBannerPattern } from "../shared/constants";
 import { DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation } from "../shared/debug/interfaces";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
@@ -153,7 +153,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): Promise<void> {
 		this.logDapRequest("launchRequest", args);
-		if (!args || !args.dartPath || (this.requiresProgram && !args.program)) {
+		if (!args || !args.dartSdkPath || (this.requiresProgram && !args.program)) {
 			this.logToUser("Unable to restart debugging. Please try ending the debug session and starting again.\n");
 			this.logDapEvent(new TerminatedEvent());
 			this.sendEvent(new TerminatedEvent());
@@ -335,11 +335,12 @@ export class DartDebugSession extends DebugSession {
 
 	protected spawnProcess(args: DartLaunchRequestArguments) {
 		const appArgs = this.buildAppArgs(args);
+		const dartPath = path.join(args.dartSdkPath, dartVMPath);
 
-		this.log(`Spawning ${args.dartPath} with args ${JSON.stringify(appArgs)}`);
+		this.log(`Spawning ${dartPath} with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
 			this.log(`..  in ${args.cwd}`);
-		const process = safeSpawn(args.cwd, args.dartPath, appArgs, { envOverrides: args.env, toolEnv: args.toolEnv });
+		const process = safeSpawn(args.cwd, dartPath, appArgs, { envOverrides: args.env, toolEnv: args.toolEnv });
 
 		this.log(`    PID: ${process.pid}`);
 
@@ -348,14 +349,15 @@ export class DartDebugSession extends DebugSession {
 
 	protected async spawnRemoteEditorProcess(args: DartLaunchRequestArguments): Promise<RemoteEditorTerminalProcess> {
 		const appArgs = this.buildAppArgs(args);
+		const dartPath = path.join(args.dartSdkPath, dartVMPath);
 
-		this.log(`Spawning ${args.dartPath} remotely with args ${JSON.stringify(appArgs)}`);
+		this.log(`Spawning ${dartPath} remotely with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
 			this.log(`..  in ${args.cwd}`);
 
 		this.remoteEditorTerminalLaunched = new Promise<RemoteEditorTerminalProcess>((resolve, reject) => {
 			this.sendRequest("runInTerminal", {
-				args: [args.dartPath].concat(appArgs),
+				args: [dartPath].concat(appArgs),
 				cwd: args.cwd,
 				env: args.env,
 				kind: "integrated",
