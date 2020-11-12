@@ -21,7 +21,7 @@ const flutterExceptionEndBannerPrefix = "═════════════
 
 export class FlutterDebugSession extends DartDebugSession {
 	private runDaemon?: RunDaemonBase;
-	public flutterTrackWidgetCreation = false;
+	public flutterTrackWidgetCreation = true;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
 	private appHasBeenToldToStopOrDetach = false;
@@ -61,7 +61,7 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): Promise<void> {
 		this.flutterCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.flutterSdkPath }) ?? this.flutterCapabilities.version;
-		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation;
+		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation !== false;
 		this.outputCategory = "stdout";
 
 		// Allow overriding the requirement for a VM service.
@@ -213,9 +213,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				appArgs.push("--release");
 			} else {
 				// Debug mode
-				if (this.flutterTrackWidgetCreation)
-					appArgs.push("--track-widget-creation");
-				else
+				if (!this.flutterTrackWidgetCreation)
 					appArgs.push("--no-track-widget-creation");
 
 				if (this.useFlutterStructuredErrors && this.flutterCapabilities.supportsDartDefine)
