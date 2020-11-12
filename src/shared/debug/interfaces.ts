@@ -30,10 +30,8 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	vmAdditionalArgs: string[];
 	vmServicePort: number;
 	webDaemonLogFile?: string;
-	pubPath: string;
 	pubTestLogFile?: string;
 	showMemoryUsage: boolean;
-	dartVersion: string;
 }
 
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {

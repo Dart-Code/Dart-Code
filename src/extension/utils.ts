@@ -4,7 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
-import { Logger, WorkspaceConfig } from "../shared/interfaces";
+import { WorkspaceConfig } from "../shared/interfaces";
 import { fsPath, getRandomInt, hasPubspec, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
@@ -63,28 +63,6 @@ export function createFolderForFile(file?: string): string | undefined {
 		return file;
 	} catch {
 		console.warn(`Ignoring invalid file path ${file}`);
-		return undefined;
-	}
-}
-
-export function getSdkVersion(logger: Logger, { sdkRoot, versionFile }: { sdkRoot?: string, versionFile?: string }): string | undefined {
-	if (!sdkRoot && !versionFile)
-		return undefined;
-	if (!versionFile)
-		versionFile = path.join(sdkRoot!, "version");
-	if (!fs.existsSync(versionFile))
-		return undefined;
-	try {
-		return fs
-			.readFileSync(versionFile, "utf8")
-			.trim()
-			.split("\n")
-			.filter((l) => l)
-			.filter((l) => l.trim().substr(0, 1) !== "#")
-			.join("\n")
-			.trim();
-	} catch (e) {
-		logger.error(e);
 		return undefined;
 	}
 }
