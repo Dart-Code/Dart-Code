@@ -4,9 +4,8 @@ import * as vs from "vscode";
 import { dartVMPath, flutterPath } from "../../shared/constants";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
-import { getChildFolders } from "../../shared/utils/fs";
+import { getChildFolders, getSdkVersion } from "../../shared/utils/fs";
 import { config } from "../config";
-import { getSdkVersion } from "../utils";
 
 abstract class SdkManager {
 	constructor(private readonly logger: Logger, protected readonly sdks: Sdks) { }
