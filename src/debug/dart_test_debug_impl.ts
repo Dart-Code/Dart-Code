@@ -45,8 +45,15 @@ export class DartTestDebugSession extends DartDebugSession {
 		}
 
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
-		appArgs.push(path.join(args.dartSdkPath, pubSnapshotPath));
-		appArgs = appArgs.concat(["run", "test", "-r", "json"]);
+		if (this.dartCapabilities.supportsDartRunTest) {
+			// Use "dart --vm-args run test:test"
+			appArgs = appArgs.concat(["run", "test:test"]);
+		} else {
+			// Use "dart --vm-args [pub-snapshot] run test"
+			appArgs.push(path.join(args.dartSdkPath, pubSnapshotPath));
+			appArgs = appArgs.concat(["run", "test"]);
+		}
+		appArgs = appArgs.concat(["-r", "json"]);
 		appArgs.push("-j1"); // Only run single-threaded in the runner.
 
 		if (args.program)
