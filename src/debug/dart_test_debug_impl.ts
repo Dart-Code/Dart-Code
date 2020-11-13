@@ -112,12 +112,6 @@ export class DartTestDebugSession extends DartDebugSession {
 					this.recordAdditionalPid(pid);
 				}
 				break;
-			// Workaround for https://github.com/Dart-Code/Dart-Code/issues/2949.
-			// Once test run has completed, prevent any exceptions or breakpoints from
-			// preventing the debug session from ending.
-			case "done":
-				this.tryRemoveAllBreakpointsAndResumeAllThreads("TESTS-DONE");
-				break;
 			case "debug":
 				const observatoryUri = notification.observatory;
 				if (observatoryUri) {

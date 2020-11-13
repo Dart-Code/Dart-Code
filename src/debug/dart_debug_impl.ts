@@ -753,7 +753,7 @@ export class DartDebugSession extends DebugSession {
 	// When shutting down, we may need to remove all breakpoints and resume all threads
 	// to avoid things like waiting for tests to exit that will never exit. We don't wait
 	// for any responses here as if the VM has shut down we won't get them.
-	protected async tryRemoveAllBreakpointsAndResumeAllThreads(request: string) {
+	private async tryRemoveAllBreakpointsAndResumeAllThreads(request: string) {
 		this.log(`${request}: Disabling break-on-exception and removing all breakpoints`);
 		await this.raceIgnoringErrors(() => Promise.all([
 			this.threadManager.setExceptionPauseMode("None"),
