@@ -99,8 +99,8 @@ export class TestSessionCoordindator implements IAmDisposable {
 	}
 
 	private handleTestStartNotifcation(suite: SuiteData, evt: TestStartNotification) {
-		let oldParent: SuiteNode | GroupNode | undefined;
-		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(suite.currentRunNumber, evt.test, (parent) => oldParent = parent);
+		const existingTest = suite.getCurrentTest(evt.test.id) || suite.reuseMatchingTest(suite.currentRunNumber, evt.test);
+		const oldParent = existingTest?.parent;
 		const parent = evt.test.groupIDs?.length ? suite.getMyGroup(suite.currentRunNumber, evt.test.groupIDs[evt.test.groupIDs.length - 1]) : suite.node;
 		const path = (evt.test.root_url || evt.test.url) ? uriToFilePath(evt.test.root_url || evt.test.url!) : undefined;
 		const line = evt.test.root_line || evt.test.line;
@@ -176,8 +176,8 @@ export class TestSessionCoordindator implements IAmDisposable {
 	}
 
 	private handleGroupNotification(suite: SuiteData, evt: GroupNotification) {
-		let oldParent: SuiteNode | GroupNode | undefined;
-		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(suite.currentRunNumber, evt.group, (parent) => oldParent = parent);
+		const existingGroup = suite.getCurrentGroup(evt.group.id) || suite.reuseMatchingGroup(suite.currentRunNumber, evt.group);
+		const oldParent = existingGroup?.parent;
 		const parent = evt.group.parentID ? suite.getMyGroup(suite.currentRunNumber, evt.group.parentID) : suite.node;
 		const path = (evt.group.root_url || evt.group.url) ? uriToFilePath(evt.group.root_url || evt.group.url!) : undefined;
 		const line = evt.group.root_line || evt.group.line;

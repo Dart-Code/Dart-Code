@@ -321,7 +321,7 @@ export class SuiteData {
 	public storeTest(node: TestNode) {
 		return this.tests[`${this.currentRunNumber}_${node.id}`] = node;
 	}
-	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group, handleOldParent: (parent: SuiteNode | GroupNode) => void): GroupNode | undefined {
+	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group): GroupNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
 		const matches = this.getAllGroups(true).filter((g) => g.name === group.name
 			&& g.suiteRunNumber !== currentSuiteRunNumber);
@@ -329,14 +329,13 @@ export class SuiteData {
 		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.line || 0) - (group.line || 0)) - Math.abs((g2.line || 0) - (group.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
-			handleOldParent(match.parent);
 			match.id = group.id;
 			match.suiteRunNumber = this.currentRunNumber;
 			this.storeGroup(match);
 		}
 		return match;
 	}
-	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test, handleOldParent: (parent: SuiteNode | GroupNode) => void): TestNode | undefined {
+	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test): TestNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
 		const matches = this.getAllTests().filter((t) => t.name === test.name
 			&& t.suiteRunNumber !== currentSuiteRunNumber);
@@ -344,7 +343,6 @@ export class SuiteData {
 		const sortedMatches = sortBy(matches, (t) => Math.abs((t.line || 0) - (test.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
-			handleOldParent(match.parent);
 			match.id = test.id;
 			match.suiteRunNumber = this.currentRunNumber;
 			this.storeTest(match);
