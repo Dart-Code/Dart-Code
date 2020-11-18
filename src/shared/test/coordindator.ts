@@ -162,7 +162,9 @@ export class TestSessionCoordindator implements IAmDisposable {
 		if (evt.time && testNode.testStartTime) {
 			testNode.duration = evt.time - testNode.testStartTime;
 			testNode.description = `${testNode.duration}ms`;
-			testNode.testStartTime = undefined;
+			// Don't clear this, as concurrent runws will overwrite each
+			// other and then we'll get no time at the end.
+			// testNode.testStartTime = undefined;
 		}
 
 		this.data.updateNode(testNode);
