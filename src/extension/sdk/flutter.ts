@@ -1,8 +1,10 @@
 import { ProgressLocation, window } from "vscode";
-import { initializingFlutterMessage, noAction, yesAction } from "../../shared/constants";
+import { initializingFlutterMessage, noAction, showLogAction, yesAction } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
+import { ringLog } from "../extension";
+import { openLogContents } from "../utils";
 import { safeToolSpawn } from "../utils/processes";
 
 export async function initializeFlutterSdk(logger: Logger, flutterScript: string, promptText?: string): Promise<void> {
@@ -25,8 +27,12 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 				logProcess(logger, LogCategory.General, proc);
 				return new Promise((resolve, reject) => proc.on("exit", (code) => {
 					if (code) {
+						const ringLogContents = ringLog.toString();
 						logger.error(`Failed to initialize Flutter: Process exited with code ${code}.`);
-						window.showErrorMessage(`Failed to initialize Flutter: Process exited with code ${code}.`);
+						window.showErrorMessage(`Failed to initialize Flutter: Process exited with code ${code}.`, showLogAction).then((chosenAction) => {
+							if (chosenAction === showLogAction)
+								openLogContents(undefined, ringLogContents);
+						});
 						reject();
 					} else
 						resolve();
