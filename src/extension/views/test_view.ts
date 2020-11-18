@@ -10,6 +10,7 @@ import { brightRed, yellow } from "../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
+import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
 type SuiteWithFailures = [SuiteNode, string[]];
 
@@ -159,31 +160,20 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			this.currentTestTerminal = undefined;
 		}
 
-		const emitter = new vs.EventEmitter<string>();
-		const pseudoterminal: vs.Pseudoterminal = {
-			close: () => { },
-			onDidWrite: emitter.event,
-			open: () => {
-				emitter.fire(`Output for ${treeNode.name}\r\n`);
+		const messages: string[] = [];
+		messages.push(`Output for ${treeNode.name}\r\n`);
 
-				if (!treeNode.outputEvents.length)
-					emitter.fire(`(no output)\r\n`);
+		if (!treeNode.outputEvents.length)
+			messages.push(`(no output)\r\n`);
 
-				for (const o of treeNode.outputEvents) {
-					this.appendTestOutput(o, emitter);
-				}
-			},
-		};
-		this.currentTestTerminal = [
-			vs.window.createTerminal({ name: "Test Output", pty: pseudoterminal }),
-			emitter,
-		];
-		this.currentTestTerminal[0].show();
+		for (const o of treeNode.outputEvents) {
+			messages.push(this.getColoredTestOutput(o));
+		}
+
+		this.currentTestTerminal = writeToPseudoTerminal(messages);
 	}
 
-	private appendTestOutput(event: PrintNotification | ErrorNotification, emitter = this.currentTestTerminal ? this.currentTestTerminal[1] : undefined) {
-		if (!emitter)
-			return;
+	private getColoredTestOutput(event: PrintNotification | ErrorNotification) {
 		let output: string | undefined;
 		if (event.type === "error") {
 			event = event as ErrorNotification;
@@ -195,8 +185,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			output = yellow(`Unknown message type '${event.type}'.\n`);
 		}
 
-		if (output)
-			emitter.fire(output.replace(/\n/g, "\r\n"));
+		return output;
 	}
 
 	public getTreeItem(element: TreeNode): vs.TreeItem {
