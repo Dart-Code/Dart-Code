@@ -184,7 +184,7 @@
 			},
 			{
 				"command": "dart.printSelectionToTerminal",
-				"title": "Linkify Selected Text in Terminal",
+				"title": "Linkify Selected Editor Text into Terminal",
 				"category": "Dart"
 			},
 			{
