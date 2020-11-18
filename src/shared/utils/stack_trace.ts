@@ -1,8 +1,8 @@
-export const maxStackFrameMessageLength = 1000;
+export const maxStackFrameMessageLength = 100000;
 const stackFramePattern = new RegExp(`\\(*((?:dart|package):[\\w\\-]+|\\S*\\.dart)(?:[: ](\\d+):(\\d+))?\\)*(\\s+.*)?$`, "m");
 
 export function parseStackFrame(message: string): MessageWithUriData | undefined {
-	// Messages over 1000 characters are unlikely to be stack frames, so short-cut
+	// Messages over 100000 characters are unlikely to be stack frames, so short-cut
 	// and assume no match.
 	if (!message || message.length > maxStackFrameMessageLength)
 		return undefined;
