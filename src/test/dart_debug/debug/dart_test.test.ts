@@ -7,7 +7,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import { makeRegexForTests } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
+import { activate, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -34,6 +34,33 @@ describe("dart test debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
+	});
+
+	it("can run tests from codelens", async function () {
+		const editor = await openFile(helloWorldTestMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+
+		const fileCodeLens = await getCodeLens(editor.document);
+		const testPos = positionOf(`test^(".split() splits`);
+
+		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+		assert.equal(codeLensForTest.length, 2);
+
+		if (!codeLensForTest[0].command) {
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			this.skip();
+			return;
+		}
+
+		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
+		assert.equal(runAction.command!.arguments![0].isGroup, false);
+
+		const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+		assert.ok(didStart);
 	});
 
 	it("receives the expected events from a Dart test script", async () => {

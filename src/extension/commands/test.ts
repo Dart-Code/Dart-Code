@@ -36,18 +36,18 @@ abstract class TestCommands implements vs.Disposable {
 		// Run for current open editor.
 		this.updateEditorContexts(vs.window.activeTextEditor);
 
-		this.disposables.push(vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
+		this.disposables.push(vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) =>
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
 				getLaunchConfig(false, test.file, [test.fullName], test.isGroup, launchTemplate),
-			);
-		}));
-		this.disposables.push(vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => {
+			)
+		));
+		this.disposables.push(vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) =>
 			vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
 				getLaunchConfig(true, test.file, [test.fullName], test.isGroup, launchTemplate),
-			);
-		}));
+			)
+		));
 	}
 
 	private async runTestAtCursor(debug: boolean): Promise<void> {
