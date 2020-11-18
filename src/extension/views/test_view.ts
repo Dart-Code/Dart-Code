@@ -2,7 +2,6 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
 import { TestSessionCoordindator } from "../../shared/test/coordindator";
 import { GroupNode, SuiteNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
@@ -18,14 +17,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private disposables: vs.Disposable[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<TreeNode | undefined> = new vs.EventEmitter<TreeNode | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<TreeNode | undefined> = this.onDidChangeTreeDataEmitter.event;
-	private currentSelectedNode: TreeNode | undefined;
 	private currentTestTerminal: [vs.Terminal, vs.EventEmitter<string>] | undefined;
 
-	public setSelectedNodes(item: TreeNode | undefined): void {
-		this.currentSelectedNode = item;
-	}
-
-	constructor(private readonly logger: Logger, private readonly data: TestTreeModel, private readonly coordindator: TestSessionCoordindator) {
+	constructor(private readonly data: TestTreeModel, private readonly coordindator: TestSessionCoordindator) {
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
 
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));

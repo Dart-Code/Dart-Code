@@ -541,7 +541,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	);
 	if (lspAnalyzer)
 		context.subscriptions.push(new TestDiscoverer(logger, lspAnalyzer.fileTracker, testTreeModel));
-	const testTreeProvider = new TestResultsProvider(logger, testTreeModel, testCoordinator);
+	const testTreeProvider = new TestResultsProvider(testTreeModel, testCoordinator);
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	const tryReveal = async (node: TreeNode) => {
 		try {
@@ -564,9 +564,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 				// the tree has been re-sorted, so wait a short period before revealing
 				// to let the tree update complete.
 				setTimeout(() => tryReveal(node), 100);
-		}),
-		testTreeView.onDidChangeSelection((e) => {
-			testTreeProvider.setSelectedNodes(e.selection && e.selection.length === 1 ? e.selection[0] : undefined);
 		}),
 	);
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
