@@ -41,21 +41,25 @@ export function createDebugClient(debugType: DebuggerType) {
 
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
-	if (debugAdapterName.endsWith("_test")) {
-		// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
-		// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
-		// a second request and that'll cause it to quit immediately.
-		defer(() => withTimeout(
-			Promise.all([
-				thisDc.terminateRequest().catch((e) => logger.error(e)),
-				delay(500).then(() => thisDc.stop()).catch((e) => logger.error(e)),
-			]),
-			"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
-			60,
-		));
-	} else {
-		defer(() => thisDc.stop());
-	}
+	defer(() => {
+		if (!dc.hasStarted)
+			return;
+		if (debugAdapterName.endsWith("_test")) {
+			// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
+			// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
+			// a second request and that'll cause it to quit immediately.
+			return withTimeout(
+				Promise.all([
+					thisDc.terminateRequest().catch((e) => logger.error(e)),
+					delay(500).then(() => thisDc.stop()).catch((e) => logger.error(e)),
+				]),
+				"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
+				60,
+			);
+		} else {
+			thisDc.stop();
+		}
+	});
 	return dc;
 }
 

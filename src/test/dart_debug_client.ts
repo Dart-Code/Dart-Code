@@ -17,6 +17,7 @@ type DebugClientArgs = { runtime: string, executable: string, args: string[], po
 export class DartDebugClient extends DebugClient {
 	private readonly port: number | undefined;
 	private currentSession?: DebugSession;
+	public hasStarted = false;
 
 	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testCoordinator: TestSessionCoordindator | undefined) {
 		super(args.runtime, args.executable, args.args, "dart", undefined, true);
@@ -78,6 +79,7 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public start(port?: number): Promise<void> {
+		this.hasStarted = true;
 		if (port)
 			throw new Error("Do not provide a port to DartDebugClient.start!");
 		return super.start(this.port);
