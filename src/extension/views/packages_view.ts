@@ -58,8 +58,10 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 		const packageDepNodes = packageNames
 			.filter((name) => packages[name] && !areSameFolder(packages[name], path.join(projectFolder, "lib")))
 			.map((name) => {
-				const path = packages[name];
-				return new PackageDepPackage(`${name}`, vs.Uri.file(path));
+				let packagePath = packages[name];
+				if (path.basename(packagePath) === "lib")
+					packagePath = path.normalize(path.join(packagePath, ".."));
+				return new PackageDepPackage(`${name}`, vs.Uri.file(packagePath));
 			});
 
 		return packageDepNodes;
