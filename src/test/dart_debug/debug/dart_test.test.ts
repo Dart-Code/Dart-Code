@@ -7,7 +7,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import { makeRegexForTests } from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
+import { activate, extApi, getExpectedResults, getLaunchConfiguration, getPackages, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -129,6 +129,31 @@ describe("dart test debugger", () => {
 
 		const expectedResults = getExpectedResults();
 		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
+
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		assert.equal(actualResults, expectedResults);
+	});
+
+	it("builds the expected tree if tests are run in multiple overlapping sessions", async () => {
+		// https://github.com/Dart-Code/Dart-Code/issues/2934
+		await openFile(helloWorldTestShortFile);
+		const runTests = async () => {
+			const config = await startDebugger(helloWorldTestShortFile);
+			config!.noDebug = true;
+			await waitAllThrowIfTerminates(dc,
+				dc.configurationSequence(),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			);
+		};
+		await Promise.all([
+			runTests(),
+			runTests(),
+		]);
+
+		const expectedResults = getExpectedResults();
+		const actualResults = (await makeTextTree(helloWorldTestShortFile, extApi.testTreeProvider)).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
