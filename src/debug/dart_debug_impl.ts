@@ -2194,6 +2194,8 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		const output = new OutputEvent(`${applyColor(message, colorText)}`, category) as OutputEvent & DebugProtocol.OutputEvent;
+		const mayBeAsyncMarker = (output.body.output.trim().startsWith("<async") && output.body.output.trim().endsWith(">"))
+			|| (output.body.output.trim().startsWith("===== asynchronous gap ==="));
 
 		// If the output line looks like a stack frame with users code, attempt to link it up to make
 		// it clickable.
@@ -2215,15 +2217,14 @@ export class DartDebugSession extends DebugSession {
 			}
 
 			// Colour based on whether it's framework code or not.
-			const isFramework = this.isSdkLibrary(frame.sourceUri)
-				|| (this.isExternalLibrary(frame.sourceUri) && (frame.sourceUri.startsWith("package:flutter/") || frame.sourceUri.startsWith("package:flutter_test/")));
+			const isExternalCode = this.isSdkLibrary(frame.sourceUri) || this.isExternalLibrary(frame.sourceUri);
 
 			// Only colour stack-frame text.
 			const colouredText = !frame.isStackFrame
 				? text
-				: (isFramework ? applyColor(text, grey) : applyColor(text, grey2));
+				: (isExternalCode ? applyColor(text, grey) : applyColor(text, grey2));
 			output.body.output = `${colouredText}\n`;
-		} else if (category === "stderr" && output.body.output.trim().startsWith("<async") && output.body.output.trim().endsWith(">")) {
+		} else if (mayBeAsyncMarker) {
 			output.body.output = `${applyColor(output.body.output.trimRight(), grey)}\n`;
 		}
 
