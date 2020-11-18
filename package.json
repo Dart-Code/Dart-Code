@@ -183,6 +183,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.printSelectionToTerminal",
+				"title": "Linkify Selected Text in Terminal",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.runTestAtCursor",
 				"title": "Run Test At Cursor",
 				"category": "Dart"
@@ -628,6 +633,10 @@
 				{
 					"command": "dart.forceReanalyze",
 					"when": "dart-code:dartProjectLoaded"
+				},
+				{
+					"command": "dart.printSelectionToTerminal",
+					"when": "dart-code:dartProjectLoaded && editorHasSelection"
 				},
 				{
 					"command": "dart.runTestAtCursor",

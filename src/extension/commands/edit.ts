@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
 import { firstEditorColumn, showCode } from "../../shared/vscode/utils";
+import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
 export class EditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
@@ -10,6 +11,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.jumpToLineColInUri", this.jumpToLineColInUri, this),
 			vs.commands.registerCommand("_dart.showCode", showCode, this),
 			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings, this),
+			vs.commands.registerCommand("dart.printSelectionToTerminal", this.printSelectionToTerminal, this),
 		);
 	}
 
@@ -48,6 +50,16 @@ export class EditCommands implements vs.Disposable {
 
 		if (action === openSettingsAction)
 			await vs.commands.executeCommand("workbench.action.openSettingsJson");
+	}
+
+	private async printSelectionToTerminal() {
+		const editor = vs.window.activeTextEditor;
+		const selection = editor?.selection;
+		const text = editor?.document?.getText(selection);
+
+		if (text) {
+			writeToPseudoTerminal([text]);
+		}
 	}
 
 	public dispose(): any {
