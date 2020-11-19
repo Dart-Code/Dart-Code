@@ -65,7 +65,7 @@ describe("stack trace parser", () => {
 		const endTime = Date.now();
 		const timeTakenMilliseconds = endTime - startTime;
 		console.log(`Took ${timeTakenMilliseconds}ms to parse ${largeString.length} character string`);
-		assert.ok(timeTakenMilliseconds < 50);
+		assert.ok(timeTakenMilliseconds < 100, `Took ${timeTakenMilliseconds}ms to parse ${maxStackFrameMessageLength} character message`);
 	});
 
 	it(`retains URIs in the middle of lines`, () => {
