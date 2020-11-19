@@ -17,7 +17,7 @@ import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from
 import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
-import { parseStackFrame as extractLocationInfo } from "../shared/utils/stack_trace";
+import { mayContainStackFrame, parseStackFrame } from "../shared/utils/stack_trace";
 import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
@@ -2182,16 +2182,17 @@ export class DartDebugSession extends DebugSession {
 	// Logs a message back to the editor. Does not add its own newlines, you must
 	// provide them!
 	protected logToUser(message: string, category?: string, colorText = (s: string) => s) {
-		// Extract stack frames from the message so we can do nicer formatting of them.
-		const frame = extractLocationInfo(message);
 
 		// If we get a multi-line message that contains an error/stack trace, process each
 		// line individually, so we can attach location metadata to individual lines.
 		const isMultiLine = message.trimRight().indexOf("\n") !== -1;
-		if (frame && isMultiLine) {
+		if (isMultiLine && mayContainStackFrame(message)) {
 			message.split("\n").forEach((line) => this.logToUser(`${line}\n`, category));
 			return;
 		}
+
+		// Extract stack frames from the message so we can do nicer formatting of them.
+		const frame = parseStackFrame(message);
 
 		const output = new OutputEvent(`${applyColor(message, colorText)}`, category) as OutputEvent & DebugProtocol.OutputEvent;
 		const mayBeAsyncMarker = (output.body.output.trim().startsWith("<async") && output.body.output.trim().endsWith(">"))
