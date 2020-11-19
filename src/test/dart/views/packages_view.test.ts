@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../../shared/constants";
+import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { ensurePackageTreeNode, extApi, getPackages, myPackageThingFile, renderedItemLabel } from "../../helpers";
 
@@ -32,13 +32,15 @@ describe("packages tree", () => {
 		assert.equal(self, undefined);
 	});
 
-	it("includes known folders from inside lib/", async () => {
+	it("includes known folders/files from inside the package", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
 		const packageNode = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
 		const packageLevel = await extApi.packagesTreeProvider.getChildren(packageNode);
 
 		const myPackage = ensurePackageTreeNode(packageLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
-		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(myPackage);
+		const myPackageContents = await extApi.packagesTreeProvider.getChildren(myPackage);
+		const libFolder = ensurePackageTreeNode(myPackageContents, DART_DEP_FOLDER_NODE_CONTEXT, "lib");
+		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(libFolder);
 		const file = ensurePackageTreeNode(myPackageLibContents, DART_DEP_FILE_NODE_CONTEXT, "my_thing.dart");
 		assert.equal(fsPath(file.resourceUri!), fsPath(myPackageThingFile));
 	});
@@ -49,7 +51,9 @@ describe("packages tree", () => {
 		const packageLevel = await extApi.packagesTreeProvider.getChildren(packageNode);
 
 		const myPackage = ensurePackageTreeNode(packageLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
-		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(myPackage);
+		const myPackageContents = await extApi.packagesTreeProvider.getChildren(myPackage);
+		const libFolder = ensurePackageTreeNode(myPackageContents, DART_DEP_FOLDER_NODE_CONTEXT, "lib");
+		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(libFolder);
 
 		const names = myPackageLibContents!.map((f) => renderedItemLabel(f));
 		// This isn't quite the same as VS Code explorer, as it does complicated things
