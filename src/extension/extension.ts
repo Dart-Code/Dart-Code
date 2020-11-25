@@ -749,7 +749,8 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 }
 
 function recalculateAnalysisRoots() {
-	analysisRoots = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
+	const workspaceFolders = getDartWorkspaceFolders();
+	analysisRoots = workspaceFolders.map((w) => fsPath(w.uri));
 
 	// Sometimes people open their home directories as the workspace root and
 	// have all sorts of performance issues because of PubCache and AppData folders
@@ -773,17 +774,9 @@ function recalculateAnalysisRoots() {
 	}
 
 	// For each workspace, handle excluded folders.
-	getDartWorkspaceFolders().forEach((f) => {
-		const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
-		const workspacePath = fsPath(f.uri);
-		if (excludedForWorkspace && Array.isArray(excludedForWorkspace)) {
-			excludedForWorkspace.forEach((folder) => {
-				// Handle both relative and absolute paths.
-				if (!path.isAbsolute(folder))
-					folder = path.join(workspacePath, folder);
-				excludeFolders.push(folder);
-			});
-		}
+	workspaceFolders.forEach((f) => {
+		for (const folder of util.getExcludedFolders(f))
+			excludeFolders.push(folder);
 	});
 
 	// tslint:disable-next-line: no-floating-promises

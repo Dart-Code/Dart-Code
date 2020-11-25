@@ -21,6 +21,11 @@ export function isWithinPath(file: string, folder: string) {
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
+export function isEqualOrWithinPath(file: string, folder: string) {
+	const relative = path.relative(folder, file);
+	return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
 export async function getChildFolders(logger: Logger, parent: string, options?: { allowBin?: boolean; allowCache?: boolean }): Promise<string[]> {
 	if (!fs.existsSync(parent))
 		return [];

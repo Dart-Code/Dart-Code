@@ -7,7 +7,7 @@ import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { findProjectFolders, fsPath, getSdkVersion, hasPubspec } from "../../shared/utils/fs";
+import { findProjectFolders, fsPath, getSdkVersion, hasPubspec, isEqualOrWithinPath } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processFlutterSnap, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -15,7 +15,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { ringLog } from "../extension";
-import { openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
+import { getExcludedFolders, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
 import { initializeFlutterSdk } from "./flutter";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
@@ -153,7 +153,9 @@ export class SdkUtils {
 
 	public async scanWorkspace(useLsp: boolean): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
-		const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
+		const workspaceFolders = getDartWorkspaceFolders();
+		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
+		const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 		const normalPath = (process.env.PATH as string) || "";
 		const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
@@ -181,10 +183,11 @@ export class SdkUtils {
 		let hasAnyWebProject: boolean = false;
 		let hasAnyStandardDartProject: boolean = false;
 
-		const allPossibleProjectFolders = await findProjectFolders(this.logger, topLevelFolders);
+		const possibleProjectsBeforeExclusions = await findProjectFolders(this.logger, topLevelFolders);
+		const possibleProjects = possibleProjectsBeforeExclusions.filter((f) => allExcludedFolders.every((ef) => !isEqualOrWithinPath(f, ef)));
 
 		// Scan through them all to figure out what type of projects we have.
-		for (const folder of allPossibleProjectFolders) {
+		for (const folder of possibleProjects) {
 			const hasPubspecFile = hasPubspec(folder);
 			const refsFlutter = hasPubspecFile && referencesFlutterSdk(folder);
 			const refsWeb = false; // hasPubspecFile && referencesWeb(folder);

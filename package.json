@@ -1245,7 +1245,7 @@
 				"dart.analysisExcludedFolders": {
 					"type": "array",
 					"default": [],
-					"description": "An array of paths to be excluded from Dart analysis. This option should usually be set at the Workspace level.",
+					"description": "An array of paths to be excluded from Dart analysis. This option should usually be set at the Workspace level. Excluded folders will also be ignored when detecting project types.",
 					"items": {
 						"type": "string"
 					},

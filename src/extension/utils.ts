@@ -239,3 +239,19 @@ export function openLogContents(logType = `txt`, logContents: string, tempPath?:
 	fs.writeFileSync(tempPath, logContents);
 	workspace.openTextDocument(tempPath).then(window.showTextDocument);
 }
+
+/// Gets all excluded folders (full absolute paths) for a given workspace
+/// folder based on config.
+export function getExcludedFolders(f: WorkspaceFolder): string[] {
+	const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
+	if (!excludedForWorkspace || !Array.isArray(excludedForWorkspace))
+		return [];
+
+	const workspacePath = fsPath(f.uri);
+	return excludedForWorkspace.map((folder) => {
+		// Handle both relative and absolute paths.
+		if (!path.isAbsolute(folder))
+			folder = path.join(workspacePath, folder);
+		return folder;
+	});
+}
