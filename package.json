@@ -1356,7 +1356,7 @@
 					],
 					"default": "notification",
 					"description": "Determines how to display Hot Restart and Hot Reload progress.",
-					"scope": "resource"
+					"scope": "window"
 				},
 				"dart.evaluateGettersInDebugViews": {
 					"type": "boolean",
