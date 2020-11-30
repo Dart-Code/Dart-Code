@@ -1349,10 +1349,13 @@
 						"type": "string"
 					}
 				},
-				"dart.largeHotReloadNotifications": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Whether to show Hot Reload status updates in a large notification or within the status bar.",
+				"dart.hotReloadProgress": {
+					"enum": [
+						"notification",
+						"statusBar"
+					],
+					"default": "notification",
+					"description": "Determines how to display Hot Restart and Hot Reload progress.",
 					"scope": "resource"
 				},
 				"dart.evaluateGettersInDebugViews": {
