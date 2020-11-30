@@ -1,0 +1,9 @@
+name: hello_world_nested_flutter_example
+publish_to: none
+
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter

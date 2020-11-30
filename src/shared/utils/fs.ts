@@ -87,10 +87,11 @@ async function fileExists(p: string): Promise<boolean> {
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
-export async function findProjectFolders(logger: Logger, roots: string[], options: { sort?: boolean; requirePubspec?: boolean } = {}): Promise<string[]> {
+export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean } = {}): Promise<string[]> {
 	const level2Folders = await flatMapAsync(roots, (f) => getChildFolders(logger, f));
 	const level3Folders = await flatMapAsync(level2Folders, (f) => getChildFolders(logger, f));
-	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders);
+	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders)
+		.filter((f) => excludedFolders.every((ef) => !isEqualOrWithinPath(f, ef)));
 
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
 		exists: options && options.requirePubspec

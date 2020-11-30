@@ -7,7 +7,7 @@ import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { findProjectFolders, fsPath, getSdkVersion, hasPubspec, isEqualOrWithinPath } from "../../shared/utils/fs";
+import { findProjectFolders, fsPath, getSdkVersion, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processFlutterSnap, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -153,9 +153,6 @@ export class SdkUtils {
 
 	public async scanWorkspace(useLsp: boolean): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
-		const workspaceFolders = getDartWorkspaceFolders();
-		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-		const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 		const normalPath = (process.env.PATH as string) || "";
 		const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
@@ -183,8 +180,10 @@ export class SdkUtils {
 		let hasAnyWebProject: boolean = false;
 		let hasAnyStandardDartProject: boolean = false;
 
-		const possibleProjectsBeforeExclusions = await findProjectFolders(this.logger, topLevelFolders);
-		const possibleProjects = possibleProjectsBeforeExclusions.filter((f) => allExcludedFolders.every((ef) => !isEqualOrWithinPath(f, ef)));
+		const workspaceFolders = getDartWorkspaceFolders();
+		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
+		const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
+		const possibleProjects = await findProjectFolders(this.logger, topLevelFolders, allExcludedFolders);
 
 		// Scan through them all to figure out what type of projects we have.
 		for (const folder of possibleProjects) {

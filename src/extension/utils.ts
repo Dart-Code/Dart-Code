@@ -242,7 +242,10 @@ export function openLogContents(logType = `txt`, logContents: string, tempPath?:
 
 /// Gets all excluded folders (full absolute paths) for a given workspace
 /// folder based on config.
-export function getExcludedFolders(f: WorkspaceFolder): string[] {
+export function getExcludedFolders(f: WorkspaceFolder | undefined): string[] {
+	if (!f)
+		return [];
+
 	const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
 	if (!excludedForWorkspace || !Array.isArray(excludedForWorkspace))
 		return [];

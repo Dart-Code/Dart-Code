@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
-import { PromiseCompleter } from "../../shared/utils";
+import { flatMap, PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -14,7 +14,7 @@ import { config } from "../config";
 import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
-import { isValidEntryFile } from "../utils";
+import { getExcludedFolders, isValidEntryFile } from "../utils";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
@@ -180,8 +180,10 @@ export class DebugCommands {
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
-			const topLevelFolders = getDartWorkspaceFolders().map((w) => fsPath(w.uri));
-			const testFolders = (await findProjectFolders(logger, topLevelFolders, { requirePubspec: true }))
+			const workspaceFolders = getDartWorkspaceFolders();
+			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
+			const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
+			const testFolders = (await findProjectFolders(this.logger, topLevelFolders, allExcludedFolders, { requirePubspec: true }))
 				.map((project) => path.join(project, "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
 			if (testFolders.length === 0) {

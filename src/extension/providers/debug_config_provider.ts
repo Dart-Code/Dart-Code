@@ -23,7 +23,7 @@ import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { getExcludedFolders, isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -493,7 +493,8 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 
 	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], { requirePubspec: true }) : [];
+
+		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true }) : [];
 		if (projectFolders.length) {
 			return projectFolders.map((projectFolder) => {
 				// Compute cwd, using undefined instead of empty if rootFolder === projectFolder
@@ -522,7 +523,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 		const results: DebugConfiguration[] = [];
 
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], { requirePubspec: true }) : [];
+		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true }) : [];
 		for (const projectFolder of projectFolders) {
 			const isFlutter = isFlutterProjectFolder(projectFolder);
 			const name = path.basename(projectFolder);
