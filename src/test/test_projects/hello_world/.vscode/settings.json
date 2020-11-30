@@ -7,7 +7,6 @@
 	],
 	"dart.analysisExcludedFolders": [
 		"lib/excluded",
-		"nested_flutter_example",
 	],
 	"dart.showIgnoreQuickFixes": true,
 	"dart.showDartDeveloperLogs": true

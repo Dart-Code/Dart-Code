@@ -318,6 +318,34 @@
 			]
 		},
 		{
+			"name": "Dart Nested Flutter Tests",
+			"type": "extensionHost",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceFolder}/src/test/test_projects/dart_nested_flutter",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/src/test/dart_nested_flutter",
+				"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir"
+			],
+			"env": {
+				"DART_CODE_USE_DEBUG_SERVERS": "true",
+				"DART_CODE_IS_TEST_RUN": "true"
+			},
+			"preLaunchTask": "npm: watch",
+			"presentation": {
+				"hidden": true
+			},
+			"request": "launch",
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"smartStep": true,
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			]
+		},
+		{
 			"name": "Flutter Tests",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
@@ -767,6 +795,16 @@
 				"Web Debug Tests",
 				"Web Debug Server",
 				"Web Test Debug Server"
+			],
+			"presentation": {
+				"order": 3
+			},
+			"stopAll": true
+		},
+		{
+			"name": "Dart Nested Flutter Tests + DAs",
+			"configurations": [
+				"Dart Nested Flutter Tests"
 			],
 			"presentation": {
 				"order": 3

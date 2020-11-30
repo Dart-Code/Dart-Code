@@ -99,10 +99,10 @@ jobs:
         run: pub get
         working-directory: src/test/test_projects/hello_world
 
-      - name: pub get (hello_world/nested_flutter_example)
-        if: startsWith(matrix.bot, 'dart')
-        run: pub get
-        working-directory: src/test/test_projects/hello_world/nested_flutter_example
+      - name: flutter pub get (dart_nested_flutter/nested_flutter_example)
+        if: matrix.bot == 'misc'
+        run: flutter pub get
+        working-directory: src/test/test_projects/dart_nested_flutter/nested_flutter_example
 
       - name: flutter pub get (flutter_hello_world)
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
