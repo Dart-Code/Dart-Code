@@ -569,7 +569,7 @@ describe("dart cli debugger", () => {
 
 	it("can fetch slices of stack frames", async () => {
 		// TODO: This might be unreliable until dev channel gets this.
-		const expectFullCount = !versionIsAtLeast(extApi.dartCapabilities.version, "2.12.0-a");
+		const expectFullCount = !versionIsAtLeast(extApi.dartCapabilities.version, "2.12.0-0");
 
 		await openFile(helloWorldStack60File);
 		const config = await startDebugger(helloWorldStack60File);
