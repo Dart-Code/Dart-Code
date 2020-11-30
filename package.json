@@ -1349,6 +1349,12 @@
 						"type": "string"
 					}
 				},
+				"dart.largeHotReloadNotifications": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Whether to show Hot Reload status updates in a large notification or within the status bar.",
+					"scope": "resource"
+				},
 				"dart.evaluateGettersInDebugViews": {
 					"type": "boolean",
 					"default": true,

@@ -520,6 +520,8 @@ export class DebugCommands {
 				}
 			}
 		} else if (e.event === "dart.progressStart") {
+			const progressLocation = config.largeHotReloadNotifications && (e.body.progressID.endsWith("hot.reload") || e.body.progressID.endsWith("hot.restart")) ? vs.ProgressLocation.Notification : vs.ProgressLocation.Window;
+
 			vs.window.withProgress(
 				// TODO: This was previously Window to match what we'd get using DAP progress
 				// notifications but users prefer larger notifications as they're easier to
@@ -527,7 +529,7 @@ export class DebugCommands {
 				// https://github.com/Dart-Code/Dart-Code/issues/2597
 				// If this is changed back, ensure the waiting-for-debug-extension notification
 				// is still displayed with additional description.
-				{ location: vs.ProgressLocation.Notification },
+				{ location: progressLocation },
 				(progress) => {
 					// Complete any existing one with this ID.
 					session.progress[e.body.progressID]?.complete();
