@@ -56,30 +56,30 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		const scope: any = task.scope;
 		const cwd = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
 
-		const newDefinition = { ...task.definition };
+		const definition = task.definition;
 
 		// Pub commands should be run through Flutter if a Flutter project.
-		if (newDefinition.command === "pub" && isFlutterProjectFolder(cwd)) {
-			newDefinition.command = "flutter";
-			newDefinition.args = ["pub", ...(newDefinition.args ?? [])];
+		if (definition.command === "pub" && isFlutterProjectFolder(cwd)) {
+			definition.command = "flutter";
+			definition.args = ["pub", ...(definition.args ?? [])];
 		}
 
-		const options = this.getOptions(newDefinition);
+		const options = this.getOptions(definition);
 		if (options?.runtimeArgs) {
-			newDefinition.args = (newDefinition.args ?? []).concat((await options?.runtimeArgs()) ?? []);
+			definition.args = (definition.args ?? []).concat((await options?.runtimeArgs()) ?? []);
 		}
 
 		// We *must* return a new Task here, otherwise the task cannot be customised
 		// in task.json.
 		// https://github.com/microsoft/vscode/issues/58836#issuecomment-696620105
 		const newTask: DartTask = new vs.Task(
-			newDefinition,
+			definition,
 			// This should never be undefined, but the type allows it but the constructor
 			// arg does not.
 			task.scope || vs.TaskScope.Workspace,
 			task.name,
 			task.source,
-			await this.createTaskExecution(this.sdks, newDefinition, cwd),
+			await this.createTaskExecution(this.sdks, definition, cwd),
 			undefined,
 		);
 
