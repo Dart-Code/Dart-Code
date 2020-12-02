@@ -4,12 +4,13 @@ import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { isLinux } from "../../../shared/constants";
 import { DebuggerType, VmService, VmServiceExtension } from "../../../shared/enums";
+import { versionIsAtLeast } from "../../../shared/utils";
 import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
+import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -688,6 +689,56 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
+	});
+
+	it("can fetch slices of stack frames", async () => {
+		// TODO: This might be unreliable until dev channel gets this.
+		const expectFullCount = !versionIsAtLeast(extApi.dartCapabilities.version, "2.12.0-0");
+
+		await openFile(flutterHelloWorldStack60File);
+		const config = await startDebugger(dc, flutterHelloWorldStack60File);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1,
+			path: fsPath(flutterHelloWorldStack60File),
+		});
+
+		// Get the total stack size we should expect and ensure it's a little over the expected current 560
+		// (don't hard-code the exact value as it may change with SDK releases).
+		const fullStack = await dc.getStack(0, 10000);
+		const fullStackFrameCount = fullStack.body.totalFrames ?? 0;
+		const expectedMin = 500;
+		const expectedMax = 900;
+		assert.ok(
+			fullStackFrameCount >= expectedMin && fullStackFrameCount <= expectedMax,
+			`Expected ${expectedMin}-${expectedMax} frames but got ${fullStackFrameCount}:
+			${fullStack.body.stackFrames.map((f, i) => `   ${i}: ${f.name}`).join("\n")}`,
+		);
+
+		const stack1 = await dc.getStack(0, 1); // frame 0
+		const stack2 = await dc.getStack(1, 9); // frame 1-10
+		const stack3 = await dc.getStack(10, 10); // frame 10-19
+		const stack4 = await dc.getStack(20, 1000); // rest
+		assert.strictEqual(stack1.body.stackFrames.length, 1);
+		assert.strictEqual(stack1.body.totalFrames, expectFullCount ? fullStackFrameCount : 21); // Expect n + 20
+		assert.strictEqual(stack2.body.stackFrames.length, 9);
+		assert.strictEqual(stack2.body.totalFrames, expectFullCount ? fullStackFrameCount : 30); // offset+length+20
+		assert.strictEqual(stack3.body.stackFrames.length, 10);
+		assert.strictEqual(stack3.body.totalFrames, expectFullCount ? fullStackFrameCount : 40); // offset+length+20
+		assert.strictEqual(stack4.body.stackFrames.length, fullStackFrameCount - 20); // Full minus the 20 already fetched.
+		assert.strictEqual(stack4.body.totalFrames, fullStackFrameCount); // Always expect full count for rest
+		const frameNames = [
+			...stack1.body.stackFrames,
+			...stack2.body.stackFrames,
+			...stack3.body.stackFrames,
+			...stack4.body.stackFrames,
+		]
+			.map((f) => f.name);
+		// The top 60 frames should be from func60 down to func1.
+		// For Flutter web, each frame appears twice, so handle that for now while waiting to hear
+		// if that's expected.
+		const frameMultiplier = frameNames[0] === frameNames[1] ? 2 : 1;
+		for (let i = 0; i < 60; i++)
+			assert.strictEqual(frameNames[i * frameMultiplier], `func${60 - i}`);
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
