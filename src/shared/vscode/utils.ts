@@ -9,12 +9,11 @@ import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { flatMap, notUndefined } from "../utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath } from "../utils/fs";
+import { isKnownCloudIde } from "./utils_cloud";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
-export const isTheia = vs.env.appName?.includes("Theia for Cloud") ?? false;
-const isKnownCloudIde = isTheia;
 
 // The extension kind is declared as Workspace, but VS Code will return UI in the
 // case that there is no remote extension host.
