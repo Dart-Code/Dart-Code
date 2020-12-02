@@ -494,7 +494,11 @@ export class DebugCommands {
 			const originalUrl = e.body.url as string;
 			try {
 				const exposedUrl = await envUtils.exposeUrl(vs.Uri.parse(originalUrl, true), this.logger);
-				// HACK: Convert %24 back to $
+				// TEMP: Spawn in browser to force cookie creation...
+				if (exposedUrl.endsWith("$debug")) {
+					const httpUrl = exposedUrl.replace(/^ws/, "http");
+					await envUtils.openInBrowser(httpUrl);
+				}
 				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl });
 			} catch (e) {
 				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
