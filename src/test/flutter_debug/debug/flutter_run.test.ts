@@ -706,8 +706,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// (don't hard-code the exact value as it may change with SDK releases).
 		const fullStack = await dc.getStack(0, 10000);
 		const fullStackFrameCount = fullStack.body.totalFrames ?? 0;
-		const expectedMin = 500;
-		const expectedMax = 900;
+		const expectedMin = 400;
+		const expectedMax = 1000;
 		assert.ok(
 			fullStackFrameCount >= expectedMin && fullStackFrameCount <= expectedMax,
 			`Expected ${expectedMin}-${expectedMax} frames but got ${fullStackFrameCount}:
