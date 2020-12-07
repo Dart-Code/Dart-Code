@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, everythingFile, extApi, getPackages, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, everythingFile, getPackages, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
@@ -47,9 +47,7 @@ describe("dart_hover_provider", () => {
 	}
 
 	function getExpectedSignature(method: string, returnType: string): string {
-		return (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewSignatureFormat)
-			? `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`
-			: `${method} → ${returnType}`;
+		return `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`;
 	}
 
 	function getExpectedDoc(packagePath: string, doc: string): string {
@@ -84,13 +82,8 @@ describe("dart_hover_provider", () => {
 		assert.deepStrictEqual(hover.range, rangeOf("get |myTestNumGetter|"));
 	});
 
-	it("returns expected information for a setter", async function () {
-		// https://github.com/dart-lang/sdk/issues/32703
-		if (extApi.analyzerCapabilities && extApi.analyzerCapabilities.isDart2) {
-			this.skip();
-			return;
-		}
-
+	// Skipped due to https://github.com/dart-lang/sdk/issues/32703
+	it.skip("returns expected information for a setter", async () => {
 		const hover = await getHoverAt("my^TestNumSetter(");
 		assert.equal(hover.displayText, getExpectedSignature("set myTestNumSetter(num value)", "void"));
 		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my num setter."));

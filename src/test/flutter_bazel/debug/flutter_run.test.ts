@@ -57,11 +57,8 @@ describe(`flutter run debugger`, () => {
 		ensureHasRunRecently("devtools_activate", 60 * 10);
 	});
 
-	it("can launch DevTools externally using custom script", async function () {
+	it("can launch DevTools externally using custom script", async () => {
 		const hasRunFile = prepareHasRunFile("devtools_run");
-
-		if (!extApi.flutterCapabilities.supportsDevTools)
-			return this.skip();
 
 		await setConfigForTest("dart", "embedDevTools", false);
 

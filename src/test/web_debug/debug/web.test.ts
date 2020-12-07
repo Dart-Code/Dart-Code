@@ -171,12 +171,7 @@ describe.skip("web debugger", () => {
 		assert.equal(config!.cwd, fsPath(webHelloWorldExampleSubFolder));
 	});
 
-	it("can launch DevTools externally", async function () {
-		if (!extApi.dartCapabilities.supportsDevTools) {
-			this.skip();
-			return;
-		}
-
+	it("can launch DevTools externally", async () => {
 		await setConfigForTest("dart", "embedDevTools", false);
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();

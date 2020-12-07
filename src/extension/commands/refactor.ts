@@ -210,9 +210,6 @@ export class RefactorCommands implements vs.Disposable {
 	}
 
 	private getResourcesToRename(rename: { oldPath: string, newPath: string }): Array<{ oldPath: string, newPath: string }> {
-		if (this.analyzer.capabilities.supportsRenameFolder)
-			return [rename];
-
 		const filesToRename: Array<{ oldPath: string, newPath: string }> = [];
 		if (fs.statSync(rename.oldPath).isFile()) {
 			// TODO: if (isAnalyzableAndInWorkspace(rename.oldPath))

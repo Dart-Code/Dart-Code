@@ -24,8 +24,6 @@ export interface DebugCommandHandler {
 export interface InternalExtensionApi {
 	analyzerCapabilities?: {
 		supportsGetSignature: boolean;
-		isDart2: boolean;
-		hasNewSignatureFormat: boolean;
 		supportsAvailableSuggestions: boolean;
 		supportsIncludedImports: boolean;
 	};
@@ -38,13 +36,7 @@ export interface InternalExtensionApi {
 	isInImplementationFileThatCanHaveTest: boolean;
 	isLsp: boolean;
 	dartCapabilities: {
-		generatesCodeWithUnimplementedError: boolean;
-		supportsDevTools: boolean;
 		includesSourceForSdkLibs: boolean;
-		handlesBreakpointsInPartFiles: boolean;
-		hasDocumentationInCompletions: boolean;
-		hasUpdatedCompletionRanking: boolean;
-		supportsDisableServiceTokens: boolean;
 		supportsPubOutdated: boolean;
 		supportsDartPub: boolean;
 		version: string;
@@ -65,11 +57,6 @@ export interface InternalExtensionApi {
 		getLastSubscribedFiles?: () => string[];
 	};
 	flutterCapabilities: {
-		supportsPidFileForMachine: boolean;
-		supportsMultipleSamplesPerElement: boolean;
-		supportsDevTools: boolean;
-		hasTestGroupFix: boolean;
-		hasEvictBug: boolean;
 		hasLatestStructuredErrorsWork: boolean;
 		webSupportsDebugging: boolean;
 		webSupportsEvaluation: boolean;

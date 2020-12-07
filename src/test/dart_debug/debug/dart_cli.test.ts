@@ -211,11 +211,7 @@ describe("dart cli debugger", () => {
 		assert.equal(config!.cwd, fsPath(helloWorldExampleSubFolder));
 	});
 
-	it("can launch DevTools externally", async function () {
-		if (!extApi.dartCapabilities.supportsDevTools) {
-			this.skip();
-			return;
-		}
+	it("can launch DevTools externally", async () => {
 
 		// TODO(dantup): Tests for embedded DevTools.
 		await setConfigForTest("dart", "embedDevTools", false);
@@ -268,12 +264,7 @@ describe("dart cli debugger", () => {
 		);
 	});
 
-	it("stops at a breakpoint in a part file", async function () {
-		if (!extApi.dartCapabilities.handlesBreakpointsInPartFiles) {
-			this.skip();
-			return;
-		}
-
+	it("stops at a breakpoint in a part file", async () => {
 		await openFile(helloWorldPartFile);
 		const config = await startDebugger(helloWorldPartEntryFile);
 		await dc.hitBreakpoint(config, {
@@ -1180,7 +1171,7 @@ insp=<inspected variable>
 		});
 
 		it("when provided only a port in launch.config", async () => {
-			const vmArgs = extApi.dartCapabilities.supportsDisableServiceTokens ? ["--disable-service-auth-codes"] : [];
+			const vmArgs = ["--disable-service-auth-codes"];
 			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 			const observatoryUri = await process.vmServiceUri;
 			const observatoryPort = /:([0-9]+)\//.exec(observatoryUri)![1];

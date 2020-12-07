@@ -7,7 +7,7 @@ import { LogCategory } from "../../shared/enums";
 import { internalApiSymbol } from "../../shared/symbols";
 import { fsPath } from "../../shared/utils/fs";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
-import { activate, extApi, logger, waitForResult } from "../helpers";
+import { activate, logger, waitForResult } from "../helpers";
 
 describe("flutter", () => {
 	beforeEach("activate", () => activate());
@@ -31,12 +31,7 @@ describe("flutter", () => {
 			assert.fail(`Did not find "${expectedString}'" in the sample file:\n\n${contents}`);
 	});
 
-	it("created a sample project", async function () {
-		if (!extApi.flutterCapabilities.supportsMultipleSamplesPerElement) {
-			this.skip();
-			return;
-		}
-
+	it("created a sample project", async () => {
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders![1].uri);
 		// const expectedString = "Flutter code sample for material.IconButton.1";
 		const expectedString = "This sample shows an `IconButton` that";

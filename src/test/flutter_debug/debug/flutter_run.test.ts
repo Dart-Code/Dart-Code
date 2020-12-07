@@ -296,10 +296,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.cwd, fsPath(flutterHelloWorldExampleSubFolder));
 	});
 
-	it("can launch DevTools externally", async function () {
-		if (!extApi.flutterCapabilities.supportsDevTools)
-			return this.skip();
-
+	it("can launch DevTools externally", async () => {
 		await setConfigForTest("dart", "embedDevTools", false);
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
@@ -327,10 +324,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	const numReloads = 1;
-	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (numReloads && extApi.flutterCapabilities.hasEvictBug)
-			return this.skip();
-
+	it(`stops at a breakpoint after each reload (${numReloads})`, async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		const expectedLocation = {

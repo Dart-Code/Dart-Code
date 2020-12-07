@@ -11,12 +11,7 @@ describe("test_outline_visitor", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestOtherFile));
 	});
 
-	it("reads the correct groups and tests", function () {
-		if (!extApi.flutterCapabilities.hasTestGroupFix) {
-			this.skip();
-			return;
-		}
-
+	it("reads the correct groups and tests", () => {
 		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile);
 
 		const visitor = extApi.isLsp ? new LspTestOutlineVisitor(logger, fsPath(flutterTestOtherFile)) : new TestOutlineVisitor(logger);

@@ -7,7 +7,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, deferUntilLast, delay, extApi, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
+import { activate, deferUntilLast, delay, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("Skip attach tests for web devices", function () {
@@ -41,15 +41,11 @@ describe("flutter run debugger (attach)", () => {
 				// be required if the app was started as a native app (as would usually be the case, outside
 				// of tests).
 				"--disable-dds",
-			]
 				// Use pid-file as a convenient way of getting the test name into the command line args
 				// for easier debugging of processes that hang around on CI (we dump the process command
 				// line at the end of the test run).
-				.concat(
-					extApi.flutterCapabilities.supportsPidFileForMachine
-						? ["--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName)]
-						: []
-				),
+				"--pid-file", path.join(os.tmpdir(), fileSafeCurrentTestName),
+			],
 			deviceId: flutterTestDeviceId,
 			vmServiceUri,
 		});

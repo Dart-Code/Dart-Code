@@ -1,20 +1,10 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { isWin } from "../../../shared/constants";
 import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
 import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureInsertReplaceRanges as ensureRanges, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
-	let parensIfNewCompletionRanking = "";
-
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
-	beforeEach("set parentsIfNewCompletionRanking", () => {
-		// TODO: Remove this when Dart v2.10 hit stable and we can always
-		// assume these parens in the tests.
-		if (extApi.dartCapabilities.hasUpdatedCompletionRanking)
-			parensIfNewCompletionRanking = "()";
-	});
 
 	// This is not implemented. Turns out it's hard to detect this without having false positives
 	// since we can't easily tell we're in a show/hide reliably.
@@ -141,10 +131,7 @@ main() {
 
 	it.skip("sorts completions by relevance");
 
-	it("inserts full text for overrides", async function () {
-		if (isWin && !vsCodeVersion.hasWindowSnippetFix)
-			return this.skip();
-
+	it("inserts full text for overrides", async () => {
 		await setTestContent(`
 abstract class Person {
   String get name;
@@ -157,9 +144,7 @@ class Student extends Person {
 		select(rangeOf("nam|| //"));
 
 		await acceptFirstSuggestion();
-		const expectedBody = extApi.isLsp || extApi.dartCapabilities.generatesCodeWithUnimplementedError
-			? "throw UnimplementedError()"
-			: "null";
+		const expectedBody = "throw UnimplementedError()";
 
 		// Compensate for LSP messing with indent.
 		// https://github.com/microsoft/language-server-protocol/issues/880
@@ -209,8 +194,6 @@ main() {
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
-			if (extApi.dartCapabilities.hasDocumentationInCompletions)
-				assert.equal((completion.documentation as vs.MarkdownString).value, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 			assert.equal(completion.filterText ?? completion.label, "ProcessInfo");
 			assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo");
 			// https://github.com/microsoft/language-server-protocol/issues/880
@@ -270,8 +253,6 @@ main() {
 				completion.detail === "Auto import from 'dart:collection'\n\n({bool equals(K key1, K key2), int hashCode(K key), bool isValidKey(potentialKey)}) → HashMap"
 				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap",
 			);
-			if (extApi.dartCapabilities.hasDocumentationInCompletions)
-				assert.equal((completion.documentation as vs.MarkdownString).value, "Creates an unordered hash-table based [Map].");
 			assert.equal(completion.filterText ?? completion.label, "HashMap");
 			if (extApi.isLsp)
 				assert.equal(snippetValue(completion.insertText) ?? completion.label, "HashMap");
@@ -312,7 +293,7 @@ main() {
 import 'dart:io';
 
 main() {
-  final a = ProcessInfo${parensIfNewCompletionRanking}^
+  final a = ProcessInfo()^
 }
 		`);
 		});
@@ -333,7 +314,7 @@ main() {
 part of 'part_wrapper.dart';
 
 main() {
-  final a = ProcessInfo${parensIfNewCompletionRanking}^
+  final a = ProcessInfo()^
 }
 		`);
 
