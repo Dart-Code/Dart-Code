@@ -528,15 +528,17 @@ export class SdkCommands {
 		if (!selectedTemplate)
 			return;
 
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: "hello_world", validateInput: this.validateDartProjectName });
-		if (!name)
-			return;
-
 		// If already in a workspace, set the default folder to something nearby.
 		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
 		if (!folders || folders.length !== 1)
 			return;
 		const folderUri = folders[0];
+
+		const defaultName = await this.nextAvailableDirName(folderUri, "dart_application");
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: this.validateDartProjectName });
+		if (!name)
+			return;
+
 		const projectFolderUri = Uri.file(path.join(fsPath(folderUri), name));
 
 		if (fs.existsSync(fsPath(projectFolderUri))) {
@@ -563,15 +565,17 @@ export class SdkCommands {
 			return;
 		}
 
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: "hello_world", validateInput: this.validateFlutterProjectName });
-		if (!name)
-			return;
-
 		// If already in a workspace, set the default folder to something nearby.
 		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
 		if (!folders || folders.length !== 1)
 			return;
 		const folderUri = folders[0];
+
+		const defaultName = await this.nextAvailableDirName(folderUri, "flutter_application");
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: this.validateFlutterProjectName });
+		if (!name)
+			return;
+
 		const projectFolderUri = Uri.file(path.join(fsPath(folderUri), name));
 
 		if (fs.existsSync(fsPath(projectFolderUri))) {
@@ -590,6 +594,47 @@ export class SdkCommands {
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
+	}
+
+	/**
+	 * Gets a unique path or filename for the specified {folderUri} location.
+	 *
+	 * If there is already a directory or file located within {folderUri} that is named {baseDirName},
+	 * an underscore and a numerical value will be appended to the {baseDirName}; the value will
+	 * be incremented until there is no item with that name, or the maximum search limit (32) is reached.
+	 *
+	 * @param folderUri directory to check for existing directories or files.
+	 * @param baseDirName base name of the directory or file; an underscore and an integer will be placed
+	 * at the end of the name if the base name already exists, eg: `mydir` would become `mydir_1`.
+	 */
+	private async nextAvailableDirName(folderUri: Uri, baseDirName: string): Promise<string> {
+		// Check to see whether the path doesn't already exist; if it doesn't, then return early.
+		if (!fs.existsSync(fsPath(Uri.file(path.join(folderUri.path, baseDirName))))) {
+			return baseDirName;
+		}
+
+		// Set an upper bound on how many attempts we should make in getting a non-existent name.
+		const maxSearchLimit = 32;
+
+		let index = 0;
+		let dirName: string;
+		let projectUri: Uri;
+
+		do {
+			if (index >= maxSearchLimit) {
+				// Hit the search limit, so return the base dir name and allow the extension
+				// to handle the already-exists condition if user doesn't change it manually.
+				return baseDirName;
+			}
+
+			index++;
+			dirName = `${baseDirName}_${index}`;
+			projectUri = Uri.file(path.join(folderUri.path, dirName));
+		}
+		while (fs.existsSync(fsPath(projectUri)));
+
+		// We've obtained a new, non-existent name that can be used - so return it.
+		return dirName;
 	}
 
 	private async createFlutterSampleProject(): Promise<vs.Uri | undefined> {
