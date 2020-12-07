@@ -26,7 +26,6 @@ export interface InternalExtensionApi {
 		supportsGetSignature: boolean;
 		isDart2: boolean;
 		hasNewSignatureFormat: boolean;
-		hasNewHoverLibraryFormat: boolean;
 		supportsAvailableSuggestions: boolean;
 		supportsIncludedImports: boolean;
 	};

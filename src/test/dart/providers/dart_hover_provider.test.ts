@@ -53,7 +53,7 @@ describe("dart_hover_provider", () => {
 	}
 
 	function getExpectedDoc(packagePath: string, doc: string): string {
-		return (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat) && packagePath
+		return packagePath
 			? `*${packagePath}*\n\n${doc}`
 			: doc;
 	}
@@ -157,20 +157,14 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a type from another package", async () => {
 		const hover = await getHoverAt("http.Cli^ent");
 		assert.equal(hover.displayText, "abstract class Client");
-		if (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
-			assert.ok(hover.documentation!.startsWith("*package:http/src/client.dart*"));
-		else
-			assert.ok(hover.documentation!.startsWith("*package:http*"));
+		assert.ok(hover.documentation!.startsWith("*package:http/src/client.dart*"));
 		assert.deepStrictEqual(hover.range, rangeOf("http.|Client|"));
 	});
 
 	it("returns expected information for a type from an SDK library", async () => {
 		const hover = await getHoverAt("Fut^ure<String>");
 		assert.equal(hover.displayText, "abstract class Future<T>");
-		if (!extApi.analyzerCapabilities || extApi.analyzerCapabilities.hasNewHoverLibraryFormat)
-			assert.ok(hover.documentation!.startsWith("*dart:async*"));
-		else
-			assert.ok(hover.documentation!.startsWith("*dart.async*"));
+		assert.ok(hover.documentation!.startsWith("*dart:async*"));
 		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
 
