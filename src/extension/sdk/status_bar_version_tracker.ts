@@ -39,7 +39,8 @@ export class StatusBarVersionTracker implements vs.Disposable {
 		statusBarItem.command = command;
 		this.subscriptions.push(statusBarItem);
 		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => {
-			if (e && e.document && isAnalyzable(e.document))
+			// Show the Dart-specific label if the document is analyzable but it isn't HTML.
+			if (e && e.document && isAnalyzable(e.document) && e.document.languageId !== "html")
 				statusBarItem.show();
 			else
 				statusBarItem.hide();
