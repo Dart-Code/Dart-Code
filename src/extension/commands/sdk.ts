@@ -534,8 +534,8 @@ export class SdkCommands {
 			return;
 		const folderUri = folders[0];
 
-		const defaultName = await this.nextAvailableDirName(folderUri, "dart_application");
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: this.validateDartProjectName });
+		const defaultName = await this.nextAvailableName(folderUri, "dart_application_");
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, fsPath(folderUri)) });
 		if (!name)
 			return;
 
@@ -571,8 +571,8 @@ export class SdkCommands {
 			return;
 		const folderUri = folders[0];
 
-		const defaultName = await this.nextAvailableDirName(folderUri, "flutter_application");
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: this.validateFlutterProjectName });
+		const defaultName = await this.nextAvailableName(folderUri, "flutter_application_");
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateFlutterProjectName(s, fsPath(folderUri)) });
 		if (!name)
 			return;
 
@@ -597,44 +597,36 @@ export class SdkCommands {
 	}
 
 	/**
-	 * Gets a unique path or filename for the specified {folderUri} location.
+	 * Gets a unique path or filename for the specified {folderUri} location, appending a numerical value
+	 * onto the end of {prefix}, as required.
 	 *
-	 * If there is already a directory or file located within {folderUri} that is named {baseDirName},
-	 * an underscore and a numerical value will be appended to the {baseDirName}; the value will
-	 * be incremented until there is no item with that name, or the maximum search limit (32) is reached.
+	 * A directory or file location will be generated from {prefix} with a trailing number (eg. `mydir1`) and
+	 * its existence will be checked; if it already exists, the number will be incremented and checked again.
+	 *
+	 * This will continue until a non-existent directory and file is available, or until the maxiumum search
+	 * limit (of 128) is reached.
 	 *
 	 * @param folderUri directory to check for existing directories or files.
-	 * @param baseDirName base name of the directory or file; an underscore and an integer will be placed
-	 * at the end of the name if the base name already exists, eg: `mydir` would become `mydir_1`.
+	 * @param prefix base name of the directory or file; an integer will be placed
+	 * at the end of {prefix}, starting from 1. Example: `mydir1` would become `mydir2` if `mydir1` exists.
 	 */
-	private async nextAvailableDirName(folderUri: Uri, baseDirName: string): Promise<string> {
-		// Check to see whether the path doesn't already exist; if it doesn't, then return early.
-		if (!fs.existsSync(fsPath(Uri.file(path.join(folderUri.path, baseDirName))))) {
-			return baseDirName;
-		}
-
+	private async nextAvailableName(folderUri: Uri, prefix: string): Promise<string> {
 		// Set an upper bound on how many attempts we should make in getting a non-existent name.
-		const maxSearchLimit = 32;
+		const maxSearchLimit = 128;
 
-		let index = 0;
-		let dirName: string;
-		let projectUri: Uri;
+		for (let index = 1; index <= maxSearchLimit; index++) {
+			const name = `${prefix}${index}`;
+			const fullPath = path.join(fsPath(folderUri), name);
 
-		do {
-			if (index >= maxSearchLimit) {
-				// Hit the search limit, so return the base dir name and allow the extension
-				// to handle the already-exists condition if user doesn't change it manually.
-				return baseDirName;
+			if (!fs.existsSync(fullPath)) {
+				// Name doesn't appear to exist on-disk and thus can be used - return it.
+				return name;
 			}
-
-			index++;
-			dirName = `${baseDirName}_${index}`;
-			projectUri = Uri.file(path.join(folderUri.path, dirName));
 		}
-		while (fs.existsSync(fsPath(projectUri)));
 
-		// We've obtained a new, non-existent name that can be used - so return it.
-		return dirName;
+		// We hit the search limit, so return {prefix}{index} (eg. mydir1) and allow the extension to
+		// handle the already-exists condition if user doesn't change it manually.
+		return `${prefix}1`;
 	}
 
 	private async createFlutterSampleProject(): Promise<vs.Uri | undefined> {
@@ -672,20 +664,28 @@ export class SdkCommands {
 		return createFlutterSampleInTempFolder(this.flutterCapabilities, selectedSnippet.snippet.id, config.workspaceFlutterSdkPath);
 	}
 
-	private validateDartProjectName(input: string) {
+	private validateDartProjectName(input: string, folderDir: string) {
 		if (!packageNameRegex.test(input))
 			return "Dart project names should be all lowercase, with underscores to separate words";
+
 		const bannedNames = ["dart", "test"];
 		if (bannedNames.includes(input))
 			return `You may not use ${input} as the name for a dart project`;
+
+		if (fs.existsSync(path.join(folderDir, input)))
+			return `A project with this name already exists within the selected directory`;
 	}
 
-	private validateFlutterProjectName(input: string) {
+	private validateFlutterProjectName(input: string, folderDir: string) {
 		if (!packageNameRegex.test(input))
 			return "Flutter project names should be all lowercase, with underscores to separate words";
+
 		const bannedNames = ["flutter", "flutter_test", "test"];
 		if (bannedNames.includes(input))
 			return `You may not use ${input} as the name for a flutter project`;
+
+		if (fs.existsSync(path.join(folderDir, input)))
+			return `A project with this name already exists within the selected directory`;
 	}
 }
 
