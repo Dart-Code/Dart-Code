@@ -18,6 +18,7 @@ export function getLaunchConfig(noDebug: boolean, path: string, testNames: strin
 		template,
 		{
 			args: templateArgs.concat(testNameArgs),
+			expectSingleTest: !isGroup && testNames?.length === 1 && !testNames[0].includes("$"),
 			program: path,
 		},
 	);

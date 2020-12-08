@@ -31,6 +31,7 @@ export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestA
 	webDaemonLogFile?: string;
 	pubTestLogFile?: string;
 	showMemoryUsage?: boolean;
+	expectSingleTest?: boolean;
 }
 
 export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {

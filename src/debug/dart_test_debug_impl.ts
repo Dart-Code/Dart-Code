@@ -1,5 +1,6 @@
 import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
+import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, debugTerminatingProgressId, pubSnapshotPath, vmServiceHttpLinkPattern } from "../shared/constants";
 import { DartLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
@@ -13,12 +14,19 @@ const tick = "✓";
 const cross = "✖";
 
 export class DartTestDebugSession extends DartDebugSession {
+	private expectSingleTest: boolean | undefined = false;
+
 	constructor() {
 		super();
 
 		this.sendStdOutToConsole = false;
 		this.allowWriteServiceInfo = false;
 		this.requiresProgram = false;
+	}
+
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): Promise<void> {
+		this.expectSingleTest = args.expectSingleTest;
+		return super.launchRequest(response, args);
 	}
 
 	protected spawnProcess(args: DartLaunchRequestArguments): any {
@@ -110,6 +118,7 @@ export class DartTestDebugSession extends DartDebugSession {
 
 	private readonly suitePaths: string[] = [];
 	private readonly tests: Test[] = [];
+	private testCount = 0;
 	protected async handleTestEvent(notification: any) {
 		// Handle basic output
 		switch (notification.type) {
@@ -143,6 +152,7 @@ export class DartTestDebugSession extends DartDebugSession {
 				const testDone = notification as TestDoneNotification;
 				if (testDone.hidden)
 					return;
+				this.testCount++;
 				const pass = testDone.result === "success";
 				const symbol = pass ? tick : cross;
 				this.sendEvent(new OutputEvent(`${symbol} ${this.tests[testDone.testID].name}\n`, "stdout"));
@@ -155,6 +165,11 @@ export class DartTestDebugSession extends DartDebugSession {
 				const error = notification as ErrorNotification;
 				this.logToUser(`${error.error}\n`, "stderr");
 				this.logToUser(`${error.stackTrace}\n`, "stderr");
+				break;
+			case "done":
+				if (this.expectSingleTest && this.testCount > 1 && this.sourceFileForArgs) {
+					this.logToUser(`${this.testCount} tests ran but only one was expected.\nYou may have multiple tests with the same name.\n`, "console");
+				}
 				break;
 		}
 	}
