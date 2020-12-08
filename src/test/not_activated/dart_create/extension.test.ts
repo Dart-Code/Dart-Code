@@ -36,12 +36,16 @@ describe("command", () => {
 		const templateName = "console-full";
 		const templateEntrypoint = "bin/__projectName__.dart";
 
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves(projectName);
-
 		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
 		const tempFolder = getRandomTempFolder();
 		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
+
+		const showInputBox = sb.stub(vs.window, "showInputBox");
+		showInputBox.resolves(projectName);
+
+		// Create some folders in the temp folder to check the default name is correctly incremented.
+		fs.mkdirSync(path.join(tempFolder, "dart_application_1"));
+		fs.mkdirSync(path.join(tempFolder, "dart_application_2"));
 
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
 		type SnippetOption = vs.QuickPickItem & { template: StagehandTemplate };
@@ -53,6 +57,7 @@ describe("command", () => {
 
 		await vs.commands.executeCommand("dart.createProject");
 
+		assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "dart_application_3")));
 		assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);
 		const triggerFile = path.join(tempFolder, projectName, DART_STAGEHAND_PROJECT_TRIGGER_FILE);

@@ -32,12 +32,16 @@ describe("command", () => {
 	it("Flutter: New Project can be invoked and creates trigger file", async () => {
 		attachLoggingWhenExtensionAvailable();
 
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("my_test_flutter_proj");
-
 		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
 		const tempFolder = getRandomTempFolder();
 		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
+
+		const showInputBox = sb.stub(vs.window, "showInputBox");
+		showInputBox.resolves("my_test_flutter_proj");
+
+		// Create some folders in the temp folder to check the default name is correctly incremented.
+		fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
+		fs.mkdirSync(path.join(tempFolder, "flutter_application_2"));
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
@@ -45,7 +49,7 @@ describe("command", () => {
 
 		await vs.commands.executeCommand("flutter.createProject");
 
-		assert.ok(showInputBox.calledOnce);
+		assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "flutter_application_3")));
 		assert.ok(showOpenDialog.calledOnce);
 		assert.ok(openFolder.calledOnce);
 		assert.ok(fs.existsSync(path.join(tempFolder, "my_test_flutter_proj", FLUTTER_CREATE_PROJECT_TRIGGER_FILE)));
