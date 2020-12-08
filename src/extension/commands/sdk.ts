@@ -532,27 +532,28 @@ export class SdkCommands {
 		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
 		if (!folders || folders.length !== 1)
 			return;
-		const folderUri = folders[0];
+		const folderPath = fsPath(folders[0]);
 
-		const defaultName = await this.nextAvailableName(folderUri, "dart_application_");
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, fsPath(folderUri)) });
+		const defaultName = await this.nextAvailableName(folderPath, "dart_application_");
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, folderPath) });
 		if (!name)
 			return;
 
-		const projectFolderUri = Uri.file(path.join(fsPath(folderUri), name));
+		const projectFolderUri = Uri.file(path.join(folderPath, name));
+		const projectFolderPath = fsPath(projectFolderUri);
 
-		if (fs.existsSync(fsPath(projectFolderUri))) {
-			vs.window.showErrorMessage(`A folder named ${name} already exists in ${fsPath(folderUri)}`);
+		if (fs.existsSync(projectFolderPath)) {
+			vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderPath}`);
 			return;
 		}
 
 		// Create the empty folder so we can open it.
-		fs.mkdirSync(fsPath(projectFolderUri));
+		fs.mkdirSync(projectFolderPath);
 		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(fsPath(projectFolderUri), triggerFilename), JSON.stringify(selectedTemplate.template));
+		fs.writeFileSync(path.join(projectFolderPath, triggerFilename), JSON.stringify(selectedTemplate.template));
 		// If we're using a custom SDK, we need to apply it to the new project too.
 		if (config.workspaceSdkPath)
-			writeDartSdkSettingIntoProject(config.workspaceSdkPath, fsPath(projectFolderUri));
+			writeDartSdkSettingIntoProject(config.workspaceSdkPath, projectFolderPath);
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
@@ -569,27 +570,28 @@ export class SdkCommands {
 		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
 		if (!folders || folders.length !== 1)
 			return;
-		const folderUri = folders[0];
+		const folderPath = fsPath(folders[0]);
 
-		const defaultName = await this.nextAvailableName(folderUri, "flutter_application_");
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateFlutterProjectName(s, fsPath(folderUri)) });
+		const defaultName = await this.nextAvailableName(folderPath, "flutter_application_");
+		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateFlutterProjectName(s, folderPath) });
 		if (!name)
 			return;
 
-		const projectFolderUri = Uri.file(path.join(fsPath(folderUri), name));
+		const projectFolderUri = Uri.file(path.join(folderPath, name));
+		const projectFolderPath = fsPath(projectFolderUri);
 
-		if (fs.existsSync(fsPath(projectFolderUri))) {
-			vs.window.showErrorMessage(`A folder named ${name} already exists in ${fsPath(folderUri)}`);
+		if (fs.existsSync(projectFolderPath)) {
+			vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderPath}`);
 			return;
 		}
 
 		// Create the empty folder so we can open it.
-		fs.mkdirSync(fsPath(projectFolderUri));
+		fs.mkdirSync(projectFolderPath);
 		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
+		fs.writeFileSync(path.join(projectFolderPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
 		// If we're using a custom SDK, we need to apply it to the new project too.
 		if (config.workspaceFlutterSdkPath)
-			writeFlutterSdkSettingIntoProject(config.workspaceFlutterSdkPath, fsPath(projectFolderUri));
+			writeFlutterSdkSettingIntoProject(config.workspaceFlutterSdkPath, projectFolderPath);
 
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
@@ -606,17 +608,17 @@ export class SdkCommands {
 	 * This will continue until a non-existent directory and file is available, or until the maxiumum search
 	 * limit (of 128) is reached.
 	 *
-	 * @param folderUri directory to check for existing directories or files.
+	 * @param folder directory to check for existing directories or files.
 	 * @param prefix base name of the directory or file; an integer will be placed
 	 * at the end of {prefix}, starting from 1. Example: `mydir1` would become `mydir2` if `mydir1` exists.
 	 */
-	private async nextAvailableName(folderUri: Uri, prefix: string): Promise<string> {
+	private async nextAvailableName(folder: string, prefix: string): Promise<string> {
 		// Set an upper bound on how many attempts we should make in getting a non-existent name.
 		const maxSearchLimit = 128;
 
 		for (let index = 1; index <= maxSearchLimit; index++) {
 			const name = `${prefix}${index}`;
-			const fullPath = path.join(fsPath(folderUri), name);
+			const fullPath = path.join(folder, name);
 
 			if (!fs.existsSync(fullPath)) {
 				// Name doesn't appear to exist on-disk and thus can be used - return it.
