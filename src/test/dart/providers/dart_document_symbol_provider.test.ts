@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
-import { activate, ensureDocumentSymbol, everythingFile, extApi, getDocumentSymbols } from "../../helpers";
+import { activate, ensureDocumentSymbol, everythingFile, getDocumentSymbols } from "../../helpers";
 
 describe("document_symbol_provider", () => {
 
@@ -25,10 +25,8 @@ describe("document_symbol_provider", () => {
 		ensureDocumentSymbol(symbols, "doSomeStuff", vs.SymbolKind.Function);
 		ensureDocumentSymbol(symbols, "foo", vs.SymbolKind.Variable);
 		ensureDocumentSymbol(symbols, "Theme", vs.SymbolKind.Enum);
-		// TODO: Can we improve this in LSP server?
-		const enumKind = extApi.isLsp ? vs.SymbolKind.Enum : vs.SymbolKind.EnumMember;
-		ensureDocumentSymbol(symbols, "Light", enumKind, "Theme");
-		ensureDocumentSymbol(symbols, "Dark", enumKind, "Theme");
+		ensureDocumentSymbol(symbols, "Light", vs.SymbolKind.EnumMember, "Theme");
+		ensureDocumentSymbol(symbols, "Dark", vs.SymbolKind.EnumMember, "Theme");
 		assert.equal(symbols.length, 18);
 	});
 });

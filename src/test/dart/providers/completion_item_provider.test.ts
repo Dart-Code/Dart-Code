@@ -4,7 +4,15 @@ import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
 import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureInsertReplaceRanges as ensureRanges, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
+	let parensIfNotLsp = "";
+
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
+	beforeEach("set parentsIfNewCompletionRanking", () => {
+		// TODO: Remove this when Dart v2.10 hit stable and we can always
+		// assume these parens in the tests.
+		if (!extApi.isLsp)
+			parensIfNotLsp = "()";
+	});
 
 	// This is not implemented. Turns out it's hard to detect this without having false positives
 	// since we can't easily tell we're in a show/hide reliably.
@@ -68,7 +76,9 @@ main() {
 		const completions = await getCompletionsAt(`foo(fo^`);
 
 		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo: ", "foo: ");
-		if (typeof comp.insertText === "string")
+		if (extApi.isLsp)
+			assert.equal(comp.insertText, "foo: ");
+		else if (typeof comp.insertText === "string")
 			throw new Error("Expected SnippetString, got string");
 		else if (comp.insertText!.value.includes("{"))
 			assert.equal(comp.insertText!.value, "foo: ${1:}");
@@ -105,10 +115,7 @@ main() {
 		assert.equal(cl.detail, "(int i) → int"); // No auto import message here
 		assert.equal(cl.filterText, "methodWithArgsAndReturnValue");
 		if (extApi.isLsp) {
-			// LSP doesn't currently insert parens/args. Non-LSP does this, but it's not reliable (eg.
-			// it always inserts parens, even if you want to do foo.map(myFunction). It would be best
-			// to support with commit characters.
-			assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue${1:}");
+			assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${0:i})");
 		} else {
 			assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${1:i})");
 			// https://github.com/microsoft/language-server-protocol/issues/880
@@ -293,7 +300,7 @@ main() {
 import 'dart:io';
 
 main() {
-  final a = ProcessInfo()^
+  final a = ProcessInfo${parensIfNotLsp}^
 }
 		`);
 		});
@@ -314,7 +321,7 @@ main() {
 part of 'part_wrapper.dart';
 
 main() {
-  final a = ProcessInfo()^
+  final a = ProcessInfo${parensIfNotLsp}^
 }
 		`);
 

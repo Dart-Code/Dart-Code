@@ -94,10 +94,12 @@ describe("dart_formatting_edit_provider", () => {
 	it("formats a huge document of unicode characters without corrupting", async () => {
 		// https://github.com/Dart-Code/Dart-Code/issues/2140
 		// Set the test document to 130 lines of 62 commented emojis
-		const testDocument = `// ${`🙈`.repeat(62)}${documentEol}`.repeat(130);
+		const largeComment = `// ${`🙈`.repeat(62)}${documentEol}`.repeat(130);
+		const testCode = `${largeComment}main() {}${documentEol}`;
 		// Add two blank lines so that there's a change to format
-		await setTestContent(`${documentEol.repeat(2)}${testDocument}`);
+		await setTestContent(`${documentEol.repeat(2)}${testCode}`);
 		await formatDocument();
-		assert.equal(currentDoc().getText(), testDocument);
+		const actual = currentDoc().getText();
+		assert.equal(actual, testCode);
 	});
 });
