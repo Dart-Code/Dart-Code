@@ -2186,7 +2186,7 @@
 		"semver": "^7.3.2",
 		"vscode-debugadapter": "^1.42.1",
 		"vscode-debugprotocol": "^1.42.0",
-		"vscode-languageclient": "^7.0.0-next.12",
+		"vscode-languageclient": "^7.0.0-next.15",
 		"ws": "^7.3.1"
 	},
 	"devDependencies": {
