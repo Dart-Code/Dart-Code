@@ -387,6 +387,12 @@ before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
 
+afterEach("wait for any debug sessions to end", async () => {
+	// Wait up to 2s for any active debug sessions to end, as some tests may end earlier and
+	// there may still be ingoing events firing.
+	await waitFor(() => vs.debug.activeDebugSession === undefined, 100, 2000);
+});
+
 const deferredItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
 const deferredToLastItems: Array<(result?: "failed" | "passed") => Promise<any> | any> = [];
 afterEach("run deferred functions", async function () {
