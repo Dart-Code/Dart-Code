@@ -7,7 +7,7 @@ import { WebClient } from "../fetch";
 import { CustomScript, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { TestSessionCoordindator } from "../test/coordindator";
-import { TreeNode } from "../test/test_model";
+import { TestTreeModel, TreeNode } from "../test/test_model";
 import { WorkspaceContext } from "../workspace";
 import { Context } from "./workspace";
 
@@ -79,6 +79,7 @@ export interface InternalExtensionApi {
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
 	testTreeProvider: TreeDataProvider<TreeNode>;
 	testCoordinator: TestSessionCoordindator;
+	testTreeModel: TestTreeModel;
 	webClient: WebClient;
 	workspaceContext: WorkspaceContext;
 }

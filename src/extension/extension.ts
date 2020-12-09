@@ -703,6 +703,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			renameProvider,
 			safeToolSpawn,
 			testCoordinator,
+			testTreeModel,
 			testTreeProvider,
 			webClient,
 			workspaceContext,

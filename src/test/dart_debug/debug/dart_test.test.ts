@@ -7,12 +7,20 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, delay, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-	beforeEach("activate helloWorldTestMainFile", () => activate(helloWorldTestMainFile));
+	beforeEach("clear test tree", async () => {
+		for (const key of Object.keys(extApi.testTreeModel.suites))
+			delete extApi.testTreeModel.suites[key];
+		extApi.testTreeModel.isNewTestRun = true;
+		extApi.testTreeModel.nextFailureIsFirst = true;
+		extApi.testTreeModel.updateNode();
+		await delay(10); // Allow tree to be updated.
+	});
+	beforeEach("activate", () => activate(null));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
@@ -28,6 +36,7 @@ describe("dart test debugger", () => {
 	}
 
 	it("runs a Dart test script to completion", async () => {
+		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(helloWorldTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -64,6 +73,7 @@ describe("dart test debugger", () => {
 	});
 
 	it("receives the expected events from a Dart test script", async () => {
+		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(helloWorldTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -202,7 +212,6 @@ describe("dart test debugger", () => {
 	it("sorts suites correctly", async () => {
 		// Run each test file in a different order to how we expect the results.
 		for (const file of [helloWorldTestSkipFile, helloWorldTestMainFile, helloWorldTestTreeFile, helloWorldTestBrokenFile]) {
-			await openFile(file);
 			const config = await startDebugger(file);
 			config!.noDebug = true;
 			await waitAllThrowIfTerminates(dc,
@@ -215,7 +224,7 @@ describe("dart test debugger", () => {
 		const topLevelNodes = await extApi.testTreeProvider.getChildren() || [];
 		const topLevelTreeItems = await Promise.all(topLevelNodes?.map((child) => extApi.testTreeProvider.getTreeItem(child)));
 		assert.ok(topLevelTreeItems);
-		assert.equal(topLevelTreeItems.length, 5);
+		assert.equal(topLevelTreeItems.length, 4);
 
 		assert.equal(topLevelTreeItems[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
 		assert.equal(topLevelNodes[0].status, TestStatus.Failed);
@@ -223,10 +232,8 @@ describe("dart test debugger", () => {
 		assert.equal(topLevelNodes[1].status, TestStatus.Failed);
 		assert.equal(topLevelTreeItems[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
 		assert.equal(topLevelNodes[2].status, TestStatus.Passed);
-		assert.equal(topLevelTreeItems[3].resourceUri!.toString(), helloWorldTestShortFile.toString());
-		assert.equal(topLevelNodes[3].status, TestStatus.Passed);
-		assert.equal(topLevelTreeItems[4].resourceUri!.toString(), helloWorldTestSkipFile.toString());
-		assert.equal(topLevelNodes[4].status, TestStatus.Skipped);
+		assert.equal(topLevelTreeItems[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
+		assert.equal(topLevelNodes[3].status, TestStatus.Skipped);
 	});
 
 	it("runs all tests if given a folder", async () => {
