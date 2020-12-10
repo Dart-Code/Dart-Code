@@ -1636,6 +1636,17 @@
 					"description": "Whether to show the Flutter Outline tree in the sidebar.",
 					"scope": "window"
 				},
+				"dart.flutterWebRenderer": {
+					"enum": [
+						"default",
+						"html",
+						"canvaskit",
+						"auto"
+					],
+					"default": "default",
+					"markdownDescription": "- `default` - use Flutter's default value.\n- `html` - always use the HTML renderer. This renderer uses a combination of HTML, CSS, SVG, 2D Canvas, and WebGL.\n- `canvaskit` - always use the CanvasKit renderer. This renderer uses WebGL and WebAssembly to render graphics.\n- `auto` - use the HTML renderer on mobile devices, and CanvasKit on desktop devices.",
+					"scope": "window"
+				},
 				"dart.analyzerAdditionalArgs": {
 					"type": "array",
 					"default": [],

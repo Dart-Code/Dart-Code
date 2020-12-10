@@ -361,7 +361,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Task handlers.
 	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(logger, context, sdks, dartCapabilities)));
-	context.subscriptions.push(vs.tasks.registerTaskProvider(FlutterTaskProvider.type, new FlutterTaskProvider(logger, context, sdks)));
+	context.subscriptions.push(vs.tasks.registerTaskProvider(FlutterTaskProvider.type, new FlutterTaskProvider(logger, context, sdks, flutterCapabilities)));
 
 	// Snippets are language-specific
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider("snippets/dart.json", () => true)));

@@ -9,6 +9,7 @@ import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HA
 import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
+import { getFutterWebRendererArg } from "../../shared/flutter/utils";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestTreeModel } from "../../shared/test/test_model";
 import { filenameSafe } from "../../shared/utils";
@@ -458,6 +459,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.args = conf.flutterAdditionalArgs.concat(isTest ? conf.flutterTestAdditionalArgs : []).concat(debugConfig.args);
+			const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
+			if (rendererArg)
+				debugConfig.args.push(rendererArg);
 			debugConfig.forceFlutterVerboseMode = isLogging;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.

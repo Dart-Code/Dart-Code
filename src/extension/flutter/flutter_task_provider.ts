@@ -1,9 +1,12 @@
 
 import * as vs from "vscode";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
+import { getFutterWebRendererArg } from "../../shared/flutter/utils";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
-import { BaseTaskProvider } from "../dart/dart_task_provider";
+import { config } from "../config";
+import { BaseTaskProvider, DartTaskDefinition } from "../dart/dart_task_provider";
 import { isFlutterWorkspaceFolder } from "../utils";
 
 
@@ -12,7 +15,7 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 
 	get type() { return FlutterTaskProvider.type; }
 
-	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks) {
+	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks, private readonly flutterCapabilities: FlutterCapabilities) {
 		super(logger, context, sdks);
 	}
 
@@ -42,4 +45,19 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 	protected createPubTask(folder: vs.WorkspaceFolder, args: string[]) {
 		return this.createTask(folder, "flutter", ["pub", ...args]);
 	}
+
+	protected injectArgs(definition: DartTaskDefinition): void | Promise<void> {
+		definition.args = definition.args ?? [];
+
+		if (definition.command === "flutter") {
+			// Inject web-renderer if required.
+			const isWebBuild = definition.args.length >= 2 && definition.args[0] === "build" && definition.args[1] === "web";
+			if (isWebBuild) {
+				const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, definition.args);
+				if (rendererArg)
+					definition.args.push(rendererArg);
+			}
+		}
+	}
+
 }
