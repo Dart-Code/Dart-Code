@@ -4,6 +4,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { getFutterWebRendererArg } from "../../shared/flutter/utils";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
+import { arrayStartsWith } from "../../shared/utils/array";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { BaseTaskProvider, DartTaskDefinition } from "../dart/dart_task_provider";
@@ -51,7 +52,7 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 
 		if (definition.command === "flutter") {
 			// Inject web-renderer if required.
-			const isWebBuild = definition.args.length >= 2 && definition.args[0] === "build" && definition.args[1] === "web";
+			const isWebBuild = arrayStartsWith(definition.args, ["build", "web"]);
 			if (isWebBuild) {
 				const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, definition.args);
 				if (rendererArg)
