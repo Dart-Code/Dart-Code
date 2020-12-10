@@ -7,7 +7,7 @@ export function getFutterWebRendererArg(flutterCapabilities: FlutterCapabilities
 	if (!renderer || renderer === "default")
 		return;
 
-	const alreadyHasArg = existingArgs?.find((a) => a.startsWith("--web-renderer"));
+	const alreadyHasArg = existingArgs?.find((a) => a.startsWith("--web-renderer=") || a === "--web-renderer");
 	if (alreadyHasArg)
 		return;
 
