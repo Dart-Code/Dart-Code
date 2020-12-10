@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { LanguageClient } from "vscode-languageclient/node";
+import { LanguageClient } from "vscode-languageclient";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { fsPath } from "../../shared/utils/fs";
 import { validLastCharacters } from "../decorations/closing_labels_decorations";
