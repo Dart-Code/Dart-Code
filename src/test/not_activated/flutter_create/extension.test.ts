@@ -4,6 +4,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
+import { FlutterCreateTriggerData } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../../shared/vscode/interfaces";
 import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb } from "../../helpers";
@@ -72,9 +73,12 @@ describe("command", () => {
 		assert.ok(openFolder.calledOnce);
 		const triggerFile = path.join(fsPath(sampleFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
-		const recordedSampleId = fs.readFileSync(triggerFile).toString().trim();
+
+		const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
+		const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
+
 		// TODO: Remove next line and uncomment the following one after the next stable Flutter release (the one after v1.2).
-		assert.equal(recordedSampleId === "material.IconButton" || recordedSampleId === "material.IconButton.1", true);
+		assert.equal(json?.sample === "material.IconButton" || json?.sample === "material.IconButton.1", true);
 		// assert.equal(recordedSampleId, "material.IconButton.1");
 	});
 });
