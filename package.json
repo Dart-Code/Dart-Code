@@ -41,6 +41,7 @@
 		"workspaceContains:flutter.sh.create",
 		"workspaceContains:flutter.create",
 		"onCommand:flutter.createProject",
+		"onCommand:flutter.createProject.module",
 		"onCommand:dart.createProject",
 		"onCommand:_dart.flutter.createSampleProject",
 		"onCommand:flutter.doctor",
@@ -83,7 +84,12 @@
 		"commands": [
 			{
 				"command": "flutter.createProject",
-				"title": "New Project",
+				"title": "New Application Project",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.createProject.module",
+				"title": "New Module Project",
 				"category": "Flutter"
 			},
 			{
@@ -566,6 +572,9 @@
 			"commandPalette": [
 				{
 					"command": "flutter.createProject"
+				},
+				{
+					"command": "flutter.createProject.module"
 				},
 				{
 					"command": "dart.createProject"

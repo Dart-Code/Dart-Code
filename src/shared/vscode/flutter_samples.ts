@@ -1,12 +1,11 @@
-import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../capabilities/flutter";
-import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
+import { dartCodeExtensionIdentifier } from "../constants";
 import { FlutterCreateTriggerData } from "../interfaces";
 import { getRandomInt, mkDirRecursive } from "../utils/fs";
-import { writeFlutterSdkSettingIntoProject } from "../utils/projects";
+import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../utils/projects";
 
 export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string, flutterSdkOverride?: string): vs.Uri | undefined {
 	// Ensure we're on at least Flutter v1 so we know creating samples works.
@@ -22,7 +21,7 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 	mkDirRecursive(tempSamplePath);
 
 	const triggerData: FlutterCreateTriggerData = { sample: sampleID };
-	fs.writeFileSync(path.join(tempSamplePath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), JSON.stringify(triggerData));
+	writeFlutterTriggerFile(tempSamplePath, triggerData);
 
 	// If we're using a custom SDK, we need to apply it to the new project too.
 	if (flutterSdkOverride)

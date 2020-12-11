@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "flutter_create_sample"
+		},
+		{
+			"path": "flutter_create_module"
 		}
 	],
 	"settings": {

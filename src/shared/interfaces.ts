@@ -68,7 +68,8 @@ export interface StagehandTemplate {
 }
 
 export interface FlutterCreateTriggerData {
-	readonly sample: string;
+	readonly sample?: string;
+	readonly template?: string;
 }
 
 export interface Logger {
