@@ -4,6 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../capabilities/flutter";
 import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
+import { FlutterCreateTriggerData } from "../interfaces";
 import { getRandomInt, mkDirRecursive } from "../utils/fs";
 import { writeFlutterSdkSettingIntoProject } from "../utils/projects";
 
@@ -20,8 +21,9 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 	// Create the empty folder so we can open it.
 	mkDirRecursive(tempSamplePath);
 
-	// Create a temp dart file to force extension to load when we open this folder.
-	fs.writeFileSync(path.join(tempSamplePath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), sampleID);
+	const triggerData: FlutterCreateTriggerData = { sample: sampleID };
+	fs.writeFileSync(path.join(tempSamplePath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), JSON.stringify(triggerData));
+
 	// If we're using a custom SDK, we need to apply it to the new project too.
 	if (flutterSdkOverride)
 		writeFlutterSdkSettingIntoProject(flutterSdkOverride, tempSamplePath);
