@@ -459,9 +459,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.args = conf.flutterAdditionalArgs.concat(isTest ? conf.flutterTestAdditionalArgs : []).concat(debugConfig.args);
-			const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
-			if (rendererArg)
-				debugConfig.args.push(rendererArg);
 			debugConfig.forceFlutterVerboseMode = isLogging;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
@@ -477,6 +474,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!debugConfig.deviceId && device) {
 				debugConfig.deviceId = device.id;
 				debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
+			}
+			if (debugConfig?.deviceId?.startsWith("web")) {
+				const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
+				if (rendererArg)
+					debugConfig.args.push(rendererArg);
 			}
 			debugConfig.showMemoryUsage =
 				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false
