@@ -51,6 +51,25 @@ describe("flutter", () => {
 			assert.fail(`Did not find "${expectedString}'" in the sample file (${mainFile}):\n\n${contents}`);
 	});
 
+	it("created a module project", async () => {
+		const moduleProjectFolder = fsPath(vs.workspace.workspaceFolders![2].uri);
+		const expectedString = "description: A new flutter module project";
+		const pubspecFile = path.join(moduleProjectFolder, "pubspec.yaml");
+		// Creating the project may be a little slow, so allow up to 60 seconds for it.
+		logger.info("Waiting for file to exist", LogCategory.CI);
+		await waitForResult(() => fs.existsSync(pubspecFile), "pubspec.yaml did not exist", 100000);
+		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
+		logger.info("Waiting for content match", LogCategory.CI);
+		await waitForResult(() => {
+			const contents = fs.readFileSync(pubspecFile);
+			return contents.indexOf(expectedString) !== -1;
+		}, undefined, 10000, false); // Don't throw on failure, as we have a better assert below that can include the contents.
+
+		const contents = fs.readFileSync(pubspecFile);
+		if (contents.indexOf(expectedString) === -1)
+			assert.fail(`Did not find "${expectedString}'" in the file (${pubspecFile}):\n\n${contents}`);
+	});
+
 	it("triggered Flutter mode", () => {
 		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
 		assert.ok(ext);

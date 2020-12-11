@@ -1,8 +1,16 @@
 import * as fs from "fs";
 import * as path from "path";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../constants";
+import { FlutterCreateTriggerData } from "../interfaces";
 
 export function writeDartSdkSettingIntoProject(dartSdkPath: string, projectFolder: string): void {
 	writeSettingIntoProject(projectFolder, { "dart.sdkPath": dartSdkPath });
+}
+
+export function writeFlutterTriggerFile(folderPath: string, triggerData: FlutterCreateTriggerData | undefined) {
+	const jsonString = triggerData ? JSON.stringify(triggerData) : "";
+
+	fs.writeFileSync(path.join(folderPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), jsonString);
 }
 
 export function writeFlutterSdkSettingIntoProject(flutterSdkPath: string, projectFolder: string): void {

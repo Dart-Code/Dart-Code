@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
+import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -13,7 +13,7 @@ import { flatMap, PromiseCompleter, uniq, usingCustomScript } from "../../shared
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { findProjectFolders, fsPath, mkDirRecursive } from "../../shared/utils/fs";
-import { writeDartSdkSettingIntoProject, writeFlutterSdkSettingIntoProject } from "../../shared/utils/projects";
+import { writeDartSdkSettingIntoProject, writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../../shared/utils/projects";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
@@ -69,6 +69,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject.module", () => this.createFlutterProject("module"), this));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.createProject", this.createDartProject, this));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.create", this.dartCreate, this));
@@ -251,6 +252,11 @@ export class SdkCommands {
 		if (triggerData?.sample) {
 			args.push("--sample");
 			args.push(triggerData.sample);
+			args.push("--overwrite");
+		}
+		if (triggerData?.template) {
+			args.push("--template");
+			args.push(triggerData.template);
 			args.push("--overwrite");
 		}
 		args.push(".");
@@ -560,7 +566,7 @@ export class SdkCommands {
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 	}
 
-	private async createFlutterProject(): Promise<void> {
+	private async createFlutterProject(template?: string): Promise<vs.Uri | undefined> {
 		if (!this.sdks || !this.sdks.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
@@ -587,8 +593,10 @@ export class SdkCommands {
 
 		// Create the empty folder so we can open it.
 		fs.mkdirSync(projectFolderPath);
-		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(projectFolderPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE), "");
+
+		const triggerData: FlutterCreateTriggerData | undefined = template ? { template } : undefined;
+		writeFlutterTriggerFile(projectFolderPath, triggerData);
+
 		// If we're using a custom SDK, we need to apply it to the new project too.
 		if (config.workspaceFlutterSdkPath)
 			writeFlutterSdkSettingIntoProject(config.workspaceFlutterSdkPath, projectFolderPath);
@@ -596,6 +604,8 @@ export class SdkCommands {
 		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
 		const openInNewWindow = hasFoldersOpen;
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
+
+		return projectFolderUri;
 	}
 
 	/**
