@@ -7,7 +7,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { CustomScript, DartSdks, DartWorkspaceContext, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
+import { CustomScript, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { flatMap, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -221,7 +221,7 @@ export class SdkCommands {
 		await util.promptToReloadExtension();
 	}
 
-	private async flutterCreate(projectPath: string | undefined, projectName?: string, sampleID?: string) {
+	private async flutterCreate(projectPath: string | undefined, projectName?: string, triggerData?: FlutterCreateTriggerData) {
 		if (!projectPath) {
 			projectPath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, undefined, true);
 			if (!projectPath)
@@ -248,9 +248,9 @@ export class SdkCommands {
 			args.push("--android-language");
 			args.push(config.flutterCreateAndroidLanguage);
 		}
-		if (sampleID) {
+		if (triggerData?.sample) {
 			args.push("--sample");
-			args.push(sampleID);
+			args.push(triggerData.sample);
 			args.push("--overwrite");
 		}
 		args.push(".");

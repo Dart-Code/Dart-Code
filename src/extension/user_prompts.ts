@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { Logger, StagehandTemplate } from "../shared/interfaces";
+import { FlutterCreateTriggerData, Logger, StagehandTemplate } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
@@ -191,14 +191,16 @@ async function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder): Promise<void>
 	if (!fs.existsSync(flutterTriggerFile))
 		return;
 
-	let sampleID: string | undefined = fs.readFileSync(flutterTriggerFile).toString().trim();
-	sampleID = sampleID ? sampleID : undefined;
+	const jsonString: string | undefined = fs.readFileSync(flutterTriggerFile).toString().trim();
+	const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
+
 	fs.unlinkSync(flutterTriggerFile);
+
 	try {
 		markProjectCreationStarted();
-		const success = await createFlutterProject(fsPath(wf.uri), sampleID);
+		const success = await createFlutterProject(fsPath(wf.uri), json);
 		if (success)
-			handleFlutterWelcome(wf, sampleID);
+			handleFlutterWelcome(wf, json);
 	} finally {
 		markProjectCreationEnded();
 	}
@@ -209,17 +211,17 @@ async function createDartProject(projectPath: string, templateName: string): Pro
 	return code === 0;
 }
 
-async function createFlutterProject(projectPath: string, sampleID: string | undefined): Promise<boolean> {
-	const projectName = sampleID ? "sample" : undefined;
-	const code = await vs.commands.executeCommand("_flutter.create", projectPath, projectName, sampleID) as number;
+async function createFlutterProject(projectPath: string, triggerData: FlutterCreateTriggerData | undefined): Promise<boolean> {
+	const projectName = triggerData?.sample ? "sample" : undefined;
+	const code = await vs.commands.executeCommand("_flutter.create", projectPath, projectName, triggerData) as number;
 	return code === 0;
 }
 
-function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, sampleID: string | undefined) {
+function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, triggerData: FlutterCreateTriggerData | undefined) {
 	const entryFile = path.join(fsPath(workspaceFolder.uri), "lib/main.dart");
 	openFile(entryFile);
-	if (sampleID)
-		vs.window.showInformationMessage(`${sampleID} sample ready! Connect a device and press F5 to run.`);
+	if (triggerData?.sample)
+		vs.window.showInformationMessage(`${triggerData.sample} sample ready! Connect a device and press F5 to run.`);
 	else
 		vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
 }

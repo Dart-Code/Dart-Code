@@ -67,6 +67,10 @@ export interface StagehandTemplate {
 	readonly entrypoint: string;
 }
 
+export interface FlutterCreateTriggerData {
+	readonly sample: string;
+}
+
 export interface Logger {
 	info(message: string, category?: LogCategory): void;
 	warn(message: SomeError, category?: LogCategory): void;
