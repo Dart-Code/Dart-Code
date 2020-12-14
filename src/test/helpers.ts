@@ -14,7 +14,7 @@ import { BufferedLogger, escapeRegExp, filenameSafe, flatMap } from "../shared/u
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
-import { SourceSortMembersCodeActionKind } from "../shared/vscode/utils";
+import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
@@ -1044,7 +1044,7 @@ export function ensurePackageTreeNode(items: vs.TreeItem[] | undefined | null, n
 }
 
 export function renderedItemLabel(item: vs.TreeItem): string {
-	return item.label || path.basename(fsPath(item.resourceUri!));
+	return treeLabel(item) || path.basename(fsPath(item.resourceUri!));
 }
 
 export async function makeTextTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {

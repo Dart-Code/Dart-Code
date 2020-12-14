@@ -7,7 +7,7 @@ import { nullLogger } from "../../shared/logging";
 import { fsPath } from "../../shared/utils/fs";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
-import { lspToPosition, lspToRange, toRange } from "../../shared/vscode/utils";
+import { lspToPosition, lspToRange, toRange, treeLabel } from "../../shared/vscode/utils";
 import { DasAnalyzer, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
@@ -322,10 +322,10 @@ export type CommonOutline = {
 		typeParameters?: string
 	};
 	kind: string;
-} & (
-	{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range?: lsp.Range } }
-	| { offset: number, length: number, codeOffset: number, codeLength: number, dartElement?: { location?: { offset?: number } } }
-);
+} & ( /* eslint-disable @typescript-eslint/indent */
+		{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range?: lsp.Range } }
+		| { offset: number, length: number, codeOffset: number, codeLength: number, dartElement?: { location?: { offset?: number } } }
+	); /* eslint-enable */
 
 export class FlutterWidgetItem extends vs.TreeItem {
 	public children: FlutterWidgetItem[] = [];
@@ -389,7 +389,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 			title: "",
 		};
 
-		this.tooltip = this.label;
+		this.tooltip = treeLabel(this);
 		if (outline.attributes && outline.attributes.length) {
 			this.tooltip += "\n  " + outline.attributes.map((a) => `${a.name}: ${a.label}`).join("\n   ");
 		}

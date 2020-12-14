@@ -217,7 +217,7 @@ export class Analytics {
 			port: 443,
 		};
 
-		await new Promise((resolve) => {
+		await new Promise<void>((resolve) => {
 			try {
 				const req = https.request(options, (resp) => {
 					if (debug)

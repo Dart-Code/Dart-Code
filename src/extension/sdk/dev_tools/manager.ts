@@ -327,8 +327,7 @@ export class DevToolsManager implements vs.Disposable {
 						if (resp === reactivateDevToolsAction) {
 							try {
 								await this.preActivate(false);
-								await this.startServer(true);
-								resolve();
+								resolve(await this.startServer(true));
 							} catch (e) {
 								reject(e);
 							}

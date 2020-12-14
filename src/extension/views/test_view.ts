@@ -96,7 +96,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, token?: vs.CancellationToken) {
 		const subs: vs.Disposable[] = [];
-		return new Promise(async (resolve, reject) => {
+		return new Promise<void>(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
 			const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
 			if (token) {

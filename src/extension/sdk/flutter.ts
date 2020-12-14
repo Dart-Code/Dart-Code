@@ -25,7 +25,7 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 				// Log this to general as it's startup stuff that can't be captured with
 				// Capture Logs so log it to the main log file.
 				logProcess(logger, LogCategory.General, proc);
-				return new Promise((resolve, reject) => proc.on("exit", (code) => {
+				return new Promise<void>((resolve, reject) => proc.on("exit", (code) => {
 					if (code) {
 						const ringLogContents = ringLog.toString();
 						logger.error(`Failed to initialize Flutter: Process exited with code ${code}.`);

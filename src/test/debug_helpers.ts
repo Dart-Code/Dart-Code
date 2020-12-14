@@ -67,7 +67,7 @@ export function createDebugClient(debugType: DebuggerType) {
 export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array<Promise<any>>) {
 	let didCompleteSuccessfully = false;
 	return Promise.race([
-		new Promise(async (resolve, reject) => {
+		new Promise<void>(async (resolve, reject) => {
 			await dc.waitForEvent("terminated")
 				.catch(() => {
 					// Swallow errors, as we don't care if this times out, we're only using it

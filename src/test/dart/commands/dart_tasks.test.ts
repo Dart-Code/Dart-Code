@@ -12,7 +12,7 @@ describe("dart tasks", () => {
 
 	it("dart.task.dartdoc causes documentation to be generated", async () => {
 		assert.ok(!fs.existsSync(dartDocOutputPath));
-		await new Promise(async (resolve, reject) => {
+		await new Promise<void>(async (resolve, reject) => {
 			vs.tasks.onDidEndTaskProcess((task) => {
 				if (task.execution === taskExecution)
 					task.exitCode ? reject(new Error(`Task quit with code ${task.exitCode}`)) : resolve();

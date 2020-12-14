@@ -18,7 +18,7 @@ import { getGlobalFlutterArgs, getToolEnv, safeToolSpawn } from "../utils/proces
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
-	private daemonStartedCompleter = new PromiseCompleter();
+	private daemonStartedCompleter = new PromiseCompleter<void>();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(logger: Logger, workspaceContext: FlutterWorkspaceContext) {

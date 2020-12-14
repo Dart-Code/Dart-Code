@@ -121,7 +121,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// Build the initial list.
 		updatePickableDeviceList();
 
-		const selection = await new Promise<PickableDevice>((resolve) => {
+		const selection = await new Promise<PickableDevice | undefined>((resolve) => {
 			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
 			quickPick.onDidHide(() => resolve(undefined));
 			quickPick.show();

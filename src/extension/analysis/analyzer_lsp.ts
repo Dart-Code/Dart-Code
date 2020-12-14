@@ -114,7 +114,7 @@ class LoggingTransform extends stream.Transform {
 	constructor(private readonly logger: Logger, private readonly prefix: string, opts?: stream.TransformOptions) {
 		super(opts);
 	}
-	public _transform(chunk: any, encoding: string, callback: () => void): void {
+	public _transform(chunk: any, encoding: BufferEncoding, callback: () => void): void {
 		this.logger.info(`${this.prefix} ${chunk}`);
 		this.push(chunk, encoding);
 		callback();

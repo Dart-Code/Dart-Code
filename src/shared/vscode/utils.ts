@@ -141,6 +141,12 @@ function uriToString(uri: vs.Uri) {
 		.replace(/%5B/g, "[");
 }
 
+export function treeLabel(item: vs.TreeItem): string | undefined {
+	if (!item.label || typeof item.label === "string")
+		return item.label;
+	return item.label.label;
+}
+
 export const envUtils = new EnvUtils();
 
 function usedEditorColumns(): Set<number> {
