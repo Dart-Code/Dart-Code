@@ -42,6 +42,8 @@
 		"workspaceContains:flutter.create",
 		"onCommand:flutter.createProject",
 		"onCommand:flutter.createProject.module",
+		"onCommand:flutter.createProject.package",
+		"onCommand:flutter.createProject.plugin",
 		"onCommand:dart.createProject",
 		"onCommand:_dart.flutter.createSampleProject",
 		"onCommand:flutter.doctor",
@@ -90,6 +92,16 @@
 			{
 				"command": "flutter.createProject.module",
 				"title": "New Module Project",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.createProject.package",
+				"title": "New Package Project",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.createProject.plugin",
+				"title": "New Plugin Project",
 				"category": "Flutter"
 			},
 			{
@@ -575,6 +587,12 @@
 				},
 				{
 					"command": "flutter.createProject.module"
+				},
+				{
+					"command": "flutter.createProject.package"
+				},
+				{
+					"command": "flutter.createProject.plugin"
 				},
 				{
 					"command": "dart.createProject"
