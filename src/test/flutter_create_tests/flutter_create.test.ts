@@ -70,6 +70,45 @@ describe("flutter", () => {
 			assert.fail(`Did not find "${expectedString}'" in the file (${pubspecFile}):\n\n${contents}`);
 	});
 
+	it("created a package project", async () => {
+		const packageProjectFolder = fsPath(vs.workspace.workspaceFolders![3].uri);
+		const expectedString = "description: A new Flutter package project";
+		const pubspecFile = path.join(packageProjectFolder, "pubspec.yaml");
+		// Creating the project may be a little slow, so allow up to 60 seconds for it.
+		logger.info("Waiting for file to exist", LogCategory.CI);
+		await waitForResult(() => fs.existsSync(pubspecFile), "pubspec.yaml did not exist", 100000);
+		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
+		logger.info("Waiting for content match", LogCategory.CI);
+		await waitForResult(() => {
+			const contents = fs.readFileSync(pubspecFile);
+			return contents.indexOf(expectedString) !== -1;
+		}, undefined, 10000, false); // Don't throw on failure, as we have a better assert below that can include the contents.
+
+		const contents = fs.readFileSync(pubspecFile);
+		if (contents.indexOf(expectedString) === -1)
+			assert.fail(`Did not find "${expectedString}'" in the file (${pubspecFile}):\n\n${contents}`);
+	});
+
+	it("created a plugin project", async () => {
+		const pluginProjectFolder = fsPath(vs.workspace.workspaceFolders![4].uri);
+		// Flutter below is lowercased in the created project; consequently, this test may fail if it gets fixed by Flutter in the future.
+		const expectedString = "description: A new flutter plugin project";
+		const pubspecFile = path.join(pluginProjectFolder, "pubspec.yaml");
+		// Creating the project may be a little slow, so allow up to 60 seconds for it.
+		logger.info("Waiting for file to exist", LogCategory.CI);
+		await waitForResult(() => fs.existsSync(pubspecFile), "pubspec.yaml did not exist", 100000);
+		// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
+		logger.info("Waiting for content match", LogCategory.CI);
+		await waitForResult(() => {
+			const contents = fs.readFileSync(pubspecFile);
+			return contents.indexOf(expectedString) !== -1;
+		}, undefined, 10000, false); // Don't throw on failure, as we have a better assert below that can include the contents.
+
+		const contents = fs.readFileSync(pubspecFile);
+		if (contents.indexOf(expectedString) === -1)
+			assert.fail(`Did not find "${expectedString}'" in the file (${pubspecFile}):\n\n${contents}`);
+	});
+
 	it("triggered Flutter mode", () => {
 		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
 		assert.ok(ext);
