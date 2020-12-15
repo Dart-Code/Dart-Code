@@ -6,13 +6,16 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../shared/constants";
+import { FlutterCreateTriggerData } from "../../shared/interfaces";
 import { getChildFolders } from "../../shared/utils/fs";
 import { DartUriHandler } from "../../shared/vscode/uri_handlers/uri_handler";
-import { deleteDirectoryRecursive, extApi, sb } from "../helpers";
+import { activate, deleteDirectoryRecursive, extApi, sb } from "../helpers";
 
 describe("URL handler", async () => {
 	const urlHandler = new DartUriHandler(new FlutterCapabilities("1.0.0"));
 	const tempPath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", "my.sample.id");
+
+	before(() => activate(null));
 	beforeEach("clear out sample folder", () => deleteDirectoryRecursive(tempPath));
 	afterEach("clear out sample folder", () => deleteDirectoryRecursive(tempPath));
 
@@ -28,10 +31,15 @@ describe("URL handler", async () => {
 		assert.equal(childFolders.length, 1);
 
 		const projectFolder = childFolders[0];
+		assert.ok(openFolderCommand.calledOnce);
+
 		const triggerFile = path.join(projectFolder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
-		assert.equal(fs.readFileSync(triggerFile).toString(), "my.sample.id");
-		assert.ok(openFolderCommand.calledOnce);
+
+		const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
+		const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
+
+		assert.equal(json?.sample === "my.sample.id", true);
 	});
 
 	it("Rejects sample IDs that do not conform", async () => {

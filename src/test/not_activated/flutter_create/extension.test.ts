@@ -57,15 +57,15 @@ describe("command", () => {
 	});
 
 	it("Flutter: New Module Project can be invoked and creates trigger file", async () => {
-		await projectContainsExpectedTemplate("flutter.createProject.module", "module");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject.module", "module");
 	});
 
 	it("Flutter: New Package Project can be invoked and creates trigger file", async () => {
-		await projectContainsExpectedTemplate("flutter.createProject.package", "package");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject.package", "package");
 	});
 
 	it("Flutter: New Plugin Project can be invoked and creates trigger file", async () => {
-		await projectContainsExpectedTemplate("flutter.createProject.plugin", "plugin");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject.plugin", "plugin");
 	});
 
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
@@ -94,7 +94,7 @@ describe("command", () => {
 	});
 });
 
-async function projectContainsExpectedTemplate(commandToExecute: string, expectedTemplate: string): Promise<void> {
+async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string): Promise<void> {
 	attachLoggingWhenExtensionAvailable();
 
 	const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
