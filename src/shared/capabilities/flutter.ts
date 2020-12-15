@@ -17,7 +17,6 @@ export class FlutterCapabilities {
 	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsDartDefine() { return versionIsAtLeast(this.version, "1.17.0"); }
 	get supportsRestartDebounce() { return versionIsAtLeast(this.version, "1.21.0-0"); }
-	// TODO: Confirm this version.
 	get supportsWebRendererOption() { return versionIsAtLeast(this.version, "1.25.0-0"); }
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }
