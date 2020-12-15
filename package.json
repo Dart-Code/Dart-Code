@@ -1638,13 +1638,12 @@
 				},
 				"dart.flutterWebRenderer": {
 					"enum": [
-						"default",
+						"auto",
 						"html",
-						"canvaskit",
-						"auto"
+						"canvaskit"
 					],
-					"default": "default",
-					"markdownDescription": "- `default` - use Flutter's default value.\n- `html` - always use the HTML renderer. This renderer uses a combination of HTML, CSS, SVG, 2D Canvas, and WebGL.\n- `canvaskit` - always use the CanvasKit renderer. This renderer uses WebGL and WebAssembly to render graphics.\n- `auto` - use the HTML renderer on mobile devices, and CanvasKit on desktop devices.",
+					"default": "auto",
+					"markdownDescription": "- `auto` - allow Flutter to pick the best renderer based on the users device.\n- `html` - always use the HTML renderer. This renderer uses a combination of HTML, CSS, SVG, 2D Canvas, and WebGL.\n- `canvaskit` - always use the CanvasKit renderer. This renderer uses WebGL and WebAssembly to render graphics.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
