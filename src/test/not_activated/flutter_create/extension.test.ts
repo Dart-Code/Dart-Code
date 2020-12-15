@@ -57,102 +57,15 @@ describe("command", () => {
 	});
 
 	it("Flutter: New Module Project can be invoked and creates trigger file", async () => {
-		attachLoggingWhenExtensionAvailable();
-
-		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
-		const tempFolder = getRandomTempFolder();
-		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
-
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("my_test_flutter_proj");
-
-		// Create some folders in the temp folder to check the default name is correctly incremented.
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_2"));
-
-		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-		const projectFolderUri: string | undefined = await vs.commands.executeCommand("flutter.createProject.module");
-
-		assert.ok(projectFolderUri);
-		assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "flutter_application_3")));
-		assert.ok(showOpenDialog.calledOnce);
-		assert.ok(openFolder.calledOnce);
-
-		const triggerFile = path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
-		assert.ok(fs.existsSync(triggerFile));
-
-		const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
-		const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
-
-		assert.equal(json?.template === "module", true);
+		await projectContainsExpectedTemplate("flutter.createProject.module", "module");
 	});
 
 	it("Flutter: New Package Project can be invoked and creates trigger file", async () => {
-		attachLoggingWhenExtensionAvailable();
-
-		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
-		const tempFolder = getRandomTempFolder();
-		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
-
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("my_test_flutter_proj");
-
-		// Create some folders in the temp folder to check the default name is correctly incremented.
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_2"));
-
-		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-		const projectFolderUri: string | undefined = await vs.commands.executeCommand("flutter.createProject.package");
-
-		assert.ok(projectFolderUri);
-		assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "flutter_application_3")));
-		assert.ok(showOpenDialog.calledOnce);
-		assert.ok(openFolder.calledOnce);
-
-		const triggerFile = path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
-		assert.ok(fs.existsSync(triggerFile));
-
-		const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
-		const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
-
-		assert.equal(json?.template === "package", true);
+		await projectContainsExpectedTemplate("flutter.createProject.package", "package");
 	});
 
 	it("Flutter: New Plugin Project can be invoked and creates trigger file", async () => {
-		attachLoggingWhenExtensionAvailable();
-
-		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
-		const tempFolder = getRandomTempFolder();
-		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
-
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("my_test_flutter_proj");
-
-		// Create some folders in the temp folder to check the default name is correctly incremented.
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_2"));
-
-		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-		const projectFolderUri: string | undefined = await vs.commands.executeCommand("flutter.createProject.plugin");
-
-		assert.ok(projectFolderUri);
-		assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "flutter_application_3")));
-		assert.ok(showOpenDialog.calledOnce);
-		assert.ok(openFolder.calledOnce);
-
-		const triggerFile = path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
-		assert.ok(fs.existsSync(triggerFile));
-
-		const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
-		const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
-
-		assert.equal(json?.template === "plugin", true);
+		await projectContainsExpectedTemplate("flutter.createProject.plugin", "plugin");
 	});
 
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
@@ -164,7 +77,6 @@ describe("command", () => {
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-
 		const sampleFolderUri: string | undefined = await vs.commands.executeCommand("_dart.flutter.createSampleProject");
 
 		assert.ok(sampleFolderUri);
@@ -181,3 +93,36 @@ describe("command", () => {
 		// assert.equal(recordedSampleId, "material.IconButton.1");
 	});
 });
+
+async function projectContainsExpectedTemplate(commandToExecute: string, expectedTemplate: string): Promise<void> {
+	attachLoggingWhenExtensionAvailable();
+
+	const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
+	const tempFolder = getRandomTempFolder();
+	showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
+
+	const showInputBox = sb.stub(vs.window, "showInputBox");
+	showInputBox.resolves("my_test_flutter_proj");
+
+	// Create some folders in the temp folder to check the default name is correctly incremented.
+	fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
+	fs.mkdirSync(path.join(tempFolder, "flutter_application_2"));
+
+	// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
+	const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
+	const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
+	const projectFolderUri: string | undefined = await vs.commands.executeCommand(commandToExecute);
+
+	assert.ok(projectFolderUri);
+	assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "flutter_application_3")));
+	assert.ok(showOpenDialog.calledOnce);
+	assert.ok(openFolder.calledOnce);
+
+	const triggerFile = path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
+	assert.ok(fs.existsSync(triggerFile));
+
+	const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
+	const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
+
+	assert.equal(json?.template === expectedTemplate, true);
+}
