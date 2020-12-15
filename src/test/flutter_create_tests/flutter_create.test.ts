@@ -14,9 +14,9 @@ describe("flutter", () => {
 
 	it("created a basic default project", async () => {
 		const basicProjectFolder = fsPath(vs.workspace.workspaceFolders![0].uri);
-		const pubspecFile = path.join(basicProjectFolder, "lib", "main.dart");
+		const mainFile = path.join(basicProjectFolder, "lib", "main.dart");
 
-		await projectFileContainsExpectedString(pubspecFile, "title: 'Flutter Demo'");
+		await projectFileContainsExpectedString(mainFile, "title: 'Flutter Demo'");
 	});
 
 	it("created a sample project", async () => {
