@@ -69,6 +69,8 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 			definition.args = (definition.args ?? []).concat((await options?.runtimeArgs()) ?? []);
 		}
 
+		this.injectArgs(definition);
+
 		// We *must* return a new Task here, otherwise the task cannot be customised
 		// in task.json.
 		// https://github.com/microsoft/vscode/issues/58836#issuecomment-696620105
@@ -88,6 +90,9 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		newTask.isBackground = task.isBackground || (options?.isBackground ?? false);
 
 		return newTask;
+	}
+
+	protected injectArgs(_: DartTaskDefinition): void | Promise<void> {
 	}
 
 	private getOptions(def: DartTaskDefinition): DartTaskOptions | undefined {

@@ -9,6 +9,7 @@ import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HA
 import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
+import { getFutterWebRendererArg } from "../../shared/flutter/utils";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestTreeModel } from "../../shared/test/test_model";
 import { filenameSafe } from "../../shared/utils";
@@ -473,6 +474,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (!debugConfig.deviceId && device) {
 				debugConfig.deviceId = device.id;
 				debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
+			}
+			if (device?.platformType === "web") {
+				const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
+				if (rendererArg)
+					debugConfig.args.push(rendererArg);
 			}
 			debugConfig.showMemoryUsage =
 				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false

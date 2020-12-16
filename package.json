@@ -41,6 +41,9 @@
 		"workspaceContains:flutter.sh.create",
 		"workspaceContains:flutter.create",
 		"onCommand:flutter.createProject",
+		"onCommand:flutter.createProject.module",
+		"onCommand:flutter.createProject.package",
+		"onCommand:flutter.createProject.plugin",
 		"onCommand:dart.createProject",
 		"onCommand:_dart.flutter.createSampleProject",
 		"onCommand:flutter.doctor",
@@ -83,7 +86,22 @@
 		"commands": [
 			{
 				"command": "flutter.createProject",
-				"title": "New Project",
+				"title": "New Application Project",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.createProject.module",
+				"title": "New Module Project",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.createProject.package",
+				"title": "New Package Project",
+				"category": "Flutter"
+			},
+			{
+				"command": "flutter.createProject.plugin",
+				"title": "New Plugin Project",
 				"category": "Flutter"
 			},
 			{
@@ -566,6 +584,15 @@
 			"commandPalette": [
 				{
 					"command": "flutter.createProject"
+				},
+				{
+					"command": "flutter.createProject.module"
+				},
+				{
+					"command": "flutter.createProject.package"
+				},
+				{
+					"command": "flutter.createProject.plugin"
 				},
 				{
 					"command": "dart.createProject"
@@ -1607,6 +1634,16 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Whether to show the Flutter Outline tree in the sidebar.",
+					"scope": "window"
+				},
+				"dart.flutterWebRenderer": {
+					"enum": [
+						"auto",
+						"html",
+						"canvaskit"
+					],
+					"default": "auto",
+					"markdownDescription": "- `auto` - allow Flutter to pick the best renderer based on the users device.\n- `html` - always use the HTML renderer. This renderer uses a combination of HTML, CSS, SVG, 2D Canvas, and WebGL.\n- `canvaskit` - always use the CanvasKit renderer. This renderer uses WebGL and WebAssembly to render graphics.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {

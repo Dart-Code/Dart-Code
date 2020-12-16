@@ -5,7 +5,16 @@
 		},
 		{
 			"path": "flutter_create_sample"
-		}
+		},
+		{
+			"path": "flutter_create_module"
+		},
+		{
+			"path": "flutter_create_package"
+		},
+		{
+			"path": "flutter_create_plugin"
+		},
 	],
 	"settings": {
 		"files.insertFinalNewline": true

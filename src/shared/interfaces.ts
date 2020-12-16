@@ -26,6 +26,7 @@ export interface DartWorkspaceContext extends WorkspaceContext {
 	readonly sdks: DartSdks;
 }
 
+// TODO(dantup): Move capabilities onto here?
 export interface FlutterWorkspaceContext extends WorkspaceContext {
 	readonly sdks: FlutterSdks;
 }
@@ -65,6 +66,11 @@ export interface StagehandTemplate {
 	readonly description: string;
 	readonly categories: string[];
 	readonly entrypoint: string;
+}
+
+export interface FlutterCreateTriggerData {
+	readonly sample?: string;
+	readonly template?: string;
 }
 
 export interface Logger {
