@@ -13,9 +13,10 @@ import { forceWindowsDriveLetterToUppercase } from "../utils/fs";
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
+const isKnownCloudIde = vs.env.appName?.includes("Theia for Cloud") ?? false;
 // The extension kind is declared as Workspace, but VS Code will return UI in the
 // case that there is no remote extension host.
-export const isRunningLocally = !dartExtension || dartExtension.extensionKind === ExtensionKind.UI;
+export const isRunningLocally = !isKnownCloudIde && (!dartExtension || dartExtension.extensionKind === ExtensionKind.UI);
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	if (!workspace.workspaceFolders)
