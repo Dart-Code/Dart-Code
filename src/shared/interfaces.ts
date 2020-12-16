@@ -26,6 +26,7 @@ export interface DartWorkspaceContext extends WorkspaceContext {
 	readonly sdks: DartSdks;
 }
 
+// TODO(dantup): Move capabilities onto here?
 export interface FlutterWorkspaceContext extends WorkspaceContext {
 	readonly sdks: FlutterSdks;
 }

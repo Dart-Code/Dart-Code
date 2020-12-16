@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
-import { DaemonCapabilities } from "../../shared/capabilities/flutter";
+import { DaemonCapabilities, FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath, isChromeOS } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
@@ -10,6 +10,7 @@ import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
 import { PromiseCompleter, usingCustomScript } from "../../shared/utils";
+import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { promptToReloadExtension } from "../utils";
@@ -21,7 +22,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonStartedCompleter = new PromiseCompleter<void>();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, workspaceContext: FlutterWorkspaceContext) {
+	constructor(logger: Logger, workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
 
 		const folder = workspaceContext.sdks.flutter;
@@ -34,9 +35,15 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.deviceEnable();
 		});
 
+		const daemonArgs = [];
+
+		// If we're running remotely, we need to pass this flag for web-server device to show up.
+		if (!isRunningLocally && flutterCapabilities.supportsShowWebServerDevice)
+			daemonArgs.push("--show-web-server-device");
+
 		const { binPath, binArgs } = usingCustomScript(
 			path.join(workspaceContext.sdks.flutter, flutterPath),
-			["daemon"],
+			["daemon"].concat(daemonArgs),
 			workspaceContext.config?.flutterDaemonScript || workspaceContext.config?.flutterScript,
 		);
 
