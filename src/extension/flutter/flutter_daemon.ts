@@ -10,7 +10,6 @@ import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
 import { PromiseCompleter, usingCustomScript } from "../../shared/utils";
-import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { promptToReloadExtension } from "../utils";
@@ -38,7 +37,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		const daemonArgs = [];
 
 		// If we're running remotely, we need to pass this flag for web-server device to show up.
-		if (!isRunningLocally && flutterCapabilities.supportsShowWebServerDevice)
+		if (/* !isRunningLocally && */ flutterCapabilities.supportsShowWebServerDevice)
 			daemonArgs.push("--show-web-server-device");
 
 		const { binPath, binArgs } = usingCustomScript(
