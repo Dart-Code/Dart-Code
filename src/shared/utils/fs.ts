@@ -101,7 +101,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 	}));
 	const projectFoldersChecks = await Promise.all(projectFolderPromises);
 	const projectFolders = projectFoldersChecks
-		.filter((res) => res.exists)
+		.filter((res) => res.exists && !res.folder.includes(".dart_tool"))
 		.map((res) => res.folder);
 
 	return options && options.sort
