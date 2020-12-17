@@ -88,10 +88,12 @@ async function fileExists(p: string): Promise<boolean> {
 // - have a project create trigger file
 // - are the Flutter repo root
 export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean } = {}): Promise<string[]> {
+	const dartToolFolderName = `.dart_tool${path.sep}`;
+
 	const level2Folders = await flatMapAsync(roots, (f) => getChildFolders(logger, f));
 	const level3Folders = await flatMapAsync(level2Folders, (f) => getChildFolders(logger, f));
 	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders)
-		.filter((f) => excludedFolders.every((ef) => !isEqualOrWithinPath(f, ef)));
+		.filter((f) => !f.includes(dartToolFolderName) && excludedFolders.every((ef) => !isEqualOrWithinPath(f, ef)));
 
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
 		exists: options && options.requirePubspec
@@ -101,7 +103,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 	}));
 	const projectFoldersChecks = await Promise.all(projectFolderPromises);
 	const projectFolders = projectFoldersChecks
-		.filter((res) => res.exists && !res.folder.includes(".dart_tool"))
+		.filter((res) => res.exists)
 		.map((res) => res.folder);
 
 	return options && options.sort
