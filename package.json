@@ -1180,6 +1180,19 @@
 				}
 			]
 		},
+		"semanticTokenScopes": [
+			{
+				"language": "dart",
+				"scopes": {
+					"keyword": [
+						"keyword"
+					],
+					"keyword.control": [
+						"keyword.control"
+					]
+				}
+			}
+		],
 		"viewsContainers": {
 			"activitybar": [
 				{
