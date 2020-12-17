@@ -1189,6 +1189,9 @@
 					],
 					"keyword.control": [
 						"keyword.control"
+					],
+					"property.declaration": [
+						"entity.name.function.member"
 					]
 				}
 			}
