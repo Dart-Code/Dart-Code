@@ -1659,7 +1659,7 @@
 						"canvaskit"
 					],
 					"default": "auto",
-					"markdownDescription": "- `auto` - allow Flutter to pick the best renderer based on the users device.\n- `html` - always use the HTML renderer. This renderer uses a combination of HTML, CSS, SVG, 2D Canvas, and WebGL.\n- `canvaskit` - always use the CanvasKit renderer. This renderer uses WebGL and WebAssembly to render graphics.",
+					"markdownDescription": "Sets the [Web renderer](https://flutter.dev/docs/development/tools/web-renderers) used for Flutter web apps.\n\n- `auto` - allow Flutter to pick the best renderer based on the users device.\n- `html` - always use the HTML renderer.\n- `canvaskit` - always use the CanvasKit renderer.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
