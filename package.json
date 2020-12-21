@@ -1383,6 +1383,24 @@
 						"type": "string"
 					}
 				},
+				"dart.flutterAttachAdditionalArgs": {
+					"type": "array",
+					"default": [],
+					"markdownDescription": "Additional args to pass to the `flutter attach` command.",
+					"scope": "resource",
+					"items": {
+						"type": "string"
+					}
+				},
+				"dart.flutterRunAdditionalArgs": {
+					"type": "array",
+					"default": [],
+					"markdownDescription": "Additional args to pass to the `flutter run` command.",
+					"scope": "resource",
+					"items": {
+						"type": "string"
+					}
+				},
 				"dart.flutterTestAdditionalArgs": {
 					"type": "array",
 					"default": [],
