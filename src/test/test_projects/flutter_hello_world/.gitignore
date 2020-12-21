@@ -1,4 +1,6 @@
 .idea/
+.flutter-plugins
+.flutter-plugins-dependencies
 .metadata
 *.iml
 android/

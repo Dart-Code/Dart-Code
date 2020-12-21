@@ -19,6 +19,7 @@ dev_dependencies:
     sdk: flutter
   flutter_driver:
     sdk: flutter
+  integration_test: ^1.0.1
 
 flutter:
   uses-material-design: true
