@@ -24,7 +24,7 @@ import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { getExcludedFolders, isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { getExcludedFolders, isFlutterProjectFolder, isInsideFolderNamed, isIntegrationTestFile, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -163,6 +163,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.Web;
 		const isStandardFlutter = debugType === DebuggerType.Flutter;
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
+		const isFlutterIntegrationTest = isAnyFlutter && isIntegrationTestFile(debugConfig.program as string);
 		const argsHaveTestNameFilter = isTest && debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 
 		if (isTest)
@@ -193,6 +194,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				default:
 					logger.info("Unknown debugType, unable to switch to test debugger");
 			}
+		}
+		if (isFlutterIntegrationTest) {
+			if (!debugConfig.flutterDriverScript && debugConfig.cwd) {
+				const defaultDriverScript = path.join(debugConfig.cwd, "integration_test", "driver.dart");
+				if (fs.existsSync(defaultDriverScript)) {
+					debugConfig.flutterDriverScript = defaultDriverScript;
+				}
+			}
+			if (debugConfig.flutterDriverScript)
+				debugType = DebuggerType.FlutterIntegrationTest;
 		}
 		logger.info(`Using ${DebuggerType[debugType]} debug adapter for this session`);
 
@@ -228,6 +239,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// different to how `pub run test (folder)` works (one debug session, which each file in an isolate). The
 			// debugger does not currently support multiple VM service sessions so we have to downgrade this to noDebug.
 			logger.warn("Setting noDebug=true for Flutter test run because it's a folder");
+			debugConfig.noDebug = true;
+		}
+
+		if (debugType === DebuggerType.FlutterIntegrationTest && !debugConfig.noDebug) {
+			// TODO: Can we support debugging for integration tests?
+			logger.warn("Setting noDebug=true for Flutter integration test run");
 			debugConfig.noDebug = true;
 		}
 
@@ -341,6 +358,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.PubTest) {
+			// TODO: Do we need to this for integration tests?
 			this.testTreeModel.flagSuiteStart(debugConfig.program, !argsHaveTestNameFilter);
 		}
 

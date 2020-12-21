@@ -3,6 +3,7 @@ export enum DebuggerType {
 	PubTest,
 	Flutter,
 	FlutterTest,
+	FlutterIntegrationTest,
 	Web,
 	WebTest,
 }

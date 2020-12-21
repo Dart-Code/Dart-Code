@@ -9,6 +9,9 @@ export function getDebugAdapterName(debugType: DebuggerType) {
 		case DebuggerType.FlutterTest:
 			debuggerName = "flutter_test";
 			break;
+		case DebuggerType.FlutterIntegrationTest:
+			debuggerName = "flutter_integration_test";
+			break;
 		case DebuggerType.Web:
 			debuggerName = "web";
 			break;

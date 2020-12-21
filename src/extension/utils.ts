@@ -109,6 +109,12 @@ export function isTestFileOrFolder(path: string): boolean {
 	return !!path && (isTestFile(path) || isTestFolder(path));
 }
 
+export function isIntegrationTestFile(file: string): boolean {
+	return !!file && isDartFile(file)
+		&& (isInsideFolderNamed(file, "integration_test"))
+		&& file.toLowerCase().endsWith("_test.dart");
+}
+
 export function isTestFile(file: string): boolean {
 	// To be a test, you must be _test.dart AND inside a test folder.
 	// https://github.com/Dart-Code/Dart-Code/issues/1165
@@ -155,7 +161,7 @@ export function isInsideFolderNamed(file: string, folderName: string): boolean {
 export function isValidEntryFile(file: string | undefined) {
 	return file && isDartFile(file) &&
 		(
-			isTestFile(file)
+			isTestFile(file) || isIntegrationTestFile(file)
 			|| isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")
 			|| file.endsWith(`lib${path.sep}main.dart`)
 		);
