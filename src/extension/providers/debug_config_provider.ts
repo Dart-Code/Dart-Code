@@ -475,7 +475,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.deviceId = device.id;
 				debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
 			}
-			if (device?.platformType === "web") {
+			if (!isTest && device?.platformType === "web") {
 				const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
 				if (rendererArg)
 					debugConfig.args.push(rendererArg);
