@@ -13,7 +13,6 @@ describe("flutter test debugger", () => {
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
 	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
-	before("run 'flutter clean'", () => vs.commands.executeCommand("_flutter.clean", fsPath(flutterHelloWorldFolder)));
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterTestMainFile", async () => {
