@@ -1,6 +1,5 @@
+import 'package:flutter_hello_world_bazel/main.dart' as hello_world;
 import 'package:flutter_test/flutter_test.dart';
-
-import '../lib/main.dart' as hello_world;
 
 // This comment is extracted by the test and compared to a text representation
 // built from the tree provider in the test. It must be maintained to match

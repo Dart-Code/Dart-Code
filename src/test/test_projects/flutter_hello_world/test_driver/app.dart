@@ -1,5 +1,5 @@
 import 'package:flutter_driver/driver_extension.dart';
-import 'package:hello_world/counter.dart' as app;
+import 'package:flutter_hello_world/counter.dart' as app;
 
 void main() {
   // This line enables the extension.

@@ -260,16 +260,16 @@ export function isExternalPackage(frame: DebugProtocol.StackFrame) {
 export function isLocalPackage(frame: DebugProtocol.StackFrame) {
 	return frame.source && frame.source.name && frame.source.name.startsWith("package:") &&
 		// Packages known to be local (from our test projects).
-		(frame.source.name.startsWith("package:my_package")
-			|| frame.source.name.startsWith("package:hello_world")
-			|| frame.source.name.startsWith("package:example"));
+		(frame.source.name.includes("my_package")
+			|| frame.source.name.includes("hello_world")
+			|| frame.source.name.includes("example"));
 }
 
 export function isUserCode(frame: DebugProtocol.StackFrame) {
 	return frame.source
 		&& frame.source.name
 		&& !frame.source.name.startsWith("dart:")
-		&& (!frame.source.name.startsWith("package:") || frame.source.name.startsWith("package:hello_world"));
+		&& (!frame.source.name.startsWith("package:") || isLocalPackage(frame));
 }
 
 export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presentationHint: string | undefined, origin: string | undefined) {
