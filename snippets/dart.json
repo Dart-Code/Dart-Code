@@ -54,7 +54,7 @@
 			"prefix": "for",
 			"description": "Insert a for loop.",
 			"body": [
-				"for (var i = 0; i < ${1:count}; i++) {",
+				"for (int i = 0; i < ${1:count}; i++) {",
 				"  $0",
 				"}"
 			]
