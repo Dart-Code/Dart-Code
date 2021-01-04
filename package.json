@@ -1628,7 +1628,7 @@
 				"dart.flutterCreateOffline": {
 					"type": "boolean",
 					"default": false,
-					"description": "Whether to use offline mode when creating new projects with the 'Flutter: New Project' command.",
+					"description": "Whether to use offline mode when creating new projects with the 'Flutter: New Application Project' command.",
 					"scope": "window"
 				},
 				"dart.flutterCreateOrganization": {
@@ -1646,7 +1646,7 @@
 						"swift"
 					],
 					"default": "swift",
-					"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: New Project' command.",
+					"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: New Application Project' command.",
 					"scope": "window"
 				},
 				"dart.flutterCreateAndroidLanguage": {
@@ -1655,7 +1655,7 @@
 						"kotlin"
 					],
 					"default": "kotlin",
-					"description": "The programming language to use for Android apps when creating new projects using the 'Flutter: New Project' command.",
+					"description": "The programming language to use for Android apps when creating new projects using the 'Flutter: New Application Project' command.",
 					"scope": "window"
 				},
 				"dart.analyzeAngularTemplates": {
