@@ -1,7 +1,8 @@
 import * as path from "path";
 import * as stream from "stream";
 import { window } from "vscode";
-import { LanguageClient, LanguageClientOptions, Location, StreamInfo, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
+import { LanguageClientOptions, Location, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
+import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";

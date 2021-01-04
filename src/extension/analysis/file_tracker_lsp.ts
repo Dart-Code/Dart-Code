@@ -1,5 +1,5 @@
 import { CancellationToken, TextDocument, Uri, workspace } from "vscode";
-import { LanguageClient } from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient/node";
 import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
