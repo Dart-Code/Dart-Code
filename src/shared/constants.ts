@@ -138,11 +138,11 @@ export const cancelAction = "Cancel";
 export const devToolsPages: DevToolsPage[] = [
 	// First entry is the default page.
 	{ pageId: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" },
-	{ pageId: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", legacyPageId: "performance", title: "CPU Profiler View" },
-	{ pageId: "memory", commandId: "dart.openDevToolsMemory", title: "Memory View" },
-	{ pageId: "performance", commandId: "dart.openDevToolsPerformance", legacyPageId: "timeline", title: "Performance View" },
-	{ pageId: "network", commandId: "dart.openDevToolsNetwork", title: "Network View" },
-	{ pageId: "logging", commandId: "dart.openDevToolsLogging", title: "Logging View" },
+	{ pageId: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", legacyPageId: "performance", title: "CPU Profiler" },
+	{ pageId: "memory", commandId: "dart.openDevToolsMemory", title: "Memory" },
+	{ pageId: "performance", commandId: "dart.openDevToolsPerformance", legacyPageId: "timeline", title: "Performance" },
+	{ pageId: "network", commandId: "dart.openDevToolsNetwork", title: "Network" },
+	{ pageId: "logging", commandId: "dart.openDevToolsLogging", title: "Logging" },
 ];
 
 export const dartRecommendedConfig = {

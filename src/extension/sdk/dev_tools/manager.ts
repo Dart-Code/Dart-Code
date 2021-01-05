@@ -151,7 +151,7 @@ export class DevToolsManager implements vs.Disposable {
 	private async promptForDevToolsPage(): Promise<{ page: DevToolsPage } | "EXTERNAL" | undefined> {
 		const choices: Array<vs.QuickPickItem & { page?: DevToolsPage; isExternal?: boolean }> = [
 			...devToolsPages.map((page) => ({
-				label: `Open ${page} Page`,
+				label: `Open ${page.title} Page`,
 				page,
 			})),
 			{ label: `Open DevTools in Web Browser`, isExternal: true },
