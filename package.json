@@ -469,10 +469,10 @@
 				"icon": "media/commands/inspector.svg"
 			},
 			{
-				"command": "dart.openDevToolsTimeline",
-				"title": "Open DevTools Timeline Page",
+				"command": "dart.openDevToolsPerformance",
+				"title": "Open DevTools Performance Page",
 				"category": "Flutter",
-				"icon": "media/commands/timeline.svg"
+				"icon": "media/commands/performance.svg"
 			},
 			{
 				"command": "dart.openDevToolsMemory",
@@ -480,8 +480,8 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.openDevToolsPerformance",
-				"title": "Open DevTools Performance Page",
+				"command": "dart.openDevToolsCpuProfiler",
+				"title": "Open DevTools CPU Profiler Page",
 				"category": "Dart"
 			},
 			{
@@ -836,7 +836,7 @@
 					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
-					"command": "dart.openDevToolsTimeline",
+					"command": "dart.openDevToolsPerformance",
 					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
@@ -844,8 +844,8 @@
 					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
-					"command": "dart.openDevToolsPerformance",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"command": "dart.openDevToolsCpuProfiler",
+					"when": "dart-code:dartProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openDevToolsNetwork",
@@ -924,7 +924,7 @@
 					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterDebugModeDebugSession && config.dart.showDevToolsDebugToolBarButtons"
 				},
 				{
-					"command": "dart.openDevToolsTimeline",
+					"command": "dart.openDevToolsPerformance",
 					"group": "navigation@90",
 					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterProfileModeDebugSession && config.dart.showDevToolsDebugToolBarButtons"
 				}
