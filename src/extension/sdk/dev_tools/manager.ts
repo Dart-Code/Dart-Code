@@ -77,7 +77,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions, page: DevToolsPage | undefined): Promise<{ url: string; dispose: () => void } | undefined> {
+	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
 		this.analytics.logDebuggerOpenDevTools();
 
 		// If we're mid-silent-activation, wait until that's finished.
@@ -108,9 +108,6 @@ export class DevToolsManager implements vs.Disposable {
 		// If the launched versin of DevTools doesn't support embedding, remove the flag.
 		if (!this.capabilities.supportsEmbedFlag)
 			options.embed = false;
-
-		if (page)
-			options.page = page;
 
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
