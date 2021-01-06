@@ -172,6 +172,25 @@ describe("dart test debugger", () => {
 		assert.equal(actualResults, expectedResults);
 	});
 
+	it("clears the test results", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(helloWorldTestTreeFile);
+		config!.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		const preclearActualResults = Object.keys(extApi.testTreeModel.suites).length;
+		assert.ok(preclearActualResults >= 1, "There should be at least one test item.");
+
+		await vs.commands.executeCommand("dart.clearTestResults");
+
+		const actualResults = Object.keys(extApi.testTreeModel.suites).length;
+		assert.strictEqual(actualResults, 0);
+	});
+
 	it("builds the expected tree if tests are run in multiple overlapping sessions", async () => {
 		// https://github.com/Dart-Code/Dart-Code/issues/2934
 		await openFile(helloWorldTestShortFile);
