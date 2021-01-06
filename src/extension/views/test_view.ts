@@ -32,7 +32,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("dart.clearTestResults", () => {
-			// Avoids any potential race condition until scenario thoroughly investigated.
+			// The command shouldn't ordinarily be available in debug mode, but check just in case it was dynamically invoked.
 			if (vs.debug.activeDebugSession)
 				return;
 
