@@ -679,7 +679,8 @@
 					"when": "dart-code:dartProjectLoaded && dart-code:canGoToTestOrImplementationFile"
 				},
 				{
-					"command": "dart.clearTestResults"
+					"command": "dart.clearTestResults",
+					"when": "!inDebugMode"
 				},
 				{
 					"command": "dart.goToTests",
