@@ -241,7 +241,6 @@ export class TestTreeModel {
 			delete this.suites[suiteData];
 		}
 
-		// this.onDidChangeTreeDataEmitter.fire(undefined);
 		this.onDidChangeDataEmitter.fire(undefined);
 	}
 
