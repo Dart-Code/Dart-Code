@@ -216,6 +216,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.clearTestResults",
+				"title": "Clear Test Results",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.goToTests",
 				"title": "Go to Tests",
 				"category": "Dart"
@@ -672,6 +677,9 @@
 				{
 					"command": "dart.goToTestOrImplementationFile",
 					"when": "dart-code:dartProjectLoaded && dart-code:canGoToTestOrImplementationFile"
+				},
+				{
+					"command": "dart.clearTestResults"
 				},
 				{
 					"command": "dart.goToTests",
