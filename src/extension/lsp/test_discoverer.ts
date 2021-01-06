@@ -4,6 +4,7 @@ import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protoco
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteNode, TestNode, TestTreeModel } from "../../shared/test/test_model";
 import { uriToFilePath } from "../../shared/utils";
+import { forceWindowsDriveLetterToUppercase } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline, isSimpleTestName } from "../../shared/utils/test";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
@@ -17,7 +18,7 @@ export class TestDiscoverer implements IAmDisposable {
 	}
 
 	private handleOutline(outline: OutlineParams) {
-		const suitePath = uriToFilePath(outline.uri);
+		const suitePath = forceWindowsDriveLetterToUppercase(uriToFilePath(outline.uri));
 		if (isTestFile(suitePath)) {
 			// Force creation of a node.
 			const [suite, didCreate] = this.model.getOrCreateSuite(suitePath);
