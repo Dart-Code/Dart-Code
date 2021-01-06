@@ -236,6 +236,15 @@ export class TestTreeModel {
 		return [suite, false];
 	}
 
+	public clearAllResults(): void {
+		for (const suiteData of Object.keys(this.suites)) {
+			delete this.suites[suiteData];
+		}
+
+		// this.onDidChangeTreeDataEmitter.fire(undefined);
+		this.onDidChangeDataEmitter.fire(undefined);
+	}
+
 	public updateNode(node?: TreeNode) {
 		this.onDidChangeDataEmitter.fire(node);
 	}

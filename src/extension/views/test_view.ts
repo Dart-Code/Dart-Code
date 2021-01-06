@@ -31,14 +31,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, true), false, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
-		this.disposables.push(vs.commands.registerCommand("dart.clearTestResults", () => {
-			for (const suiteData of Object.keys(data.suites)) {
-				delete data.suites[suiteData];
-			}
-
-			this.onDidChangeTreeDataEmitter.fire(undefined);
-		}));
-
+		this.disposables.push(vs.commands.registerCommand("dart.clearTestResults", () => this.data.clearAllResults()));
 		this.disposables.push(vs.commands.registerCommand("_dart.displaySuite", (treeNode: SuiteNode) => vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(treeNode.suiteData.path))));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayGroup", (treeNode: GroupNode) => {
 			if (!treeNode.path)
