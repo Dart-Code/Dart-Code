@@ -241,7 +241,7 @@ export class TestTreeModel {
 			delete this.suites[suiteData];
 		}
 
-		this.onDidChangeDataEmitter.fire(undefined);
+		this.updateNode();
 	}
 
 	public updateNode(node?: TreeNode) {

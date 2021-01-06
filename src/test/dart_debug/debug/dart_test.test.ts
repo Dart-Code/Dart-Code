@@ -172,7 +172,7 @@ describe("dart test debugger", () => {
 		assert.equal(actualResults, expectedResults);
 	});
 
-	it("clears the test results", async () => {
+	it("clears the results from the test tree", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(helloWorldTestTreeFile);
 		config!.noDebug = true;
@@ -182,13 +182,13 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		);
 
-		const preclearActualResults = Object.keys(extApi.testTreeModel.suites).length;
-		assert.ok(preclearActualResults >= 1, "There should be at least one test item.");
+		const preclearActualResults = await extApi.testTreeProvider.getChildren();
+		assert.ok(preclearActualResults && preclearActualResults.length >= 1, "There should be at least one test item to ensure the tree was actually cleared");
 
 		await vs.commands.executeCommand("dart.clearTestResults");
 
-		const actualResults = Object.keys(extApi.testTreeModel.suites).length;
-		assert.strictEqual(actualResults, 0);
+		const actualResults = await extApi.testTreeProvider.getChildren();
+		assert.strictEqual(actualResults?.length, 0);
 	});
 
 	it("builds the expected tree if tests are run in multiple overlapping sessions", async () => {
