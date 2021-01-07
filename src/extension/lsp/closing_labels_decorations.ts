@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { validLastCharacters } from "../decorations/closing_labels_decorations";
 
@@ -99,6 +100,6 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 				// doesn't seem to be a way to tell.
 			}
 		}
-		this.subscriptions.forEach((s) => s.dispose());
+		disposeAll(this.subscriptions);
 	}
 }

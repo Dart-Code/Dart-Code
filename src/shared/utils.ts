@@ -208,7 +208,9 @@ export function escapeDartString(input: string) {
 }
 
 export function disposeAll(disposables: IAmDisposable[]) {
-	for (const d of disposables) {
+	const toDispose = disposables.slice();
+	disposables.length = 0;
+	for (const d of toDispose) {
 		try {
 			d.dispose();
 		} catch (e) {

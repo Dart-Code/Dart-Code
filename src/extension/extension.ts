@@ -12,7 +12,7 @@ import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordindator } from "../shared/test/coordindator";
 import { TestTreeModel, TreeNode } from "../shared/test/test_model";
-import { uniq } from "../shared/utils";
+import { disposeAll, uniq } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
@@ -125,6 +125,7 @@ let analytics: Analytics;
 let showTodos: boolean | undefined;
 let previousSettings: string;
 
+let analyzerShutdown: Promise<void> | undefined;
 let experiments: KnownExperiments;
 
 const loggers: IAmDisposable[] = [];
@@ -156,15 +157,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async () => {
 		logger.info("Performing silent extension reload...");
 		await deactivate(true);
-		const toDispose = context.subscriptions.slice();
-		context.subscriptions.length = 0;
-		for (const sub of toDispose) {
-			try {
-				sub.dispose();
-			} catch (e) {
-				logger.error(e);
-			}
-		}
+		disposeAll(context.subscriptions);
 		await activate(context, true);
 		logger.info("Done!");
 	}));
@@ -804,8 +797,10 @@ function handleConfigurationChange(sdks: Sdks) {
 	}
 
 	if (settingsChanged) {
-		// tslint:disable-next-line: no-floating-promises
-		util.promptToReloadExtension();
+		// Delay the restart slightly, because the config change may be transmitted to the LSP server
+		// and shutting the server down too quickly results in that trying to write to a closed
+		// stream.
+		setTimeout(util.promptToReloadExtension, 50);
 	}
 }
 
@@ -841,7 +836,7 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false);
-	await analyzer?.dispose();
+	analyzer?.dispose();
 	if (loggers) {
 		await Promise.all(loggers.map((logger) => logger.dispose()));
 		loggers.length = 0;

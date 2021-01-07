@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { disposeAll } from "../utils";
 
 export class DocumentPositionTracker implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
@@ -44,7 +45,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.disposables.forEach((s) => s.dispose());
+		disposeAll(this.disposables);
 	}
 }
 
@@ -111,6 +112,6 @@ export class DocumentOffsetTracker implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.disposables.forEach((s) => s.dispose());
+		disposeAll(this.disposables);
 	}
 }

@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { modifyingFilesOutsideWorkspaceInfoUrl, moreInfoAction } from "../../shared/constants";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { envUtils } from "../../shared/vscode/utils";
 import { config } from "../config";
@@ -55,6 +56,6 @@ export class FileChangeWarnings implements vs.Disposable {
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

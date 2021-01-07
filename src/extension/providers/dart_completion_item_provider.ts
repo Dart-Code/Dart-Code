@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { flatMap } from "../../shared/utils";
+import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { cleanDartdoc } from "../../shared/vscode/extension_utils";
@@ -720,6 +720,6 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

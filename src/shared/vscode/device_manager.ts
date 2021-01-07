@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { flatMap } from "../../shared/utils";
+import { disposeAll, flatMap } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { cancelAction, runFlutterCreateDotAction, runFlutterCreateDotPrompt } from "../constants";
@@ -37,7 +37,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.subscriptions.forEach((s) => s.dispose());
+		disposeAll(this.subscriptions);
 	}
 
 	public isSupported(types: f.PlatformType[] | undefined, device: { platformType?: f.PlatformType | null | undefined } | undefined) {

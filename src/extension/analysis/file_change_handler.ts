@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import * as util from "../utils";
 import { DasAnalyzerClient } from "./analyzer_das";
@@ -74,6 +75,6 @@ export class FileChangeHandler implements vs.Disposable {
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

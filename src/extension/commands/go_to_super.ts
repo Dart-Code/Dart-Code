@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { showCode, toRangeOnLine } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
@@ -51,6 +52,6 @@ export class GoToSuperCommand implements vs.Disposable {
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

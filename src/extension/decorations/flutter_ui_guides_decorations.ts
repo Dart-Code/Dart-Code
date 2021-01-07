@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { flatMap } from "../../shared/utils";
+import { disposeAll, flatMap } from "../../shared/utils";
 import { DocumentPositionTracker } from "../../shared/vscode/trackers";
 import { config } from "../config";
 
@@ -131,7 +131,7 @@ export abstract class FlutterUiGuideDecorations implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.disposables.forEach((s) => s.dispose());
+		disposeAll(this.disposables);
 	}
 }
 
@@ -186,6 +186,6 @@ class WidgetGuideTracker implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.disposables.forEach((s) => s.dispose());
+		disposeAll(this.disposables);
 	}
 }

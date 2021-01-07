@@ -3,7 +3,7 @@
 import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteNode, TestNode, TestTreeModel } from "../../shared/test/test_model";
-import { uriToFilePath } from "../../shared/utils";
+import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline, isSimpleTestName } from "../../shared/utils/test";
@@ -79,6 +79,6 @@ export class TestDiscoverer implements IAmDisposable {
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

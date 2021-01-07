@@ -1,6 +1,6 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { flatMap } from "../../shared/utils";
+import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
@@ -74,6 +74,6 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

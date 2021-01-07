@@ -4,6 +4,7 @@ import * as lsp from "vscode-languageclient";
 import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
 import * as as from "../../shared/analysis_server_types";
 import { nullLogger } from "../../shared/logging";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
@@ -139,7 +140,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 
 	public dispose() {
 		this.activeEditor = undefined;
-		this.subscriptions.forEach((s) => s.dispose());
+		disposeAll(this.subscriptions);
 	}
 }
 

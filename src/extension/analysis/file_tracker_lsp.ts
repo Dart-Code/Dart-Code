@@ -3,6 +3,7 @@ import { LanguageClient } from "vscode-languageclient/node";
 import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { lspToPosition } from "../../shared/vscode/utils";
@@ -84,8 +85,6 @@ export class LspFileTracker implements IAmDisposable {
 	}
 
 	public dispose(): any {
-		// TODO: This (and others) should probably await, in case they're promises.
-		// And also not fail on first error.
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

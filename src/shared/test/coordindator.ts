@@ -2,7 +2,7 @@ import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
 import { IAmDisposable, Logger } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
-import { uriToFilePath } from "../utils";
+import { disposeAll, uriToFilePath } from "../utils";
 import { GroupNode, SuiteData, SuiteNode, TestNode, TestTreeModel, TreeNode } from "./test_model";
 
 /// Handles results from a test debug session and provides them to the test model.
@@ -248,6 +248,6 @@ export class TestSessionCoordindator implements IAmDisposable {
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

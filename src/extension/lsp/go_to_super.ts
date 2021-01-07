@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { disposeAll } from "../../shared/utils";
 import { showCode } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import * as editors from "../editors";
@@ -34,6 +35,6 @@ export class LspGoToSuperCommand implements vs.Disposable {
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

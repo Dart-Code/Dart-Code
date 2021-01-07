@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { isAnalyzable } from "../utils";
@@ -91,6 +92,6 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	public dispose() {
 		this.activeEditor?.setDecorations(this.decorationType, []);
 		this.activeEditor = undefined;
-		this.subscriptions.forEach((s) => s.dispose());
+		disposeAll(this.subscriptions);
 	}
 }

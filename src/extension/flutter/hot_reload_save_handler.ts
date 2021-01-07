@@ -4,6 +4,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { restartReasonSave } from "../../shared/constants";
 import { VmService } from "../../shared/enums";
 import { IAmDisposable } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DebugCommands } from "../commands/debug";
 import { config } from "../config";
@@ -93,6 +94,6 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		if (this.hotReloadDelayTimer)
 			clearTimeout(this.hotReloadDelayTimer);
 
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

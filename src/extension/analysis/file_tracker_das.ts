@@ -1,6 +1,7 @@
 import { CancellationToken, Disposable, TextDocument, Uri, window, workspace } from "vscode";
 import { FlutterOutline, FoldingRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -182,8 +183,6 @@ export class DasFileTracker implements IAmDisposable {
 	}
 
 	public dispose(): any {
-		// TODO: This (and others) should probably await, in case they're promises.
-		// And also not fail on first error.
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

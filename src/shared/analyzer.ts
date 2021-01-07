@@ -1,6 +1,6 @@
 import { EventEmitter } from "./events";
 import { IAmDisposable, Logger } from "./interfaces";
-import { PromiseCompleter } from "./utils";
+import { disposeAll, PromiseCompleter } from "./utils";
 import { resolvedPromise } from "./utils/promises";
 
 export abstract class Analyzer implements IAmDisposable {
@@ -41,6 +41,6 @@ export abstract class Analyzer implements IAmDisposable {
 	}
 
 	public dispose(): void | Promise<void> {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }

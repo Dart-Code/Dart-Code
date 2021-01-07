@@ -2,6 +2,7 @@ import * as minimatch from "minimatch";
 import { CancellationToken, DocumentFormattingEditProvider, DocumentSelector, FormattingOptions, languages, OnTypeFormattingEditProvider, Position, Range, TextDocument, TextEdit, window, workspace } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
@@ -47,8 +48,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 	}
 
 	private unregisterAllFormatters() {
-		this.registeredFormatters.forEach((s) => s.dispose());
-		this.registeredFormatters.length = 0;
+		disposeAll(this.registeredFormatters);
 	}
 
 	public async provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken): Promise<TextEdit[] | undefined> {

@@ -10,7 +10,7 @@ import { DartWorkspaceContext, DevToolsPage, Logger, SomeError } from "../../../
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
-import { usingCustomScript } from "../../../shared/utils";
+import { disposeAll, usingCustomScript } from "../../../shared/utils";
 import { arraysEqual } from "../../../shared/utils/array";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
@@ -354,7 +354,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }
 

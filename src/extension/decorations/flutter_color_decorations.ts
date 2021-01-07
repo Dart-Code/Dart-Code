@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { mkDirRecursive } from "../../shared/utils/fs";
 import { ColorRangeComputer } from "../../shared/vscode/color_range_computer";
 import { isAnalyzable } from "../utils";
@@ -90,7 +91,7 @@ export class FlutterColorDecorations implements vs.Disposable {
 
 	public dispose() {
 		this.activeEditor = undefined;
-		this.subscriptions.forEach((s) => s.dispose());
+		disposeAll(this.subscriptions);
 	}
 }
 

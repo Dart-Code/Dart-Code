@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { disposeAll } from "../../shared/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { isAnalyzable } from "../utils";
@@ -50,6 +51,6 @@ export class StatusBarVersionTracker implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.subscriptions.forEach((s) => s.dispose());
+		disposeAll(this.subscriptions);
 	}
 }

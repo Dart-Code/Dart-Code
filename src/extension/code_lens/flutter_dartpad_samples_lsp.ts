@@ -1,6 +1,7 @@
 import * as path from "path";
 import { CancellationToken, CodeLens, CodeLensProvider, commands, Event, EventEmitter, Range, TextDocument } from "vscode";
 import { FlutterSdks, IAmDisposable, Logger } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { LspClassOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { envUtils, lspToPosition, lspToRange } from "../../shared/vscode/utils";
@@ -67,7 +68,7 @@ export class LspFlutterDartPadSamplesCodeLensProvider implements CodeLensProvide
 	}
 
 	public dispose(): any {
-		this.disposables.forEach((d) => d.dispose());
+		disposeAll(this.disposables);
 	}
 }
 

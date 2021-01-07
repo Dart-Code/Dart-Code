@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { docsIconPathFormat } from "../../shared/vscode/extension_utils";
 import { isAnalyzable } from "../utils";
 
@@ -49,6 +50,6 @@ export abstract class FlutterIconDecorations implements vs.Disposable {
 
 	public dispose() {
 		this.activeEditor = undefined;
-		this.subscriptions.forEach((s) => s.dispose());
+		disposeAll(this.subscriptions);
 	}
 }
