@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
-import { DartWorkspaceContext, Logger, LogMessage } from "../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, Logger, LogMessage } from "../../shared/interfaces";
 import { flatMap, PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
@@ -101,13 +101,13 @@ export class DebugCommands {
 			}
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
-		devToolsPages.forEach((pageName) => {
-			context.subscriptions.push(vs.commands.registerCommand(`dart.openDevTools${pageName}`, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
-				options = Object.assign({}, options, { page: pageName.toLowerCase() });
+		devToolsPages.forEach((page) => {
+			context.subscriptions.push(vs.commands.registerCommand(page.commandId, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
+				options = Object.assign({}, options, { page });
 				return vs.commands.executeCommand("dart.openDevTools", options);
 			}));
 		});
-		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
+		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length) {
 				this.logger.warn("No active debug sessions found, so unable to launch DevTools");
 				vs.window.showInformationMessage("You must have an active debug session to start DevTools.");

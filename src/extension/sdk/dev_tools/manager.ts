@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
 import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
-import { DartWorkspaceContext, Logger, SomeError } from "../../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, Logger, SomeError } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
@@ -63,6 +63,16 @@ export class DevToolsManager implements vs.Disposable {
 	private async preActivate(silent: boolean): Promise<void> {
 		this.devToolsActivationPromise = this.pubGlobal.backgroundActivate(devtoolsPackageName, devtoolsPackageID, silent, this.workspaceContext.config?.devtoolsActivateScript);
 		await this.devToolsActivationPromise;
+	}
+
+	private routeIdForPage(page: DevToolsPage | undefined): string | undefined {
+		if (!page)
+			return undefined;
+
+		if (this.capabilities.usesLegacyPageIds && page.legacyPageId)
+			return page.legacyPageId;
+
+		return page.pageId;
 	}
 
 	/// Spawns DevTools and returns the full URL to open for that session
@@ -138,11 +148,11 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
-	private async promptForDevToolsPage(): Promise<{ page: string } | "EXTERNAL" | undefined> {
-		const choices: Array<vs.QuickPickItem & { page?: string; isExternal?: boolean }> = [
+	private async promptForDevToolsPage(): Promise<{ page: DevToolsPage } | "EXTERNAL" | undefined> {
+		const choices: Array<vs.QuickPickItem & { page?: DevToolsPage; isExternal?: boolean }> = [
 			...devToolsPages.map((page) => ({
-				label: `Open ${page} Page`,
-				page: page.toLowerCase(),
+				label: `Open ${page.title} Page`,
+				page,
 			})),
 			{ label: `Open DevTools in Web Browser`, isExternal: true },
 		];
@@ -168,8 +178,9 @@ export class DevToolsManager implements vs.Disposable {
 		if (!this.devtoolsUrl)
 			return;
 
-		for (const page of Object.keys(this.devToolsEmbeddedViews)) {
-			const panels = this.devToolsEmbeddedViews[page];
+		for (const pageId of Object.keys(this.devToolsEmbeddedViews)) {
+			const page = devToolsPages.find((p) => p.pageId === pageId);
+			const panels = this.devToolsEmbeddedViews[pageId];
 			if (!panels)
 				continue;
 
@@ -197,18 +208,18 @@ export class DevToolsManager implements vs.Disposable {
 		};
 
 		// Try to launch via service if allowed.
-		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams }))
+		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page) }))
 			return true;
 
 		// Otherwise, fall back to embedded or launching manually.
 		if (options.page)
-			queryParams.page = options.page;
+			queryParams.page = this.routeIdForPage(options.page);
 		if (options.embed)
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
 		if (options.embed)
 			// TODO: What should really we do it we don't have a page?
-			this.launchInEmbeddedWebView(fullUrl, session, options.page || "inspector");
+			this.launchInEmbeddedWebView(fullUrl, session, options.page ?? devToolsPages[0]);
 		else
 			await envUtils.openInBrowser(fullUrl.toString(), this.logger);
 	}
@@ -216,24 +227,25 @@ export class DevToolsManager implements vs.Disposable {
 	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, session: DartDebugSessionInformation & { vmServiceUri: string }, url: string) {
 		const paramsString = Object.keys(queryParams)
 			.filter((key) => queryParams[key] !== undefined)
-			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] || "")}`)
+			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] ?? "")}`)
 			.join("&");
 		const vmServiceUri = vs.Uri.parse(session.vmServiceUri);
 		const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
 		return vs.Uri.parse(`${url}?${paramsString}&uri=${encodeURIComponent(exposedUrl)}`);
 	}
 
-	private launchInEmbeddedWebView(uri: vs.Uri, session: DartDebugSessionInformation, page: string) {
-		if (!this.devToolsEmbeddedViews[page]) {
-			this.devToolsEmbeddedViews[page] = [];
+	private launchInEmbeddedWebView(uri: vs.Uri, session: DartDebugSessionInformation, page: DevToolsPage) {
+		const pageId = page.pageId;
+		if (!this.devToolsEmbeddedViews[pageId]) {
+			this.devToolsEmbeddedViews[pageId] = [];
 		}
 		// Look through any open DevTools frames for this page, to see if any are already our session, or
 		// are for a session that has been stopped.
-		let frame = this.devToolsEmbeddedViews[page]?.find((dtev) => dtev.session === session || dtev.session.hasEnded);
+		let frame = this.devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || dtev.session.hasEnded);
 		if (!frame) {
 			frame = new DevToolsEmbeddedView(session, uri, page);
-			frame.onDispose.listen(() => delete this.devToolsEmbeddedViews[page]);
-			this.devToolsEmbeddedViews[page]?.push(frame);
+			frame.onDispose.listen(() => delete this.devToolsEmbeddedViews[pageId]);
+			this.devToolsEmbeddedViews[pageId]?.push(frame);
 		}
 		frame?.load(session, uri);
 	}
@@ -425,5 +437,5 @@ interface DevToolsOptions {
 	embed: boolean;
 	reuseWindows?: boolean;
 	notify?: boolean;
-	page?: string;
+	page?: DevToolsPage;
 }

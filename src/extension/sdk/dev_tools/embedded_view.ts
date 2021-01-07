@@ -1,16 +1,8 @@
 import * as vs from "vscode";
 import { Event, EventEmitter } from "../../../shared/events";
+import { DevToolsPage } from "../../../shared/interfaces";
 import { firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
-
-const devToolsPageNames: { [key: string]: string } = {
-	inspector: "Widget Inspector",
-	logging: "Logging View",
-	memory: "Memory View",
-	network: "Network View",
-	performance: "Performance View",
-	timeline: "Flutter Timeline",
-};
 
 const pageScript = `
 window.addEventListener('message', (event) => {
@@ -38,10 +30,9 @@ export class DevToolsEmbeddedView {
 	private onDisposeEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
 
-	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: vs.Uri, readonly page: string) {
-		const pageName = devToolsPageNames[page] || "Dart DevTools";
+	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: vs.Uri, readonly page: DevToolsPage) {
 		const column = firstNonEditorColumn() || vs.ViewColumn.Beside;
-		this.panel = vs.window.createWebviewPanel("dartDevTools", pageName, column, {
+		this.panel = vs.window.createWebviewPanel("dartDevTools", page.title, column, {
 			enableScripts: true,
 			localResourceRoots: [],
 			retainContextWhenHidden: true,

@@ -168,3 +168,10 @@ export interface OpenedFileInformation {
 	readonly selectionOffset: number;
 	readonly selectionLength: number;
 }
+
+export interface DevToolsPage {
+	pageId: string;
+	commandId: string;
+	legacyPageId?: string;
+	title: string;
+}
