@@ -179,10 +179,11 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public async getMainThread(): Promise<DebugProtocol.Thread> {
+		// For tests, we can assume the last thread is the "main" one, as dartdev, pub etc. will all
+		// be spawned first.
 		const threadsResponse = await this.threadsRequest();
 		const threads = threadsResponse.body.threads;
-		assert.equal(threads.length, 1);
-		return threads[0];
+		return threads[threads.length - 1];
 	}
 
 	public async resume(): Promise<DebugProtocol.ContinueResponse> {

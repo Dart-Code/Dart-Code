@@ -118,7 +118,7 @@ describe("dart test debugger", () => {
 		);
 	});
 
-	it.skip("provides exception details when stopped on exception", async () => {
+	it("provides exception details when stopped on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(helloWorldTestBrokenFile);
 		await waitAllThrowIfTerminates(dc,
