@@ -125,7 +125,7 @@ export class DevToolsManager implements vs.Disposable {
 			const url = await this.devtoolsUrl;
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
-				title: "Opening Dart DevTools...",
+				title: "Opening DevTools...",
 			}, async () => {
 
 				const canLaunchDevToolsThroughService = isRunningLocally
@@ -138,7 +138,7 @@ export class DevToolsManager implements vs.Disposable {
 			});
 
 			this.devToolsStatusBarItem.text = "Dart DevTools";
-			this.devToolsStatusBarItem.tooltip = `Dart DevTools is running at ${url}`;
+			this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
 			this.devToolsStatusBarItem.command = "dart.openDevTools";
 			this.devToolsStatusBarItem.show();
 			return { url, dispose: () => this.dispose() };

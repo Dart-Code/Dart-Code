@@ -107,6 +107,8 @@ export class DebugCommands {
 				return vs.commands.executeCommand("dart.openDevTools", options);
 			}));
 		});
+		context.subscriptions.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> =>
+			vs.commands.executeCommand("dart.openDevTools", options)));
 		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length) {
 				this.logger.warn("No active debug sessions found, so unable to launch DevTools");

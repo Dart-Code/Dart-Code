@@ -468,6 +468,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "flutter.openDevTools",
+				"title": "Open DevTools",
+				"category": "Flutter"
+			},
+			{
 				"command": "dart.openDevToolsInspector",
 				"title": "Open DevTools Widget Inspector Page",
 				"category": "Flutter",
@@ -841,6 +846,10 @@
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
+					"command": "flutter.openDevTools",
+					"when": "dart-code:dartProjectLoaded && dart-code:anyFlutterProjectLoaded"
+				},
+				{
 					"command": "dart.openDevToolsInspector",
 					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
@@ -850,7 +859,7 @@
 				},
 				{
 					"command": "dart.openDevToolsMemory",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:dartProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openDevToolsCpuProfiler",
@@ -858,11 +867,11 @@
 				},
 				{
 					"command": "dart.openDevToolsNetwork",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:dartProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openDevToolsLogging",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:dartProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",
