@@ -75,21 +75,19 @@ export class DevToolsManager implements vs.Disposable {
 		return page.pageId;
 	}
 
-	/// Spawns DevTools and returns the full URL to open for that session
-	///   eg. http://127.0.0.1:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
-		this.analytics.logDebuggerOpenDevTools();
-
+	private async spawnIfRequired(): Promise<string | undefined> {
 		// If we're mid-silent-activation, wait until that's finished.
 		await this.devToolsActivationPromise;
 
 		if (this.service && !this.service.isValidForCurrentSettings) {
+			this.devToolsStatusBarItem.hide();
 			this.service.dispose();
 			this.service = undefined;
 			this.devtoolsUrl = undefined;
 		}
 
 		if (!this.devtoolsUrl) {
+			this.devToolsStatusBarItem.hide();
 			// Don't try to check for install when we run eagerly.
 			if (!this.workspaceContext.config?.activateDevToolsEagerly) {
 				const installedVersion = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.8.0", this.workspaceContext.config?.devtoolsActivateScript, true);
@@ -105,6 +103,40 @@ export class DevToolsManager implements vs.Disposable {
 			}, async () => this.startServer());
 		}
 
+		const url = await this.devtoolsUrl;
+
+		this.devToolsStatusBarItem.text = "Dart DevTools";
+		this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
+		this.devToolsStatusBarItem.command = "dart.openDevTools";
+		this.devToolsStatusBarItem.show();
+
+		return url;
+	}
+
+	/// Spawns DevTools and returns the full URL to open without a debug session.
+	public async spawnForNoSession(): Promise<{ url: string; dispose: () => void } | undefined> {
+		this.analytics.logDebuggerOpenDevTools();
+
+		const url = await this.spawnIfRequired();
+		if (!url)
+			return;
+
+		try {
+			envUtils.openInBrowser(url.toString(), this.logger);
+		} catch (e) {
+			this.showError(e);
+		}
+	}
+
+	/// Spawns DevTools and returns the full URL to open for that session
+	///   eg. http://127.0.0.1:8123/?port=8543
+	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
+		this.analytics.logDebuggerOpenDevTools();
+
+		const url = await this.spawnIfRequired();
+		if (!url)
+			return;
+
 		// If the launched versin of DevTools doesn't support embedding, remove the flag.
 		if (!this.capabilities.supportsEmbedFlag)
 			options.embed = false;
@@ -112,7 +144,7 @@ export class DevToolsManager implements vs.Disposable {
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
 		if (options.embed && !options.page) {
-			const choice = await this.promptForDevToolsPage();
+			const choice = options.page === null ? "EXTERNAL" : await this.promptForDevToolsPage();
 			if (!choice) // User cancelled
 				return;
 			else if (choice === "EXTERNAL")
@@ -122,12 +154,10 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		try {
-			const url = await this.devtoolsUrl;
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 				title: "Opening DevTools...",
 			}, async () => {
-
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !options.embed
 					&& !process.env.DART_CODE_IS_TEST_RUN
@@ -137,13 +167,8 @@ export class DevToolsManager implements vs.Disposable {
 				await this.launch(!!canLaunchDevToolsThroughService, session, options);
 			});
 
-			this.devToolsStatusBarItem.text = "Dart DevTools";
-			this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
-			this.devToolsStatusBarItem.command = "dart.openDevTools";
-			this.devToolsStatusBarItem.show();
 			return { url, dispose: () => this.dispose() };
 		} catch (e) {
-			this.devToolsStatusBarItem.hide();
 			this.showError(e);
 		}
 	}

@@ -110,11 +110,9 @@ export class DebugCommands {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> =>
 			vs.commands.executeCommand("dart.openDevTools", options)));
 		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> => {
-			if (!debugSessions.length) {
-				this.logger.warn("No active debug sessions found, so unable to launch DevTools");
-				vs.window.showInformationMessage("You must have an active debug session to start DevTools.");
-				return;
-			}
+			if (!debugSessions.length)
+				return this.devTools.spawnForNoSession();
+
 			const session = options && options.debugSessionId
 				? debugSessions.find((s) => s.session.id === options.debugSessionId)
 				: await this.getDebugSession();
@@ -512,7 +510,7 @@ export class DebugCommands {
 				if (config.openDevTools !== "never") {
 					const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
 					if (shouldLaunch)
-						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true });
+						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page: null });
 				} else if (debuggerType === DebuggerType.Flutter) {
 					// tslint:disable-next-line: no-floating-promises
 					showDevToolsNotificationIfAppropriate(this.context).then((res) => {
