@@ -123,7 +123,7 @@ jobs:
         run: flutter packages get
         working-directory: src/test/test_projects/flutter_hello_world
 
-        - name: flutter pub get (flutter_hello_world_bazel)
+      - name: flutter pub get (flutter_hello_world_bazel)
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter packages get
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
