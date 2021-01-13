@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { platformEol } from "../../../shared/constants";
-import { activate, currentDoc, currentEditor, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, extApi, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
+import { activate, currentDoc, currentEditor, delay, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, extApi, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
 
 const formattingOptions: vs.FormattingOptions = { tabSize: 2, insertSpaces: true };
 
@@ -59,6 +59,7 @@ describe("dart_formatting_edit_provider", () => {
 		await setConfigForTest("dart", "enableSdkFormatter", false);
 		await setConfigForTest("editor", "formatOnSave", true);
 		await setConfigForTest("dart", "enableSdkFormatter", true);
+		await delay(100);
 		await setTestContent(unformattedContent);
 		await currentDoc().save();
 		assert.equal(currentDoc().getText(), formattedContent);

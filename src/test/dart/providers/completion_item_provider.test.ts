@@ -288,11 +288,13 @@ main() {
 			select(rangeOf("ProcessInf||"));
 
 			await acceptFirstSuggestion();
+			// TODO: Cursor positions are slightly different between LSP/not right now.
+			const parens = extApi.isLsp ? "(^)" : "()^";
 			await ensureTestContentWithCursorPos(`
 import 'dart:io';
 
 main() {
-  final a = ProcessInfo(^)
+  final a = ProcessInfo${parens}
 }
 		`);
 		});
@@ -309,11 +311,13 @@ main() {
 			select(rangeOf("ProcessInf||"));
 
 			await acceptFirstSuggestion();
+			// TODO: Cursor positions are slightly different between LSP/not right now.
+			const parens = extApi.isLsp ? "(^)" : "()^";
 			await ensureTestContentWithCursorPos(`
 part of 'part_wrapper.dart';
 
 main() {
-  final a = ProcessInfo(^)
+  final a = ProcessInfo${parens}
 }
 		`);
 
