@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
 import { window } from "vscode";
-import { LanguageClientOptions, Location, TextDocumentPositionParams, WorkspaceEdit } from "vscode-languageclient";
+import { HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
@@ -23,10 +23,20 @@ export class LspAnalyzer extends Analyzer {
 
 	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
-		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext);
+		const middleware: Middleware = {};
+		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, middleware);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client.start());
 		this.disposables.push(this.fileTracker);
+
+		middleware.handleWorkDoneProgress = (token: ProgressToken, params: WorkDoneProgressBegin | WorkDoneProgressReport | WorkDoneProgressEnd, next: HandleWorkDoneProgressSignature) => {
+			if (params.kind === "begin")
+				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: true, suppressProgress: true });
+			else if (params.kind === "end")
+				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
+
+			next(token, params);
+		};
 
 		// tslint:disable-next-line: no-floating-promises
 		this.client.onReady().then(() => {
@@ -66,7 +76,7 @@ export class LspAnalyzer extends Analyzer {
 	}
 }
 
-function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext): LanguageClient {
+function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: Middleware): LanguageClient {
 	const clientOptions: LanguageClientOptions = {
 		initializationOptions: {
 			// 	onlyAnalyzeProjectsWithOpenFiles: true,
@@ -74,6 +84,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			flutterOutline: wsContext.hasAnyFlutterProjects,
 			outline: true,
 		},
+		middleware,
 		outputChannelName: "LSP",
 	};
 

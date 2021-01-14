@@ -16,7 +16,8 @@ export abstract class Analyzer implements IAmDisposable {
 	public get onCurrentAnalysisComplete() { return this.isAnalyzing ? this.onAnalysisCompleteCompleter.promise : resolvedPromise; }
 	public get onNextAnalysisComplete() { return this.onAnalysisCompleteCompleter.promise; }
 
-	protected readonly onAnalysisStatusChangeEmitter = new EventEmitter<{ isAnalyzing: boolean }>();
+	// TODO: Remove suppressProgress when non-LSP is gone and Flutter stable has LSP server that uses $/progress.
+	protected readonly onAnalysisStatusChangeEmitter = new EventEmitter<AnalyzingEvent>();
 	public readonly onAnalysisStatusChange = this.onAnalysisStatusChangeEmitter.event;
 	private isAnalyzing = false;
 
@@ -43,4 +44,9 @@ export abstract class Analyzer implements IAmDisposable {
 	public dispose(): void | Promise<void> {
 		disposeAll(this.disposables);
 	}
+}
+
+export interface AnalyzingEvent {
+	isAnalyzing: boolean;
+	suppressProgress?: boolean;
 }

@@ -1,17 +1,22 @@
 import { ProgressLocation, window } from "vscode";
-import { Analyzer } from "../../shared/analyzer";
+import { Analyzer, AnalyzingEvent } from "../../shared/analyzer";
 import { PromiseCompleter } from "../../shared/utils";
+
+// TODO: Remove this class once Flutter Stable has an LSP server that uses $/progress.
 
 export class LspAnalyzerStatusReporter {
 	private analysisInProgress = false;
 	private analyzingPromise?: PromiseCompleter<void>;
 
 	constructor(readonly analyzer: Analyzer) {
-		analyzer.onAnalysisStatusChange.listen((params) => this.handleServerStatus(params.isAnalyzing));
+		analyzer.onAnalysisStatusChange.listen((params) => this.handleServerStatus(params));
 	}
 
-	private handleServerStatus(isAnalyzing: boolean) {
-		this.analysisInProgress = isAnalyzing;
+	private handleServerStatus(params: AnalyzingEvent) {
+		if (params.suppressProgress) {
+			return;
+		}
+		this.analysisInProgress = params.isAnalyzing;
 
 		if (this.analysisInProgress) {
 			// Debounce short analysis times.
