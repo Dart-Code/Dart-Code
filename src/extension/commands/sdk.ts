@@ -80,6 +80,9 @@ export class SdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		this.setupPubspecWatcher(context);
+
+		// Monitor version files for SDK upgrades.
+		this.setupVersionWatcher(context);
 	}
 
 	private async getPackages(uri: string | Uri | undefined) {
@@ -220,6 +223,8 @@ export class SdkCommands {
 		const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 		if (!fs.existsSync(tempDir))
 			fs.mkdirSync(tempDir);
+		// Don't prompt to reload when the version changes, as we automatically reload here.
+		this.promptToReloadOnVersionChanges = false;
 		await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter", true);
 		await util.promptToReloadExtension();
 	}
@@ -274,6 +279,25 @@ export class SdkCommands {
 		context.subscriptions.push(watcher);
 		watcher.onDidChange(this.handlePubspecChange, this);
 		watcher.onDidCreate(this.handlePubspecChange, this);
+	}
+
+	private promptToReloadOnVersionChanges = true;
+	private setupVersionWatcher(context: vs.ExtensionContext) {
+		const versionFile = path.join(this.sdks.dart, "version");
+		const watcher = fs.watch(versionFile, { persistent: false }, () => {
+			if (!this.promptToReloadOnVersionChanges)
+				return;
+
+			// Ensure we don't fire too often as some OSes may generate multiple events.
+			this.promptToReloadOnVersionChanges = false;
+			// Allow it again in 60 seconds.
+			setTimeout(() => this.promptToReloadOnVersionChanges = true, 60000);
+
+			// Wait a short period before prompting.
+			setTimeout(() => util.promptToReloadExtension("Your Dart SDK has been updated. Reload using the new SDK?", undefined, false), 1000);
+		});
+
+		context.subscriptions.push({ dispose() { watcher.close(); } });
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
