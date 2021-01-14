@@ -200,7 +200,7 @@ export function escapeShell(args: string[]) {
 }
 
 export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean): Promise<void> {
-	const restartAction = buttonText || "Restart";
+	const restartAction = buttonText || "Reload";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
 	const ringLogContents = ringLog.toString();
 	let showPromptAgain = true;
