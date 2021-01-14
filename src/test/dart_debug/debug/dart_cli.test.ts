@@ -586,7 +586,8 @@ describe("dart cli debugger", () => {
 		const stack3 = await dc.getStack(10, 10); // frame 10-19
 		const stack4 = await dc.getStack(20, 1000); // rest
 		assert.strictEqual(stack1.body.stackFrames.length, 1);
-		assert.strictEqual(stack1.body.totalFrames, expectFullCount ? fullStackFrameCount : 21); // Expect n + 20
+		// For the first frame, we'll always get 1 + batchSize because we may short-cut going to the VM.
+		assert.strictEqual(stack1.body.totalFrames, 21); // Expect n + 20
 		assert.strictEqual(stack2.body.stackFrames.length, 9);
 		assert.strictEqual(stack2.body.totalFrames, expectFullCount ? fullStackFrameCount : 30); // offset+length+20
 		assert.strictEqual(stack3.body.stackFrames.length, 10);

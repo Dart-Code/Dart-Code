@@ -951,6 +951,7 @@ export class DartDebugSession extends DebugSession {
 
 	protected async stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): Promise<void> {
 		this.logDapRequest("stackTraceRequest", args);
+		const stackFrameBatch = 20;
 		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		const startFrame = args.startFrame || 0;
 		const levels = args.levels;
@@ -972,7 +973,7 @@ export class DartDebugSession extends DebugSession {
 
 		try {
 			let isTruncated = true;
-			let framesRecieved = 1;
+			let totalFrames = 1;
 			let stackFrames: DebugProtocol.StackFrame[] = [];
 
 			// Newer VM Service allows us to cap the frames to avoid fetching more than we need.
@@ -987,13 +988,14 @@ export class DartDebugSession extends DebugSession {
 			// If the request is only for the top frame, we may be able to satisfy this using the
 			// `topFrame` field of the pause event.
 			if (startFrame === 0 && levels === 1 && thread.pauseEvent?.topFrame) {
+				totalFrames = 1 + stackFrameBatch; // Claim we had more +stackFrameBatch frames to force another request.
 				stackFrames.push(await this.convertStackFrame(thread, thread.pauseEvent?.topFrame, true, true));
 			} else {
 				const result = await this.vmService.getStack(thread.ref.id, limit);
 
 				const stack: VMStack = result.result as VMStack;
 				let vmFrames = stack.asyncCausalFrames || stack.frames;
-				framesRecieved = vmFrames.length;
+				const framesRecieved = vmFrames.length;
 				isTruncated = stack.truncated ?? false;
 
 				// Drop frames that are earlier than what we wanted.
@@ -1006,13 +1008,14 @@ export class DartDebugSession extends DebugSession {
 				const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.getNonDebuggableFrameReason(f.location?.script?.uri) === undefined);
 
 				stackFrames = await Promise.all(vmFrames.map((f, i) => this.convertStackFrame(thread, f, startFrame + i === 0, hasAnyDebuggableFrames)));
+
+				totalFrames = supportsGetStackLimit
+					// If the stack was truncated, we should say there are 20(stackFrameBatch) more frames, otherwise use the real count.
+					? isTruncated ? framesRecieved + stackFrameBatch : framesRecieved
+					// If we don't support limit, the number recieved is always correct.
+					: framesRecieved;
 			}
 
-			const totalFrames = supportsGetStackLimit
-				// If the stack was truncated, we should say there are 20 more frames, otherwise use the real count.
-				? isTruncated ? framesRecieved + 20 : framesRecieved
-				// If we don't support limit, the number recieved is always correct.
-				: framesRecieved;
 
 			response.body = {
 				stackFrames,
