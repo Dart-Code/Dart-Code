@@ -2,7 +2,9 @@ import { escapeRegExp } from "../utils";
 
 const materialIconRegex = new RegExp(
 	`(?:${escapeRegExp("<p>")})?`
-	+ escapeRegExp('<i class="material-icons md-36">')
+	+ escapeRegExp('<i class="material-icons')
+	+ "(?:-([\\w]+))?"
+	+ escapeRegExp(' md-36">')
 	+ "([\\w\\s_]+)"
 	+ escapeRegExp('</i> &#x2014; material icon named "')
 	+ "([\\w\\s_]+)"
@@ -31,8 +33,18 @@ export function cleanDartdoc(doc: string | undefined, iconPathFormat: string): s
 	// Remove colons from old-style references like [:foo:].
 	doc = doc.replace(/\[:\S+:\]/g, (match) => `[${match.substring(2, match.length - 2)}]`);
 
-	const materialIconPathFormat = iconPathFormat.replace("$1", "material/$1");
-	doc = doc.replace(materialIconRegex, `![$1](${materialIconPathFormat}|width=32,height=32)`);
+	// Replace material icon HTML blocks with markdown to load the images from the correct place.
+	doc = doc.replace(materialIconRegex, (_fullMatch: string, variant: string, icon: string, name: string) => {
+		if (variant) {
+			// HACK: Classnames don't match the filenames.
+			if (variant === "round")
+				variant = "rounded";
+			icon = `${icon}_${variant}`;
+		}
+		const iconPath = iconPathFormat.replace("$1", `material/${icon}`);
+		// TODO: Escape name!
+		return `![${name}](${iconPath}|width=32,height=32)`;
+	});
 
 	// Remove any directives like {@template xxx}
 	doc = doc.replace(dartDocDirectives, "");
