@@ -17,6 +17,20 @@ export interface VMEvent {
 	exception?: VMInstanceRef;
 	breakpoint?: VMBreakpoint;
 	pauseBreakpoints?: VMBreakpoint[];
+	// The top stack frame associated with this event, if applicable.
+	//
+	// This is provided for the event kinds:
+	//   PauseBreakpoint
+	//   PauseInterrupted
+	//   PauseException
+	//
+	// For PauseInterrupted events, there will be no top frame if the
+	// isolate is idle (waiting in the message loop).
+	//
+	// For the Resume event, the top frame is provided at
+	// all times except for the initial resume event that is delivered
+	// when an isolate begins execution.
+	topFrame?: VMFrame;
 	atAsyncSuspension?: boolean;
 	extensionRPC?: string;
 	extensionKind?: string;

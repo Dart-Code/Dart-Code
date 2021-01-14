@@ -4,7 +4,7 @@ import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { errorString, PromiseCompleter } from "../shared/utils";
 import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
-import { DebuggerResult, VMBreakpoint, VMInstanceRef, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
+import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 
 export class ThreadManager {
 	public nextThreadId: number = 0;
@@ -219,6 +219,7 @@ export class ThreadInfo {
 	public atAsyncSuspension: boolean = false;
 	public exceptionReference = 0;
 	public paused: boolean = false;
+	public pauseEvent: VMEvent | undefined;
 
 	constructor(
 		public readonly manager: ThreadManager,
@@ -305,6 +306,7 @@ export class ThreadInfo {
 		this.atAsyncSuspension = false;
 		this.exceptionReference = 0;
 		this.paused = false;
+		this.pauseEvent = undefined;
 	}
 
 	public async resume(step?: string, frameIndex?: number): Promise<void> {
@@ -349,13 +351,15 @@ export class ThreadInfo {
 		return this.manager.storeData(this, data);
 	}
 
-	public handlePaused(atAsyncSuspension?: boolean, exception?: VMInstanceRef) {
-		this.atAsyncSuspension = atAsyncSuspension === true;
-		if (exception) {
+	public handlePaused(pauseEvent: VMEvent) {
+		this.atAsyncSuspension = pauseEvent.atAsyncSuspension === true;
+		if (pauseEvent.exception) {
+			const exception = pauseEvent.exception;
 			(exception as InstanceWithEvaluateName).evaluateName = "$e";
 			this.exceptionReference = this.storeData(exception);
 		}
 		this.paused = true;
+		this.pauseEvent = pauseEvent;
 	}
 }
 

@@ -970,36 +970,47 @@ export class DartDebugSession extends DebugSession {
 			return;
 		}
 
-		// Newer VM Service allows us to cap the frames to avoid fetching more than we need.
-		// They do not support an offset, however earlier frames will be internally cached
-		// so fetching 40 frames if we've already had 0-20 should only incur the cost of the
-		// new 20.
-		const supportsGetStackLimit = this.vmServiceCapabilities.supportsGetStackLimit;
-		const limit = supportsGetStackLimit && levels
-			? startFrame + levels
-			: undefined;
-
 		try {
-			const result = await this.vmService.getStack(thread.ref.id, limit);
+			let isTruncated = true;
+			let framesRecieved = 1;
+			let stackFrames: DebugProtocol.StackFrame[] = [];
 
-			const stack: VMStack = result.result as VMStack;
-			let vmFrames = stack.asyncCausalFrames || stack.frames;
-			const framesRecieved = vmFrames.length;
+			// Newer VM Service allows us to cap the frames to avoid fetching more than we need.
+			// They do not support an offset, however earlier frames will be internally cached
+			// so fetching 40 frames if we've already had 0-20 should only incur the cost of the
+			// new 20.
+			const supportsGetStackLimit = this.vmServiceCapabilities.supportsGetStackLimit;
+			const limit = supportsGetStackLimit && levels
+				? startFrame + levels
+				: undefined;
 
-			// Drop frames that are earlier than what we wanted.
-			vmFrames = vmFrames.slice(startFrame);
+			// If the request is only for the top frame, we may be able to satisfy this using the
+			// `topFrame` field of the pause event.
+			if (startFrame === 0 && levels === 1 && thread.pauseEvent?.topFrame) {
+				stackFrames.push(await this.convertStackFrame(thread, thread.pauseEvent?.topFrame, true, true));
+			} else {
+				const result = await this.vmService.getStack(thread.ref.id, limit);
 
-			// Drop off any that are after where we wanted.
-			if (levels && vmFrames.length > levels)
-				vmFrames = vmFrames.slice(0, levels);
+				const stack: VMStack = result.result as VMStack;
+				let vmFrames = stack.asyncCausalFrames || stack.frames;
+				framesRecieved = vmFrames.length;
+				isTruncated = stack.truncated ?? false;
 
-			const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.getNonDebuggableFrameReason(f.location?.script?.uri) === undefined);
+				// Drop frames that are earlier than what we wanted.
+				vmFrames = vmFrames.slice(startFrame);
 
-			const stackFrames = await Promise.all(vmFrames.map((f, i) => this.convertStackFrame(thread, f, startFrame + i === 0, hasAnyDebuggableFrames)));
+				// Drop off any that are after where we wanted.
+				if (levels && vmFrames.length > levels)
+					vmFrames = vmFrames.slice(0, levels);
+
+				const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.getNonDebuggableFrameReason(f.location?.script?.uri) === undefined);
+
+				stackFrames = await Promise.all(vmFrames.map((f, i) => this.convertStackFrame(thread, f, startFrame + i === 0, hasAnyDebuggableFrames)));
+			}
 
 			const totalFrames = supportsGetStackLimit
 				// If the stack was truncated, we should say there are 20 more frames, otherwise use the real count.
-				? stack.truncated ? framesRecieved + 20 : framesRecieved
+				? isTruncated ? framesRecieved + 20 : framesRecieved
 				// If we don't support limit, the number recieved is always correct.
 				: framesRecieved;
 
@@ -1815,7 +1826,7 @@ export class DartDebugSession extends DebugSession {
 			else {
 				// Otherwise, if we were attaching, then just issue a step-into to put the debugger
 				// right at the start of the application.
-				thread.handlePaused(event.atAsyncSuspension, event.exception);
+				thread.handlePaused(event);
 				await thread.resume("Into");
 			}
 		} else {
@@ -1872,7 +1883,7 @@ export class DartDebugSession extends DebugSession {
 						: undefined;
 			}
 
-			thread.handlePaused(event.atAsyncSuspension, event.exception);
+			thread.handlePaused(event);
 			if (shouldRemainedStoppedOnBreakpoint) {
 				this.logDapEvent(new StoppedEvent(reason, thread.num, exceptionText));
 				this.sendEvent(new StoppedEvent(reason, thread.num, exceptionText));
