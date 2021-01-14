@@ -949,7 +949,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
-	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
+	protected async stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): Promise<void> {
 		this.logDapRequest("stackTraceRequest", args);
 		const thread = this.threadManager.getThreadInfoFromNumber(args.threadId);
 		const startFrame = args.startFrame || 0;
@@ -979,7 +979,9 @@ export class DartDebugSession extends DebugSession {
 			? startFrame + levels
 			: undefined;
 
-		this.vmService.getStack(thread.ref.id, limit).then((result: DebuggerResult) => {
+		try {
+			const result = await this.vmService.getStack(thread.ref.id, limit);
+
 			const stack: VMStack = result.result as VMStack;
 			let vmFrames = stack.asyncCausalFrames || stack.frames;
 			const framesRecieved = vmFrames.length;
@@ -991,87 +993,9 @@ export class DartDebugSession extends DebugSession {
 			if (levels && vmFrames.length > levels)
 				vmFrames = vmFrames.slice(0, levels);
 
-			const stackFrames: DebugProtocol.StackFrame[] = [];
-			const promises: Array<Promise<void>> = [];
-
 			const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.getNonDebuggableFrameReason(f.location?.script?.uri) === undefined);
 
-			vmFrames.forEach((frame: VMFrame) => {
-				const frameId = thread.storeData(frame);
-
-				if (frame.kind === "AsyncSuspensionMarker") {
-					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, "<asynchronous gap>");
-					stackFrame.presentationHint = "label";
-					stackFrames.push(stackFrame);
-					return;
-				}
-
-				const frameName =
-					frame && frame.code && frame.code.name
-						? (
-							frame.code.name.startsWith(unoptimizedPrefix)
-								? frame.code.name.substring(unoptimizedPrefix.length)
-								: frame.code.name
-						)
-						: "<unknown>";
-				const location = frame.location;
-
-				if (!location) {
-					const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, frameName);
-					stackFrame.presentationHint = "subtle";
-					stackFrames.push(stackFrame);
-					return;
-				}
-
-				const uri = location.script.uri;
-				let sourcePath = this.convertVMUriToSourcePath(uri);
-				let canShowSource = sourcePath && fs.existsSync(sourcePath);
-
-				// Download the source if from a "dart:" uri.
-				let sourceReference: number | undefined;
-				if (uri.startsWith("dart:") || uri.startsWith("org-dartlang-app:")) {
-					sourcePath = undefined;
-					sourceReference = thread.storeData(location.script);
-					canShowSource = true;
-				}
-
-				const shortName = this.formatUriForShortDisplay(uri);
-				const stackFrame: DebugProtocol.StackFrame = new StackFrame(
-					frameId,
-					frameName,
-					canShowSource ? new Source(shortName, sourcePath, sourceReference, undefined, location.script) : undefined,
-					0, 0,
-				);
-				// The top frame is only allowed to be deemphasized when it's an exception and there is some user-code in the
-				// stack (so the editor can walk up the stack to user code).
-				// If the reason for stopping was a breakpoint, step, etc., then we should always leave the frame focusable.
-				const isTopFrame = stackFrames.length === 0;
-				const isStoppedAtException = thread.exceptionReference !== 0;
-				const allowDeemphasizingFrame = !isTopFrame || (isStoppedAtException && hasAnyDebuggableFrames);
-
-				// If we wouldn't debug this source, then deemphasize in the stack.
-				if (stackFrame.source && allowDeemphasizingFrame) {
-					const nonDebuggableFrameReason = this.getNonDebuggableFrameReason(uri);
-					if (nonDebuggableFrameReason === "SDK") {
-						stackFrame.source.origin = "from the Dart SDK";
-						stackFrame.source.presentationHint = "deemphasize";
-					} else if (nonDebuggableFrameReason === "PACKAGE") {
-						stackFrame.source.origin = uri.startsWith("package:flutter/") ? "from the Flutter framework" : "from Pub packages";
-						stackFrame.source.presentationHint = "deemphasize";
-					}
-				}
-				stackFrames.push(stackFrame);
-
-				// Resolve the line and column information.
-				const promise = thread.getScript(location.script).then((script: VMScript) => {
-					const fileLocation = this.resolveFileLocation(script, location.tokenPos);
-					if (fileLocation) {
-						stackFrame.line = fileLocation.line;
-						stackFrame.column = fileLocation.column;
-					}
-				});
-				promises.push(promise);
-			});
+			const stackFrames = await Promise.all(vmFrames.map((f, i) => this.convertStackFrame(thread, f, startFrame + i === 0, hasAnyDebuggableFrames)));
 
 			const totalFrames = supportsGetStackLimit
 				// If the stack was truncated, we should say there are 20 more frames, otherwise use the real count.
@@ -1084,14 +1008,89 @@ export class DartDebugSession extends DebugSession {
 				totalFrames,
 			};
 
-			Promise.all(promises).then(() => {
-				this.logDapResponse(response);
-				this.sendResponse(response);
-			}).catch(() => {
-				this.logDapResponse(response);
-				this.sendResponse(response);
-			});
-		}).catch((error) => this.errorResponse(response, `${error}`));
+			this.logDapResponse(response);
+			this.sendResponse(response);
+
+		} catch (error) {
+			this.errorResponse(response, `${error}`);
+		}
+	}
+
+	private async convertStackFrame(thread: ThreadInfo, frame: VMFrame, isTopFrame: boolean, hasDebuggableFrames: boolean): Promise<DebugProtocol.StackFrame> {
+		const frameId = thread.storeData(frame);
+
+		if (frame.kind === "AsyncSuspensionMarker") {
+			const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, "<asynchronous gap>");
+			stackFrame.presentationHint = "label";
+			return stackFrame;
+		}
+
+		const frameName =
+			frame && frame.code && frame.code.name
+				? (
+					frame.code.name.startsWith(unoptimizedPrefix)
+						? frame.code.name.substring(unoptimizedPrefix.length)
+						: frame.code.name
+				)
+				: "<unknown>";
+		const location = frame.location;
+
+		if (!location) {
+			const stackFrame: DebugProtocol.StackFrame = new StackFrame(frameId, frameName);
+			stackFrame.presentationHint = "subtle";
+			return stackFrame;
+		}
+
+		const uri = location.script.uri;
+		let sourcePath = this.convertVMUriToSourcePath(uri);
+		let canShowSource = sourcePath && fs.existsSync(sourcePath);
+
+		// Download the source if from a "dart:" uri.
+		let sourceReference: number | undefined;
+		if (uri.startsWith("dart:") || uri.startsWith("org-dartlang-app:")) {
+			sourcePath = undefined;
+			sourceReference = thread.storeData(location.script);
+			canShowSource = true;
+		}
+
+		const shortName = this.formatUriForShortDisplay(uri);
+		const stackFrame: DebugProtocol.StackFrame = new StackFrame(
+			frameId,
+			frameName,
+			canShowSource ? new Source(shortName, sourcePath, sourceReference, undefined, location.script) : undefined,
+			0, 0,
+		);
+		// The top frame is only allowed to be deemphasized when it's an exception and there is some user-code in the
+		// stack (so the editor can walk up the stack to user code).
+		// If the reason for stopping was a breakpoint, step, etc., then we should always leave the frame focusable.
+		const isStoppedAtException = thread.exceptionReference !== 0;
+		const allowDeemphasizingFrame = !isTopFrame || (isStoppedAtException && hasDebuggableFrames);
+
+		// If we wouldn't debug this source, then deemphasize in the stack.
+		if (stackFrame.source && allowDeemphasizingFrame) {
+			const nonDebuggableFrameReason = this.getNonDebuggableFrameReason(uri);
+			if (nonDebuggableFrameReason === "SDK") {
+				stackFrame.source.origin = "from the Dart SDK";
+				stackFrame.source.presentationHint = "deemphasize";
+			} else if (nonDebuggableFrameReason === "PACKAGE") {
+				stackFrame.source.origin = uri.startsWith("package:flutter/") ? "from the Flutter framework" : "from Pub packages";
+				stackFrame.source.presentationHint = "deemphasize";
+			}
+		}
+
+		// Resolve the line and column information.
+		try {
+			const script = await thread.getScript(location.script);
+			const fileLocation = this.resolveFileLocation(script, location.tokenPos);
+			if (fileLocation) {
+				stackFrame.line = fileLocation.line;
+				stackFrame.column = fileLocation.column;
+			}
+		} catch (e) {
+			this.logger.error(e);
+		}
+
+		return stackFrame;
 	}
 
 	private getNonDebuggableFrameReason(uri: string): "SDK" | "PACKAGE" | undefined {
