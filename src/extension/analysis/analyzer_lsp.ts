@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
-import { window } from "vscode";
-import { HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { CancellationToken, CompletionItem, MarkdownString, MarkedString, Position, TextDocument, window } from "vscode";
+import { HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
@@ -10,6 +10,7 @@ import { dartVMPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
+import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
@@ -23,30 +24,63 @@ export class LspAnalyzer extends Analyzer {
 
 	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
-		const middleware: Middleware = {};
-		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, middleware);
+		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client.start());
 		this.disposables.push(this.fileTracker);
-
-		middleware.handleWorkDoneProgress = (token: ProgressToken, params: WorkDoneProgressBegin | WorkDoneProgressReport | WorkDoneProgressEnd, next: HandleWorkDoneProgressSignature) => {
-			if (params.kind === "begin")
-				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: true, suppressProgress: true });
-			else if (params.kind === "end")
-				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
-
-			next(token, params);
-		};
 
 		// tslint:disable-next-line: no-floating-promises
 		this.client.onReady().then(() => {
 			// Reminder: These onNotification calls only hold ONE handler!
 			// https://github.com/microsoft/vscode-languageserver-node/issues/174
+			// TODO: Remove this once Dart/Flutter stable LSP servers are using $/progress.
 			this.client.onNotification(AnalyzerStatusNotification.type, (params) => {
 				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: params.isAnalyzing });
 			});
 			this.onReadyCompleter.resolve();
 		});
+	}
+
+	private buildMiddleware(): Middleware {
+		// Why need this 🤷‍♂️?
+		function isLanguageValuePair(input: any): input is { language: string; value: string } {
+			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
+		}
+
+		function cleanDocString<T extends MarkedString>(input: T): T {
+			if (input instanceof MarkdownString)
+				return new MarkdownString(cleanDartdoc(input.value)) as T;
+			else if (typeof input === "string")
+				return cleanDartdoc(input) as T;
+			else if (isLanguageValuePair(input))
+				return { language: input.language, value: cleanDartdoc(input.value) } as T;
+			else
+				return input;
+		}
+
+		return {
+			handleWorkDoneProgress: (token: ProgressToken, params: WorkDoneProgressBegin | WorkDoneProgressReport | WorkDoneProgressEnd, next: HandleWorkDoneProgressSignature) => {
+				if (params.kind === "begin")
+					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: true, suppressProgress: true });
+				else if (params.kind === "end")
+					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
+
+				next(token, params);
+			},
+
+			resolveCompletionItem: (item: CompletionItem, token: CancellationToken, next: ResolveCompletionItemSignature) => {
+				if (item.documentation)
+					item.documentation = cleanDocString(item.documentation);
+				return next(item, token);
+			},
+
+			provideHover: async (document: TextDocument, position: Position, token: CancellationToken, next: ProvideHoverSignature) => {
+				const item = await next(document, position, token);
+				if (item?.contents)
+					item.contents = item.contents.map((s) => cleanDocString(s));
+				return item;
+			},
+		};
 	}
 
 	public async getDiagnosticServerPort(): Promise<{ port: number }> {
