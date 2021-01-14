@@ -15,6 +15,11 @@ import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, extApi, flut
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
 describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
+	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
+	// `flutter create .`!
+	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
+	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldExampleSubFolder)));
+
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
@@ -25,10 +30,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			this.skip();
 	});
 
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
-	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldExampleSubFolder)));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {

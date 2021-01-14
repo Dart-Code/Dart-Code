@@ -9,15 +9,14 @@ import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerm
 import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getPackages, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
-
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
 	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
+
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-	beforeEach("activate flutterTestMainFile", async () => {
-		await activate(flutterTestMainFile);
-	});
+
+	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
 
 	beforeEach(() => {
 		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));

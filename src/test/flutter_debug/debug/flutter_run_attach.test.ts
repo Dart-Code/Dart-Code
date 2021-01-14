@@ -15,14 +15,14 @@ describe("flutter run debugger (attach)", () => {
 			this.skip();
 	});
 
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
-	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
-
 	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
 	// `flutter create .`!
 	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
 	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldExampleSubFolder)));
+
+	// We have tests that require external packages.
+	before("get packages", () => getPackages());
+	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	beforeEach(() => {
 		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
