@@ -1,15 +1,19 @@
 import { escapeRegExp } from "../utils";
 
 const materialIconRegex = new RegExp(
-	`(?:${escapeRegExp("<p>")})?`
-	+ escapeRegExp('<i class="material-icons')
+	escapeRegExp('<i class="material-icons')
 	+ "(?:-([\\w]+))?"
 	+ escapeRegExp(' md-36">')
 	+ "([\\w\\s_]+)"
-	+ escapeRegExp('</i> &#x2014; material icon named "')
+	+ escapeRegExp("</i> &#x2014;")
+	+ "\\s+",
+	"gi",
+);
+const cupertinoIconRegex = new RegExp(
+	escapeRegExp(`<i class='cupertino-icons md-36'>`)
 	+ "([\\w\\s_]+)"
-	+ escapeRegExp('".')
-	+ `(?:${escapeRegExp("</p>")})?`,
+	+ escapeRegExp("</i> &#x2014;")
+	+ "\\s+",
 	"gi",
 );
 const dartDocDirectives = new RegExp(
@@ -34,7 +38,7 @@ export function cleanDartdoc(doc: string | undefined, iconPathFormat: string): s
 	doc = doc.replace(/\[:\S+:\]/g, (match) => `[${match.substring(2, match.length - 2)}]`);
 
 	// Replace material icon HTML blocks with markdown to load the images from the correct place.
-	doc = doc.replace(materialIconRegex, (_fullMatch: string, variant: string, icon: string, name: string) => {
+	doc = doc.replace(materialIconRegex, (_fullMatch: string, variant: string, icon: string) => {
 		if (variant) {
 			// HACK: Classnames don't match the filenames.
 			if (variant === "round")
@@ -42,8 +46,13 @@ export function cleanDartdoc(doc: string | undefined, iconPathFormat: string): s
 			icon = `${icon}_${variant}`;
 		}
 		const iconPath = iconPathFormat.replace("$1", `material/${icon}`);
-		// TODO: Escape name!
-		return `![${name}](${iconPath}|width=32,height=32)`;
+		return `![${icon}](${iconPath}|width=32,height=32)\n\n`;
+	});
+
+	// Replace cupertino icon HTML blocks with markdown to load the images from the correct place.
+	doc = doc.replace(cupertinoIconRegex, (_fullMatch: string, icon: string) => {
+		const iconPath = iconPathFormat.replace("$1", `cupertino/${icon}`);
+		return `![${icon}](${iconPath}|width=32,height=32)\n\n`;
 	});
 
 	// Remove any directives like {@template xxx}

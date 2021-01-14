@@ -4,14 +4,55 @@ import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { cleanDartdoc, extensionPath } from "../../shared/vscode/extension_utils";
 
 describe("cleanDartDoc", () => {
-	it("replaces Flutter's image tags with external Material image tags", () => {
+	it("replaces Flutter's image tags with Material image Markdown", () => {
 		const input = `
-		<i class="material-icons md-36">360</i> &#x2014; material icon named "360".
-		<p><i class="material-icons md-36">360</i> &#x2014; material icon named "360".</p>
+<i class="material-icons md-36">360</i> &#x2014; material icon named "360".
+
+<i class="material-icons-round md-36">class</i> &#x2014; material icon named "class rounded".
+
+<i class="material-icons-sharp md-36">class</i> &#x2014; material icon named "class sharp".
 		`;
 		const expected = `
-		![360](${Uri.file(extensionPath)}/media/doc-icons/material/360%402x.png|width=32,height=32)
-		![360](${Uri.file(extensionPath)}/media/doc-icons/material/360%402x.png|width=32,height=32)
+![360](${Uri.file(extensionPath)}/media/doc-icons/material/360%402x.png|width=32,height=32)
+
+material icon named "360".
+
+![class_rounded](${Uri.file(extensionPath)}/media/doc-icons/material/class_rounded%402x.png|width=32,height=32)
+
+material icon named "class rounded".
+
+![class_sharp](${Uri.file(extensionPath)}/media/doc-icons/material/class_sharp%402x.png|width=32,height=32)
+
+material icon named "class sharp".
+		`;
+		assert.equal(cleanDartdoc(input), expected);
+	});
+	it("replaces Flutter's image tags with Cupertino image Markdown", () => {
+		const input = `
+<i class='cupertino-icons md-36'>plus_circle</i> &#x2014; Cupertino icon named "plus circle".
+
+<i class='cupertino-icons md-36'>ant_circle_fill</i> &#x2014; Cupertino icon named "ant circle fill".
+
+<i class='cupertino-icons md-36'>arrow_clockwise_circle</i> &#x2014; Cupertino icon named "arrow clockwise circle".
+
+<i class='cupertino-icons md-36'>arrow_clockwise_circle_fill</i> &#x2014; Cupertino icon named "arrow clockwise circle fill".
+		`;
+		const expected = `
+![plus_circle](${Uri.file(extensionPath)}/media/doc-icons/cupertino/plus_circle%402x.png|width=32,height=32)
+
+Cupertino icon named "plus circle".
+
+![ant_circle_fill](${Uri.file(extensionPath)}/media/doc-icons/cupertino/ant_circle_fill%402x.png|width=32,height=32)
+
+Cupertino icon named "ant circle fill".
+
+![arrow_clockwise_circle](${Uri.file(extensionPath)}/media/doc-icons/cupertino/arrow_clockwise_circle%402x.png|width=32,height=32)
+
+Cupertino icon named "arrow clockwise circle".
+
+![arrow_clockwise_circle_fill](${Uri.file(extensionPath)}/media/doc-icons/cupertino/arrow_clockwise_circle_fill%402x.png|width=32,height=32)
+
+Cupertino icon named "arrow clockwise circle fill".
 		`;
 		assert.equal(cleanDartdoc(input), expected);
 	});
