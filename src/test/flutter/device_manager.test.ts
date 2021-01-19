@@ -160,14 +160,15 @@ describe("device_manager", () => {
 	it("shows unsupported platforms and prompts to run flutter create if selected", async () => {
 		await daemon.connect(desktop, false);
 		const devices = dm.getPickableDevices(["android"]);
-		const d = devices.find((e) => e.device.id === desktop.id);
+		const d = devices.find((e) => e.device.type === "platform-enabler" && e.device.platformType === "macos");
 
 		if (!d)
-			throw new Error("Desktop device was missing");
-		assert.equal(d.label, `Enable ${desktop.name}`);
+			throw new Error("macos platform enabler was missing");
+
+		assert.equal(d.label, `Enable macos for this project`);
 
 		const runCreatePrompt = sb.stub(window, "showInformationMessage")
-			.withArgs(runFlutterCreateDotPrompt(desktop.name), sinon.match.any)
+			.withArgs(runFlutterCreateDotPrompt(desktop.platformType), sinon.match.any)
 			.resolves(runFlutterCreateDotAction);
 
 		const flutterCreateCommand = sb.stub(commands, "executeCommand")
@@ -255,7 +256,7 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	}
 }
 
-const desktop: f.Device = {
+const desktop: f.Device & { platformType: string } = {
 	category: "desktop",
 	emulator: false,
 	emulatorId: undefined,

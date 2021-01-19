@@ -182,6 +182,14 @@ export function notUndefined<T>(x: T | undefined): x is T {
 	return x !== undefined;
 }
 
+export function notNull<T>(x: T | null): x is T {
+	return x !== null;
+}
+
+export function notNullOrUndefined<T>(x: T | null | undefined): x is T {
+	return notUndefined(x) && notNull(x);
+}
+
 export function asHexColor({ r, g, b, a }: { r: number, g: number, b: number, a: number }): string {
 	r = clamp(r, 0, 255);
 	g = clamp(g, 0, 255);

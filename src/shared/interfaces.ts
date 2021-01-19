@@ -110,7 +110,6 @@ export interface IFlutterDaemon extends IAmDisposable {
 }
 
 export type Emulator = (f.FlutterEmulator & { type: "emulator" }) | CustomEmulator;
-export type DisabledDevice = f.Device & { type: "disabled-device" };
 
 export interface CustomEmulator {
 	id: string;
@@ -126,6 +125,12 @@ export interface EmulatorCreator {
 	id?: undefined;
 	type: "emulator-creator";
 	platformType: "android";
+}
+
+export interface PlatformEnabler {
+	id?: undefined;
+	type: "platform-enabler";
+	platformType: f.PlatformType;
 }
 
 export interface CustomEmulatorDefinition {

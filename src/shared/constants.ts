@@ -131,7 +131,7 @@ export const reactivateDevToolsAction = "Reactivate DevTools";
 export const vmServiceListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
 export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
-export const runFlutterCreateDotPrompt = (deviceName: string) => `You must run 'flutter create .' to create the files required to use the ${deviceName} device for this project.`;
+export const runFlutterCreateDotPrompt = (platformType: string) => `You must run 'flutter create .' to create the files required to use the ${platformType} platform for this project.`;
 export const runFlutterCreateDotAction = "Run 'flutter create .'";
 export const cancelAction = "Cancel";
 

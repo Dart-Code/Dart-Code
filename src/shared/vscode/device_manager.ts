@@ -1,11 +1,11 @@
 import * as vs from "vscode";
-import { disposeAll, flatMap } from "../../shared/utils";
+import { disposeAll, flatMap, notNullOrUndefined, uniq } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { cancelAction, runFlutterCreateDotAction, runFlutterCreateDotPrompt } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
-import { CustomEmulator, CustomEmulatorDefinition, DisabledDevice, Emulator, EmulatorCreator, IFlutterDaemon, Logger } from "../interfaces";
+import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
 import { logProcess } from "../logging";
 import { safeSpawn } from "../processes";
 import { unique } from "../utils/array";
@@ -14,8 +14,9 @@ import { isRunningLocally } from "./utils";
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private statusBarItem: vs.StatusBarItem;
-	private devices: f.Device[] = [];
 	public currentDevice?: f.Device;
+	private devices: f.Device[] = [];
+	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
 	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean }) {
@@ -164,18 +165,18 @@ export class FlutterDeviceManager implements vs.Disposable {
 				await this.launchCustomEmulator(selection.device);
 				this.updateStatusBar();
 				break;
+			case "platform-enabler":
+				const action = await vs.window.showInformationMessage(
+					runFlutterCreateDotPrompt(selection.device.platformType),
+					runFlutterCreateDotAction,
+					cancelAction,
+				);
+				if (action !== runFlutterCreateDotAction)
+					return false;
+				await vs.commands.executeCommand("_flutter.create");
+
+				break;
 			case "device":
-				if (!selection.isSupported) {
-					const action = await vs.window.showInformationMessage(
-						runFlutterCreateDotPrompt(selection.device.name),
-						runFlutterCreateDotAction,
-						cancelAction,
-					);
-					if (action === runFlutterCreateDotAction)
-						await vs.commands.executeCommand("_flutter.create");
-					else
-						return false;
-				}
 				this.currentDevice = selection.device;
 				this.updateStatusBar();
 				break;
@@ -197,7 +198,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.map((d) => ({
 				description: d.category || d.platform,
 				device: d,
-				isSupported: true,
 				label: this.labelForDevice(d),
 			}));
 
@@ -210,15 +210,22 @@ export class FlutterDeviceManager implements vs.Disposable {
 				emulatorDevices.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1));
 		}
 
-		// Add any unsupported platforms that we have devices for (eg. things that could be
+		// Add any unsupported platforms that we have devices/emulators for (eg. things that could be
 		// enabled) to the bottom.
-		pickableItems = pickableItems.concat(
-			sortedDevices
+		const potentialPlatformTypes = uniq(
+			[
+				...sortedDevices.map((d) => d),
+				...this.emulators.map((e) => e),
+			]
 				.filter((d) => !this.isSupported(supportedTypes, d))
-				.map((d) => ({
-					device: d,
-					isSupported: false,
-					label: `Enable ${this.labelForDevice(d)}`,
+				.map((d) => d.platformType)
+				.filter(notNullOrUndefined)
+		);
+		pickableItems = pickableItems.concat(
+			potentialPlatformTypes
+				.map((p) => ({
+					device: { type: "platform-enabler", platformType: p },
+					label: `Enable ${p} for this project`,
 				})),
 		);
 
@@ -314,13 +321,14 @@ export class FlutterDeviceManager implements vs.Disposable {
 				} as Emulator;
 			}
 
-			const allEmulators = Object.values(allEmulatorsByID);
+			const emulators = Object.values(allEmulatorsByID);
+			this.emulators = emulators;
 
 			// Whenever we see emulators, record all their names.
-			for (const e of allEmulators)
+			for (const e of emulators)
 				this.knownEmulatorNames[e.id] = e.name;
 
-			return allEmulators;
+			return emulators;
 		} catch (e) {
 			this.logger.error({ message: e });
 			return [];
@@ -407,7 +415,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 				alwaysShow: false,
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
 				device: e,
-				isSupported: true,
 				label: showAsEmulators ? `Start ${e.name}` : e.name,
 			}));
 
@@ -416,7 +423,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 			emulators.push({
 				alwaysShow: true,
 				device: { type: "emulator-creator", platformType: "android", name: "Create Android emulator" } as EmulatorCreator,
-				isSupported: true,
 				label: "Create Android emulator",
 			});
 		}
@@ -480,4 +486,4 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 }
 
-type PickableDevice = vs.QuickPickItem & { device: f.Device | DisabledDevice | Emulator | EmulatorCreator, isSupported: boolean };
+type PickableDevice = vs.QuickPickItem & { device: f.Device | PlatformEnabler | Emulator | EmulatorCreator };
