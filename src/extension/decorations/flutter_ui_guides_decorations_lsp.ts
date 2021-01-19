@@ -14,7 +14,7 @@ export class FlutterUiGuideDecorationsLsp extends FlutterUiGuideDecorations {
 		// update that too.
 		this.disposables.push(this.analyzer.fileTracker.onFlutterOutline.listen((op) => {
 			const editor = vs.window.activeTextEditor;
-			if (editor && editor.document && fsPath(editor.document.uri) === fsPath(op.uri))
+			if (editor && editor.document && fsPath(editor.document.uri) === fsPath(vs.Uri.parse(op.uri)))
 				this.buildFromOutline(editor, op.outline);
 		}));
 	}
