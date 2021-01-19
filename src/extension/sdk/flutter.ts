@@ -3,6 +3,7 @@ import { initializingFlutterMessage, noAction, showLogAction, yesAction } from "
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
+import * as channels from "../commands/channels";
 import { ringLog } from "../extension";
 import { openLogContents } from "../utils";
 import { safeToolSpawn } from "../utils/processes";
@@ -17,7 +18,13 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 				title: initializingFlutterMessage,
 			},
 			async (progress, cancellationToken) => {
-				const proc = safeToolSpawn(undefined, flutterScript, ["config", "--machine"]);
+				const proc = safeToolSpawn(undefined, flutterScript, ["doctor", "-v"]);
+
+				// Show the output in an output channel so if it gets stuck the user can see it.
+				const channel = channels.createChannel(`flutter doctor`);
+				channel.show();
+				channels.runProcessInChannel(proc, channel);
+
 				cancellationToken.onCancellationRequested((e) => {
 					logger.info(`User canceled!`);
 					proc.kill();
@@ -34,8 +41,10 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 								openLogContents(undefined, ringLogContents);
 						});
 						reject();
-					} else
+					} else {
+						channel.hide();
 						resolve();
+					}
 				}));
 			},
 		);
