@@ -1,3 +1,4 @@
+import * as vs from "vscode";
 import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
@@ -12,7 +13,7 @@ export class FlutterIconDecorationsLsp extends FlutterIconDecorations {
 		this.computer = new IconRangeComputerLsp(logger);
 
 		this.subscriptions.push(this.analyzer.fileTracker.onFlutterOutline.listen(async (op) => {
-			if (this.activeEditor && fsPath(this.activeEditor.document.uri) === fsPath(op.uri)) {
+			if (this.activeEditor && fsPath(this.activeEditor.document.uri) === fsPath(vs.Uri.parse(op.uri))) {
 				this.update(op.outline);
 			}
 		}));
