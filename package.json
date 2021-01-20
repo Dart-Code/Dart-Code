@@ -584,6 +584,14 @@
 				"command": "_flutter.outline.refactor.flutter.removeWidget",
 				"title": "Remove this widget",
 				"category": "Flutter"
+			},
+			{
+				"command": "_dart.toggleSkippedTestVisibilityOn",
+				"title": "Show skipped tests"
+			},
+			{
+				"command": "_dart.toggleSkippedTestVisibilityOff",
+				"title": "Hide skipped tests"
 			}
 		],
 		"keybindings": [
@@ -1173,6 +1181,14 @@
 					"when": "view == dartTestTree",
 					"command": "dart.clearTestResults",
 					"group": "navigation@3"
+				},
+				{
+					"when": "view == dartTestTree && config.dart.showSkippedTests",
+					"command": "_dart.toggleSkippedTestVisibilityOff"
+				},
+				{
+					"when": "view == dartTestTree && !config.dart.showSkippedTests",
+					"command": "_dart.toggleSkippedTestVisibilityOn"
 				}
 			],
 			"view/item/context": [
@@ -1413,6 +1429,12 @@
 					"default": true,
 					"markdownDescription": "Whether to show logs from the `dart:developer` `log()` function in the debug console.",
 					"scope": "resource"
+				},
+				"dart.showSkippedTests": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Whether to show skipped tests in the test tree.",
+					"scope": "window"
 				},
 				"dart.flutterStructuredErrors": {
 					"type": "boolean",

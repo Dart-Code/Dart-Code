@@ -10,6 +10,7 @@ import { brightRed, yellow } from "../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
+import { config } from "../config";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
 type SuiteList = [SuiteNode, string[]];
@@ -25,6 +26,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
+		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOff", () => config.setShowSkippedTests(false)));
+		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOn", () => config.setShowSkippedTests(true)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)));
