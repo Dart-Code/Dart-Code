@@ -105,6 +105,7 @@ class Config {
 	get showDevToolsDebugToolBarButtons(): boolean { return this.getConfig<boolean>("showDevToolsDebugToolBarButtons", true); }
 	get showIgnoreQuickFixes(): boolean { return this.getConfig<boolean>("showIgnoreQuickFixes", true); }
 	get showMainCodeLens(): boolean { return this.getConfig<boolean>("showMainCodeLens", true); }
+	get showSkippedTests(): boolean { return this.getConfig<boolean>("showSkippedTests", true); }
 	get showTestCodeLens(): boolean { return this.getConfig<boolean>("showTestCodeLens", true); }
 	get showTodos(): boolean { return this.getConfig<boolean>("showTodos", true); }
 	get triggerSignatureHelpAutomatically(): boolean { return this.getConfig<boolean>("triggerSignatureHelpAutomatically", false); }
@@ -132,6 +133,7 @@ class Config {
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
 	public setPreviewLsp(value: boolean): Thenable<void> { return this.setConfig("previewLsp", value, ConfigurationTarget.Global); }
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Thenable<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
+	public setShowSkippedTests(value: boolean): Thenable<void> { return this.setConfig("showSkippedTests", value, ConfigurationTarget.Global); }
 	public setSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 	public setWarnWhenEditingFilesInPubCache(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesInPubCache", value, ConfigurationTarget.Global); }
