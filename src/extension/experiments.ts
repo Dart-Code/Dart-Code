@@ -61,7 +61,7 @@ class Experiment {
 
 class LspExperiment extends Experiment {
 	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
-		super(logger, workspaceContext, context, "lsp-prompt", 40);
+		super(logger, workspaceContext, context, "lsp-prompt", 60);
 	}
 
 	protected async activate(isFirstActivation: boolean): Promise<undefined | false> {
