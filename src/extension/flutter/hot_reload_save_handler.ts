@@ -1,5 +1,5 @@
 import * as path from "path";
-import { commands, DiagnosticSeverity, languages, Uri, workspace } from "vscode";
+import { commands, DiagnosticSeverity, languages, TextDocumentSaveReason, Uri, workspace } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { restartReasonSave } from "../../shared/constants";
 import { VmService } from "../../shared/enums";
@@ -14,8 +14,12 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private hotReloadDelayTimer: NodeJS.Timer | undefined;
 
+	// Track save reason so we can avoid hot reloading on auto-saves.
+	private lastSaveReason: TextDocumentSaveReason | undefined;
+
 	constructor(private readonly debugCommands: DebugCommands, private readonly flutterCapabilities: FlutterCapabilities) {
 		// Non-FS-watcher version (onDidSave).
+		this.disposables.push(workspace.onWillSaveTextDocument((e) => this.lastSaveReason = e.reason));
 		this.disposables.push(workspace.onDidSaveTextDocument((td) => {
 			// Bail if we're using fs-watcher instead. We still wire this
 			// handler up so we don't need to reload for this setting change.
@@ -43,6 +47,12 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	}
 
 	private triggerReload(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
+		// Don't do anything on auto-saves. If user is using auto-save, they will have
+		// to press Ctrl+S to trigger a reload-on-save.
+		if (this.lastSaveReason === TextDocumentSaveReason.FocusOut
+			|| this.lastSaveReason === TextDocumentSaveReason.AfterDelay)
+			return;
+
 		// Never do anything for files inside .dart_tool folders.
 		if (fsPath(file.uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
 			return;
