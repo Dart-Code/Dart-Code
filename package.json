@@ -178,12 +178,14 @@
 			{
 				"command": "dart.runAllSkippedTestsWithoutDebugging",
 				"title": "Run All Skipped Tests",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "./media/commands/test-run-skipped.svg"
 			},
 			{
 				"command": "dart.runAllFailedTestsWithoutDebugging",
 				"title": "Run All Failed Tests",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "./media/commands/test-run-failed.svg"
 			},
 			{
 				"command": "dart.rerunLastDebugSession",
@@ -1156,6 +1158,16 @@
 				{
 					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.removeWidget",
 					"command": "_flutter.outline.refactor.flutter.removeWidget"
+				},
+				{
+					"when": "view == dartTestTree",
+					"command": "dart.runAllFailedTestsWithoutDebugging",
+					"group": "navigation@1"
+				},
+				{
+					"when": "view == dartTestTree",
+					"command": "dart.runAllSkippedTestsWithoutDebugging",
+					"group": "navigation@2"
 				},
 				{
 					"when": "view == dartTestTree",
