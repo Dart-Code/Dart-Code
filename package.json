@@ -223,7 +223,11 @@
 			{
 				"command": "dart.clearTestResults",
 				"title": "Clear Test Results",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": {
+					"dark": "./media/commands/test-clear-dark.svg",
+					"light": "./media/commands/test-clear-light.svg"
+				}
 			},
 			{
 				"command": "dart.goToTests",
@@ -1152,6 +1156,11 @@
 				{
 					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.removeWidget",
 					"command": "_flutter.outline.refactor.flutter.removeWidget"
+				},
+				{
+					"when": "view == dartTestTree",
+					"command": "dart.clearTestResults",
+					"group": "navigation@3"
 				}
 			],
 			"view/item/context": [
