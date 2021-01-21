@@ -191,7 +191,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		flutterCapabilities.version = sdks.flutterVersion;
 		analytics.flutterSdkVersion = sdks.flutterVersion;
 
-		// If we're going to pass the DevTools URL to Flutter, we need to eagerly activate it
+		// If we're going to pass the DevTools URL to Flutter, we need to eagerly start it
 		// so it's already running.
 		if (config.shareDevToolsWithFlutter && flutterCapabilities.supportsDevToolsServerAddress) {
 			const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
