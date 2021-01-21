@@ -53,7 +53,7 @@ export class DebugCommands {
 	private onDebugSessionVmServiceAvailableEmitter = new vs.EventEmitter<DartDebugSessionInformation>();
 	public readonly onDebugSessionVmServiceAvailable = this.onDebugSessionVmServiceAvailableEmitter.event;
 	public readonly vmServices: VmServiceExtensions;
-	private readonly devTools: DevToolsManager;
+	public readonly devTools: DevToolsManager;
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.vmServices = new VmServiceExtensions(logger, this.sendServiceSetting);

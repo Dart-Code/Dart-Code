@@ -6,7 +6,7 @@ import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/
 import { dartPlatformName, flutterExtensionIdentifier, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks } from "../shared/interfaces";
+import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
@@ -190,6 +190,13 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (sdks.flutterVersion) {
 		flutterCapabilities.version = sdks.flutterVersion;
 		analytics.flutterSdkVersion = sdks.flutterVersion;
+
+		// If we're going to pass the DevTools URL to Flutter, we need to eagerly activate it
+		// so it's already running.
+		if (config.shareDevToolsWithFlutter && flutterCapabilities.supportsDevToolsServerAddress) {
+			const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
+			writableConfig.startDevToolsServerEagerly = true;
+		}
 	}
 
 	try {
@@ -425,7 +432,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, testTreeModel, flutterDaemon, deviceManager, dartCapabilities, flutterCapabilities);
+	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, testTreeModel, flutterDaemon, deviceManager, debugCommands, dartCapabilities, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", new DartDebugAdapterDescriptorFactory(logger, context)));
 	// Also the providers for the initial configs.
