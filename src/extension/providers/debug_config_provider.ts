@@ -18,7 +18,7 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
-import { debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
+import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config } from "../config";
 import { locateBestProjectRoot } from "../project";
@@ -28,7 +28,7 @@ import { getExcludedFolders, isFlutterProjectFolder, isInsideFolderNamed, isTest
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testTreeModel: TestTreeModel, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testTreeModel: TestTreeModel, private readonly daemon: IFlutterDaemon, private readonly deviceManager: FlutterDeviceManager, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		debugConfig.type = debugConfig.type || "dart";
@@ -286,7 +286,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
+		await this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -424,7 +424,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return vmServiceUriOrPort;
 	}
 
-	private setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager) {
+	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager): Promise<void> {
 		const conf = config.for(folder && folder.uri);
 
 		// Attach any properties that weren't explicitly set.
@@ -470,6 +470,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				: isAttach
 					? conf.flutterAttachAdditionalArgs
 					: conf.flutterRunAdditionalArgs;
+
+			if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress) {
+				const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
+				if (devtoolsUrl)
+					additionalArgs.push("--devtools-server-address");
+				additionalArgs.push(devtoolsUrl!.toString());
+			}
 
 			debugConfig.args = conf.flutterAdditionalArgs.concat(additionalArgs).concat(debugConfig.args);
 			debugConfig.forceFlutterVerboseMode = isLogging;

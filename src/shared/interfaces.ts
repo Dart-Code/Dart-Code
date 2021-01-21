@@ -37,6 +37,7 @@ export interface WritableWorkspaceConfig {
 	// config.
 
 	activateDevToolsEagerly?: boolean;
+	startDevToolsServerEagerly?: boolean;
 	dartSdkHomeLinux?: string;
 	dartSdkHomeMac?: string;
 	devtoolsActivateScript?: CustomScript;

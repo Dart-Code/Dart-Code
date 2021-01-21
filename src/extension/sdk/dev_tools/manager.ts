@@ -44,19 +44,33 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
-	private devtoolsUrl: Thenable<string> | undefined;
+	public devtoolsUrl: Thenable<string> | undefined;
 
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 
-		if (workspaceContext.config?.activateDevToolsEagerly) {
-			this.preActivate(true).then(
-				() => { this.logger.info(`Finished background activating DevTools`); },
-				(e) => {
-					this.logger.error("Failed to background activate DevTools");
-					this.logger.error(e);
-					vs.window.showErrorMessage(`Failed to activate DevTools: ${e}`);
-				});
+		if (workspaceContext.config?.activateDevToolsEagerly || workspaceContext.config?.startDevToolsServerEagerly) {
+			this
+				.preActivate(true)
+				.then(
+					() => { this.logger.info(`Finished background activating DevTools`); },
+					(e) => {
+						this.logger.error("Failed to background activate DevTools");
+						this.logger.error(e);
+						vs.window.showErrorMessage(`Failed to activate DevTools: ${e}`);
+					},
+				)
+				.then(
+					() => {
+						if (workspaceContext.config?.startDevToolsServerEagerly)
+							this.spawnIfRequired(true);
+					},
+					(e) => {
+						this.logger.error("Failed to background start DevTools");
+						this.logger.error(e);
+						vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
+					},
+				);
 		}
 	}
 
@@ -75,7 +89,7 @@ export class DevToolsManager implements vs.Disposable {
 		return page.pageId;
 	}
 
-	private async spawnIfRequired(): Promise<string | undefined> {
+	private async spawnIfRequired(silent = false): Promise<string | undefined> {
 		// If we're mid-silent-activation, wait until that's finished.
 		await this.devToolsActivationPromise;
 
@@ -96,11 +110,14 @@ export class DevToolsManager implements vs.Disposable {
 				}
 				this.capabilities.version = installedVersion;
 			}
-
-			this.devtoolsUrl = vs.window.withProgress({
-				location: vs.ProgressLocation.Notification,
-				title: "Starting Dart DevTools...",
-			}, async () => this.startServer());
+			if (silent) {
+				this.devtoolsUrl = this.startServer();
+			} else {
+				this.devtoolsUrl = vs.window.withProgress({
+					location: vs.ProgressLocation.Notification,
+					title: "Starting Dart DevTools...",
+				}, async () => this.startServer());
+			}
 		}
 
 		const url = await this.devtoolsUrl;
