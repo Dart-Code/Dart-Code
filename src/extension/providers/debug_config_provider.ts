@@ -472,10 +472,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					: conf.flutterRunAdditionalArgs;
 
 			if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress) {
-				const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
-				if (devtoolsUrl)
-					additionalArgs.push("--devtools-server-address");
-				additionalArgs.push(devtoolsUrl!.toString());
+				this.logger.info("Getting DevTools server address to pass to Flutter...");
+				try {
+					const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
+					if (devtoolsUrl) {
+						additionalArgs.push("--devtools-server-address");
+						additionalArgs.push(devtoolsUrl.toString());
+					} else {
+						this.logger.warn("DevTools server unavailable, not sending --devtools-server-address!");
+					}
+				} catch (e) {
+					this.logger.error(`Failed to get DevTools server address ${e}`);
+				}
 			}
 
 			debugConfig.args = conf.flutterAdditionalArgs.concat(additionalArgs).concat(debugConfig.args);
