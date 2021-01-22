@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as vs from "vscode";
 import { DebuggerType, TestStatus } from "../../../shared/enums";
+import { SuiteNode } from "../../../shared/test/test_model";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
@@ -213,7 +214,7 @@ describe("dart test debugger", () => {
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
-		assert.equal(actualResults, expectedResults);
+		assert.strictEqual(actualResults, expectedResults);
 	});
 
 	it("warns if multiple tests run when one was expected", async () => {
@@ -240,19 +241,19 @@ describe("dart test debugger", () => {
 			);
 		}
 
-		const topLevelNodes = await extApi.testTreeProvider.getChildren() || [];
+		const topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[] || [];
 		const topLevelTreeItems = await Promise.all(topLevelNodes?.map((child) => extApi.testTreeProvider.getTreeItem(child)));
 		assert.ok(topLevelTreeItems);
-		assert.equal(topLevelTreeItems.length, 4);
+		assert.strictEqual(topLevelTreeItems.length, 4);
 
-		assert.equal(topLevelTreeItems[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
-		assert.equal(topLevelNodes[0].status, TestStatus.Failed);
-		assert.equal(topLevelTreeItems[1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
-		assert.equal(topLevelNodes[1].status, TestStatus.Failed);
-		assert.equal(topLevelTreeItems[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
-		assert.equal(topLevelNodes[2].status, TestStatus.Passed);
-		assert.equal(topLevelTreeItems[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
-		assert.equal(topLevelNodes[3].status, TestStatus.Skipped);
+		assert.strictEqual(topLevelTreeItems[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
+		assert.strictEqual(topLevelNodes[0].highestStatus, TestStatus.Failed);
+		assert.strictEqual(topLevelTreeItems[1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
+		assert.strictEqual(topLevelNodes[1].highestStatus, TestStatus.Failed);
+		assert.strictEqual(topLevelTreeItems[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
+		assert.strictEqual(topLevelNodes[2].highestStatus, TestStatus.Passed);
+		assert.strictEqual(topLevelTreeItems[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
+		assert.strictEqual(topLevelNodes[3].highestStatus, TestStatus.Skipped);
 	});
 
 	it("runs all tests if given a folder", async () => {
@@ -353,6 +354,39 @@ describe("dart test debugger", () => {
 		}
 	}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
+	it("can rerun only skipped tests", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(helloWorldTestTreeFile);
+		config!.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		// Now re-run only failed tests.
+		await vs.commands.executeCommand("dart.runAllSkippedTestsWithoutDebugging");
+
+		await openFile(helloWorldTestTreeFile);
+		// Get the expected tree and filter it to only skipped tests.
+		// const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("skip.svg")).join("\n");
+		const expectedResults = `
+test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
+    failing group 1 [3/4 passed, {duration}ms] (fail.svg)
+        skipped test 1 [{duration}ms] (pass.svg)
+    skipped group 2 [4/6 passed, {duration}ms] (fail.svg)
+        skipped group 2.1 [2/3 passed, {duration}ms] (fail.svg)
+            passing test 1 [{duration}ms] (pass.svg)
+            failing test 1 [{duration}ms] (fail.svg)
+            skipped test 1 [{duration}ms] (pass.svg)
+        skipped test 1 [{duration}ms] (pass.svg)
+		`.trim();
+
+		// Get the actual tree, filtered only to those that ran in the last run.
+		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider, { onlyActive: true })).join("\n");
+		assert.strictEqual(actualResults, expectedResults);
+	});
+
 	it("can rerun only failed tests", async () => {
 		const testFiles = [helloWorldTestTreeFile, helloWorldTestBrokenFile];
 		for (const file of testFiles) {
@@ -375,7 +409,7 @@ describe("dart test debugger", () => {
 			const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("fail.svg")).join("\n");
 			// Get the actual tree, filtered only to those that ran in the last run.
 			const actualResults = (await makeTextTree(file, extApi.testTreeProvider, { onlyActive: true })).join("\n");
-			assert.equal(actualResults, expectedResults);
+			assert.strictEqual(actualResults, expectedResults);
 		}
 	});
 

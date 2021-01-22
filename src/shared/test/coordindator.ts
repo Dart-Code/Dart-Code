@@ -87,7 +87,8 @@ export class TestSessionCoordindator implements IAmDisposable {
 
 	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
 		const [suite, didCreate] = this.data.getOrCreateSuite(evt.suite.path);
-		suite.node.status = TestStatus.Waiting;
+		suite.node.clearStatuses();
+		suite.node.appendStatus(TestStatus.Waiting);
 		this.data.updateNode(suite.node);
 		this.data.updateNode();
 		// If this is the first suite, we've started a run and can show the tree.
@@ -155,14 +156,14 @@ export class TestSessionCoordindator implements IAmDisposable {
 		} else if (evt.result === "failure") {
 			testNode.status = TestStatus.Failed;
 		} else if (evt.result === "error")
-			testNode.status = TestStatus.Errored;
+			testNode.status = TestStatus.Failed;
 		else {
 			testNode.status = TestStatus.Unknown;
 		}
 		if (evt.time && testNode.testStartTime) {
 			testNode.duration = evt.time - testNode.testStartTime;
 			testNode.description = `${testNode.duration}ms`;
-			// Don't clear this, as concurrent runws will overwrite each
+			// Don't clear this, as concurrent runs will overwrite each
 			// other and then we'll get no time at the end.
 			// testNode.testStartTime = undefined;
 		}
@@ -171,7 +172,7 @@ export class TestSessionCoordindator implements IAmDisposable {
 		this.data.updateNode(testNode.parent);
 		this.data.updateSuiteStatuses(suite);
 
-		if ((testNode.status === TestStatus.Failed || testNode.status === TestStatus.Errored) && this.data.nextFailureIsFirst) {
+		if (testNode.status === TestStatus.Failed && this.data.nextFailureIsFirst) {
 			this.data.nextFailureIsFirst = false;
 			this.onFirstFailureEmitter.fire(testNode);
 		}
@@ -208,7 +209,8 @@ export class TestSessionCoordindator implements IAmDisposable {
 		if (!existingGroup || hasChangedParent)
 			groupNode.parent.groups.push(groupNode);
 
-		groupNode.status = TestStatus.Running;
+		groupNode.clearStatuses();
+		groupNode.appendStatus(TestStatus.Running);
 		this.data.updateNode(groupNode);
 		this.data.updateNode(groupNode.parent);
 	}

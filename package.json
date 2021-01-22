@@ -176,8 +176,13 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.runAllSkippedTestsWithoutDebugging",
+				"title": "Run All Skipped Tests",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.runAllFailedTestsWithoutDebugging",
-				"title": "Re-Run All Failed Tests",
+				"title": "Run All Failed Tests",
 				"category": "Dart"
 			},
 			{
@@ -250,6 +255,16 @@
 			{
 				"command": "dart.startWithoutDebuggingTest",
 				"title": "Run Without Debugging",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.startDebuggingSkippedTests",
+				"title": "Debug Skipped",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.startWithoutDebuggingSkippedTests",
+				"title": "Run Skipped",
 				"category": "Dart"
 			},
 			{
@@ -652,6 +667,10 @@
 					"when": "dart-code:dartProjectLoaded"
 				},
 				{
+					"command": "dart.runAllSkippedTestsWithoutDebugging",
+					"when": "dart-code:dartProjectLoaded"
+				},
+				{
 					"command": "dart.runAllFailedTestsWithoutDebugging",
 					"when": "dart-code:dartProjectLoaded"
 				},
@@ -705,6 +724,14 @@
 				},
 				{
 					"command": "dart.startWithoutDebuggingTest",
+					"when": "false"
+				},
+				{
+					"command": "dart.startDebuggingSkippedTests",
+					"when": "false"
+				},
+				{
+					"command": "dart.startWithoutDebuggingSkippedTests",
 					"when": "false"
 				},
 				{
@@ -1167,14 +1194,24 @@
 					"group": "4.5_exec@2"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testSuiteNodeWithFailures",
+					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testSuiteNodeWithFailures/",
 					"command": "dart.startDebuggingFailedTests",
 					"group": "4.5_exec@3"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testSuiteNodeWithFailures",
+					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testSuiteNodeWithFailures/",
 					"command": "dart.startWithoutDebuggingFailedTests",
 					"group": "4.5_exec@4"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testSuiteNodeWithSkips/",
+					"command": "dart.startDebuggingSkippedTests",
+					"group": "4.5_exec@5"
+				},
+				{
+					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testSuiteNodeWithSkips/",
+					"command": "dart.startWithoutDebuggingSkippedTests",
+					"group": "4.5_exec@6"
 				},
 				{
 					"when": "dart-code:dartProjectLoaded && viewItem == dart-code:testGroupNode",
