@@ -15,7 +15,6 @@ export enum TestStatus {
 	Skipped,
 	Unknown,
 	Failed,
-	Errored,
 	Running,
 }
 

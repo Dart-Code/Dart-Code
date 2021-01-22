@@ -13,7 +13,7 @@ enum TestSortOrder {
 }
 
 function getTestSortOrder(status: TestStatus): TestSortOrder {
-	if (status === TestStatus.Failed || status === TestStatus.Errored)
+	if (status === TestStatus.Failed)
 		return TestSortOrder.Top;
 	// https://github.com/Dart-Code/Dart-Code/issues/1125
 	// if (status === TestStatus.Skipped)
@@ -23,12 +23,11 @@ function getTestSortOrder(status: TestStatus): TestSortOrder {
 
 export abstract class TreeNode {
 	public isStale = false;
-	private _status: TestStatus = TestStatus.Unknown; // tslint:disable-line:variable-name
 	// To avoid the sort changing on every status change (stale, running, etc.) this
 	// field will be the last status the user would care about (pass/fail/skip).
 	// Default to Passed just so things default to the most likely (hopefully) place. This should
 	// never be used for rendering; only sorting.
-	private _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
+	protected _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
 	public suiteRunNumber = 1;
 	public isPotentiallyDeleted = false;
 
@@ -42,41 +41,51 @@ export abstract class TreeNode {
 
 	constructor(public readonly suiteData: SuiteData) { }
 
-	get status(): TestStatus {
-		return this._status;
-	}
-
-	set status(status: TestStatus) {
-		this._status = status;
-		this.description = undefined; // Clear old run duration.
-
-		if (status === TestStatus.Errored || status === TestStatus.Failed
-			|| status === TestStatus.Passed
-			|| status === TestStatus.Skipped) {
-			this.isStale = false;
-			this.isPotentiallyDeleted = false;
-			this._sort = getTestSortOrder(status);
-		}
-	}
-
-	get hasFailures(): boolean {
-		return this._status === TestStatus.Errored || this._status === TestStatus.Failed;
-	}
-
 	get sort(): TestSortOrder {
 		return this._sort;
 	}
 }
 
-export class SuiteNode extends TreeNode {
+export abstract class TestContainerNode extends TreeNode {
 	public readonly groups: GroupNode[] = [];
 	public readonly tests: TestNode[] = [];
 
-	constructor(suiteData: SuiteData) {
-		super(suiteData);
+	public readonly statuses = new Set<TestStatus>([TestStatus.Unknown]);
+	private _highestStatus = TestStatus.Unknown;
+
+	/// Adds a status to the existing statuses list.
+	public appendStatus(status: TestStatus) {
+		if (status === TestStatus.Failed
+			|| status === TestStatus.Passed
+			|| status === TestStatus.Skipped) {
+			this.isStale = false;
+			this.isPotentiallyDeleted = false;
+		}
+
+		this.statuses.add(status);
+		this.updateHighestPriorityStatus();
+
+		this._sort = getTestSortOrder(this._highestStatus);
 	}
 
-	get label(): undefined { return undefined; }
+	public clearStatuses() {
+		this.statuses.clear();
+		this.description = undefined;		// Clear old run duration.
+	}
+
+	public hasStatus(status: TestStatus): boolean {
+		return this.statuses.has(status);
+	}
+
+	private updateHighestPriorityStatus() {
+		this._highestStatus = this.statuses.size
+			? Math.max(...this.statuses)
+			: TestStatus.Unknown;
+	}
+
+	get highestStatus(): TestStatus {
+		return this._highestStatus;
+	}
 
 	get testCount(): number {
 		return this.children.map((t) => t.testCount)
@@ -94,6 +103,17 @@ export class SuiteNode extends TreeNode {
 			.filter(notUndefined)
 			.reduce((total, value) => total + value, 0);
 	}
+
+	abstract get label(): string | undefined;
+	abstract get children(): TreeNode[];
+}
+
+export class SuiteNode extends TestContainerNode {
+	constructor(suiteData: SuiteData) {
+		super(suiteData);
+	}
+
+	get label(): undefined { return undefined; }
 
 	get children(): TreeNode[] {
 		// Children should be:
@@ -107,10 +127,7 @@ export class SuiteNode extends TreeNode {
 	}
 }
 
-export class GroupNode extends TreeNode {
-	public readonly groups: GroupNode[] = [];
-	public readonly tests: TestNode[] = [];
-
+export class GroupNode extends TestContainerNode {
 	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public line: number | undefined, public column: number | undefined) {
 		super(suiteData);
 	}
@@ -121,24 +138,7 @@ export class GroupNode extends TreeNode {
 			: this.name || "<unnamed>";
 	}
 
-	get testCount(): number {
-		return this.children.map((t) => t.testCount)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	get testPassCount(): number {
-		return this.children.map((t) => t.testPassCount)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	get duration(): number | undefined {
-		return this.children
-			.map((t) => t.duration)
-			.filter(notUndefined)
-			.reduce((total, value) => total + value, 0);
-	}
-
-	// TODO: Remove phatom groups from this model, and handle only in the test notification handler.
+	// TODO: Remove phantom groups from this model, and handle only in the test notification handler.
 	get isPhantomGroup() {
 		return !this.name && this.parent instanceof SuiteNode;
 	}
@@ -157,6 +157,8 @@ export class GroupNode extends TreeNode {
 }
 
 export class TestNode extends TreeNode {
+	private _status = TestStatus.Unknown;
+
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
 	public duration: number | undefined;
@@ -179,6 +181,23 @@ export class TestNode extends TreeNode {
 
 	get testPassCount(): number {
 		return this.status === TestStatus.Passed ? 1 : 0;
+	}
+
+	get status(): TestStatus {
+		return this._status;
+	}
+
+	set status(value: TestStatus) {
+		this._status = value;
+
+		if (this._status === TestStatus.Failed
+			|| this._status === TestStatus.Passed
+			|| this._status === TestStatus.Skipped) {
+			this.isStale = false;
+			this.isPotentiallyDeleted = false;
+		}
+
+		this._sort = getTestSortOrder(this.status);
 	}
 }
 
@@ -256,29 +275,35 @@ export class TestTreeModel {
 		this.updateNode();
 	}
 
-	private updateStatusFromChildren(node: SuiteNode | GroupNode): TestStatus {
+	private updateStatusFromChildren(node: SuiteNode | GroupNode): Set<TestStatus> {
 		const childStatuses = node.children.length
-			? node.children.filter((c) =>
-				(c instanceof GroupNode && !c.isPhantomGroup)
-				|| (c instanceof TestNode && !c.hidden),
-			).map((c) => {
-				if (c instanceof GroupNode)
-					return this.updateStatusFromChildren(c);
-				if (c instanceof TestNode)
-					return c.status;
-				return TestStatus.Unknown;
-			})
+			? flatMap(
+				node.children.filter((c) =>
+					(c instanceof GroupNode && !c.isPhantomGroup)
+					|| (c instanceof TestNode && !c.hidden),
+				).map((c) => {
+					if (c instanceof GroupNode)
+						return [...this.updateStatusFromChildren(c)];
+					if (c instanceof TestNode)
+						return [c.status];
+					return [TestStatus.Unknown];
+				}),
+				(s) => s,
+			)
 			: [TestStatus.Unknown];
 
-		const newStatus = Math.max(...childStatuses);
-		if (newStatus !== node.status) {
-			node.status = newStatus;
-			this.updateNode(node);
+		const childStatusesSet = new Set<TestStatus>(childStatuses);
+		const statusAreEqual = node.statuses.size === childStatusesSet.size && [...childStatusesSet].every((s) => node.statuses.has(s));
+
+		if (!statusAreEqual) {
+			node.clearStatuses();
+			childStatuses.forEach((s) => node.appendStatus(s));
+			this.updateNode();
 		}
 
 		node.description = `${node.testPassCount}/${node.testCount} passed, ${node.duration}ms`;
 
-		return node.status;
+		return node.statuses;
 	}
 }
 

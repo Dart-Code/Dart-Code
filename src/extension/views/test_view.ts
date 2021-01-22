@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
+import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT, DART_TEST_SUITE_NODE_WITH_SKIPS_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { TestSessionCoordindator } from "../../shared/test/coordindator";
 import { GroupNode, SuiteNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
@@ -12,7 +12,7 @@ import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
-type SuiteWithFailures = [SuiteNode, string[]];
+type SuiteList = [SuiteNode, string[]];
 
 export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<TreeNode> {
 	private disposables: vs.Disposable[] = [];
@@ -25,10 +25,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, false), true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, false), false, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, true), true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, true), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("dart.clearTestResults", () => {
@@ -71,38 +74,46 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.coordindator.handleDebugSessionEnd(session.id);
 	}
 
+	private async runAllSkippedTests(): Promise<void> {
+		await this.runAllTests(TestStatus.Skipped);
+	}
+
 	private async runAllFailedTests(): Promise<void> {
+		await this.runAllTests(TestStatus.Failed);
+	}
+
+	private async runAllTests(onlyOfType: TestStatus): Promise<void> {
 		const topLevelNodes = this.getChildren() || [];
-		const suitesWithFailures = topLevelNodes
-			.filter((node) => node instanceof SuiteNode && node.hasFailures)
-			.map((m) => [m as SuiteNode, this.getTestNames(m, true)] as SuiteWithFailures);
-		if (suitesWithFailures.length === 0)
+		const suiteList = topLevelNodes
+			.filter((node) => node instanceof SuiteNode && node.hasStatus(onlyOfType))
+			.map((m) => [m as SuiteNode, this.getTestNames(m, onlyOfType)] as SuiteList);
+		if (suiteList.length === 0)
 			return;
 
-		const percentProgressPerTest = 99 / suitesWithFailures.map((swf) => swf[1].length).reduce((a, b) => a + b);
+		const percentProgressPerTest = 99 / suiteList.map((sl) => sl[1].length).reduce((a, b) => a + b);
 		await vs.window.withProgress(
 			{
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
-				title: "Re-running failed tests",
+				title: `Re-running ${onlyOfType.toString().toLowerCase()} tests`,
 			},
 			async (progress, token) => {
 				progress.report({ increment: 1 });
-				for (const suite of suitesWithFailures) {
+				for (const suite of suiteList) {
 					const node = suite[0];
 					const failedTestNames = suite[1];
 					if (token.isCancellationRequested)
 						break;
 					const suiteName = path.basename(node.suiteData.path);
 					progress.report({ message: suiteName });
-					await this.runTests(node, failedTestNames, false, true, token);
+					await this.runTests(node, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
 					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
 				}
 			},
 		);
 	}
 
-	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, token?: vs.CancellationToken) {
+	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests?: boolean, token?: vs.CancellationToken) {
 		const subs: vs.Disposable[] = [];
 		return new Promise<void>(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
@@ -127,7 +138,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 						!debug,
 						programPath,
 						testNames,
-						treeNode instanceof GroupNode
+						treeNode instanceof GroupNode,
+						runSkippedTests
 					),
 					name: `Tests ${path.basename(programPath)}`,
 				}
@@ -137,25 +149,25 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}).finally(() => disposeAll(subs));
 	}
 
-	private getTestNames(treeNode: TreeNode, failedOnly: boolean): string[] | undefined {
-		// If we're not running failed only, we can just use the test name/group name (or undefined for suite)
-		// directly.
-		if (!failedOnly) {
+	private getTestNames(treeNode: TreeNode, onlyOfStatus?: TestStatus): string[] | undefined {
+		// If we're getting all tests, we can just use the test name/group name (or undefined for suite) directly.
+		if (onlyOfStatus === undefined) {
 			if ((treeNode instanceof TestNode || treeNode instanceof GroupNode) && treeNode.name !== undefined)
 				return [treeNode.name];
+
 			return undefined;
 		}
 
-		// Otherwise, collect all descendants tests that are failed.
+		// Otherwise, collect all descendant tests that are of the specified type.
 		let names: string[] = [];
 		if (treeNode instanceof SuiteNode || treeNode instanceof GroupNode) {
 			for (const child of treeNode.children) {
-				const childNames = this.getTestNames(child, failedOnly);
+				const childNames = this.getTestNames(child, onlyOfStatus);
 				if (childNames)
 					names = names.concat(childNames);
 			}
-		} else if (treeNode instanceof TestNode && treeNode.hasFailures) {
-			if (treeNode.name !== undefined)
+		} else if (treeNode instanceof TestNode && treeNode.name !== undefined) {
+			if (treeNode.status === onlyOfStatus)
 				names.push(treeNode.name);
 		}
 
@@ -254,7 +266,6 @@ function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 			file = isStale ? "pass_stale" : "pass";
 			break;
 		case TestStatus.Failed:
-		case TestStatus.Errored:
 			file = isStale ? "fail_stale" : "fail";
 			break;
 		case TestStatus.Skipped:
@@ -280,10 +291,17 @@ class TreeItemBuilder {
 		// TODO: children is quite expensive, we should add a faster way.
 		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
 		const treeItem = new vs.TreeItem(vs.Uri.file(node.suiteData.path), collapseState);
-		treeItem.contextValue = node.hasFailures
-			? DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT
-			: DART_TEST_SUITE_NODE_CONTEXT;
-		treeItem.iconPath = getIconPath(node.status, node.isStale);
+
+		let contexts = "";
+
+		if (node.hasStatus(TestStatus.Failed))
+			contexts += `${DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT} `;
+
+		if (node.hasStatus(TestStatus.Skipped))
+			contexts += `${DART_TEST_SUITE_NODE_WITH_SKIPS_CONTEXT} `;
+
+		treeItem.contextValue = contexts.trimEnd() || DART_TEST_SUITE_NODE_CONTEXT;
+		treeItem.iconPath = getIconPath(node.highestStatus, node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displaySuite", arguments: [node], title: "" };
 		return treeItem;
@@ -294,7 +312,7 @@ class TreeItemBuilder {
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", collapseState);
 		treeItem.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
-		treeItem.iconPath = getIconPath(node.status, node.isStale);
+		treeItem.iconPath = getIconPath(node.highestStatus, node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displayGroup", arguments: [node], title: "" };
 		return treeItem;
