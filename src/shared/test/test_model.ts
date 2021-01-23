@@ -12,8 +12,8 @@ enum TestSortOrder {
 	Bottom, // Skips
 }
 
-function getTestSortOrder(status: TestStatus): TestSortOrder {
-	if (status === TestStatus.Failed)
+function getTestSortOrder(statuses: Set<TestStatus>): TestSortOrder {
+	if (statuses.has(TestStatus.Failed))
 		return TestSortOrder.Top;
 	// https://github.com/Dart-Code/Dart-Code/issues/1125
 	// if (status === TestStatus.Skipped)
@@ -65,7 +65,7 @@ export abstract class TestContainerNode extends TreeNode {
 		this.statuses.add(status);
 		this.updateHighestPriorityStatus();
 
-		this._sort = getTestSortOrder(this._highestStatus);
+		this._sort = getTestSortOrder(this.statuses);
 	}
 
 	public clearStatuses() {
@@ -197,7 +197,7 @@ export class TestNode extends TreeNode {
 			this.isPotentiallyDeleted = false;
 		}
 
-		this._sort = getTestSortOrder(this.status);
+		this._sort = getTestSortOrder(new Set<TestStatus>([this.status]));
 	}
 }
 

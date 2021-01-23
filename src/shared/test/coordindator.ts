@@ -87,7 +87,6 @@ export class TestSessionCoordindator implements IAmDisposable {
 
 	private handleSuiteNotification(suitePath: string, evt: SuiteNotification) {
 		const [suite, didCreate] = this.data.getOrCreateSuite(evt.suite.path);
-		suite.node.clearStatuses();
 		suite.node.appendStatus(TestStatus.Waiting);
 		this.data.updateNode(suite.node);
 		this.data.updateNode();
@@ -209,7 +208,6 @@ export class TestSessionCoordindator implements IAmDisposable {
 		if (!existingGroup || hasChangedParent)
 			groupNode.parent.groups.push(groupNode);
 
-		groupNode.clearStatuses();
 		groupNode.appendStatus(TestStatus.Running);
 		this.data.updateNode(groupNode);
 		this.data.updateNode(groupNode.parent);
