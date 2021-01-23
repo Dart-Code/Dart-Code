@@ -8,7 +8,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, delay, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, delay, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -412,6 +412,32 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 			const actualResults = (await makeTextTree(file, extApi.testTreeProvider, { onlyActive: true })).join("\n");
 			assert.strictEqual(actualResults, expectedResults);
 		}
+	});
+
+	it("can hide skipped tests from tree", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(helloWorldTestTreeFile);
+		config!.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		// First ensure the full results appear.
+		let expectedResults = getExpectedResults();
+		let actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		assert.equal(actualResults, expectedResults);
+
+		// Check toggling the setting results in the skipped nodes being removed.
+		await setConfigForTest("dart", "showSkippedTests", false);
+		expectedResults = getExpectedResults().split("\n").filter((l) => !l.includes("skip.svg")).join("\n");
+		actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		assert.equal(actualResults, expectedResults);
 	});
 
 	it.skip("removes stale results when running a full suite", () => {
