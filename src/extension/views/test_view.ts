@@ -23,6 +23,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 	constructor(private readonly data: TestTreeModel, private readonly coordindator: TestSessionCoordindator) {
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
+		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => this.handleConfigChange(e)));
 
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
@@ -67,6 +68,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				treeNode.column,
 			);
 		}));
+	}
+
+	private handleConfigChange(e: vs.ConfigurationChangeEvent) {
+		if (e.affectsConfiguration("dart.showSkippedTests"))
+			this.onDidChangeTreeDataEmitter.fire(undefined);
 	}
 
 	public handleDebugSessionCustomEvent(e: { session: vs.DebugSession; event: string; body?: any; }) {
@@ -223,10 +229,26 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		}
 	}
 
+	private skippedSettingFilter(node: TreeNode): boolean {
+		if (config.showSkippedTests)
+			return true;
+
+		if (node instanceof TestNode) {
+			// Show only if not skipped.
+			return node.status !== TestStatus.Skipped;
+		} else if (node instanceof GroupNode) {
+			// Show only if status is not exactly skipped.
+			return node.statuses.size !== 1 || !node.statuses.has(TestStatus.Skipped);
+		} else {
+			// Otherwise show (though nothing should get here).
+			return true;
+		}
+	}
+
 	public getChildren(element?: TreeNode): TreeNode[] {
 		// Nodes with children.
 		if (element instanceof SuiteNode || element instanceof GroupNode)
-			return element.children;
+			return element.children.filter(this.skippedSettingFilter);
 
 		// Notes without children (TestNode, or other unknown).
 		if (element)
