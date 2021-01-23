@@ -95,7 +95,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			{
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
-				title: `Re-running ${onlyOfType.toString().toLowerCase()} tests`,
+				title: `Running ${onlyOfType.toString().toLowerCase()} tests`,
 			},
 			async (progress, token) => {
 				progress.report({ increment: 1 });

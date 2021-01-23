@@ -364,12 +364,13 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		);
 
-		// Now re-run only failed tests.
+		// Now run only skipped tests.
 		await vs.commands.executeCommand("dart.runAllSkippedTestsWithoutDebugging");
 
 		await openFile(helloWorldTestTreeFile);
-		// Get the expected tree and filter it to only skipped tests.
-		// const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("skip.svg")).join("\n");
+		// Expected results differ from what's in the file as the skipped tests will be run
+		// and also the parent groups/suite status will be recomputed so they will be not-stale
+		// in the new results (so we can't just filter to skipped, like we do in the failed test).
 		const expectedResults = `
 test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
     failing group 1 [3/4 passed, {duration}ms] (fail.svg)
@@ -400,7 +401,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 			);
 		}
 
-		// Now re-run only failed tests.
+		// Now run only failed tests.
 		await vs.commands.executeCommand("dart.runAllFailedTestsWithoutDebugging");
 
 		for (const file of testFiles) {
