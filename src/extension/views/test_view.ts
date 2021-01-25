@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT, DART_TEST_SUITE_NODE_WITH_SKIPS_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
+import { DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { TestSessionCoordindator } from "../../shared/test/coordindator";
-import { GroupNode, SuiteNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, SuiteNode, TestContainerNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll } from "../../shared/utils";
 import { brightRed, yellow } from "../../shared/utils/colors";
@@ -319,16 +319,7 @@ class TreeItemBuilder {
 		// TODO: children is quite expensive, we should add a faster way.
 		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
 		const treeItem = new vs.TreeItem(vs.Uri.file(node.suiteData.path), collapseState);
-
-		let contexts = "";
-
-		if (node.hasStatus(TestStatus.Failed))
-			contexts += `${DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT} `;
-
-		if (node.hasStatus(TestStatus.Skipped))
-			contexts += `${DART_TEST_SUITE_NODE_WITH_SKIPS_CONTEXT} `;
-
-		treeItem.contextValue = contexts.trimEnd() || DART_TEST_SUITE_NODE_CONTEXT;
+		treeItem.contextValue = this.getContextValueForNode(node);
 		treeItem.iconPath = getIconPath(node.getHighestStatus(config.showSkippedTests), node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displaySuite", arguments: [node], title: "" };
@@ -338,7 +329,7 @@ class TreeItemBuilder {
 	public createGroupNode(node: GroupNode): vs.TreeItem {
 		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", collapseState);
-		treeItem.contextValue = DART_TEST_GROUP_NODE_CONTEXT;
+		treeItem.contextValue = this.getContextValueForNode(node);
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
 		treeItem.iconPath = getIconPath(node.getHighestStatus(config.showSkippedTests), node.isStale);
 		treeItem.description = node.description;
@@ -355,5 +346,18 @@ class TreeItemBuilder {
 		treeItem.command = { command: "_dart.displayTest", arguments: [node], title: "" };
 		return treeItem;
 	}
+
+	private getContextValueForNode(node: TestContainerNode): string {
+		let contexts = `${node instanceof SuiteNode ? DART_TEST_SUITE_NODE_CONTEXT : DART_TEST_GROUP_NODE_CONTEXT} `;
+
+		if (node.hasStatus(TestStatus.Failed))
+			contexts += `${DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT} `;
+
+		if (node.hasStatus(TestStatus.Skipped))
+			contexts += `${DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT} `;
+
+		return contexts.trimEnd();
+	}
 }
+
 const treeItemBuilder = new TreeItemBuilder();
