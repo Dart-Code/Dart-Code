@@ -341,7 +341,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.PubTest) {
-			this.testTreeModel.flagSuiteStart(debugConfig.program, !argsHaveTestNameFilter);
+			const suitePaths = isTestFolder(debugConfig.program)
+				? Object.values(this.testTreeModel.suites)
+					.map((suite) => suite.path)
+					.filter((p) => p.startsWith(debugConfig.program))
+				: [debugConfig.program];
+			for (const suitePath of suitePaths)
+				this.testTreeModel.flagSuiteStart(suitePath, !argsHaveTestNameFilter);
 		}
 
 		debugConfig.debuggerType = debugType;
