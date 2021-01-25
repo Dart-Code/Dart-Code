@@ -8,17 +8,13 @@ import { fsPath } from "../utils/fs";
 
 enum TestSortOrder {
 	Top, // Fails
-	Middle, // Passes
-	Bottom, // Skips
+	Bottom,
 }
 
 function getTestSortOrder(statuses: Set<TestStatus>): TestSortOrder {
 	if (statuses.has(TestStatus.Failed))
 		return TestSortOrder.Top;
-	// https://github.com/Dart-Code/Dart-Code/issues/1125
-	// if (status === TestStatus.Skipped)
-	// 	return TestSortOrder.Bottom;
-	return TestSortOrder.Middle;
+	return TestSortOrder.Bottom;
 }
 
 export abstract class TreeNode {
@@ -27,13 +23,13 @@ export abstract class TreeNode {
 	// field will be the last status the user would care about (pass/fail/skip).
 	// Default to Passed just so things default to the most likely (hopefully) place. This should
 	// never be used for rendering; only sorting.
-	protected _sort: TestSortOrder = TestSortOrder.Middle; // tslint:disable-line:variable-name
+	protected _sort: TestSortOrder = TestSortOrder.Bottom; // tslint:disable-line:variable-name
 	public suiteRunNumber = 1;
 	public isPotentiallyDeleted = false;
 
 	public abstract label: string | undefined;
 
-	public abstract testCount: number;
+	public abstract getTestCount(includeSkipped: boolean): number;
 	public abstract testPassCount: number;
 
 	public abstract duration: number | undefined;
@@ -51,7 +47,6 @@ export abstract class TestContainerNode extends TreeNode {
 	public readonly tests: TestNode[] = [];
 
 	public readonly statuses = new Set<TestStatus>([TestStatus.Unknown]);
-	private _highestStatus = TestStatus.Unknown;
 
 	/// Adds a status to the existing statuses list.
 	public appendStatus(status: TestStatus) {
@@ -63,7 +58,6 @@ export abstract class TestContainerNode extends TreeNode {
 		}
 
 		this.statuses.add(status);
-		this.updateHighestPriorityStatus();
 
 		this._sort = getTestSortOrder(this.statuses);
 	}
@@ -77,18 +71,19 @@ export abstract class TestContainerNode extends TreeNode {
 		return this.statuses.has(status);
 	}
 
-	private updateHighestPriorityStatus() {
-		this._highestStatus = this.statuses.size
-			? Math.max(...this.statuses)
+	getHighestStatus(includeSkipped: boolean): TestStatus {
+		// Always include Skipped status for Suite nodes that have only that status, else they'll
+		// show as unknown.
+		if (!includeSkipped && this instanceof SuiteNode && this.statuses.size === 1 && this.statuses.has(TestStatus.Skipped))
+			includeSkipped = true;
+		const validStatues = [...this.statuses].filter((s) => includeSkipped || s !== TestStatus.Skipped);
+		return validStatues.length
+			? Math.max(...validStatues)
 			: TestStatus.Unknown;
 	}
 
-	get highestStatus(): TestStatus {
-		return this._highestStatus;
-	}
-
-	get testCount(): number {
-		return this.children.map((t) => t.testCount)
+	getTestCount(includeSkipped: boolean): number {
+		return this.children.map((t) => t.getTestCount(includeSkipped))
 			.reduce((total, value) => total + value, 0);
 	}
 
@@ -175,8 +170,8 @@ export class TestNode extends TreeNode {
 			: (this.name || "<unnamed>");
 	}
 
-	get testCount(): number {
-		return 1;
+	getTestCount(includeSkipped: boolean): number {
+		return includeSkipped || this.status !== TestStatus.Skipped ? 1 : 0;
 	}
 
 	get testPassCount(): number {
@@ -213,6 +208,8 @@ export class TestTreeModel {
 
 	// TODO: Make private?
 	public readonly suites: { [key: string]: SuiteData } = {};
+
+	public constructor(private readonly config: { showSkippedTests: boolean }) { }
 
 	public flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
 		this.isNewTestRun = true;
@@ -263,27 +260,38 @@ export class TestTreeModel {
 		this.updateNode();
 	}
 
+	public handleConfigChange(): void {
+		// When config changes, some things may change (for example
+		// skipped tests may be hidden, so the test counts need
+		// recomputing).
+
+		Object.values(this.suites).forEach((suite) => this.rebuildSuiteNode(suite));
+	}
+
 	public updateNode(node?: TreeNode) {
 		this.onDidChangeDataEmitter.fire(node);
 	}
 
-	public updateSuiteStatuses(suite: SuiteData) {
+	public rebuildSuiteNode(suite: SuiteData) {
 		// Walk the tree to get the status.
-		this.updateStatusFromChildren(suite.node);
+		this.rebuildNode(suite.node);
 
 		// Update top level list, as we could've changed order.
 		this.updateNode();
 	}
 
-	private updateStatusFromChildren(node: SuiteNode | GroupNode): Set<TestStatus> {
+	/// Rebuilds any data on a node that is dependent on its children.
+	private rebuildNode(node: SuiteNode | GroupNode): void {
 		const childStatuses = node.children.length
 			? flatMap(
 				node.children.filter((c) =>
 					(c instanceof GroupNode && !c.isPhantomGroup)
 					|| (c instanceof TestNode && !c.hidden),
 				).map((c) => {
-					if (c instanceof GroupNode)
-						return [...this.updateStatusFromChildren(c)];
+					if (c instanceof GroupNode) {
+						this.rebuildNode(c);
+						return [...c.statuses];
+					}
 					if (c instanceof TestNode)
 						return [c.status];
 					return [TestStatus.Unknown];
@@ -301,9 +309,7 @@ export class TestTreeModel {
 			this.updateNode();
 		}
 
-		node.description = `${node.testPassCount}/${node.testCount} passed, ${node.duration}ms`;
-
-		return node.statuses;
+		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed, ${node.duration}ms`;
 	}
 }
 

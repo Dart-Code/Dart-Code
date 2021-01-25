@@ -420,7 +420,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	util.logTime("All other stuff before debugger..");
 
-	const testTreeModel = new TestTreeModel();
+	const testTreeModel = new TestTreeModel(config);
 	const testCoordinator = new TestSessionCoordindator(logger, testTreeModel);
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 

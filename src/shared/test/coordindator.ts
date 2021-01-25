@@ -141,7 +141,7 @@ export class TestSessionCoordindator implements IAmDisposable {
 		this.data.updateNode(testNode);
 		this.data.updateNode(testNode.parent);
 		if (!testNode.hidden)
-			this.data.updateSuiteStatuses(suite);
+			this.data.rebuildSuiteNode(suite);
 	}
 
 	private handleTestDoneNotification(suite: SuiteData, evt: TestDoneNotification) {
@@ -169,7 +169,7 @@ export class TestSessionCoordindator implements IAmDisposable {
 
 		this.data.updateNode(testNode);
 		this.data.updateNode(testNode.parent);
-		this.data.updateSuiteStatuses(suite);
+		this.data.rebuildSuiteNode(suite);
 
 		if (testNode.status === TestStatus.Failed && this.data.nextFailureIsFirst) {
 			this.data.nextFailureIsFirst = false;
@@ -234,7 +234,7 @@ export class TestSessionCoordindator implements IAmDisposable {
 			this.data.updateNode(t);
 		});
 
-		this.data.updateSuiteStatuses(suite);
+		this.data.rebuildSuiteNode(suite);
 	}
 
 	private handlePrintNotification(suite: SuiteData, evt: PrintNotification) {
