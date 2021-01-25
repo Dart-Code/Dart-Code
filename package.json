@@ -174,19 +174,28 @@
 				"command": "dart.runAllTestsWithoutDebugging",
 				"title": "Run All Tests",
 				"category": "Dart",
-				"icon": "$(play)"
+				"icon": {
+					"dark": "./media/commands/test-run-all-dark.svg",
+					"light": "./media/commands/test-run-all-light.svg"
+				}
 			},
 			{
 				"command": "dart.runAllSkippedTestsWithoutDebugging",
 				"title": "Run All Skipped Tests",
 				"category": "Dart",
-				"icon": "./media/commands/test-run-skipped.svg"
+				"icon": {
+					"dark": "./media/commands/test-run-skipped-dark.svg",
+					"light": "./media/commands/test-run-skipped-light.svg"
+				}
 			},
 			{
 				"command": "dart.runAllFailedTestsWithoutDebugging",
 				"title": "Run All Failed Tests",
 				"category": "Dart",
-				"icon": "./media/commands/test-run-failed.svg"
+				"icon": {
+					"dark": "./media/commands/test-run-failed-dark.svg",
+					"light": "./media/commands/test-run-failed-light.svg"
+				}
 			},
 			{
 				"command": "dart.rerunLastDebugSession",
