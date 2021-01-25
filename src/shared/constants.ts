@@ -38,8 +38,8 @@ export const FLUTTER_DOWNLOAD_URL = "https://flutter.dev/setup/";
 export const IS_LSP_CONTEXT = "dart-code:isLsp";
 
 export const DART_TEST_SUITE_NODE_CONTEXT = "dart-code:testSuiteNode";
-export const DART_TEST_SUITE_NODE_WITH_SKIPS_CONTEXT = "dart-code:testSuiteNodeWithSkips";
-export const DART_TEST_SUITE_NODE_WITH_FAILURES_CONTEXT = "dart-code:testSuiteNodeWithFailures";
+export const DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT = "dart-code:testContainerNodeWithSkips";
+export const DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT = "dart-code:testContainerNodeWithFailures";
 export const DART_TEST_GROUP_NODE_CONTEXT = "dart-code:testGroupNode";
 export const DART_TEST_TEST_NODE_CONTEXT = "dart-code:testTestNode";
 
@@ -184,4 +184,3 @@ export const dartRecommendedConfig = {
 	// strings. This setting will prevent that.
 	"editor.wordBasedSuggestions": false,
 };
-
