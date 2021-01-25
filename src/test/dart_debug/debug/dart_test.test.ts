@@ -242,18 +242,23 @@ describe("dart test debugger", () => {
 		}
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[] || [];
-		const topLevelTreeItems = await Promise.all(topLevelNodes?.map((child) => extApi.testTreeProvider.getTreeItem(child)));
-		assert.ok(topLevelTreeItems);
-		assert.strictEqual(topLevelTreeItems.length, 4);
+		assert.strictEqual(topLevelNodes.length, 4);
 
-		assert.strictEqual(topLevelTreeItems[0].resourceUri!.toString(), helloWorldTestBrokenFile.toString());
-		assert.strictEqual(topLevelNodes[0].highestStatus, TestStatus.Failed);
-		assert.strictEqual(topLevelTreeItems[1].resourceUri!.toString(), helloWorldTestTreeFile.toString());
-		assert.strictEqual(topLevelNodes[1].highestStatus, TestStatus.Failed);
-		assert.strictEqual(topLevelTreeItems[2].resourceUri!.toString(), helloWorldTestMainFile.toString());
-		assert.strictEqual(topLevelNodes[2].highestStatus, TestStatus.Passed);
-		assert.strictEqual(topLevelTreeItems[3].resourceUri!.toString(), helloWorldTestSkipFile.toString());
-		assert.strictEqual(topLevelNodes[3].highestStatus, TestStatus.Skipped);
+
+		let actualOrder = "";
+		for (const node of topLevelNodes) {
+			const treeItem = await extApi.testTreeProvider.getTreeItem(node);
+			actualOrder += `${treeItem.resourceUri!.toString()} (${TestStatus[node.getHighestStatus(true)]} / ${TestStatus[node.getHighestStatus(false)]})\n`;
+		}
+
+		const expectedOrder = `
+${helloWorldTestBrokenFile} (Failed / Failed)
+${helloWorldTestTreeFile} (Failed / Failed)
+${helloWorldTestMainFile} (Passed / Passed)
+${helloWorldTestSkipFile} (Skipped / Skipped)
+		`;
+
+		assert.strictEqual(actualOrder.trim(), expectedOrder.trim());
 	});
 
 	it("runs all tests if given a folder", async () => {
@@ -427,17 +432,29 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 		// First ensure the full results appear.
 		let expectedResults = getExpectedResults();
 		let actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
-		assert.ok(expectedResults);
 		assert.ok(actualResults);
-		assert.equal(actualResults, expectedResults);
+		assert.strictEqual(actualResults, expectedResults);
 
 		// Check toggling the setting results in the skipped nodes being removed.
 		await setConfigForTest("dart", "showSkippedTests", false);
-		expectedResults = getExpectedResults().split("\n").filter((l) => !l.includes("skip.svg")).join("\n");
+		// Expected results differ from what's in the file not only because skipped tests are hidden, but because
+		// the counts on the containing nodes will also be reduced.
+		expectedResults = `
+test/tree_test.dart [4/6 passed, {duration}ms] (fail.svg)
+    failing group 1 [2/3 passed, {duration}ms] (fail.svg)
+        group 1.1 [1/1 passed, {duration}ms] (pass.svg)
+            passing test 1 with ' some " quotes in name [{duration}ms] (pass.svg)
+        passing test 1 2 [{duration}ms] (pass.svg)
+        failing test 1 some string [{duration}ms] (fail.svg)
+    skipped group 2 [1/2 passed, {duration}ms] (fail.svg)
+        passing test 1 [{duration}ms] (pass.svg)
+        failing test 1 [{duration}ms] (fail.svg)
+    passing group 3 [1/1 passed, {duration}ms] (pass.svg)
+        passing test 1 [{duration}ms] (pass.svg)
+		`.trim();
 		actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
-		assert.ok(expectedResults);
 		assert.ok(actualResults);
-		assert.equal(actualResults, expectedResults);
+		assert.strictEqual(actualResults, expectedResults);
 	});
 
 	it.skip("removes stale results when running a full suite", () => {

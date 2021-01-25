@@ -72,7 +72,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 	private handleConfigChange(e: vs.ConfigurationChangeEvent) {
 		if (e.affectsConfiguration("dart.showSkippedTests"))
-			this.onDidChangeTreeDataEmitter.fire(undefined);
+			this.data.handleConfigChange();
 	}
 
 	public handleDebugSessionCustomEvent(e: { session: vs.DebugSession; event: string; body?: any; }) {
@@ -256,6 +256,9 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 		// All top-level suites.
 		return Object.values(this.data.suites)
+			// We don't filter skipped out, as we want the node as a convenient
+			// way for the user to click the node and run Run Skipped Tests
+			// for the suite.
 			.map((suite) => suite.node)
 			.sort((a, b) => {
 				// Sort by .sort first.
@@ -317,7 +320,7 @@ class TreeItemBuilder {
 		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
 		const treeItem = new vs.TreeItem(vs.Uri.file(node.suiteData.path), collapseState);
 		treeItem.contextValue = this.getContextValueForNode(node);
-		treeItem.iconPath = getIconPath(node.highestStatus, node.isStale);
+		treeItem.iconPath = getIconPath(node.getHighestStatus(config.showSkippedTests), node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displaySuite", arguments: [node], title: "" };
 		return treeItem;
@@ -328,7 +331,7 @@ class TreeItemBuilder {
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", collapseState);
 		treeItem.contextValue = this.getContextValueForNode(node);
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
-		treeItem.iconPath = getIconPath(node.highestStatus, node.isStale);
+		treeItem.iconPath = getIconPath(node.getHighestStatus(config.showSkippedTests), node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displayGroup", arguments: [node], title: "" };
 		return treeItem;
