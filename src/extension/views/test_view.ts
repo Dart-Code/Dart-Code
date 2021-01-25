@@ -29,8 +29,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOff", () => config.setShowSkippedTests(false)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOn", () => config.setShowSkippedTests(true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false)));
