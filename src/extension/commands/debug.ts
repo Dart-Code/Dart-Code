@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext } from "../../shared/constants";
+import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, Logger, LogMessage } from "../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
 import { flatMap, PromiseCompleter } from "../../shared/utils";
 import { findProjectFolders, fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
@@ -54,6 +54,7 @@ export class DebugCommands {
 	public readonly onDebugSessionVmServiceAvailable = this.onDebugSessionVmServiceAvailableEmitter.event;
 	public readonly vmServices: VmServiceExtensions;
 	public readonly devTools: DevToolsManager;
+	private suppressFlutterWidgetErrors = false;
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.vmServices = new VmServiceExtensions(logger, this.sendServiceSetting);
@@ -121,11 +122,10 @@ export class DebugCommands {
 
 			// Only show a notification if we were not triggered automatically.
 			const notify = !options || options.triggeredAutomatically !== true;
-			const reuseWindows = config.devToolsReuseWindows;
 			const page = options?.page;
 
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { embed: config.embedDevTools, reuseWindows, notify, page });
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, page });
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else {
@@ -549,6 +549,34 @@ export class DebugCommands {
 				await new Promise((resolve) => setTimeout(resolve, 400));
 			}
 			session.progress[e.body.progressID]?.complete();
+		} else if (e.event === "dart.flutter.widgetErrorInspectData") {
+			if (this.suppressFlutterWidgetErrors || !config.showInspectorNotificationsForWidgetErrors)
+				return;
+
+			const data = e.body as WidgetErrorInspectData;
+			if (data.devToolsUrl !== (await this.devTools.devtoolsUrl))
+				return;
+
+			// To avoid spam, when we show this dialog we will set a flag that prevents any more
+			// of these types of dialogs until it is dismissed or 5 seconds have passed.
+			this.suppressFlutterWidgetErrors = true;
+			const timer = setTimeout(() => this.suppressFlutterWidgetErrors = false, 5000);
+
+			const inspectAction = `Inspect Widget`;
+			const choice = await vs.window.showWarningMessage(data.errorDescription, inspectAction, doNotAskAgainAction);
+			if (choice === inspectAction && session.vmServiceUri) {
+				this.devTools.spawnForSession(
+					session as DartDebugSessionInformation & { vmServiceUri: string },
+					{
+						inspectorRef: data.inspectorReference,
+						page: widgetInspectorPage,
+					},
+				);
+			} else if (choice === doNotAskAgainAction) {
+				config.setShowInspectorNotificationsForWidgetErrors(false);
+			}
+			clearTimeout(timer);
+			this.suppressFlutterWidgetErrors = false;
 		}
 	}
 

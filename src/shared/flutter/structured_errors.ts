@@ -12,6 +12,7 @@ export interface DiagnosticsNode {
 	properties: DiagnosticsNode[];
 	children: DiagnosticsNode[];
 	style: DiagnosticsNodeStyle;
+	value?: string;
 }
 
 // If we have per-type properties, handle them like this.
@@ -21,8 +22,10 @@ export interface DiagnosticsNode {
 
 export enum DiagnosticsNodeType {
 	ErrorDescription = "ErrorDescription",
+	ErrorSummary = "ErrorSummary",
 	ErrorSpacer = "ErrorSpacer",
 	DiagnosticsStackTrace = "DiagnosticsStackTrace",
+	DevToolsDeepLinkProperty = "DevToolsDeepLinkProperty",
 }
 
 export enum DiagnosticsNodeLevel {

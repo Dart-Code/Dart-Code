@@ -181,3 +181,9 @@ export interface DevToolsPage {
 	legacyPageId?: string;
 	title: string;
 }
+
+export interface WidgetErrorInspectData {
+	errorDescription: string;
+	devToolsUrl: string;
+	inspectorReference: string;
+}

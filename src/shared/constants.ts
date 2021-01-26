@@ -136,9 +136,10 @@ export const runFlutterCreateDotPrompt = (platformType: string) => `You must run
 export const runFlutterCreateDotAction = "Run 'flutter create .'";
 export const cancelAction = "Cancel";
 
+export const widgetInspectorPage: DevToolsPage = { pageId: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" };
 export const devToolsPages: DevToolsPage[] = [
 	// First entry is the default page.
-	{ pageId: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" },
+	widgetInspectorPage,
 	{ pageId: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", legacyPageId: "performance", title: "CPU Profiler" },
 	{ pageId: "memory", commandId: "dart.openDevToolsMemory", title: "Memory" },
 	{ pageId: "performance", commandId: "dart.openDevToolsPerformance", legacyPageId: "timeline", title: "Performance" },

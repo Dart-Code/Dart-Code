@@ -6,7 +6,7 @@ import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "..
 import { LogCategory, VmService, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
-import { Logger } from "../shared/interfaces";
+import { Logger, WidgetErrorInspectData } from "../shared/interfaces";
 import { grey, grey2 } from "../shared/utils/colors";
 import { getSdkVersion } from "../shared/utils/fs";
 import { DartDebugSession } from "./dart_debug_impl";
@@ -408,6 +408,9 @@ export class FlutterDebugSession extends DartDebugSession {
 	private handleFlutterErrorEvent(event: VMEvent) {
 		const error = event.extensionData as FlutterErrorData;
 		this.logFlutterErrorToUser(error);
+
+		if (this.useInspectorNotificationsForWidgetErrors)
+			this.tryParseDevToolsInspectLink(error);
 	}
 
 	private logFlutterErrorToUser(error: FlutterErrorData) {
@@ -437,8 +440,12 @@ export class FlutterDebugSession extends DartDebugSession {
 			if (node.showSeparator !== false && node.description)
 				line += ": ";
 		}
-		if (node.description)
-			line += node.description;
+		if (node.description) {
+			if (this.useInspectorNotificationsForWidgetErrors && node.type === DiagnosticsNodeType.DevToolsDeepLinkProperty)
+				line += "You can inspect this widget using the 'Inspect Widget' button in the VS Code notification.";
+			else
+				line += node.description;
+		}
 		line = line.trimRight();
 
 		// For text that is not part of a stack trace and is not an Error or Summary we
@@ -487,6 +494,29 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 		if (node.children)
 			node.children.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
+	}
+
+	static flutterErrorDevToolsUrlPattern = new RegExp("(https?://[^/]+/)[^ ]+&inspectorRef=([^ &\\n]+)");
+	private tryParseDevToolsInspectLink(error: FlutterErrorData) {
+		try {
+			const errorSummaryNode = error.properties?.find((p) => p.type === DiagnosticsNodeType.ErrorSummary);
+			const devToolsLinkNode = error.properties?.find((p) => p.type === DiagnosticsNodeType.DevToolsDeepLinkProperty);
+
+			// "A RenderFlex overflowed by 5551 pixels on the right."
+			const errorDescription = errorSummaryNode?.description;
+
+			// "http://127.0.0.1:9100/#/inspector?uri=http%3A%2F%2F127.0.0.1%3A49905%2FC-UKCEA9hEQ%3D%2F&inspectorRef=inspector-0"
+			const devToolsInspectWidgetUrl = devToolsLinkNode?.value;
+			const devToolsInspectWidgetUrlMatch = devToolsInspectWidgetUrl ? FlutterDebugSession.flutterErrorDevToolsUrlPattern.exec(devToolsInspectWidgetUrl) : undefined;
+			const devToolsUrl = devToolsInspectWidgetUrlMatch?.length ? devToolsInspectWidgetUrlMatch[1] : undefined;
+			const inspectorReference = devToolsInspectWidgetUrlMatch?.length ? devToolsInspectWidgetUrlMatch[2] : undefined;
+
+			if (errorDescription && devToolsUrl && inspectorReference) {
+				this.sendEvent(new Event("dart.flutter.widgetErrorInspectData", { errorDescription, devToolsUrl, inspectorReference } as WidgetErrorInspectData));
+			}
+		} catch (e) {
+			this.logger.error(`Error trying to parse widget inspect data from structured error`);
+		}
 	}
 
 	// Extension
