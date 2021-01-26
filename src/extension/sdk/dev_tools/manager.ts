@@ -154,9 +154,10 @@ export class DevToolsManager implements vs.Disposable {
 		if (!url)
 			return;
 
-		// If the launched versin of DevTools doesn't support embedding, remove the flag.
-		if (!this.capabilities.supportsEmbedFlag)
-			options.embed = false;
+		if (options.embed === undefined)
+			options.embed = this.capabilities.supportsEmbedFlag && config.embedDevTools;
+		if (options.reuseWindows === undefined)
+			options.reuseWindows = config.devToolsReuseWindows;
 
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
@@ -246,6 +247,7 @@ export class DevToolsManager implements vs.Disposable {
 		const queryParams: { [key: string]: string | undefined } = {
 			hide: "debugger",
 			ide: "VSCode",
+			inspectorRef: options.inspectorRef,
 			theme: config.useDevToolsDarkTheme && !options.embed ? "dark" : undefined,
 		};
 
@@ -260,7 +262,7 @@ export class DevToolsManager implements vs.Disposable {
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
 		if (options.embed)
-			// TODO: What should really we do it we don't have a page?
+			// TODO: What should we do if we don't have a page?
 			this.launchInEmbeddedWebView(fullUrl, session, options.page ?? devToolsPages[0]);
 		else
 			await envUtils.openInBrowser(fullUrl.toString(), this.logger);
@@ -476,8 +478,9 @@ export interface ServerStartedNotification {
 }
 
 interface DevToolsOptions {
-	embed: boolean;
+	embed?: boolean;
 	reuseWindows?: boolean;
 	notify?: boolean;
 	page?: DevToolsPage;
+	inspectorRef?: string;
 }

@@ -73,6 +73,7 @@ export class DartDebugSession extends DebugSession {
 	public debugExternalLibraries = false;
 	public showDartDeveloperLogs = true;
 	public useFlutterStructuredErrors = false;
+	public useInspectorNotificationsForWidgetErrors = false;
 	public evaluateGettersInDebugViews = false;
 	protected evaluateToStringInDebugViews = false;
 	protected readonly dartCapabilities = DartCapabilities.empty;
@@ -275,7 +276,8 @@ export class DartDebugSession extends DebugSession {
 		this.sendLogsToClient = !!args.sendLogsToClient;
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.toolEnv = args.toolEnv;
-		this.useFlutterStructuredErrors = args.useFlutterStructuredErrors;
+		this.useFlutterStructuredErrors = !!args.useFlutterStructuredErrors;
+		this.useInspectorNotificationsForWidgetErrors = !!args.useInspectorNotificationsForWidgetErrors;
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {

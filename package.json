@@ -1523,6 +1523,12 @@
 						"type": "string"
 					}
 				},
+				"dart.showInspectorNotificationsForWidgetErrors": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Whether to show notifications for widget errors that offer Inspect Widget links. This requires that the `dart.shareDevToolsWithFlutter` setting is also enabled.",
+					"scope": "window"
+				},
 				"dart.hotReloadProgress": {
 					"enum": [
 						"notification",

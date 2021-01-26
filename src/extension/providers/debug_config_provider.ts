@@ -463,6 +463,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
 			debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
 			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
+			debugConfig.useInspectorNotificationsForWidgetErrors = config.showInspectorNotificationsForWidgetErrors;
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 
 			const additionalArgs = isTest

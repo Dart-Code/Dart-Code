@@ -11,7 +11,8 @@ export interface DartSharedArgs {
 	sendLogsToClient?: boolean;
 	showDartDeveloperLogs: boolean;
 	toolEnv?: { [key: string]: string | undefined };
-	useFlutterStructuredErrors: boolean;
+	useFlutterStructuredErrors?: boolean;
+	useInspectorNotificationsForWidgetErrors?: boolean;
 	debugExtensionBackendProtocol: "sse" | "ws";
 }
 
