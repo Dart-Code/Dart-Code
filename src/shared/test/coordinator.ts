@@ -6,7 +6,7 @@ import { disposeAll, uriToFilePath } from "../utils";
 import { GroupNode, SuiteData, SuiteNode, TestNode, TestTreeModel, TreeNode } from "./test_model";
 
 /// Handles results from a test debug session and provides them to the test model.
-export class TestSessionCoordindator implements IAmDisposable {
+export class TestSessionCoordinator implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
 	private onDidStartTestsEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();

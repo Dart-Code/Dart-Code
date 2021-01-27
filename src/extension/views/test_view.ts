@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
-import { TestSessionCoordindator } from "../../shared/test/coordindator";
+import { TestSessionCoordinator } from "../../shared/test/coordinator";
 import { GroupNode, SuiteNode, TestContainerNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll } from "../../shared/utils";
@@ -21,7 +21,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	public readonly onDidChangeTreeData: vs.Event<TreeNode | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private currentTestTerminal: [vs.Terminal, vs.EventEmitter<string>] | undefined;
 
-	constructor(private readonly data: TestTreeModel, private readonly coordindator: TestSessionCoordindator) {
+	constructor(private readonly data: TestTreeModel, private readonly coordinator: TestSessionCoordinator) {
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
 		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => this.handleConfigChange(e)));
 
@@ -76,11 +76,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	}
 
 	public handleDebugSessionCustomEvent(e: { session: vs.DebugSession; event: string; body?: any; }) {
-		this.coordindator.handleDebugSessionCustomEvent(e);
+		this.coordinator.handleDebugSessionCustomEvent(e);
 	}
 
 	public handleDebugSessionEnd(session: vs.DebugSession) {
-		this.coordindator.handleDebugSessionEnd(session.id);
+		this.coordinator.handleDebugSessionEnd(session.id);
 	}
 
 	private async runAllSkippedTests(): Promise<void> {
