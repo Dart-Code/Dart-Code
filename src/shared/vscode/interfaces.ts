@@ -2,6 +2,8 @@ import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, Deb
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
+import { DartCapabilities } from "../capabilities/dart";
+import { FlutterCapabilities } from "../capabilities/flutter";
 import { VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { CustomScript, SpawnedProcess } from "../interfaces";
@@ -35,15 +37,7 @@ export interface InternalExtensionApi {
 	isInTestFileThatHasImplementation: boolean;
 	isInImplementationFileThatCanHaveTest: boolean;
 	isLsp: boolean;
-	dartCapabilities: {
-		includesSourceForSdkLibs: boolean;
-		supportsPubOutdated: boolean;
-		supportsDartPub: boolean;
-		version: string;
-		webSupportsDebugging: boolean;
-		webSupportsEvaluation: boolean;
-		webSupportsHotReload: boolean;
-	};
+	dartCapabilities: DartCapabilities;
 	debugCommands: DebugCommandHandler;
 	debugProvider: DebugConfigurationProvider;
 	debugSessions: Array<{ loadedServiceExtensions: VmServiceExtension[] }>;
@@ -56,12 +50,7 @@ export interface InternalExtensionApi {
 		getLastPriorityFiles?: () => string[];
 		getLastSubscribedFiles?: () => string[];
 	};
-	flutterCapabilities: {
-		hasLatestStructuredErrorsWork: boolean;
-		webSupportsDebugging: boolean;
-		webSupportsEvaluation: boolean;
-		webSupportsHotReload: boolean;
-	};
+	flutterCapabilities: FlutterCapabilities;
 	flutterOutlineTreeProvider: TreeDataProvider<TreeNode> | undefined;
 	getLogHeader: () => string;
 	initialAnalysis: Promise<void>;
