@@ -3,7 +3,7 @@ import * as assert from "assert";
 import { Writable } from "stream";
 import { DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { TestSessionCoordindator } from "../shared/test/coordindator";
+import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler } from "../shared/vscode/interfaces";
@@ -19,7 +19,7 @@ export class DartDebugClient extends DebugClient {
 	private currentSession?: DebugSession;
 	public hasStarted = false;
 
-	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testCoordinator: TestSessionCoordindator | undefined) {
+	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testCoordinator: TestSessionCoordinator | undefined) {
 		super(args.runtime, args.executable, args.args, "dart", undefined, true);
 		this.port = args.port;
 

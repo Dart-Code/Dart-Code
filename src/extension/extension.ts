@@ -10,7 +10,7 @@ import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposab
 import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
-import { TestSessionCoordindator } from "../shared/test/coordindator";
+import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestTreeModel, TreeNode } from "../shared/test/test_model";
 import { disposeAll, uniq } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
@@ -428,7 +428,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	util.logTime("All other stuff before debugger..");
 
 	const testTreeModel = new TestTreeModel(config);
-	const testCoordinator = new TestSessionCoordindator(logger, testTreeModel);
+	const testCoordinator = new TestSessionCoordinator(logger, testTreeModel);
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
