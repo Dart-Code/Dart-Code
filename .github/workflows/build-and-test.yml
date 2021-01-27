@@ -107,14 +107,14 @@ jobs:
       # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
       - name: Try adding Flutter integration_test package (flutter_hello_world)
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
-        run: pub add integration_test --dev --sdk flutter
+        run: flutter pub add integration_test --dev --sdk flutter
         working-directory: src/test/test_projects/flutter_hello_world
         continue-on-error: true
 
       # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
       - name: Try adding Flutter integration_test package (flutter_hello_world_bazel)
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
-        run: pub add integration_test --dev --sdk flutter
+        run: flutter pub add integration_test --dev --sdk flutter
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
         continue-on-error: true
 
