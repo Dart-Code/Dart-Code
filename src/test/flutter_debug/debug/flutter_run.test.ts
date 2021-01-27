@@ -296,6 +296,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.cwd, fsPath(flutterHelloWorldExampleSubFolder));
 	});
 
+	it("automatically spawns DevTools at startup", async function () {
+		if (!extApi.flutterCapabilities.supportsDevToolsServerAddress)
+			this.skip();
+
+		assert.ok(extApi.debugCommands.devTools.devtoolsUrl);
+		assert.ok((await extApi.debugCommands.devTools.devtoolsUrl).startsWith("http://"));
+	});
+
 	it("can launch DevTools externally", async () => {
 		await setConfigForTest("dart", "embedDevTools", false);
 
