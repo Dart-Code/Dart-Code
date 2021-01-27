@@ -19,8 +19,7 @@ export class FlutterCapabilities {
 	get supportsRestartDebounce() { return versionIsAtLeast(this.version, "1.21.0-0"); }
 	get supportsShowWebServerDevice() { return versionIsAtLeast(this.version, "1.26.0-0"); }
 	get supportsWebRendererOption() { return versionIsAtLeast(this.version, "1.25.0-0"); }
-	// TODO: Version supporting devtools-server-address
-	get supportsDevToolsServerAddress() { return false; }
+	get supportsDevToolsServerAddress() { return versionIsAtLeast(this.version, "1.26.0-12"); }
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
