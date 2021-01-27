@@ -4,10 +4,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DebuggerType } from "../../../shared/enums";
-import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, deferUntilLast, delay, fileSafeCurrentTestName, flutterHelloWorldExampleSubFolder, flutterHelloWorldFolder, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../../helpers";
+import { activate, deferUntilLast, delay, fileSafeCurrentTestName, flutterHelloWorldMainFile, getAttachConfiguration, logger, watchPromise } from "../../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("Skip attach tests for web devices", function () {
@@ -15,13 +14,6 @@ describe("flutter run debugger (attach)", () => {
 			this.skip();
 	});
 
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
-	before("run 'flutter create' for example", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldExampleSubFolder)));
-
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	beforeEach(() => {

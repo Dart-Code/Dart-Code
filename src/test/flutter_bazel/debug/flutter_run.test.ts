@@ -3,10 +3,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
-import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, defer, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, setConfigForTest, watchPromise } from "../../helpers";
+import { activate, defer, ensureHasRunRecently, extApi, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, sb, setConfigForTest, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -15,10 +14,6 @@ describe(`flutter run debugger`, () => {
 		if (isWin)
 			this.skip();
 	});
-
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterBazelHelloWorldFolder)));
 
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());

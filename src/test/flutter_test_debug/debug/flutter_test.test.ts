@@ -1,21 +1,13 @@
 import * as assert from "assert";
 import * as path from "path";
-import * as vs from "vscode";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, getPackages, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
+import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterHelloWorldFolder)));
-
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
-
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
 
 	beforeEach(() => {

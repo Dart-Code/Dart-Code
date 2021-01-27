@@ -1,23 +1,15 @@
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
-import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, flutterBazelHelloWorldFolder, flutterBazelTestMainFile, getLaunchConfiguration, getPackages, prepareHasRunFile } from "../../helpers";
+import { activate, ensureHasRunRecently, flutterBazelTestMainFile, getLaunchConfiguration, prepareHasRunFile } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach(function () {
 		if (isWin)
 			this.skip();
 	});
-
-	// We don't commit all the iOS/Android stuff to this repo to save space, but we can bring it back with
-	// `flutter create .`!
-	before("run 'flutter create'", () => vs.commands.executeCommand("_flutter.create", fsPath(flutterBazelHelloWorldFolder)));
-
-	// We have tests that require external packages.
-	before("get packages", () => getPackages());
 
 	beforeEach("activate flutterTestMainFile", () => activate(flutterBazelTestMainFile));
 
