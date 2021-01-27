@@ -21,6 +21,9 @@ export interface DebugCommandHandler {
 	handleDebugSessionStart(session: DebugSession): void;
 	handleDebugSessionEnd(session: DebugSession): void;
 	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
+	devTools: {
+		devtoolsUrl: Thenable<string> | undefined;
+	};
 }
 
 export interface InternalExtensionApi {
