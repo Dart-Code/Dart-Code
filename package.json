@@ -597,11 +597,13 @@
 			},
 			{
 				"command": "_dart.toggleSkippedTestVisibilityOn",
-				"title": "Show skipped tests"
+				"title": "Show skipped tests",
+				"category": "Dart"
 			},
 			{
 				"command": "_dart.toggleSkippedTestVisibilityOff",
-				"title": "Hide skipped tests"
+				"title": "Hide skipped tests",
+				"category": "Dart"
 			}
 		],
 		"keybindings": [
@@ -764,6 +766,14 @@
 				},
 				{
 					"command": "dart.startWithoutDebuggingFailedTests",
+					"when": "false"
+				},
+				{
+					"command": "_dart.toggleSkippedTestVisibilityOn",
+					"when": "false"
+				},
+				{
+					"command": "_dart.toggleSkippedTestVisibilityOff",
 					"when": "false"
 				},
 				{
