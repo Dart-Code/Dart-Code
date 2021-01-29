@@ -2,15 +2,12 @@ import * as path from "path";
 import { escapeRegExp } from "../../shared/utils";
 import { OpenedFileInformation } from "../interfaces";
 
-export function getLaunchConfig(noDebug: boolean, path: string, testNames: string[] | undefined, isGroup: boolean, runSkippedTests?: boolean, template?: any | undefined) {
+export function getLaunchConfig(noDebug: boolean, path: string, testNames: string[] | undefined, isGroup: boolean, template?: any | undefined) {
 	const templateArgs = template?.args || [];
 	const testNameArgs = testNames
 		? ["--name", makeRegexForTests(testNames, isGroup)]
 		: [];
 	const args = templateArgs.concat(testNameArgs);
-
-	if (runSkippedTests)
-		args.push("--run-skipped");
 
 	return Object.assign(
 		{

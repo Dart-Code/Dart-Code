@@ -29,13 +29,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOff", () => config.setShowSkippedTests(false)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOn", () => config.setShowSkippedTests(true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("dart.clearTestResults", () => {
@@ -83,10 +80,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.coordinator.handleDebugSessionEnd(session.id);
 	}
 
-	private async runAllSkippedTests(): Promise<void> {
-		await this.runAllTests(TestStatus.Skipped);
-	}
-
 	private async runAllFailedTests(): Promise<void> {
 		await this.runAllTests(TestStatus.Failed);
 	}
@@ -115,14 +108,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 						break;
 					const suiteName = path.basename(node.suiteData.path);
 					progress.report({ message: suiteName });
-					await this.runTests(node, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
+					await this.runTests(node, failedTestNames, false, true, token);
 					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
 				}
 			},
 		);
 	}
 
-	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests?: boolean, token?: vs.CancellationToken) {
+	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, token?: vs.CancellationToken) {
 		const subs: vs.Disposable[] = [];
 		return new Promise<void>(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
@@ -148,7 +141,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 						programPath,
 						testNames,
 						treeNode instanceof GroupNode,
-						runSkippedTests
 					),
 					name: `Tests ${path.basename(programPath)}`,
 				}
