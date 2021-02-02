@@ -75,7 +75,7 @@ class LspExperiment extends Experiment {
 
 		const yesPleaseAction = "Yes please!";
 		const noThanksAction = "No thanks";
-		const action = await vs.window.showInformationMessage("Dart-Code is switching to using the Language Server Protocol for improved performance. Would you like to enable it now?", yesPleaseAction, noThanksAction);
+		const action = await vs.window.showInformationMessage("Dart-Code is switching to using the Language Server Protocol for improved performance. Would you like to enable the preview now?", yesPleaseAction, noThanksAction);
 
 		if (action === yesPleaseAction) {
 			this.logger.info("Enabling LSP preview and reloading!");
