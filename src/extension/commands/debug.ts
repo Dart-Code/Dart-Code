@@ -520,7 +520,8 @@ export class DebugCommands {
 				}
 			}
 		} else if (e.event === "dart.progressStart") {
-			const progressLocation = config.hotReloadProgress === "notification" && (e.body.progressID.endsWith("-hot.reload") || e.body.progressID.endsWith("-hot.restart")) ? vs.ProgressLocation.Notification : vs.ProgressLocation.Window;
+			const isHotEvent = e.body.progressID.endsWith("-hot.reload") || e.body.progressID.endsWith("-hot.restart");
+			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
 
 			vs.window.withProgress(
 				// TODO: This was previously Window to match what we'd get using DAP progress
