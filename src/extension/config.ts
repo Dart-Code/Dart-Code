@@ -76,7 +76,17 @@ class Config {
 	get flutterCustomEmulators(): Array<{ id: string, name: string, executable: string, args?: string[] }> { return this.getConfig<Array<{ id: string, name: string, executable: string, args?: string[] }>>("flutterCustomEmulators", []); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
-	get flutterHotReloadOnSave(): boolean { return this.getConfig<boolean>("flutterHotReloadOnSave", true); }
+	get flutterHotReloadOnSave(): "never" | "always" | "manual" {
+		const value = this.getConfig<"never" | "always" | "manual" | true | false>("flutterHotReloadOnSave", "manual");
+
+		// Convert the legacy bool value to its new enum type, if required.
+		if (value === true)
+			return "manual";
+		else if (value === false)
+			return "never";
+		else
+			return value;
+	}
 	get flutterHotRestartOnSave(): boolean { return this.getConfig<boolean>("flutterHotRestartOnSave", true); }
 	get flutterOutline(): boolean { return this.getConfig<boolean>("flutterOutline", true); }
 	get flutterRunLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterRunLogFile", null))); }

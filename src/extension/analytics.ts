@@ -192,7 +192,7 @@ export class Analytics {
 			cd6: resourceUri ? this.getDebuggerPreference() : null,
 			cd7: this.workspaceContext.workspaceTypeDescription,
 			cd8: config.closingLabels ? "On" : "Off",
-			cd9: this.workspaceContext.hasAnyFlutterProjects ? (config.flutterHotReloadOnSave ? "On" : "Off") : null,
+			cd9: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : null,
 			// TODO: Auto-save
 			// TODO: Hot-restart-on-save
 			cid: machineId,
