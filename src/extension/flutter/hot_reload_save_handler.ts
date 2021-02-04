@@ -47,19 +47,20 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	}
 
 	private triggerReload(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
-		// Don't do anything on auto-saves. If user is using auto-save, they will have
-		// to press Ctrl+S to trigger a reload-on-save.
-		if (this.lastSaveReason === TextDocumentSaveReason.FocusOut
-			|| this.lastSaveReason === TextDocumentSaveReason.AfterDelay)
+		if (config.flutterHotReloadOnSave === "never")
+			return;
+
+		const isAutoSave = this.lastSaveReason === TextDocumentSaveReason.FocusOut ||
+			this.lastSaveReason === TextDocumentSaveReason.AfterDelay;
+
+		if (isAutoSave && config.flutterHotReloadOnSave === "manual")
 			return;
 
 		// Never do anything for files inside .dart_tool folders.
 		if (fsPath(file.uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
 			return;
 
-		const shouldHotReload =
-			this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload)
-			&& config.flutterHotReloadOnSave;
+		const shouldHotReload = this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload);
 
 		const shouldHotRestart =
 			!this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload)

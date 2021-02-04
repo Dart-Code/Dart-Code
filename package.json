@@ -1697,9 +1697,13 @@
 					"scope": "machine-overridable"
 				},
 				"dart.flutterHotReloadOnSave": {
-					"type": "boolean",
-					"default": true,
-					"description": "Whether to automatically send a Hot Reload request during a debug session when saving files.",
+					"enum": [
+						"never",
+						"always",
+						"manual"
+					],
+					"default": "manual",
+					"markdownDescription": "Whether to automatically send a Hot Reload request during a debug session when saving files.\n\n- `never` - do not reload when saving.\n- `always` - reload for all saves, manual or automatic.\n- `manual` - only reload for manual saves (requires pressing Save explicitly if using autosave).",
 					"scope": "window"
 				},
 				"dart.flutterHotRestartOnSave": {
