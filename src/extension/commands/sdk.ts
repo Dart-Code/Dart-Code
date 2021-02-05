@@ -284,9 +284,26 @@ export class SdkCommands {
 	private promptToReloadOnVersionChanges = true;
 	private setupVersionWatcher(context: vs.ExtensionContext) {
 		const versionFile = path.join(this.sdks.dart, "version");
-		const watcher = fs.watch(versionFile, { persistent: false }, () => {
+		const watcher = fs.watch(versionFile, { persistent: false }, async (eventType: string) => {
+			if (eventType !== "change")
+				return;
+
 			if (!this.promptToReloadOnVersionChanges)
 				return;
+
+			try {
+				const stats = await fs.promises.stat(versionFile);
+				const timeSinceModifiedMs = new Date().getTime() - stats.mtime.getTime();
+
+				// On Windows, sometimes this fires when accessed as opposed to modified so results in spurious notifications;
+				// so if it hasn't been modified within 60 seconds then bail.
+				if (timeSinceModifiedMs > 1000 * 60) {
+					return;
+				}
+			} catch (error) {
+				this.logger.warn(`Failed to check modification time on version file. ${error}`);
+				return;
+			}
 
 			// Ensure we don't fire too often as some OSes may generate multiple events.
 			this.promptToReloadOnVersionChanges = false;
