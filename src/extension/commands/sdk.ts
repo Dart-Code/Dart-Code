@@ -282,11 +282,36 @@ export class SdkCommands {
 	}
 
 	private promptToReloadOnVersionChanges = true;
-	private setupVersionWatcher(context: vs.ExtensionContext) {
+	private async setupVersionWatcher(context: vs.ExtensionContext) {
+		// On Windows, the watcher sometimes fires even if the file wasn't modified (could be when
+		// accessed), so we need to filter those out. We can't just check the modified time is "recent"
+		// because the unzip preserves the modification dates of the SDK. Instead, we'll capture the mtime
+		// of the file at start, and then fire only if that time actually changes.
 		const versionFile = path.join(this.sdks.dart, "version");
-		const watcher = fs.watch(versionFile, { persistent: false }, () => {
+		const getModifiedTimeMs = async () => {
+			try {
+				return (await fs.promises.stat(versionFile)).mtime.getTime();
+			} catch (error) {
+				this.logger.warn(`Failed to check modification time on version file. ${error}`);
+				return;
+			}
+		};
+		let lastModifiedTime = await getModifiedTimeMs();
+		// If we couldn't get the initial modified time, we can't track this.
+		if (!lastModifiedTime)
+			return;
+
+		const watcher = fs.watch(versionFile, { persistent: false }, async (eventType: string) => {
 			if (!this.promptToReloadOnVersionChanges)
 				return;
+
+			const newModifiedTime = await getModifiedTimeMs();
+
+			// Bail if we couldn't get a new modified time, or it was the same as the last one.
+			if (!newModifiedTime || newModifiedTime === lastModifiedTime)
+				return;
+
+			lastModifiedTime = newModifiedTime;
 
 			// Ensure we don't fire too often as some OSes may generate multiple events.
 			this.promptToReloadOnVersionChanges = false;
