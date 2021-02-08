@@ -427,7 +427,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	util.logTime("All other stuff before debugger..");
 
-	const testTreeModel = new TestTreeModel(config);
+	const testTreeModel = new TestTreeModel(config, util.isPathInsideFlutterProject);
 	const testCoordinator = new TestSessionCoordinator(logger, testTreeModel);
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 

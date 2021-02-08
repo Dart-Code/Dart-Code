@@ -364,6 +364,40 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 		}
 	}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
+	it("can rerun only skipped tests", async () => {
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(helloWorldTestTreeFile);
+		config!.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		// Now run only skipped tests.
+		await vs.commands.executeCommand("dart.runAllSkippedTestsWithoutDebugging");
+
+		await openFile(helloWorldTestTreeFile);
+		// Expected results differ from what's in the file as the skipped tests will be run
+		// and also the parent groups/suite status will be recomputed so they will be not-stale
+		// in the new results (so we can't just filter to skipped, like we do in the failed test).
+		const expectedResults = `
+test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
+    failing group 1 [3/4 passed, {duration}ms] (fail.svg)
+        skipped test 1 [{duration}ms] (pass.svg)
+    skipped group 2 [4/6 passed, {duration}ms] (fail.svg)
+        skipped group 2.1 [2/3 passed, {duration}ms] (fail.svg)
+            passing test 1 [{duration}ms] (pass.svg)
+            failing test 1 [{duration}ms] (fail.svg)
+            skipped test 1 [{duration}ms] (pass.svg)
+        skipped test 1 [{duration}ms] (pass.svg)
+		`.trim();
+
+		// Get the actual tree, filtered only to those that ran in the last run.
+		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider, { onlyActive: true })).join("\n");
+		assert.strictEqual(actualResults, expectedResults);
+	});
+
 	it("can rerun only failed tests", async () => {
 		const testFiles = [helloWorldTestTreeFile, helloWorldTestBrokenFile];
 		for (const file of testFiles) {

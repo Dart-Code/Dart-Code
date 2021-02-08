@@ -209,7 +209,7 @@ export class TestTreeModel {
 	// TODO: Make private?
 	public readonly suites: { [key: string]: SuiteData } = {};
 
-	public constructor(private readonly config: { showSkippedTests: boolean }) { }
+	public constructor(private readonly config: { showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
 
 	public flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
 		this.isNewTestRun = true;
@@ -245,7 +245,7 @@ export class TestTreeModel {
 	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
 		let suite = this.suites[suitePath];
 		if (!suite) {
-			suite = new SuiteData(suitePath);
+			suite = new SuiteData(suitePath, this.isPathInsideFlutterProject(suitePath));
 			this.suites[suitePath] = suite;
 			return [suite, true];
 		}
@@ -315,12 +315,10 @@ export class TestTreeModel {
 
 export class SuiteData {
 	public get currentRunNumber() { return this.node.suiteRunNumber; }
-	public readonly path: string;
 	public readonly node: SuiteNode;
 	private readonly groups: { [key: string]: GroupNode } = {};
 	private readonly tests: { [key: string]: TestNode } = {};
-	constructor(suitePath: string) {
-		this.path = suitePath;
+	constructor(public readonly path: string, public readonly isFlutterSuite: boolean) {
 		this.node = new SuiteNode(this);
 	}
 

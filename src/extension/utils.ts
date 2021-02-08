@@ -27,6 +27,14 @@ export function isInsideFlutterProject(uri?: Uri): boolean {
 		return isFlutterWorkspaceFolder(workspace.getWorkspaceFolder(uri));
 }
 
+export function isPathInsideFlutterProject(path: string): boolean {
+	const projectRoot = locateBestProjectRoot(path);
+	if (!projectRoot)
+		return false;
+
+	return isFlutterProjectFolder(projectRoot);
+}
+
 export function isFlutterProjectFolder(folder?: string): boolean {
 	return referencesFlutterSdk(folder);
 }
