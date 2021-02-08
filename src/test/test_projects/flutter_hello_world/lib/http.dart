@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 void main() async {
-  final resp = await http.read("https://www.google.co.uk");
+  final uri = Uri.parse("https://www.google.co.uk");
+  final resp = await http.read(uri);
   print(resp);
 
   runApp(MyApp());
