@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
+import { DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT, IS_IN_DART_TEST_SUITE_CONTEXT, IS_IN_FLUTTER_TEST_SUITE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { TestSessionCoordinator } from "../../shared/test/coordinator";
 import { GroupNode, SuiteNode, TestContainerNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
@@ -11,6 +11,7 @@ import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
+import { isInsideFlutterProject } from "../utils";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
 type SuiteList = [SuiteNode, string[]];
@@ -29,10 +30,13 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOff", () => config.setShowSkippedTests(false)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOn", () => config.setShowSkippedTests(true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("dart.clearTestResults", () => {
@@ -80,6 +84,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.coordinator.handleDebugSessionEnd(session.id);
 	}
 
+	private async runAllSkippedTests(): Promise<void> {
+		await this.runAllTests(TestStatus.Skipped);
+	}
+
 	private async runAllFailedTests(): Promise<void> {
 		await this.runAllTests(TestStatus.Failed);
 	}
@@ -108,14 +116,14 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 						break;
 					const suiteName = path.basename(node.suiteData.path);
 					progress.report({ message: suiteName });
-					await this.runTests(node, failedTestNames, false, true, token);
+					await this.runTests(node, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
 					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
 				}
 			},
 		);
 	}
 
-	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, token?: vs.CancellationToken) {
+	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests?: boolean, token?: vs.CancellationToken) {
 		const subs: vs.Disposable[] = [];
 		return new Promise<void>(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
@@ -131,6 +139,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 					resolve();
 			}));
 			const programPath = fsPath(treeNode.suiteData.path);
+			const shouldRunSkippedTests = runSkippedTests && !isInsideFlutterProject(vs.Uri.file(treeNode.suiteData.path));
 			const didStart = await vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(treeNode.suiteData.path)),
 				{
@@ -141,6 +150,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 						programPath,
 						testNames,
 						treeNode instanceof GroupNode,
+						shouldRunSkippedTests,
 					),
 					name: `Tests ${path.basename(programPath)}`,
 				}
@@ -331,7 +341,7 @@ class TreeItemBuilder {
 
 	public createTestNode(node: TestNode): vs.TreeItem {
 		const treeItem = new vs.TreeItem(node.label || "<unnamed>", vs.TreeItemCollapsibleState.None);
-		treeItem.contextValue = DART_TEST_TEST_NODE_CONTEXT;
+		treeItem.contextValue = this.getContextValueForNode(node);
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
@@ -339,14 +349,28 @@ class TreeItemBuilder {
 		return treeItem;
 	}
 
-	private getContextValueForNode(node: TestContainerNode): string {
-		let contexts = `${node instanceof SuiteNode ? DART_TEST_SUITE_NODE_CONTEXT : DART_TEST_GROUP_NODE_CONTEXT} `;
+	private getContextValueForNode(node: TestContainerNode | TestNode): string {
+		let contexts = "";
 
-		if (node.hasStatus(TestStatus.Failed))
-			contexts += `${DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT} `;
+		if (node instanceof SuiteNode)
+			contexts = `${DART_TEST_SUITE_NODE_CONTEXT} `;
+		else if (node instanceof GroupNode)
+			contexts = `${DART_TEST_GROUP_NODE_CONTEXT} `;
+		else
+			contexts = `${DART_TEST_TEST_NODE_CONTEXT} `;
 
-		if (node.hasStatus(TestStatus.Skipped))
-			contexts += `${DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT} `;
+		if (node instanceof TestContainerNode) {
+			if (node.hasStatus(TestStatus.Failed))
+				contexts += `${DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT} `;
+
+			if (node.hasStatus(TestStatus.Skipped))
+				contexts += `${DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT} `;
+		}
+
+		if (node.suiteData.isFlutterSuite)
+			contexts += `${IS_IN_FLUTTER_TEST_SUITE_CONTEXT} `;
+		else
+			contexts += `${IS_IN_DART_TEST_SUITE_CONTEXT} `;
 
 		return contexts.trimEnd();
 	}

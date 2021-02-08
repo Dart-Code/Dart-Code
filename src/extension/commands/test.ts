@@ -12,7 +12,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { DasFileTracker } from "../analysis/file_tracker_das";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { isDartDocument } from "../editors";
-import { isTestFile } from "../utils";
+import { isInsideFlutterProject, isTestFile } from "../utils";
 
 const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
@@ -37,17 +37,18 @@ abstract class TestCommands implements vs.Disposable {
 		this.updateEditorContexts(vs.window.activeTextEditor);
 
 		this.disposables.push(vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) =>
-			vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
-				getLaunchConfig(false, test.file, [test.fullName], test.isGroup, launchTemplate),
-			)
-		));
+			this.startTestFromOutline(false, test, launchTemplate)));
 		this.disposables.push(vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) =>
-			vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
-				getLaunchConfig(true, test.file, [test.fullName], test.isGroup, launchTemplate),
-			)
-		));
+			this.startTestFromOutline(true, test, launchTemplate)));
+	}
+
+	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
+		const canRunSkippedTest = !test.isGroup && !isInsideFlutterProject(vs.Uri.file(test.file));
+
+		return vs.debug.startDebugging(
+			vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
+			getLaunchConfig(noDebug, test.file, [test.fullName], test.isGroup, canRunSkippedTest, launchTemplate),
+		);
 	}
 
 	private async runTestAtCursor(debug: boolean): Promise<void> {
