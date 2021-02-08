@@ -8,7 +8,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, delay, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, delay, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -69,8 +69,13 @@ describe("dart test debugger", () => {
 		assert.equal(runAction.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
-		const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
-		assert.ok(didStart);
+		const customEvents = await captureDebugSessionCustomEvents(async () => {
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			assert.ok(didStart);
+		});
+		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
+		const testDoneNotification = customEvents.find((e) => e.event === "dart.testRunNotification" && e.body.notification.type === "testDone");
+		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	});
 
 	it("receives the expected events from a Dart test script", async () => {

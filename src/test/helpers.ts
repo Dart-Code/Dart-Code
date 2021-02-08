@@ -6,7 +6,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
-import { Logger } from "../shared/interfaces";
+import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { TreeNode } from "../shared/test/test_model";
@@ -907,6 +907,33 @@ export function deleteFileIfExists(filePath: string) {
 	if (fs.existsSync(filePath)) {
 		fs.unlinkSync(filePath);
 	}
+}
+
+export async function captureDebugSessionCustomEvents(startDebug: () => void): Promise<vs.DebugSessionCustomEvent[]> {
+	let session: vs.DebugSession;
+	let startSub: IAmDisposable;
+	let endSub: IAmDisposable;
+	const events: vs.DebugSessionCustomEvent[] = [];
+
+	const startPromise = new Promise<void>((resolve) => {
+		startSub = vs.debug.onDidStartDebugSession((s) => {
+			session = s;
+			resolve();
+		});
+	}).finally(() => startSub.dispose());
+	const eventSub = vs.debug.onDidReceiveDebugSessionCustomEvent((e) => events.push(e));
+	const endPromise = new Promise<void>((resolve) => {
+		endSub = vs.debug.onDidTerminateDebugSession((s) => {
+			if (s === session)
+				resolve();
+		});
+	}).finally(() => endSub.dispose());
+
+	startDebug();
+	await Promise.all([startPromise, endPromise]);
+	eventSub.dispose();
+
+	return events;
 }
 
 export function prepareHasRunFile(name: string) {
