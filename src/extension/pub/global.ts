@@ -80,12 +80,16 @@ export class PubGlobal {
 	}
 
 	public async checkVersionStatus(packageID: string, installedVersion: string | undefined, requiredVersion?: string): Promise<VersionStatus> {
-		if (!installedVersion)
+		if (!installedVersion) {
+			this.logger.info(`${packageID} has no installed version, returning NotInstalled`);
 			return VersionStatus.NotInstalled;
+		}
 
 		// If we need a specific version, check it here.
-		if (requiredVersion && !pubVersionIsAtLeast(installedVersion, requiredVersion))
+		if (requiredVersion && !pubVersionIsAtLeast(installedVersion, requiredVersion)) {
+			this.logger.info(`${packageID} version ${installedVersion} is not at least ${requiredVersion} so returning UpdateRequired`);
 			return VersionStatus.UpdateRequired;
+		}
 
 		// If we haven't checked in the last 24 hours, check if there's an update available.
 		const lastChecked = this.context.getPackageLastCheckedForUpdates(packageID);
@@ -93,8 +97,10 @@ export class PubGlobal {
 			this.context.setPackageLastCheckedForUpdates(packageID, Date.now());
 			try {
 				const pubPackage = await this.pubApi.getPackage(packageID);
-				if (!pubVersionIsAtLeast(installedVersion, pubPackage.latest.version))
+				if (!pubVersionIsAtLeast(installedVersion, pubPackage.latest.version)) {
+					this.logger.info(`${packageID} version ${installedVersion} is not at least ${pubPackage.latest.version} so returning UpdateAvailable`);
 					return VersionStatus.UpdateAvailable;
+				}
 			} catch (e) {
 				// If we fail to call the API to check for a new version, then we can run
 				// with what we have.
@@ -104,6 +110,7 @@ export class PubGlobal {
 		}
 
 		// Otherwise, we're installed and have a new enough version.
+		this.logger.info(`${packageID} version ${installedVersion} appears to be latest so returning Valid`);
 		return VersionStatus.Valid;
 	}
 
