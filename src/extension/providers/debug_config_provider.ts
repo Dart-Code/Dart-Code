@@ -162,6 +162,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Some helpers for conditions below.
 		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.Web;
 		const isStandardFlutter = debugType === DebuggerType.Flutter;
+		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program as string, "integration_test");
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
 		const argsHaveTestNameFilter = isTest && debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 
@@ -177,14 +178,22 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 						debugType = DebuggerType.PubTest;
 					break;
 				case DebuggerType.Flutter:
-					if (!debugConfig.runTestsOnDevice || argsHaveTestNameFilter) {
-						if (debugConfig.runTestsOnDevice && argsHaveTestNameFilter) {
-							vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
-							logger.info(`runTestsOnDevice is set but args have test filter so will still use Flutter`);
-						}
+					if (isIntegrationTest) {
+						// Integration tests always use "flutter test".
 						debugType = DebuggerType.FlutterTest;
-					} else {
+					} else if (debugConfig.runTestsOnDevice && argsHaveTestNameFilter) {
+						// Non-integration tests set to run on device but have a test name filter will also have
+						// to run with "flutter test".
+						vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
+						logger.info(`runTestsOnDevice is set but args have test filter so will still use Flutter`);
+						debugType = DebuggerType.FlutterTest;
+					} else if (debugConfig.runTestsOnDevice) {
+						// Anything else (eg. Non-integration tests without a test name filter) is allowed to
+						// run on a device if specified.
 						logger.info(`runTestsOnDevice is set, so will use Flutter instead of FlutterTest`);
+					} else {
+						// Otherwise, default is to use "flutter test".
+						debugType = DebuggerType.FlutterTest;
 					}
 					break;
 				case DebuggerType.Web:
@@ -248,29 +257,33 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (token && token.isCancellationRequested)
 			return;
 
-		let deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId) || this.deviceManager?.currentDevice;
 
 		// Ensure we have a device if required.
-		if (debugType === DebuggerType.Flutter && this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
-			let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
-				? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
-				: [];
+		let deviceToLaunchOn;
+		const requiresDevice = debugType === DebuggerType.Flutter || (DebuggerType.FlutterTest && isIntegrationTest);
+		if (requiresDevice) {
+			deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId) || this.deviceManager?.currentDevice;
+			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
+				let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
+					? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+					: [];
 
-			// If the current device is not valid, prompt the user.
-			if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
-				deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms);
+				// If the current device is not valid, prompt the user.
+				if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
+					deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms);
 
-			// Refresh the supported platforms, as the we may have enabled new platforms during
-			// the call to showDevicePicker.
-			supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
-				? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
-				: [];
+				// Refresh the supported platforms, as the we may have enabled new platforms during
+				// the call to showDevicePicker.
+				supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
+					? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+					: [];
 
-			// If we still don't have a valid device, show an error.
-			if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn)) {
-				logger.warn("Unable to launch due to no active device");
-				window.showInformationMessage("Cannot launch without an active device");
-				return undefined; // undefined means silent (don't open launch.json).
+				// If we still don't have a valid device, show an error.
+				if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn)) {
+					logger.warn("Unable to launch due to no active device");
+					window.showInformationMessage("Cannot launch without an active device");
+					return undefined; // undefined means silent (don't open launch.json).
+				}
 			}
 		}
 
@@ -304,7 +317,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				const file = fsPath(fd[0]);
 				return isWithinPath(file, debugConfig.cwd)
 					// Ignore errors in test folder unless it's the file we're running.
-					&& (!isInsideFolderNamed(file, "test") || file === debugConfig.program);
+					&& ((!isInsideFolderNamed(file, "test") || !isInsideFolderNamed(file, "integration_test")) || file === debugConfig.program);
 			});
 			if (firstRelevantDiagnostic) {
 				logger.warn("Project has errors, prompting user");
@@ -596,6 +609,15 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 				results.push({
 					name: `${name} (${isFlutter ? "Flutter" : "Dart"} Tests)`,
 					program: "test",
+					cwd,
+					request: "launch",
+					type: "dart",
+				});
+			}
+			if (isFlutter && exists("integration_test")) {
+				results.push({
+					name: `${name} (${isFlutter ? "Flutter" : "Dart"} Integration Tests)`,
+					program: "integration_test",
 					cwd,
 					request: "launch",
 					type: "dart",
