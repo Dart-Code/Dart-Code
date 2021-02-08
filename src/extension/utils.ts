@@ -123,7 +123,12 @@ export function isTestFile(file: string): boolean {
 	// https://github.com/Dart-Code/Dart-Code/issues/2021
 	// https://github.com/Dart-Code/Dart-Code/issues/2034
 	return !!file && isDartFile(file)
-		&& (isInsideFolderNamed(file, "test") || isInsideFolderNamed(file, "test_driver") || config.allowTestsOutsideTestFolder)
+		&& (
+			isInsideFolderNamed(file, "test")
+			|| isInsideFolderNamed(file, "integration_test")
+			|| isInsideFolderNamed(file, "test_driver")
+			|| config.allowTestsOutsideTestFolder
+		)
 		&& file.toLowerCase().endsWith("_test.dart");
 }
 
@@ -134,7 +139,12 @@ export function isPubRunnableTestFile(file: string): boolean {
 }
 
 export function isTestFolder(path: string): boolean {
-	return !!path && isInsideFolderNamed(path, "test") && fs.existsSync(path) && fs.statSync(path).isDirectory();
+	return !!path
+		&& (
+			isInsideFolderNamed(path, "test")
+			|| isInsideFolderNamed(path, "integration_test")
+		) && fs.existsSync(path)
+		&& fs.statSync(path).isDirectory();
 }
 
 export function projectShouldUsePubForTests(folder: string, config: WorkspaceConfig): boolean {
