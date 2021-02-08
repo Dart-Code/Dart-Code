@@ -1,11 +1,12 @@
 import * as assert from "assert";
 import * as path from "path";
+import * as vs from "vscode";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getExpectedResults, makeTextTree, openFile, positionOf, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, makeTextTree, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -26,6 +27,38 @@ describe("flutter test debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
+	});
+
+	it("can run tests from codelens", async function () {
+		const editor = await openFile(flutterTestMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
+
+		const fileCodeLens = await getCodeLens(editor.document);
+		const testPos = positionOf(`test^Widgets('Hello world test`);
+
+		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+		assert.equal(codeLensForTest.length, 2);
+
+		if (!codeLensForTest[0].command) {
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			this.skip();
+			return;
+		}
+
+		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.arguments![0].fullName, "Hello world test");
+		assert.equal(runAction.command!.arguments![0].isGroup, false);
+
+		const customEvents = await captureDebugSessionCustomEvents(async () => {
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			assert.ok(didStart);
+		});
+		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
+		const testDoneNotification = customEvents.find((e) => e.event === "dart.testRunNotification" && e.body.notification.type === "testDone");
+		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	});
 
 	it("receives the expected events from a Flutter test script", async () => {
