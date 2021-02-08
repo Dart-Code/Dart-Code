@@ -19,6 +19,11 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 			appArgs = appArgs.concat(args.args);
 		}
 
+		if (args.deviceId) {
+			appArgs.push("-d");
+			appArgs.push(args.deviceId);
+		}
+
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
 
