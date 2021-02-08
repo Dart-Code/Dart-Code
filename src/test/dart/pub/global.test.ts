@@ -5,10 +5,10 @@ import { VersionStatus } from "../../../shared/enums";
 import { activate, defer, extApi, sb } from "../../helpers";
 
 const alreadyInstalledPackage = "devtools";
-const installedButBelowMinimumPackage1 = "args";
-const installedButBelowMinimumPackage1NewVersion = "1.5.1";
-const installedButBelowMinimumPackage2 = "meta";
-const installedButBelowMinimumPackage2NewVersion = "1.1.7";
+const installedButBelowMinimumPackage1 = "_fe_analyzer_shared";
+const installedButBelowMinimumPackage1NewVersion = "13.0.0";
+const installedButBelowMinimumPackage2 = "analyzer";
+const installedButBelowMinimumPackage2NewVersion = "0.41.0";
 const installedButOutOfDatePackage1 = "pedantic";
 const installedButOutOfDatePackage2 = "json_annotation";
 const definitelyNotInstalledPackage1 = "path";
@@ -99,7 +99,7 @@ describe("pub global", () => {
 	});
 
 	it("can auto-update a below-minimum package", async () => {
-		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, undefined);
+		extApi.context.setPackageLastCheckedForUpdates(installedButBelowMinimumPackage2, undefined);
 		const installPrompt = sb.stub(vs.window, "showWarningMessage");
 
 		// Ensure we're not prompted but it's updated.
