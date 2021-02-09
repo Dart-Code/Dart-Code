@@ -1375,7 +1375,7 @@
 				"dart.enableSdkFormatter": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Whether to enable the automatic [dart_style](https://pub.dev/packages/dart_style) formatter for Dart code.",
+					"markdownDescription": "Whether to enable the [dart_style](https://pub.dev/packages/dart_style) formatter for Dart code.",
 					"scope": "window"
 				},
 				"dart.enableSnippets": {
