@@ -78,8 +78,8 @@ jobs:
           pub global activate --no-executables devtools
           pub global activate --no-executables webdev
           pub global activate --no-executables stagehand
-          pub global activate --no-executables _fe_analyzer_shared 12.0.0
-          pub global activate --no-executables analyzer 0.40.0
+          pub global activate --no-executables args 1.5.0
+          pub global activate --no-executables meta 1.1.6
           pub global activate --no-executables pedantic 1.4.0
           pub global activate --no-executables json_annotation 1.2.0
         if: matrix.bot != 'flutter_snap'
