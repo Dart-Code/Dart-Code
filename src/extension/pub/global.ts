@@ -49,11 +49,16 @@ export class PubGlobal {
 			const actionName = versionStatus === VersionStatus.NotInstalled ? `Activating ${packageName}` : `Updating ${packageName}`;
 
 			const args = ["global", "activate", packageID];
-			await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
-			installedVersion = await this.getInstalledVersion(packageName, packageID);
-			if (await this.checkVersionStatus(packageID, installedVersion) === VersionStatus.Valid) {
+			try {
+				await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
+				installedVersion = await this.getInstalledVersion(packageName, packageID);
+				const newVersionStatus = await this.checkVersionStatus(packageID, installedVersion);
+				if (newVersionStatus !== VersionStatus.Valid) {
+					this.logger.warn(`After installing ${packageID}, version status was ${VersionStatus[newVersionStatus]} and not Valid!`);
+				}
 				return installedVersion;
-			} else {
+			} catch (e) {
+				this.logger.error(e);
 				action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfoAction);
 				if (action === moreInfoAction) {
 					await envUtils.openInBrowser(moreInfoLink);

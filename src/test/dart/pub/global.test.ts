@@ -54,6 +54,8 @@ describe("pub global", () => {
 	});
 
 	it("can install a package that's not installed", async () => {
+		extApi.context.setPackageLastCheckedForUpdates(definitelyNotInstalledPackage2, undefined);
+
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Activate ${definitelyNotInstalledPackage2}`);
 
 		let installedVersion = await extApi.pubGlobal.promptToInstallIfRequired(definitelyNotInstalledPackage2, definitelyNotInstalledPackage2);
@@ -69,6 +71,8 @@ describe("pub global", () => {
 	});
 
 	it("can prompt to update a below-minimum package", async () => {
+		extApi.context.setPackageLastCheckedForUpdates(installedButBelowMinimumPackage1, undefined);
+
 		const installPrompt = sb.stub(vs.window, "showWarningMessage").resolves(`Update ${installedButBelowMinimumPackage1}`);
 
 		// Prompt to update it, and ensure it's successful.
@@ -99,7 +103,7 @@ describe("pub global", () => {
 	});
 
 	it("can auto-update a below-minimum package", async () => {
-		extApi.context.setPackageLastCheckedForUpdates(installedButOutOfDatePackage1, undefined);
+		extApi.context.setPackageLastCheckedForUpdates(installedButBelowMinimumPackage2, undefined);
 		const installPrompt = sb.stub(vs.window, "showWarningMessage");
 
 		// Ensure we're not prompted but it's updated.
