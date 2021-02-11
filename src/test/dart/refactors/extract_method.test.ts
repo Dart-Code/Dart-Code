@@ -11,7 +11,7 @@ describe("extract method refactor", () => {
 
 	it("can extract simple code into a method", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("newMethod");
+		showInputBox.resolves("myNewMethod");
 
 		await setTestContent(`
 main() {
@@ -23,10 +23,10 @@ main() {
 
 		await ensureTestContent(`
 main() {
-  newMethod();
+  myNewMethod();
 }
 
-void newMethod() {
+void myNewMethod() {
   print("Hello, world!");
 }
 		`);
@@ -42,10 +42,7 @@ main() {
 		assert.equal(codeActions.length, 0);
 	});
 
-	it("displays an error if an invalid new name is provided", async function () {
-		if (extApi.isLsp)
-			this.skip(); // LSP doesn't ask for the name
-
+	it("displays an error if an invalid new name is provided", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("\"\"\"");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");

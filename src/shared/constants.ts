@@ -138,6 +138,9 @@ export const runFlutterCreateDotPrompt = (platformType: string) => `You must run
 export const runFlutterCreateDotAction = "Run 'flutter create .'";
 export const cancelAction = "Cancel";
 
+export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
+export const validClassNameRegex = validMethodNameRegex;
+
 export const widgetInspectorPage: DevToolsPage = { pageId: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" };
 export const devToolsPages: DevToolsPage[] = [
 	// First entry is the default page.

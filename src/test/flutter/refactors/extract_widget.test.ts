@@ -10,7 +10,7 @@ describe("extract widget refactor", () => {
 
 	it("can extract simple code into a widget", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("NewWidget");
+		showInputBox.resolves("MyNewWidget");
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -30,12 +30,12 @@ import 'package:flutter/widgets.dart';
 class MyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new NewWidget();
+    return new MyNewWidget();
   }
 }
 
-class NewWidget extends StatelessWidget {
-  const NewWidget({
+class MyNewWidget extends StatelessWidget {
+  const MyNewWidget({
     Key key,
   }) : super(key: key);
 
@@ -63,10 +63,7 @@ class MyWidget extends StatelessWidget {
 		assert.equal(codeActions.length, 0);
 	});
 
-	it("displays an error if an invalid new name is provided", async function () {
-		if (extApi.isLsp)
-			this.skip(); // LSP doesn't ask for the name
-
+	it("displays an error if an invalid new name is provided", async () => {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("\"\"\"");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");

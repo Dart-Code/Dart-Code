@@ -1,12 +1,12 @@
 import * as path from "path";
 import * as stream from "stream";
 import { CancellationToken, CompletionItem, MarkdownString, MarkedString, Position, TextDocument, window } from "vscode";
-import { HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath } from "../../shared/constants";
+import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -79,6 +79,57 @@ export class LspAnalyzer extends Analyzer {
 				if (item?.contents)
 					item.contents = item.contents.map((s) => cleanDocString(s));
 				return item;
+			},
+
+			executeCommand: async (command: string, args: any[], next: ExecuteCommandSignature) => {
+				if (command === "refactor.perform") {
+					const expectedCount = 6;
+					if (args && args.length === expectedCount) {
+						const refactorFailedErrorCode = -32011;
+						const refactorKind = args[0];
+						const optionsIndex = 5;
+						// Intercept EXTRACT_METHOD and EXTRACT_WIDGET to prompt the user for a name, since
+						// LSP doesn't currently allow us to prompt during a code-action invocation.
+						let name: string | undefined;
+						switch (refactorKind) {
+							case "EXTRACT_METHOD":
+								name = await window.showInputBox({
+									prompt: "Enter a name for the method",
+									validateInput: (s) => validMethodNameRegex.test(s) ? undefined : "Enter a valid method name",
+									value: "newMethod",
+								});
+								if (!name)
+									return;
+								args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
+								break;
+							case "EXTRACT_WIDGET":
+								name = await window.showInputBox({
+									prompt: "Enter a name for the widget",
+									validateInput: (s) => validClassNameRegex.test(s) ? undefined : "Enter a valid widget name",
+									value: "NewWidget",
+								});
+								if (!name)
+									return;
+								args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
+								break;
+						}
+
+						// The server may return errors for things like invalid names, so
+						// capture the errors and present the error better if it's a refactor
+						// error.
+						try {
+							return await next(command, args);
+						} catch (e) {
+							if (e?.code === refactorFailedErrorCode) {
+								window.showErrorMessage(e.message);
+								return;
+							} else {
+								throw e;
+							}
+						}
+					}
+				}
+				return next(command, args);
 			},
 		};
 	}
