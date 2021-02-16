@@ -330,7 +330,7 @@ class TreeItemBuilder {
 
 	public createGroupNode(node: GroupNode): vs.TreeItem {
 		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
-		const treeItem = new vs.TreeItem(node.label || "<unnamed>", collapseState);
+		const treeItem = new vs.TreeItem(this.cleanLabel(node.label || "<unnamed>"), collapseState);
 		treeItem.contextValue = this.getContextValueForNode(node);
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
 		treeItem.iconPath = getIconPath(node.getHighestStatus(config.showSkippedTests), node.isStale);
@@ -340,13 +340,17 @@ class TreeItemBuilder {
 	}
 
 	public createTestNode(node: TestNode): vs.TreeItem {
-		const treeItem = new vs.TreeItem(node.label || "<unnamed>", vs.TreeItemCollapsibleState.None);
+		const treeItem = new vs.TreeItem(this.cleanLabel(node.label || "<unnamed>"), vs.TreeItemCollapsibleState.None);
 		treeItem.contextValue = this.getContextValueForNode(node);
 		treeItem.resourceUri = vs.Uri.file(node.suiteData.path);
 		treeItem.iconPath = getIconPath(node.status, node.isStale);
 		treeItem.description = node.description;
 		treeItem.command = { command: "_dart.displayTest", arguments: [node], title: "" };
 		return treeItem;
+	}
+
+	private cleanLabel(label: string) {
+		return label.trim().split("\n").map((l) => l.trim()).join(" ");
 	}
 
 	private getContextValueForNode(node: TestContainerNode | TestNode): string {
