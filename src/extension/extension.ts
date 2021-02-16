@@ -103,7 +103,8 @@ import { TestResultsProvider } from "./views/test_view";
 const DART_MODE = { language: "dart", scheme: "file" };
 const HTML_MODE = { language: "html", scheme: "file" };
 
-const DART_PROJECT_LOADED = "dart-code:dartProjectLoaded";
+const PROJECT_LOADED = "dart-code:anyProjectLoaded";
+const DART_PROJECT_LOADED = "dart-code:anyStandardDartProjectLoaded";
 // TODO: Define what this means better. Some commands a general Flutter (eg. Hot
 // Reload) and some are more specific (eg. Attach).
 const FLUTTER_PROJECT_LOADED = "dart-code:anyFlutterProjectLoaded";
@@ -859,8 +860,8 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 }
 
 function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContext) {
-	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable);
-	// TODO: Make this more specific. Maybe the one above?
+	vs.commands.executeCommand("setContext", PROJECT_LOADED, enable);
+	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyStandardDartProjects);
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
 	vs.commands.executeCommand("setContext", FLUTTER_MOBILE_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterMobileProjects);
 	vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);

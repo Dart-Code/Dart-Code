@@ -181,7 +181,8 @@
 			},
 			{
 				"command": "dart.runAllSkippedTestsWithoutDebugging",
-				"title": "Run All Skipped Tests",
+				"title": "Run All Skipped Tests (Standard Dart projects only)",
+				"enablement": "dart-code:anyStandardDartProjectLoaded",
 				"category": "Dart",
 				"icon": {
 					"dark": "./media/commands/test-run-skipped-dark.svg",
@@ -620,13 +621,13 @@
 			},
 			{
 				"command": "dart.rerunLastDebugSession",
-				"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode",
+				"when": "dart-code:anyProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode",
 				"key": "cmd+shift+f5",
 				"win": "ctrl+shift+f5"
 			},
 			{
 				"command": "dart.openDevTools",
-				"when": "dart-code:dartProjectLoaded",
+				"when": "dart-code:anyProjectLoaded",
 				"key": "ctrl+alt+d",
 				"win": "ctrl+alt+d"
 			}
@@ -650,39 +651,39 @@
 				},
 				{
 					"command": "dart.startLogging",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.startLoggingAnalysisServer",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.startLoggingDebugging",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.startLoggingExtensionOnly",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.stopLogging",
-					"when": "dart-code:dartProjectLoaded && dart-code:isCapturingLogs"
+					"when": "dart-code:anyProjectLoaded && dart-code:isCapturingLogs"
 				},
 				{
 					"command": "pub.get",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.task.dartdoc",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "pub.upgrade",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "pub.outdated",
-					"when": "dart-code:dartProjectLoaded && dart-code:pubOutdatedSupported"
+					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported"
 				},
 				{
 					"command": "dart.startDebugging",
@@ -690,43 +691,43 @@
 				},
 				{
 					"command": "dart.runAllTestsWithoutDebugging",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.runAllSkippedTestsWithoutDebugging",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.runAllFailedTestsWithoutDebugging",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.rerunLastDebugSession",
-					"when": "dart-code:dartProjectLoaded && dart-code:hasLastDebugConfig"
+					"when": "dart-code:anyProjectLoaded && dart-code:hasLastDebugConfig"
 				},
 				{
 					"command": "dart.rerunLastTestDebugSession",
-					"when": "dart-code:dartProjectLoaded && dart-code:hasLastTestDebugConfig"
+					"when": "dart-code:anyProjectLoaded && dart-code:hasLastTestDebugConfig"
 				},
 				{
 					"command": "dart.restartAnalysisServer",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.forceReanalyze",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.printSelectionToTerminal",
-					"when": "dart-code:dartProjectLoaded && editorHasSelection"
+					"when": "dart-code:anyProjectLoaded && editorHasSelection"
 				},
 				{
 					"command": "dart.runTestAtCursor",
-					"when": "dart-code:dartProjectLoaded && dart-code:cursorIsInTest"
+					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest"
 				},
 				{
 					"command": "dart.goToTestOrImplementationFile",
-					"when": "dart-code:dartProjectLoaded && dart-code:canGoToTestOrImplementationFile"
+					"when": "dart-code:anyProjectLoaded && dart-code:canGoToTestOrImplementationFile"
 				},
 				{
 					"command": "dart.clearTestResults",
@@ -738,7 +739,7 @@
 				},
 				{
 					"command": "dart.debugTestAtCursor",
-					"when": "dart-code:dartProjectLoaded && dart-code:cursorIsInTest"
+					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest"
 				},
 				{
 					"command": "dart.startWithoutDebugging",
@@ -778,11 +779,11 @@
 				},
 				{
 					"command": "dart.goToSuper",
-					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
 				},
 				{
 					"command": "dart.attach",
-					"when": "dart-code:dartProjectLoaded && !inDebugMode"
+					"when": "dart-code:anyProjectLoaded && !inDebugMode"
 				},
 				{
 					"command": "flutter.attach",
@@ -794,27 +795,27 @@
 				},
 				{
 					"command": "dart.sortMembers",
-					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
 				},
 				{
 					"command": "dart.completeStatement",
-					"when": "dart-code:dartProjectLoaded && editorLangId == dart && !dart-code:isLsp"
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart && !dart-code:isLsp"
 				},
 				{
 					"command": "dart.showTypeHierarchy",
-					"when": "dart-code:dartProjectLoaded && editorLangId == dart"
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
 				},
 				{
 					"command": "dart.openObservatory",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openAnalyzerDiagnostics",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.changeSdk",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.changeFlutterSdk",
@@ -904,35 +905,35 @@
 				},
 				{
 					"command": "dart.openDevTools",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "flutter.openDevTools",
-					"when": "dart-code:dartProjectLoaded && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsInspector",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsPerformance",
-					"when": "dart-code:dartProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsMemory",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openDevToolsCpuProfiler",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openDevToolsNetwork",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "dart.openDevToolsLogging",
-					"when": "dart-code:dartProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",
@@ -1027,17 +1028,17 @@
 			],
 			"editor/title": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.get",
 					"group": "navigation@1"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.upgrade",
 					"group": "navigation@2"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.outdated",
 					"group": "navigation@3"
 				},
@@ -1058,32 +1059,32 @@
 					"group": "navigation@3"
 				},
 				{
-					"when": "resourceFilename == dartdoc_options.yaml && dart-code:dartProjectLoaded",
+					"when": "resourceFilename == dartdoc_options.yaml && dart-code:anyProjectLoaded",
 					"command": "dart.task.dartdoc",
 					"group": "navigation@1"
 				},
 				{
-					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && dart-code:currentFileIsRunnable",
+					"when": "resourceLangId == dart && dart-code:anyProjectLoaded && dart-code:currentFileIsRunnable",
 					"command": "dart.startWithoutDebugging",
 					"group": "1_run@10"
 				},
 				{
-					"when": "resourceLangId == dart && dart-code:dartProjectLoaded && dart-code:currentFileIsRunnable",
+					"when": "resourceLangId == dart && dart-code:anyProjectLoaded && dart-code:currentFileIsRunnable",
 					"command": "dart.startDebugging",
 					"group": "1_run@20"
 				}
 			],
 			"editor/context": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "pub.outdated"
 				},
 				{
@@ -1099,21 +1100,21 @@
 					"command": "flutter.packages.outdated"
 				},
 				{
-					"when": "resourceFilename == dartdoc_options.yaml && dart-code:dartProjectLoaded",
+					"when": "resourceFilename == dartdoc_options.yaml && dart-code:anyProjectLoaded",
 					"command": "dart.task.dartdoc"
 				}
 			],
 			"explorer/context": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:dartProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "pub.outdated"
 				},
 				{
@@ -1129,16 +1130,16 @@
 					"command": "flutter.packages.outdated"
 				},
 				{
-					"when": "resourceFilename == dartdoc_options.yaml && dart-code:dartProjectLoaded",
+					"when": "resourceFilename == dartdoc_options.yaml && dart-code:anyProjectLoaded",
 					"command": "dart.task.dartdoc"
 				},
 				{
-					"when": "resourceLangId == dart && dart-code:dartProjectLoaded",
+					"when": "resourceLangId == dart && dart-code:anyProjectLoaded",
 					"command": "dart.startDebugging",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "resourceLangId == dart && dart-code:dartProjectLoaded",
+					"when": "resourceLangId == dart && dart-code:anyProjectLoaded",
 					"command": "dart.startWithoutDebugging",
 					"group": "4.5_exec@1"
 				},
@@ -1246,52 +1247,52 @@
 					"command": "_flutter.outline.refactor.flutter.removeWidget"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /^dart-code:testSuiteNode/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /^dart-code:testSuiteNode/",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /^dart-code:testSuiteNode/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /^dart-code:testSuiteNode/",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@2"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithFailures/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithFailures/",
 					"command": "dart.startDebuggingFailedTests",
 					"group": "4.5_exec@3"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithFailures/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithFailures/",
 					"command": "dart.startWithoutDebuggingFailedTests",
 					"group": "4.5_exec@4"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:isInDartTestSuite/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:isInDartTestSuite/",
 					"command": "dart.startDebuggingSkippedTests",
 					"group": "4.5_exec@5"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:isInDartTestSuite/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:isInDartTestSuite/",
 					"command": "dart.startWithoutDebuggingSkippedTests",
 					"group": "4.5_exec@6"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testGroupNode/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testGroupNode/",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testGroupNode/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testGroupNode/",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@2"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testTestNode/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
 					"command": "dart.startDebuggingTest",
 					"group": "4.5_exec@1"
 				},
 				{
-					"when": "dart-code:dartProjectLoaded && viewItem =~ /dart-code:testTestNode/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@2"
 				}
@@ -1327,7 +1328,7 @@
 				{
 					"id": "dartPackages",
 					"name": "Dependencies",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				}
 			],
 			"flutter": [
@@ -1341,7 +1342,7 @@
 				{
 					"id": "dartTestTree",
 					"name": "Dart & Flutter",
-					"when": "dart-code:dartProjectLoaded"
+					"when": "dart-code:anyProjectLoaded"
 				}
 			]
 		},
