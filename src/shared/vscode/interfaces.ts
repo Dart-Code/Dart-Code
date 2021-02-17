@@ -62,7 +62,7 @@ export interface InternalExtensionApi {
 	nextAnalysis: () => Promise<void>;
 	packagesTreeProvider: TreeDataProvider<TreeItem>;
 	pubGlobal: {
-		promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink?: string, requiredVersion?: string, customActivateScript?: CustomScript, autoUpdate?: boolean): Promise<string | undefined>;
+		installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; customActivateScript?: CustomScript; autoUpdate?: boolean; silent?: boolean; }): Promise<string | undefined>;
 		checkVersionStatus(packageID: string, installedVersion: string | undefined, requiredVersion?: string): Promise<VersionStatus>;
 		getInstalledVersion(packageName: string, packageID: string): Promise<string | undefined>;
 		uninstall(packageID: string): Promise<void>;

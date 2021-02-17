@@ -13,7 +13,15 @@ import { safeToolSpawn } from "../utils/processes";
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
-	public async promptToInstallIfRequired(packageName: string, packageID: string, moreInfoLink = pubGlobalDocsUrl, requiredVersion: string, customActivateScript?: CustomScript, autoUpdate: boolean = false): Promise<string | undefined> {
+	public async installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; customActivateScript?: CustomScript; autoUpdate?: boolean; silent?: boolean; }): Promise<string | undefined> {
+		const packageID = options.packageID;
+		const packageName = options.packageName ?? packageID;
+		const customActivateScript = options.customActivateScript;
+		const moreInfoLink = options.moreInfoLink ?? pubGlobalDocsUrl;
+		const requiredVersion = options.requiredVersion;
+		const silent = !!options.silent;
+		let autoUpdate = !!options.autoUpdate;
+
 		let installedVersion = await this.getInstalledVersion(packageName, packageID);
 		const versionStatus = customActivateScript
 			? VersionStatus.UpdateRequired
@@ -23,7 +31,7 @@ export class PubGlobal {
 
 		// Custom activation scripts always auto run without prompt since we
 		// are unable to check whether they are required.
-		if (customActivateScript)
+		if (customActivateScript || silent)
 			autoUpdate = true;
 
 		const activateForMe = versionStatus === VersionStatus.NotInstalled ? `Activate ${packageName}` : `Update ${packageName}`;
@@ -38,7 +46,7 @@ export class PubGlobal {
 		let action =
 			// If we need an update and we're allowed to auto-update, to the same as if the user
 			// clicked the activate button, otherwise prompt them.
-			autoUpdate && (versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable)
+			autoUpdate && ((versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable) || silent)
 				? activateForMe
 				: await vs.window.showWarningMessage(message, activateForMe, moreInfoAction);
 
@@ -50,7 +58,10 @@ export class PubGlobal {
 
 			const args = ["global", "activate", packageID];
 			try {
-				await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
+				if (silent)
+					await this.runCommand(packageName, args, customActivateScript);
+				else
+					await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
 				installedVersion = await this.getInstalledVersion(packageName, packageID);
 				const newVersionStatus = await this.checkVersionStatus(packageID, installedVersion);
 				if (newVersionStatus !== VersionStatus.Valid) {
@@ -59,9 +70,11 @@ export class PubGlobal {
 				return installedVersion;
 			} catch (e) {
 				this.logger.error(e);
-				action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfoAction);
-				if (action === moreInfoAction) {
-					await envUtils.openInBrowser(moreInfoLink);
+				if (!silent) {
+					action = await vs.window.showErrorMessage(`${actionName} failed. Please try running 'pub global activate ${packageID}' manually.`, moreInfoAction);
+					if (action === moreInfoAction) {
+						await envUtils.openInBrowser(moreInfoLink);
+					}
 				}
 				return undefined;
 			}

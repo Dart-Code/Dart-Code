@@ -49,28 +49,31 @@ export class DevToolsManager implements vs.Disposable {
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal) {
 		this.disposables.push(this.devToolsStatusBarItem);
 
-		if (workspaceContext.config?.activateDevToolsEagerly || workspaceContext.config?.startDevToolsServerEagerly) {
-			this
-				.preActivate(true)
-				.then(
-					() => { this.logger.info(`Finished background activating DevTools`); },
-					(e) => {
-						this.logger.error("Failed to background activate DevTools");
-						this.logger.error(e);
-						vs.window.showErrorMessage(`Failed to activate DevTools: ${e}`);
-					},
-				)
-				.then(
-					() => {
-						if (workspaceContext.config?.startDevToolsServerEagerly)
-							this.spawnIfRequired(true);
-					},
-					(e) => {
-						this.logger.error("Failed to background start DevTools");
-						this.logger.error(e);
-						vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
-					},
-				);
+		this.handleEagerActivationAndStartup(workspaceContext);
+	}
+
+	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
+		if (workspaceContext.config?.activateDevToolsEagerly) {
+			try {
+				await this.preActivate(true);
+				this.logger.info(`Finished background activating DevTools`);
+			} catch (e) {
+				this.logger.error("Failed to background activate DevTools");
+				this.logger.error(e);
+				vs.window.showErrorMessage(`Failed to activate DevTools: ${e}`);
+			}
+		}
+
+		if (workspaceContext.config?.startDevToolsServerEagerly) {
+			try {
+				if (workspaceContext.config?.startDevToolsServerEagerly)
+					await this.spawnIfRequired(true);
+			} catch (e) {
+				this.logger.error("Failed to background start DevTools");
+				this.logger.error(e);
+				vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
+			}
+
 		}
 	}
 
@@ -102,9 +105,17 @@ export class DevToolsManager implements vs.Disposable {
 
 		if (!this.devtoolsUrl) {
 			this.devToolsStatusBarItem.hide();
-			// Don't try to check for install when we run eagerly.
-			if (!this.workspaceContext.config?.activateDevToolsEagerly) {
-				const installedVersion = await this.pubGlobal.promptToInstallIfRequired(devtoolsPackageName, devtoolsPackageID, undefined, "0.8.0", this.workspaceContext.config?.devtoolsActivateScript, true);
+			// Don't try to check for install/version if we're using a custom script.
+			if (!this.workspaceContext.config?.devtoolsActivateScript) {
+				const installedVersion = await this.pubGlobal.installIfRequired({
+					autoUpdate: true,
+					customActivateScript: this.workspaceContext.config?.devtoolsActivateScript,
+					moreInfoLink: undefined,
+					packageID: devtoolsPackageID,
+					packageName: devtoolsPackageName,
+					requiredVersion: "0.8.0",
+					silent,
+				});
 				if (!installedVersion) {
 					return undefined;
 				}

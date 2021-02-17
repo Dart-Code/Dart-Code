@@ -548,7 +548,7 @@ export class SdkCommands {
 		// Get the JSON for the available templates by calling stagehand.
 
 		const stagehand = new Stagehand(this.logger, this.sdks, this.pubGlobal);
-		const isAvailable = await stagehand.promptToInstallIfRequired();
+		const isAvailable = await stagehand.installIfRequired();
 		if (!isAvailable) {
 			return;
 		}
