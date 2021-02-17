@@ -28,7 +28,7 @@ describe("dart test debugger", () => {
 		dc = createDebugClient(DebuggerType.PubTest);
 	});
 
-	async function startDebugger(script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
+	async function startDebugger(dc: DartDebugClient, script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 		const config = await getLaunchConfiguration(script, extraConfiguration);
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
@@ -38,7 +38,7 @@ describe("dart test debugger", () => {
 
 	it("runs a Dart test script to completion", async () => {
 		await openFile(helloWorldTestMainFile);
-		const config = await startDebugger(helloWorldTestMainFile);
+		const config = await startDebugger(dc, helloWorldTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -80,7 +80,7 @@ describe("dart test debugger", () => {
 
 	it("receives the expected events from a Dart test script", async () => {
 		await openFile(helloWorldTestMainFile);
-		const config = await startDebugger(helloWorldTestMainFile);
+		const config = await startDebugger(dc, helloWorldTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
@@ -92,7 +92,7 @@ describe("dart test debugger", () => {
 
 	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldTestMainFile);
-		const config = await startDebugger(helloWorldTestMainFile);
+		const config = await startDebugger(dc, helloWorldTestMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldTestMainFile),
@@ -101,7 +101,7 @@ describe("dart test debugger", () => {
 
 	it("stops on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -113,7 +113,7 @@ describe("dart test debugger", () => {
 		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
 		// as deemphasized.
 		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
@@ -126,7 +126,7 @@ describe("dart test debugger", () => {
 
 	it("provides exception details when stopped on exception", async () => {
 		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {}),
@@ -150,7 +150,7 @@ describe("dart test debugger", () => {
 
 	it("sends failure results for failing tests", async () => {
 		await openFile(helloWorldTestBrokenFile);
-		const config = await startDebugger(helloWorldTestBrokenFile);
+		const config = await startDebugger(dc, helloWorldTestBrokenFile);
 		config!.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -162,7 +162,7 @@ describe("dart test debugger", () => {
 
 	it("builds the expected tree from a test run", async () => {
 		await openFile(helloWorldTestTreeFile);
-		const config = await startDebugger(helloWorldTestTreeFile);
+		const config = await startDebugger(dc, helloWorldTestTreeFile);
 		config!.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -180,7 +180,7 @@ describe("dart test debugger", () => {
 
 	it("clears the results from the test tree", async () => {
 		await openFile(helloWorldTestTreeFile);
-		const config = await startDebugger(helloWorldTestTreeFile);
+		const config = await startDebugger(dc, helloWorldTestTreeFile);
 		config!.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -201,12 +201,15 @@ describe("dart test debugger", () => {
 		// https://github.com/Dart-Code/Dart-Code/issues/2934
 		await openFile(helloWorldTestShortFile);
 		const runTests = async () => {
-			const config = await startDebugger(helloWorldTestShortFile);
+			// Create separate debug clients for each run, else we'll send multiple
+			// launchRequests to the same one.
+			const testDc = createDebugClient(DebuggerType.PubTest);
+			const config = await startDebugger(testDc, helloWorldTestShortFile);
 			config!.noDebug = true;
-			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
-				dc.waitForEvent("terminated"),
-				dc.launch(config),
+			await waitAllThrowIfTerminates(testDc,
+				testDc.configurationSequence(),
+				testDc.waitForEvent("terminated"),
+				testDc.launch(config),
 			);
 		};
 		await Promise.all([
@@ -237,7 +240,7 @@ describe("dart test debugger", () => {
 	it("sorts suites correctly", async () => {
 		// Run each test file in a different order to how we expect the results.
 		for (const file of [helloWorldTestSkipFile, helloWorldTestMainFile, helloWorldTestTreeFile, helloWorldTestBrokenFile]) {
-			const config = await startDebugger(file);
+			const config = await startDebugger(dc, file);
 			config!.noDebug = true;
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
@@ -267,7 +270,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 	});
 
 	it("runs all tests if given a folder", async () => {
-		const config = await startDebugger("./test/");
+		const config = await startDebugger(dc, "./test/");
 		config!.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -366,7 +369,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 
 	it("can rerun only skipped tests", async () => {
 		await openFile(helloWorldTestTreeFile);
-		const config = await startDebugger(helloWorldTestTreeFile);
+		const config = await startDebugger(dc, helloWorldTestTreeFile);
 		config!.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -402,7 +405,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 		const testFiles = [helloWorldTestTreeFile, helloWorldTestBrokenFile];
 		for (const file of testFiles) {
 			await openFile(file);
-			const config = await startDebugger(file);
+			const config = await startDebugger(dc, file);
 			config!.noDebug = true;
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
@@ -426,7 +429,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 
 	it("can hide skipped tests from tree", async () => {
 		await openFile(helloWorldTestTreeFile);
-		const config = await startDebugger(helloWorldTestTreeFile);
+		const config = await startDebugger(dc, helloWorldTestTreeFile);
 		config!.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -469,7 +472,7 @@ test/tree_test.dart [4/6 passed, {duration}ms] (fail.svg)
 
 	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<any>>): Promise<void> {
 		await openFile(file);
-		const config = await startDebugger(file, { args, noDebug: true });
+		const config = await startDebugger(dc, file, { args, noDebug: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
