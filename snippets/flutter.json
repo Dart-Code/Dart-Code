@@ -47,7 +47,7 @@
 			]
 		},
 		"Flutter stateless widget widgets": {
-			"prefix": "stlessc",
+			"prefix": "stlessw",
 			"description": "Insert a StatelessWidget with widgets import",
 			"body": [
 				"import 'package:flutter/widgets.dart';",
@@ -62,11 +62,73 @@
 				"}"
 			]
 		},
-
 		"Flutter stateful widget": {
 			"prefix": "stful",
 			"description": "Insert a StatefulWidget",
 			"body": [
+				"class $1 extends StatefulWidget {",
+				"  @override",
+				"  _$1State createState() => _$1State();",
+				"}",
+				"",
+				"class _$1State extends State<$1> {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return Container(",
+				"      $2",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+		"Flutter stateful widget material": {
+			"prefix": "stfulm",
+			"description": "Insert a StatefulWidget with material import",
+			"body": [
+				"import 'package:flutter/material.dart';",
+				"",
+				"class $1 extends StatefulWidget {",
+				"  @override",
+				"  _$1State createState() => _$1State();",
+				"}",
+				"",
+				"class _$1State extends State<$1> {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return Container(",
+				"      $2",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+		"Flutter stateful widget cupertino": {
+			"prefix": "stfulc",
+			"description": "Insert a StatefulWidget with cupertino import",
+			"body": [
+				"import 'package:flutter/cupertino.dart';",
+				"",
+				"class $1 extends StatefulWidget {",
+				"  @override",
+				"  _$1State createState() => _$1State();",
+				"}",
+				"",
+				"class _$1State extends State<$1> {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return Container(",
+				"      $2",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+		"Flutter stateful widget widgets": {
+			"prefix": "stfulw",
+			"description": "Insert a StatefulWidget with widgets import",
+			"body": [
+				"import 'package:flutter/widgets.dart';",
+				"",
 				"class $1 extends StatefulWidget {",
 				"  @override",
 				"  _$1State createState() => _$1State();",
