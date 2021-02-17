@@ -14,6 +14,55 @@
 				"}"
 			]
 		},
+		"Flutter stateless widget material": {
+			"prefix": "stlessm",
+			"description": "Insert a StatelessWidget with material import",
+			"body": [
+				"import 'package:flutter/material.dart';",
+				"",
+				"class $1 extends StatelessWidget {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return Container(",
+				"      $2",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+		"Flutter stateless widget cupertino": {
+			"prefix": "stlessc",
+			"description": "Insert a StatelessWidget with cupertino import",
+			"body": [
+				"import 'package:flutter/cupertino.dart';",
+				"",
+				"class $1 extends StatelessWidget {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return Container(",
+				"      $2",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+		"Flutter stateless widget widgets": {
+			"prefix": "stlessc",
+			"description": "Insert a StatelessWidget with widgets import",
+			"body": [
+				"import 'package:flutter/widgets.dart';",
+				"",
+				"class $1 extends StatelessWidget {",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return Container(",
+				"      $2",
+				"    );",
+				"  }",
+				"}"
+			]
+		},
+
 		"Flutter stateful widget": {
 			"prefix": "stful",
 			"description": "Insert a StatefulWidget",
