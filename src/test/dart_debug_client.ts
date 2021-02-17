@@ -129,8 +129,9 @@ export class DartDebugClient extends DebugClient {
 			workspaceFolder: undefined,
 		};
 		this.debugCommands.handleDebugSessionStart(this.currentSession);
-		// tslint:disable-next-line: no-floating-promises
-		this.waitForEvent("terminated").then(() => this.debugCommands.handleDebugSessionEnd(this.currentSession!));
+		this.waitForEvent("terminated")
+			.then(() => this.debugCommands.handleDebugSessionEnd(this.currentSession!))
+			.catch((e) => console.error(`Error while waiting for termiantion: ${e}`));
 
 		// We override the base method to swap for attachRequest when required, so that
 		// all the existing methods that provide useful functionality but assume launching
