@@ -53,6 +53,9 @@ export class Analytics {
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
 
+	// If analytics fail, they will be disabled for the rest of the session.
+	private disableAnalyticsForSession = false;
+
 	constructor(private readonly logger: Logger, public workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
 	}
@@ -164,7 +167,7 @@ export class Analytics {
 	}
 
 	private async send(customData: any, resourceUri?: Uri): Promise<void> {
-		if (!machineId || !config.allowAnalytics || process.env.DART_CODE_IS_TEST_RUN)
+		if (this.disableAnalyticsForSession || !machineId || !config.allowAnalytics || process.env.DART_CODE_IS_TEST_RUN)
 			return;
 
 		const data: any = {
@@ -241,12 +244,21 @@ export class Analytics {
 					resolve();
 				});
 				req.write(querystring.stringify(data));
+				req.on("error", (e) => {
+					this.handleError(e);
+					resolve();
+				});
 				req.end();
 			} catch (e) {
-				this.logger.error(`Failed to send analytics: ${e}`);
+				this.handleError(e);
 				resolve();
 			}
 		});
+	}
+
+	private handleError(e: any) {
+		this.logger.error(`Failed to send analytics: ${e}`);
+		this.disableAnalyticsForSession = true;
 	}
 
 	private getDebuggerPreference(): string {
