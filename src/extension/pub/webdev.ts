@@ -6,7 +6,7 @@ const packageID = "webdev";
 export class WebDev {
 	constructor(private pubGlobal: PubGlobal) { }
 
-	public promptToInstallIfRequired() {
-		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID, undefined, "2.5.4");
+	public installIfRequired() {
+		return this.pubGlobal.installIfRequired({ packageName, packageID, moreInfoLink: undefined, requiredVersion: "2.5.4" });
 	}
 }

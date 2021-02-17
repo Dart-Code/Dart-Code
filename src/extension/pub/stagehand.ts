@@ -14,8 +14,8 @@ const packageID = "stagehand";
 export class Stagehand {
 	constructor(private logger: Logger, private sdks: DartSdks, private pubGlobal: PubGlobal) { }
 
-	public promptToInstallIfRequired() {
-		return this.pubGlobal.promptToInstallIfRequired(packageName, packageID, stagehandInstallationInstructionsUrl, "3.3.0");
+	public installIfRequired() {
+		return this.pubGlobal.installIfRequired({ packageName, packageID, moreInfoLink: stagehandInstallationInstructionsUrl, requiredVersion: "3.3.0" });
 	}
 
 	public async getTemplates(): Promise<StagehandTemplate[]> {

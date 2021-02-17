@@ -377,7 +377,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	private installDependencies(debugType: DebuggerType, pubGlobal: PubGlobal) {
 		return debugType === DebuggerType.Web
-			? new WebDev(pubGlobal).promptToInstallIfRequired()
+			? new WebDev(pubGlobal).installIfRequired()
 			: true;
 	}
 
