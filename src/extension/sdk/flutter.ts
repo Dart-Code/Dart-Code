@@ -12,43 +12,47 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 	const selectedItem = promptText ? await window.showInformationMessage(promptText, yesAction, noAction) : yesAction;
 	if (selectedItem === yesAction) {
 		logger.info(`Flutter is not initialized, running 'flutter config --machine'...`);
-		await window.withProgress(
-			{
-				location: ProgressLocation.Notification,
-				title: initializingFlutterMessage,
-			},
-			async (progress, cancellationToken) => {
-				const proc = safeToolSpawn(undefined, flutterScript, ["doctor", "-v"]);
+		try {
+			await window.withProgress(
+				{
+					location: ProgressLocation.Notification,
+					title: initializingFlutterMessage,
+				},
+				async (progress, cancellationToken) => {
+					const proc = safeToolSpawn(undefined, flutterScript, ["doctor", "-v"]);
 
-				// Show the output in an output channel so if it gets stuck the user can see it.
-				const channel = channels.createChannel(`flutter doctor`);
-				channel.show();
-				channels.runProcessInChannel(proc, channel);
+					// Show the output in an output channel so if it gets stuck the user can see it.
+					const channel = channels.createChannel(`flutter doctor`);
+					channel.show();
+					channels.runProcessInChannel(proc, channel);
 
-				cancellationToken.onCancellationRequested((e) => {
-					logger.info(`User canceled!`);
-					proc.kill();
-				});
-				// Log this to general as it's startup stuff that can't be captured with
-				// Capture Logs so log it to the main log file.
-				logProcess(logger, LogCategory.General, proc);
-				return new Promise<void>((resolve, reject) => proc.on("exit", (code) => {
-					if (code) {
-						const ringLogContents = ringLog.toString();
-						logger.error(`Failed to initialize Flutter: Process exited with code ${code}.`);
-						window.showErrorMessage(`Failed to initialize Flutter: Process exited with code ${code}.`, showLogAction).then((chosenAction) => {
-							if (chosenAction === showLogAction)
-								openLogContents(undefined, ringLogContents);
-						});
-						reject();
-					} else {
-						channel.hide();
-						resolve();
-					}
-				}));
-			},
-		);
-		logger.info(`Flutter initialized!`);
+					cancellationToken.onCancellationRequested((e) => {
+						logger.info(`User canceled!`);
+						proc.kill();
+					});
+					// Log this to general as it's startup stuff that can't be captured with
+					// Capture Logs so log it to the main log file.
+					logProcess(logger, LogCategory.General, proc);
+					return new Promise<void>((resolve, reject) => proc.on("exit", (code) => {
+						if (code) {
+							const ringLogContents = ringLog.toString();
+							logger.error(`Failed to initialize Flutter: Process exited with code ${code}.`);
+							window.showErrorMessage(`Failed to initialize Flutter: Process exited with code ${code}.`, showLogAction).then((chosenAction) => {
+								if (chosenAction === showLogAction)
+									openLogContents(undefined, ringLogContents);
+							});
+							reject();
+						} else {
+							channel.hide();
+							resolve();
+						}
+					}));
+				},
+			);
+			logger.info(`Flutter initialized!`);
+		} catch (e) {
+			logger.warn(`Flutter initialization failed, proceeding without!`);
+		}
 	} else {
 		logger.info(`User cancelled Flutter initialization`);
 	}
