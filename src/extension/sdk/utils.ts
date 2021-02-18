@@ -281,11 +281,11 @@ export class SdkUtils {
 			.concat([flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")])
 			.filter(notUndefined);
 
-		const dartSdkPath = this.findDartSdk(dartSdkSearchPaths);
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
 
 		// If we're a Flutter workspace but we couldn't get the version, try running Flutter to initialise it first.
+		// Do this before searching for the Dart SDK, as it might download the Dart SDK we'd like to find.
 		if (hasAnyFlutterProject && flutterSdkPath) {
 			const flutterNeedsInitializing = !getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, versionFile: workspaceConfig?.flutterVersionFile })
 				|| !fs.existsSync(path.join(flutterSdkPath, "bin/cache/dart-sdk"));
@@ -293,6 +293,11 @@ export class SdkUtils {
 			if (flutterNeedsInitializing)
 				await initializeFlutterSdk(this.logger, path.join(flutterSdkPath, flutterPath));
 		}
+
+		const dartSdkPath = this.findDartSdk(dartSdkSearchPaths);
+
+		// Since we just blocked on a lot of sync FS, yield.
+		await resolvedPromise;
 
 		return new WorkspaceContext(
 			{
