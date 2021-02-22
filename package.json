@@ -248,6 +248,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "_dart.displayTestOutput",
+				"title": "Display Test Output",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.debugTestAtCursor",
 				"title": "Debug Test At Cursor",
 				"category": "Dart"
@@ -1295,6 +1300,11 @@
 					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
 					"command": "dart.startWithoutDebuggingTest",
 					"group": "4.5_exec@2"
+				},
+				{
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
+					"command": "_dart.displayTestOutput",
+					"group": "9_misc@1"
 				}
 			]
 		},

@@ -59,7 +59,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestNode) => {
-			this.writeTestOutput(treeNode);
 			if (!treeNode.path)
 				return;
 			return vs.commands.executeCommand(
@@ -69,6 +68,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 				treeNode.column,
 			);
 		}));
+		this.disposables.push(vs.commands.registerCommand("_dart.displayTestOutput", this.writeTestOutput, this));
 	}
 
 	private handleConfigChange(e: vs.ConfigurationChangeEvent) {
