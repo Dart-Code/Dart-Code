@@ -137,6 +137,9 @@ export class TestSessionCoordinator implements IAmDisposable {
 		if (!existingTest || hasChangedParent)
 			testNode.parent.tests.push(testNode);
 
+		// Clear any test output from previous runs.
+		testNode.outputEvents.length = 0;
+
 		testNode.status = TestStatus.Running;
 		this.data.updateNode(testNode);
 		this.data.updateNode(testNode.parent);
