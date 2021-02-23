@@ -87,7 +87,16 @@ export class DartTestDebugSession extends DartDebugSession {
 				this.updateProgress(debugTerminatingProgressId, `${msg.trim()}`);
 			this.logToUserIfAppropriate(msg, "stdout");
 		});
-		runner.registerForTestStartedProcess((n) => this.initDebugger(`${n.observatoryUri}ws`));
+		runner.registerForTestStartedProcess((n) => {
+			// flutter test may send this without a Uri in non-debug mode
+			// https://github.com/flutter/flutter/issues/76533
+			// also exclude the string "null" since that's never valid and
+			// was emitted for a short period (it will never make stable, but
+			// is currently being produced on the bots running against Flutter
+			// master).
+			if (n.observatoryUri && n.observatoryUri !== "null")
+				this.initDebugger(`${n.observatoryUri}ws`);
+		});
 		runner.registerForAllTestNotifications(async (n) => {
 			try {
 				await this.handleTestEvent(n);
