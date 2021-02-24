@@ -134,7 +134,11 @@ export class DevToolsManager implements vs.Disposable {
 		const url = await this.devtoolsUrl;
 
 		this.devToolsStatusBarItem.text = "Dart DevTools";
-		this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
+		if (this.capabilities.version !== DevToolsCapabilities.empty.version) {
+			this.devToolsStatusBarItem.tooltip = `DevTools ${this.capabilities.version} is running at ${url}`;
+		} else {
+			this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
+		}
 		this.devToolsStatusBarItem.command = "dart.openDevTools";
 		this.devToolsStatusBarItem.show();
 
