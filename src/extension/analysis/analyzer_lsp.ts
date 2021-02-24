@@ -135,12 +135,12 @@ export class LspAnalyzer extends Analyzer {
 	}
 
 	public async getDiagnosticServerPort(): Promise<{ port: number }> {
-		return this.client.sendRequest(DiagnosticServerRequest.type, undefined);
+		return this.client.sendRequest(DiagnosticServerRequest.type);
 	}
 
 	public async forceReanalyze(): Promise<void> {
 		try {
-			return await this.client.sendRequest(ReanalyzeRequest.type, undefined);
+			return await this.client.sendRequest(ReanalyzeRequest.type);
 		} catch (e) {
 			window.showErrorMessage("Reanalyze is not supported by this version of the Dart SDK's LSP server.");
 		}
