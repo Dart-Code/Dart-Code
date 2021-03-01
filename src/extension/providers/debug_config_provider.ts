@@ -160,8 +160,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		logger.info(`Detected launch project as ${DebuggerType[debugType]}`);
 
 		// Some helpers for conditions below.
-		const isAnyFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.Web;
-		const isStandardFlutter = debugType === DebuggerType.Flutter;
+		const isFlutter = debugType === DebuggerType.Flutter;
 		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
 		const argsHaveTestNameFilter = isTest && debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 
@@ -234,11 +233,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// If we're attaching to Dart, ensure we get a VM service URI.
 		if (isAttachRequest && !debugConfig.serviceInfoFile) {
 			// For attaching, the VM service address must be specified. If it's not provided already, prompt for it.
-			if (!isStandardFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
+			if (!isFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
 				debugConfig.vmServiceUri = await this.getFullVmServiceUri(debugConfig.vmServiceUri || debugConfig.observatoryUri);
 			}
 
-			if (!debugConfig.vmServiceUri && !isStandardFlutter) {
+			if (!debugConfig.vmServiceUri && !isFlutter) {
 				logger.warn("No VM service URI/port was provided");
 				window.showInformationMessage("You must provide a VM service URI/port to attach a debugger");
 				return undefined; // undefined means silent (don't open launch.json).
@@ -286,7 +285,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		await this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isAnyFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
+		await this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
