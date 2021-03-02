@@ -133,14 +133,14 @@ main() {
 	it("inserts full text for overrides", async () => {
 		await setTestContent(`
 abstract class Person {
-  String get name;
+  String get fullName;
 }
 
 class Student extends Person {
-  nam //
+  fullNam //
 }
 	`);
-		select(rangeOf("nam|| //"));
+		select(rangeOf("fullNam|| //"));
 
 		await acceptFirstSuggestion();
 		const expectedBody = "throw UnimplementedError()";
@@ -151,13 +151,13 @@ class Student extends Person {
 
 		await ensureTestContentWithSelection(`
 abstract class Person {
-  String get name;
+  String get fullName;
 }
 
 class Student extends Person {
   @override
-${extraUnwantedIndent}  // TODO: implement name
-${extraUnwantedIndent}  String get name => |${expectedBody}|; //
+${extraUnwantedIndent}  // TODO: implement fullName
+${extraUnwantedIndent}  String get fullName => |${expectedBody}|; //
 }
 	`);
 	});
