@@ -151,7 +151,7 @@ export class SdkUtils {
 		}
 	}
 
-	public async scanWorkspace(useLsp: boolean): Promise<WorkspaceContext> {
+	public async scanWorkspace(): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 		const normalPath = (process.env.PATH as string) || "";
@@ -220,7 +220,7 @@ export class SdkUtils {
 		}
 
 		// Certain types of workspaces will have special config, so read them here.
-		const workspaceConfig: WorkspaceConfig = { useLsp };
+		const workspaceConfig: WorkspaceConfig = {};
 		// Helper that searches for a specific folder/file up the tree and
 		// runs some specific processing.
 		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {

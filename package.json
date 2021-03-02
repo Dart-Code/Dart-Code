@@ -2084,8 +2084,11 @@
 					"scope": "window"
 				},
 				"dart.previewLsp": {
-					"type": "boolean",
-					"default": false,
+					"type": [
+						"null",
+						"boolean"
+					],
+					"default": null,
 					"markdownDescription": "Whether to run the analyzer in [LSP mode](https://microsoft.github.io/language-server-protocol/) (requires restart).",
 					"scope": "window"
 				},

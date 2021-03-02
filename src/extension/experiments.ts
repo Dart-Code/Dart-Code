@@ -1,17 +1,17 @@
-import * as vs from "vscode";
 import { Logger } from "../shared/interfaces";
 import { getRandomInt } from "../shared/utils/fs";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
-import { config } from "./config";
 
 // Used for testing. DO NOT COMMIT AS TRUE.
 const clearAllExperiments = false;
 
-export interface KnownExperiments { lspPrompt: LspExperiment }
-export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
+export interface KnownExperiments {
+	lspDefault: Experiment,
+}
+export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
 	return {
-		lspPrompt: new LspExperiment(logger, workspaceContext, context),
+		lspDefault: new LspDefaultExperiement(logger, workspaceContext, context),
 	};
 }
 
@@ -59,28 +59,8 @@ class Experiment {
 	protected async activate(isFirstActivation: boolean): Promise<undefined | false> { return; }
 }
 
-class LspExperiment extends Experiment {
+class LspDefaultExperiement extends Experiment {
 	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
-		super(logger, workspaceContext, context, "lsp-prompt", 60);
-	}
-
-	protected async activate(isFirstActivation: boolean): Promise<undefined | false> {
-		// If we don't have any projects, skip this and return false so we can re-trigger in future.
-		if (!this.workspaceContext.hasAnyStandardDartProjects && !this.workspaceContext.hasAnyFlutterProjects)
-			return false;
-
-		// Never prompt if LSP is already enabled or this isn't the first activation.
-		if (config.previewLsp || !isFirstActivation)
-			return;
-
-		const yesPleaseAction = "Yes please!";
-		const noThanksAction = "No thanks";
-		const action = await vs.window.showInformationMessage("Dart-Code is switching to using the Language Server Protocol for improved performance. Would you like to enable the preview now?", yesPleaseAction, noThanksAction);
-
-		if (action === yesPleaseAction) {
-			this.logger.info("Enabling LSP preview and reloading!");
-			await config.setPreviewLsp(true);
-			vs.commands.executeCommand("workbench.action.reloadWindow");
-		}
+		super(logger, workspaceContext, context, "lsp-default", 10);
 	}
 }

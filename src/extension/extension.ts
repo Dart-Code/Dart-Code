@@ -169,12 +169,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const extensionStartTime = new Date();
 	util.logTime();
 	const sdkUtils = new SdkUtils(logger);
-	const isUsingLsp = !!(config.previewLsp || process.env.DART_CODE_FORCE_LSP);
-	const workspaceContextUnverified = await sdkUtils.scanWorkspace(isUsingLsp);
+	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
 	util.logTime("initWorkspace");
 
-	// Create log headers and set up all other log files.
-	buildLogHeaders(logger, workspaceContextUnverified);
+	// Set up log files.
 	setupLog(config.analyzerLogFile, LogCategory.Analyzer);
 	setupLog(config.flutterDaemonLogFile, LogCategory.FlutterDaemon);
 	setupLog(config.devToolsLogFile, LogCategory.DevTools);
@@ -187,6 +185,14 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;
 	const sdks = workspaceContext.sdks;
+	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
+
+	if (sdks.dartVersion) {
+		dartCapabilities.version = sdks.dartVersion;
+		analytics.sdkVersion = sdks.dartVersion;
+		// tslint:disable-next-line: no-floating-promises
+		checkForStandardDartSdkUpdates(logger, workspaceContext);
+	}
 
 	if (sdks.flutterVersion) {
 		flutterCapabilities.version = sdks.flutterVersion;
@@ -195,7 +201,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		// If we're going to pass the DevTools URL to Flutter, we need to eagerly start it
 		// so it's already running.
 		if (workspaceContext.hasAnyFlutterProjects && config.shareDevToolsWithFlutter && flutterCapabilities.supportsDevToolsServerAddress) {
-			const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
 			writableConfig.startDevToolsServerEagerly = true;
 		}
 	}
@@ -207,16 +212,18 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		logger.error(e);
 	}
 
-	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, workspaceContext.config.useLsp);
+	const isUsingLsp = !!process.env.DART_CODE_FORCE_LSP
+		|| (config.previewLsp !== undefined ? config.previewLsp : (dartCapabilities.canDefaultLsp && experiments.lspDefault.applies));
+	writableConfig.useLsp = isUsingLsp;
+	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
+
+	// Build log headers now we know analyzer type.
+	buildLogHeaders(logger, workspaceContextUnverified);
 
 	// Show the SDK version in the status bar.
-	if (sdks.dartVersion) {
-		dartCapabilities.version = sdks.dartVersion;
-		analytics.sdkVersion = sdks.dartVersion;
-		// tslint:disable-next-line: no-floating-promises
-		checkForStandardDartSdkUpdates(logger, workspaceContext);
+	if (sdks.dartVersion)
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext, isUsingLsp));
-	}
+
 	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 
 	const pubApi = new PubApi(webClient);
@@ -654,7 +661,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(async (f) => {
 		// First check if something changed that will affect our SDK, in which case
 		// we'll perform a silent restart so that we do new SDK searches.
-		const newWorkspaceContext = await sdkUtils.scanWorkspace(isUsingLsp);
+		const newWorkspaceContext = await sdkUtils.scanWorkspace();
 		if (
 			newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
