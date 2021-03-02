@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
+import { debugAnywayAction, isWin, showErrorsAction } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
 import { grey } from "../../../shared/utils/colors";
@@ -14,6 +14,13 @@ import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariabl
 import { activate, breakpointFor, closeAllOpenFiles, defer, delay, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
+	beforeEach("skip for Windows", async function () {
+		// These tests currently fail a lot on Windows:
+		// https://github.com/dart-lang/sdk/issues/44787
+		if (isWin)
+			this.skip();
+	});
+
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
