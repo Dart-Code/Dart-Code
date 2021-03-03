@@ -23,6 +23,16 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 	const config = await getLaunchConfiguration(script, extraConfiguration);
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);
+
+	// DDS currently fails to start on Windows quite a lot, so pass
+	// `--disable-dart-dev` if it's supported as a workaround until this is fixed.
+	// https://github.com/dart-lang/sdk/issues/44787
+	if (!config.flutterSdkPath && isWin && extApi.dartCapabilities.supportsDisableDartDev) {
+		extraConfiguration = extraConfiguration || {};
+		extraConfiguration.vmAdditionalArgs = extraConfiguration.vmAdditionalArgs || [];
+		extraConfiguration.vmAdditionalArgs.push("--disable-dart-dev");
+	}
+
 	await watchPromise("startDebugger->start", dc.start());
 	return config;
 }

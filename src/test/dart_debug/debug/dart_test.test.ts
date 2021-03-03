@@ -7,8 +7,8 @@ import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/ou
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, delay, extApi, getCodeLens, getExpectedResults, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { activate, captureDebugSessionCustomEvents, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -27,14 +27,6 @@ describe("dart test debugger", () => {
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.PubTest);
 	});
-
-	async function startDebugger(dc: DartDebugClient, script: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
-		const config = await getLaunchConfiguration(script, extraConfiguration);
-		if (!config)
-			throw new Error(`Could not get launch configuration (got ${config})`);
-		await dc.start();
-		return config;
-	}
 
 	it("runs a Dart test script to completion", async () => {
 		await openFile(helloWorldTestMainFile);
@@ -151,7 +143,7 @@ describe("dart test debugger", () => {
 	it("sends failure results for failing tests", async () => {
 		await openFile(helloWorldTestBrokenFile);
 		const config = await startDebugger(dc, helloWorldTestBrokenFile);
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertFailingTest("might fail today"),
@@ -163,7 +155,7 @@ describe("dart test debugger", () => {
 	it("builds the expected tree from a test run", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(dc, helloWorldTestTreeFile);
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -181,7 +173,7 @@ describe("dart test debugger", () => {
 	it("clears the results from the test tree", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(dc, helloWorldTestTreeFile);
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -205,7 +197,7 @@ describe("dart test debugger", () => {
 			// launchRequests to the same one.
 			const testDc = createDebugClient(DebuggerType.PubTest);
 			const config = await startDebugger(testDc, helloWorldTestShortFile);
-			config!.noDebug = true;
+			config.noDebug = true;
 			await waitAllThrowIfTerminates(testDc,
 				testDc.configurationSequence(),
 				testDc.waitForEvent("terminated"),
@@ -241,7 +233,7 @@ describe("dart test debugger", () => {
 		// Run each test file in a different order to how we expect the results.
 		for (const file of [helloWorldTestSkipFile, helloWorldTestMainFile, helloWorldTestTreeFile, helloWorldTestBrokenFile]) {
 			const config = await startDebugger(dc, file);
-			config!.noDebug = true;
+			config.noDebug = true;
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
@@ -271,7 +263,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 
 	it("runs all tests if given a folder", async () => {
 		const config = await startDebugger(dc, "./test/");
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -370,7 +362,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 	it("can rerun only skipped tests", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(dc, helloWorldTestTreeFile);
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -406,7 +398,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 		for (const file of testFiles) {
 			await openFile(file);
 			const config = await startDebugger(dc, file);
-			config!.noDebug = true;
+			config.noDebug = true;
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
@@ -430,7 +422,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 	it("can hide skipped tests from tree", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(dc, helloWorldTestTreeFile);
-		config!.noDebug = true;
+		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),

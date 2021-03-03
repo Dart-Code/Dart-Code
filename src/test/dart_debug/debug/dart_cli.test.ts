@@ -3,15 +3,16 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { debugAnywayAction, isWin, showErrorsAction } from "../../../shared/constants";
+import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
 import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, breakpointFor, closeAllOpenFiles, defer, delay, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -23,21 +24,6 @@ describe("dart cli debugger", () => {
 		dc = createDebugClient(DebuggerType.Dart);
 	});
 
-	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
-		// DDS currently fails to start on Windows quite a lot, so pass
-		// `--disable-dart-dev` if it's supported as a workaround until this is fixed.
-		// https://github.com/dart-lang/sdk/issues/44787
-		if (isWin && extApi.dartCapabilities.supportsDisableDartDev) {
-			extraConfiguration = extraConfiguration || {};
-			extraConfiguration.vmAdditionalArgs = extraConfiguration.vmAdditionalArgs || [];
-			extraConfiguration.vmAdditionalArgs.push("--disable-dart-dev");
-		}
-		const config = (await getLaunchConfiguration(script, extraConfiguration))!;
-		if (config) {
-			await dc.start();
-		}
-		return config;
-	}
 
 	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 		const config = await getAttachConfiguration(Object.assign({ vmServiceUri }, extraConfiguration));
@@ -48,7 +34,7 @@ describe("dart cli debugger", () => {
 	}
 
 	it("runs to completion", async () => {
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
@@ -84,7 +70,7 @@ describe("dart cli debugger", () => {
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 			showErrorMessage.resolves(debugAnywayAction);
 
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 
 			// If we got a debug config, then we will launch normally.
 			assert(config);
@@ -103,7 +89,7 @@ describe("dart cli debugger", () => {
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
 			showErrorMessage.resolves(debugAnywayAction);
 
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 
 			// Although we have errors, they're in test scripts, so we expect
 			// them to be ignored.
@@ -133,7 +119,7 @@ describe("dart cli debugger", () => {
 	});
 
 	it("receives the expected output", async () => {
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
@@ -146,7 +132,7 @@ describe("dart cli debugger", () => {
 
 	it("can run in a terminal", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile, {
+		const config = await startDebugger(dc, helloWorldMainFile, {
 			console: "terminal",
 			name: "dart-terminal-test",
 		});
@@ -168,7 +154,7 @@ describe("dart cli debugger", () => {
 	});
 
 	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		config.vmAdditionalArgs = ["--fake-flag"];
 		await waitAllThrowIfTerminates(dc,
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
@@ -227,7 +213,7 @@ describe("dart cli debugger", () => {
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
 
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		// Stop at a breakpoint so the app won't quit while we're verifying DevTools.
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
@@ -246,7 +232,7 @@ describe("dart cli debugger", () => {
 
 	it("stops at a breakpoint", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldMainFile),
@@ -260,7 +246,7 @@ describe("dart cli debugger", () => {
 
 	it("does not stop at a breakpoint in noDebug mode", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
@@ -274,7 +260,7 @@ describe("dart cli debugger", () => {
 
 	it("stops at a breakpoint in a part file", async () => {
 		await openFile(helloWorldPartFile);
-		const config = await startDebugger(helloWorldPartEntryFile);
+		const config = await startDebugger(dc, helloWorldPartEntryFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line,
 			path: fsPath(helloWorldPartFile),
@@ -288,7 +274,7 @@ describe("dart cli debugger", () => {
 
 	it("stops at a breakpoint in a deferred file", async () => {
 		await openFile(helloWorldDeferredScriptFile);
-		const config = await startDebugger(helloWorldDeferredEntryFile);
+		const config = await startDebugger(dc, helloWorldDeferredEntryFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line,
 			path: fsPath(helloWorldDeferredScriptFile),
@@ -305,7 +291,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const def = await getDefinition(positionOf("pri^nt("));
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, breakpointFor(def));
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
@@ -318,7 +304,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read`
 		const def = await getDefinition(positionOf("http.re^ad"));
-		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalLibraries: true });
 		await dc.hitBreakpoint(config, breakpointFor(def));
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
@@ -331,7 +317,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: true });
+		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
 			path: fsPath(helloWorldMainFile),
@@ -356,7 +342,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: false });
+		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
 			path: fsPath(helloWorldMainFile),
@@ -383,7 +369,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: false });
+		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
 			path: fsPath(helloWorldMainFile),
@@ -402,7 +388,7 @@ describe("dart cli debugger", () => {
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
-		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1,
 			path: fsPath(helloWorldHttpFile),
@@ -426,7 +412,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
-		const config = await startDebugger(helloWorldHttpFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line,
 			path: fsPath(helloWorldHttpFile),
@@ -445,7 +431,7 @@ describe("dart cli debugger", () => {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const config = await startDebugger(helloWorldLocalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldLocalPackageFile, { debugExternalLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
 			path: fsPath(helloWorldLocalPackageFile),
@@ -474,7 +460,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const config = await startDebugger(helloWorldMainFile, { debugSdkLibraries: true });
+		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
 			path: fsPath(helloWorldMainFile),
@@ -503,7 +489,7 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async () => {
 		await openFile(helloWorldThrowInSdkFile);
-		const config = await startDebugger(helloWorldThrowInSdkFile, { debugSdkLibraries: false });
+		const config = await startDebugger(dc, helloWorldThrowInSdkFile, { debugSdkLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -516,7 +502,7 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks debuggable SDK frames when debugSdkLibraries is true", async () => {
 		await openFile(helloWorldThrowInSdkFile);
-		const config = await startDebugger(helloWorldThrowInSdkFile, { debugSdkLibraries: true });
+		const config = await startDebugger(dc, helloWorldThrowInSdkFile, { debugSdkLibraries: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -529,7 +515,7 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks non-debuggable external library frames when debugExternalLibraries is false", async () => {
 		await openFile(helloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(helloWorldThrowInExternalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -542,7 +528,7 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks debuggable external library frames when debugExternalLibraries is true", async () => {
 		await openFile(helloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(helloWorldThrowInExternalPackageFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalLibraries: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -555,7 +541,7 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks debuggable local library frames even when debugExternalLibraries is false", async () => {
 		await openFile(helloWorldThrowInLocalPackageFile);
-		const config = await startDebugger(helloWorldThrowInLocalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldThrowInLocalPackageFile, { debugExternalLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -571,7 +557,7 @@ describe("dart cli debugger", () => {
 		const expectFullCount = !versionIsAtLeast(extApi.dartCapabilities.version, "2.12.0-0");
 
 		await openFile(helloWorldStack60File);
-		const config = await startDebugger(helloWorldStack60File);
+		const config = await startDebugger(dc, helloWorldStack60File);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1,
 			path: fsPath(helloWorldStack60File),
@@ -617,7 +603,7 @@ describe("dart cli debugger", () => {
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
 		return async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 
 			let didStop = false;
 
@@ -665,7 +651,7 @@ describe("dart cli debugger", () => {
 
 	it("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized").then((event) => dc.setBreakpointsRequest({
 				// positionOf is 0-based, but seems to want 1-based
@@ -685,7 +671,7 @@ describe("dart cli debugger", () => {
 
 	it("provides local variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldMainFile);
-		const debugConfig = await startDebugger(helloWorldMainFile);
+		const debugConfig = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldMainFile),
@@ -761,7 +747,7 @@ describe("dart cli debugger", () => {
 
 	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async () => {
 		await openFile(helloWorldMainFile);
-		const debugConfig = await startDebugger(helloWorldMainFile);
+		const debugConfig = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT2").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldMainFile),
@@ -775,7 +761,7 @@ describe("dart cli debugger", () => {
 
 	it("includes getters in variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldGettersFile);
-		const config = await startDebugger(helloWorldGettersFile);
+		const config = await startDebugger(dc, helloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldGettersFile),
@@ -792,7 +778,7 @@ describe("dart cli debugger", () => {
 
 	it("watch expressions provide same info as locals", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldMainFile),
@@ -813,7 +799,7 @@ describe("dart cli debugger", () => {
 
 	it("evaluateName evaluates to the expected value", async () => {
 		await openFile(helloWorldMainFile);
-		const config = await startDebugger(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(helloWorldMainFile),
@@ -847,7 +833,7 @@ describe("dart cli debugger", () => {
 	describe("can evaluate at breakpoint", () => {
 		it("simple expressions", async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -863,7 +849,7 @@ describe("dart cli debugger", () => {
 
 		it("complex expression expressions", async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -879,7 +865,7 @@ describe("dart cli debugger", () => {
 
 		it("an expression that returns a variable", async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -896,7 +882,7 @@ describe("dart cli debugger", () => {
 
 		it("complex expression expressions when in a top level function", async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -912,7 +898,7 @@ describe("dart cli debugger", () => {
 
 		it("can evaluate expressions with trailing semicolons", async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -928,7 +914,7 @@ describe("dart cli debugger", () => {
 
 		it("returns a full error message for repl context", async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -942,7 +928,7 @@ describe("dart cli debugger", () => {
 
 		it("returns a short error message for watch context", async () => {
 			await openFile(helloWorldMainFile);
-			const config = await startDebugger(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -958,7 +944,7 @@ describe("dart cli debugger", () => {
 	describe("can evaluate when not at a breakpoint", () => {
 		it("simple expressions", async () => {
 			await openFile(helloWorldLongRunningFile);
-			const config = await startDebugger(helloWorldLongRunningFile);
+			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
@@ -975,7 +961,7 @@ describe("dart cli debugger", () => {
 
 		it("complex expression expressions", async () => {
 			await openFile(helloWorldLongRunningFile);
-			const config = await startDebugger(helloWorldLongRunningFile);
+			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
@@ -992,7 +978,7 @@ describe("dart cli debugger", () => {
 
 		it("an expression that returns a variable", async () => {
 			await openFile(helloWorldLongRunningFile);
-			const config = await startDebugger(helloWorldLongRunningFile);
+			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
@@ -1010,7 +996,7 @@ describe("dart cli debugger", () => {
 
 		it("can evaluate expressions with trailing semicolons", async () => {
 			await openFile(helloWorldLongRunningFile);
-			const config = await startDebugger(helloWorldLongRunningFile);
+			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
@@ -1027,7 +1013,7 @@ describe("dart cli debugger", () => {
 
 		it("returns a full error message for repl context", async () => {
 			await openFile(helloWorldLongRunningFile);
-			const config = await startDebugger(helloWorldLongRunningFile);
+			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
@@ -1041,7 +1027,7 @@ describe("dart cli debugger", () => {
 
 		it("returns a short error message for watch context", async () => {
 			await openFile(helloWorldLongRunningFile);
-			const config = await startDebugger(helloWorldLongRunningFile);
+			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
@@ -1056,7 +1042,7 @@ describe("dart cli debugger", () => {
 
 	it("prints the output of inspected variables", async () => {
 		await openFile(helloWorldInspectFile);
-		const debugConfig = await startDebugger(helloWorldInspectFile);
+		const debugConfig = await startDebugger(dc, helloWorldInspectFile);
 		const expectedVariablesTree = `
 insp=<inspected variable>
   [0]=Person
@@ -1080,7 +1066,7 @@ insp=<inspected variable>
 
 	it("stops on exception", async () => {
 		await openFile(helloWorldBrokenFile);
-		const config = await startDebugger(helloWorldBrokenFile);
+		const config = await startDebugger(dc, helloWorldBrokenFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
@@ -1093,7 +1079,7 @@ insp=<inspected variable>
 
 	it("does not stop on exception in noDebug mode", async () => {
 		await openFile(helloWorldBrokenFile);
-		const config = await startDebugger(helloWorldBrokenFile);
+		const config = await startDebugger(dc, helloWorldBrokenFile);
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -1104,7 +1090,7 @@ insp=<inspected variable>
 
 	it("provides exception details when stopped on exception", async () => {
 		await openFile(helloWorldBrokenFile);
-		const config = await startDebugger(helloWorldBrokenFile);
+		const config = await startDebugger(dc, helloWorldBrokenFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
@@ -1120,7 +1106,7 @@ insp=<inspected variable>
 
 	it("writes exception to stderr", async () => {
 		await openFile(helloWorldBrokenFile);
-		const config = await startDebugger(helloWorldBrokenFile);
+		const config = await startDebugger(dc, helloWorldBrokenFile);
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -1132,7 +1118,7 @@ insp=<inspected variable>
 
 	it("moves known files from call stacks to metadata", async () => {
 		await openFile(helloWorldBrokenFile);
-		const config = await startDebugger(helloWorldBrokenFile);
+		const config = await startDebugger(dc, helloWorldBrokenFile);
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
