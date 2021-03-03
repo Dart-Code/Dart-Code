@@ -14,13 +14,6 @@ import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariabl
 import { activate, breakpointFor, closeAllOpenFiles, defer, delay, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
-	beforeEach("skip for Windows", async function () {
-		// These tests currently fail a lot on Windows:
-		// https://github.com/dart-lang/sdk/issues/44787
-		if (isWin)
-			this.skip();
-	});
-
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
@@ -31,6 +24,14 @@ describe("dart cli debugger", () => {
 	});
 
 	async function startDebugger(script?: vs.Uri, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration> {
+		// DDS currently fails to start on Windows quite a lot, so pass
+		// `--disable-dart-dev` if it's supported as a workaround until this is fixed.
+		// https://github.com/dart-lang/sdk/issues/44787
+		if (isWin && extApi.dartCapabilities.supportsDisableDartDev) {
+			extraConfiguration = extraConfiguration || {};
+			extraConfiguration.vmAdditionalArgs = extraConfiguration.vmAdditionalArgs || [];
+			extraConfiguration.vmAdditionalArgs.push("--disable-dart-dev");
+		}
 		const config = (await getLaunchConfiguration(script, extraConfiguration))!;
 		if (config) {
 			await dc.start();
