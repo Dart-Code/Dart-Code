@@ -289,18 +289,19 @@ export class DebugCommands {
 			this.logger.info("Using only available debug session");
 			return debugSessions[0];
 		} else {
-			this.logger.info("Multiple debug sessions available, prompting user");
-			const selectedItem = await vs.window.showQuickPick(
-				debugSessions.map((s) => ({
-					description: s.session.workspaceFolder ? s.session.workspaceFolder.name : undefined,
-					detail: s.session.configuration.deviceName || `Started ${s.sessionStart.toLocaleTimeString()}`,
-					label: s.session.name,
-					session: s,
-				})),
-				{
-					placeHolder: "Which debug session?",
-				},
-			);
+			this.logger.info("Multiple debug sessions available, will prompt user:");
+
+			const sessions = debugSessions.map((s) => ({
+				description: s.session.workspaceFolder ? s.session.workspaceFolder.name : undefined,
+				detail: s.session.configuration.deviceName || `Started ${s.sessionStart.toLocaleTimeString()}`,
+				label: s.session.name,
+				session: s,
+			}));
+
+			for (const session of sessions)
+				this.logger.info(`${session.label} ${session.description} (${session.detail})`);
+
+			const selectedItem = await vs.window.showQuickPick(sessions, { placeHolder: "Which debug session?" });
 
 			return selectedItem && selectedItem.session;
 		}
