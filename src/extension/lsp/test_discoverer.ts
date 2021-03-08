@@ -52,6 +52,11 @@ export class TestDiscoverer implements IAmDisposable {
 							? new GroupNode(suite, parent, id++, fullName, suitePath, range.start.line + 1, range.start.character)
 							: new TestNode(suite, parent, id++, fullName, suitePath, range.start.line + 1, range.start.character);
 
+						// Set this to something that does not overlap with real runs, so that if a real
+						// test run is running at the same time, it cannot consider these nodes as part
+						// of its own run, and will reuse them.
+						item.suiteRunNumber = 0;
+
 						if (item instanceof GroupNode) {
 							suite.storeGroup(item);
 							parent.groups.push(item);

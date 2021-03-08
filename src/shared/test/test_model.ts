@@ -353,10 +353,10 @@ export class SuiteData {
 		return this.tests[`${suiteRunNumber}_${id}`];
 	}
 	public storeGroup(node: GroupNode) {
-		return this.groups[`${this.currentRunNumber}_${node.id}`] = node;
+		return this.groups[`${node.suiteRunNumber}_${node.id}`] = node;
 	}
 	public storeTest(node: TestNode) {
-		return this.tests[`${this.currentRunNumber}_${node.id}`] = node;
+		return this.tests[`${node.suiteRunNumber}_${node.id}`] = node;
 	}
 	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group): GroupNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
