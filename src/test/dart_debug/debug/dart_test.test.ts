@@ -7,7 +7,7 @@ import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/ou
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, captureDebugSessionCustomEvents, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
@@ -241,9 +241,9 @@ describe("dart test debugger", () => {
 			);
 		}
 
-		const topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[] || [];
-		assert.strictEqual(topLevelNodes.length, 4);
-
+		const topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[];
+		assert.ok(topLevelNodes);
+		expectTopLevelTestNodeCount(topLevelNodes, 4);
 
 		let actualOrder = "";
 		for (const node of topLevelNodes) {
@@ -272,7 +272,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 
 		const topLevelNodes = await extApi.testTreeProvider.getChildren();
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, 7);
+		expectTopLevelTestNodeCount(topLevelNodes, 7);
 	});
 
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {

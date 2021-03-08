@@ -7,6 +7,7 @@ import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { DebuggerType, LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
+import { TreeNode } from "../shared/test/test_model";
 import { getDebugAdapterName, getDebugAdapterPort } from "../shared/utils/debug";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
@@ -113,6 +114,10 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 		if (value.ends)
 			assert.equal(v.value.slice(-value.ends.length), value.ends);
 	}
+}
+
+export function expectTopLevelTestNodeCount(topLevelNodes: TreeNode[], expectedLength: number) {
+	assert.strictEqual(topLevelNodes.length, expectedLength, `Expected ${expectedLength} nodes but got\n${topLevelNodes.map((n) => `        ${n.label ?? n.suiteData.path}`).join("\n")}`);
 }
 
 export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], index: number, evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
