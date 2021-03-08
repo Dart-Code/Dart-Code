@@ -1031,6 +1031,18 @@
 					"group": "93_utils"
 				}
 			],
+			"editor/title/run": [
+				{
+					"when": "resourceLangId == dart && dart-code:anyProjectLoaded && dart-code:currentFileIsRunnable",
+					"command": "dart.startDebugging",
+					"group": "1_run@10"
+				},
+				{
+					"when": "resourceLangId == dart && dart-code:anyProjectLoaded && dart-code:currentFileIsRunnable",
+					"command": "dart.startWithoutDebugging",
+					"group": "1_run@20"
+				}
+			],
 			"editor/title": [
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
@@ -1067,16 +1079,6 @@
 					"when": "resourceFilename == dartdoc_options.yaml && dart-code:anyProjectLoaded",
 					"command": "dart.task.dartdoc",
 					"group": "navigation@1"
-				},
-				{
-					"when": "resourceLangId == dart && dart-code:anyProjectLoaded && dart-code:currentFileIsRunnable",
-					"command": "dart.startWithoutDebugging",
-					"group": "1_run@10"
-				},
-				{
-					"when": "resourceLangId == dart && dart-code:anyProjectLoaded && dart-code:currentFileIsRunnable",
-					"command": "dart.startDebugging",
-					"group": "1_run@20"
 				}
 			],
 			"editor/context": [
