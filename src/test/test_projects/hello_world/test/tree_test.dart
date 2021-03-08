@@ -10,7 +10,7 @@ import "package:test/test.dart";
 //             passing test 1 with ' some " quotes and newlines in name [{duration}ms] (pass.svg)
 //         passing test 1 2 [{duration}ms] (pass.svg)
 //         failing test 1 some string [{duration}ms] (fail.svg)
-//         skipped test 1 [{duration}ms] (skip.svg)
+//         skipped test 1 some string [{duration}ms] (skip.svg)
 //     skipped group 2 [1/6 passed, {duration}ms] (fail.svg)
 //         skipped group 2.1 [0/3 passed, {duration}ms] (skip.svg)
 //             passing test 1 [{duration}ms] (skip.svg)
@@ -28,7 +28,7 @@ void main() {
   group("failing group 1", () {
     test("passing test 1 ${1 + 1}", () => expect(1, equals(1)));
     test("failing test 1 $foo", () => expect(1, equals(2)));
-    test("skipped test 1", () {}, skip: true);
+    test("skipped test 1 $foo", () {}, skip: true);
     group("group 1.1", () {
       test('''
         passing test 1 with \' some " quotes

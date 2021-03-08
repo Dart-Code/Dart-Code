@@ -379,7 +379,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 		const expectedResults = `
 test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
     failing group 1 [3/4 passed, {duration}ms] (fail.svg)
-        skipped test 1 [{duration}ms] (pass.svg)
+        skipped test 1 some string [{duration}ms] (pass.svg)
     skipped group 2 [4/6 passed, {duration}ms] (fail.svg)
         skipped group 2.1 [2/3 passed, {duration}ms] (fail.svg)
             passing test 1 [{duration}ms] (pass.svg)
