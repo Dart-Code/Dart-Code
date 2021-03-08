@@ -186,6 +186,7 @@ export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string
 	const allArgs = [
 		"--enable-vm-service=0",
 		"--pause_isolates_on_start=true",
+		"--disable-dart-dev",
 		...vmArgs,
 		programPath,
 	];
