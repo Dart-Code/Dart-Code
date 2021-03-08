@@ -991,7 +991,7 @@ export class DartDebugSession extends DebugSession {
 			// `topFrame` field of the pause event.
 			if (startFrame === 0 && levels === 1 && thread.pauseEvent?.topFrame) {
 				totalFrames = 1 + stackFrameBatch; // Claim we had more +stackFrameBatch frames to force another request.
-				stackFrames.push(await this.convertStackFrame(thread, thread.pauseEvent?.topFrame, true, true));
+				stackFrames.push(await this.convertStackFrame(thread, thread.pauseEvent?.topFrame, true, true, Infinity));
 			} else {
 				const result = await this.vmService.getStack(thread.ref.id, limit);
 
@@ -999,6 +999,10 @@ export class DartDebugSession extends DebugSession {
 				let vmFrames = stack.asyncCausalFrames || stack.frames;
 				const framesRecieved = vmFrames.length;
 				isTruncated = stack.truncated ?? false;
+
+				let firstAsyncMarkerIndex = vmFrames.findIndex((f) => f.kind === "AsyncSuspensionMarker");
+				if (firstAsyncMarkerIndex === -1)
+					firstAsyncMarkerIndex = Infinity;
 
 				// Drop frames that are earlier than what we wanted.
 				vmFrames = vmFrames.slice(startFrame);
@@ -1009,7 +1013,8 @@ export class DartDebugSession extends DebugSession {
 
 				const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.getNonDebuggableFrameReason(f.location?.script?.uri) === undefined);
 
-				stackFrames = await Promise.all(vmFrames.map((f, i) => this.convertStackFrame(thread, f, startFrame + i === 0, hasAnyDebuggableFrames)));
+
+				stackFrames = await Promise.all(vmFrames.map((f, i) => this.convertStackFrame(thread, f, startFrame + i === 0, hasAnyDebuggableFrames, firstAsyncMarkerIndex)));
 
 				totalFrames = supportsGetStackLimit
 					// If the stack was truncated, we should say there are 20(stackFrameBatch) more frames, otherwise use the real count.
@@ -1032,7 +1037,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private async convertStackFrame(thread: ThreadInfo, frame: VMFrame, isTopFrame: boolean, hasDebuggableFrames: boolean): Promise<DebugProtocol.StackFrame> {
+	private async convertStackFrame(thread: ThreadInfo, frame: VMFrame, isTopFrame: boolean, hasDebuggableFrames: boolean, firstAsyncMarkerIndex: number): Promise<DebugProtocol.StackFrame> {
 		const frameId = thread.storeData(frame);
 
 		if (frame.kind === "AsyncSuspensionMarker") {
@@ -1093,6 +1098,8 @@ export class DartDebugSession extends DebugSession {
 				stackFrame.source.presentationHint = "deemphasize";
 			}
 		}
+
+		stackFrame.canRestart = !isTopFrame && frame.index < firstAsyncMarkerIndex;
 
 		// Resolve the line and column information.
 		try {
