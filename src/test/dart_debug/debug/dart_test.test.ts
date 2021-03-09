@@ -7,7 +7,7 @@ import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/ou
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, disableDdsForTestForWindows, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, captureDebugSessionCustomEvents, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
@@ -22,6 +22,8 @@ describe("dart test debugger", () => {
 		await delay(10); // Allow tree to be updated.
 	});
 	beforeEach("activate", () => activate(null));
+
+	beforeEach("disable DDS for Windows", disableDdsForTestForWindows);
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
