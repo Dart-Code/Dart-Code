@@ -6,7 +6,7 @@ import '../lib/main.dart' as hello_world;
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// test/widget_test.dart [1/2 passed, {duration}ms] (skip.svg)
+// test/widget_test.dart [1/2 passed, {duration}ms] (pass.svg)
 //     Hello world test [{duration}ms] (pass.svg)
 //     Skipped test [{duration}ms] (skip.svg)
 // == /EXPECTED RESULTS ==
