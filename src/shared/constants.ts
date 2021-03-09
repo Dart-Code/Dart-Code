@@ -42,8 +42,7 @@ export const DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT = "dart-code:testContai
 export const DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT = "dart-code:testContainerNodeWithFailures";
 export const DART_TEST_GROUP_NODE_CONTEXT = "dart-code:testGroupNode";
 export const DART_TEST_TEST_NODE_CONTEXT = "dart-code:testTestNode";
-export const IS_IN_FLUTTER_TEST_SUITE_CONTEXT = "dart-code:isInFlutterTestSuite";
-export const IS_IN_DART_TEST_SUITE_CONTEXT = "dart-code:isInDartTestSuite";
+export const DART_TEST_CAN_RUN_SKIPPED_CONTEXT = "dart-code:canRunSkipped";
 
 export const DART_DEP_PROJECT_NODE_CONTEXT = "dart-code:depProjectNode";
 export const DART_DEP_PACKAGE_NODE_CONTEXT = "dart-code:depPackageNode";

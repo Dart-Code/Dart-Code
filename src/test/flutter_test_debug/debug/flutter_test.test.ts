@@ -2,6 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
+import { TestDoneNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -59,6 +60,89 @@ describe("flutter test debugger", () => {
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
 		const testDoneNotification = customEvents.find((e) => e.event === "dart.testRunNotification" && e.body.notification.type === "testDone");
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+	});
+
+	function isTestDoneNotification(e: vs.DebugSessionCustomEvent) {
+		if (e.event !== "dart.testRunNotification")
+			return false;
+		const notification = e.body.notification as TestDoneNotification;
+		return notification.type === "testDone" && !notification.hidden;
+	}
+
+	it("does not attempt to run skipped tests from codelens if not supported", async function () {
+		if (extApi.flutterCapabilities.supportsRunSkippedTests)
+			this.skip();
+
+		const editor = await openFile(flutterTestMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
+
+		const fileCodeLens = await getCodeLens(editor.document);
+		const testPos = positionOf(`test^Widgets('Skipped test`);
+
+		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+		assert.equal(codeLensForTest.length, 2);
+
+		if (!codeLensForTest[0].command) {
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			this.skip();
+			return;
+		}
+
+		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
+		assert.equal(runAction.command!.arguments![0].isGroup, false);
+
+		const customEvents = await captureDebugSessionCustomEvents(async () => {
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			assert.ok(didStart);
+		});
+
+		const testDoneNotification = customEvents.find(isTestDoneNotification);
+		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+
+		const testDone = testDoneNotification.body.notification as TestDoneNotification;
+		assert.strictEqual(testDone.skipped, true);
+	});
+
+	it("can run skipped tests from codelens if supported", async function () {
+		if (!extApi.flutterCapabilities.supportsRunSkippedTests)
+			this.skip();
+
+		const editor = await openFile(flutterTestMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
+
+		const fileCodeLens = await getCodeLens(editor.document);
+		const testPos = positionOf(`test^Widgets('Skipped test`);
+
+		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+		assert.equal(codeLensForTest.length, 2);
+
+		if (!codeLensForTest[0].command) {
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			this.skip();
+			return;
+		}
+
+		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
+		assert.equal(runAction.command!.arguments![0].isGroup, false);
+
+		const customEvents = await captureDebugSessionCustomEvents(async () => {
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			assert.ok(didStart);
+		});
+
+		const testDoneNotification = customEvents.find(isTestDoneNotification);
+		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+
+		const testDone = testDoneNotification.body.notification as TestDoneNotification;
+		assert.strictEqual(testDone.skipped, false); // Test should have run.
 	});
 
 	it("receives the expected events from a Flutter test script", async () => {
@@ -225,5 +309,35 @@ describe("flutter test debugger", () => {
 			dc.assertPassingTest(`Counter App increments the counter`),
 			dc.launch(config),
 		);
+	});
+
+	it("can rerun only skipped tests", async function () {
+		if (!extApi.flutterCapabilities.supportsRunSkippedTests)
+			this.skip();
+
+		await openFile(flutterTestMainFile);
+		const config = await startDebugger(dc, flutterTestMainFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		// Now run only skipped tests.
+		await vs.commands.executeCommand("dart.runAllSkippedTestsWithoutDebugging");
+
+		await openFile(flutterTestMainFile);
+		// Expected results differ from what's in the file as the skipped tests will be run
+		// and also the parent groups/suite status will be recomputed so they will be not-stale
+		// in the new results (so we can't just filter to skipped, like we do in the failed test).
+		const expectedResults = `
+test/widget_test.dart [2/2 passed, {duration}ms] (pass.svg)
+    Skipped test [{duration}ms] (pass.svg)
+		`.trim();
+
+		// Get the actual tree, filtered only to those that ran in the last run.
+		const actualResults = (await makeTextTree(flutterTestMainFile, extApi.testTreeProvider, { onlyActive: true })).join("\n");
+		assert.strictEqual(actualResults, expectedResults);
 	});
 });
