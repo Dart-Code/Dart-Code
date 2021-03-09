@@ -181,8 +181,7 @@
 			},
 			{
 				"command": "dart.runAllSkippedTestsWithoutDebugging",
-				"title": "Run All Skipped Tests (Standard Dart projects only)",
-				"enablement": "dart-code:anyStandardDartProjectLoaded",
+				"title": "Run All Skipped Tests",
 				"category": "Dart",
 				"icon": {
 					"dark": "./media/commands/test-run-skipped-dark.svg",
@@ -1274,12 +1273,12 @@
 					"group": "4.5_exec@4"
 				},
 				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:isInDartTestSuite/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:canRunSkipped/",
 					"command": "dart.startDebuggingSkippedTests",
 					"group": "4.5_exec@5"
 				},
 				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:isInDartTestSuite/",
+					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:canRunSkipped/",
 					"command": "dart.startWithoutDebuggingSkippedTests",
 					"group": "4.5_exec@6"
 				},

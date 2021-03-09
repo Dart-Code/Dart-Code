@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
@@ -24,7 +25,7 @@ export let isInImplementationFileThatCanHaveTest = false;
 abstract class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext) {
+	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
@@ -43,7 +44,7 @@ abstract class TestCommands implements vs.Disposable {
 	}
 
 	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
-		const canRunSkippedTest = !test.isGroup && !isInsideFlutterProject(vs.Uri.file(test.file));
+		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
 
 		return vs.debug.startDebugging(
 			vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
@@ -177,8 +178,8 @@ abstract class TestCommands implements vs.Disposable {
 }
 
 export class DasTestCommands extends TestCommands {
-	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: DasFileTracker) {
-		super(logger, wsContext);
+	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: DasFileTracker, flutterCapabilities: FlutterCapabilities) {
+		super(logger, wsContext, flutterCapabilities);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
@@ -208,8 +209,8 @@ export class DasTestCommands extends TestCommands {
 }
 
 export class LspTestCommands extends TestCommands {
-	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: LspFileTracker) {
-		super(logger, wsContext);
+	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: LspFileTracker, flutterCapabilities: FlutterCapabilities) {
+		super(logger, wsContext, flutterCapabilities);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): LspTestOutlineInfo | undefined {

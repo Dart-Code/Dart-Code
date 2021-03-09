@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT, IS_IN_DART_TEST_SUITE_CONTEXT, IS_IN_FLUTTER_TEST_SUITE_CONTEXT } from "../../shared/constants";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
+import { DART_TEST_CAN_RUN_SKIPPED_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { TestSessionCoordinator } from "../../shared/test/coordinator";
 import { GroupNode, SuiteNode, TestContainerNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
@@ -21,8 +22,10 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<TreeNode | undefined> = new vs.EventEmitter<TreeNode | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<TreeNode | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private currentTestTerminal: [vs.Terminal, vs.EventEmitter<string>] | undefined;
+	private readonly treeItemBuilder: TreeItemBuilder;
 
-	constructor(private readonly data: TestTreeModel, private readonly coordinator: TestSessionCoordinator) {
+	constructor(private readonly data: TestTreeModel, private readonly coordinator: TestSessionCoordinator, private readonly flutterCapabilities: FlutterCapabilities) {
+		this.treeItemBuilder = new TreeItemBuilder(flutterCapabilities);
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
 		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => this.handleConfigChange(e)));
 
@@ -34,8 +37,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode)));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()));
 		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
@@ -123,7 +126,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		);
 	}
 
-	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests?: boolean, token?: vs.CancellationToken) {
+	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken) {
 		const subs: vs.Disposable[] = [];
 		return new Promise<void>(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
@@ -139,7 +142,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 					resolve();
 			}));
 			const programPath = fsPath(treeNode.suiteData.path);
-			const shouldRunSkippedTests = runSkippedTests && !isInsideFlutterProject(vs.Uri.file(treeNode.suiteData.path));
+			const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(treeNode.suiteData.path));
+			const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
 			const didStart = await vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(treeNode.suiteData.path)),
 				{
@@ -221,11 +225,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 	public getTreeItem(element: TreeNode): vs.TreeItem {
 		if (element instanceof SuiteNode) {
-			return treeItemBuilder.createSuiteNode(element);
+			return this.treeItemBuilder.createSuiteNode(element);
 		} else if (element instanceof GroupNode) {
-			return treeItemBuilder.createGroupNode(element);
+			return this.treeItemBuilder.createGroupNode(element);
 		} else if (element instanceof TestNode) {
-			return treeItemBuilder.createTestNode(element);
+			return this.treeItemBuilder.createTestNode(element);
 		} else {
 			throw new Error(`Unrecognised tree node type: ${element}`);
 		}
@@ -317,6 +321,8 @@ function getIconPath(status: TestStatus, isStale: boolean): vs.Uri | undefined {
 }
 
 class TreeItemBuilder {
+	constructor(private readonly flutterCapabilities: FlutterCapabilities) { }
+
 	public createSuiteNode(node: SuiteNode): vs.TreeItem {
 		// TODO: children is quite expensive, we should add a faster way.
 		const collapseState = node.children?.length || 0 > 0 ? vs.TreeItemCollapsibleState.Collapsed : vs.TreeItemCollapsibleState.None;
@@ -371,13 +377,11 @@ class TreeItemBuilder {
 				contexts += `${DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT} `;
 		}
 
-		if (node.suiteData.isFlutterSuite)
-			contexts += `${IS_IN_FLUTTER_TEST_SUITE_CONTEXT} `;
-		else
-			contexts += `${IS_IN_DART_TEST_SUITE_CONTEXT} `;
+		// Don't mark a node as skipable unless it's non-Flutter or the current Flutter version
+		// supports run-skipped.
+		if (!node.suiteData.isFlutterSuite || this.flutterCapabilities.supportsRunSkippedTests)
+			contexts += `${DART_TEST_CAN_RUN_SKIPPED_CONTEXT} `;
 
 		return contexts.trimEnd();
 	}
 }
-
-const treeItemBuilder = new TreeItemBuilder();

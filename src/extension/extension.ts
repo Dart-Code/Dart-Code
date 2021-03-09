@@ -517,9 +517,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	if (dasAnalyzer)
-		context.subscriptions.push(new DasTestCommands(logger, workspaceContext, dasAnalyzer.fileTracker));
+		context.subscriptions.push(new DasTestCommands(logger, workspaceContext, dasAnalyzer.fileTracker, flutterCapabilities));
 	if (lspAnalyzer)
-		context.subscriptions.push(new LspTestCommands(logger, workspaceContext, lspAnalyzer.fileTracker));
+		context.subscriptions.push(new LspTestCommands(logger, workspaceContext, lspAnalyzer.fileTracker, flutterCapabilities));
 
 	if (lspClient && lspAnalyzer) {
 		// TODO: LSP equivs of the others...
@@ -549,7 +549,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	);
 	if (lspAnalyzer)
 		context.subscriptions.push(new TestDiscoverer(logger, lspAnalyzer.fileTracker, testTreeModel));
-	const testTreeProvider = new TestResultsProvider(testTreeModel, testCoordinator);
+	const testTreeProvider = new TestResultsProvider(testTreeModel, testCoordinator, flutterCapabilities);
 	const testTreeView = vs.window.createTreeView("dartTestTree", { treeDataProvider: testTreeProvider });
 	const tryReveal = async (node: TreeNode) => {
 		try {
