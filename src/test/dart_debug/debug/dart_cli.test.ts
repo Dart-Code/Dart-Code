@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
+import { debugAnywayAction, isWin, showErrorsAction } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
 import { grey } from "../../../shared/utils/colors";
@@ -21,6 +21,10 @@ describe("dart cli debugger", () => {
 
 	// Doesn't currently work.
 	// beforeEach("disable DDS for Windows", disableDdsForTestForWindows);
+	beforeEach(function () {
+		if (isWin)
+			this.skip();
+	});
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
