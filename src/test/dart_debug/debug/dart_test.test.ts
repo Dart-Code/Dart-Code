@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as vs from "vscode";
+import { isWin } from "../../../shared/constants";
 import { DebuggerType, TestStatus } from "../../../shared/enums";
 import { SuiteNode } from "../../../shared/test/test_model";
 import { fsPath } from "../../../shared/utils/fs";
@@ -7,7 +8,7 @@ import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/ou
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, disableDdsForTestForWindows, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, captureDebugSessionCustomEvents, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
@@ -23,7 +24,12 @@ describe("dart test debugger", () => {
 	});
 	beforeEach("activate", () => activate(null));
 
-	beforeEach("disable DDS for Windows", disableDdsForTestForWindows);
+	// Doesn't work for "dart run" because that requires DDS/DartDev.
+	// beforeEach("disable DDS for Windows", disableDdsForTestForWindows);
+	beforeEach(function () {
+		if (isWin)
+			this.skip();
+	});
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
