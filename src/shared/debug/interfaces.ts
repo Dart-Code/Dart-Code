@@ -14,6 +14,7 @@ export interface DartSharedArgs {
 	useFlutterStructuredErrors?: boolean;
 	useInspectorNotificationsForWidgetErrors?: boolean;
 	debugExtensionBackendProtocol: "sse" | "ws";
+	injectedClientProtocol: "sse" | "ws";
 }
 
 export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, DartSharedArgs {
