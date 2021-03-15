@@ -33,6 +33,11 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 				promises.push(this.createTask(folder, "flutter", ["build", "ios"]));
 				promises.push(this.createTask(folder, "flutter", ["build", "macos"]));
 				promises.push(this.createTask(folder, "flutter", ["build", "web"]));
+				/// with no-sound-null-safety
+				promises.push(this.createTask(folder, "flutter", ["build", "apk", "--no-sound-null-safety"]));
+				promises.push(this.createTask(folder, "flutter", ["build", "ios", "--no-sound-null-safety"]));
+				promises.push(this.createTask(folder, "flutter", ["build", "macos", "--no-sound-null-safety"]));
+				promises.push(this.createTask(folder, "flutter", ["build", "web", "--no-sound-null-safety"]));
 
 				promises.push(this.createTask(folder, "flutter", ["install"]));
 			}
