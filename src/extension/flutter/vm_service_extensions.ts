@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { isWin, TRACK_WIDGET_CREATION_ENABLED } from "../../shared/constants";
-import { DebuggerType, VmService, VmServiceExtension } from "../../shared/enums";
+import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -92,22 +92,18 @@ export class VmServiceExtensions {
 					await e.session.customRequest("checkBrightnessOverride");
 				} else if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
 					// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
-					// works for open packages too.
-					const debuggerType: DebuggerType = e.session.configuration.debuggerType;
-					if (debuggerType !== DebuggerType.Web) {
-						await e.session.customRequest(
-							"serviceExtension",
-							{
-								params: {
-									arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
-									arg1: e.session.configuration.cwd,
-									// TODO: Is this OK???
-									isolateId: e.body.isolateId,
-								},
-								type: "ext.flutter.inspector.setPubRootDirectories",
+					await e.session.customRequest(
+						"serviceExtension",
+						{
+							params: {
+								arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
+								arg1: e.session.configuration.cwd,
+								// TODO: Is this OK???
+								isolateId: e.body.isolateId,
 							},
-						);
-					}
+							type: "ext.flutter.inspector.setPubRootDirectories",
+						},
+					);
 				}
 			} catch (e) {
 				this.logger.error(e);
