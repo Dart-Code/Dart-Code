@@ -147,7 +147,7 @@ class Student extends Person {
 
 		// Compensate for LSP messing with indent.
 		// https://github.com/microsoft/language-server-protocol/issues/880
-		const extraUnwantedIndent = extApi.isLsp ? "  " : "";
+		const extraUnwantedIndent = extApi.isLsp && !extApi.dartCapabilities.hasLspInsertTextModeSupport ? "  " : "";
 
 		await ensureTestContentWithSelection(`
 abstract class Person {
