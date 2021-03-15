@@ -3,6 +3,16 @@ import { IndentAction, LanguageConfiguration } from "vscode";
 export class DartLanguageConfiguration implements LanguageConfiguration {
 	public onEnterRules = [
 		{
+			// Double-slash with space.
+			action: { indentAction: IndentAction.None, appendText: "// " },
+			beforeText: /^\s*\/\/ /,
+		},
+		{
+			// Double-slash without space.
+			action: { indentAction: IndentAction.None, appendText: "//" },
+			beforeText: /^\s*\/\//,
+		},
+		{
 			// Triple-slash with space.
 			action: { indentAction: IndentAction.None, appendText: "/// " },
 			beforeText: /^\s*\/\/\/ /,
