@@ -2,7 +2,9 @@ import * as vs from "vscode";
 import { isWin, TRACK_WIDGET_CREATION_ENABLED } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
+import { getExcludedFolders } from "../utils";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
@@ -91,16 +93,24 @@ export class VmServiceExtensions {
 				} else if (e.body.id === VmServiceExtension.BrightnessOverride) {
 					await e.session.customRequest("checkBrightnessOverride");
 				} else if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
-					// TODO: We should send all open workspaces (arg0, arg1, arg2) so that it
+					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+
+					const params: { [key: string]: string } = {
+						// TODO: Is this OK???
+						isolateId: e.body.isolateId,
+					};
+
+					let argNum = 0;
+					for (const projectFolder of projectFolders) {
+						params[`arg${argNum++}`] = projectFolder;
+						if (isWin)
+							params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
+					}
+
 					await e.session.customRequest(
 						"serviceExtension",
 						{
-							params: {
-								arg0: this.formatPathForPubRootDirectories(e.session.configuration.cwd),
-								arg1: e.session.configuration.cwd,
-								// TODO: Is this OK???
-								isolateId: e.body.isolateId,
-							},
+							params,
 							type: "ext.flutter.inspector.setPubRootDirectories",
 						},
 					);
@@ -130,7 +140,7 @@ export class VmServiceExtensions {
 
 	// TODO: Remove this function (and the call to it) once the fix has rolled to Flutter beta.
 	// https://github.com/flutter/flutter-intellij/issues/2217
-	private formatPathForPubRootDirectories(path: string | undefined): string | undefined {
+	private formatPathForPubRootDirectories(path: string): string {
 		return isWin
 			? path && `file:///${path.replace(/\\/g, "/")}`
 			: path;
