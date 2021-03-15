@@ -7,10 +7,10 @@ import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { findProjectFolders, fsPath, getSdkVersion, hasPubspec } from "../../shared/utils/fs";
+import { fsPath, getSdkVersion, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processFlutterSnap, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
-import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -180,10 +180,7 @@ export class SdkUtils {
 		let hasAnyWebProject: boolean = false;
 		let hasAnyStandardDartProject: boolean = false;
 
-		const workspaceFolders = getDartWorkspaceFolders();
-		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-		const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
-		const possibleProjects = await findProjectFolders(this.logger, topLevelFolders, allExcludedFolders);
+		const possibleProjects = await getAllProjectFolders(this.logger, getExcludedFolders);
 
 		// Scan through them all to figure out what type of projects we have.
 		for (const folder of possibleProjects) {
@@ -223,6 +220,8 @@ export class SdkUtils {
 		const workspaceConfig: WorkspaceConfig = {};
 		// Helper that searches for a specific folder/file up the tree and
 		// runs some specific processing.
+		const workspaceFolders = getDartWorkspaceFolders();
+		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
 		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
 			for (const folder of topLevelFolders) {
 				const root = await search(this.logger, folder);

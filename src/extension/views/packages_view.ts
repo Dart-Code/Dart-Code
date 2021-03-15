@@ -4,10 +4,9 @@ import * as vs from "vscode";
 import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
-import { flatMap } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
-import { areSameFolder, findProjectFolders, fsPath } from "../../shared/utils/fs";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { areSameFolder, fsPath } from "../../shared/utils/fs";
+import { getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { getExcludedFolders } from "../utils";
 
@@ -28,9 +27,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 	public async getChildren(element?: PackageDep): Promise<PackageDep[]> {
 		if (!element) {
 			const workspaceFolders = getDartWorkspaceFolders();
-			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-			const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
-			const allProjects = await findProjectFolders(this.logger, topLevelFolders, allExcludedFolders, { requirePubspec: true });
+			const allProjects = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
 			// If there's only one, just skip over to the deps.

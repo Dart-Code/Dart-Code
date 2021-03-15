@@ -7,8 +7,8 @@ import { dartCodeExtensionIdentifier } from "../constants";
 import { EventEmitter } from "../events";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
-import { notUndefined } from "../utils";
-import { forceWindowsDriveLetterToUppercase } from "../utils/fs";
+import { flatMap, notUndefined } from "../utils";
+import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath } from "../utils/fs";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
@@ -21,6 +21,17 @@ export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	if (!workspace.workspaceFolders)
 		return [];
 	return workspace.workspaceFolders.filter(isDartWorkspaceFolder);
+}
+
+export async function getAllProjectFolders(
+	logger: Logger,
+	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
+	options: { sort?: boolean; requirePubspec?: boolean } = {},
+) {
+	const workspaceFolders = getDartWorkspaceFolders();
+	const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
+	const allExcludedFolders = getExcludedFolders ? flatMap(workspaceFolders, getExcludedFolders) : [];
+	return findProjectFolders(logger, topLevelFolders, allExcludedFolders, options);
 }
 
 export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {

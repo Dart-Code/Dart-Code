@@ -4,10 +4,10 @@ import * as vs from "vscode";
 import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
-import { flatMap, PromiseCompleter } from "../../shared/utils";
-import { findProjectFolders, fsPath } from "../../shared/utils/fs";
+import { PromiseCompleter } from "../../shared/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
-import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { envUtils, getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -180,10 +180,7 @@ export class DebugCommands {
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
-			const workspaceFolders = getDartWorkspaceFolders();
-			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-			const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
-			const testFolders = (await findProjectFolders(this.logger, topLevelFolders, allExcludedFolders, { requirePubspec: true }))
+			const testFolders = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
 				.map((project) => path.join(project, "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
 			if (testFolders.length === 0) {

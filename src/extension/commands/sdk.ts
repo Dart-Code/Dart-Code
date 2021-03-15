@@ -9,15 +9,15 @@ import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, pubPath }
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { flatMap, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
+import { PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
-import { findProjectFolders, fsPath, mkDirRecursive } from "../../shared/utils/fs";
+import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
 import { writeDartSdkSettingIntoProject, writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../../shared/utils/projects";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
@@ -391,10 +391,7 @@ export class SdkCommands {
 			//   0 - then just use Uri
 			//   1 - then just do that one
 			//   more than 1 - prompt to do all
-			const workspaceFolders = getDartWorkspaceFolders();
-			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-			const allExcludedFolders = flatMap(workspaceFolders, util.getExcludedFolders);
-			const folders = await findProjectFolders(this.logger, topLevelFolders, allExcludedFolders, { requirePubspec: true });
+			const folders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true });
 			const foldersRequiringPackageGet = uniq(folders)
 				.map(vs.Uri.file)
 				.filter((uri) => config.for(uri).promptToGetPackages)

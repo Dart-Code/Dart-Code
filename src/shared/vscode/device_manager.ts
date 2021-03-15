@@ -1,7 +1,6 @@
 import * as vs from "vscode";
 import { disposeAll, flatMap, notNullOrUndefined, uniq } from "../../shared/utils";
-import { findProjectFolders, fsPath } from "../../shared/utils/fs";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { cancelAction, runFlutterCreateDotAction, runFlutterCreateDotPrompt } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
@@ -242,9 +241,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		this.shortCacheForSupportedPlatforms = new Promise(async (resolve) => {
-			const workspaceFolders = getDartWorkspaceFolders();
-			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-			const projectFolders = await findProjectFolders(this.logger, topLevelFolders, [], { requirePubspec: true });
+			const projectFolders = await getAllProjectFolders(this.logger, undefined, { requirePubspec: true });
 			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
 			const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));

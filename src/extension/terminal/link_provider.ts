@@ -1,9 +1,7 @@
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
-import { flatMap } from "../../shared/utils";
-import { findProjectFolders, fsPath } from "../../shared/utils/fs";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { getExcludedFolders } from "../utils";
 
@@ -25,10 +23,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 			return this.packageMapDiscovery;
 		}
 		this.packageMapDiscovery = new Promise(async (resolve) => {
-			const workspaceFolders = getDartWorkspaceFolders();
-			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-			const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
-			const projectFolders = await findProjectFolders(this.logger, topLevelFolders, allExcludedFolders, { requirePubspec: true });
+			const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
 			this.packageMaps = {};
 			for (const projectFolder of projectFolders) {
 				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);

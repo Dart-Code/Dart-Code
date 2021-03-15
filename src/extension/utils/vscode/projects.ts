@@ -2,9 +2,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Uri } from "vscode";
 import { Logger } from "../../../shared/interfaces";
-import { flatMap, notUndefined } from "../../../shared/utils";
-import { findProjectFolders, fsPath } from "../../../shared/utils/fs";
-import { getDartWorkspaceFolders } from "../../../shared/vscode/utils";
+import { notUndefined } from "../../../shared/utils";
+import { fsPath } from "../../../shared/utils/fs";
+import { getAllProjectFolders } from "../../../shared/vscode/utils";
 import { locateBestProjectRoot } from "../../project";
 import { getExcludedFolders, homeRelativePath, isFlutterProjectFolder } from "../../utils";
 
@@ -18,10 +18,7 @@ export async function getFolderToRunCommandIn(logger: Logger, placeHolder: strin
 		return folder;
 
 	// Otherwise look for what projects we have.
-	const workspaceFolders = getDartWorkspaceFolders();
-	const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-	const allExcludedFolders = flatMap(workspaceFolders, getExcludedFolders);
-	const selectableFolders = (await findProjectFolders(logger, topLevelFolders, allExcludedFolders, { requirePubspec: true, sort: true }))
+	const selectableFolders = (await getAllProjectFolders(logger, getExcludedFolders, { requirePubspec: true, sort: true }))
 		.filter(flutterOnly ? isFlutterProjectFolder : () => true);
 
 	if (!selectableFolders || !selectableFolders.length) {
