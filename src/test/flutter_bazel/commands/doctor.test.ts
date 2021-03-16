@@ -14,7 +14,7 @@ describe("flutter doctor", () => {
 	it("runs and prints output using script", async () => {
 		const hasRunFile = prepareHasRunFile("doctor");
 
-		const buffer = captureOutput("custom_doctor");
+		const buffer = captureOutput("custom_doctor (flutter)");
 		const exitCode = await vs.commands.executeCommand("flutter.doctor");
 		assert.equal(exitCode, 0);
 
