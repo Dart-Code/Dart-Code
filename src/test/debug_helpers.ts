@@ -191,10 +191,14 @@ export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string
 	const programPath = fsPath(program);
 	const cwdPath = fsPath(cwd);
 	const dartPath = path.join(extApi.workspaceContext.sdks.dart!, dartVMPath);
-	const allArgs = [
+	const debugArgs = [
 		"--enable-vm-service=0",
 		"--pause_isolates_on_start=true",
-		"--disable-dart-dev",
+	];
+	if (extApi.dartCapabilities.supportsDisableDartDev && !extApi.dartCapabilities.hasDdsTimingFix)
+		debugArgs.push("--disable-dart-dev");
+	const allArgs = [
+		...debugArgs,
 		...vmArgs,
 		programPath,
 	];
