@@ -20,7 +20,8 @@ describe("dart test debugger", () => {
 		extApi.testTreeModel.isNewTestRun = true;
 		extApi.testTreeModel.nextFailureIsFirst = true;
 		extApi.testTreeModel.updateNode();
-		await delay(10); // Allow tree to be updated.
+		extApi.logger.info(`Cleared test tree!`);
+		await delay(50); // Allow tree to be updated.
 	});
 	beforeEach("activate", () => activate(null));
 
@@ -276,7 +277,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 			dc.launch(config),
 		);
 
-		const topLevelNodes = await extApi.testTreeProvider.getChildren();
+		const topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[];
 		assert.ok(topLevelNodes);
 		expectTopLevelTestNodeCount(topLevelNodes, 7);
 	});

@@ -4,10 +4,10 @@ import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, debugAdapterPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
 import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
-import { DebuggerType, LogCategory } from "../shared/enums";
+import { DebuggerType, LogCategory, TestStatus } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
-import { TreeNode } from "../shared/test/test_model";
+import { SuiteNode } from "../shared/test/test_model";
 import { getDebugAdapterName, getDebugAdapterPort } from "../shared/utils/debug";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
@@ -116,8 +116,16 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 	}
 }
 
-export function expectTopLevelTestNodeCount(topLevelNodes: TreeNode[], expectedLength: number) {
-	assert.strictEqual(topLevelNodes.length, expectedLength, `Expected ${expectedLength} nodes but got\n${topLevelNodes.map((n) => `        ${n.label ?? n.suiteData.path}`).join("\n")}`);
+export function expectTopLevelTestNodeCount(topLevelNodes: SuiteNode[], expectedLength: number) {
+	const topLevelText = topLevelNodes.length === expectedLength
+		? ""
+		: topLevelNodes.map((n) => `        ${n.label ?? n.suiteData.path} (${TestStatus[n.getHighestStatus(true)]})`).join("\n");
+
+	assert.strictEqual(
+		topLevelNodes.length,
+		expectedLength,
+		`Expected ${expectedLength} nodes but got\n\n${topLevelText}`,
+	);
 }
 
 export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], index: number, evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
