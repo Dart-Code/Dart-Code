@@ -276,7 +276,7 @@ function logOpenEditors() {
 export function captureOutput(name: string) {
 	// Create a channel that buffers its output.
 	const buffer: string[] = [];
-	const channel = vs.window.createOutputChannel(name);
+	const channel = extApi.getOutputChannel(name);
 
 	sb.stub(channel, "append").callsFake((s: string) => buffer.push(s));
 	sb.stub(channel, "appendLine").callsFake((s: string) => buffer.push(`${s}\n`));

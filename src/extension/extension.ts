@@ -35,6 +35,7 @@ import { LspMainCodeLensProvider } from "./code_lens/main_code_lens_provider_lsp
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { LspTestCodeLensProvider } from "./code_lens/test_code_lens_provider_lsp";
 import { AnalyzerCommands } from "./commands/analyzer";
+import { getOutputChannel } from "./commands/channels";
 import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { DasEditCommands } from "./commands/edit_das";
@@ -702,6 +703,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
 			getLogHeader,
+			getOutputChannel,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			isLsp: isUsingLsp,
 			logger,

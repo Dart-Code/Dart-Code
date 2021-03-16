@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
@@ -56,6 +56,7 @@ export interface InternalExtensionApi {
 	flutterCapabilities: FlutterCapabilities;
 	flutterOutlineTreeProvider: TreeDataProvider<TreeNode> | undefined;
 	getLogHeader: () => string;
+	getOutputChannel: (name: string) => OutputChannel;
 	initialAnalysis: Promise<void>;
 	logger: EmittingLogger;
 	analyzer: Analyzer;

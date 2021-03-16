@@ -17,7 +17,7 @@ export class DartRenameProvider implements RenameProvider {
 	}
 
 	private async doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): Promise<WorkspaceEdit | undefined> {
-		const outputChannel = channels.getChannel("Refactorings");
+		const outputChannel = channels.getOutputChannel("Refactorings");
 		outputChannel.appendLine("");
 
 		const resp = await this.analyzer.editGetRefactoring({

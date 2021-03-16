@@ -22,9 +22,9 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 					const proc = safeToolSpawn(undefined, flutterScript, ["doctor", "-v"]);
 
 					// Show the output in an output channel so if it gets stuck the user can see it.
-					const channel = channels.createChannel(`flutter doctor`);
+					const channel = channels.getOutputChannel(`flutter doctor`, true);
 					channel.show();
-					channels.runProcessInChannel(proc, channel);
+					channels.runProcessInOutputChannel(proc, channel);
 
 					cancellationToken.onCancellationRequested((e) => {
 						logger.info(`User canceled!`);

@@ -497,7 +497,7 @@ export class SdkCommands {
 		shortPath = shortPath || path.basename(folder);
 		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
-		const channel = channels.createChannel(`${commandName} (${shortPath})`);
+		const channel = channels.getOutputChannel(`${commandName} (${shortPath})`, true);
 		if (alwaysShowOutput)
 			channel.show();
 
@@ -527,7 +527,7 @@ export class SdkCommands {
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 				progress.report({ message: "running..." });
 				const proc = safeToolSpawn(folder, binPath, args);
-				channels.runProcessInChannel(proc, channel);
+				channels.runProcessInOutputChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, proc);
 

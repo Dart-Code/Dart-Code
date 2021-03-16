@@ -1,10 +1,10 @@
 import { ExtensionContext, window } from "vscode";
 import { DaemonLog, ShowMessage } from "../../shared/flutter/daemon_interfaces";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
-import { createChannel } from "../commands/channels";
+import { getOutputChannel } from "../commands/channels";
 
 export function setUpDaemonMessageHandler(logger: Logger, context: ExtensionContext, daemon: IFlutterDaemon) {
-	const channel = createChannel("flutter daemon");
+	const channel = getOutputChannel("flutter daemon", true);
 	context.subscriptions.push(daemon.registerForDaemonLog((l: DaemonLog) => {
 		// Don't show, as we get errors from this just when disconnected devices!
 		// channel.show(true);
