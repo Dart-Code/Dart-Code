@@ -20,7 +20,7 @@ export function disableDdsForTestForWindows() {
 	// DDS currently fails to start on Windows quite a lot, so pass
 	// `--disable-dart-dev` if it's supported as a workaround until this is fixed.
 	// https://github.com/dart-lang/sdk/issues/44787
-	if (isWin && extApi.dartCapabilities.supportsDisableDartDev) {
+	if (isWin && extApi.dartCapabilities.supportsDisableDartDev && !extApi.dartCapabilities.hasDdsTimingFix) {
 		setConfigForTest("dart", "vmAdditionalArgs", ["--disable-dart-dev"]);
 	}
 }

@@ -24,10 +24,8 @@ describe("dart test debugger", () => {
 	});
 	beforeEach("activate", () => activate(null));
 
-	// Doesn't work for "dart run" because that requires DDS/DartDev.
-	// beforeEach("disable DDS for Windows", disableDdsForTestForWindows);
 	beforeEach(function () {
-		if (isWin)
+		if (isWin && !extApi.dartCapabilities.hasDdsTimingFix)
 			this.skip();
 	});
 
