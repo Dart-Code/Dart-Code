@@ -168,3 +168,36 @@ export function areSameFolder(folder1: string, folder2: string) {
 export function normalizeSlashes(p: string) {
 	return p.replace(/[\\/]/g, path.sep);
 }
+
+/**
+ * Gets a unique path or filename for the specified {folderUri} location, appending a numerical value
+ * between {prefix} and suffix, as required.
+ *
+ * A directory/file location will be generated from {prefix} with a trailing number (eg. `mydir1`) and
+ * its existence will be checked; if it already exists, the number will be incremented and checked again.
+ *
+ * This will continue until a non-existent directory/file is available, or until the maxiumum search
+ * limit (of 128) is reached.
+ *
+ * @param folder directory to check for existing directories or files.
+ * @param prefix prefix of the directory/file
+ * @param suffix suffix of the directory/file
+ */
+export function nextAvailableFilename(folder: string, prefix: string, suffix?: string): string {
+	// Set an upper bound on how many attempts we should make in getting a non-existent name.
+	const maxSearchLimit = 128;
+
+	for (let index = 1; index <= maxSearchLimit; index++) {
+		const name = `${prefix}${index}${suffix}`;
+		const fullPath = path.join(folder, name);
+
+		if (!fs.existsSync(fullPath)) {
+			// Name doesn't appear to exist on-disk and thus can be used - return it.
+			return name;
+		}
+	}
+
+	// We hit the search limit, so return {prefix}{index} (eg. mydir1) and allow the extension to
+	// handle the already-exists condition if user doesn't change it manually.
+	return `${prefix}1${suffix}`;
+}

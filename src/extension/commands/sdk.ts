@@ -12,7 +12,7 @@ import { logProcess } from "../../shared/logging";
 import { PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
-import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
+import { fsPath, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
 import { writeDartSdkSettingIntoProject, writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../../shared/utils/projects";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
@@ -188,9 +188,27 @@ export class SdkCommands {
 		// Ensure folder exists.
 		mkDirRecursive(this.flutterScreenshotPath);
 
-		const deviceId = this.deviceManager && this.deviceManager.currentDevice ? this.deviceManager.currentDevice.id : undefined;
-		const args = deviceId ? ["screenshot", "-d", deviceId] : ["screenshot"];
-		await this.runFlutterInFolder(this.flutterScreenshotPath, args, "screenshot", true);
+		const debugSession = vs.debug.activeDebugSession;
+		if (!debugSession) {
+			vs.window.showErrorMessage("You must have an active Flutter debug session to take screenshots");
+			return;
+		}
+		if (debugSession.type !== "dart") {
+			vs.window.showErrorMessage("The active debug session is not a Flutter app");
+			return;
+		}
+
+		const projectFolder = debugSession.configuration.cwd;
+		const deviceId = debugSession.configuration.deviceId ?? this.deviceManager?.currentDevice?.id;
+		const outputFilename = nextAvailableFilename(this.flutterScreenshotPath, "flutter_", ".png");
+		const args = ["screenshot"];
+		if (deviceId) {
+			args.push("-d");
+			args.push(deviceId);
+		}
+		args.push("-o");
+		args.push(path.join(this.flutterScreenshotPath, outputFilename));
+		await this.runFlutterInFolder(projectFolder, args, "screenshot");
 
 		if (shouldNotify) {
 			const res = await vs.window.showInformationMessage(`Screenshots will be saved to ${this.flutterScreenshotPath}`, "Show Folder");
@@ -588,7 +606,7 @@ export class SdkCommands {
 			return;
 		const folderPath = fsPath(folders[0]);
 
-		const defaultName = await this.nextAvailableName(folderPath, "dart_application_");
+		const defaultName = nextAvailableFilename(folderPath, "dart_application_");
 		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, folderPath) });
 		if (!name)
 			return;
@@ -626,7 +644,7 @@ export class SdkCommands {
 			return;
 		const folderPath = fsPath(folders[0]);
 
-		const defaultName = await this.nextAvailableName(folderPath, "flutter_application_");
+		const defaultName = nextAvailableFilename(folderPath, "flutter_application_");
 		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateFlutterProjectName(s, folderPath) });
 		if (!name)
 			return;
@@ -654,39 +672,6 @@ export class SdkCommands {
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
 
 		return projectFolderUri;
-	}
-
-	/**
-	 * Gets a unique path or filename for the specified {folderUri} location, appending a numerical value
-	 * onto the end of {prefix}, as required.
-	 *
-	 * A directory or file location will be generated from {prefix} with a trailing number (eg. `mydir1`) and
-	 * its existence will be checked; if it already exists, the number will be incremented and checked again.
-	 *
-	 * This will continue until a non-existent directory and file is available, or until the maxiumum search
-	 * limit (of 128) is reached.
-	 *
-	 * @param folder directory to check for existing directories or files.
-	 * @param prefix base name of the directory or file; an integer will be placed
-	 * at the end of {prefix}, starting from 1. Example: `mydir1` would become `mydir2` if `mydir1` exists.
-	 */
-	private async nextAvailableName(folder: string, prefix: string): Promise<string> {
-		// Set an upper bound on how many attempts we should make in getting a non-existent name.
-		const maxSearchLimit = 128;
-
-		for (let index = 1; index <= maxSearchLimit; index++) {
-			const name = `${prefix}${index}`;
-			const fullPath = path.join(folder, name);
-
-			if (!fs.existsSync(fullPath)) {
-				// Name doesn't appear to exist on-disk and thus can be used - return it.
-				return name;
-			}
-		}
-
-		// We hit the search limit, so return {prefix}{index} (eg. mydir1) and allow the extension to
-		// handle the already-exists condition if user doesn't change it manually.
-		return `${prefix}1`;
 	}
 
 	private async createFlutterSampleProject(): Promise<vs.Uri | undefined> {
