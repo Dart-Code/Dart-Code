@@ -89,9 +89,10 @@ export class LspAnalyzer extends Analyzer {
 			},
 
 			async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken, next: ProvideCodeActionsSignature) {
+				const documentVersion = document.version;
 				const res = await next(document, range, context, token);
 
-				snippetTextEdits.rewriteSnippetTextEditsToCommands(res);
+				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
 
 				return res;
 			},
