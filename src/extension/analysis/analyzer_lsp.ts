@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
-import { CancellationToken, CompletionItem, MarkdownString, MarkedString, Position, TextDocument, window } from "vscode";
-import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { CancellationToken, CodeActionContext, CompletionItem, MarkdownString, MarkedString, Position, Range, TextDocument, window } from "vscode";
+import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
@@ -16,18 +16,23 @@ import { config } from "../config";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
+import { SnippetTextEditFeature } from "./analyzer_lsp_snippet_text_edits";
 import { LspFileTracker } from "./file_tracker_lsp";
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
 	public readonly fileTracker: LspFileTracker;
+	public readonly snippetTextEdits: SnippetTextEditFeature;
 
 	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
+		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
+		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.disposables.push(this.client.start());
 		this.disposables.push(this.fileTracker);
+		this.disposables.push(this.snippetTextEdits);
 
 		// tslint:disable-next-line: no-floating-promises
 		this.client.onReady().then(() => {
@@ -58,6 +63,8 @@ export class LspAnalyzer extends Analyzer {
 				return input;
 		}
 
+		const snippetTextEdits = this.snippetTextEdits;
+
 		return {
 			handleWorkDoneProgress: (token: ProgressToken, params: WorkDoneProgressBegin | WorkDoneProgressReport | WorkDoneProgressEnd, next: HandleWorkDoneProgressSignature) => {
 				if (params.kind === "begin")
@@ -79,6 +86,14 @@ export class LspAnalyzer extends Analyzer {
 				if (item?.contents)
 					item.contents = item.contents.map((s) => cleanDocString(s));
 				return item;
+			},
+
+			async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken, next: ProvideCodeActionsSignature) {
+				const res = await next(document, range, context, token);
+
+				snippetTextEdits.rewriteSnippetTextEditsToCommands(res);
+
+				return res;
 			},
 
 			executeCommand: async (command: string, args: any[], next: ExecuteCommandSignature) => {
