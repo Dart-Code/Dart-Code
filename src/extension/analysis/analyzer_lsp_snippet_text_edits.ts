@@ -61,8 +61,16 @@ export class SnippetTextEditFeature implements IAmDisposable {
 	private async applySnippetTextEdit(uri: vs.Uri, edit: vs.TextEdit) {
 		const doc = await vs.workspace.openTextDocument(uri);
 		const editor = await vs.window.showTextDocument(doc);
-		const snippet = new vs.SnippetString(edit.newText);
+		const leadingIndentCharacters = doc.lineAt(edit.range.start.line).firstNonWhitespaceCharacterIndex;
+		const newText = this.compensateForVsCodeIndenting(edit.newText, leadingIndentCharacters);
+		const snippet = new vs.SnippetString(newText);
 		await editor.insertSnippet(snippet, edit.range);
+	}
+
+	private compensateForVsCodeIndenting(newText: string, leadingIndentCharacters: number) {
+		const indent = " ".repeat(leadingIndentCharacters);
+		const indentPattern = new RegExp(`\n${indent}`, "g");
+		return newText.replace(indentPattern, "\n");
 	}
 
 	public dispose(): any {
