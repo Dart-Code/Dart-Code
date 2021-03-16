@@ -28,7 +28,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 		};
 	}
 
-	public rewriteSnippetTextEditsToCommands(res: Array<vs.Command | vs.CodeAction> | null | undefined) {
+	public rewriteSnippetTextEditsToCommands(documentVersion: number, res: Array<vs.Command | vs.CodeAction> | null | undefined) {
 		if (!res)
 			return;
 
@@ -47,7 +47,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 						if (hasSnippet) {
 							action.edit = undefined;
 							action.command = {
-								arguments: [uri, textEdit],
+								arguments: [documentVersion, uri, textEdit],
 								command: "_dart.applySnippetTextEdit",
 								title: "Apply edit",
 							};
@@ -58,9 +58,13 @@ export class SnippetTextEditFeature implements IAmDisposable {
 		}
 	}
 
-	private async applySnippetTextEdit(uri: vs.Uri, edit: vs.TextEdit) {
+	private async applySnippetTextEdit(documentVersion: number, uri: vs.Uri, edit: vs.TextEdit) {
 		const doc = await vs.workspace.openTextDocument(uri);
 		const editor = await vs.window.showTextDocument(doc);
+
+		if (doc.version !== documentVersion)
+			vs.window.showErrorMessage(`Unable to apply snippet, document was modified`);
+
 		const leadingIndentCharacters = doc.lineAt(edit.range.start.line).firstNonWhitespaceCharacterIndex;
 		const newText = this.compensateForVsCodeIndenting(edit.newText, leadingIndentCharacters);
 		const snippet = new vs.SnippetString(newText);
