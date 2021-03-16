@@ -10,7 +10,7 @@ import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { TreeNode } from "../shared/test/test_model";
-import { BufferedLogger, escapeRegExp, filenameSafe, flatMap } from "../shared/utils";
+import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -281,14 +281,7 @@ export function captureOutput(name: string) {
 	sb.stub(channel, "append").callsFake((s: string) => buffer.push(s));
 	sb.stub(channel, "appendLine").callsFake((s: string) => buffer.push(`${s}\n`));
 
-	// Ensure calls to create this output channel return our stubbed output channel.
-	const createOutputChannel = sb.stub(vs.window, "createOutputChannel").callThrough();
-	createOutputChannel.withArgs(sinon.match(new RegExp(`^${escapeRegExp(name)}`))).returns(channel);
-
-	return {
-		buffer,
-		channel,
-	};
+	return buffer;
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
