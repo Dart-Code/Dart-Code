@@ -513,6 +513,9 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async initDebugger(uri: string): Promise<void> {
+		// On some cloud providers we get an IPv6 loopback which fails to connect
+		// correctly. Assume that if we get this, it's safe to use the "localhost" hostname.
+		uri = uri.replace("[::]", "localhost");
 		this.log(`Initialising debugger for ${uri}`);
 		// Send the uri back to the editor so it can be used to launch browsers etc.
 		let browserFriendlyUri: string;
