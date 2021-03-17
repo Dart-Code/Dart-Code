@@ -482,7 +482,7 @@ export class DebugCommands {
 			if (!launched) {
 				try {
 					const uri = vs.Uri.parse(e.body.url, true);
-					await envUtils.openInBrowser(uri.toString());
+					await envUtils.openInBrowser(uri.toString(), this.logger);
 				} catch (e) {
 					this.logger.error(`Failed to parse URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
 				}
