@@ -489,6 +489,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 			debugConfig.useInspectorNotificationsForWidgetErrors = config.showInspectorNotificationsForWidgetErrors;
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
+			debugConfig.injectedClientProtocol = config.debugExtensionBackendProtocol;
 
 			const additionalArgs = isTest
 				? conf.flutterTestAdditionalArgs

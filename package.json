@@ -1593,7 +1593,7 @@
 						"ws"
 					],
 					"default": "ws",
-					"description": "The protocol to use for the Dart Debug Extension backend service. Using WebSockets can improve performance but may fail when connecting through some proxy servers.",
+					"description": "The protocol to use for the Dart Debug Extension backend service and injected client. Using WebSockets can improve performance but may fail when connecting through some proxy servers.",
 					"scope": "window"
 				},
 				"dart.devToolsTheme": {
