@@ -5,6 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
+import { vsCodeVersion } from "../../shared/capabilities/vscode";
 import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, showErrorsAction } from "../../shared/constants";
 import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
@@ -33,6 +34,30 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
+
+		// Temporary workaround while Theia does not support resolveDebugConfigurationWithSubstitutedVariables.
+		if (!vsCodeVersion.supportsResolveDebugConfigurationWithSubstitutedVariables) {
+			function resolveVariables(input?: string): string | undefined {
+				const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
+					? fsPath(window.activeTextEditor.document.uri)
+					: undefined;
+
+				if (!input)
+					return input;
+				if (openFile)
+					input = input.replace(/\${file}/gi, openFile);
+				if (folder) {
+					const folderPath = fsPath(folder.uri);
+					input = input.replace(/\${(workspaceFolder|workspaceRoot)}/gi, folderPath);
+				}
+				return input;
+			}
+
+			debugConfig.program = resolveVariables(debugConfig.program);
+			debugConfig.cwd = resolveVariables(debugConfig.cwd);
+
+			return this.resolveDebugConfigurationWithSubstitutedVariables(folder, debugConfig, token);
+		}
 
 		return debugConfig;
 	}

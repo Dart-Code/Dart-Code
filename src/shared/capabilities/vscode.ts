@@ -1,11 +1,12 @@
 import { version as codeVersion } from "vscode";
+import { isTheia } from "../vscode/utils";
 
 export class CodeCapabilities {
 	public version: string;
 	constructor(version: string) {
 		this.version = version;
 	}
-	// get hasWindowSnippetFix() { return !versionIsAtLeast(this.version, "1.42.0"); }
+	get supportsResolveDebugConfigurationWithSubstitutedVariables() { return !isTheia; }
 }
 
 export const vsCodeVersion = new CodeCapabilities(codeVersion);
