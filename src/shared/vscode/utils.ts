@@ -13,9 +13,15 @@ import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath } from "
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
+const isKnownCloudIde = vs.env.appName?.includes("Theia for Cloud") ?? false;
+
 // The extension kind is declared as Workspace, but VS Code will return UI in the
 // case that there is no remote extension host.
-export const isRunningLocally = !dartExtension || dartExtension.extensionKind === ExtensionKind.UI;
+export const isRunningLocally =
+	// Some cloud IDEs mis-report the extension kind, so if we _know_ something is a cloud IDE,
+	// override that.
+	!isKnownCloudIde
+	&& (!dartExtension || dartExtension.extensionKind === ExtensionKind.UI);
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	if (!workspace.workspaceFolders)
