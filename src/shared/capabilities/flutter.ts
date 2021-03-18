@@ -15,14 +15,15 @@ export class FlutterCapabilities {
 	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsWsDebugBackend() { return versionIsAtLeast(this.version, "1.21.0-0"); }
 	// TODO: Version for WS Injected Client !!
-	get supportsWsInjectedClient() { return false; }
+	get supportsWsInjectedClient() { return true; }
 	get supportsExposeUrl() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsDartDefine() { return versionIsAtLeast(this.version, "1.17.0"); }
 	get supportsRestartDebounce() { return versionIsAtLeast(this.version, "1.21.0-0"); }
 	get supportsRunSkippedTests() { return versionIsAtLeast(this.version, "2.1.0-11"); }
 	get supportsShowWebServerDevice() { return versionIsAtLeast(this.version, "1.26.0-0"); }
 	get supportsWebRendererOption() { return versionIsAtLeast(this.version, "1.25.0-0"); }
-	get supportsDwdsRedirect() { return false; }
+	// TODO: Get a version for this!
+	get supportsDwdsRedirect() { return true; }
 	get supportsDevToolsServerAddress() { return versionIsAtLeast(this.version, "1.26.0-12"); }
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }
