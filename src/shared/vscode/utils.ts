@@ -130,7 +130,7 @@ class EnvUtils {
 		// Additionally, on some cloud providers we get an IPv6 loopback which fails to connect
 		// correctly. Assume that if we get this, it's safe to use the "localhost" hostname.
 		const fakeHostname = url.hostname === "[::]" ? "localhost" : url.hostname;
-		const fakePort = url.port ?? (isSecure ? "443" : "80");
+		const fakePort = url.port || (isSecure ? "443" : "80"); // Don't change to ??, port can be empty string!
 		const fakeAuthority = `${fakeHostname}:${fakePort}`;
 
 		const uriToMap = uri.with({ scheme: fakeScheme, authority: fakeAuthority });
