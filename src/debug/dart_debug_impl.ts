@@ -762,12 +762,12 @@ export class DartDebugSession extends DebugSession {
 		this.log(`${request}: Disabling break-on-exception and removing all breakpoints`);
 		await this.raceIgnoringErrors(() => Promise.all([
 			this.threadManager.setExceptionPauseMode("None"),
-			this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()),
+			...this.threadManager.threads.map((thread) => thread.removeAllBreakpoints()),
 		]));
 
 		this.log(`${request}: Unpausing all threads...`);
 		await this.raceIgnoringErrors(() => Promise.all([
-			this.threadManager.threads.map((thread) => thread.resume()),
+			...this.threadManager.threads.map((thread) => thread.resume()),
 		]));
 	}
 
