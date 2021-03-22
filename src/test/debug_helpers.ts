@@ -116,6 +116,12 @@ export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName
 	}
 }
 
+export function ensureNoVariable(variables: DebugProtocol.Variable[], name: string) {
+	assert.ok(variables, "No variables given to search");
+	const v = variables.find((v) => v.name === name);
+	assert.ok(!v, `Found unexpected variable ${name}!`);
+}
+
 export function expectTopLevelTestNodeCount(topLevelNodes: SuiteNode[], expectedLength: number) {
 	const topLevelText = topLevelNodes.length === expectedLength
 		? ""

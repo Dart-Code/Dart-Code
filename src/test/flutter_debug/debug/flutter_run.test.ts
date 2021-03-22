@@ -9,7 +9,7 @@ import { grey, grey2 } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -932,7 +932,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("includes getters in variables when stopped at a breakpoint", async function () {
+	it("includes fields and getters in variables when stopped at a breakpoint", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
@@ -947,12 +947,47 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureVariable(variables, "danny", "danny", `Danny`);
 
 		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny")!.variablesReference);
+		// Fields
+		ensureVariable(classInstance, "danny.field", "field", `"field"`);
+		ensureVariable(classInstance, "danny.baseField", "baseField", `"baseField"`);
+		// Getters
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
 		// TODO: Remove this Linux-skip when this bug is fixed:
 		// https://github.com/dart-lang/sdk/issues/39330
 		if (!isLinux)
 			ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
+	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async function () {
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
+		await setConfigForTest("dart", "evaluateGettersInDebugViews", false);
+
+		await openFile(flutterHelloWorldGettersFile);
+		const config = await startDebugger(dc, flutterHelloWorldGettersFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterHelloWorldGettersFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		ensureVariable(variables, "danny", "danny", `Danny`);
+
+		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny")!.variablesReference);
+		// Fields
+		ensureVariable(classInstance, "danny.field", "field", `"field"`);
+		ensureVariable(classInstance, "danny.baseField", "baseField", `"baseField"`);
+		// No getters
+		ensureNoVariable(classInstance, "kind");
+		ensureNoVariable(classInstance, "name");
+		ensureNoVariable(classInstance, "throws");
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),

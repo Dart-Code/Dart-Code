@@ -10,7 +10,7 @@ import { grey } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, disableDdsForTestForWindows, ensureFrameCategories, ensureMapEntry, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, disableDdsForTestForWindows, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, breakpointFor, closeAllOpenFiles, defer, delay, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 
@@ -761,7 +761,7 @@ describe("dart cli debugger", () => {
 		assert.equal(variables.length, 1);
 	});
 
-	it("includes getters in variables when stopped at a breakpoint", async () => {
+	it("includes fields and getters in variables when stopped at a breakpoint", async () => {
 		await openFile(helloWorldGettersFile);
 		const config = await startDebugger(dc, helloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
@@ -773,9 +773,36 @@ describe("dart cli debugger", () => {
 		ensureVariable(variables, "danny", "danny", `Danny`);
 
 		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny")!.variablesReference);
+		// Fields
+		ensureVariable(classInstance, "danny.field", "field", `"field"`);
+		ensureVariable(classInstance, "danny.baseField", "baseField", `"baseField"`);
+		// Getters
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
 		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
+	});
+
+	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async () => {
+		await setConfigForTest("dart", "evaluateGettersInDebugViews", false);
+
+		await openFile(helloWorldGettersFile);
+		const config = await startDebugger(dc, helloWorldGettersFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldGettersFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		ensureVariable(variables, "danny", "danny", `Danny`);
+
+		const classInstance = await dc.getVariables(variables.find((v) => v.name === "danny")!.variablesReference);
+		// Fields
+		ensureVariable(classInstance, "danny.field", "field", `"field"`);
+		ensureVariable(classInstance, "danny.baseField", "baseField", `"baseField"`);
+		// No getters
+		ensureNoVariable(classInstance, "kind");
+		ensureNoVariable(classInstance, "name");
+		ensureNoVariable(classInstance, "throws");
 	});
 
 	it("watch expressions provide same info as locals", async () => {
