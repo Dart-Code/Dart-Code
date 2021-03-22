@@ -1323,12 +1323,10 @@ export class DartDebugSession extends DebugSession {
 									}
 								});
 								fieldAndGetterPromises = fieldAndGetterPromises.concat(getterPromises);
-
-								const fieldAndGetterVariables = await Promise.all(fieldAndGetterPromises);
-								variables = variables.concat(fieldAndGetterVariables);
 							}
 
-							await Promise.all(fieldAndGetterPromises);
+							const fieldAndGetterVariables = await Promise.all(fieldAndGetterPromises);
+							variables = variables.concat(fieldAndGetterVariables);
 						} else {
 							this.logToUser(`Unknown instance kind: ${instance.kind}. ${pleaseReportBug}\n`);
 						}
