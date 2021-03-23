@@ -1186,7 +1186,7 @@ insp=<inspected variable>
 			const config = await attachDebugger(observatoryUri);
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
-				dc.assertOutput("stdout", "Hello, world!"),
+				dc.assertOutputContains("stdout", "Hello, world!"),
 				dc.waitForEvent("terminated"),
 				dc.launch(config),
 			);
