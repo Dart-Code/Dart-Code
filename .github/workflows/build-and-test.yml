@@ -108,7 +108,7 @@ jobs:
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: |
           flutter create .
-          rm -r integration_test # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
+          rm -rf integration_test # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
         working-directory: src/test/test_projects/flutter_hello_world
         continue-on-error: true
 
@@ -116,7 +116,7 @@ jobs:
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: |
           flutter create .
-          rm -r integration_test # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
+          rm -rf integration_test # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
         working-directory: src/test/test_projects/flutter_hello_world/example
         continue-on-error: true
 
@@ -124,7 +124,7 @@ jobs:
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: |
           flutter create .
-          rm -r integration_test # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
+          rm -rf integration_test # TODO: Remove this when Stable Flutter has integration_test and just commit it to pubspec.yaml
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
         continue-on-error: true
 
