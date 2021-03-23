@@ -185,7 +185,7 @@ function getTestsConfig(test: TestConfig) {
 			test.project.startsWith("${env:") ? test.project : `\${workspaceFolder}/${testProjectsFolder}/${test.project}`,
 			"--extensionDevelopmentPath=${workspaceFolder}",
 			`--extensionTestsPath=\${workspaceFolder}/${testFolder}/${test.testFolder}`,
-			"--user-data-dir=${workspaceFolder}/.dart_code_test_data_dir",
+			"--user-data-dir=${workspaceFolder}/.dcud",
 		],
 		"env": {
 			"DART_CODE_USE_DEBUG_SERVERS": "true",

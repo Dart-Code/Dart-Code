@@ -2,6 +2,7 @@
 	"extends": "./tsconfig.json",
 	"exclude": [
 		".dart_code_test_data_dir",
+		".dcud",
 		".dart_code_test_logs",
 		".vscode-test",
 		"node_modules",
