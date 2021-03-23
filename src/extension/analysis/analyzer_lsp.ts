@@ -168,6 +168,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			closingLabels: config.closingLabels,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
 			outline: true,
+			suggestFromUnimportedLibraries: config.autoImportCompletions,
 		},
 		middleware,
 		outputChannelName: "LSP",
