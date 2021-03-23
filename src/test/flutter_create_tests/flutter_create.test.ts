@@ -47,10 +47,10 @@ describe("flutter", () => {
 		await projectFileContainsExpectedString(pubspecFile, "description: A new flutter plugin project");
 	});
 
-	it("triggered Flutter mode", () => {
+	it("triggered Flutter mode", async () => {
 		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
 		assert.ok(ext);
-		assert.ok(ext.isActive);
+		await waitForResult(() => ext.isActive, "Extension did not activate!", 10000);
 
 		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
 		assert.equal(api.workspaceContext.hasAnyFlutterProjects, true);

@@ -33,10 +33,10 @@ describe("dart", () => {
 		await waitForResult(() => fs.existsSync(packagesFile), ".dart_tool/package_config.json did not exist", 10000);
 	});
 
-	it("did not trigger Flutter mode", () => {
+	it("did not trigger Flutter mode", async () => {
 		const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier);
 		assert.ok(ext);
-		assert.ok(ext.isActive);
+		await waitForResult(() => ext.isActive, "Extension did not activate!", 10000);
 		const api: InternalExtensionApi = ext.exports[internalApiSymbol];
 		assert.equal(api.workspaceContext.hasAnyFlutterProjects, false);
 	});
