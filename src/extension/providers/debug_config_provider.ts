@@ -491,11 +491,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.injectedClientProtocol = config.debugExtensionBackendProtocol;
 
-			const additionalArgs = isTest
-				? conf.flutterTestAdditionalArgs
-				: isAttach
-					? conf.flutterAttachAdditionalArgs
-					: conf.flutterRunAdditionalArgs;
+			const additionalArgs = (
+				isTest
+					? conf.flutterTestAdditionalArgs
+					: isAttach
+						? conf.flutterAttachAdditionalArgs
+						: conf.flutterRunAdditionalArgs
+			).slice(); // https://github.com/Dart-Code/Dart-Code/issues/3198
 
 			if (!isTest && config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress) {
 				this.logger.info("Getting DevTools server address to pass to Flutter...");
