@@ -234,6 +234,7 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 			"run",
 			"-d",
 			config.deviceId!,
+			"--start-paused",
 			"--disable-dds",
 		],
 	);

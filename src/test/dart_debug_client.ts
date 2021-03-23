@@ -142,10 +142,6 @@ export class DartDebugClient extends DebugClient {
 		}
 		// Attach will be paused by default and issue a step when we connect; but our tests
 		// generally assume we will automatically resume.
-		// TODO: For Flutter attach, the process isn't likely to be paused, so this code will
-		// stall on the waitForEvent(stopped). As a workaround, just follow the launchRequest
-		// path for Flutter tests, but we should probably come back and resolve these to work the
-		// same and just push the unpause logic up into a test helper.
 		if (launchArgs.request === "attach" && launchArgs.deviceId !== "flutter-tester") {
 			logger.info("Attaching to process...");
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
@@ -170,6 +166,11 @@ export class DartDebugClient extends DebugClient {
 					this.resume(),
 				]),
 			);
+		} else if (launchArgs.request === "attach") {
+			// For Flutter, we don't need all the crazy stuff above, just issue a standard
+			// attach request.
+			logger.info("Attaching to process...");
+			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
 		} else {
 			await watchPromise("launch()->launchRequest", this.launchRequest(launchArgs));
 		}
