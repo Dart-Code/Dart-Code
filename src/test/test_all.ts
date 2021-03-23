@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as vstest from "vscode-test";
 
@@ -52,7 +53,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 					? workspaceFolder
 					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
 				"--user-data-dir",
-				path.join(cwd, ".dart_code_test_data_dir", testFolder),
+				path.join(os.tmpdir(), ".dart_code_test_data_dir", testFolder),
 			],
 			version: process.env.CODE_VERSION,
 		});
