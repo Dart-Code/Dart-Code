@@ -7,7 +7,6 @@ export class CodeCapabilities {
 		this.version = version;
 	}
 	get supportsResolveDebugConfigurationWithSubstitutedVariables() { return !isTheia; }
-	get requiresDwdsAuthenticationRedirect() { return isTheia; }
 }
 
 export const vsCodeVersion = new CodeCapabilities(codeVersion);

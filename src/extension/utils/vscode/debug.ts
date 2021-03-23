@@ -5,7 +5,6 @@ import { PromiseCompleter } from "../../../shared/utils";
 export class DartDebugSessionInformation {
 	public observatoryUri?: string;
 	public vmServiceUri?: string;
-	public debugServiceBackendUri?: string;
 	public readonly sessionStart: Date = new Date();
 	public hasEnded = false;
 	public progress: { [key: string]: ProgressMessage } = {};

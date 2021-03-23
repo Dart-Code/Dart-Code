@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { vsCodeVersion } from "../../shared/capabilities/vscode";
 import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
@@ -10,7 +9,6 @@ import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils, getAllProjectFolders } from "../../shared/vscode/utils";
-import { generateDwdsAuthRedirectUrl } from "../../shared/vscode/utils_cloud";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -484,27 +482,15 @@ export class DebugCommands {
 			const launched = !!e.body.launched;
 			if (!launched) {
 				try {
-					let url = e.body.url;
-
-					if (session.debugServiceBackendUri
-						&& this.flutterCapabilities.supportsDwdsRedirect
-						&& vsCodeVersion.requiresDwdsAuthenticationRedirect)
-						url = generateDwdsAuthRedirectUrl({ debugServiceBackendUri: session.debugServiceBackendUri, url });
-
-					await envUtils.openInBrowser(url, this.logger);
+					await envUtils.openInBrowser(e.body.url, this.logger);
 				} catch (e) {
-					this.logger.error(`Failed to parse URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
+					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
 				}
 			}
 		} else if (e.event === "dart.exposeUrl") {
 			const originalUrl = e.body.url as string;
 			try {
 				const exposedUrl = await envUtils.exposeUrl(vs.Uri.parse(originalUrl, true), this.logger);
-				// Capture the debug service backend URL so we can redirect through it to
-				// force authentication.
-				if (exposedUrl.endsWith("/$debug")) {
-					session.debugServiceBackendUri = exposedUrl;
-				}
 				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl });
 			} catch (e) {
 				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
