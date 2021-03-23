@@ -172,47 +172,6 @@ jobs:
           name: coverage-${{ matrix.os }}
           path: coverage
 
-
-  upload_logs:
-
-    name: Upload Logs
-    needs: build
-    if: always() && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - uses: actions/setup-ruby@v1
-        with:
-          ruby-version: 2.5.x
-      - run: gem install dpl
-
-      - name: Fetch Linux test results
-        uses: actions/download-artifact@v1
-        with:
-          name: test-results-ubuntu-latest
-          path: .test_results/linux
-      - name: Fetch Windows test results
-        uses: actions/download-artifact@v1
-        with:
-          name: test-results-windows-latest
-          path: .test_results/win
-      - name: Fetch macOS test results
-        uses: actions/download-artifact@v1
-        with:
-          name: test-results-macOS-latest
-          path: .test_results/osx
-
-      - name: Combine summary files
-        run: find .test_results -name '*_summary.csv' -exec cat {} + > .test_results/summary.csv
-
-      - name: Upload test results to Amazon S3
-        run: dpl --provider=s3 --bucket="test-results.dartcode.org" --skip_cleanup=true --local-dir=".test_results" --upload-dir="$($env:GITHUB_REF.Replace(`"refs/heads/`", `"`"))/$($env:GITHUB_SHA)" --acl=public_read --default_text_charset=utf-8
-        shell: pwsh
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
   upload_coverage:
 
     name: Send Coverage to CodeClimate
