@@ -18,7 +18,7 @@ import { sortBy } from "../shared/utils/array";
 import { applyColor, grey, grey2 } from "../shared/utils/colors";
 import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
 import { mayContainStackFrame, parseStackFrame } from "../shared/utils/stack_trace";
-import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef } from "./dart_debug_protocol";
+import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef, VMWriteEvent } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { formatPathForVm } from "./utils";
@@ -72,6 +72,7 @@ export class DartDebugSession extends DebugSession {
 	public debugSdkLibraries = false;
 	public debugExternalLibraries = false;
 	public showDartDeveloperLogs = true;
+	protected subscribeToStdout = false;
 	public useFlutterStructuredErrors = false;
 	public useInspectorNotificationsForWidgetErrors = false;
 	public evaluateGettersInDebugViews = false;
@@ -212,10 +213,10 @@ export class DartDebugSession extends DebugSession {
 					if (this.shouldConnectDebugger && this.parseVmServiceUriFromStdOut && !this.vmService) {
 						match = vmServiceListeningBannerPattern.exec(data.toString());
 					}
-					if (match) {
+					if (match)
 						await this.initDebugger(this.vmServiceWsUriFor(match[1]));
-					} else if (this.sendStdOutToConsole)
-						this.logToUserBuffered(data.toString(), "stdout");
+					else if (this.sendStdOutToConsole)
+						this.logStdout(data.toString());
 				});
 				process.stderr.setEncoding("utf8");
 				process.stderr.on("data", (data) => {
@@ -322,6 +323,7 @@ export class DartDebugSession extends DebugSession {
 				url = await this.startServiceFilePolling();
 				this.endProgress(debugLaunchProgressId);
 			}
+			this.subscribeToStdout = true;
 			await this.initDebugger(url);
 		} catch (e) {
 			const messageSuffix = args.serviceInfoFile ? `\n    VM info was read from ${args.serviceInfoFile}` : "";
@@ -685,9 +687,17 @@ export class DartDebugSession extends DebugSession {
 
 		if (this.vmServiceCapabilities.hasLoggingStream && this.showDartDeveloperLogs) {
 			await this.vmService.on("Logging", (event: VMEvent) => this.handleLoggingEvent(event)).catch((e) => {
-				this.logger.info(errorString(e));
 				// For web, the protocol version says this is supported, but it throws.
 				// TODO: Remove this catch block if/when the stable release does not throw.
+				this.logger.info(errorString(e));
+			});
+		}
+
+		if (this.subscribeToStdout) {
+			await this.vmService.on("Stdout", (event: VMWriteEvent) => this.handleStdoutEvent(event)).catch((e) => {
+				// Some embedders may not provide Stdout and it's not clear if they will throw, so
+				// just catch/log errors here.
+				this.logger.info(errorString(e));
 			});
 		}
 	}
@@ -1750,6 +1760,15 @@ export class DartDebugSession extends DebugSession {
 		this.lastLoggingEvent = this.lastLoggingEvent.then(() => this.processLoggingEvent(event));
 	}
 
+	public handleStdoutEvent(event: VMWriteEvent): void {
+		if (!event.bytes)
+			return;
+		const buff = Buffer.from(event.bytes, "base64");
+		const message = buff.toString("utf8");
+		// Use the promise from above, to avoid stdout getting out of order with logging events.
+		this.lastLoggingEvent = this.lastLoggingEvent.then(() => this.logStdout(message));
+	}
+
 	// Logging
 	public async processLoggingEvent(event: VMEvent): Promise<void> {
 		const kind = event.kind;
@@ -2176,6 +2195,10 @@ export class DartDebugSession extends DebugSession {
 
 		if (this.pollforMemoryMs)
 			setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs).unref();
+	}
+
+	protected logStdout(message: string) {
+		this.logToUserBuffered(message, "stdout");
 	}
 
 	/// Buffers text and sends to the user when a newline is recieved. This is to handle stderr/stdout which

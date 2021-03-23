@@ -319,6 +319,11 @@ export interface VMLogRecord extends VMResponse {
 	stackTrace: VMInstanceRef;
 }
 
+export interface VMWriteEvent extends VMEvent {
+	// An array of bytes, encoded as a base64 string.
+	bytes?: string;
+}
+
 export interface VMSourceReport extends VMResponse {
 	// A list of ranges in the program source.  These ranges correspond
 	// to ranges of executable code in the user's program (functions,

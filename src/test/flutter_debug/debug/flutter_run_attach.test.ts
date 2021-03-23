@@ -52,6 +52,18 @@ describe("flutter run debugger (attach)", () => {
 		return config;
 	}
 
+	it("attaches to a Flutter application and collects stdout", async () => {
+		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
+		const vmServiceUri = await process.vmServiceUri;
+		const config = await attachDebugger(vmServiceUri);
+
+		await waitAllThrowIfTerminates(dc,
+			watchPromise("attaches_and_collects_stdout->configurationSequence", dc.configurationSequence()),
+			watchPromise("attaches_and_collects_stdout->output", dc.assertOutput("stdout", "Hello, world!")),
+			watchPromise("attaches_and_collects_stdout->launch", dc.launch(config)),
+		);
+	});
+
 	it("attaches to a Flutter application and remains active until told to detach", async () => {
 		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
 		const vmServiceUri = await process.vmServiceUri;
@@ -90,6 +102,5 @@ describe("flutter run debugger (attach)", () => {
 		// Ensure the main process is still alive.
 		await delay(4000);
 		assert.equal(process.hasExited, false);
-
 	});
 });

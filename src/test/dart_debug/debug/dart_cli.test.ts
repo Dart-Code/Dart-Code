@@ -1179,6 +1179,19 @@ insp=<inspected variable>
 			);
 		});
 
+		it("to a paused Dart script and can collects stdout", async () => {
+			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
+			const observatoryUri = await process.vmServiceUri;
+
+			const config = await attachDebugger(observatoryUri);
+			await waitAllThrowIfTerminates(dc,
+				dc.configurationSequence(),
+				dc.assertOutput("stdout", "Hello, world!"),
+				dc.waitForEvent("terminated"),
+				dc.launch(config),
+			);
+		});
+
 		it("to a Dart script launched externally using --write-service-info and can unpause to run it to completion", async () => {
 			const tempVmServiceInfoFile = path.join(os.tmpdir(), `dart-vm-service-${getRandomInt(0x1000, 0x10000).toString(16)}.json`);
 			const vmArgs = [
