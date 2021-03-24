@@ -9,20 +9,11 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, clearTestTree, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-	beforeEach("clear test tree", async () => {
-		for (const key of Object.keys(extApi.testTreeModel.suites))
-			delete extApi.testTreeModel.suites[key];
-		extApi.testTreeModel.isNewTestRun = true;
-		extApi.testTreeModel.nextFailureIsFirst = true;
-		extApi.testTreeModel.updateNode();
-		extApi.logger.info(`Cleared test tree!`);
-		await delay(50); // Allow tree to be updated.
-	});
 	beforeEach("activate", () => activate(null));
 
 	beforeEach(function () {
@@ -34,6 +25,8 @@ describe("dart test debugger", () => {
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.PubTest);
 	});
+
+	beforeEach("clear test tree", () => clearTestTree());
 
 	it("runs a Dart test script to completion", async () => {
 		await openFile(helloWorldTestMainFile);

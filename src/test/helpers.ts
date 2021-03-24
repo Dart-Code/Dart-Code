@@ -299,6 +299,17 @@ export async function closeAllOpenFiles(): Promise<void> {
 	logOpenEditors();
 }
 
+export async function clearTestTree(): Promise<void> {
+	logger.info(`Clearing test tree...`);
+	for (const key of Object.keys(extApi.testTreeModel.suites))
+		delete extApi.testTreeModel.suites[key];
+	extApi.testTreeModel.isNewTestRun = true;
+	extApi.testTreeModel.nextFailureIsFirst = true;
+	extApi.testTreeModel.updateNode();
+	await delay(50); // Allow tree to be updated.
+	logger.info(`Done clearing test tree!`);
+}
+
 export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
 	logger.info(`Waiting for VS Code to mark all documents as closed...`);
 	const getAllOpenDocs = () => vs.workspace.textDocuments.filter((td) => !td.isUntitled && td.uri.scheme === "file");
