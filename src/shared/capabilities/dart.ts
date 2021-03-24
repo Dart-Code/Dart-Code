@@ -14,8 +14,7 @@ export class DartCapabilities {
 	// https://github.com/dart-lang/sdk/issues/43207
 	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1") && !this.version.startsWith("2.10."); }
 	get hasLspInsertTextModeSupport() { return versionIsAtLeast(this.version, "2.13.0-0"); }
-	// TODO: !
-	get supportsSnippetTextEdits() { return false; }
+	get supportsSnippetTextEdits() { return versionIsAtLeast(this.version, "2.13.0-150"); }
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
 	get supportsDebugInternalLibraries() { return versionIsAtLeast(this.version, "2.9.0-a"); }
 	get supportsDisableDartDev() { return versionIsAtLeast(this.version, "2.12.0-0"); }
