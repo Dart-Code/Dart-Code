@@ -37,8 +37,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 		const daemonArgs = [];
 
-		// If we're running remotely, we need to pass this flag for web-server device to show up.
-		if (!isRunningLocally && flutterCapabilities.supportsShowWebServerDevice)
+		const showWebServer = config.flutterShowWebServerDevice === "always" || !isRunningLocally;
+		if (showWebServer && flutterCapabilities.supportsShowWebServerDevice)
 			daemonArgs.push("--show-web-server-device");
 
 		const { binPath, binArgs } = usingCustomScript(

@@ -2024,6 +2024,15 @@
 					"description": "Whether to set newly connected devices as the current device in Flutter projects.",
 					"scope": "window"
 				},
+				"dart.flutterShowWebServerDevice": {
+					"enum": [
+						"remote",
+						"always"
+					],
+					"default": "remote",
+					"markdownDescription": "When to show the Flutter headless web-server device. This requires using the Dart Debug extension for Chrome and is usually only used for remote environments where Chrome is not available such as browser/cloud-based IDEs (requires restart).\n\n- `remote` - only show when connected to a remote.\n- `always` - always show, even for local sessions.",
+					"scope": "window"
+				},
 				"dart.warnWhenEditingFilesOutsideWorkspace": {
 					"type": "boolean",
 					"default": true,
