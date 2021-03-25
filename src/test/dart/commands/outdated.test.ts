@@ -20,7 +20,7 @@ describe("pub outdated", () => {
 		assert.equal(exitCode, 0);
 
 		const output = buffer.join("").trim();
-		assert.equal(output.startsWith(`[hello_world] ${commandToRun}`), true);
+		assert.equal(output.startsWith(`--\n\n[hello_world] ${commandToRun}`), true);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });
