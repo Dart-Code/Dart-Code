@@ -23,6 +23,8 @@ export class Context {
 	public setFlutterSurveyNotificationDoNotShow(id: string, value: boolean | undefined) { this.context.globalState.update(`flutterSurvey${id}NotificationDoNotShowAgain`, value); }
 	get hasWarnedAboutFormatterSyntaxLimitation(): boolean { return !!this.context.globalState.get("hasWarnedAboutFormatterSyntaxLimitation"); }
 	set hasWarnedAboutFormatterSyntaxLimitation(value: boolean) { this.context.globalState.update("hasWarnedAboutFormatterSyntaxLimitation", value); }
+	get hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation(): boolean { return !!this.context.globalState.get("hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation"); }
+	set hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation(value: boolean) { this.context.globalState.update("hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation", value); }
 	get lastSeenVersion(): string | undefined { return this.context.globalState.get("lastSeenVersion"); }
 	set lastSeenVersion(value: string | undefined) { this.context.globalState.update("lastSeenVersion", value); }
 

@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { ProgressLocation, Uri, window } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, pubPath } from "../../shared/constants";
+import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, iUnderstandAction, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -18,6 +18,7 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
@@ -42,7 +43,7 @@ export class SdkCommands {
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined } = {};
 
-	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
+	constructor(private readonly logger: Logger, private readonly context: Context, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager) {
 		this.sdks = workspace.sdks;
 		const dartSdkManager = new DartSdkManager(this.logger, this.workspace.sdks);
 		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
@@ -53,10 +54,12 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
+		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages.majorVersions", this.upgradePackagesMajorVersions, this));
 
 		// Pub commands.
 		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
 		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
+		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
 		context.subscriptions.push(vs.commands.registerCommand("pub.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
 
 		// Flutter commands.
@@ -65,6 +68,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
@@ -79,10 +83,10 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
 
 		// Hook saving pubspec to run pub.get.
-		this.setupPubspecWatcher(context);
+		this.setupPubspecWatcher();
 
 		// Monitor version files for SDK upgrades.
-		this.setupVersionWatcher(context);
+		this.setupVersionWatcher();
 	}
 
 	private async getPackages(uri: string | Uri | undefined) {
@@ -131,6 +135,34 @@ export class SdkCommands {
 			return this.runFlutter(["pub", "upgrade"], uri);
 		else
 			return this.runPub(["upgrade"], uri);
+	}
+
+	private async upgradePackagesMajorVersions(uri: string | Uri | undefined) {
+		if (!this.dartCapabilities.supportsPubUpgradeMajorVersions) {
+			vs.window.showErrorMessage("Your current Dart SDK does not support 'pub upgrade --major-versions'");
+			return;
+		}
+
+		if (!this.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation) {
+			const resp = await window.showWarningMessage("Running 'pub get --major-versions' will update your pubspec.yaml to match the 'resolvable' column reported in 'pub outdated'", iUnderstandAction);
+			if (resp !== iUnderstandAction) {
+				return;
+			}
+			this.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
+		}
+
+		if (!uri || !(uri instanceof Uri)) {
+			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages --major-versions in");
+			// If the user cancelled, bail out (otherwise we'll prompt them again below).
+			if (!uri)
+				return;
+		}
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+		if (util.isInsideFlutterProject(uri))
+			return this.runFlutter(["pub", "upgrade", "--major-versions"], uri);
+		else
+			return this.runPub(["upgrade", "--major-versions"], uri);
 	}
 
 	private async flutterGetPackages(selection: vs.Uri | undefined): Promise<number | undefined> {
@@ -288,19 +320,19 @@ export class SdkCommands {
 		return this.runFlutterInFolder(projectPath, args, projectName);
 	}
 
-	private setupPubspecWatcher(context: vs.ExtensionContext) {
-		context.subscriptions.push(vs.workspace.onWillSaveTextDocument((e) => {
+	private setupPubspecWatcher() {
+		this.context.subscriptions.push(vs.workspace.onWillSaveTextDocument((e) => {
 			if (path.basename(fsPath(e.document.uri)).toLowerCase() === "pubspec.yaml")
 				lastPubspecSaveReason = e.reason;
 		}));
 		const watcher = vs.workspace.createFileSystemWatcher("**/pubspec.yaml");
-		context.subscriptions.push(watcher);
+		this.context.subscriptions.push(watcher);
 		watcher.onDidChange(this.handlePubspecChange, this);
 		watcher.onDidCreate(this.handlePubspecChange, this);
 	}
 
 	private promptToReloadOnVersionChanges = true;
-	private async setupVersionWatcher(context: vs.ExtensionContext) {
+	private async setupVersionWatcher() {
 		// On Windows, the watcher sometimes fires even if the file wasn't modified (could be when
 		// accessed), so we need to filter those out. We can't just check the modified time is "recent"
 		// because the unzip preserves the modification dates of the SDK. Instead, we'll capture the mtime
@@ -340,7 +372,7 @@ export class SdkCommands {
 			setTimeout(() => util.promptToReloadExtension("Your Dart SDK has been updated. Reload using the new SDK?", undefined, false), 1000);
 		});
 
-		context.subscriptions.push({ dispose() { watcher.close(); } });
+		this.context.subscriptions.push({ dispose() { watcher.close(); } });
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {

@@ -19,6 +19,7 @@ export class DartCapabilities {
 	get supportsDebugInternalLibraries() { return versionIsAtLeast(this.version, "2.9.0-a"); }
 	get supportsDisableDartDev() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get hasDdsTimingFix() { return versionIsAtLeast(this.version, "2.13.0-117"); }
+	get supportsPubUpgradeMajorVersions() { return versionIsAtLeast(this.version, "2.12.0"); }
 	get supportsPubOutdated() { return versionIsAtLeast(this.version, "2.8.0-a"); }
 	get supportsDartPub() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get supportsDartRunTest() { return versionIsAtLeast(this.version, "2.12.0-0"); }

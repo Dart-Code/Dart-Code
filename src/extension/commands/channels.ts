@@ -3,11 +3,15 @@ import { SpawnedProcess } from "../../shared/interfaces";
 
 const channels: { [key: string]: vs.OutputChannel } = {};
 
-export function getOutputChannel(name: string, clear = false): vs.OutputChannel {
-	if (!channels[name])
+export function getOutputChannel(name: string, insertDivider = false): vs.OutputChannel {
+	if (!channels[name]) {
 		channels[name] = vs.window.createOutputChannel(name);
-	else if (clear)
-		channels[name].clear();
+	} else if (insertDivider) {
+		const ch = channels[name];
+		ch.appendLine("");
+		ch.appendLine("--");
+		ch.appendLine("");
+	}
 
 	return channels[name];
 }

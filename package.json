@@ -142,6 +142,15 @@
 				}
 			},
 			{
+				"command": "pub.upgrade.majorVersions",
+				"title": "Upgrade Packages (--major-versions)",
+				"category": "Pub",
+				"icon": {
+					"light": "./media/commands/upgrade.svg",
+					"dark": "./media/commands/upgrade-inverse.svg"
+				}
+			},
+			{
 				"command": "pub.outdated",
 				"title": "List Outdated Packages",
 				"category": "Pub",
@@ -375,6 +384,15 @@
 			{
 				"command": "flutter.packages.upgrade",
 				"title": "Upgrade Packages",
+				"category": "Flutter",
+				"icon": {
+					"light": "./media/commands/upgrade.svg",
+					"dark": "./media/commands/upgrade-inverse.svg"
+				}
+			},
+			{
+				"command": "flutter.packages.upgrade.majorVersions",
+				"title": "Upgrade Packages (--major-versions)",
 				"category": "Flutter",
 				"icon": {
 					"light": "./media/commands/upgrade.svg",
@@ -686,6 +704,10 @@
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{
+					"command": "pub.upgrade.majorVersions",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
 					"command": "pub.outdated",
 					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported"
 				},
@@ -831,6 +853,10 @@
 				},
 				{
 					"command": "flutter.packages.upgrade",
+					"when": "dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "flutter.packages.upgrade.majorVersions",
 					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
@@ -1051,6 +1077,7 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.upgrade",
+					"alt": "pub.upgrade.majorVersions",
 					"group": "navigation@2"
 				},
 				{
@@ -1061,12 +1088,12 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.get",
-					"alt": "flutter.packages.upgrade",
 					"group": "navigation@1"
 				},
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.upgrade",
+					"alt": "flutter.packages.upgrade.majorVersions",
 					"group": "navigation@2"
 				},
 				{
@@ -1090,6 +1117,10 @@
 					"command": "pub.upgrade"
 				},
 				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"command": "pub.upgrade.majorVersions"
+				},
+				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "pub.outdated"
 				},
@@ -1100,6 +1131,10 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
@@ -1120,6 +1155,10 @@
 					"command": "pub.upgrade"
 				},
 				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"command": "pub.upgrade.majorVersions"
+				},
+				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
 					"command": "pub.outdated"
 				},
@@ -1130,6 +1169,10 @@
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.packages.upgrade"
+				},
+				{
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
 					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
