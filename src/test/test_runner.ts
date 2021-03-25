@@ -11,7 +11,7 @@ module.exports = {
 		// Create the mocha test
 		const mocha = new Mocha({
 			color: true,
-			forbidOnly: !!process.env.MOCHA_FORBID_ONLY,
+			// forbidOnly: !!process.env.MOCHA_FORBID_ONLY,
 			reporter: MultiReporter,
 			reporterOptions: {
 				output: process.env.TEST_XML_OUTPUT,

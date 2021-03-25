@@ -287,7 +287,7 @@ describe("flutter test debugger", () => {
 		);
 	});
 
-	it("can run test_driver tests", async () => {
+	it.only("can run test_driver tests", async () => {
 		// Start the instrumented app.
 		const appDc = createDebugClient(DebuggerType.Flutter);
 		const appConfig = await startDebugger(appDc, flutterTestDriverAppFile);
