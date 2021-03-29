@@ -3,8 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
-import { StagehandTemplate } from "../../../shared/interfaces";
+import { DART_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
+import { DartProjectTemplate } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/utils/fs";
 import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb } from "../../helpers";
 
@@ -48,7 +48,7 @@ describe("command", () => {
 		fs.mkdirSync(path.join(tempFolder, "dart_application_2"));
 
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
-		type SnippetOption = vs.QuickPickItem & { template: StagehandTemplate };
+		type SnippetOption = vs.QuickPickItem & { template: DartProjectTemplate };
 		showQuickPick.callsFake((items: SnippetOption[]) => items.find((t) => t.template.name === templateName));
 
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
@@ -60,10 +60,10 @@ describe("command", () => {
 		assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "dart_application_3")));
 		assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);
-		const triggerFile = path.join(tempFolder, projectName, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
+		const triggerFile = path.join(tempFolder, projectName, DART_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
 		const recordedTemplateJson = fs.readFileSync(triggerFile).toString().trim();
-		const recordedTemplate = JSON.parse(recordedTemplateJson) as StagehandTemplate;
+		const recordedTemplate = JSON.parse(recordedTemplateJson) as DartProjectTemplate;
 		assert.equal(recordedTemplate.name, templateName);
 		assert.equal(recordedTemplate.entrypoint, templateEntrypoint);
 	});

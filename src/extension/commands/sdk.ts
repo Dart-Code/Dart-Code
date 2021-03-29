@@ -2,12 +2,11 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { ProgressLocation, Uri, window } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { dartVMPath, DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterPath, iUnderstandAction, pubPath } from "../../shared/constants";
+import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE, flutterPath, iUnderstandAction, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { CustomScript, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess, StagehandTemplate } from "../../shared/interfaces";
+import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -23,6 +22,7 @@ import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
 import { Stagehand } from "../pub/stagehand";
+import { DartCreate, DartProjectCreator } from "../sdk/dart/dart_create";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
 import { SdkUtils } from "../sdk/utils";
@@ -89,8 +89,8 @@ export class SdkCommands {
 		this.setupVersionWatcher();
 	}
 
-	private async getPackages(uri: string | Uri | undefined) {
-		if (!uri || !(uri instanceof Uri)) {
+	private async getPackages(uri: string | vs.Uri | undefined) {
+		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to get packages for");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
@@ -107,8 +107,8 @@ export class SdkCommands {
 		}
 	}
 
-	private async listOutdatedPackages(uri: string | Uri | undefined) {
-		if (!uri || !(uri instanceof Uri)) {
+	private async listOutdatedPackages(uri: string | vs.Uri | undefined) {
+		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to check for outdated packages");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
@@ -123,8 +123,8 @@ export class SdkCommands {
 			return this.runPub(["outdated"], uri, true);
 	}
 
-	private async upgradePackages(uri: string | Uri | undefined) {
-		if (!uri || !(uri instanceof Uri)) {
+	private async upgradePackages(uri: string | vs.Uri | undefined) {
+		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages in");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
@@ -138,21 +138,21 @@ export class SdkCommands {
 			return this.runPub(["upgrade"], uri);
 	}
 
-	private async upgradePackagesMajorVersions(uri: string | Uri | undefined) {
+	private async upgradePackagesMajorVersions(uri: string | vs.Uri | undefined) {
 		if (!this.dartCapabilities.supportsPubUpgradeMajorVersions) {
 			vs.window.showErrorMessage("Your current Dart SDK does not support 'pub upgrade --major-versions'");
 			return;
 		}
 
 		if (!this.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation) {
-			const resp = await window.showWarningMessage("Running 'pub get --major-versions' will update your pubspec.yaml to match the 'resolvable' column reported in 'pub outdated'", iUnderstandAction);
+			const resp = await vs.window.showWarningMessage("Running 'pub get --major-versions' will update your pubspec.yaml to match the 'resolvable' column reported in 'pub outdated'", iUnderstandAction);
 			if (resp !== iUnderstandAction) {
 				return;
 			}
 			this.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation = true;
 		}
 
-		if (!uri || !(uri instanceof Uri)) {
+		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages --major-versions in");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
@@ -190,7 +190,7 @@ export class SdkCommands {
 		// If path is still empty, bring up the folder selector.
 		if (!this.flutterScreenshotPath) {
 			const selectedFolder =
-				await window.showOpenDialog({ canSelectFolders: true, openLabel: "Set screenshots folder" });
+				await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Set screenshots folder" });
 			if (selectedFolder && selectedFolder.length > 0) {
 				// Set variable to selected path. This allows prompting the user only once.
 				this.flutterScreenshotPath = selectedFolder[0].path;
@@ -229,13 +229,24 @@ export class SdkCommands {
 		if (shouldNotify) {
 			const res = await vs.window.showInformationMessage(`Screenshots will be saved to ${this.flutterScreenshotPath}`, "Show Folder");
 			if (res)
-				await vs.commands.executeCommand("revealFileInOS", Uri.file(this.flutterScreenshotPath));
+				await vs.commands.executeCommand("revealFileInOS", vs.Uri.file(this.flutterScreenshotPath));
 		}
 	}
 
 	private dartCreate(projectPath: string, templateName: string) {
-		const args = ["global", "run", "stagehand", templateName];
-		return this.runPubInFolder(projectPath, args, templateName);
+		// TODO: This should move inside DartCreate/Stagehand, but it requires extracting
+		// all the command executing also into a better base class ("run pub in folder" etc.)
+		// instead of being directly in here.
+		if (this.dartCapabilities.supportsDartCreate) {
+			const binPath = path.join(this.sdks.dart, dartVMPath);
+			const projectContainer = path.dirname(projectPath);
+			const projectName = path.basename(projectPath);
+			const args = ["create", "-t", templateName, projectName, "--force"];
+			return this.runCommandInFolder(templateName, projectContainer, binPath, args, false);
+		} else {
+			const args = ["global", "run", "stagehand", templateName];
+			return this.runPubInFolder(projectPath, args, templateName);
+		}
 	}
 
 	public flutterDoctor() {
@@ -529,7 +540,7 @@ export class SdkCommands {
 
 		return vs.window.withProgress({
 			cancellable: true,
-			location: ProgressLocation.Notification,
+			location: vs.ProgressLocation.Notification,
 			title: `${commandName} ${args.join(" ")}`,
 		}, (progress, token) => {
 			if (existingProcess) {
@@ -567,32 +578,33 @@ export class SdkCommands {
 	}
 
 	private async createDartProject(): Promise<void> {
-		return this.createStagehandProject("dart.createProject", DART_STAGEHAND_PROJECT_TRIGGER_FILE, false);
-	}
+		const command = "dart.createProject";
+		const triggerFilename = DART_CREATE_PROJECT_TRIGGER_FILE;
+		const autoPickIfSingleItem = false;
 
-	private async createStagehandProject(command: string, triggerFilename: string, autoPickIfSingleItem: boolean, filter?: (t: StagehandTemplate) => boolean): Promise<void> {
 		if (!this.sdks || !this.sdks.dart) {
 			this.sdkUtils.showDartActivationFailure(command);
 			return;
 		}
 
-		// Get the JSON for the available templates by calling stagehand.
+		// Get the JSON for the available templates by calling stagehand or 'dart create'.
 
-		const stagehand = new Stagehand(this.logger, this.sdks, this.pubGlobal);
-		const isAvailable = await stagehand.installIfRequired();
+		const creator: DartProjectCreator = this.dartCapabilities.supportsDartCreate
+			? new DartCreate(this.logger, this.sdks)
+			: new Stagehand(this.logger, this.sdks, this.pubGlobal);
+		const isAvailable = await creator.installIfRequired();
 		if (!isAvailable) {
 			return;
 		}
-		let templates: StagehandTemplate[];
+		let templates: DartProjectTemplate[];
 		try {
-			templates = await stagehand.getTemplates();
+			templates = await creator.getTemplates();
 		} catch (e) {
-			vs.window.showErrorMessage(`Unable to execute Stagehand. ${e}`);
+			vs.window.showErrorMessage(`Unable to fetch project templates. ${e}`);
 			return;
 		}
 
-		const filteredTemplate = filter ? templates.filter(filter) : templates;
-		const sortedTemplates = sortBy(filteredTemplate, (s) => s.label);
+		const sortedTemplates = sortBy(templates, (s) => s.label);
 		const pickItems = sortedTemplates.map((t) => ({
 			description: t.name,
 			detail: t.description,
@@ -627,7 +639,7 @@ export class SdkCommands {
 		if (!name)
 			return;
 
-		const projectFolderUri = Uri.file(path.join(folderPath, name));
+		const projectFolderUri = vs.Uri.file(path.join(folderPath, name));
 		const projectFolderPath = fsPath(projectFolderUri);
 
 		if (fs.existsSync(projectFolderPath)) {
@@ -665,7 +677,7 @@ export class SdkCommands {
 		if (!name)
 			return;
 
-		const projectFolderUri = Uri.file(path.join(folderPath, name));
+		const projectFolderUri = vs.Uri.file(path.join(folderPath, name));
 		const projectFolderPath = fsPath(projectFolderUri);
 
 		if (fs.existsSync(projectFolderPath)) {

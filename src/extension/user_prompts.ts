@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_STAGEHAND_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { DART_CREATE_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { FlutterCreateTriggerData, Logger, StagehandTemplate } from "../shared/interfaces";
+import { DartProjectTemplate, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
@@ -142,7 +142,7 @@ function error(err: any) {
 export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
 	await Promise.all(getDartWorkspaceFolders().map(async (wf) => {
 		try {
-			await handleStagehandTrigger(logger, wf, DART_STAGEHAND_PROJECT_TRIGGER_FILE);
+			await handleStagehandTrigger(logger, wf, DART_CREATE_PROJECT_TRIGGER_FILE);
 			await handleFlutterCreateTrigger(wf);
 		} catch (e) {
 			logger.error("Failed to create project");
@@ -158,7 +158,7 @@ async function handleStagehandTrigger(logger: Logger, wf: vs.WorkspaceFolder, tr
 		return;
 
 	const templateJson = fs.readFileSync(triggerFile).toString().trim();
-	let template: StagehandTemplate;
+	let template: DartProjectTemplate;
 	try {
 		template = JSON.parse(templateJson);
 	} catch (e) {
@@ -226,7 +226,7 @@ function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, triggerData: 
 		vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
 }
 
-function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: StagehandTemplate) {
+function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: DartProjectTemplate) {
 	const workspacePath = fsPath(workspaceFolder.uri);
 	const projectName = path.basename(workspacePath);
 	const entryFile = path.join(workspacePath, template.entrypoint.replace("__projectName__", projectName));

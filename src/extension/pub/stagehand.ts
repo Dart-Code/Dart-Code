@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { pubPath, stagehandInstallationInstructionsUrl } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { DartSdks, Logger, StagehandTemplate } from "../../shared/interfaces";
+import { DartProjectTemplate, DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { cleanPubOutput } from "../../shared/pub/utils";
 import { safeToolSpawn } from "../utils/processes";
@@ -18,7 +18,7 @@ export class Stagehand {
 		return this.pubGlobal.installIfRequired({ packageName, packageID, moreInfoLink: stagehandInstallationInstructionsUrl, requiredVersion: "3.3.0" });
 	}
 
-	public async getTemplates(): Promise<StagehandTemplate[]> {
+	public async getTemplates(): Promise<DartProjectTemplate[]> {
 		const json = await this.getTemplateJson();
 		return JSON.parse(json);
 	}
