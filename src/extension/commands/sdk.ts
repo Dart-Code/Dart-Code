@@ -63,7 +63,7 @@ export class SdkCommands {
 		context.subscriptions.push(vs.commands.registerCommand("pub.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
 
 		// Flutter commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", this.flutterGetPackages, this));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.clean", this.flutterClean, this));
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
@@ -100,10 +100,11 @@ export class SdkCommands {
 			uri = vs.Uri.file(uri);
 
 
-		if (util.isInsideFlutterProject(uri))
+		if (util.isInsideFlutterProject(uri)) {
 			return this.runFlutter(["pub", "get"], uri);
-		else
+		} else {
 			return this.runPub(["get"], uri);
+		}
 	}
 
 	private async listOutdatedPackages(uri: string | Uri | undefined) {
@@ -163,23 +164,6 @@ export class SdkCommands {
 			return this.runFlutter(["pub", "upgrade", "--major-versions"], uri);
 		else
 			return this.runPub(["upgrade", "--major-versions"], uri);
-	}
-
-	private async flutterGetPackages(selection: vs.Uri | undefined): Promise<number | undefined> {
-		// TODO: This should just bounce to dart.getPackages, and ensure that handles all of the cases here.
-		if (!selection) {
-			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter packages get" in`, selection);
-			if (!path)
-				return;
-			selection = vs.Uri.file(path);
-		}
-
-		// If we're working on the flutter repository, map this on to update-packages.
-		if (selection && fsPath(selection) === this.workspace.sdks.flutter) {
-			return this.runFlutter(["update-packages"], selection);
-		}
-
-		return this.runFlutter(["pub", "get"], selection);
 	}
 
 	private async flutterClean(selection: vs.Uri | undefined): Promise<number | undefined> {
