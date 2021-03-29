@@ -16,6 +16,7 @@ export class DartCapabilities {
 	get hasLspInsertTextModeSupport() { return versionIsAtLeast(this.version, "2.13.0-0"); }
 	get supportsSnippetTextEdits() { return versionIsAtLeast(this.version, "2.13.0-150"); }
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
+	get supportsDartCreate() { return versionIsAtLeast(this.version, "2.13.0-0"); }
 	get supportsDebugInternalLibraries() { return versionIsAtLeast(this.version, "2.9.0-a"); }
 	get supportsDisableDartDev() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get hasDdsTimingFix() { return versionIsAtLeast(this.version, "2.13.0-117"); }

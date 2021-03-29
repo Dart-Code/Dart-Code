@@ -61,7 +61,7 @@ export interface CustomScript {
 	replacesArgs: number;
 }
 
-export interface StagehandTemplate {
+export interface DartProjectTemplate {
 	readonly name: string;
 	readonly label: string;
 	readonly description: string;
