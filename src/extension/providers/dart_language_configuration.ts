@@ -3,16 +3,6 @@ import { IndentAction, LanguageConfiguration } from "vscode";
 export class DartLanguageConfiguration implements LanguageConfiguration {
 	public onEnterRules = [
 		{
-			// Double-slash with space.
-			action: { indentAction: IndentAction.None, appendText: "// " },
-			beforeText: /^\s*\/\/ /,
-		},
-		{
-			// Double-slash without space.
-			action: { indentAction: IndentAction.None, appendText: "//" },
-			beforeText: /^\s*\/\//,
-		},
-		{
 			// Triple-slash with space.
 			action: { indentAction: IndentAction.None, appendText: "/// " },
 			beforeText: /^\s*\/\/\/ /,
@@ -21,6 +11,16 @@ export class DartLanguageConfiguration implements LanguageConfiguration {
 			// Triple-slash without space.
 			action: { indentAction: IndentAction.None, appendText: "///" },
 			beforeText: /^\s*\/\/\//,
+		},
+		{
+			// Double-slash with space.
+			action: { indentAction: IndentAction.None, appendText: "// " },
+			beforeText: /^\s*\/\/ /,
+		},
+		{
+			// Double-slash without space.
+			action: { indentAction: IndentAction.None, appendText: "//" },
+			beforeText: /^\s*\/\//,
 		},
 		{
 			// When between "/** | */" this puts a " * " in but also pushes the "*/" down to next line.
