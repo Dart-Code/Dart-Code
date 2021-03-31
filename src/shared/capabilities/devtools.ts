@@ -9,6 +9,5 @@ export class DevToolsCapabilities {
 		this.version = dartVersion;
 	}
 
-	get supportsEmbedFlag() { return versionIsAtLeast(this.version, "0.8.0"); }
 	get usesLegacyPageIds() { return !versionIsAtLeast(this.version, "0.9.6"); }
 }

@@ -11,7 +11,6 @@ import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
 import { disposeAll, usingCustomScript } from "../../../shared/utils";
-import { arraysEqual } from "../../../shared/utils/array";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
@@ -96,13 +95,6 @@ export class DevToolsManager implements vs.Disposable {
 		// If we're mid-silent-activation, wait until that's finished.
 		await this.devToolsActivationPromise;
 
-		if (this.service && !this.service.isValidForCurrentSettings) {
-			this.devToolsStatusBarItem.hide();
-			this.service.dispose();
-			this.service = undefined;
-			this.devtoolsUrl = undefined;
-		}
-
 		if (!this.devtoolsUrl) {
 			this.devToolsStatusBarItem.hide();
 			// Don't try to check for install/version if we're using a custom script.
@@ -113,7 +105,7 @@ export class DevToolsManager implements vs.Disposable {
 					moreInfoLink: undefined,
 					packageID: devtoolsPackageID,
 					packageName: devtoolsPackageName,
-					requiredVersion: "0.8.0",
+					requiredVersion: "0.9.6",
 					silent,
 				});
 				if (!installedVersion) {
@@ -170,7 +162,7 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 
 		if (options.embed === undefined)
-			options.embed = this.capabilities.supportsEmbedFlag && config.embedDevTools;
+			options.embed = config.embedDevTools;
 		if (options.reuseWindows === undefined)
 			options.reuseWindows = config.devToolsReuseWindows;
 
@@ -446,16 +438,8 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		this.createProcess(undefined, binPath, binArgs, { toolEnv: getToolEnv() });
 	}
 
-	public get isValidForCurrentSettings() {
-		return this.spawnedArgs && arraysEqual(this.spawnedArgs, this.getDevToolsArgs());
-	}
-
 	private getDevToolsArgs() {
-		const additionalArgs = this.capabilities.supportsEmbedFlag
-			? ["--allow-embedding"]
-			: ["--enable-notifications"];
-		const args = ["global", "run", "devtools", "--machine", "--try-ports", "10"].concat(additionalArgs);
-		return args;
+		return ["global", "run", "devtools", "--machine", "--try-ports", "10", "--allow-embedding"];
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
