@@ -241,7 +241,11 @@ describe("dart test debugger", () => {
 			);
 		}
 
-		const topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[];
+		let topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[];
+		// Filter out any nodes that are Unknown, as sometimes they show up from discovery from being opened
+		// by other tests while this one is running, making this test flaky. This test is checking orders, not
+		// functionality of test discovery.
+		topLevelNodes = topLevelNodes.filter((n) => !(n.statuses.size === 1 && n.hasStatus(TestStatus.Unknown)));
 		assert.ok(topLevelNodes);
 		expectTopLevelTestNodeCount(topLevelNodes, 4);
 
