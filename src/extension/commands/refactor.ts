@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { REFACTOR_ANYWAY, REFACTOR_FAILED_DOC_MODIFIED } from "../../shared/constants";
@@ -146,9 +147,17 @@ export class RefactorCommands implements vs.Disposable {
 			this.logger.info(`Skipping rename event for some files because another is in progress`);
 			return;
 		}
-		this.isProcessingMoveEvent = true;
 		try {
-			const filesToRename = flatMap(e.files, (f) => this.getResourcesToRename({ oldPath: fsPath(f.oldUri), newPath: fsPath(f.newUri) }));
+			const filesToRename =
+				flatMap(e.files, (f) => this.getResourcesToRename({ oldPath: fsPath(f.oldUri), newPath: fsPath(f.newUri) }))
+					// Renames are only supported for Dart files, so filter out anything else to avoid producing an edit that will
+					// trigger VS Code to show the rename dialog.
+					.filter((f) => path.extname(f.oldPath).toLowerCase() === ".dart");
+
+			if (filesToRename.length === 0)
+				return;
+
+			this.isProcessingMoveEvent = true;
 			const edits = this.getRenameEdits(filesToRename);
 			e.waitUntil(edits.finally(() => this.isProcessingMoveEvent = false));
 		} catch (e) {
