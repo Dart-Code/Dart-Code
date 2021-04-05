@@ -215,6 +215,9 @@ export class RefactorCommands implements vs.Disposable {
 			}
 		}
 
+		if (changes.size === 0)
+			return;
+
 		return changes;
 	}
 
