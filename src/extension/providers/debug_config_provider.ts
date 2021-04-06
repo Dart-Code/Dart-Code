@@ -17,6 +17,7 @@ import { filenameSafe } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
+import { cloudShellDefaultFlutterRunAdditionalArgs, isCloudShell } from "../../shared/vscode/utils_cloud";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
@@ -491,12 +492,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.injectedClientProtocol = config.debugExtensionBackendProtocol;
 
+			const flutterTestAdditionalArgs = conf.flutterTestAdditionalArgs;
+			const flutterAttachAdditionalArgs = conf.flutterAttachAdditionalArgs;
+			const flutterRunAdditionalArgs = conf.flutterRunAdditionalArgs ?? this.defaultFlutterRunAdditionalArgs;
+
 			const additionalArgs = (
 				isTest
-					? conf.flutterTestAdditionalArgs
+					? flutterTestAdditionalArgs
 					: isAttach
-						? conf.flutterAttachAdditionalArgs
-						: conf.flutterRunAdditionalArgs
+						? flutterAttachAdditionalArgs
+						: flutterRunAdditionalArgs
 			).slice(); // https://github.com/Dart-Code/Dart-Code/issues/3198
 
 			if (!isTest && config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress) {
@@ -541,6 +546,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					? debugConfig.showMemoryUsage
 					: debugConfig.flutterMode === "profile";
 		}
+	}
+
+	private get defaultFlutterRunAdditionalArgs(): string[] {
+		return isCloudShell ? cloudShellDefaultFlutterRunAdditionalArgs : [];
 	}
 
 	private insertSessionName(args: { name: string }, logPath: string | undefined) {
