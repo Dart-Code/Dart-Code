@@ -81,7 +81,7 @@ export class DevToolsManager implements vs.Disposable {
 		await this.devToolsActivationPromise;
 	}
 
-	private routeIdForPage(page: DevToolsPage | undefined): string | undefined {
+	private routeIdForPage(page: DevToolsPage | undefined | null): string | undefined {
 		if (!page)
 			return undefined;
 
@@ -480,6 +480,6 @@ interface DevToolsOptions {
 	embed?: boolean;
 	reuseWindows?: boolean;
 	notify?: boolean;
-	page?: DevToolsPage;
+	page?: DevToolsPage | null; // undefined = unspecified (use default), null = force external so user can pick any
 	inspectorRef?: string;
 }

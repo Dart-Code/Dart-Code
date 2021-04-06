@@ -1980,7 +1980,7 @@
 						"always"
 					],
 					"default": "never",
-					"description": "Whether to automatically open DevTools at the start of a debug session.",
+					"description": "Whether to automatically open DevTools at the start of a debug session. If embedded DevTools is enabled, this will launch the Widget Inspector embedded for Flutter projects, or launch DevTools externally in a browser for Dart projects.",
 					"scope": "window"
 				},
 				"dart.flutterDaemonLogFile": {
