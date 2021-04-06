@@ -467,11 +467,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
 			debugConfig.injectedClientProtocol = config.debugExtensionBackendProtocol;
 
+			const flutterAdditionalArgs = conf.flutterAdditionalArgs;
 			const flutterTestAdditionalArgs = conf.flutterTestAdditionalArgs;
 			const flutterAttachAdditionalArgs = conf.flutterAttachAdditionalArgs;
 			const flutterRunAdditionalArgs = conf.flutterRunAdditionalArgs ?? this.defaultFlutterRunAdditionalArgs;
 
-			const additionalArgs = (
+			const commandAdditionalArgs = (
 				isTest
 					? flutterTestAdditionalArgs
 					: isAttach
@@ -484,8 +485,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				try {
 					const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
 					if (devtoolsUrl) {
-						additionalArgs.push("--devtools-server-address");
-						additionalArgs.push(devtoolsUrl.toString());
+						commandAdditionalArgs.push("--devtools-server-address");
+						commandAdditionalArgs.push(devtoolsUrl.toString());
 					} else {
 						this.logger.warn("DevTools server unavailable, not sending --devtools-server-address!");
 					}
@@ -494,7 +495,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				}
 			}
 
-			debugConfig.args = conf.flutterAdditionalArgs.concat(additionalArgs).concat(debugConfig.args);
+			// Theia gives us back the same debug config that we've already extended, so inserting new args may
+			// result in dupes, so we must first ensure the args were not already previous inserted before adding them.
+			let newArgs: string[] = [];
+			if (flutterAdditionalArgs && flutterAdditionalArgs.length && !debugConfig.args.includes(flutterAdditionalArgs[0])) {
+				newArgs = newArgs.concat(flutterAdditionalArgs);
+			}
+			if (commandAdditionalArgs && commandAdditionalArgs.length && !debugConfig.args.includes(commandAdditionalArgs[0])) {
+				newArgs = newArgs.concat(commandAdditionalArgs);
+			}
+			newArgs = newArgs.concat(debugConfig.args);
+			debugConfig.args = newArgs;
+
 			debugConfig.forceFlutterVerboseMode = isLogging;
 			debugConfig.flutterTrackWidgetCreation =
 				// Use from the launch.json if configured.
