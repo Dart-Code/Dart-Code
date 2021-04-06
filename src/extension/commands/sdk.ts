@@ -655,9 +655,7 @@ export class SdkCommands {
 		if (config.workspaceSdkPath)
 			writeDartSdkSettingIntoProject(config.workspaceSdkPath, projectFolderPath);
 
-		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
-		const openInNewWindow = hasFoldersOpen;
-		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
+		vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
 	}
 
 	private async createFlutterProject(template?: string): Promise<vs.Uri | undefined> {
@@ -695,9 +693,7 @@ export class SdkCommands {
 		if (config.workspaceFlutterSdkPath)
 			writeFlutterSdkSettingIntoProject(config.workspaceFlutterSdkPath, projectFolderPath);
 
-		const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
-		const openInNewWindow = hasFoldersOpen;
-		vs.commands.executeCommand("vscode.openFolder", projectFolderUri, openInNewWindow);
+		vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
 
 		return projectFolderUri;
 	}

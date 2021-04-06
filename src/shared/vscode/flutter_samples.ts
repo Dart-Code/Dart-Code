@@ -27,10 +27,8 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 	if (flutterSdkOverride)
 		writeFlutterSdkSettingIntoProject(flutterSdkOverride, tempSamplePath);
 
-	const hasFoldersOpen = !!(vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length);
-	const openInNewWindow = hasFoldersOpen;
 	const folderUri = vs.Uri.file(tempSamplePath);
-	vs.commands.executeCommand("vscode.openFolder", folderUri, openInNewWindow);
+	vs.commands.executeCommand("vscode.openFolder", folderUri);
 
 	return folderUri;
 }
