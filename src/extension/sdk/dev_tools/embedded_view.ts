@@ -17,6 +17,10 @@ window.addEventListener('message', (event) => {
 			if (devToolsFrame.src !== url)
 				devToolsFrame.src = url;
 			break;
+		case "keydown":
+			// https://github.com/flutter/devtools/issues/2775
+			window.dispatchEvent(new KeyboardEvent('keydown', message.data));
+			break;
 	}
 });
 `;
