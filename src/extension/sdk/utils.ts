@@ -257,6 +257,8 @@ export class SdkUtils {
 			firstFlutterMobileProject && path.join(firstFlutterMobileProject, "vendor/flutter"),
 			process.env.FLUTTER_ROOT,
 			isLinux ? "~/snap/flutter/common/flutter" : undefined,
+			"~/flutter-sdk",
+			"~/.flutter-sdk",
 		].concat(paths).filter(notUndefined);
 
 		const flutterSdkPath = this.findFlutterSdk(flutterSdkSearchPaths);
