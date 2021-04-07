@@ -1,17 +1,8 @@
-import { IndentAction, LanguageConfiguration } from "vscode";
+import { IndentAction, LanguageConfiguration, OnEnterRule } from "vscode";
+import { config } from "../config";
 
 export class DartLanguageConfiguration implements LanguageConfiguration {
-	public onEnterRules = [
-		{
-			// Triple-slash with space.
-			action: { indentAction: IndentAction.None, appendText: "/// " },
-			beforeText: /^\s*\/\/\/ /,
-		},
-		{
-			// Triple-slash without space.
-			action: { indentAction: IndentAction.None, appendText: "///" },
-			beforeText: /^\s*\/\/\//,
-		},
+	private readonly doubleSlashRules: OnEnterRule[] = [
 		{
 			// Double-slash with space.
 			action: { indentAction: IndentAction.None, appendText: "// " },
@@ -22,6 +13,20 @@ export class DartLanguageConfiguration implements LanguageConfiguration {
 			action: { indentAction: IndentAction.None, appendText: "//" },
 			beforeText: /^\s*\/\//,
 		},
+	];
+	private readonly tripleSlashRules: OnEnterRule[] = [
+		{
+			// Triple-slash with space.
+			action: { indentAction: IndentAction.None, appendText: "/// " },
+			beforeText: /^\s*\/\/\/ /,
+		},
+		{
+			// Triple-slash without space.
+			action: { indentAction: IndentAction.None, appendText: "///" },
+			beforeText: /^\s*\/\/\//,
+		},
+	];
+	private readonly slashStarRules: OnEnterRule[] = [
 		{
 			// When between "/** | */" this puts a " * " in but also pushes the "*/" down to next line.
 			action: { indentAction: IndentAction.IndentOutdent, appendText: " * " },
@@ -44,4 +49,16 @@ export class DartLanguageConfiguration implements LanguageConfiguration {
 			beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
 		},
 	];
+
+	public get onEnterRules() {
+		let rules: OnEnterRule[] = [];
+
+		if (config.automaticCommentSlashes !== "none")
+			rules = rules.concat(this.tripleSlashRules);
+		if (config.automaticCommentSlashes === "all")
+			rules = rules.concat(this.doubleSlashRules);
+		rules = rules.concat(this.slashStarRules);
+
+		return rules;
+	}
 }

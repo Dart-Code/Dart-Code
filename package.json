@@ -1430,6 +1430,16 @@
 					"markdownDescription": "Whether to consider files ending `_test.dart` that are outside of the test directory as tests. This should be enabled if you put tests inside the `lib` directory of your Flutter app so they will be run with `flutter test` and not `flutter run`.",
 					"scope": "window"
 				},
+				"dart.automaticCommentSlashes": {
+					"enum": [
+						"none",
+						"tripleSlash",
+						"all"
+					],
+					"default": "tripleSlash",
+					"markdownDescription": "Determines when to insert comment slashes when pressing `<enter>` in the editor (requires restart).\n\n- `none` - never insert slashes automatically.\n- `tripleSlash` - insert `///` when pressing `<enter>` in a triple-slash comment.\n- `all` - insert `///` when pressing `<enter>` in a triple-slash comment and also `//` when pressing `<enter>` in a double-slash comment.",
+					"scope": "window"
+				},
 				"dart.enableSdkFormatter": {
 					"type": "boolean",
 					"default": true,

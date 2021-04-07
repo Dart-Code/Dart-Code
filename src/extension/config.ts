@@ -50,6 +50,7 @@ class Config {
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get analyzerSshHost(): undefined | string { return this.getConfig<null | string>("analyzerSshHost", null); }
 	get analyzerVmServicePort(): undefined | number { return this.getConfig<null | number>("analyzerVmServicePort", null); }
+	get automaticCommentSlashes(): "none" | "tripleSlash" | "all" { return this.getConfig<"none" | "tripleSlash" | "all">("automaticCommentSlashes", "tripleSlash"); }
 	get autoImportCompletions(): boolean { return this.getConfig<boolean>("autoImportCompletions", true); }
 	get buildRunnerAdditionalArgs(): string[] { return this.getConfig<string[]>("buildRunnerAdditionalArgs", []); }
 	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
