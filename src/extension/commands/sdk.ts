@@ -4,7 +4,8 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE, flutterPath, iUnderstandAction, pubPath } from "../../shared/constants";
+import { vsCodeVersion } from "../../shared/capabilities/vscode";
+import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE, defaultLaunchJson, flutterPath, iUnderstandAction, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -312,7 +313,23 @@ export class SdkCommands {
 			args.push("--overwrite");
 		}
 		args.push(".");
-		return this.runFlutterInFolder(projectPath, args, projectName);
+
+		const exitCode = await this.runFlutterInFolder(projectPath, args, projectName);
+
+		if (!vsCodeVersion.supportsDebugWithoutLaunchJson) {
+			this.writeDefaultLaunchJson(projectPath);
+		}
+
+		return exitCode;
+	}
+
+	private writeDefaultLaunchJson(projectPath: string) {
+		const launchJsonFolder = path.join(projectPath, vsCodeVersion.editorConfigFolder);
+		const launchJsonFile = path.join(launchJsonFolder, "launch.json");
+		if (!fs.existsSync(launchJsonFile)) {
+			mkDirRecursive(launchJsonFolder);
+			fs.writeFileSync(launchJsonFile, defaultLaunchJson);
+		}
 	}
 
 	private setupPubspecWatcher() {

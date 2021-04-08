@@ -190,3 +190,17 @@ export const dartRecommendedConfig = {
 	// strings. This setting will prevent that.
 	"editor.wordBasedSuggestions": false,
 };
+
+export const defaultLaunchJson = JSON.stringify(
+	{
+		"configurations": [
+			{
+				"name": "Dart & Flutter",
+				"request": "launch",
+				"type": "dart",
+			},
+		],
+		"version": "0.2.0",
+	},
+	undefined, "\t"
+);
