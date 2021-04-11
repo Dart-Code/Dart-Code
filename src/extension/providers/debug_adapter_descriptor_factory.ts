@@ -1,11 +1,13 @@
+import * as path from "path";
 import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterServer, DebugSession, ExtensionContext } from "vscode";
-import { debugAdapterPath } from "../../shared/constants";
+import { dartVMPath, debugAdapterPath } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
+import { config } from "../config";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
-	constructor(private readonly logger: Logger, private readonly extensionContext: ExtensionContext) { }
+	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: ExtensionContext) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
 		const debuggerName = getDebugAdapterName(session.configuration.debuggerType);
@@ -17,8 +19,14 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			return new DebugAdapterServer(port);
 		}
 
-		const args = [this.extensionContext.asAbsolutePath(debugAdapterPath), debuggerName];
-		this.logger.info(`Running debugger via node with ${args.join("    ")}`);
-		return new DebugAdapterExecutable("node", args);
+		if (config.experimentalDartDapPath) {
+			const args = [config.experimentalDartDapPath, debuggerName];
+			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
+			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
+		} else {
+			const args = [this.extensionContext.asAbsolutePath(debugAdapterPath), debuggerName];
+			this.logger.info(`Running debugger via node with ${args.join("    ")}`);
+			return new DebugAdapterExecutable("node", args);
+		}
 	}
 }
