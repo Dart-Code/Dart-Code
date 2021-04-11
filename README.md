@@ -34,7 +34,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - [Prompts to get packages when out of date](https://dartcode.org/docs/settings/#dartprompttogetpackages)
 - Syntax highlighting
 - Code completion
-- Snippets
+- [Snippets](https://github.com/Dart-Code/Dart-Code/tree/master/snippets)
 - Realtime errors/warnings/TODOs
 - Documentation in hovers/tooltips
 - Go to Definition
