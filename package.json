@@ -1437,7 +1437,7 @@
 						"all"
 					],
 					"default": "tripleSlash",
-					"markdownDescription": "Determines when to insert comment slashes when pressing `<enter>` in the editor (requires restart).\n\n- `none` - never insert slashes automatically.\n- `tripleSlash` - insert `///` when pressing `<enter>` in a triple-slash comment.\n- `all` - insert `///` when pressing `<enter>` in a triple-slash comment and also `//` when pressing `<enter>` in a double-slash comment.",
+					"markdownDescription": "Determines when to insert comment slashes when pressing `<enter>` in the editor (requires restart).\n\n- `none` - never insert slashes automatically.\n- `tripleSlash` - insert `///` when pressing `<enter>` at the end of a triple-slash comment.\n- `all` - insert `///` when pressing `<enter>` at the end of a triple-slash comment and also `//` when pressing `<enter>` at the end of a double-slash comment.\n\nWhen using `tripleSlash`, double-slashes will still be included when breaking existing double-slash comments across additional lines.",
 					"scope": "window"
 				},
 				"dart.enableSdkFormatter": {

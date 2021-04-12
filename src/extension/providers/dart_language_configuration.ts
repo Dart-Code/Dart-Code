@@ -14,6 +14,29 @@ export class DartLanguageConfiguration implements LanguageConfiguration {
 			beforeText: /^\s*\/\//,
 		},
 	];
+	// When double-slash is disabled, we still want to be able to add newlines
+	// in existing comments and have them include the comment markers.
+	private readonly betweenDoubleSlashRules: OnEnterRule[] = [
+		{
+			// Double-slash with space when there's already an existing space after
+			// so we don't need to insert one.
+			action: { indentAction: IndentAction.None, appendText: "//" },
+			afterText: / .*$/,
+			beforeText: /^\s*\/\//,
+		},
+		{
+			// Double-slash with space when there's not already an existing space after.
+			action: { indentAction: IndentAction.None, appendText: "// " },
+			afterText: /[^ ]+$/,
+			beforeText: /^\s*\/\/ /,
+		},
+		{
+			// Double-slash without space.
+			action: { indentAction: IndentAction.None, appendText: "//" },
+			afterText: /.+$/,
+			beforeText: /^\s*\/\//,
+		},
+	];
 	private readonly tripleSlashRules: OnEnterRule[] = [
 		{
 			// Triple-slash with space.
@@ -57,6 +80,8 @@ export class DartLanguageConfiguration implements LanguageConfiguration {
 			rules = rules.concat(this.tripleSlashRules);
 		if (config.automaticCommentSlashes === "all")
 			rules = rules.concat(this.doubleSlashRules);
+		else
+			rules = rules.concat(this.betweenDoubleSlashRules);
 		rules = rules.concat(this.slashStarRules);
 
 		return rules;
