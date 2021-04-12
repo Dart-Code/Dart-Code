@@ -268,11 +268,13 @@ export class DevToolsManager implements vs.Disposable {
 		if (options.embed)
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
-		if (options.embed)
+		if (options.embed) {
+			const exposedUri = vs.Uri.parse(await envUtils.exposeUrl(fullUrl));
 			// TODO: What should we do if we don't have a page?
-			this.launchInEmbeddedWebView(fullUrl, session, options.page ?? devToolsPages[0]);
-		else
+			this.launchInEmbeddedWebView(exposedUri, session, options.page ?? devToolsPages[0]);
+		} else {
 			await envUtils.openInBrowser(fullUrl.toString(), this.logger);
+		}
 	}
 
 	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, session: DartDebugSessionInformation & { vmServiceUri: string }, url: string) {
