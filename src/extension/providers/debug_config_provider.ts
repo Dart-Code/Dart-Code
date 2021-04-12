@@ -16,7 +16,6 @@ import { filenameSafe } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
-import { cloudShellDefaultFlutterRunAdditionalArgs, isCloudShell } from "../../shared/vscode/utils_cloud";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
@@ -470,7 +469,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			const flutterAdditionalArgs = conf.flutterAdditionalArgs;
 			const flutterTestAdditionalArgs = conf.flutterTestAdditionalArgs;
 			const flutterAttachAdditionalArgs = conf.flutterAttachAdditionalArgs;
-			const flutterRunAdditionalArgs = conf.flutterRunAdditionalArgs ?? this.defaultFlutterRunAdditionalArgs;
+			const flutterRunAdditionalArgs = conf.flutterRunAdditionalArgs;
 
 			const commandAdditionalArgs = (
 				isTest
@@ -533,10 +532,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					? debugConfig.showMemoryUsage
 					: debugConfig.flutterMode === "profile";
 		}
-	}
-
-	private get defaultFlutterRunAdditionalArgs(): string[] {
-		return isCloudShell ? cloudShellDefaultFlutterRunAdditionalArgs : [];
 	}
 
 	private insertSessionName(args: { name: string }, logPath: string | undefined) {
