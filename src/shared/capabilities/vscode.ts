@@ -1,6 +1,6 @@
 import { version as codeVersion } from "vscode";
 import { versionIsAtLeast } from "../utils";
-import { isTheia } from "../vscode/utils_cloud";
+import { isKnownCloudIde, isTheia } from "../vscode/utils_cloud";
 
 export class CodeCapabilities {
 	public version: string;
@@ -15,6 +15,8 @@ export class CodeCapabilities {
 	// Theia doesn't currently support launching without a launch.json. This may need updating to also
 	// check the version in future.
 	get supportsDebugWithoutLaunchJson() { return !isTheia; }
+	// Cloud IDEs may have authentication issues trying to use embedded DevTools so just disable it.
+	get supportsEmbeddedDevTools() { return !isKnownCloudIde; }
 	get editorConfigFolder() { return isTheia ? ".theia" : ".vscode"; }
 }
 

@@ -4,6 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
+import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger, SomeError } from "../../../shared/interfaces";
@@ -162,7 +163,7 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 
 		if (options.embed === undefined)
-			options.embed = config.embedDevTools;
+			options.embed = config.embedDevTools && vsCodeVersion.supportsEmbeddedDevTools;
 		if (options.reuseWindows === undefined)
 			options.reuseWindows = config.devToolsReuseWindows;
 
