@@ -53,6 +53,16 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
 				"--user-data-dir",
 				path.join(cwd, ".dcud", testFolder),
+				// Disable the Git extensions as these may be causing test failures on GitHub Actions:
+				// https://github.com/Dart-Code/Dart-Code/runs/2297610200?check_suite_focus=true#step:23:121
+				"--disable-extension",
+				"vscode.git",
+				"--disable-extension",
+				"vscode.git-ui",
+				"--disable-extension",
+				"vscode.github",
+				"--disable-extension",
+				"vscode.github-authentication",
 			],
 			version: process.env.CODE_VERSION,
 		});
