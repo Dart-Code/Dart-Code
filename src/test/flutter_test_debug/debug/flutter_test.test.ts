@@ -7,7 +7,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, deferUntilLast, extApi, flutterHelloWorldFolder, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, makeTextTree, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, deferUntilLast, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, makeTextTree, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -311,6 +311,32 @@ describe("flutter test debugger", () => {
 		);
 	});
 
+	it("can run integration_test tests", async () => {
+		const config = await startDebugger(dc, flutterIntegrationTestFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertPassingTest(`Counter App increments the counter`),
+			dc.launch(config),
+		);
+	});
+
+	it("stops at a breakpoint in test code in integration_test tests", async () => {
+		const config = await startDebugger(dc, flutterIntegrationTestFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line,
+			path: fsPath(flutterIntegrationTestFile),
+		});
+	});
+
+	it("stops at a breakpoint in app code in integration_test tests", async () => {
+		const config = await startDebugger(dc, flutterIntegrationTestFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterHelloWorldCounterAppFile),
+		});
+	});
+
 	it("can rerun only skipped tests", async function () {
 		if (!extApi.flutterCapabilities.supportsRunSkippedTests)
 			this.skip();
@@ -341,3 +367,4 @@ test/widget_test.dart [2/2 passed, {duration}ms] (pass.svg)
 		assert.strictEqual(actualResults, expectedResults);
 	});
 });
+
