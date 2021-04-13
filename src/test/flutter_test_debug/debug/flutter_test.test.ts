@@ -311,31 +311,33 @@ describe("flutter test debugger", () => {
 		);
 	});
 
-	it("can run integration_test tests", async () => {
-		const config = await startDebugger(dc, flutterIntegrationTestFile);
-		config.noDebug = true;
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.assertPassingTest(`Counter App increments the counter`),
-			dc.launch(config),
-		);
-	});
-
-	it("stops at a breakpoint in test code in integration_test tests", async () => {
-		const config = await startDebugger(dc, flutterIntegrationTestFile);
-		await dc.hitBreakpoint(config, {
-			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(flutterIntegrationTestFile),
+	if (extApi.flutterCapabilities.supportsRunningIntegrationTests) {
+		it("can run integration_test tests", async () => {
+			const config = await startDebugger(dc, flutterIntegrationTestFile);
+			config.noDebug = true;
+			await waitAllThrowIfTerminates(dc,
+				dc.configurationSequence(),
+				dc.assertPassingTest(`Counter App increments the counter`),
+				dc.launch(config),
+			);
 		});
-	});
 
-	it("stops at a breakpoint in app code in integration_test tests", async () => {
-		const config = await startDebugger(dc, flutterIntegrationTestFile);
-		await dc.hitBreakpoint(config, {
-			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: fsPath(flutterHelloWorldCounterAppFile),
+		it("stops at a breakpoint in test code in integration_test tests", async () => {
+			const config = await startDebugger(dc, flutterIntegrationTestFile);
+			await dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line,
+				path: fsPath(flutterIntegrationTestFile),
+			});
 		});
-	});
+
+		it("stops at a breakpoint in app code in integration_test tests", async () => {
+			const config = await startDebugger(dc, flutterIntegrationTestFile);
+			await dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(flutterHelloWorldCounterAppFile),
+			});
+		});
+	}
 
 	it("can rerun only skipped tests", async function () {
 		if (!extApi.flutterCapabilities.supportsRunSkippedTests)
