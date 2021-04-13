@@ -10,7 +10,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, deferUntilLast, delay, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldExampleSubFolder, flutterHelloWorldExampleSubFolderMainFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, deferUntilLast, delay, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -273,20 +273,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
-	});
-
-	it("resolves project program/cwds in sub-folders when the open file is in a project sub-folder", async () => {
-		await openFile(flutterHelloWorldExampleSubFolderMainFile);
-		const config = await getLaunchConfiguration(undefined, { deviceId: flutterTestDeviceId });
-		assert.equal(config!.program, fsPath(flutterHelloWorldExampleSubFolderMainFile));
-		assert.equal(config!.cwd, fsPath(flutterHelloWorldExampleSubFolder));
-	});
-
-	it("can run projects in sub-folders when cwd is set to a project sub-folder", async () => {
-		await closeAllOpenFiles();
-		const config = await getLaunchConfiguration(undefined, { cwd: "example", deviceId: flutterTestDeviceId });
-		assert.equal(config!.program, fsPath(flutterHelloWorldExampleSubFolderMainFile));
-		assert.equal(config!.cwd, fsPath(flutterHelloWorldExampleSubFolder));
 	});
 
 	it("automatically spawns DevTools at startup", async function () {
