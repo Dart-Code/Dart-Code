@@ -81,6 +81,7 @@ export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTes
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
+export const flutterHelloWorldCounterAppFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/counter.dart"));
 export const flutterHelloWorldOutlineFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/outline.dart"));
 export const flutterHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
 export const flutterHelloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleSubFolder), "lib/main.dart"));
@@ -104,6 +105,7 @@ export const flutterTestAnotherFile = vs.Uri.file(path.join(fsPath(flutterHelloW
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
 export const flutterTestDriverAppFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test_driver/app.dart"));
 export const flutterTestDriverTestFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test_driver/app_test.dart"));
+export const flutterIntegrationTestFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "integration_test/app_test.dart"));
 // Web
 export const webProjectContainerFolder = vs.Uri.file(path.join(testFolder, "test_projects/web"));
 export const webHelloWorldFolder = vs.Uri.file(path.join(fsPath(webProjectContainerFolder), "hello_world"));
