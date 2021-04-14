@@ -57,9 +57,10 @@ Running Dart Code from source is relatively straight forward. You should:
 
 1. Clone the Dart Code repository (or your own fork)
 2. Run `npm install` to install dependencies
-3. Open the repository root folder in Visual Studio Code
-4. Ensure "Extension" is selected in the Debug side bar
-5. Press `F5`
+3. Run `git submodule init` and `git submodule update` to fetch submodules that contain Flutter images
+4. Open the repository root folder in Visual Studio Code
+5. Ensure "Extension" is selected in the Debug side bar
+6. Press `F5`
 
 This will compile Dart Code and launch the Code **Extension Development Host**. You may see a warning in the top of the screen telling you the extension has been overwritten - this is normal; it's Code informing you that the normal installed version of the extension has been replaced by the version you just compiled. This only affects that particular session of the extension development host.
 
