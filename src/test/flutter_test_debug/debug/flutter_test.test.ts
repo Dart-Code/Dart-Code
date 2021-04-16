@@ -312,7 +312,7 @@ describe("flutter test debugger", () => {
 	});
 
 	it("can run integration_test tests", async function () {
-		if (extApi.flutterCapabilities.supportsRunningIntegrationTests)
+		if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
 			this.skip();
 
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
@@ -325,7 +325,7 @@ describe("flutter test debugger", () => {
 	});
 
 	it("stops at a breakpoint in test code in integration_test tests", async function () {
-		if (extApi.flutterCapabilities.supportsRunningIntegrationTests)
+		if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
 			this.skip();
 
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
@@ -336,7 +336,7 @@ describe("flutter test debugger", () => {
 	});
 
 	it("stops at a breakpoint in app code in integration_test tests", async function () {
-		if (extApi.flutterCapabilities.supportsRunningIntegrationTests)
+		if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
 			this.skip();
 
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
