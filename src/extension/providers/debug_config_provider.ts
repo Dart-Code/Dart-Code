@@ -315,7 +315,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				const file = fsPath(fd[0]);
 				return isWithinPath(file, debugConfig.cwd)
 					// Ignore errors in test folder unless it's the file we're running.
-					&& ((!isInsideFolderNamed(file, "test") || !isInsideFolderNamed(file, "integration_test")) || file === debugConfig.program);
+					&& ((!isInsideFolderNamed(file, "test") && !isInsideFolderNamed(file, "integration_test")) || file === debugConfig.program);
 			});
 			if (firstRelevantDiagnostic) {
 				logger.warn("Project has errors, prompting user");
