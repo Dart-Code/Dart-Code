@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { flutterSnapScript, isWin } from "../constants";
+import { isWin } from "../constants";
 import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processKnownGitRepositories(logger: Logger, config: WritableWorkspaceConfig, gitRoot: string) {
@@ -10,11 +10,6 @@ export function processKnownGitRepositories(logger: Logger, config: WritableWork
 		// The Dart SDKs tests cannot run using pub, so also force them to use the VM.
 		config.useVmForTests = true;
 	}
-}
-
-export function processFlutterSnap(logger: Logger, config: WritableWorkspaceConfig, snapSdkRoot: string) {
-	config.flutterSdkHome = snapSdkRoot;
-	config.flutterScript = { replacesArgs: 0, script: flutterSnapScript };
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
