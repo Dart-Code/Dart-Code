@@ -1,15 +1,14 @@
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
-import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, flutterSnapScript, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, initializeSnapPrompt, isLinux, isMac, isWin, showLogAction } from "../../shared/constants";
-import { Logger, Sdks, WorkspaceConfig } from "../../shared/interfaces";
+import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, isMac, isWin, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
+import { Logger, Sdks, SdkSearchResults, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { fsPath, getSdkVersion, hasPubspec } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
-import { processBazelWorkspace, processFlutterSnap, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
+import { processBazelWorkspace, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -106,7 +105,7 @@ export class SdkUtils {
 
 	public async showSdkActivationFailure(
 		sdkType: string,
-		search: (path: string[]) => string | undefined,
+		search: (path: string[]) => Promise<SdkSearchResults>,
 		downloadUrl: string,
 		saveSdkPath: (path: string) => Thenable<void>,
 		commandToReRun?: string,
@@ -127,9 +126,9 @@ export class SdkUtils {
 				const selectedFolders =
 					await window.showOpenDialog({ canSelectFolders: true, openLabel: `Set ${sdkType} SDK folder` });
 				if (selectedFolders && selectedFolders.length > 0) {
-					const matchingSdkFolder = search(selectedFolders.map(fsPath));
-					if (matchingSdkFolder) {
-						await saveSdkPath(matchingSdkFolder);
+					const matchingSdkFolder = await search(selectedFolders.map(fsPath));
+					if (matchingSdkFolder.sdkPath) {
+						await saveSdkPath(matchingSdkFolder.sdkPath);
 						await promptToReloadExtension();
 						if (commandToReRun) {
 							commands.executeCommand(commandToReRun);
@@ -237,7 +236,6 @@ export class SdkUtils {
 		// TODO: Remove this lambda when the preview flag is removed.
 		await processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
 		const fuchsiaRoot = await processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
-		await processWorkspaceType(findFlutterSnapSdkRoot, processFlutterSnap);
 
 		if (fuchsiaRoot) {
 			this.logger.info(`Found Fuchsia root at ${fuchsiaRoot}`);
@@ -261,7 +259,20 @@ export class SdkUtils {
 			"~/.flutter-sdk",
 		].concat(paths).filter(notUndefined);
 
-		const flutterSdkPath = this.findFlutterSdk(flutterSdkSearchPaths);
+		let flutterSdkResult = await this.findFlutterSdk(flutterSdkSearchPaths);
+
+		// Handle the case where the Flutter snap has not been initialised.
+		if (!flutterSdkResult.sdkPath && flutterSdkResult.candidatePaths.includes(snapBinaryPath)) {
+			// Trigger initialization.
+			this.logger.info(`No Flutter SDK found, but a 'flutter' binary did point at ${snapBinaryPath} so attempting to initialize...`);
+			await initializeFlutterSdk(this.logger, snapFlutterBinaryPath);
+
+			// Then search again.
+			this.logger.info(`Snap initialization completed, searching for Flutter SDK again...`);
+			flutterSdkResult = await this.findFlutterSdk(flutterSdkSearchPaths);
+		}
+
+		const flutterSdkPath = flutterSdkResult.sdkPath;
 
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
@@ -296,7 +307,8 @@ export class SdkUtils {
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
 
-		const dartSdkPath = this.findDartSdk(dartSdkSearchPaths);
+		const dartSdkResult = await this.findDartSdk(dartSdkSearchPaths);
+		const dartSdkPath = dartSdkResult.sdkPath;
 
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
@@ -330,7 +342,7 @@ export class SdkUtils {
 		return fs.existsSync(fullPath) && fs.statSync(fullPath).isFile();
 	}
 
-	public searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): string | undefined {
+	public async searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): Promise<SdkSearchResults> {
 		this.logger.info(`Searching for ${executableFilename}`);
 
 		let sdkPaths =
@@ -362,7 +374,7 @@ export class SdkUtils {
 			this.logger.info(`        ${p}`);
 
 		// Convert all the paths to their resolved locations.
-		sdkPaths = sdkPaths.map((p) => {
+		sdkPaths = await Promise.all(sdkPaths.map(async (p) => {
 			const fullPath = path.join(p, executableFilename);
 
 			// In order to handle symlinks on the binary (not folder), we need to add the executableName before calling realpath.
@@ -371,9 +383,16 @@ export class SdkUtils {
 			if (realExecutableLocation.toLowerCase() !== fullPath.toLowerCase())
 				this.logger.info(`Following symlink: ${fullPath} ==> ${realExecutableLocation}`);
 
+			// If the symlink resolves to the Snap binary, it's not a real SDK
+			// and we should return as-is rather than walk up two levels, as we
+			// may want to use the presence of this to trigger initialisation.
+			if (realExecutableLocation === snapBinaryPath) {
+				return snapBinaryPath;
+			}
+
 			// Then we need to take the executable name and /bin back off
 			return path.dirname(path.dirname(realExecutableLocation));
-		});
+		}));
 
 		// Now apply any post-filters.
 		this.logger.info("    Candidate paths to be post-filtered:");
@@ -384,9 +403,10 @@ export class SdkUtils {
 		if (sdkPath)
 			this.logger.info(`    Found at ${sdkPath}`);
 
+
 		this.logger.info(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
 
-		return sdkPath;
+		return { sdkPath, candidatePaths: sdkPaths };
 	}
 }
 
@@ -460,25 +480,6 @@ async function findBazelWorkspaceRoot(logger: Logger, folder: string): Promise<s
 async function findGitRoot(logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".git");
 }
-
-async function findFlutterSnapSdkRoot(logger: Logger, folder: string): Promise<string | undefined> {
-	if (isLinux && fs.existsSync(flutterSnapScript)) {
-		logger.info(`Found Flutter snap script`);
-		const snapSdkRoot = path.join(os.homedir(), "/snap/flutter/common/flutter");
-
-		if (!fs.existsSync(snapSdkRoot + "/.git")) {
-			logger.info(`Flutter snap is not initialized, showing prompt`);
-			await initializeFlutterSdk(logger, flutterSnapScript, initializeSnapPrompt);
-		}
-
-		if (fs.existsSync(snapSdkRoot + "/.git")) {
-			logger.info(`Returning ${snapSdkRoot} as Flutter snap SDK root`);
-			return snapSdkRoot;
-		}
-	}
-	return undefined;
-}
-
 
 function findRootContaining(folder: string, childName: string, expectFile = false): string | undefined {
 	if (folder) {

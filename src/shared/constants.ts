@@ -30,7 +30,6 @@ export const pubPath = "bin/" + executableNames.pub;
 export const flutterPath = "bin/" + executableNames.flutter;
 export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
-export const flutterSnapScript = "/snap/flutter/current/flutter.sh";
 export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/" + s);
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.dev/setup/";
@@ -81,9 +80,10 @@ export const takeSurveyAction = "Take Survey";
 export const skipThisSurveyAction = "Skip This Survey";
 
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
-
-export const initializeSnapPrompt = "The Flutter snap is installed but not initialized. Would you like to initialize it now?";
 export const initializingFlutterMessage = "Initializing Flutter. This may take a few minutes.";
+
+export const snapBinaryPath = "/usr/bin/snap";
+export const snapFlutterBinaryPath = "/snap/bin/flutter";
 
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;

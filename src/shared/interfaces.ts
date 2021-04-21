@@ -6,6 +6,11 @@ import * as f from "./flutter/daemon_interfaces";
 import { UnknownResponse } from "./services/interfaces";
 import { WorkspaceContext } from "./workspace";
 
+export interface SdkSearchResults {
+	sdkPath: string | undefined;
+	candidatePaths: string[];
+}
+
 export interface Sdks {
 	readonly dart?: string;
 	readonly dartVersion?: string;
