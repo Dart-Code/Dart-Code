@@ -109,11 +109,6 @@ jobs:
         run: flutter create .
         working-directory: src/test/test_projects/flutter_hello_world
 
-      - name: flutter create (flutter_hello_world/example)
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
-        run: flutter create .
-        working-directory: src/test/test_projects/flutter_hello_world/example
-
       - name: flutter create (flutter_hello_world_bazel)
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter create .
