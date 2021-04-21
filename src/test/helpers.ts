@@ -1059,7 +1059,7 @@ export function ensurePackageTreeNode(items: vs.TreeItem[] | undefined | null, n
 		&& renderedItemLabel(item) === label,
 	);
 	if (!item)
-		throw new Error(`Did not find item matching ${label}`);
+		throw new Error(`Did not find item matching ${label} in:\n${items.map((item) => `    ${renderedItemLabel(item)} (${item.label}, ${item.contextValue})`).join("\n")}`);
 
 	if (description)
 		assert.equal(item.description, description);
