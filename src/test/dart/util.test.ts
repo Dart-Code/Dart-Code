@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as path from "path";
 import { escapeDartString, generateTestNameFromFileName, isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
 import { applyColor, red } from "../../shared/utils/colors";
-import { fsPath, isWithinPath } from "../../shared/utils/fs";
+import { fsPath, isWithinPath, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder } from "../helpers";
 
 describe("versionIsAtLeast", () => {
@@ -166,5 +166,45 @@ describe("isWithinPath", () => {
 		assert.equal(isWithinPath(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldFolder)), false);
 		assert.equal(isWithinPath(fsPath(flutterEmptyFile), fsPath(flutterEmptyFile)), false);
 		assert.equal(isWithinPath(fsPath(flutterHelloWorldMainFile), fsPath(flutterHelloWorldMainFile)), false);
+	});
+});
+
+describe("isWithinPathOrEqual", () => {
+	it("should return true for children", () => {
+		assert.equal(isWithinPathOrEqual(fsPath(helloWorldFolder), ext.extensionPath), true);
+		assert.equal(isWithinPathOrEqual(fsPath(emptyFile), ext.extensionPath), true);
+		assert.equal(isWithinPathOrEqual(fsPath(everythingFile), ext.extensionPath), true);
+		assert.equal(isWithinPathOrEqual(fsPath(emptyFile), fsPath(helloWorldFolder)), true);
+		assert.equal(isWithinPathOrEqual(fsPath(everythingFile), fsPath(helloWorldFolder)), true);
+
+		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldFolder), ext.extensionPath), true);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterEmptyFile), ext.extensionPath), true);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldMainFile), ext.extensionPath), true);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterEmptyFile), fsPath(flutterHelloWorldFolder)), true);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldMainFile), fsPath(flutterHelloWorldFolder)), true);
+	});
+
+	it("should return false for parents", () => {
+		assert.equal(isWithinPathOrEqual(ext.extensionPath, fsPath(helloWorldFolder)), false);
+		assert.equal(isWithinPathOrEqual(ext.extensionPath, fsPath(emptyFile)), false);
+		assert.equal(isWithinPathOrEqual(ext.extensionPath, fsPath(everythingFile)), false);
+		assert.equal(isWithinPathOrEqual(fsPath(helloWorldFolder), fsPath(emptyFile)), false);
+		assert.equal(isWithinPathOrEqual(fsPath(helloWorldFolder), fsPath(everythingFile)), false);
+
+		assert.equal(isWithinPathOrEqual(ext.extensionPath, fsPath(flutterHelloWorldFolder)), false);
+		assert.equal(isWithinPathOrEqual(ext.extensionPath, fsPath(flutterEmptyFile)), false);
+		assert.equal(isWithinPathOrEqual(ext.extensionPath, fsPath(flutterHelloWorldMainFile)), false);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldFolder), fsPath(flutterEmptyFile)), false);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldMainFile)), false);
+	});
+
+	it("should return true for same input", () => {
+		assert.equal(isWithinPathOrEqual(ext.extensionPath, ext.extensionPath), true);
+		assert.equal(isWithinPathOrEqual(fsPath(helloWorldFolder), fsPath(helloWorldFolder)), true);
+		assert.equal(isWithinPathOrEqual(fsPath(emptyFile), fsPath(emptyFile)), true);
+		assert.equal(isWithinPathOrEqual(fsPath(everythingFile), fsPath(everythingFile)), true);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldFolder)), true);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterEmptyFile), fsPath(flutterEmptyFile)), true);
+		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldMainFile), fsPath(flutterHelloWorldMainFile)), true);
 	});
 });

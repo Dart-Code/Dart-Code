@@ -1,7 +1,7 @@
 import * as path from "path";
 import { TextDocument, workspace } from "vscode";
 import { escapeRegExp } from "../utils";
-import { fsPath, isWithinPath } from "../utils/fs";
+import { fsPath, isWithinPathOrEqual } from "../utils/fs";
 
 const debugTypeTokenRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
 
@@ -18,7 +18,7 @@ export function getTemplatedLaunchConfigs(document: TextDocument, fileType: stri
 	for (const templateType of wantedTemplateTypes) {
 		const relevantLaunchConfigs = runConfigs
 			.filter((c) => c.type === "dart" && isTemplateOfType(c, templateType))
-			.filter((c) => c.codeLens?.path && workspacePath ? isWithinPath(filePath, path.join(workspacePath, c.codeLens?.path)) : !c.codeLens?.path);
+			.filter((c) => c.codeLens?.path && workspacePath ? isWithinPathOrEqual(filePath, path.join(workspacePath, c.codeLens?.path)) : !c.codeLens?.path);
 		for (const launchConfig of relevantLaunchConfigs) {
 			runFileTemplates.push({
 				...launchConfig,

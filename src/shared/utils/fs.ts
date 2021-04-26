@@ -22,6 +22,11 @@ export function isWithinPath(file: string, folder: string) {
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
+export function isWithinPathOrEqual(file: string, folder: string) {
+	const relative = path.relative(folder, file);
+	return !relative || isWithinPath(file, folder);
+}
+
 export function isEqualOrWithinPath(file: string, folder: string) {
 	const relative = path.relative(folder, file);
 	return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
