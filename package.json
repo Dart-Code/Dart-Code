@@ -1500,7 +1500,8 @@
 								"items": {
 									"type": "string"
 								}
-							}
+							},
+							"env": {}
 						}
 					},
 					"scope": "window"

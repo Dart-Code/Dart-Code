@@ -125,6 +125,7 @@ export interface CustomEmulator {
 	name: string;
 	executable: string;
 	args?: string[];
+	env: any;
 }
 
 export interface EmulatorCreator {

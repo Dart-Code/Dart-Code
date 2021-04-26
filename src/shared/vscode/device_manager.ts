@@ -8,6 +8,7 @@ import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, IF
 import { logProcess } from "../logging";
 import { safeSpawn } from "../processes";
 import { unique } from "../utils/array";
+import { resolveTildePaths } from "../utils/fs";
 import { isRunningLocally } from "./utils";
 
 export class FlutterDeviceManager implements vs.Disposable {
@@ -459,8 +460,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 				progress.report({ message: `Launching ${emulator.name}...` });
 				const binPath = emulator.executable;
 				const args = emulator.args || [];
+				const env = emulator.env ?? {};
 
-				const customEmulatorProc = safeSpawn(undefined, emulator.executable, args, {});
+				const customEmulatorProc = safeSpawn(undefined, binPath, args, env);
 				this.logger.info(`(PROC ${customEmulatorProc.pid}) Spawned ${binPath} ${args.join(" ")}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, customEmulatorProc);
 
