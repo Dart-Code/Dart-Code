@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger } from "../interfaces";
@@ -80,6 +81,16 @@ async function fileExists(p: string): Promise<boolean> {
 	} catch {
 		return false;
 	}
+}
+
+export function resolveTildePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
+	if (typeof p !== "string")
+		return undefined as (undefined extends T ? undefined : never);
+
+	if (p.startsWith("~/"))
+		return path.join(os.homedir(), p.substr(2));
+
+	return p;
 }
 
 // Walks a few levels down and returns all folders that look like project

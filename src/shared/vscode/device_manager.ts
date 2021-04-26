@@ -458,7 +458,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				location: vs.ProgressLocation.Notification,
 			}, async (progress) => {
 				progress.report({ message: `Launching ${emulator.name}...` });
-				const binPath = emulator.executable;
+				const binPath = resolveTildePaths(emulator.executable);
 				const args = emulator.args || [];
 				const env = emulator.env ?? {};
 
