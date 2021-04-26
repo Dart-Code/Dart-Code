@@ -3,7 +3,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
 import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
-import { LogCategory, VmService, VmServiceExtension } from "../shared/enums";
+import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger, WidgetErrorInspectData } from "../shared/interfaces";
@@ -64,18 +64,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation !== false;
 		this.outputCategory = "stdout";
 
-		// Allow overriding the requirement for a VM service.
-		if (args.flutterDisableVmServiceExperimental) {
-			this.connectVmEvenForNoDebug = false;
-		}
-
 		await super.launchRequest(response, args);
-
-		// Pretend the required services were loaded.
-		if (args.flutterDisableVmServiceExperimental) {
-			this.notifyServiceRegistered(VmService.HotReload, "FAKE-SERVICE");
-			this.notifyServiceRegistered(VmService.HotRestart, "FAKE-SERVICE");
-		}
 	}
 
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: any): Promise<void> {

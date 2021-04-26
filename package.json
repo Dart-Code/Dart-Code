@@ -2251,10 +2251,6 @@
 								],
 								"default": "default"
 							},
-							"flutterDisableVmServiceExperimental": {
-								"type": "boolean",
-								"description": "EXPERIMENTAL: Whether to run Flutter apps without a direct connection to the VM service."
-							},
 							"codeLens": {
 								"description": "Shows this launch config in CodeLens links for main and/or test methods.",
 								"type": "object",
