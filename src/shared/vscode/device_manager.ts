@@ -470,6 +470,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 					await new Promise((resolve) => setTimeout(resolve, 500));
 					if (this.currentDevice)
 						return;
+					if (customEmulatorProc.exitCode !== null && customEmulatorProc.exitCode !== 0) {
+						throw Error(`Exit code ${customEmulatorProc.exitCode}`);
+					}
 				}
 				throw new Error("Emulator didn't connect within 60 seconds");
 			});
