@@ -1613,6 +1613,10 @@
 						"notification",
 						"statusBar"
 					],
+					"enumDescriptions": [
+						"Hot reload progress will be shown in a toast notification",
+						"Hot reload progress will be shown only in the status bar"
+					],
 					"default": "notification",
 					"description": "Determines how to display Hot Restart and Hot Reload progress.",
 					"scope": "window"
@@ -1646,6 +1650,10 @@
 						"sse",
 						"ws"
 					],
+					"enumDescriptions": [
+						"Server-Sent Events",
+						"WebSockets"
+					],
 					"default": "ws",
 					"description": "The protocol to use for the Dart Debug Extension backend service and injected client. Using WebSockets can improve performance but may fail when connecting through some proxy servers.",
 					"scope": "window"
@@ -1663,6 +1671,10 @@
 					"enum": [
 						"chrome",
 						"default"
+					],
+					"enumDescriptions": [
+						"Locate and launch Google Chrome from your system",
+						"Use your systems default web browser"
 					],
 					"default": "chrome",
 					"description": "Whether to launch external DevTools windows using Chrome or the system default browser.",
@@ -1817,8 +1829,13 @@
 						"always",
 						"manual"
 					],
+					"enumDescriptions": [
+						"Do not reload when saving",
+						"Reload for all saves, manual or automatic",
+						"Only reload for manual saves (requires pressing Save explicitly if using autosave)"
+					],
 					"default": "manual",
-					"markdownDescription": "Whether to automatically send a Hot Reload request during a debug session when saving files.\n\n- `never` - do not reload when saving.\n- `always` - reload for all saves, manual or automatic.\n- `manual` - only reload for manual saves (requires pressing Save explicitly if using autosave).",
+					"markdownDescription": "Whether to automatically send a Hot Reload request during a debug session when saving files.",
 					"scope": "window"
 				},
 				"dart.flutterHotRestartOnSave": {
@@ -1878,8 +1895,13 @@
 						"html",
 						"canvaskit"
 					],
+					"enumDescriptions": [
+						"Allow Flutter to pick the best renderer based on the users device",
+						"Always use the HTML renderer",
+						"Always use the CanvasKit renderer"
+					],
 					"default": "auto",
-					"markdownDescription": "Sets the [Web renderer](https://flutter.dev/docs/development/tools/web-renderers) used for Flutter web apps.\n\n- `auto` - allow Flutter to pick the best renderer based on the users device.\n- `html` - always use the HTML renderer.\n- `canvaskit` - always use the CanvasKit renderer.",
+					"markdownDescription": "Sets the [Web renderer](https://flutter.dev/docs/development/tools/web-renderers) used for Flutter web apps.",
 					"scope": "window"
 				},
 				"dart.analyzerAdditionalArgs": {
@@ -1990,6 +2012,11 @@
 						"flutter",
 						"always"
 					],
+					"enumDescriptions": [
+						"Do not automatically launch DevTools when starting a debug session",
+						"Automatically launch DevTools when starting a Flutter debug session",
+						"Automatically launch DevTools when starting any debug session"
+					],
 					"default": "never",
 					"description": "Whether to automatically open DevTools at the start of a debug session. If embedded DevTools is enabled, this will launch the Widget Inspector embedded for Flutter projects, or launch DevTools externally in a browser for Dart projects.",
 					"scope": "window"
@@ -2083,8 +2110,12 @@
 						"remote",
 						"always"
 					],
+					"enumDescriptions": [
+						"Only show for remote workspaces (includes browser-based workspaces)",
+						"Always show, even for local sessions"
+					],
 					"default": "remote",
-					"markdownDescription": "When to show the Flutter headless web-server device. This requires using the Dart Debug extension for Chrome and is usually only used for remote environments where Chrome is not available such as browser/cloud-based IDEs (requires restart).\n\n- `remote` - only show when connected to a remote.\n- `always` - always show, even for local sessions.",
+					"markdownDescription": "When to show the Flutter headless web-server device. This requires using the Dart Debug extension for Chrome and is usually only used for remote environments where Chrome is not available such as browser/cloud-based IDEs (requires restart).",
 					"scope": "window"
 				},
 				"dart.warnWhenEditingFilesOutsideWorkspace": {
