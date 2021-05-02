@@ -305,7 +305,7 @@
 					"name": "keyword.operator.logical.dart"
 				},
 				{
-					"match": "(?<!\\$)\\b(static|final|const|required|late)\\b(?!\\$)",
+					"match": "(?<!\\$)\\b(static|final|const|required|late|bool|String|int|void|var)\\b(?!\\$)",
 					"name": "storage.modifier.dart"
 				},
 				{
