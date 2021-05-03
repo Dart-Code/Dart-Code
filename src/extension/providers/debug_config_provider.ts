@@ -278,8 +278,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 				// If we still don't have a valid device, show an error.
 				if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn)) {
-					logger.warn("Unable to launch due to no active device");
-					window.showInformationMessage("Cannot launch without an active device");
+					if (deviceToLaunchOn) {
+						logger.warn(`Unable to launch because ${deviceToLaunchOn.id} is not valid for this project (${deviceToLaunchOn.platformType} is not allowed according to [${supportedPlatforms.join(", ")}])`);
+						window.showInformationMessage("Cannot launch without a valid device for this project");
+					} else {
+						logger.warn("Unable to launch due to no active device");
+						window.showInformationMessage("Cannot launch without an active device");
+					}
 					return undefined; // undefined means silent (don't open launch.json).
 				}
 			}
