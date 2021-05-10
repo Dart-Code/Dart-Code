@@ -11,7 +11,10 @@
 		"workspace"
 	],
 	"capabilities": {
-    	"virtualWorkspaces": false
+    	"virtualWorkspaces": false,
+		"untrustedWorkspaces": {
+			"supported": false
+		}
   	},
 	"license": "SEE LICENSE IN LICENSE",
 	"bugs": {
