@@ -1377,6 +1377,9 @@
 					],
 					"property.declaration": [
 						"entity.name.function.member"
+					],
+					"string.escape": [
+						"constant.character.escape"
 					]
 				}
 			}
