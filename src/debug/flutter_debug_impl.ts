@@ -199,8 +199,16 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (!isAttach) {
 			if (args.flutterMode === "profile") {
 				appArgs.push("--profile");
+				// We also may not be able to connect a VM Service for profile modes for web.
+				if (this.isWebDevice(args.deviceId) && !this.flutterCapabilities.supportsDebuggerForWebProfileBuilds) {
+					this.noDebug = true;
+					this.connectVmEvenForNoDebug = false;
+				}
 			} else if (args.flutterMode === "release") {
 				appArgs.push("--release");
+				// We also can't connect a VM Service for release modes.
+				this.noDebug = true;
+				this.connectVmEvenForNoDebug = false;
 			} else {
 				// Debug mode
 				if (!this.flutterTrackWidgetCreation)
@@ -244,6 +252,10 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 
 		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterSdkPath, args.workspaceConfig, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+	}
+
+	private isWebDevice(deviceId: string | undefined): boolean {
+		return !!(deviceId?.startsWith("web") || deviceId === "chrome" || deviceId === "edge");
 	}
 
 	private async connectToVmServiceIfReady() {
