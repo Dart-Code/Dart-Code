@@ -401,7 +401,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		const serverConnected = dasClient.registerForServerConnected((sc) => {
 			serverConnected.dispose();
 			if (vs.workspace.workspaceFolders)
-				recalculateAnalysisRoots();
+				recalculateDasAnalysisRoots();
 
 			// Set up a handler to warn the user if they open a Dart file and we
 			// never set up the analyzer
@@ -674,7 +674,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}
 
 		workspaceContext.events.onPackageMapChange.fire();
-		recalculateAnalysisRoots();
+		if (!isUsingLsp)
+			recalculateDasAnalysisRoots();
 		checkForPackages();
 	}));
 
@@ -760,7 +761,7 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 	logger?.info(getLogHeader());
 }
 
-function recalculateAnalysisRoots() {
+function recalculateDasAnalysisRoots() {
 	const workspaceFolders = getDartWorkspaceFolders();
 	analysisRoots = workspaceFolders.map((w) => fsPath(w.uri));
 
