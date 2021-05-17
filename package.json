@@ -11,7 +11,7 @@
 		"workspace"
 	],
 	"capabilities": {
-    	"virtualWorkspaces": false,
+    	"virtualWorkspaces": true,
 		"untrustedWorkspaces": {
 			"supported": false
 		}

@@ -214,7 +214,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		logger.error(e);
 	}
 
+	const isVirtualWorkspace  = vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.every((f) => f.uri.scheme !== 'file');
 	const isUsingLsp = !!process.env.DART_CODE_FORCE_LSP
+		|| isVirtualWorkspace
 		|| (config.previewLsp ?? (dartCapabilities.canDefaultLsp && vsCodeVersion.supportsLatestLspClient && experiments.lspDefault.applies));
 	writableConfig.useLsp = isUsingLsp;
 	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
@@ -225,6 +227,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Show the SDK version in the status bar.
 	if (sdks.dartVersion)
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext, isUsingLsp));
+
+		if (isVirtualWorkspace && !dartCapabilities.supportsNonFileSchemeWorkspaces) {
+			vs.window.showWarningMessage("Please upgrade to the latest Dart/Flutter SDK to prevent errors in workspaces with virtual folders");
+		}
 
 	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 
