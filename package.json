@@ -985,7 +985,7 @@
 				},
 				{
 					"command": "flutter.launchEmulator",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:isRunningLocally"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:isRunningLocally || dart-code:anyFlutterProjectLoaded && config.dart.flutterShowEmulators == always"
 				},
 				{
 					"when": "false",
