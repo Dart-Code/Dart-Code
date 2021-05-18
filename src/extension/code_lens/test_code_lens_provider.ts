@@ -2,7 +2,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, Tex
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { TestOutlineVisitor } from "../../shared/utils/outline_das";
+import { DasTestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzer } from "../analysis/analyzer_das";
@@ -38,38 +38,34 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			return;
 
 		const templates = getTemplatedLaunchConfigs(document, "test");
+		const templatesHaveRun = !!templates.find((t) => t.name === "Run");
+		const templatesHaveDebug = !!templates.find((t) => t.name === "Debug");
 
 		const visitor = new TestOutlineVisitor(this.logger);
 		visitor.visit(outline);
 		return flatMap(
 			visitor.tests
 				.filter((test) => test.offset && test.length)
-				.map((test) => [
-					new CodeLens(
-						toRange(document, test.offset, test.length),
-						{
-							arguments: [test],
-							command: "_dart.startWithoutDebuggingTestFromOutline",
-							title: "Run",
-						},
-					),
-					new CodeLens(
-						toRange(document, test.offset, test.length),
-						{
-							arguments: [test],
-							command: "_dart.startDebuggingTestFromOutline",
-							title: "Debug",
-						},
-					),
-				].concat(templates.map((t) => new CodeLens(
-					toRange(document, test.offset, test.length),
-					{
-						arguments: [test, t],
-						command: t.template === "run-test" ? "_dart.startWithoutDebuggingTestFromOutline" : "_dart.startDebuggingTestFromOutline",
-						title: t.name,
-					},
-				)))),
+				.map((test) => {
+					const results: CodeLens[] = [];
+					if (!templatesHaveRun)
+						results.push(this.createCodeLens(document, test, "Run", false));
+					if (!templatesHaveDebug)
+						results.push(this.createCodeLens(document, test, "Debug", true));
+					return results.concat(templates.map((t) => this.createCodeLens(document, test, t.name, t.template.startsWith("debug"), t)));
+				}),
 			(x) => x,
+		);
+	}
+
+	private createCodeLens(document: TextDocument, test: DasTestOutlineInfo, name: string, debug: boolean, template?: { name: string }): CodeLens {
+		return new CodeLens(
+			toRange(document, test.offset, test.length),
+			{
+				arguments: template ? [test, template] : [test],
+				command: debug ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline",
+				title: name,
+			}
 		);
 	}
 

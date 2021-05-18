@@ -1,4 +1,5 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
+import { Outline } from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -28,36 +29,30 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 
 		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
 		const templates = getTemplatedLaunchConfigs(document, fileType);
+		const templatesHaveRun = !!templates.find((t) => t.name === "Run");
+		const templatesHaveDebug = !!templates.find((t) => t.name === "Debug");
 
 		const mainFunction = outline.children?.find((o) => o.element.name === "main");
 		if (!mainFunction)
 			return;
 
-		return [
-			new CodeLens(
-				toRange(document, mainFunction.offset, mainFunction.length),
-				{
-					arguments: [document.uri],
-					command: "dart.startWithoutDebugging",
-					title: "Run",
-				},
-			),
-			new CodeLens(
-				toRange(document, mainFunction.offset, mainFunction.length),
-				{
-					arguments: [document.uri],
-					command: "dart.startDebugging",
-					title: "Debug",
-				},
-			),
-		].concat(templates.map((t) => new CodeLens(
+		const results: CodeLens[] = [];
+		if (!templatesHaveRun)
+			results.push(this.createCodeLens(document, mainFunction, "Run", false));
+		if (!templatesHaveDebug)
+			results.push(this.createCodeLens(document, mainFunction, "Debug", true));
+		return results.concat(templates.map((t) => this.createCodeLens(document, mainFunction, t.name, t.template.startsWith("debug"), t)));
+	}
+
+	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: { name: string }): CodeLens {
+		return new CodeLens(
 			toRange(document, mainFunction.offset, mainFunction.length),
 			{
-				arguments: [document.uri, t],
-				command: t.template === `run-${fileType}` ? "dart.startWithoutDebugging" : "dart.startDebugging",
-				title: t.name,
-			},
-		)));
+				arguments: template ? [document.uri, template] : [document.uri],
+				command: debug ? "dart.startDebugging" : "dart.startWithoutDebugging",
+				title: name,
+			}
+		);
 	}
 
 	public dispose(): any {

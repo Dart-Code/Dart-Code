@@ -81,6 +81,46 @@ describe("main_code_lens", () => {
 				assert.equal(fsPath(action.command!.arguments![0]), fsPath(testConfig.fileUri));
 				assert.equal(action.command!.arguments![1].console, "terminal");
 			});
+
+			it(`replaces default ${debugType.type} action with custom templated actions from launch templates for ${testConfig.type}`, async function () {
+				await addLaunchConfigsForTest(
+					vs.workspace.workspaceFolders![0].uri,
+					[
+						{
+							codeLens: {
+								for: [`${debugType.type}-${testConfig.type}`],
+								title: "${debugType}",
+							},
+							console: "terminal",
+							name: "test_config",
+							request: "launch",
+							type: "dart",
+						},
+					],
+				);
+
+				const editor = await openFile(testConfig.fileUri);
+				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
+
+				const fileCodeLens = await getCodeLens(editor.document);
+				const mainFunctionPos = positionOf(testConfig.lensLocation);
+
+				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
+				assert.equal(codeLensForMainFunction.length, 2);
+
+				if (!codeLensForMainFunction[0].command) {
+					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+					// race condition. Rather than failing our test runs, skip.
+					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+					this.skip();
+					return;
+				}
+
+				const action = codeLensForMainFunction.find((cl) => cl.command!.title === `${debugType.name}`)!;
+				assert.equal(action.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
+				assert.equal(fsPath(action.command!.arguments![0]), fsPath(testConfig.fileUri));
+				assert.equal(action.command!.arguments![1].console, "terminal");
+			});
 		}
 	}
 
