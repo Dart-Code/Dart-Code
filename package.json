@@ -2131,6 +2131,19 @@
 					"markdownDescription": "When to show the Flutter headless web-server device. This requires using the Dart Debug extension for Chrome and is usually only used for remote environments where Chrome is not available such as browser/cloud-based IDEs (requires restart).",
 					"scope": "window"
 				},
+				"dart.flutterShowEmulators": {
+					"enum": [
+						"local",
+						"always"
+					],
+					"enumDescriptions": [
+						"Only show for local workspaces",
+						"Always show, even for remote sessions"
+					],
+					"default": "local",
+					"markdownDescription": "When to show the Flutter emulators. These are usually hidden for remote workspaces because it is usually not possible to see or interact with emulators in a remote session. If you are using remoting/containers in a way that you can interact with launched emulator processes, you may wish to set this to 'always'.",
+					"scope": "window"
+				},
 				"dart.warnWhenEditingFilesOutsideWorkspace": {
 					"type": "boolean",
 					"default": true,

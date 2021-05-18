@@ -17,7 +17,7 @@ describe("device_manager", () => {
 	beforeEach(() => {
 		daemon = new FakeFlutterDaemon();
 		// TODO: Tests for custom emulators.
-		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: customEmulators, flutterSelectDeviceWhenConnected: true });
+		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: customEmulators, flutterSelectDeviceWhenConnected: true, flutterShowEmulators: "local" });
 	});
 
 	afterEach(() => {
