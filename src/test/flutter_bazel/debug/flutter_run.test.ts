@@ -31,7 +31,7 @@ describe(`flutter run debugger`, () => {
 
 		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -61,7 +61,7 @@ describe(`flutter run debugger`, () => {
 
 		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);

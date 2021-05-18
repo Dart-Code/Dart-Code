@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
-import { grey } from "../../../shared/utils/colors";
+import { faint } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -125,7 +125,7 @@ describe("dart cli debugger", () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
-			dc.assertOutputContains("console", `${grey("[log] ")}Logging from dart:developer!`),
+			dc.assertOutputContains("console", `${faint("[log] ")}Logging from dart:developer!`),
 			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),

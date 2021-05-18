@@ -5,7 +5,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { isLinux } from "../../../shared/constants";
 import { DebuggerType, VmService, VmServiceExtension } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
-import { grey, grey2 } from "../../../shared/utils/colors";
+import { faint } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -36,7 +36,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("runs and remains active until told to quit", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -290,7 +290,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("stdout", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -1323,25 +1323,23 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
+		config.noDebug = true;
 
-		// Collect all output to stderr.
-		let stderrOutput = "";
+		// Collect all output.
+		let allOutput = "";
 		const handleOutput = (event: DebugProtocol.OutputEvent) => {
-			if (event.body.category === "stderr") {
-				stderrOutput += event.body.output;
-			}
+			allOutput += `${event.body.category}: ${event.body.output}`;
 		};
 		dc.on("output", handleOutput);
 		try {
-
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
 
 			await waitForResult(
-				() => stderrOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
-					&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
+				() => allOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
+					&& allOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
 				"Waiting for error output",
 				5000,
 			);
@@ -1355,7 +1353,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		// Grab online the lines that form our error.
-		let stdErrLines = stderrOutput.split("\n").map((l) => l.trim());
+		let stdErrLines = allOutput.split("\n").map((l) => l.trim());
 		// Trim off stuff before our error.
 		const firstErrorLine = stdErrLines.findIndex((l) => l.toLowerCase().indexOf("exception caught by widgets library") !== -1);
 		stdErrLines = stdErrLines.slice(firstErrorLine);
@@ -1369,19 +1367,20 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		// Handle old/new error messages for stable/dev.
 		const expectedErrorLines = [
-			grey2(`════════ Exception caught by widgets library ═══════════════════════════════════`),
-			grey(`The following _Exception was thrown building MyBrokenHomePage(dirty):`),
-			`Exception: Oops`,
-			grey(`The relevant error-causing widget was`),
-			grey2(`MyBrokenHomePage`),
-			grey(`When the exception was thrown, this was the stack`),
-			grey2(`#0      MyBrokenHomePage._throwAnException`),
-			grey2(`#1      MyBrokenHomePage.build`),
-			grey(`#2      StatelessElement.build`),
-			grey(`#3      ComponentElement.performRebuild`),
-			grey(`#4      Element.rebuild`),
-			grey(`...`),
-			grey2(`════════════════════════════════════════════════════════════════════════════════`),
+			`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
+			`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
+			`stderr: Exception: Oops`,
+			`stdout:`,
+			`stdout: The relevant error-causing widget was`,
+			`stdout: MyBrokenHomePage`,
+			`stdout: When the exception was thrown, this was the stack`,
+			`stdout: #0      MyBrokenHomePage._throwAnException`,
+			`stdout: #1      MyBrokenHomePage.build`,
+			`stdout: ${faint("#2      StatelessElement.build")}`,
+			`stdout: ${faint("#3      ComponentElement.performRebuild")}`,
+			`stdout: ${faint("#4      Element.rebuild")}`,
+			`stdout: ...`,
+			`stderr: ════════════════════════════════════════════════════════════════════════════════`,
 		];
 
 		assert.deepStrictEqual(stdErrLines.map((s) => s.toLowerCase()), expectedErrorLines.map((s) => s.toLowerCase()));
@@ -1398,26 +1397,24 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
+		config.noDebug = true;
 
-		// Collect all output to stderr.
-		let stderrOutput = "";
+		// Collect all output.
+		let allOutput = "";
 		const handleOutput = (event: DebugProtocol.OutputEvent) => {
-			if (event.body.category === "stderr") {
-				stderrOutput += event.body.output;
-			}
+			allOutput += `${event.body.category}: ${event.body.output}`;
 		};
 		dc.on("output", handleOutput);
 		try {
-
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
 
 			await waitForResult(
-				() => stderrOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
-					&& stderrOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
-				"Waiting for error output",
+				() => allOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
+					&& allOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
+				"Waiting for output",
 				5000,
 			);
 
@@ -1431,6 +1428,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.terminateRequest(),
 		);
 
-		assert.equal(stderrOutput.toLowerCase().indexOf("══╡ exception caught"), -1);
+		assert.equal(allOutput.toLowerCase().indexOf("══╡ exception caught"), -1);
 	});
 });

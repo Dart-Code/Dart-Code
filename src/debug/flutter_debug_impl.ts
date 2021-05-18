@@ -7,7 +7,6 @@ import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger, WidgetErrorInspectData } from "../shared/interfaces";
-import { grey, grey2 } from "../shared/utils/colors";
 import { getSdkVersion } from "../shared/utils/fs";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
@@ -30,7 +29,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	protected readonly flutterCapabilities = FlutterCapabilities.empty;
 
 	// Allow flipping into stderr mode for red exceptions when we see the start/end of a Flutter exception dump.
-	private outputCategory: "stdout" | "stderr" = "stdout";
+	private outputCategory: "stdout" | "stderr" | "console" = "console";
 
 	constructor() {
 		super();
@@ -62,7 +61,6 @@ export class FlutterDebugSession extends DartDebugSession {
 	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): Promise<void> {
 		this.flutterCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.flutterSdkPath }) ?? this.flutterCapabilities.version;
 		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation !== false;
-		this.outputCategory = "stdout";
 
 		await super.launchRequest(response, args);
 	}
@@ -101,6 +99,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		});
 		this.runDaemon.registerForAppStarted(async (n) => {
 			this.appHasStarted = true;
+			this.outputCategory = "stdout";
 			await this.connectToVmServiceIfReady();
 		});
 		this.runDaemon.registerForAppStop((n) => {
@@ -425,12 +424,13 @@ export class FlutterDebugSession extends DartDebugSession {
 		const headerPrefix = barChar.repeat(8);
 		const headerSuffix = barChar.repeat(Math.max((assumedTerminalSize - error.description.length - 2 - headerPrefix.length), 0));
 		const header = `${headerPrefix} ${error.description} ${headerSuffix}`;
-		this.logToUser(`\n${header}\n`, "stderr", grey2);
+		this.logToUser(`\n`, "stderr");
+		this.logToUser(`${header}\n`, "stderr");
 		if (error.errorsSinceReload)
 			this.logFlutterErrorSummary(error);
 		else
 			this.logDiagnosticNodeDescendents(error);
-		this.logToUser(`${barChar.repeat(header.length)}\n`, "stderr", grey2);
+		this.logToUser(`${barChar.repeat(header.length)}\n`, "stderr");
 	}
 
 	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0, blankLineAfterSummary = true }: { parent: DiagnosticsNode; level?: number; blankLineAfterSummary?: boolean }) {
@@ -461,14 +461,14 @@ export class FlutterDebugSession extends DartDebugSession {
 			// TODO: Remove this when Flutter is marking user-thrown exceptions with
 			// ErrorSummary.
 			|| node.description && node.description.startsWith("Exception: ");
-		const isHint = node.level === DiagnosticsNodeLevel.Hint;
-		const colorText = isErrorMessage
-			? (s: string) => s // Leave as default (red stderr)
-			: isHint ? grey2 : grey;
 
-		this.logToUser(`${line}\n`, "stderr", colorText);
+		if (isErrorMessage) {
+			this.logToUser(`${line}\n`, "stderr");
+		} else {
+			this.logToUser(`${line}\n`, "stdout");
+		}
 		if (blankLineAfterSummary && node.level === DiagnosticsNodeLevel.Summary)
-			this.logToUser("\n");
+			this.logToUser("\n", "stdout");
 
 		const childLevel = node.style === DiagnosticsNodeStyle.Flat
 			? level
@@ -493,7 +493,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			let lastLevel: DiagnosticsNodeLevel | undefined;
 			for (const child of node.properties) {
 				if (lastLevel !== child.level && (lastLevel === DiagnosticsNodeLevel.Hint || child.level === DiagnosticsNodeLevel.Hint))
-					this.logToUser("\n");
+					this.logToUser("\n", "stdout");
 				this.logDiagnosticNodeToUser(child, { parent: node, level });
 				lastLevel = child.level;
 			}

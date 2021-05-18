@@ -1,4 +1,7 @@
-const codeReset = "39;49";
+const codeDefautForeground = 39;
+const codeReset = 0;
+const codeBold = 1;
+const codeFaint = 2;
 const brightOffset = 8;
 const codeFg = "38;5";
 const codeBg = "48;5";
@@ -10,10 +13,11 @@ const codeBlue = 4;
 const codeMagenta = 5;
 const codeCyan = 6;
 const codeWhite = 7;
-const codeGrey = 244;
-const codeGrey2 = 248;
 
 const esc = (...code: Array<number | string>) => `\u001B[${code.join(";")}m`;
+export const defaultForeground = (msg: string) => `${esc(codeDefautForeground)}${msg}${esc(codeReset)}`;
+export const bold = (msg: string) => `${esc(codeBold)}${msg}${esc(codeReset)}`;
+export const faint = (msg: string) => `${esc(codeFaint)}${msg}${esc(codeReset)}`;
 export const black = (msg: string) => `${esc(codeFg, codeBlack)}${msg}${esc(codeReset)}`;
 export const red = (msg: string) => `${esc(codeFg, codeRed)}${msg}${esc(codeReset)}`;
 export const green = (msg: string) => `${esc(codeFg, codeGreen)}${msg}${esc(codeReset)}`;
@@ -22,8 +26,6 @@ export const blue = (msg: string) => `${esc(codeFg, codeBlue)}${msg}${esc(codeRe
 export const magenta = (msg: string) => `${esc(codeFg, codeMagenta)}${msg}${esc(codeReset)}`;
 export const cyan = (msg: string) => `${esc(codeFg, codeCyan)}${msg}${esc(codeReset)}`;
 export const white = (msg: string) => `${esc(codeFg, codeWhite)}${msg}${esc(codeReset)}`;
-export const grey = (msg: string) => `${esc(codeFg, codeGrey)}${msg}${esc(codeReset)}`;
-export const grey2 = (msg: string) => `${esc(codeFg, codeGrey2)}${msg}${esc(codeReset)}`;
 export const brightBlack = (msg: string) => `${esc(codeFg, codeBlack + brightOffset)}${msg}${esc(codeReset)}`;
 export const brightRed = (msg: string) => `${esc(codeFg, codeRed + brightOffset)}${msg}${esc(codeReset)}`;
 export const brightGreen = (msg: string) => `${esc(codeFg, codeGreen + brightOffset)}${msg}${esc(codeReset)}`;

@@ -15,7 +15,7 @@ import { safeSpawn } from "../shared/processes";
 import { PackageMap } from "../shared/pub/package_map";
 import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
-import { applyColor, grey, grey2 } from "../shared/utils/colors";
+import { applyColor, faint } from "../shared/utils/colors";
 import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
 import { mayContainStackFrame, parseStackFrame } from "../shared/utils/stack_trace";
 import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef, VMWriteEvent } from "./dart_debug_protocol";
@@ -1783,7 +1783,7 @@ export class DartDebugSession extends DebugSession {
 				const printLogRecord = async (event: VMEvent, instance: VMInstanceRef, logPrefix: string, indent: string, category: string = "console") => {
 					const message = await this.fullValueAsString(event.isolate, instance, true);
 					if (message) {
-						const indentedMessage = `${grey(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
+						const indentedMessage = `${faint(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
 						this.logToUser(`${indentedMessage.trimRight()}\n`, category);
 					}
 				};
@@ -2266,13 +2266,11 @@ export class DartDebugSession extends DebugSession {
 			// Colour based on whether it's framework code or not.
 			const isExternalCode = this.isSdkLibrary(frame.sourceUri) || this.isExternalLibrary(frame.sourceUri);
 
-			// Only colour stack-frame text.
-			const colouredText = !frame.isStackFrame
-				? text
-				: (isExternalCode ? applyColor(text, grey) : applyColor(text, grey2));
+			// Fade out any stack frames for external code.
+			const colouredText = frame.isStackFrame && isExternalCode ? applyColor(text, faint) : text;
 			output.body.output = `${colouredText}\n`;
 		} else if (mayBeAsyncMarker) {
-			output.body.output = `${applyColor(output.body.output.trimRight(), grey)}\n`;
+			output.body.output = `${applyColor(output.body.output.trimRight(), faint)}\n`;
 		}
 
 		this.logDapEvent(output);
