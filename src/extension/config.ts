@@ -54,6 +54,7 @@ class Config {
 	get autoImportCompletions(): boolean { return this.getConfig<boolean>("autoImportCompletions", true); }
 	get buildRunnerAdditionalArgs(): string[] { return this.getConfig<string[]>("buildRunnerAdditionalArgs", []); }
 	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
+	get cliConsole(): "debugConsole" | "terminal" { return this.getConfig<"debugConsole" | "terminal">("cliConsole", "debugConsole"); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
 	get debugExtensionBackendProtocol(): "sse" | "ws" { return this.getConfig<"sse" | "ws">("debugExtensionBackendProtocol", "ws"); }
 	get debugExternalLibraries(): boolean { return this.getConfig<boolean>("debugExternalLibraries", false); }

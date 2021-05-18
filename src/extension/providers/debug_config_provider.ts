@@ -475,6 +475,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;
+
+		if (!isFlutter && !isAttach && !isTest && debugConfig.console === undefined && config.cliConsole !== undefined)
+			debugConfig.console = config.cliConsole;
+
 		if (isFlutter && this.wsContext.sdks.flutter) {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
 			debugConfig.globalFlutterArgs = getGlobalFlutterArgs();

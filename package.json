@@ -1453,6 +1453,15 @@
 					"markdownDescription": "Determines when to insert comment slashes when pressing `<enter>` in the editor (requires restart).\n\n- `none` - never insert slashes automatically.\n- `tripleSlash` - insert `///` when pressing `<enter>` at the end of a triple-slash comment.\n- `all` - insert `///` when pressing `<enter>` at the end of a triple-slash comment and also `//` when pressing `<enter>` at the end of a double-slash comment.\n\nWhen using `tripleSlash`, double-slashes will still be included when breaking existing double-slash comments across additional lines.",
 					"scope": "window"
 				},
+				"dart.cliConsole": {
+					"enum": [
+						"debugConsole",
+						"terminal"
+					],
+					"default": "debugConsole",
+					"description": "Whether to run Dart CLI apps in the Debug Console or the VS Code integrated terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin.",
+					"scope": "window"
+				},
 				"dart.enableSdkFormatter": {
 					"type": "boolean",
 					"default": true,
@@ -2270,7 +2279,7 @@
 									"terminal"
 								],
 								"default": "debugConsole",
-								"description": "Whether to run apps in the debug console (which does not support reading user input) or a VS Code terminal (which does)."
+								"description": "Whether to run Dart CLI apps in the Debug Console or the VS Code integrated terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin."
 							},
 							"enableAsserts": {
 								"type": "boolean",
