@@ -102,7 +102,7 @@ describe("util.isDartSdkFromFlutter", () => {
 
 describe("applyColor", () => {
 	const redPrefix = "\u001b[38;5;1m";
-	const reset = "\u001b[39;49m";
+	const reset = "\u001b[0m";
 	it("should work with strings with no whitespace", () => {
 		assert.equal(applyColor("This is a test", red), `${redPrefix}This is a test${reset}`);
 	});
