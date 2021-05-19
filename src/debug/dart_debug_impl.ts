@@ -2,7 +2,6 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { URL } from "url";
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DartCapabilities } from "../shared/capabilities/dart";
@@ -217,7 +216,7 @@ export class DartDebugSession extends DebugSession {
 						match = vmServiceListeningBannerPattern.exec(data.toString());
 					}
 					if (match)
-						await this.initDebugger(this.vmServiceWsUriFor(match[1]));
+						await this.initDebugger(this.convertObservatoryUriToVmServiceUri(match[1]));
 					else if (this.sendStdOutToConsole)
 						this.logStdout(data.toString());
 				});
@@ -320,7 +319,9 @@ export class DartDebugSession extends DebugSession {
 		let url: string | undefined;
 		try {
 			if (vmServiceUri) {
-				url = this.vmServiceWsUriFor(vmServiceUri);
+				// TODO: Should we do this here? DDS won't have a /ws on the end so
+				// this may end up being incorrect.
+				url = this.convertObservatoryUriToVmServiceUri(vmServiceUri);
 			} else {
 				this.vmServiceInfoFile = args.serviceInfoFile;
 				this.updateProgress(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}`);
@@ -417,7 +418,7 @@ export class DartDebugSession extends DebugSession {
 		return appArgs;
 	}
 
-	protected vmServiceWsUriFor(uri: string) {
+	protected convertObservatoryUriToVmServiceUri(uri: string) {
 		const wsUri = uri.trim();
 		if (wsUri.endsWith("/ws"))
 			return wsUri;
@@ -499,7 +500,7 @@ export class DartDebugSession extends DebugSession {
 				await this.remoteEditorTerminalLaunched;
 				await new Promise((resolve) => setTimeout(resolve, 5));
 			}
-			this.serviceInfoFileCompleter?.resolve(url.toString());
+			this.serviceInfoFileCompleter?.resolve(serviceInfo.uri);
 		} catch (e) {
 			this.logger.error(e);
 			this.serviceInfoFileCompleter?.reject(e);

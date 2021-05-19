@@ -142,7 +142,7 @@ export class DartTestDebugSession extends DartDebugSession {
 				if (observatoryUri) {
 					const match = vmServiceHttpLinkPattern.exec(observatoryUri);
 					if (match) {
-						await this.initDebugger(this.vmServiceWsUriFor(match[1]));
+						await this.initDebugger(this.convertObservatoryUriToVmServiceUri(match[1]));
 					}
 				}
 				break;
