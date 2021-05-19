@@ -1271,6 +1271,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("writes exception to stderr", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
+		config.noDebug = true;
+
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
@@ -1290,6 +1292,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
+		config.noDebug = true;
+
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(
