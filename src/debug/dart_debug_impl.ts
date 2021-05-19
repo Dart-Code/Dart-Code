@@ -490,16 +490,7 @@ export class DartDebugSession extends DebugSession {
 
 			const serviceInfo: { uri: string } = JSON.parse(serviceInfoJson);
 
-			this.logger.info(`Successfully read JSON from ${this.vmServiceInfoFile}`);
-
-			const url = new URL(serviceInfo.uri);
-			url.protocol = "ws";
-			// Ensure we no trailing /
-			if (url.pathname.endsWith("/"))
-				url.pathname = url.pathname.substr(0, url.pathname.length - 1);
-			// Ensure we always end with /ws
-			if (!url.pathname.endsWith("/ws"))
-				url.pathname = `${url.pathname}/ws`;
+			this.logger.info(`Successfully read JSON from ${this.vmServiceInfoFile} which indicates URI ${serviceInfo.uri}`);
 
 			this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
 			// Ensure we don't try to start anything before we've finished
