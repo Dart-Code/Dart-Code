@@ -2,41 +2,43 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { WorkspaceConfig } from "../interfaces";
 
 export interface DartSharedArgs {
+	args?: string[];
+	console?: "debugConsole" | "terminal";
+	cwd?: string;
+	dartSdkPath: string;
+	debugExtensionBackendProtocol: "sse" | "ws";
 	debugExternalLibraries: boolean;
 	debugSdkLibraries: boolean;
+	deleteServiceInfoFile?: boolean;
+	enableAsserts?: boolean;
+	env?: { [key: string]: string | undefined };
 	evaluateGettersInDebugViews: boolean;
 	evaluateToStringInDebugViews: boolean;
+	expectSingleTest?: boolean;
+	injectedClientProtocol: "sse" | "ws";
 	maxLogLineLength: number;
-	vmServiceLogFile?: string;
+	name: string;
+	observatoryUri?: string; // For backwards compatibility
+	packages?: string;
+	program?: string;
+	pubTestLogFile?: string;
+	request: string;
 	sendLogsToClient?: boolean;
+	serviceInfoFile?: string;
 	showDartDeveloperLogs: boolean;
+	showMemoryUsage?: boolean;
 	toolEnv?: { [key: string]: string | undefined };
+	type: string;
 	useFlutterStructuredErrors?: boolean;
 	useInspectorNotificationsForWidgetErrors?: boolean;
-	debugExtensionBackendProtocol: "sse" | "ws";
-	injectedClientProtocol: "sse" | "ws";
-}
-
-export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, DartSharedArgs {
-	name: string;
-	type: string;
-	request: string;
-	cwd?: string;
-	enableAsserts?: boolean;
-	console?: "debugConsole" | "terminal";
-	dartSdkPath: string;
-	env?: { [key: string]: string | undefined };
-	program: string;
-	args?: string[];
 	vmAdditionalArgs?: string[];
+	vmServiceLogFile?: string;
 	vmServicePort?: number;
+	vmServiceUri?: string;
 	webDaemonLogFile?: string;
-	pubTestLogFile?: string;
-	showMemoryUsage?: boolean;
-	expectSingleTest?: boolean;
 }
 
-export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments {
+export interface FlutterSharedArgs {
 	deviceId?: string;
 	deviceName?: string;
 	forceFlutterVerboseMode?: boolean;
@@ -50,24 +52,13 @@ export interface FlutterLaunchRequestArguments extends DartLaunchRequestArgument
 	flutterTestLogFile?: string;
 }
 
-export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments, DartSharedArgs {
-	type: string;
-	request: string;
-	cwd: string | undefined;
-	program: string | undefined;
-	packages: string | undefined;
-	// For backwards compatibility
-	observatoryUri: string | undefined;
-	vmServiceUri: string | undefined;
-	serviceInfoFile: string | undefined;
-	dartVersion: string;
-}
+export interface DartLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, DartSharedArgs { }
 
-export interface FlutterAttachRequestArguments extends DartAttachRequestArguments {
-	deviceId: string;
-	flutterPath: string;
-	flutterVersion: string;
-}
+export interface FlutterLaunchRequestArguments extends DartLaunchRequestArguments, FlutterSharedArgs { }
+
+export interface DartAttachRequestArguments extends DebugProtocol.AttachRequestArguments, DartSharedArgs { }
+
+export interface FlutterAttachRequestArguments extends DartAttachRequestArguments, FlutterSharedArgs { }
 
 export interface FileLocation {
 	line: number;

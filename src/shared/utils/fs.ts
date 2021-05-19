@@ -11,9 +11,13 @@ export function fsPath(uri: { fsPath: string } | string) {
 	return forceWindowsDriveLetterToUppercase(typeof uri === "string" ? uri : uri.fsPath);
 }
 
-export function forceWindowsDriveLetterToUppercase(p: string): string {
+export function forceWindowsDriveLetterToUppercase<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
+	if (typeof p !== "string")
+		return undefined as (undefined extends T ? undefined : never);
+
 	if (p && isWin && path.isAbsolute(p) && p.startsWith(p.charAt(0).toLowerCase()))
-		p = p.substr(0, 1).toUpperCase() + p.substr(1);
+		return p.substr(0, 1).toUpperCase() + p.substr(1);
+
 	return p;
 }
 

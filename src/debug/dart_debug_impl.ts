@@ -79,9 +79,10 @@ export class DartDebugSession extends DebugSession {
 	protected evaluateToStringInDebugViews = false;
 	protected readonly dartCapabilities = DartCapabilities.empty;
 	protected readonly vmServiceCapabilities = VmServiceCapabilities.empty;
-	protected useWriteServiceInfo = false;
+	private useWriteServiceInfo = false;
 	protected vmServiceInfoFile?: string;
 	private serviceInfoPollTimer?: NodeJS.Timer;
+	protected deleteServiceFileAfterRead = false;
 	private remoteEditorTerminalLaunched?: Promise<RemoteEditorTerminalProcess>;
 	private serviceInfoFileCompleter?: PromiseCompleter<string>;
 	protected threadManager: ThreadManager;
@@ -182,6 +183,7 @@ export class DartDebugSession extends DebugSession {
 		this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.program || args.cwd));
 		this.dartCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.dartSdkPath }) ?? this.dartCapabilities.version;
 		this.useWriteServiceInfo = this.allowWriteServiceInfo && this.dartCapabilities.supportsWriteServiceInfo;
+		this.deleteServiceFileAfterRead = !!args.deleteServiceInfoFile;
 		this.supportsDebugInternalLibraries = this.dartCapabilities.supportsDebugInternalLibraries;
 		this.readSharedArgs(args);
 
@@ -200,9 +202,10 @@ export class DartDebugSession extends DebugSession {
 				this.log("Ignoring request to run in terminal because client does not support runInTerminalRequest", LogSeverity.Warn);
 			}
 			if (args.console === "terminal" && this.useWriteServiceInfo && this.supportsRunInTerminalRequest) {
+				this.deleteServiceFileAfterRead = true;
 				this.childProcess = await this.spawnRemoteEditorProcess(args);
 			} else {
-				const process = this.spawnProcess(args);
+				const process = await this.spawnProcess(args);
 
 				this.childProcess = process;
 				this.processExited = false;
@@ -227,7 +230,7 @@ export class DartDebugSession extends DebugSession {
 				});
 				// tslint:disable-next-line: no-floating-promises
 				this.processExit.then(async ({ code, signal }) => {
-					this.stopServiceFilePolling();
+					this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
 					this.processExited = true;
 					this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
 					if (!code && !signal)
@@ -245,6 +248,7 @@ export class DartDebugSession extends DebugSession {
 			}
 
 			if (this.useWriteServiceInfo && this.shouldConnectDebugger) {
+
 				const url = await this.startServiceFilePolling();
 				await this.initDebugger(url.toString());
 			}
@@ -333,11 +337,11 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	protected sourceFileForArgs(args: DartLaunchRequestArguments) {
-		return args.cwd ? path.relative(args.cwd, args.program) : args.program;
+	protected sourceFileForArgs(args: DartLaunchRequestArguments): string {
+		return args.cwd ? path.relative(args.cwd, args.program!) : args.program!;
 	}
 
-	protected spawnProcess(args: DartLaunchRequestArguments) {
+	protected async spawnProcess(args: DartLaunchRequestArguments): Promise<SpawnedProcess> {
 		const appArgs = this.buildAppArgs(args);
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
 
@@ -441,7 +445,7 @@ export class DartDebugSession extends DebugSession {
 			this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.VmService } as LogMessage));
 	}
 
-	private startServiceFilePolling(): Promise<string> {
+	protected startServiceFilePolling(): Promise<string> {
 		this.logger.info(`Starting to poll for file ${this.vmServiceInfoFile}`);
 		// Ensure we stop if we were already running, to avoid leaving timers running
 		// if this is somehow called twice.
@@ -453,17 +457,14 @@ export class DartDebugSession extends DebugSession {
 		return this.serviceInfoFileCompleter.promise;
 	}
 
-	private stopServiceFilePolling(allowDelete = true) {
+	private stopServiceFilePolling(allowDelete: boolean) {
 		if (this.serviceInfoPollTimer) {
 			this.logger.info(`Stopping polling for file ${this.vmServiceInfoFile}`);
 			clearInterval(this.serviceInfoPollTimer);
 		}
 		if (allowDelete
 			&& this.vmServiceInfoFile
-			&& fs.existsSync(this.vmServiceInfoFile)
-			// And we launched the process - we don't want to delete files we
-			// didn't create.
-			&& this.remoteEditorTerminalLaunched) {
+			&& fs.existsSync(this.vmServiceInfoFile)) {
 			try {
 				fs.unlinkSync(this.vmServiceInfoFile);
 				this.vmServiceInfoFile = undefined;
@@ -500,7 +501,7 @@ export class DartDebugSession extends DebugSession {
 			if (!url.pathname.endsWith("/ws"))
 				url.pathname = `${url.pathname}/ws`;
 
-			this.stopServiceFilePolling();
+			this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
 			// Ensure we don't try to start anything before we've finished
 			// setting up the process when running remotely.
 			if (this.remoteEditorTerminalLaunched) {
@@ -706,7 +707,7 @@ export class DartDebugSession extends DebugSession {
 		const signal = force ? "SIGKILL" : "SIGINT";
 		const request = force ? "DISC" : "TERM";
 		this.log(`${request}: Requested to terminate with ${signal}...`);
-		this.stopServiceFilePolling();
+		this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
 		if (this.shouldKillProcessOnTerminate && this.childProcess && !this.processExited) {
 			this.log(`${request}: Terminating processes...`);
 			for (const pid of this.additionalPidsToTerminate) {

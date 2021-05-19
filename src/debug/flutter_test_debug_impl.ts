@@ -2,13 +2,14 @@ import * as path from "path";
 import { flutterPath } from "../shared/constants";
 import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
+import { SpawnedProcess } from "../shared/interfaces";
 import { usingCustomScript } from "../shared/utils";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
 import { DebugAdapterLogger } from "./logging";
 
 export class FlutterTestDebugSession extends DartTestDebugSession {
 
-	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
+	protected async spawnProcess(args: FlutterLaunchRequestArguments): Promise<SpawnedProcess> {
 		let appArgs: string[] = [];
 
 		if (this.shouldConnectDebugger) {
@@ -34,6 +35,6 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		);
 
 		const logger = new DebugAdapterLogger(this, LogCategory.FlutterTest);
-		return this.createRunner(binPath, args.cwd, args.program, (args.globalFlutterArgs || []).concat(binArgs).concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(binPath, args.cwd, (args.globalFlutterArgs || []).concat(binArgs).concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
 	}
 }

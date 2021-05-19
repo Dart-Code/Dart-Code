@@ -6,7 +6,7 @@ import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "..
 import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
-import { Logger, WidgetErrorInspectData } from "../shared/interfaces";
+import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
 import { getSdkVersion } from "../shared/utils/fs";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
@@ -65,18 +65,26 @@ export class FlutterDebugSession extends DartDebugSession {
 		await super.launchRequest(response, args);
 	}
 
-	protected async attachRequest(response: DebugProtocol.AttachResponse, args: any): Promise<void> {
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: FlutterAttachRequestArguments): Promise<void> {
 		// For flutter attach, we actually do the same thing as launch - we run a flutter process
 		// (flutter attach instead of flutter run).
 		this.subscribeToStdout = true;
 		return this.launchRequest(response, args);
 	}
 
-	protected spawnProcess(args: FlutterLaunchRequestArguments): any {
+	protected async spawnProcess(args: FlutterLaunchRequestArguments): Promise<SpawnedProcess> {
 		const isAttach = args.request === "attach";
 
 		if (args.showMemoryUsage) {
 			this.pollforMemoryMs = 1000;
+		}
+
+		// If we have a service info file, read the URI from it and then use that
+		// as if it was supplied.
+		if (isAttach && (!args.vmServiceUri && args.serviceInfoFile)) {
+			this.vmServiceInfoFile = args.serviceInfoFile;
+			this.updateProgress(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}`);
+			args.vmServiceUri = await this.startServiceFilePolling();
 		}
 
 		// Normally for `flutter run` we don't allow terminating the pid we get from the VM service,
@@ -122,7 +130,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.runDaemon.registerForDaemonLog((msg) => this.handleLogOutput(msg.log, msg.error));
 		this.runDaemon.registerForAppLog((msg) => this.handleLogOutput(msg.log, msg.error));
 
-		return this.runDaemon.process;
+		return this.runDaemon.process!;
 	}
 
 	private sendLaunchProgressEvent(e: AppProgress) {
@@ -187,8 +195,8 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 
 		if (isAttach) {
-			const flutterAttach: FlutterAttachRequestArguments = args as any;
-			const vmServiceUri = (flutterAttach.vmServiceUri || flutterAttach.observatoryUri);
+			const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
+
 			if (vmServiceUri) {
 				appArgs.push("--debug-uri");
 				appArgs.push(vmServiceUri);

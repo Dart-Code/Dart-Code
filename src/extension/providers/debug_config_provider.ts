@@ -6,7 +6,7 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, showErrorsAction } from "../../shared/constants";
-import { FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
+import { DartSharedArgs, FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRendererArg } from "../../shared/flutter/utils";
@@ -37,7 +37,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartSharedArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
 		const logger = this.logger;
 		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
 			? fsPath(window.activeTextEditor.document.uri)
@@ -150,7 +150,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			&& !isInsideFolderNamed(debugConfig.program, "tool")
 			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
 			// Check if we're a Flutter or Web project.
-			if (isFlutterProjectFolder(debugConfig.cwd as string)) {
+			if (isFlutterProjectFolder(debugConfig.cwd)) {
 				debugType = DebuggerType.Flutter;
 			} else if (isInsideFolderNamed(debugConfig.program, "web") && !isInsideFolderNamed(debugConfig.program, "test"))
 				debugType = DebuggerType.Web;
@@ -161,13 +161,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Some helpers for conditions below.
 		const isFlutter = debugType === DebuggerType.Flutter;
-		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program as string, "integration_test");
-		const isTest = debugConfig.program && isTestFileOrFolder(debugConfig.program as string);
+		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
+		const isTest = isTestFileOrFolder(debugConfig.program);
 		const argsHaveTestNameFilter = isTest && debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
 
 		if (isTest)
 			logger.info(`Detected launch project as a Test project`);
-		const canPubRunTest = isTest && debugConfig.cwd && shouldUsePubForTests(debugConfig.cwd as string, this.wsContext.config);
+		const canPubRunTest = isTest && debugConfig.cwd && shouldUsePubForTests(debugConfig.cwd, this.wsContext.config);
 		if (isTest && !canPubRunTest)
 			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
 		if (isTest) {
@@ -257,8 +257,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// Ensure we have a device if required.
-		let deviceToLaunchOn;
-		const requiresDevice = debugType === DebuggerType.Flutter || (DebuggerType.FlutterTest && isIntegrationTest && this.flutterCapabilities.supportsRunningIntegrationTests);
+		let deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId) || this.deviceManager?.currentDevice;
+		const requiresDevice = (debugType === DebuggerType.Flutter && !isAttachRequest)
+			|| (DebuggerType.FlutterTest && isIntegrationTest && this.flutterCapabilities.supportsRunningIntegrationTests);
 		if (requiresDevice) {
 			deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId) || this.deviceManager?.currentDevice;
 			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
@@ -318,7 +319,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// Check if any are inside our CWD.
 			const firstRelevantDiagnostic = dartErrors.find((fd) => {
 				const file = fsPath(fd[0]);
-				return isWithinPath(file, debugConfig.cwd)
+				return isWithinPath(file, debugConfig.cwd!)
 					// Ignore errors in test folder unless it's the file we're running.
 					&& ((!isInsideFolderNamed(file, "test") && !isInsideFolderNamed(file, "integration_test")) || file === debugConfig.program);
 			});
@@ -360,8 +361,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			const suitePaths = isTestFolder(debugConfig.program)
 				? Object.values(this.testTreeModel.suites)
 					.map((suite) => suite.path)
-					.filter((p) => p.startsWith(debugConfig.program))
-				: [debugConfig.program];
+					.filter((p) => p.startsWith(debugConfig.program!))
+				: [debugConfig.program!];
 			for (const suitePath of suitePaths)
 				this.testTreeModel.flagSuiteStart(suitePath, !argsHaveTestNameFilter);
 		}

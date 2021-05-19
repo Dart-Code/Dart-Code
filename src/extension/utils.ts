@@ -113,7 +113,7 @@ export function isWithinWorkspace(file: string) {
 	return !!workspace.getWorkspaceFolder(Uri.file(file));
 }
 
-export function isTestFileOrFolder(path: string): boolean {
+export function isTestFileOrFolder(path: string | undefined): boolean {
 	return !!path && (isTestFile(path) || isTestFolder(path));
 }
 
@@ -138,7 +138,7 @@ export function isPubRunnableTestFile(file: string): boolean {
 	return !!file && isDartFile(file) && file.toLowerCase().endsWith("_test.dart");
 }
 
-export function isTestFolder(path: string): boolean {
+export function isTestFolder(path: string | undefined): boolean {
 	return !!path
 		&& (
 			isInsideFolderNamed(path, "test")
@@ -155,7 +155,7 @@ export function isDartFile(file: string): boolean {
 	return !!file && path.extname(file.toLowerCase()) === ".dart" && fs.existsSync(file) && fs.statSync(file).isFile();
 }
 
-export function isInsideFolderNamed(file: string, folderName: string): boolean {
+export function isInsideFolderNamed(file: string | undefined, folderName: string): boolean {
 	if (!file)
 		return false;
 

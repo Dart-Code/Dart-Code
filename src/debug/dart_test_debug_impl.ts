@@ -4,7 +4,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, debugTerminatingProgressId, pubSnapshotPath, vmServiceHttpLinkPattern } from "../shared/constants";
 import { DartLaunchRequestArguments } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
-import { Logger } from "../shared/interfaces";
+import { Logger, SpawnedProcess } from "../shared/interfaces";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { DartDebugSession } from "./dart_debug_impl";
 import { DebugAdapterLogger } from "./logging";
@@ -29,7 +29,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		return super.launchRequest(response, args);
 	}
 
-	protected spawnProcess(args: DartLaunchRequestArguments): any {
+	protected async spawnProcess(args: DartLaunchRequestArguments): Promise<SpawnedProcess> {
 		let appArgs: string[] = [];
 
 		// To use the test framework in the supported debugging way we should
@@ -72,10 +72,10 @@ export class DartTestDebugSession extends DartDebugSession {
 		}
 
 		const logger = new DebugAdapterLogger(this, LogCategory.PubTest);
-		return this.createRunner(dartPath, args.cwd, args.program, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(dartPath, args.cwd, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
 	}
 
-	protected createRunner(executable: string, projectFolder: string | undefined, program: string, args: string[], envOverrides: { [key: string]: string | undefined } | undefined, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
+	protected createRunner(executable: string, projectFolder: string | undefined, args: string[], envOverrides: { [key: string]: string | undefined } | undefined, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {
 		const runner = new TestRunner(executable, projectFolder, args, { envOverrides, toolEnv: this.toolEnv }, logFile, logger, maxLogLineLength);
 
 		// Set up subscriptions.
@@ -112,7 +112,7 @@ export class DartTestDebugSession extends DartDebugSession {
 			}
 		});
 
-		return runner.process;
+		return runner.process!;
 	}
 
 	protected logToUserIfAppropriate(message: string, category?: string) {

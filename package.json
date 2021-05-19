@@ -2393,7 +2393,11 @@
 							},
 							"serviceInfoFile": {
 								"type": "string",
-								"markdownDescription": "File to read (expected to be written with `--write-service-info`) VM service details from if `vmServiceUri` is not supplied."
+								"markdownDescription": "File to read (expected to be written with `--write-service-info`) VM Service details from if `vmServiceUri` is not supplied."
+							},
+							"deleteServiceInfoFile": {
+								"type": "boolean",
+								"markdownDescription": "Whether to delete the file in serviceInfoFile after reading the contents and connecting to its VM Service."
 							}
 						}
 					}
