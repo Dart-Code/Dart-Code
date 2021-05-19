@@ -1298,7 +1298,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
-				dc.assertOutputContains("stderr", "_throwAnException")
+				dc.assertOutputContains("stdout", "_throwAnException")
 					.then((event) => {
 						assert.equal(event.body.output.indexOf("package:flutter_hello_world/broken.dart"), -1);
 						assert.equal(event.body.source!.name, "package:flutter_hello_world/broken.dart");
