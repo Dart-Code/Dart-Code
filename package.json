@@ -1380,6 +1380,9 @@
 					],
 					"string.escape": [
 						"constant.character.escape"
+					],
+					"source": [
+						"meta.embedded"
 					]
 				}
 			}
