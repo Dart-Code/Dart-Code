@@ -2414,7 +2414,7 @@
 				"configurationSnippets": [
 					{
 						"label": "Dart: Launch",
-						"description": "Launch and debug Dart apps",
+						"description": "Launch and debug a Dart app",
 						"body": {
 							"name": "Dart",
 							"type": "dart",
@@ -2443,7 +2443,7 @@
 					},
 					{
 						"label": "Flutter: Launch",
-						"description": "Launch and debug Flutter apps",
+						"description": "Launch and debug a Flutter app",
 						"body": {
 							"name": "Flutter",
 							"type": "dart",
@@ -2464,7 +2464,7 @@
 					},
 					{
 						"label": "Flutter: Attach to Device",
-						"description": "Attach to Flutter on a device.",
+						"description": "Attach to Flutter on a device",
 						"body": {
 							"name": "Flutter: Attach to Device",
 							"type": "dart",
