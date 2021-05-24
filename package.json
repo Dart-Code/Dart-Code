@@ -1471,6 +1471,12 @@
 					"markdownDescription": "Whether to enable the [dart_style](https://pub.dev/packages/dart_style) formatter for Dart code.",
 					"scope": "window"
 				},
+				"dart.enableServerSnippets": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "This setting is currently unused and should be left set to 'false'. It will be updated and enabled by default in the future.",
+					"scope": "window"
+				},
 				"dart.enableSnippets": {
 					"type": "boolean",
 					"default": true,
