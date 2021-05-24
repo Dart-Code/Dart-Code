@@ -504,7 +504,15 @@ export class DebugCommands {
 			// Open or prompt for DevTools when appropriate.
 			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
 			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.Web) {
-				if (config.openDevTools !== "never") {
+				if (session.session.configuration.openDevTools != null) {
+					const pageId = session.session.configuration.openDevTools;
+					const page = devToolsPages.find((p) => p.pageId === pageId);
+					if (pageId) {
+						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
+					} else {
+						vs.window.showWarningMessage(`Debug configuration contain an invalid DevTools page '${pageId}' in 'openDevTools'`);
+					}
+				} else if (config.openDevTools !== "never") {
 					const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
 					if (shouldLaunch) {
 						// If embedded DevTools is enabled and it's a Flutter app, assume the user wants the Widget inspector.
