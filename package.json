@@ -2452,6 +2452,17 @@
 						}
 					},
 					{
+						"label": "Flutter: Launch in Profile Mode",
+						"description": "Launch a Flutter app in profile mode",
+						"body": {
+							"name": "Flutter",
+							"type": "dart",
+							"request": "launch",
+							"program": "^\"lib/main.dart\"",
+							"flutterMode": "profile"
+						}
+					},
+					{
 						"label": "Flutter: Attach to Device",
 						"description": "Attach to Flutter on a device.",
 						"body": {
