@@ -567,27 +567,50 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 	constructor(private readonly logger: Logger) { }
 
 	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
-		const rootFolder = folder ? fsPath(folder.uri) : undefined;
+		const results: DebugConfiguration[] = [];
 
+		const rootFolder = folder ? fsPath(folder.uri) : undefined;
 		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true }) : [];
+
 		if (projectFolders.length) {
-			return projectFolders.map((projectFolder) => {
+			for (const projectFolder of projectFolders) {
+				const isFlutter = isFlutterProjectFolder(projectFolder);
+				const name = path.basename(projectFolder);
 				// Compute cwd, using undefined instead of empty if rootFolder === projectFolder
 				const cwd = rootFolder ? path.relative(rootFolder, projectFolder) || undefined : undefined;
-				return {
-					name: path.basename(projectFolder),
-					cwd,
-					request: "launch",
-					type: "dart",
-				};
-			});
+
+				if (isFlutter) {
+					results.push({
+						name,
+						cwd,
+						request: "launch",
+						type: "dart",
+					});
+					results.push({
+						name: `${name} (profile mode)`,
+						cwd,
+						request: "launch",
+						type: "dart",
+						flutterMode: "profile",
+					});
+				} else {
+					results.push({
+						name,
+						cwd,
+						request: "launch",
+						type: "dart",
+					});
+				}
+			}
 		} else {
-			return [{
+			results.push({
 				name: "Dart & Flutter",
 				request: "launch",
 				type: "dart",
-			}];
+			});
 		}
+
+		return results;
 	}
 }
 
@@ -602,21 +625,30 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 		for (const projectFolder of projectFolders) {
 			const isFlutter = isFlutterProjectFolder(projectFolder);
 			const name = path.basename(projectFolder);
+			// Compute cwd, using undefined instead of empty if rootFolder === projectFolder
 			const cwd = rootFolder ? path.relative(rootFolder, projectFolder) || undefined : undefined;
 			const exists = (p: string) => folder && fs.existsSync(path.join(projectFolder, p));
 
 			if (isFlutter && exists("lib/main.dart")) {
 				results.push({
-					name: `${name} (Flutter)`,
+					name: `Flutter`,
 					program: "lib/main.dart",
 					cwd,
 					request: "launch",
 					type: "dart",
 				});
+				results.push({
+					name: `Flutter (profile mode)`,
+					program: "lib/main.dart",
+					cwd,
+					request: "launch",
+					type: "dart",
+					flutterMode: "profile",
+				});
 			}
 			if (!isFlutter && exists("web")) {
 				results.push({
-					name: `${name} (Dart Web)`,
+					name: `Dart Web`,
 					program: "web",
 					cwd,
 					request: "launch",
@@ -625,7 +657,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			}
 			if (exists("bin/main.dart")) {
 				results.push({
-					name: `${name} (Dart)`,
+					name: `Dart`,
 					program: "bin/main.dart",
 					cwd,
 					request: "launch",
@@ -634,7 +666,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			}
 			if (exists("test")) {
 				results.push({
-					name: `${name} (${isFlutter ? "Flutter" : "Dart"} Tests)`,
+					name: `${isFlutter ? "Flutter" : "Dart"} Tests`,
 					program: "test",
 					cwd,
 					request: "launch",
@@ -643,7 +675,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			}
 			if (isFlutter && exists("integration_test")) {
 				results.push({
-					name: `${name} (${isFlutter ? "Flutter" : "Dart"} Integration Tests)`,
+					name: `${isFlutter ? "Flutter" : "Dart"} Integration Tests`,
 					program: "integration_test",
 					cwd,
 					request: "launch",
