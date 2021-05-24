@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
+import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
@@ -521,6 +521,14 @@ export class DebugCommands {
 				}
 			}
 		} else if (e.event === "dart.progressStart") {
+			// When a debug session is restarted by VS Code (eg. not handled by the DA), the session-end event
+			// will not fire so we need to clean up the "Terminating debug session" message manually. Doing it here
+			// means it will vanish at the same time as the new one appears, so there are no gaps in progress indicators.
+			if (e.body.progressID === debugLaunchProgressId) {
+				session.progress[debugTerminatingProgressId]?.complete();
+				delete session.progress[debugTerminatingProgressId];
+			}
+
 			const isHotEvent = e.body.progressID.endsWith("-hot.reload") || e.body.progressID.endsWith("-hot.restart");
 			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
 
