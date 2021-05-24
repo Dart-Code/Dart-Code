@@ -6,7 +6,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
-import { isTestFile } from "../utils";
+import { isInsideFlutterProject, isTestFile } from "../utils";
 
 export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -31,6 +31,7 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		const templates = getTemplatedLaunchConfigs(document, fileType);
 		const templatesHaveRun = !!templates.find((t) => t.name === "Run");
 		const templatesHaveDebug = !!templates.find((t) => t.name === "Debug");
+		const templatesHaveProfile = !!templates.find((t) => t.name === "Profile");
 
 		const mainFunction = outline.children?.find((o) => o.element.name === "main");
 		if (!mainFunction)
@@ -41,10 +42,12 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 			results.push(this.createCodeLens(document, mainFunction, "Run", false));
 		if (!templatesHaveDebug)
 			results.push(this.createCodeLens(document, mainFunction, "Debug", true));
+		if (fileType === "file" && !templatesHaveProfile && isInsideFlutterProject(document.uri))
+			results.push(this.createCodeLens(document, mainFunction, "Profile", false, { "flutterMode": "profile" }));
 		return results.concat(templates.map((t) => this.createCodeLens(document, mainFunction, t.name, t.template.startsWith("debug"), t)));
 	}
 
-	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: { name: string }): CodeLens {
+	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: { [key: string]: string }): CodeLens {
 		return new CodeLens(
 			lspToRange(mainFunction.range),
 			{
