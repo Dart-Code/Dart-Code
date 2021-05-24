@@ -462,6 +462,7 @@ export class DartDebugSession extends DebugSession {
 		if (this.serviceInfoPollTimer) {
 			this.logger.info(`Stopping polling for file ${this.vmServiceInfoFile}`);
 			clearInterval(this.serviceInfoPollTimer);
+			this.serviceInfoPollTimer = undefined;
 		}
 		if (allowDelete
 			&& this.vmServiceInfoFile
