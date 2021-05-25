@@ -2598,5 +2598,9 @@
 		"vscode-test": "^1.5.2",
 		"webpack-cli": "^4.7.0",
 		"webpack": "^5.37.1"
+	},
+	"optionalDependencies": {
+		"bufferutil": "^4.0.3",
+		"utf-8-validate": "^5.0.5"
 	}
 }
