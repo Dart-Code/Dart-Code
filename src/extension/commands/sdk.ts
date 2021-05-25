@@ -9,7 +9,7 @@ import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE, defaultLaunchJson, flutte
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
+import { nullToUndefined, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { fsPath, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
@@ -811,7 +811,7 @@ class ChainedProcess {
 			return;
 		}
 		this.process = this.spawn();
-		this.process.on("close", (code) => this.completer.resolve(code));
+		this.process.on("close", (code) => this.completer.resolve(nullToUndefined(code)));
 	}
 
 	public cancel(): void {
