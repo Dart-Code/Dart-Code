@@ -55,7 +55,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 				return allPackages;
 
 			// If we support "pub deps --json" split the packages into groups.
-			const packageKinds = await this.deps.getDependencyKinds(fsPath(element.resourceUri!));
+			const packageKinds = await this.deps.getDependencyKinds(element.projectFolder);
 			const directPackages = allPackages.filter((p) => packageKinds[p.packageName] === "direct");
 			const devPackages = allPackages.filter((p) => packageKinds[p.packageName] === "dev");
 			const transitivePackages = allPackages.filter((p) => packageKinds[p.packageName] === "transitive");
@@ -85,14 +85,12 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 	}
 
 	private async getPackages(project: PackageDepProject): Promise<PackageDepPackage[]> {
-		const projectFolder = fsPath(project.resourceUri!);
-
-		const map = PackageMap.loadForProject(this.logger, projectFolder);
+		const map = PackageMap.loadForProject(this.logger, project.projectFolder);
 		const packages = map.packages;
 		const packageNames = sortBy(Object.keys(packages), (s) => s.toLowerCase());
 
 		const packageDepNodes = packageNames
-			.filter((name) => packages[name] && !areSameFolder(packages[name], path.join(projectFolder, "lib")))
+			.filter((name) => packages[name] && !areSameFolder(packages[name], path.join(project.projectFolder, "lib")))
 			.map((name) => {
 				let packagePath = packages[name];
 				if (path.basename(packagePath) === "lib")
@@ -166,15 +164,17 @@ export class PackageDepFolder extends PackageDep {
 }
 
 export class PackageDepProject extends PackageDep {
+	public readonly projectFolder: string;
 	constructor(
-		resourceUri: vs.Uri,
+		projectUri: vs.Uri,
 	) {
-		const projectFolder = fsPath(resourceUri);
-		super(path.basename(projectFolder), resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+		const projectFolder = fsPath(projectUri);
+		super(path.basename(projectFolder), undefined, vs.TreeItemCollapsibleState.Collapsed);
+		this.projectFolder = projectFolder;
 		this.contextValue = DART_DEP_PROJECT_NODE_CONTEXT;
 
 		// Calculate relative path to the folder for the description.
-		const wf = vs.workspace.getWorkspaceFolder(resourceUri);
+		const wf = vs.workspace.getWorkspaceFolder(projectUri);
 		if (wf) {
 			const workspaceFolder = fsPath(wf.uri);
 			this.description = path.relative(path.dirname(workspaceFolder), path.dirname(projectFolder));
