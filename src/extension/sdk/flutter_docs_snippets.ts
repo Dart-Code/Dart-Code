@@ -7,7 +7,7 @@ import { flutterPath } from "../../shared/constants";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { getRandomInt, tryDeleteFile } from "../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
-import { runProcess } from "../utils/processes";
+import { runToolProcess } from "../utils/processes";
 
 export function getFlutterSnippets(logger: Logger, sdks: Sdks, capabilities: FlutterCapabilities): Promise<FlutterSampleSnippet[]> {
 	if (capabilities.supportsFlutterCreateListSamples)
@@ -25,7 +25,7 @@ async function getFlutterSnippetsFromSdk(logger: Logger, sdks: Sdks): Promise<Fl
 	const tempPath = path.join(os.tmpdir(), fileName);
 
 	try {
-		const res = await runProcess(logger, undefined, binPath, ["create", "--list-samples", tempPath]);
+		const res = await runToolProcess(logger, undefined, binPath, ["create", "--list-samples", tempPath]);
 		if (res.exitCode !== 0)
 			throw new Error(`Failed to get Flutter samples from SDK (${res.exitCode})\n\n${res.stderr}\n\n${res.stdout}`);
 

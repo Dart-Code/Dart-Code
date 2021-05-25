@@ -1,23 +1,38 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
-import { Logger } from "../../shared/interfaces";
+import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
+import { PubDeps } from "../../shared/pub/deps";
 import { PackageMap } from "../../shared/pub/package_map";
 import { sortBy } from "../../shared/utils/array";
 import { areSameFolder, fsPath } from "../../shared/utils/fs";
-import { getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { getExcludedFolders } from "../utils";
 
 export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
+	private readonly deps: PubDeps;
 
-	constructor(private readonly logger: Logger, private readonly context: WorkspaceContext) {
+	private processPackageMapChangeEvents = true;
+
+	constructor(private readonly logger: Logger, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) {
 		context.events.onPackageMapChange.listen(() => {
+			// Calling "pub deps --json" modifies .dart_tool/package_config.json which
+			// causes a loop here. The file is modified, we rebuild the tree, which triggers
+			// the file to be modified, which rebuilds...
+			//
+			// As a workaround, when this fires, suppress any further events for a short period.
+			// This may result in dropped events, but it's better than the loop.
+			if (!this.processPackageMapChangeEvents)
+				return;
+			this.processPackageMapChangeEvents = false;
+			setTimeout(() => this.processPackageMapChangeEvents = true, 5000);
 			this.onDidChangeTreeDataEmitter.fire(undefined);
 		});
+		this.deps = new PubDeps(logger, context.sdks, dartCapabilities);
 	}
 
 	public getTreeItem(element: PackageDep): vs.TreeItem {
@@ -26,7 +41,6 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 
 	public async getChildren(element?: PackageDep): Promise<PackageDep[]> {
 		if (!element) {
-			const workspaceFolders = getDartWorkspaceFolders();
 			const allProjects = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
@@ -36,7 +50,28 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 				: nodes;
 
 		} else if (element instanceof PackageDepProject) {
-			return this.getPackages(element);
+			const allPackages = await this.getPackages(element);
+			if (!this.dartCapabilities.supportsPubDepsJson)
+				return allPackages;
+
+			// If we support "pub deps --json" split the packages into groups.
+			const packageKinds = await this.deps.getDependencyKinds(fsPath(element.resourceUri!));
+			const directPackages = allPackages.filter((p) => packageKinds[p.packageName] === "direct");
+			const devPackages = allPackages.filter((p) => packageKinds[p.packageName] === "dev");
+			const transitivePackages = allPackages.filter((p) => packageKinds[p.packageName] === "transitive");
+
+			const nodes: PackageDepProjectPackageGroup[] = [];
+			if (directPackages.length)
+				nodes.push(new PackageDepProjectPackageGroup("direct dependencies", directPackages));
+			if (devPackages.length)
+				nodes.push(new PackageDepProjectPackageGroup("dev dependencies", devPackages));
+			if (transitivePackages.length)
+				nodes.push(new PackageDepProjectPackageGroup("transitive dependencies", transitivePackages));
+			return nodes;
+		} else if (element instanceof PackageDepProjectPackageGroup) {
+			// For the package groups, we've already computed the children when we split
+			// them into the grous, so just return them directly.
+			return element.packages;
 		} else if (element instanceof PackageDepPackage) {
 			return this.getFilesAndFolders(element);
 		} else if (element instanceof PackageDepFolder) {
@@ -49,7 +84,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 		}
 	}
 
-	private getPackages(project: PackageDepProject): PackageDep[] {
+	private async getPackages(project: PackageDepProject): Promise<PackageDepPackage[]> {
 		const projectFolder = fsPath(project.resourceUri!);
 
 		const map = PackageMap.loadForProject(this.logger, projectFolder);
@@ -93,14 +128,16 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 export abstract class PackageDep extends vs.TreeItem {
 	constructor(
 		label: string | undefined,
-		resourceUri: vs.Uri,
+		resourceUri: vs.Uri | undefined,
 		collapsibleState: vs.TreeItemCollapsibleState | undefined,
 	) {
 		if (label) {
 			super(label, collapsibleState);
 			this.resourceUri = resourceUri;
-		} else {
+		} else if (resourceUri) {
 			super(resourceUri, collapsibleState);
+		} else {
+			super("<unnamed>", collapsibleState);
 		}
 	}
 }
@@ -145,12 +182,22 @@ export class PackageDepProject extends PackageDep {
 	}
 }
 
-export class PackageDepPackage extends PackageDep {
+export class PackageDepProjectPackageGroup extends PackageDep {
 	constructor(
 		label: string,
+		public readonly packages: PackageDepPackage[],
+	) {
+		super(label, undefined, vs.TreeItemCollapsibleState.Collapsed);
+		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
+	}
+}
+
+export class PackageDepPackage extends PackageDep {
+	constructor(
+		public readonly packageName: string,
 		resourceUri: vs.Uri,
 	) {
-		super(label, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
+		super(packageName, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
 		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
 	}
 }

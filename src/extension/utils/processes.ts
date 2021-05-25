@@ -1,8 +1,5 @@
-import { LogCategory } from "../../shared/enums";
 import { Logger, SpawnedProcess } from "../../shared/interfaces";
-import { logProcess } from "../../shared/logging";
-import { safeSpawn } from "../../shared/processes";
-import { nullToUndefined } from "./misc";
+import { runProcess, RunProcessResult, safeSpawn } from "../../shared/processes";
 
 // Environment used when spawning Dart and Flutter processes.
 let toolEnv: /* { [key: string]: string | undefined } */ any = {};
@@ -35,26 +32,11 @@ export function setupToolEnv(envOverrides?: any) {
 setupToolEnv();
 
 export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): SpawnedProcess {
-	return safeSpawn(workingDirectory, binPath, args, { envOverrides, toolEnv });
+	const env = Object.assign({}, toolEnv, envOverrides);
+	return safeSpawn(workingDirectory, binPath, args, env);
 }
 
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
-export function runProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): Promise<RunProcessResult> {
-	return new Promise((resolve) => {
-		logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(envOverrides)}`);
-		const proc = safeToolSpawn(workingDirectory, binPath, args, envOverrides);
-		logProcess(logger, LogCategory.CommandProcesses, proc);
-
-		const out: string[] = [];
-		const err: string[] = [];
-		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
-		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
-		proc.on("exit", (code) => {
-			resolve(new RunProcessResult(nullToUndefined(code), out.join(""), err.join("")));
-		});
-	});
-}
-
-export class RunProcessResult {
-	constructor(public readonly exitCode: number | undefined, public readonly stdout: string, public readonly stderr: string) { }
+export function runToolProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): Promise<RunProcessResult> {
+	return runProcess(logger, binPath, args, workingDirectory, envOverrides, safeToolSpawn);
 }

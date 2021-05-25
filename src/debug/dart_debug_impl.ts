@@ -349,7 +349,8 @@ export class DartDebugSession extends DebugSession {
 		this.log(`Spawning ${dartPath} with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
 			this.log(`..  in ${args.cwd}`);
-		const process = safeSpawn(args.cwd, dartPath, appArgs, { envOverrides: args.env, toolEnv: args.toolEnv });
+		const env = Object.assign({}, args.toolEnv, args.env);
+		const process = safeSpawn(args.cwd, dartPath, appArgs, env);
 
 		this.log(`    PID: ${process.pid}`);
 

@@ -7,37 +7,64 @@ describe("packages tree", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 
-	it("includes multiple projects from single workspace folder at the top level", async () => {
+	it("includes multiple projects from single workspace folder", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
+
 		ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
 		ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "example", "hello_world");
 	});
 
-	it("includes known packages in the project", async () => {
+	it("includes known packages in the project in the correct categories", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
-		const packageNode = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
-		const packageLevel = await extApi.packagesTreeProvider.getChildren(packageNode);
 
-		ensurePackageTreeNode(packageLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
-		ensurePackageTreeNode(packageLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "meta");
-		ensurePackageTreeNode(packageLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "test");
+		const packageNode = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
+
+		// If "pub deps json" is supported, the packages will be inside a "direct dependencies" node
+		if (extApi.dartCapabilities.supportsPubDepsJson) {
+			const dependencyGroups = await extApi.packagesTreeProvider.getChildren(packageNode);
+			const directDependencies = await extApi.packagesTreeProvider.getChildren(dependencyGroups?.find((node) => node.label === "direct dependencies"));
+			const devDependencies = await extApi.packagesTreeProvider.getChildren(dependencyGroups?.find((node) => node.label === "dev dependencies"));
+			const transitiveDependencies = await extApi.packagesTreeProvider.getChildren(dependencyGroups?.find((node) => node.label === "transitive dependencies"));
+
+			ensurePackageTreeNode(directDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
+			ensurePackageTreeNode(devDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "test");
+			ensurePackageTreeNode(transitiveDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "meta");
+		} else {
+			const allDependencies = await extApi.packagesTreeProvider.getChildren(packageNode);
+
+			ensurePackageTreeNode(allDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
+			ensurePackageTreeNode(allDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "test");
+			ensurePackageTreeNode(allDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "meta");
+		}
 	});
 
 	it("does not include own package", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
 		const packageNode = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
-		const packageLevel = await extApi.packagesTreeProvider.getChildren(packageNode);
 
-		const self = packageLevel!.find((node) => node.label === "hello_world");
+		// If "pub deps json" is supported, the packages will be inside a "direct dependencies" node, otherwise
+		// they'll just be inside the packages folder directly.
+		const packagesContainer = extApi.dartCapabilities.supportsPubDepsJson
+			? (await extApi.packagesTreeProvider.getChildren(packageNode))!.find((node) => node.label === "direct dependencies")
+			: packageNode;
+		const packagesNodes = await extApi.packagesTreeProvider.getChildren(packagesContainer);
+
+		const self = packagesNodes!.find((node) => node.label === "hello_world");
 		assert.equal(self, undefined);
 	});
 
 	it("includes known folders/files from inside the package", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
 		const packageNode = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
-		const packageLevel = await extApi.packagesTreeProvider.getChildren(packageNode);
 
-		const myPackage = ensurePackageTreeNode(packageLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
+		// If "pub deps json" is supported, the packages will be inside a "direct dependencies" node, otherwise
+		// they'll just be inside the packages folder directly.
+		const packagesContainer = extApi.dartCapabilities.supportsPubDepsJson
+			? (await extApi.packagesTreeProvider.getChildren(packageNode))!.find((node) => node.label === "direct dependencies")
+			: packageNode;
+		const packagesNodes = await extApi.packagesTreeProvider.getChildren(packagesContainer);
+
+		const myPackage = ensurePackageTreeNode(packagesNodes, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
 		const myPackageContents = await extApi.packagesTreeProvider.getChildren(myPackage);
 		const libFolder = ensurePackageTreeNode(myPackageContents, DART_DEP_FOLDER_NODE_CONTEXT, "lib");
 		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(libFolder);
@@ -48,9 +75,15 @@ describe("packages tree", () => {
 	it("sorts the same way as VS Code explorer", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
 		const packageNode = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
-		const packageLevel = await extApi.packagesTreeProvider.getChildren(packageNode);
 
-		const myPackage = ensurePackageTreeNode(packageLevel, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
+		// If "pub deps json" is supported, the packages will be inside a "direct dependencies" node, otherwise
+		// they'll just be inside the packages folder directly.
+		const packagesContainer = extApi.dartCapabilities.supportsPubDepsJson
+			? (await extApi.packagesTreeProvider.getChildren(packageNode))!.find((node) => node.label === "direct dependencies")
+			: packageNode;
+		const packagesNodes = await extApi.packagesTreeProvider.getChildren(packagesContainer);
+
+		const myPackage = ensurePackageTreeNode(packagesNodes, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
 		const myPackageContents = await extApi.packagesTreeProvider.getChildren(myPackage);
 		const libFolder = ensurePackageTreeNode(myPackageContents, DART_DEP_FOLDER_NODE_CONTEXT, "lib");
 		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(libFolder);

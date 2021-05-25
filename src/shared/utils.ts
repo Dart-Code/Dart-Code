@@ -178,6 +178,12 @@ export class BufferedLogger implements Logger {
 	}
 }
 
+export type NullAsUndefined<T> = null extends T ? Exclude<T, null> | undefined : T;
+
+export function nullToUndefined<T>(value: T): NullAsUndefined<T> {
+	return (value === null ? undefined : value) as NullAsUndefined<T>;
+}
+
 export function notUndefined<T>(x: T | undefined): x is T {
 	return x !== undefined;
 }

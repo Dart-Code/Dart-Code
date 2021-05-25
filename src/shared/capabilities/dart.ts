@@ -22,6 +22,7 @@ export class DartCapabilities {
 	get hasDdsTimingFix() { return versionIsAtLeast(this.version, "2.13.0-117"); }
 	get supportsPubUpgradeMajorVersions() { return versionIsAtLeast(this.version, "2.12.0"); }
 	get supportsPubOutdated() { return versionIsAtLeast(this.version, "2.8.0-a"); }
+	get supportsPubDepsJson() { return versionIsAtLeast(this.version, "2.14.0-0"); }
 	get supportsDartPub() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get supportsDartRunTest() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get supportsNonFileSchemeWorkspaces() { return versionIsAtLeast(this.version, "2.13.0-28"); }

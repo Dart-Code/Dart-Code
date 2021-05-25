@@ -189,6 +189,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const sdks = workspaceContext.sdks;
 	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
 
+	// TODO: Move these capabilities into WorkspaceContext.
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
@@ -550,7 +551,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartTerminalLinkProvider(logger, workspaceContext)));
 
 	// Register our view providers.
-	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext);
+	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext, dartCapabilities);
 	const packagesTreeView = vs.window.createTreeView("dartPackages", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(
 		packagesTreeView,
