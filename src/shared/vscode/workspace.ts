@@ -25,6 +25,8 @@ export class Context {
 	set hasWarnedAboutFormatterSyntaxLimitation(value: boolean) { this.context.globalState.update("hasWarnedAboutFormatterSyntaxLimitation", value); }
 	get hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation(): boolean { return !!this.context.globalState.get("hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation"); }
 	set hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation(value: boolean) { this.context.globalState.update("hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation", value); }
+	get hasNotifiedAboutProfileModeDefaultConfiguration(): boolean { return !!this.context.globalState.get("hasNotifiedAboutProfileModeDefaultConfiguration"); }
+	set hasNotifiedAboutProfileModeDefaultConfiguration(value: boolean) { this.context.globalState.update("hasNotifiedAboutProfileModeDefaultConfiguration", value); }
 	get lastSeenVersion(): string | undefined { return this.context.globalState.get("lastSeenVersion"); }
 	set lastSeenVersion(value: string | undefined) { this.context.globalState.update("lastSeenVersion", value); }
 

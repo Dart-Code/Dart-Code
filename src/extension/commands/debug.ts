@@ -232,6 +232,19 @@ export class DebugCommands {
 				vmServiceUri: "${command:dart.promptForVmService}",
 			});
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.profileApp", async () => {
+			await vs.debug.startDebugging(undefined, {
+				flutterMode: "profile",
+				name: "Flutter: Run in Profile Mode",
+				openDevTools: "performance",
+				request: "launch",
+				type: "dart",
+			});
+			if (!this.context.hasNotifiedAboutProfileModeDefaultConfiguration) {
+				this.context.hasNotifiedAboutProfileModeDefaultConfiguration = true;
+				vs.window.showInformationMessage("Profiling Flutter app with default configuration. To customize this, create a launch configuration (and include 'flutterMode': 'profile').");
+			}
+		}));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.attach", () => {
 			vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Device",

@@ -175,6 +175,11 @@
 				"category": "Debug"
 			},
 			{
+				"command": "flutter.profileApp",
+				"title": "Profile Flutter app",
+				"category": "Debug"
+			},
+			{
 				"command": "flutter.attach",
 				"title": "Attach to Flutter on Device",
 				"category": "Debug"
@@ -820,6 +825,10 @@
 				{
 					"command": "dart.attach",
 					"when": "dart-code:anyProjectLoaded && !inDebugMode"
+				},
+				{
+					"command": "flutter.profileApp",
+					"when": "dart-code:anyFlutterProjectLoaded && !inDebugMode"
 				},
 				{
 					"command": "flutter.attach",
