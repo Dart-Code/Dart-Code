@@ -13,7 +13,11 @@ window.addEventListener('message', (event) => {
 			const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
 			const background = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
 			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
-			const url = \`\${message.url}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+			let url = \`\${message.url}&them'e=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
+			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
+				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
+			}
 			if (devToolsFrame.src !== url)
 				devToolsFrame.src = url;
 			break;
