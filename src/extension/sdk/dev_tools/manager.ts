@@ -11,7 +11,7 @@ import { DartWorkspaceContext, DevToolsPage, Logger, SomeError } from "../../../
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
-import { disposeAll, usingCustomScript } from "../../../shared/utils";
+import { disposeAll } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
@@ -78,7 +78,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private async preActivate(silent: boolean): Promise<void> {
-		this.devToolsActivationPromise = this.pubGlobal.backgroundActivate(devtoolsPackageName, devtoolsPackageID, silent, this.workspaceContext.config?.devtoolsActivateScript);
+		this.devToolsActivationPromise = this.pubGlobal.backgroundActivate(devtoolsPackageName, devtoolsPackageID, silent);
 		await this.devToolsActivationPromise;
 	}
 
@@ -98,22 +98,18 @@ export class DevToolsManager implements vs.Disposable {
 
 		if (!this.devtoolsUrl) {
 			this.devToolsStatusBarItem.hide();
-			// Don't try to check for install/version if we're using a custom script.
-			if (!this.workspaceContext.config?.devtoolsActivateScript) {
-				const installedVersion = await this.pubGlobal.installIfRequired({
-					autoUpdate: true,
-					customActivateScript: this.workspaceContext.config?.devtoolsActivateScript,
-					moreInfoLink: undefined,
-					packageID: devtoolsPackageID,
-					packageName: devtoolsPackageName,
-					requiredVersion: "0.9.6",
-					silent,
-				});
-				if (!installedVersion) {
-					return undefined;
-				}
-				this.capabilities.version = installedVersion;
+			const installedVersion = await this.pubGlobal.installIfRequired({
+				autoUpdate: true,
+				moreInfoLink: undefined,
+				packageID: devtoolsPackageID,
+				packageName: devtoolsPackageName,
+				requiredVersion: "0.9.6",
+				silent,
+			});
+			if (!installedVersion) {
+				return undefined;
 			}
+			this.capabilities.version = installedVersion;
 			if (silent) {
 				this.devtoolsUrl = this.startServer();
 			} else {
@@ -386,9 +382,8 @@ export class DevToolsManager implements vs.Disposable {
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}.`;
 					this.logger.error(errorMessage);
 
-					// If we haven't tried reinstalling and we don't have a custom activate script, prompt
-					// to retry.
-					if (!hasReinstalled && !this.workspaceContext.config?.devtoolsActivateScript) {
+					// If we haven't tried reinstalling, prompt to retry.
+					if (!hasReinstalled) {
 						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try reactivating DevTools?`, reactivateDevToolsAction, skipAction);
 						if (resp === reactivateDevToolsAction) {
 							try {
@@ -420,11 +415,9 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		this.spawnedArgs = this.getDevToolsArgs();
 
-		const { binPath, binArgs } = usingCustomScript(
-			path.join(workspaceContext.sdks.dart, pubPath),
-			this.spawnedArgs,
-			workspaceContext.config?.devtoolsRunScript,
-		);
+		// TODO(helin24): Use daemon instead to start DevTools if internal workspace
+		const binPath = path.join(workspaceContext.sdks.dart, pubPath);
+		const binArgs = this.spawnedArgs;
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
 		portToBind = config.devToolsPort // Always config first

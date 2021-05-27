@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
-import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, isMac, isWin, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
+import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, isWin, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
 import { Logger, Sdks, SdkSearchResults, WorkspaceConfig } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { PackageMap } from "../../shared/pub/package_map";
@@ -288,7 +288,6 @@ export class SdkUtils {
 		}
 
 		const dartSdkSearchPaths = [
-			isMac ? workspaceConfig?.dartSdkHomeMac : workspaceConfig?.dartSdkHomeLinux,
 			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
 			fuchsiaRoot && path.join(fuchsiaRoot, "topaz/tools/prebuilt-dart-sdk", `${dartPlatformName}-x64`),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks/dart-sdk"),
