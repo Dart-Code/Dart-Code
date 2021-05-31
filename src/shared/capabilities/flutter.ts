@@ -42,4 +42,5 @@ export class DaemonCapabilities {
 	get canCreateEmulators() { return versionIsAtLeast(this.version, "0.4.0"); }
 	get canFlutterAttach() { return versionIsAtLeast(this.version, "0.4.1"); }
 	get providesPlatformTypes() { return versionIsAtLeast(this.version, "0.5.2"); }
+	get supportsAvdColdBootLaunch() { return versionIsAtLeast(this.version, "0.6.1"); }
 }

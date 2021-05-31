@@ -98,7 +98,7 @@ export interface IFlutterDaemon extends IAmDisposable {
 
 	deviceEnable(): Thenable<UnknownResponse>;
 	getEmulators(): Thenable<f.FlutterEmulator[]>;
-	launchEmulator(emulatorId: string): Thenable<void>;
+	launchEmulator(emulatorId: string, coldBoot: boolean): Thenable<void>;
 	createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }>;
 	getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse>;
 
