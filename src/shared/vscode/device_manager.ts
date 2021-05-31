@@ -154,7 +154,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 				// to connect.
 				this.currentDevice = undefined;
 				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
-				await this.launchEmulator(selection.device);
+				const coldBoot = selection.coldBoot ?? false;
+				await this.launchEmulator(selection.device, coldBoot);
 				this.updateStatusBar();
 				break;
 			case "custom-emulator":
@@ -363,7 +364,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator-creator") {
 			return this.createEmulator();
 		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator") {
-			return this.launchEmulator(selectedEmulator.device);
+			const coldBoot = selectedEmulator.coldBoot ?? false;
+			return this.launchEmulator(selectedEmulator.device, coldBoot);
 		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "custom-emulator") {
 			return this.launchCustomEmulator(selectedEmulator.device);
 		} else {
@@ -390,7 +392,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			return this.launchEmulator({
 				id: res.emulatorName,
 				name: res.emulatorName,
-			});
+			}, false);
 		} else {
 			vs.window.showErrorMessage(res.error);
 			return false;
@@ -411,10 +413,23 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.filter((e) => this.isSupported(supportedTypes, e))
 			.map((e) => ({
 				alwaysShow: false,
+				coldBoot: false,
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
 				device: e,
 				label: showAsEmulators ? `Start ${e.name}` : e.name,
 			}));
+
+		// Add a cold boot option for each android based emulator
+		if (this.daemon.capabilities.supportsAvdColdBootLaunch) {
+			const androidEmulators = emulators.filter((e) => e.device.platformType && e.device.platformType === "android");
+			androidEmulators.forEach((e) => emulators.push({
+				alwaysShow: e.alwaysShow,
+				coldBoot: true,
+				description: `${e.description} (cold boot)`,
+				device: e.device,
+				label: e.label,
+			}));
+		}
 
 		// Add an option to create a new emulator if the daemon supports it.
 		if (this.daemon.capabilities.canCreateEmulators && this.isSupported(supportedTypes, { platformType: "android" })) {
@@ -427,13 +442,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return emulators;
 	}
 
-	private async launchEmulator(emulator: f.FlutterEmulator): Promise<boolean> {
+	private async launchEmulator(emulator: f.FlutterEmulator, coldBoot: boolean): Promise<boolean> {
 		try {
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
 			}, async (progress) => {
 				progress.report({ message: `Launching ${emulator.name}...` });
-				await this.daemon.launchEmulator(emulator.id);
+				await this.daemon.launchEmulator(emulator.id, coldBoot);
 				progress.report({ message: `Waiting for ${emulator.name} to connect...` });
 				// Wait up to 60 seconds for emulator to launch.
 				for (let i = 0; i < 120; i++) {
@@ -488,4 +503,4 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 }
 
-type PickableDevice = vs.QuickPickItem & { device: f.Device | PlatformEnabler | Emulator | EmulatorCreator };
+type PickableDevice = vs.QuickPickItem & { device: f.Device | PlatformEnabler | Emulator | EmulatorCreator, coldBoot? : boolean };

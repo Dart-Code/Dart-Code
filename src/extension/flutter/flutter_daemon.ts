@@ -176,8 +176,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("emulator.getEmulators");
 	}
 
-	public launchEmulator(emulatorId: string): Thenable<void> {
-		return this.sendRequest("emulator.launch", { emulatorId });
+	public launchEmulator(emulatorId: string, coldBoot: boolean): Thenable<void> {
+		return this.sendRequest("emulator.launch", { emulatorId, coldBoot });
 	}
 
 	public createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }> {

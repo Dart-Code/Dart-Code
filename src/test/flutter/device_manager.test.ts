@@ -77,6 +77,24 @@ describe("device_manager", () => {
 		assert.equal(em.label, "Start My custom emulator");
 	});
 
+	it("includes cold boot option for Android emulators only", async () => {
+		// Set a daemon version that does not support cold boot
+		daemon.capabilities = new DaemonCapabilities("0.6.0");
+		let emulators = await dm.getPickableEmulators(true);
+		let coldBootable = emulators.filter((e) => e.coldBoot !== undefined && e.coldBoot === true);
+		assert.strictEqual(coldBootable.length, 0);
+
+		// Set a daemon version that supports cold boot
+		daemon.capabilities = new DaemonCapabilities("0.6.1");
+		emulators = await dm.getPickableEmulators(true);
+		coldBootable = emulators.filter((e) => e.coldBoot !== undefined && e.coldBoot === true);
+		const androidEmulators = emulators.filter((e) => e.device.platformType === "android" && e.device.type === "emulator");
+		// Expect that all android emulators have a coldboot version
+		assert.strictEqual(coldBootable.length, androidEmulators.length);
+		// All cold boot entries should have the type android
+		coldBootable.forEach((e) => assert.strictEqual(e.device.platformType, "android"));
+	});
+
 	it("overrides real emulators with custom definitions", async () => {
 		const emulators = await dm.getPickableEmulators(true);
 		const em = emulators.find((e) => e.device.id === customEmulator2.id);

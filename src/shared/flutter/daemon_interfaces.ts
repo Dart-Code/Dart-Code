@@ -11,6 +11,7 @@ export interface Device {
 	platform: string;
 	platformType: PlatformType | undefined | null;
 	type: "device";
+	coldBoot?: boolean;
 }
 
 export interface FlutterEmulator {
