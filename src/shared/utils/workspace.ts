@@ -54,8 +54,6 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			}
 		}
 
-		// TODO(helin24): Check where this is used
-		config.activateDevToolsEagerly = false;
 		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);

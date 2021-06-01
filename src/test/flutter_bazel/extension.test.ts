@@ -37,7 +37,6 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.config);
-		assert.equal(workspaceContext.config?.activateDevToolsEagerly, true);
 		assert.equal(workspaceContext.config?.disableAutomaticPackageGet, true);
 		assert.equal(workspaceContext.config?.disableSdkUpdateChecks, true);
 		assert.deepStrictEqual(workspaceContext.config?.flutterDaemonScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"), replacesArgs: 1 });

@@ -41,7 +41,6 @@ export interface WritableWorkspaceConfig {
 	// should be what is expected from a standard workspace without any additional
 	// config.
 
-	activateDevToolsEagerly?: boolean;
 	startDevToolsServerEagerly?: boolean;
 	disableAutomaticPackageGet?: boolean;
 	disableSdkUpdateChecks?: boolean;

@@ -53,17 +53,6 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
-		if (workspaceContext.config?.activateDevToolsEagerly) {
-			try {
-				await this.preActivate(true);
-				this.logger.info(`Finished background activating DevTools`);
-			} catch (e) {
-				this.logger.error("Failed to background activate DevTools");
-				this.logger.error(e);
-				vs.window.showErrorMessage(`Failed to activate DevTools: ${e}`);
-			}
-		}
-
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
 				if (workspaceContext.config?.startDevToolsServerEagerly)
