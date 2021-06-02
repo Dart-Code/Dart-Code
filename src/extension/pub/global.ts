@@ -83,13 +83,13 @@ export class PubGlobal {
 		return undefined;
 	}
 
-	public async backgroundActivate(packageName: string, packageID: string, silent: boolean, customActivateScript: CustomScript | undefined): Promise<void> {
+	public async backgroundActivate(packageName: string, packageID: string, silent: boolean): Promise<void> {
 		const actionName = `Activating ${packageName}`;
 		const args = ["global", "activate", packageID];
 		if (silent)
-			await this.runCommand(packageName, args, customActivateScript);
+			await this.runCommand(packageName, args);
 		else
-			await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
+			await this.runCommandWithProgress(packageName, `${actionName}...`, args);
 	}
 
 	public async uninstall(packageID: string): Promise<void> {

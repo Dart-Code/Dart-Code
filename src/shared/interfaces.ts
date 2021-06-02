@@ -41,12 +41,7 @@ export interface WritableWorkspaceConfig {
 	// should be what is expected from a standard workspace without any additional
 	// config.
 
-	activateDevToolsEagerly?: boolean;
 	startDevToolsServerEagerly?: boolean;
-	dartSdkHomeLinux?: string;
-	dartSdkHomeMac?: string;
-	devtoolsActivateScript?: CustomScript;
-	devtoolsRunScript?: CustomScript;
 	disableAutomaticPackageGet?: boolean;
 	disableSdkUpdateChecks?: boolean;
 	flutterDaemonScript?: CustomScript;

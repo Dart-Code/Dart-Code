@@ -37,11 +37,6 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.config);
-		assert.equal(workspaceContext.config?.activateDevToolsEagerly, true);
-		assert.equal(workspaceContext.config?.dartSdkHomeLinux, path.join(fsPath(flutterBazelRoot), "my-linux-dart-sdk"));
-		assert.equal(workspaceContext.config?.dartSdkHomeMac, path.join(fsPath(flutterBazelRoot), "my-mac-dart-sdk"));
-		assert.deepStrictEqual(workspaceContext.config?.devtoolsActivateScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_activate.sh"), replacesArgs: 3 });
-		assert.deepStrictEqual(workspaceContext.config?.devtoolsRunScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools_run.sh"), replacesArgs: 3 });
 		assert.equal(workspaceContext.config?.disableAutomaticPackageGet, true);
 		assert.equal(workspaceContext.config?.disableSdkUpdateChecks, true);
 		assert.deepStrictEqual(workspaceContext.config?.flutterDaemonScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"), replacesArgs: 1 });

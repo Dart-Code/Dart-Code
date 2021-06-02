@@ -54,13 +54,6 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			}
 		}
 
-		config.activateDevToolsEagerly = !!flutterConfig.devtoolsActivateScript;
-		config.dartSdkHomeLinux = makeFullPath(flutterConfig.dartSdkHome?.linux);
-		config.dartSdkHomeMac = makeFullPath(flutterConfig.dartSdkHome?.macos);
-		// This one replaces the args "global activate devtools"
-		config.devtoolsActivateScript = makeScript(flutterConfig.devtoolsActivateScript, 3);
-		// This one replaces the args "global run devtools"
-		config.devtoolsRunScript = makeScript(flutterConfig.devtoolsRunScript, 3);
 		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);
