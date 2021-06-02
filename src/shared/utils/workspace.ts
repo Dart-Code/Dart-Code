@@ -54,6 +54,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			}
 		}
 
+		config.flutterBazel = true;
 		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);

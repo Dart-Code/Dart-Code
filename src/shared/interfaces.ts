@@ -53,6 +53,7 @@ export interface WritableWorkspaceConfig {
 	flutterVersionFile?: string;
 	useLsp?: boolean;
 	useVmForTests?: boolean;
+	flutterBazel?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
