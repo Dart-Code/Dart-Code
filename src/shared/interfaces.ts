@@ -53,6 +53,8 @@ export interface WritableWorkspaceConfig {
 	flutterVersionFile?: string;
 	useLsp?: boolean;
 	useVmForTests?: boolean;
+	forceFlutterMode?: boolean;
+	skipFlutterInitialization?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;

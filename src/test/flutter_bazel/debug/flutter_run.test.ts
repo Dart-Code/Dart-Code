@@ -3,7 +3,7 @@ import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, flutterBazelHelloWorldMainFile, getPackages, prepareHasRunFile, watchPromise } from "../../helpers";
+import { activate, ensureHasRunRecently, flutterBazelHelloWorldMainFile, prepareHasRunFile, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -14,7 +14,8 @@ describe(`flutter run debugger`, () => {
 	});
 
 	// We have tests that require external packages.
-	before("get packages", () => getPackages());
+	// TODO(helin24): This requires a full flutter SDK but we need to handle this differently for bazel workspaces without an SDK.
+	// before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterBazelHelloWorldMainFile));
 
 	let dc: DartDebugClient;

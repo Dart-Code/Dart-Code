@@ -243,43 +243,49 @@ export class SdkUtils {
 				this.logger.info(`Found Fuchsia project that is not vanilla Flutter`);
 		}
 
-		const flutterSdkSearchPaths = [
-			workspaceConfig?.flutterSdkHome,
-			config.flutterSdkPath,
-			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
-			fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
-			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
-			firstFlutterMobileProject,
-			firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(firstFlutterMobileProject),
-			firstFlutterMobileProject && path.join(firstFlutterMobileProject, ".flutter"),
-			firstFlutterMobileProject && path.join(firstFlutterMobileProject, "vendor/flutter"),
-			process.env.FLUTTER_ROOT,
-			isLinux ? "~/snap/flutter/common/flutter" : undefined,
-			"~/flutter-sdk",
-			"~/.flutter-sdk",
-		].concat(paths).filter(notUndefined);
+		let flutterSdkPath;
+		if (workspaceConfig.forceFlutterMode) {
+			hasAnyFlutterProject = true;
+			hasAnyFlutterMobileProject = true;
+			flutterSdkPath = workspaceConfig?.flutterSdkHome;
+		} else {
+			const flutterSdkSearchPaths = [
+				config.flutterSdkPath,
+				// TODO: These could move into processFuchsiaWorkspace and be set on the config?
+				fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
+				fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
+				firstFlutterMobileProject,
+				firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(firstFlutterMobileProject),
+				firstFlutterMobileProject && path.join(firstFlutterMobileProject, ".flutter"),
+				firstFlutterMobileProject && path.join(firstFlutterMobileProject, "vendor/flutter"),
+				process.env.FLUTTER_ROOT,
+				isLinux ? "~/snap/flutter/common/flutter" : undefined,
+				"~/flutter-sdk",
+				"~/.flutter-sdk",
+			].concat(paths).filter(notUndefined);
 
-		let flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
+			let flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
 
-		// Handle the case where the Flutter snap has not been initialised.
-		if (!flutterSdkResult.sdkPath && flutterSdkResult.candidatePaths.includes(snapBinaryPath)) {
-			// Trigger initialization.
-			this.logger.info(`No Flutter SDK found, but a 'flutter' binary did point at ${snapBinaryPath} so attempting to initialize...`);
-			await initializeFlutterSdk(this.logger, snapFlutterBinaryPath);
+			// Handle the case where the Flutter snap has not been initialised.
+			if (!flutterSdkResult.sdkPath && flutterSdkResult.candidatePaths.includes(snapBinaryPath)) {
+				// Trigger initialization.
+				this.logger.info(`No Flutter SDK found, but a 'flutter' binary did point at ${snapBinaryPath} so attempting to initialize...`);
+				await initializeFlutterSdk(this.logger, snapFlutterBinaryPath);
 
-			// Then search again.
-			this.logger.info(`Snap initialization completed, searching for Flutter SDK again...`);
-			flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
+				// Then search again.
+				this.logger.info(`Snap initialization completed, searching for Flutter SDK again...`);
+				flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
+			}
+
+			flutterSdkPath = flutterSdkResult.sdkPath;
 		}
-
-		const flutterSdkPath = flutterSdkResult.sdkPath;
 
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
 
 		// If we're a Flutter workspace but we couldn't get the version, try running Flutter to initialise it first.
 		// Do this before searching for the Dart SDK, as it might download the Dart SDK we'd like to find.
-		if (hasAnyFlutterProject && flutterSdkPath) {
+		if (hasAnyFlutterProject && flutterSdkPath && !workspaceConfig.skipFlutterInitialization) {
 			const flutterNeedsInitializing = !getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, versionFile: workspaceConfig?.flutterVersionFile })
 				|| !fs.existsSync(path.join(flutterSdkPath, "bin/cache/dart-sdk"));
 
