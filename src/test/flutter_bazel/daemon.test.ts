@@ -14,9 +14,7 @@ describe("flutter daemon", () => {
 	it("runs using custom script", async () => {
 		const hasRunFile = prepareHasRunFile("daemon");
 
-		// Restart the extension so the daemon is restarted and will create
-		// the hasRun file when it started (since we deleted it in prepareHasRunFile
-		// above).
+		// Restart the extension so the daemon picks up our buffered channel.
 		await vs.commands.executeCommand("_dart.reloadExtension");
 
 		await waitForResult(() => fs.existsSync(hasRunFile));
