@@ -47,9 +47,14 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			workspaceContext.config?.flutterDaemonScript || workspaceContext.config?.flutterScript,
 		);
 
+		// TODO(dantup): This "folder" is the Flutter SDK so this is looking up resource
+		// config for the SDK which doesn't make much sense. It sees unlikely this is doing
+		// what anyone expects and should probably be a config that can be set at either
+		// User Settings level (where it would be used here) or Resource level (for the other
+		// non-daemon places it's used).
 		const flutterAdditionalArgs = config.for(vs.Uri.file(folder)).flutterAdditionalArgs;
 		const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(binArgs);
-		this.createProcess(folder, binPath, args, { toolEnv: getToolEnv() });
+		this.createProcess(undefined, binPath, args, { toolEnv: getToolEnv() });
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");
