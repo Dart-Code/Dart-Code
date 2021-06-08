@@ -17,7 +17,7 @@ describe("dart_reference_provider", () => {
 	it("returns expected location for definition of field reference", async () => {
 		const definition = await getDefinition(positionOf("a.myTestNum^Field"));
 		assert.deepStrictEqual(uriFor(definition).toString(), currentDoc().uri.toString());
-		assert.deepStrictEqual(rangeFor(definition), extApi.isLsp ? rangeOf("|num myTestNumField|;") : rangeOf("num |myTestNumField|;"));
+		assert.deepStrictEqual(rangeFor(definition), extApi.isLsp ? rangeOf("|num? myTestNumField|;") : rangeOf("num? |myTestNumField|;"));
 		// assert.deepStrictEqual(definition.targetUri.toString(), currentDoc().uri.toString());
 		// assert.deepStrictEqual(definition.targetRange, rangeOf("num |myNumField|;"));
 		// assert.deepStrictEqual(definition.originSelectionRange, rangeOf("a.|myNumField|"));

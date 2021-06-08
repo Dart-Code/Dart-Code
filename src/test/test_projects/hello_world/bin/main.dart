@@ -21,7 +21,7 @@ main() async {
     1: "one",
     1.1: "one-point-one",
   };
-  if (m[true]) {
+  if (m[true] == true) {
     print("Hello, world!"); // BREAKPOINT1
   }
   log("Logging from dart:developer!");

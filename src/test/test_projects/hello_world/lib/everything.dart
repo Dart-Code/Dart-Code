@@ -15,7 +15,7 @@ const foo = "foo";
 /// This is my class.
 class MyTestClass {
   /// This is my num field.
-  num myTestNumField;
+  num? myTestNumField;
 
   /// This is my num getter.
   num get myTestNumGetter => 1;
@@ -24,10 +24,10 @@ class MyTestClass {
   set myTestNumSetter(num value) {}
 
   /// This is my HTTP Client from another package.
-  http.Client myTestHttpClient;
+  http.Client? myTestHttpClient;
 
   /// This is a future string from an SDK library.
-  Future<String> myTestFutureString;
+  Future<String>? myTestFutureString;
 
   /// This is my class constructor.
   MyTestClass();

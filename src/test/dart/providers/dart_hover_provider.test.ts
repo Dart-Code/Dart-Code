@@ -69,10 +69,10 @@ describe("dart_hover_provider", () => {
 	});
 
 	it("returns expected information for a field", async () => {
-		const hover = await getHoverAt("num my^TestNumField");
-		assert.equal(hover.displayText, "num myTestNumField");
+		const hover = await getHoverAt("num? my^TestNumField");
+		assert.equal(hover.displayText, "num? myTestNumField");
 		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my num field."));
-		assert.deepStrictEqual(hover.range, rangeOf("num |myTestNumField|"));
+		assert.deepStrictEqual(hover.range, rangeOf("num? |myTestNumField|"));
 	});
 
 	it("returns expected information for a getter", async () => {
