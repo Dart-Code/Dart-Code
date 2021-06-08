@@ -29,6 +29,9 @@ jobs:
             code-version: insiders
           - os: ubuntu-latest
             bot: flutter_snap
+        exclude:
+          - os: windows-latest
+            build-version: dev
 
     steps:
 
