@@ -269,7 +269,12 @@ export class DartProcess {
 	}
 }
 
-export function killFlutterTester(): Promise<void> {
+export async function killFlutterTester(): Promise<void> {
+	// extApi may be unavailable if the test was skipped (eg. Flutter Bazel on
+	// Windows), so we can't call extApi.safeToolSpawn here (though also should
+	// not need to).
+	if (!extApi)
+		return;
 	return new Promise((resolve) => {
 		const proc = isWin
 			? extApi.safeToolSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
