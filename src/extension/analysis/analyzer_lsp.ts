@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
-import { CancellationToken, CodeActionContext, CompletionItem, MarkdownString, MarkedString, Position, Range, TextDocument, window } from "vscode";
-import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, window } from "vscode";
+import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
@@ -63,6 +63,19 @@ export class LspAnalyzer extends Analyzer {
 				return input;
 		}
 
+		/// Whether or not to trigger completion again when completing on this item. This is used
+		/// for convenience, eg. when completing the "import '';" snippet people expect completion
+		/// to immediately reopen.
+		function shouldTriggerCompletionAgain(item: CompletionItem): boolean {
+			if (item.label === "import '';")
+				return true;
+
+			if (item.kind === CompletionItemKind.Folder && item.label.endsWith("/"))
+				return true;
+
+			return false;
+		}
+
 		const snippetTextEdits = this.snippetTextEdits;
 
 		return {
@@ -73,6 +86,30 @@ export class LspAnalyzer extends Analyzer {
 					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
 
 				next(token, params);
+			},
+
+			provideCompletionItem: async (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
+				const results = await next(document, position, context, token);
+				let items: CompletionItem[] | undefined;
+				if (!results)
+					return results;
+
+				// Handle either a CompletionItem[] or CompletionList.
+				if ("isIncomplete" in results) {
+					items = results.items;
+				} else {
+					items = results as CompletionItem[];
+				}
+
+				// Attach a command for any we should re-trigger for.
+				for (const item of items.filter(shouldTriggerCompletionAgain)) {
+					item.command = {
+						command: "editor.action.triggerSuggest",
+						title: "Suggest",
+					};
+				}
+
+				return results;
 			},
 
 			resolveCompletionItem: (item: CompletionItem, token: CancellationToken, next: ResolveCompletionItemSignature) => {
