@@ -205,4 +205,5 @@ export const defaultLaunchJson = JSON.stringify(
 	undefined, "\t"
 );
 
-export const LATEST_SDK_VERSION = "latest";
+// This indicates that a version is the latest possible.
+export const MAX_VERSION = "999.999.999";

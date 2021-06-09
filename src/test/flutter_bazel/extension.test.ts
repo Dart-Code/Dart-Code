@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { isWin } from "../../shared/constants";
+import { isWin, MAX_VERSION } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { activateWithoutAnalysis, ext, extApi, flutterBazelRoot, logger } from "../helpers";
@@ -38,7 +38,7 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.config);
 		assert.strictEqual(workspaceContext.config?.disableAutomaticPackageGet, true);
-		assert.strictEqual(workspaceContext.config?.isFlutterVersionLatest, true);
+		assert.strictEqual(workspaceContext.config?.flutterVersion, MAX_VERSION);
 		assert.strictEqual(workspaceContext.config?.forceFlutterMode, true);
 		assert.strictEqual(workspaceContext.config?.skipFlutterInitialization, true);
 		assert.deepStrictEqual(workspaceContext.config?.flutterDaemonScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"), replacesArgs: 1 });

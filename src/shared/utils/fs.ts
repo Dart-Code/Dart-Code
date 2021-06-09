@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin, LATEST_SDK_VERSION } from "../constants";
+import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger } from "../interfaces";
 import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
@@ -131,14 +131,10 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 		: projectFolders;
 }
 
-export function getSdkVersion(logger: Logger, { sdkRoot, versionFile, isLatest }: { sdkRoot?: string, versionFile?: string, isLatest?: boolean }): string | undefined {
-	if (!sdkRoot && !versionFile && !isLatest)
+export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string }): string | undefined {
+	if (!sdkRoot)
 		return undefined;
-	if (isLatest) {
-		return LATEST_SDK_VERSION;
-	}
-	if (!versionFile)
-		versionFile = path.join(sdkRoot!, "version");
+	const versionFile = path.join(sdkRoot, "version");
 	if (!fs.existsSync(versionFile))
 		return undefined;
 	try {

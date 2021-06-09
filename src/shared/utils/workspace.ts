@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { isWin } from "../constants";
+import { isWin, MAX_VERSION } from "../constants";
 import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processKnownGitRepositories(logger: Logger, config: WritableWorkspaceConfig, gitRoot: string) {
@@ -56,7 +56,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 
 		config.forceFlutterMode = true;
 		config.skipFlutterInitialization = true;
-		config.isFlutterVersionLatest = true;
+		config.flutterVersion = MAX_VERSION;
 		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);

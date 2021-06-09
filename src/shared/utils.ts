@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
-import { executableNames, isWin, LATEST_SDK_VERSION } from "./constants";
+import { executableNames, isWin } from "./constants";
 import { LogCategory } from "./enums";
 import { CustomScript, IAmDisposable, Logger, SomeError } from "./interfaces";
 
@@ -85,9 +85,6 @@ export function isDartSdkFromFlutter(dartSdkPath: string) {
 }
 
 export function versionIsAtLeast(inputVersion: string, requiredVersion: string): boolean {
-	if (inputVersion == LATEST_SDK_VERSION) {
-		return true;
-	}
 	return semver.gte(inputVersion, requiredVersion);
 }
 
