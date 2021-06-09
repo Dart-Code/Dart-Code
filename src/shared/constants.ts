@@ -204,3 +204,5 @@ export const defaultLaunchJson = JSON.stringify(
 	},
 	undefined, "\t"
 );
+
+export const LATEST_SDK_VERSION = "latest";

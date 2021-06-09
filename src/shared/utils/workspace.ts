@@ -56,12 +56,12 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 
 		config.forceFlutterMode = true;
 		config.skipFlutterInitialization = true;
+		config.isFlutterVersionLatest = true;
 		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);
 		config.flutterTestScript = makeScript(flutterConfig.testScript);
-		config.flutterVersionFile = makeFullPath(flutterConfig.versionFile);
 	} catch (e) {
 		logger.error(e);
 	}
