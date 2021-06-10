@@ -32,9 +32,9 @@ main() {
 		assert.equal(sigs.activeSignature, 0);
 		assert.equal(sigs.signatures.length, 1);
 		const sig = sigs.signatures[0];
-		assert.equal(sig.label, "print(Object object)");
+		assert.equal(sig.label, sig.label.includes("?") ? "print(Object? object)" : "print(Object object)");
 		assert.equal(sig.parameters.length, 1);
-		assert.equal(sig.parameters[0].label, "Object object");
+		assert.equal(sig.parameters[0].label, (sig.parameters[0].label as string).includes("?") ? "Object? object" : "Object object");
 		assert.equal(sig.parameters[0].documentation, undefined);
 		assert.equal((sig.documentation as vs.MarkdownString).value, "Prints a string representation of the object to the console.");
 	});
