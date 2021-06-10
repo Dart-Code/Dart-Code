@@ -127,6 +127,17 @@ jobs:
         run: flutter packages get
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
 
+      # upload-artifact fails if the path does not exist (it only supports
+      # silent failure for no-files-found, but the path must exist), so
+      # ensure these folders exist so that if the build/lint fails we don't
+      # get additional failures reported on the artifact uploads that make
+      # it less clear what the failure is.
+      - run: |
+          mkdir -p .dart_code_test_logs
+          mkdir -p .test_results
+          mkdir -p coverage
+        shell: pwsh
+
       - name: npm test
         run: npm test
         env:
@@ -139,18 +150,6 @@ jobs:
           FLUTTER_VERSION: ${{ matrix.flutter-version }}
           LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }}
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
-
-      # upload-artifact fails if the path does not exist (it only supports
-      # silent failure for no-files-found, but the path must exist), so
-      # ensure these folders exist so that if the build/lint fails we don't
-      # get additional failures reported on the artifact uploads that make
-      # it less clear what the failure is.
-      - run: |
-          New-Item -Path .dart_code_test_logs -Force
-          New-Item -Path .test_results -Force
-          New-Item -Path coverage -Force
-        if: always()
-        shell: pwsh
 
       - name: Store logs
         uses: actions/upload-artifact@v1
