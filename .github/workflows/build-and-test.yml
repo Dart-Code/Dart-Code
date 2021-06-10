@@ -140,6 +140,18 @@ jobs:
           LOGS_NAME: ${{ matrix.dart-version }}_${{ matrix.code-version }}
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
+      # upload-artifact fails if the path does not exist (it only supports
+      # silent failure for no-files-found, but the path must exist), so
+      # ensure these folders exist so that if the build/lint fails we don't
+      # get additional failures reported on the artifact uploads that make
+      # it less clear what the failure is.
+      - run: |
+          mkdir -p .dart_code_test_logs
+          mkdir -p .test_results
+          mkdir -p coverage
+        if: always()
+        shell: pwsh
+
       - name: Store logs
         uses: actions/upload-artifact@v1
         if: always()
