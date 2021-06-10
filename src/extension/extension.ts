@@ -216,9 +216,31 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	}
 
 	const isVirtualWorkspace = vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.every((f) => f.uri.scheme !== "file");
-	const isUsingLsp = !!process.env.DART_CODE_FORCE_LSP
-		|| isVirtualWorkspace
-		|| (config.previewLsp ?? (dartCapabilities.canDefaultLsp && vsCodeVersion.supportsLatestLspClient && experiments.lspDefault.applies));
+	function shouldUseLsp(): boolean {
+		// Never use LSP if the LSP client would reject the current VS Code version.
+		if (!vsCodeVersion.supportsLatestLspClient)
+			return false;
+
+		// If DART_CODE_FORCE_LSP is set to true/false it always overrides.
+		if (process.env.DART_CODE_FORCE_LSP === "true")
+			return true;
+		if (process.env.DART_CODE_FORCE_LSP === "false")
+			return false;
+
+		// In virtual workspaces, we always use LSP because it will have non-file resources
+		// and we only handle them properly in LSP.
+		if (isVirtualWorkspace)
+			return true;
+
+		// If config is explicily set to non-null, use that.
+		if (config.previewLsp !== undefined)
+			return config.previewLsp;
+
+		// Otherwise, if we're a high enough LSP version to enable by default and we're in the
+		// experiment group for it to be enabled.
+		return dartCapabilities.canDefaultLsp && experiments.lspDefault.applies;
+	}
+	const isUsingLsp = shouldUseLsp();
 	writableConfig.useLsp = isUsingLsp;
 	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
 

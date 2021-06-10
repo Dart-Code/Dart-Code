@@ -10,12 +10,12 @@ const testFolder = "out/src/test";
 const testProjectsFolder = "src/test/test_projects";
 
 const testConfigs: TestConfig[] = [
-	{ testFolder: "dart", project: "hello_world" },
+	{ testFolder: "dart", project: "hello_world", lsp: false },
 	{ testFolder: "dart", project: "hello_world", lsp: true },
 	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"] },
 	{ testFolder: "web_debug", project: "web", debugAdapters: ["web", "web_test"] },
 	{ testFolder: "dart_nested_flutter", project: "dart_nested_flutter" },
-	{ testFolder: "flutter", project: "flutter_hello_world" },
+	{ testFolder: "flutter", project: "flutter_hello_world", lsp: false },
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"] },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], chrome: true },
@@ -190,7 +190,7 @@ function getTestsConfig(test: TestConfig) {
 		"env": {
 			"DART_CODE_USE_DEBUG_SERVERS": "true",
 			"DART_CODE_IS_TEST_RUN": "true",
-			"DART_CODE_FORCE_LSP": test.lsp ? "true" : undefined,
+			"DART_CODE_FORCE_LSP": test.lsp === undefined ? undefined : `${test.lsp}`,
 			"FLUTTER_TEST_DEVICE_ID": test.chrome ? "chrome" : undefined,
 		},
 		"preLaunchTask": "npm: watch",
