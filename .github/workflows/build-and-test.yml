@@ -146,9 +146,9 @@ jobs:
       # get additional failures reported on the artifact uploads that make
       # it less clear what the failure is.
       - run: |
-          mkdir -p .dart_code_test_logs
-          mkdir -p .test_results
-          mkdir -p coverage
+          New-Item -Path .dart_code_test_logs -Force
+          New-Item -Path .test_results -Force
+          New-Item -Path coverage -Force
         if: always()
         shell: pwsh
 
