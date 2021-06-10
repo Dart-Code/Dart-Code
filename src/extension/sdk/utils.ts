@@ -286,7 +286,8 @@ export class SdkUtils {
 		// If we're a Flutter workspace but we couldn't get the version, try running Flutter to initialise it first.
 		// Do this before searching for the Dart SDK, as it might download the Dart SDK we'd like to find.
 		if (hasAnyFlutterProject && flutterSdkPath && !workspaceConfig.skipFlutterInitialization) {
-			const flutterNeedsInitializing = !getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, versionFile: workspaceConfig?.flutterVersionFile })
+			const flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath });
+			const flutterNeedsInitializing = !flutterVersion
 				|| !fs.existsSync(path.join(flutterSdkPath, "bin/cache/dart-sdk"));
 
 			if (flutterNeedsInitializing)
@@ -324,7 +325,7 @@ export class SdkUtils {
 				dartSdkIsFromFlutter: !!dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
 				dartVersion: getSdkVersion(this.logger, { sdkRoot: dartSdkPath }),
 				flutter: flutterSdkPath,
-				flutterVersion: getSdkVersion(this.logger, { sdkRoot: flutterSdkPath, versionFile: workspaceConfig?.flutterVersionFile }),
+				flutterVersion: workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath }),
 			} as Sdks,
 			workspaceConfig,
 			hasAnyFlutterMobileProject,

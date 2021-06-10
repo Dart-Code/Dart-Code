@@ -131,11 +131,10 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 		: projectFolders;
 }
 
-export function getSdkVersion(logger: Logger, { sdkRoot, versionFile }: { sdkRoot?: string, versionFile?: string }): string | undefined {
-	if (!sdkRoot && !versionFile)
+export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string }): string | undefined {
+	if (!sdkRoot)
 		return undefined;
-	if (!versionFile)
-		versionFile = path.join(sdkRoot!, "version");
+	const versionFile = path.join(sdkRoot, "version");
 	if (!fs.existsSync(versionFile))
 		return undefined;
 	try {

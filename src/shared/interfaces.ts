@@ -50,7 +50,7 @@ export interface WritableWorkspaceConfig {
 	flutterScript?: CustomScript;
 	flutterSdkHome?: string;
 	flutterTestScript?: CustomScript;
-	flutterVersionFile?: string;
+	flutterVersion?: string;
 	useLsp?: boolean;
 	useVmForTests?: boolean;
 	forceFlutterMode?: boolean;

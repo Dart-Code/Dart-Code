@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { MAX_VERSION } from "../../shared/constants";
 import { disposeAll } from "../../shared/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
@@ -20,9 +21,12 @@ export class StatusBarVersionTracker implements vs.Disposable {
 			? "Flutter"
 			: (dartIsFromFlutter ? "Dart from Flutter" : "Dart");
 
-		const versionLabel = (workspaceContext.hasAnyFlutterProjects || dartIsFromFlutter)
+		let versionLabel = (workspaceContext.hasAnyFlutterProjects || dartIsFromFlutter)
 			? workspaceContext.sdks.flutterVersion
 			: workspaceContext.sdks.dartVersion;
+
+		if (versionLabel === MAX_VERSION)
+			versionLabel = "latest";
 
 		if (versionLabel) {
 			this.addStatusBarItem(

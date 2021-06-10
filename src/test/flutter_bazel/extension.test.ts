@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { isWin } from "../../shared/constants";
+import { isWin, MAX_VERSION } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { activateWithoutAnalysis, ext, extApi, flutterBazelRoot, logger } from "../helpers";
@@ -37,14 +37,15 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.config);
-		assert.equal(workspaceContext.config?.disableAutomaticPackageGet, true);
-		assert.equal(workspaceContext.config?.disableSdkUpdateChecks, true);
+		assert.strictEqual(workspaceContext.config?.disableAutomaticPackageGet, true);
+		assert.strictEqual(workspaceContext.config?.flutterVersion, MAX_VERSION);
+		assert.strictEqual(workspaceContext.config?.forceFlutterMode, true);
+		assert.strictEqual(workspaceContext.config?.skipFlutterInitialization, true);
 		assert.deepStrictEqual(workspaceContext.config?.flutterDaemonScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterDoctorScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterRunScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"), replacesArgs: 1 });
-		assert.equal(workspaceContext.config?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
+		assert.strictEqual(workspaceContext.config?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
 		assert.deepStrictEqual(workspaceContext.config?.flutterTestScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"), replacesArgs: 1 });
-		assert.equal(workspaceContext.config?.flutterVersionFile, path.join(fsPath(flutterBazelRoot), "my-flutter-version"));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});
 	// This test requires another clone of the SDK to verify the path (symlinks

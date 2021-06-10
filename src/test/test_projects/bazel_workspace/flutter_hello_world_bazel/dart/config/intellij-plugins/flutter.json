@@ -5,7 +5,6 @@
 	"runScript": "../scripts/custom_run.sh",
 	"syncScript": "../scripts/custom_sync.sh",
 	"sdkHome": "../my-flutter-sdk",
-	"versionFile": "../my-flutter-version",
 	"requiredIJPluginID": "ij-plugin-id",
 	"requiredIJPluginMessage": "IJ plugin message",
 	"configWarningPrefix": "Configuration warning prefix"
