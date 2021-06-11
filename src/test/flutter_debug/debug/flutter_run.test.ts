@@ -1369,7 +1369,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const timingRegex = new RegExp("\[[ \d]+\] ", "g");
 		stdErrLines = stdErrLines.map((line) => line.replace(timingRegex, ""));
 
-		// Handle old/new error messages for stable/dev.
 		const expectedErrorLines = [
 			`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
 			`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
@@ -1383,11 +1382,15 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			`stdout: ${faint("#2      StatelessElement.build")}`,
 			`stdout: ${faint("#3      ComponentElement.performRebuild")}`,
 			`stdout: ${faint("#4      Element.rebuild")}`,
-			`stdout: ...`,
-			`stderr: ════════════════════════════════════════════════════════════════════════════════`,
+			// Don't check any more past this, since they can change with Flutter framework changes.
 		];
 
-		assert.deepStrictEqual(stdErrLines.map((s) => s.toLowerCase()), expectedErrorLines.map((s) => s.toLowerCase()));
+		assert.deepStrictEqual(
+			// Only check top expectedErrorLines.length to avoid all the frames that are
+			// likely to change with Flutter changes.
+			stdErrLines.slice(0, expectedErrorLines.length).map((s) => s.toLowerCase()),
+			expectedErrorLines.map((s) => s.toLowerCase()),
+		);
 	});
 
 	it("does not print original error if using structured errors", async function () {
