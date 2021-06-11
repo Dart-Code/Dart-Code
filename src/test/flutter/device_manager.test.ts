@@ -247,6 +247,10 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		return { platforms: this.supportedPlatforms };
 	}
 
+	public async serveDevTools(): Promise<f.ServeDevToolsResponse> {
+		return { host: "", port: ""};
+	}
+
 	// Subscription methods.
 
 	public registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): IAmDisposable {
