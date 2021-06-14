@@ -38,7 +38,8 @@ export class StatusBarVersionTracker implements vs.Disposable {
 	}
 
 	private addStatusBarItem(text: string, tooltip: string, command: string | undefined) {
-		const statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 2);
+		const statusBarItem = vs.window.createStatusBarItem("dartStatusSdkVersion", vs.StatusBarAlignment.Right, 2);
+		statusBarItem.name = "Dart/Flutter SDK Version";
 		statusBarItem.text = text;
 		statusBarItem.tooltip = tooltip;
 		statusBarItem.command = command;

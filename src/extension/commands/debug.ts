@@ -42,9 +42,9 @@ export class LastTestDebugSession {
 }
 
 export class DebugCommands {
-	private debugOptions = vs.window.createStatusBarItem(vs.StatusBarAlignment.Left, 0);
+	private debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
 	private currentDebugOption = DebugOption.MyCode;
-	private debugMetrics = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 0);
+	private debugMetrics = vs.window.createStatusBarItem("dartStatusDebugMetrics", vs.StatusBarAlignment.Right, 0);
 	private onWillHotReloadEmitter = new vs.EventEmitter<void>();
 	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
 	private onWillHotRestartEmitter = new vs.EventEmitter<void>();
@@ -61,7 +61,9 @@ export class DebugCommands {
 		this.vmServices = new VmServiceExtensions(logger, this.sendServiceSetting);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal);
 		context.subscriptions.push(this.devTools);
+		this.debugOptions.name = "Dart Debug Options";
 		context.subscriptions.push(this.debugOptions);
+		this.debugMetrics.name = "Dart Debug Metrics";
 		context.subscriptions.push(this.debugMetrics);
 
 		context.subscriptions.push(vs.debug.onDidChangeBreakpoints((e) => this.handleBreakpointChange(e)));

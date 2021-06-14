@@ -35,7 +35,7 @@ let portToBind: number | undefined;
 /// Handles launching DevTools in the browser and managing the underlying service.
 export class DevToolsManager implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
-	private readonly devToolsStatusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 100);
+	private readonly devToolsStatusBarItem = vs.window.createStatusBarItem("dartStatusDevTools", vs.StatusBarAlignment.Right, 100);
 	private devToolsActivationPromise: Promise<void> | undefined;
 	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
 	public get devToolsActivation() { return this.devToolsActivationPromise; }
@@ -47,6 +47,7 @@ export class DevToolsManager implements vs.Disposable {
 	public devtoolsUrl: Thenable<string> | undefined;
 
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal) {
+		this.devToolsStatusBarItem.name = "Dart/Flutter DevTools";
 		this.disposables.push(this.devToolsStatusBarItem);
 
 		this.handleEagerActivationAndStartup(workspaceContext);

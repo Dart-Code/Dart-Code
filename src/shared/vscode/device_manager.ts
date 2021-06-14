@@ -20,7 +20,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
 	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" }) {
-		this.statusBarItem = vs.window.createStatusBarItem(vs.StatusBarAlignment.Right, 1);
+		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
+		this.statusBarItem.name = "Flutter Device";
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.command = "flutter.selectDevice";
 		this.statusBarItem.show();
@@ -503,4 +504,4 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 }
 
-type PickableDevice = vs.QuickPickItem & { device: f.Device | PlatformEnabler | Emulator | EmulatorCreator, coldBoot? : boolean };
+type PickableDevice = vs.QuickPickItem & { device: f.Device | PlatformEnabler | Emulator | EmulatorCreator, coldBoot?: boolean };
