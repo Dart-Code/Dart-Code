@@ -707,6 +707,10 @@
 					"when": "dart-code:anyProjectLoaded && dart-code:isCapturingLogs"
 				},
 				{
+					"command": "dart.openExtensionLog",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
 					"command": "pub.get",
 					"when": "dart-code:anyProjectLoaded"
 				},
@@ -725,6 +729,10 @@
 				{
 					"command": "pub.outdated",
 					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported"
+				},
+				{
+					"command": "dart.writeRecommendedSettings",
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.startDebugging",
@@ -772,11 +780,15 @@
 				},
 				{
 					"command": "dart.clearTestResults",
-					"when": "!inDebugMode"
+					"when": "dart-code:anyProjectLoaded && !inDebugMode"
 				},
 				{
 					"command": "dart.goToTests",
 					"when": "false"
+				},
+				{
+					"command": "_dart.displayTestOutput",
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.debugTestAtCursor",
