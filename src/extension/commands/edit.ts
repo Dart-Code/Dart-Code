@@ -12,6 +12,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.showCode", showCode, this),
 			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings, this),
 			vs.commands.registerCommand("dart.printSelectionToTerminal", this.printSelectionToTerminal, this),
+			vs.commands.registerCommand("dart.toggleLineComment", this.toggleLineComment, this),
 		);
 	}
 
@@ -60,6 +61,107 @@ export class EditCommands implements vs.Disposable {
 		if (text) {
 			writeToPseudoTerminal([text]);
 		}
+	}
+
+	private async toggleLineComment() {
+		const editor = vs.window.activeTextEditor;
+		if (!editor || !editor.selections.length)
+			return;
+		const document = editor.document;
+		const selections = editor.selections;
+
+		// Track the prefix that matches all lines in all selections.
+		// If any line does not start with `///` then it cannot be TRIPLE.
+		// If any line does not start with '//' then it cannot be DOUBLE.
+		// We start from the highest and work down as we find lines that don't match.
+		let commonPrefix: "NONE" | "DOUBLE" | "TRIPLE" = "TRIPLE";
+
+		check: {
+			for (const selection of selections) {
+				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
+					const line = document.lineAt(lineNumber);
+					// Skip over blank lines, as they won't have comment markers and shouldn't
+					// influence which common prefix we find.
+					if (line.isEmptyOrWhitespace)
+						continue;
+
+					const text = line.text.trim();
+					if (commonPrefix === "TRIPLE" && !text.startsWith("///"))
+						commonPrefix = text.startsWith("//") ? "DOUBLE" : "NONE";
+					else if (commonPrefix === "DOUBLE" && !text.startsWith("//"))
+						commonPrefix = "NONE";
+
+					// Any time we hit NONE, we can bail out.
+					if (commonPrefix === "NONE")
+						break check;
+				}
+			}
+		}
+
+		switch (commonPrefix) {
+			case "NONE":
+				this.prefixLines(editor, selections, "// ");
+				break;
+			case "DOUBLE":
+				this.prefixLines(editor, selections, "/");
+				break;
+			case "TRIPLE":
+				this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
+				break;
+		}
+	}
+
+	private prefixLines(editor: vs.TextEditor, selections: vs.Selection[], prefix: string) {
+		const document = editor.document;
+		// In case we have overlapping selections, keep track of lines we've done.
+		const doneLines = new Set<number>();
+
+		editor.edit((edit) => {
+			for (const selection of selections) {
+				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
+					if (doneLines.has(lineNumber))
+						continue;
+					doneLines.add(lineNumber);
+
+					const line = document.lineAt(lineNumber);
+					if (line.isEmptyOrWhitespace)
+						continue;
+
+					const insertionPoint = line.range.start.translate(0, line.firstNonWhitespaceCharacterIndex);
+					edit.insert(insertionPoint, prefix);
+				}
+			}
+		});
+	}
+
+	private removeLinePrefixes(editor: vs.TextEditor, selections: vs.Selection[], prefixes: string[]) {
+		const document = editor.document;
+		// In case we have overlapping selections, keep track of lines we've done.
+		const doneLines = new Set<number>();
+
+		editor.edit((edit) => {
+			for (const selection of selections) {
+				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
+					if (doneLines.has(lineNumber))
+						continue;
+					doneLines.add(lineNumber);
+
+					const line = document.lineAt(lineNumber);
+					if (line.isEmptyOrWhitespace)
+						continue;
+
+					const lineContentStart = line.range.start.translate(0, line.firstNonWhitespaceCharacterIndex);
+					for (const prefix of prefixes) {
+						const possiblePrefixRange = new vs.Range(lineContentStart, lineContentStart.translate(0, prefix.length));
+						const possiblePrefix = document.getText(possiblePrefixRange);
+						if (possiblePrefix === prefix) {
+							edit.delete(possiblePrefixRange);
+							break;
+						}
+					}
+				}
+			}
+		});
 	}
 
 	public dispose(): any {

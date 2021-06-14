@@ -125,6 +125,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.toggleLineComment",
+				"title": "Toggle Line/DartDoc Comment",
+				"category": "Dart"
+			},
+			{
 				"command": "pub.get",
 				"title": "Get Packages",
 				"category": "Pub",
@@ -732,6 +737,10 @@
 				},
 				{
 					"command": "dart.writeRecommendedSettings",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
+					"command": "dart.toggleLineComment",
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{
