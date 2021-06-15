@@ -18,15 +18,18 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 
 	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks, private readonly flutterCapabilities: FlutterCapabilities) {
 		super(logger, context, sdks);
+		this.logger.info(`Registering Flutter Tasks`);
 	}
 
 	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
+		this.logger.info(`Providing Flutter Tasks`);
 		const dartProjects = getDartWorkspaceFolders();
 
 		let promises: Array<Promise<vs.Task | undefined>> = [];
 		dartProjects.forEach((folder) => {
 			const isFlutter = isFlutterWorkspaceFolder(folder);
 			if (isFlutter) {
+				this.logger.info(`Creating Flutter tasks for ${folder}`);
 				promises = promises.concat(this.createSharedTasks(folder));
 
 				promises.push(this.createTask(folder, "flutter", ["build", "apk"]));
@@ -60,5 +63,4 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 			}
 		}
 	}
-
 }

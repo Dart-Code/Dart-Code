@@ -30,7 +30,7 @@ const taskOptions: Array<[string[], DartTaskOptions]> = [
 ];
 
 export abstract class BaseTaskProvider implements vs.TaskProvider {
-	constructor(private readonly logger: Logger, readonly context: vs.ExtensionContext, private sdks: DartSdks) { }
+	constructor(protected readonly logger: Logger, readonly context: vs.ExtensionContext, private sdks: DartSdks) { }
 
 	abstract get type(): string;
 
@@ -53,13 +53,17 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 	}
 
 	public async resolveTask(task: DartTask, token?: vs.CancellationToken): Promise<vs.Task> {
+		this.logger.info(`Resolving task...`);
 		const scope: any = task.scope;
 		const cwd = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
+
+		this.logger.info(`URI from scope is ${cwd}`);
 
 		const definition = task.definition;
 
 		// Pub commands should be run through Flutter if a Flutter project.
 		if (definition.command === "pub" && isFlutterProjectFolder(cwd)) {
+			this.logger.info(`Command is pub, but project is Flutter - updating...`);
 			definition.command = "flutter";
 			definition.args = ["pub", ...(definition.args ?? [])];
 		}
@@ -142,8 +146,12 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 	}
 
 	protected async createTaskExecution(sdks: DartSdks, definition: DartTaskDefinition, cwd: string | undefined): Promise<vs.ProcessExecution | undefined> {
-		if (!definition.command)
+		if (!definition.command) {
+			this.logger.info(`Task definition has no command, not creating TaskExecution`);
 			return;
+		}
+
+		this.logger.info(`Creating TaskExecution for ${definition.command}...`);
 
 		const sdk = definition.command === "flutter" && sdks.flutter ? sdks.flutter : sdks.dart;
 		const executable = getExecutableName(definition.command);
@@ -154,6 +162,13 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 			if (runtimeArgs)
 				args = args.concat(runtimeArgs);
 		}
+
+		this.logger.info(`
+			Returning a vs.ProcessExecution:
+			  program: ${program}
+			  args: ${args || []}
+			  options: ${JSON.stringify({ cwd, env: getToolEnv() })}
+		`);
 
 		return new vs.ProcessExecution(
 			program,
