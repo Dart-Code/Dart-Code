@@ -125,8 +125,8 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.toggleLineComment",
-				"title": "Toggle Line/DartDoc Comment",
+				"command": "dart.toggleDartdocComment",
+				"title": "Toggle Dartdoc Comment",
 				"category": "Dart"
 			},
 			{
@@ -740,7 +740,7 @@
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{
-					"command": "dart.toggleLineComment",
+					"command": "dart.toggleDartdocComment",
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{

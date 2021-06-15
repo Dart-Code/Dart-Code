@@ -12,7 +12,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.showCode", showCode, this),
 			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings, this),
 			vs.commands.registerCommand("dart.printSelectionToTerminal", this.printSelectionToTerminal, this),
-			vs.commands.registerCommand("dart.toggleLineComment", this.toggleLineComment, this),
+			vs.commands.registerCommand("dart.toggleDartdocComment", this.toggleDartdocomment, this),
 		);
 	}
 
@@ -63,7 +63,7 @@ export class EditCommands implements vs.Disposable {
 		}
 	}
 
-	private async toggleLineComment() {
+	private async toggleDartdocomment() {
 		const editor = vs.window.activeTextEditor;
 		if (!editor || !editor.selections.length)
 			return;
@@ -100,12 +100,15 @@ export class EditCommands implements vs.Disposable {
 
 		switch (commonPrefix) {
 			case "NONE":
-				this.prefixLines(editor, selections, "// ");
+				// If no prefix, insert triples.
+				this.prefixLines(editor, selections, "/// ");
 				break;
 			case "DOUBLE":
+				// If already double, just add the additional one slash.
 				this.prefixLines(editor, selections, "/");
 				break;
 			case "TRIPLE":
+				// If already triple, remove slashes.
 				this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
 				break;
 		}
@@ -115,6 +118,20 @@ export class EditCommands implements vs.Disposable {
 		const document = editor.document;
 		// In case we have overlapping selections, keep track of lines we've done.
 		const doneLines = new Set<number>();
+
+		// Find the minimum indent, so we can insert all slashes at the same level even if
+		// there is indented code.
+		let minIndent: number | undefined;
+		for (const selection of selections) {
+			for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
+				const line = document.lineAt(lineNumber);
+				if (line.isEmptyOrWhitespace)
+					continue;
+
+				if (!minIndent || line.firstNonWhitespaceCharacterIndex < minIndent)
+					minIndent = line.firstNonWhitespaceCharacterIndex;
+			}
+		}
 
 		editor.edit((edit) => {
 			for (const selection of selections) {
@@ -127,7 +144,7 @@ export class EditCommands implements vs.Disposable {
 					if (line.isEmptyOrWhitespace)
 						continue;
 
-					const insertionPoint = line.range.start.translate(0, line.firstNonWhitespaceCharacterIndex);
+					const insertionPoint = line.range.start.translate(0, minIndent);
 					edit.insert(insertionPoint, prefix);
 				}
 			}

@@ -463,8 +463,8 @@ export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
 		.join("\n");
 }
 
-export function select(range: vs.Range) {
-	currentEditor().selection = new vs.Selection(range.start, range.end);
+export function select(...ranges: vs.Range[]) {
+	currentEditor().selections = ranges.map((range) => new vs.Selection(range.start, range.end));
 }
 
 export async function executeOrganizeImportsCodeAction() {
