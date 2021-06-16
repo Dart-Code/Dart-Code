@@ -11,7 +11,10 @@
 		"workspace"
 	],
 	"capabilities": {
-		"virtualWorkspaces": true,
+		"virtualWorkspaces": {
+			"supported": "limited",
+			"description": "Some functionality may be limited for remote files in virtual workspaces."
+		},
 		"untrustedWorkspaces": {
 			"supported": false
 		}
