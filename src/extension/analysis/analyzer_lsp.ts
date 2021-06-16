@@ -13,6 +13,8 @@ import { CategoryLogger } from "../../shared/logging";
 import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
+import { DART_MODE } from "../extension";
+import { IgnoreLintCodeActionProvider } from "../providers/ignore_lint_code_action_provider";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
@@ -77,6 +79,7 @@ export class LspAnalyzer extends Analyzer {
 		}
 
 		const snippetTextEdits = this.snippetTextEdits;
+		const ignoreActionProvider = new IgnoreLintCodeActionProvider(DART_MODE);
 
 		return {
 			handleWorkDoneProgress: (token: ProgressToken, params: WorkDoneProgressBegin | WorkDoneProgressReport | WorkDoneProgressEnd, next: HandleWorkDoneProgressSignature) => {
@@ -127,9 +130,16 @@ export class LspAnalyzer extends Analyzer {
 
 			async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken, next: ProvideCodeActionsSignature) {
 				const documentVersion = document.version;
-				const res = await next(document, range, context, token);
+				let res = await next(document, range, context, token) || [];
 
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
+
+				const hasExistingIgnoreActions = res.find((r) => r.title.startsWith("Ignore "));
+				if (!hasExistingIgnoreActions) {
+					const ignoreActions = ignoreActionProvider.provideCodeActions(document, range, context, token);
+					if (ignoreActions)
+						res = res.concat(ignoreActions);
+				}
 
 				return res;
 			},

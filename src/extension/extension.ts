@@ -84,7 +84,6 @@ import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_p
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
-import { IgnoreLintCodeActionProvider } from "./providers/ignore_lint_code_action_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { RankingCodeActionProvider } from "./providers/ranking_code_action_provider";
 import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
@@ -102,7 +101,7 @@ import { safeToolSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
 import { TestResultsProvider } from "./views/test_view";
 
-const DART_MODE = { language: "dart", scheme: "file" };
+export const DART_MODE = { language: "dart", scheme: "file" };
 const HTML_MODE = { language: "html", scheme: "file" };
 
 const PROJECT_LOADED = "dart-code:anyProjectLoaded";
@@ -392,8 +391,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
 		}
 	}
-
-	rankingCodeActionProvider.registerProvider(new IgnoreLintCodeActionProvider(activeFileFilters));
 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
