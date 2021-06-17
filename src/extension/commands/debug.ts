@@ -13,9 +13,10 @@ import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
+import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
-import { getExcludedFolders, isValidEntryFile } from "../utils";
+import { getExcludedFolders, isDartFile, isFlutterProjectFolder, isValidEntryFile } from "../utils";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
@@ -182,6 +183,7 @@ export class DebugCommands {
 			);
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration, this));
 		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
 			const testFolders = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
 				.map((project) => path.join(project, "test"))
@@ -292,6 +294,57 @@ export class DebugCommands {
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
 		this.debugOptions.tooltip = `Controls whether to step into or stop at breakpoints in only files in this workspace or also those in SDK and/or external Pub packages`;
 		this.debugOptions.command = "_dart.toggleDebugOptions";
+	}
+
+	private async createLaunchConfiguration(resourceUri: vs.Uri) {
+		if (!resourceUri || resourceUri.scheme !== "file")
+			return;
+
+		const entryScriptPath = fsPath(resourceUri);
+		if (!isDartFile(entryScriptPath))
+			return;
+
+		const workspaceFolder = vs.workspace.getWorkspaceFolder(resourceUri);
+		if (!workspaceFolder)
+			return;
+
+		const workspaceFolderPath = fsPath(workspaceFolder.uri);
+		const projectFolderPath = locateBestProjectRoot(entryScriptPath) ?? workspaceFolderPath;
+		const relativeCwdPath = path.relative(workspaceFolderPath, projectFolderPath);
+		const relativeEntryScriptPath = path.relative(projectFolderPath, entryScriptPath);
+
+
+		const projectType = isFlutterProjectFolder(projectFolderPath) ? "Flutter" : "Dart";
+		const name = `${projectType} (${relativeEntryScriptPath})`;
+		const newLaunchConfig = {
+			name,
+			type: "dart",
+			// eslint-disable-next-line @typescript-eslint/tslint/config
+			request: "launch",
+			cwd: relativeCwdPath ? relativeCwdPath : undefined,
+			program: relativeEntryScriptPath,
+		};
+
+		// Add to the launch.json config.
+		const launchFile = vs.workspace.getConfiguration("launch", workspaceFolder);
+		// If we're in a code-workspace that already has workspace-level launch configs,
+		// we should add to that. Otherwise add directly to the workspace folder.
+		const configInspect = launchFile.inspect<any[]>("configurations");
+		const workspaceConfigs = configInspect?.workspaceValue ?? [];
+		const workspaceFolderConfigs = configInspect?.workspaceFolderValue ?? [];
+		const hasWorkspaceConfigs = !!workspaceConfigs.length;
+		const configs = hasWorkspaceConfigs ? workspaceConfigs : workspaceFolderConfigs;
+		const target = hasWorkspaceConfigs ? vs.ConfigurationTarget.Workspace : vs.ConfigurationTarget.WorkspaceFolder;
+		configs.push(newLaunchConfig);
+		await launchFile.update("configurations", configs, target);
+
+		// Open the correct file based on workspace or workspace folder.
+		if (hasWorkspaceConfigs) {
+			vs.commands.executeCommand("workbench.action.openWorkspaceConfigFile");
+		} else {
+			const launchConfig = path.join(workspaceFolderPath, ".vscode", "launch.json");
+			vs.workspace.openTextDocument(launchConfig).then((doc) => vs.window.showTextDocument(doc));
+		}
 	}
 
 	private async getDebugSession(): Promise<DartDebugSessionInformation | undefined> {

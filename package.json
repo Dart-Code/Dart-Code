@@ -301,6 +301,11 @@
 				"icon": "$(play)"
 			},
 			{
+				"command": "dart.createLaunchConfiguration",
+				"title": "Create Launch Configuration",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.startDebuggingTest",
 				"title": "Start Debugging",
 				"category": "Dart"
@@ -811,6 +816,10 @@
 					"when": "false"
 				},
 				{
+					"command": "dart.createLaunchConfiguration",
+					"when": "false"
+				},
+				{
 					"command": "dart.startDebuggingTest",
 					"when": "false"
 				},
@@ -1233,7 +1242,12 @@
 				{
 					"when": "resourceLangId == dart && dart-code:anyProjectLoaded",
 					"command": "dart.startWithoutDebugging",
-					"group": "4.5_exec@1"
+					"group": "4.5_exec@2"
+				},
+				{
+					"when": "resourceLangId == dart && dart-code:anyProjectLoaded",
+					"command": "dart.createLaunchConfiguration",
+					"group": "4.5_exec@3"
 				},
 				{
 					"command": "flutter.openInAndroidStudio",
