@@ -4,6 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
+import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
@@ -46,7 +47,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(this.devToolsStatusBarItem);
 
 		this.handleEagerActivationAndStartup(workspaceContext);
@@ -86,10 +87,11 @@ export class DevToolsManager implements vs.Disposable {
 		if (!page)
 			return undefined;
 
-		if (this.capabilities.usesLegacyPageIds && page.legacyPageId)
-			return page.legacyPageId;
 
-		return page.pageId;
+		if (page.routeId)
+			return page.routeId(this.flutterCapabilities.version);
+
+		return page.id;
 	}
 
 	private async spawnIfRequired(silent = false): Promise<string | undefined> {
@@ -230,7 +232,7 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 
 		for (const pageId of Object.keys(this.devToolsEmbeddedViews)) {
-			const page = devToolsPages.find((p) => p.pageId === pageId);
+			const page = devToolsPages.find((p) => p.id === pageId);
 			const panels = this.devToolsEmbeddedViews[pageId];
 			if (!panels)
 				continue;
@@ -289,7 +291,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private launchInEmbeddedWebView(uri: vs.Uri, session: DartDebugSessionInformation, page: DevToolsPage) {
-		const pageId = page.pageId;
+		const pageId = page.id;
 		if (!this.devToolsEmbeddedViews[pageId]) {
 			this.devToolsEmbeddedViews[pageId] = [];
 		}

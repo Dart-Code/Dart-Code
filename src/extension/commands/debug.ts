@@ -59,7 +59,7 @@ export class DebugCommands {
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
 		this.vmServices = new VmServiceExtensions(logger, this.sendServiceSetting);
-		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal);
+		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, flutterCapabilities);
 		context.subscriptions.push(this.devTools);
 		context.subscriptions.push(this.debugOptions);
 		context.subscriptions.push(this.debugMetrics);
@@ -519,7 +519,7 @@ export class DebugCommands {
 			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.Web) {
 				if (session.session.configuration.openDevTools != null) {
 					const pageId = session.session.configuration.openDevTools;
-					const page = devToolsPages.find((p) => p.pageId === pageId);
+					const page = devToolsPages.find((p) => p.id === pageId);
 					if (pageId) {
 						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
 					} else {
