@@ -179,9 +179,9 @@ export interface OpenedFileInformation {
 }
 
 export interface DevToolsPage {
-	pageId: string;
+	id: string;
 	commandId: string;
-	legacyPageId?: string;
+	routeId?: (flutterVersion: string | undefined) => string;
 	title: string;
 }
 
