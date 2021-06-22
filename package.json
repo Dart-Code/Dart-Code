@@ -1656,7 +1656,7 @@
 				"dart.flutterAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"markdownDescription": "Additional args to pass to all `flutter` commands.",
+					"markdownDescription": "Additional args to pass to all `flutter` commands including `flutter daemon`. Do not use this to pass arguments to your Flutter app, use the `args` field in a `launch.json` or the `dart.flutterRunAdditionalArgs` setting.",
 					"scope": "resource",
 					"items": {
 						"type": "string"
@@ -1665,7 +1665,7 @@
 				"dart.flutterAttachAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"markdownDescription": "Additional args to pass to the `flutter attach` command.",
+					"markdownDescription": "Additional args to pass to the `flutter attach` command. Using the `args` field in `launch.json` is usually better than this setting as this setting will apply to _all_ projects.",
 					"scope": "resource",
 					"items": {
 						"type": "string"
@@ -1674,7 +1674,7 @@
 				"dart.flutterRunAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"markdownDescription": "Additional args to pass to the `flutter run` command.",
+					"markdownDescription": "Additional args to pass to the `flutter run` command. Using the `args` field in `launch.json` is usually better than this setting as this setting will apply to _all_ projects.",
 					"scope": "resource",
 					"items": {
 						"type": "string"
@@ -1683,7 +1683,7 @@
 				"dart.flutterTestAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"markdownDescription": "Additional args to pass to the `flutter test` command.",
+					"markdownDescription": "Additional args to pass to the `flutter test` command. Using the `args` field in `launch.json` is usually better than this setting as this setting will apply to _all_ projects.",
 					"scope": "resource",
 					"items": {
 						"type": "string"
@@ -1865,7 +1865,7 @@
 				"dart.pubAdditionalArgs": {
 					"type": "array",
 					"default": [],
-					"description": "Additional args to pass to all pub commands.",
+					"description": "Additional args to pass to all `pub` commands.",
 					"scope": "resource",
 					"items": {
 						"type": "string"
