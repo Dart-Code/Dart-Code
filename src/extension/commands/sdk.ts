@@ -294,11 +294,11 @@ export class SdkCommands {
 			args.push("--org");
 			args.push(config.flutterCreateOrganization);
 		}
-		if (config.flutterCreateIOSLanguage) {
+		if (config.flutterCreateIOSLanguage && config.flutterCreateIOSLanguage !== "swift") {
 			args.push("--ios-language");
 			args.push(config.flutterCreateIOSLanguage);
 		}
-		if (config.flutterCreateAndroidLanguage) {
+		if (config.flutterCreateAndroidLanguage && config.flutterCreateAndroidLanguage !== "kotlin") {
 			args.push("--android-language");
 			args.push(config.flutterCreateAndroidLanguage);
 		}
