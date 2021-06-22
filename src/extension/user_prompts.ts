@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DART_CREATE_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartProjectTemplate, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
+import { DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
@@ -213,7 +213,8 @@ async function createDartProject(projectPath: string, templateName: string): Pro
 
 async function createFlutterProject(projectPath: string, triggerData: FlutterCreateTriggerData | undefined): Promise<boolean> {
 	const projectName = triggerData?.sample ? "sample" : undefined;
-	const code = await vs.commands.executeCommand("_flutter.create", projectPath, projectName, triggerData) as number;
+	const args = { projectPath, projectName, triggerData } as FlutterCreateCommandArgs;
+	const code = await vs.commands.executeCommand("_flutter.create", args) as number;
 	return code === 0;
 }
 

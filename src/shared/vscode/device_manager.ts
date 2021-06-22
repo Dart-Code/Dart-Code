@@ -1,10 +1,10 @@
 import * as vs from "vscode";
 import { disposeAll, flatMap, notNullOrUndefined, uniq } from "../../shared/utils";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
-import { cancelAction, runFlutterCreateDotAction, runFlutterCreateDotPrompt } from "../constants";
+import { cancelAction, runFlutterCreatePrompt, yesAction } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
-import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
+import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, FlutterCreateCommandArgs, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
 import { logProcess } from "../logging";
 import { safeSpawn } from "../processes";
 import { unique } from "../utils/array";
@@ -169,13 +169,14 @@ export class FlutterDeviceManager implements vs.Disposable {
 				break;
 			case "platform-enabler":
 				const action = await vs.window.showInformationMessage(
-					runFlutterCreateDotPrompt(selection.device.platformType),
-					runFlutterCreateDotAction,
+					runFlutterCreatePrompt(selection.device.platformType),
+					yesAction,
 					cancelAction,
 				);
-				if (action !== runFlutterCreateDotAction)
+				if (action !== yesAction)
 					return false;
-				await vs.commands.executeCommand("_flutter.create");
+				const createArgs = { platform: selection.device.platformType } as FlutterCreateCommandArgs;
+				await vs.commands.executeCommand("_flutter.create", createArgs);
 
 				break;
 			case "device":

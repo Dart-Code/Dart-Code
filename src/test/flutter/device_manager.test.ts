@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { commands, window } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
-import { runFlutterCreateDotAction, runFlutterCreateDotPrompt } from "../../shared/constants";
+import { runFlutterCreatePrompt, yesAction } from "../../shared/constants";
 import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
@@ -186,8 +186,8 @@ describe("device_manager", () => {
 		assert.equal(d.label, `Enable macos for this project`);
 
 		const runCreatePrompt = sb.stub(window, "showInformationMessage")
-			.withArgs(runFlutterCreateDotPrompt(desktop.platformType), sinon.match.any)
-			.resolves(runFlutterCreateDotAction);
+			.withArgs(runFlutterCreatePrompt(desktop.platformType), sinon.match.any)
+			.resolves(yesAction);
 
 		const flutterCreateCommand = sb.stub(commands, "executeCommand")
 			.callThrough()

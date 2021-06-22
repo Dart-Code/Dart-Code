@@ -137,6 +137,13 @@ export interface PlatformEnabler {
 	platformType: f.PlatformType;
 }
 
+export interface FlutterCreateCommandArgs {
+	projectPath?: string;
+	projectName?: string;
+	triggerData?: FlutterCreateTriggerData;
+	platform?: string;
+}
+
 export interface CustomEmulatorDefinition {
 	id: string;
 	name: string;

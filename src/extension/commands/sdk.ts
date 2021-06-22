@@ -7,7 +7,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../shared/capabilities/vscode";
 import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE, defaultLaunchJson, flutterPath, iUnderstandAction, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, FlutterCreateTriggerData, Logger, SpawnedProcess } from "../../shared/interfaces";
+import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { nullToUndefined, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -275,7 +275,7 @@ export class SdkCommands {
 		await util.promptToReloadExtension();
 	}
 
-	private async flutterCreate(projectPath: string | undefined, projectName?: string, triggerData?: FlutterCreateTriggerData) {
+	private async flutterCreate({ projectName, projectPath, triggerData, platform }: FlutterCreateCommandArgs) {
 		if (!projectPath) {
 			projectPath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, undefined, true);
 			if (!projectPath)
@@ -285,6 +285,10 @@ export class SdkCommands {
 		const args = ["create"];
 		if (config.flutterCreateOffline) {
 			args.push("--offline");
+		}
+		if (platform) {
+			args.push("--platforms");
+			args.push(platform);
 		}
 		if (projectName) {
 			args.push("--project-name");
