@@ -55,6 +55,7 @@ export interface WritableWorkspaceConfig {
 	useVmForTests?: boolean;
 	forceFlutterMode?: boolean;
 	skipFlutterInitialization?: boolean;
+	skipTargetFlag?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;

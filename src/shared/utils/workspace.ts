@@ -56,6 +56,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 
 		config.forceFlutterMode = true;
 		config.skipFlutterInitialization = true;
+		config.skipTargetFlag = true;
 		config.flutterVersion = MAX_VERSION;
 		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
