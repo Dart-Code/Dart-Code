@@ -50,8 +50,6 @@ export class DebugCommands {
 	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
 	private onWillHotRestartEmitter = new vs.EventEmitter<void>();
 	public readonly onWillHotRestart = this.onWillHotRestartEmitter.event;
-	private onFirstFrameEmitter = new vs.EventEmitter<void>();
-	public readonly onFirstFrame = this.onFirstFrameEmitter.event;
 	private onDebugSessionVmServiceAvailableEmitter = new vs.EventEmitter<DartDebugSessionInformation>();
 	public readonly onDebugSessionVmServiceAvailable = this.onDebugSessionVmServiceAvailableEmitter.event;
 	public readonly vmServices: VmServiceExtensions;
@@ -524,8 +522,6 @@ export class DebugCommands {
 			// in the command).
 			this.analytics.logDebuggerHotReload();
 			this.onWillHotReloadEmitter.fire();
-		} else if (e.event === "dart.flutter.firstFrame") {
-			this.onFirstFrameEmitter.fire();
 		} else if (e.event === "dart.debugMetrics") {
 			const memory = e.body.memory;
 			const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;

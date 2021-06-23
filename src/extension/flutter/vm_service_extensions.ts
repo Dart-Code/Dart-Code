@@ -63,7 +63,9 @@ export class VmServiceExtensions {
 		// keep a reference to it.
 		this.sendValueToVM = (extension: VmServiceExtension) => {
 			// Only ever send values for enabled and known extensions.
-			if (this.loadedServiceExtensions.indexOf(extension) !== -1 && toggleExtensionStateKeys[extension] !== undefined) {
+			const isLoaded = this.loadedServiceExtensions.indexOf(extension) !== -1;
+			const hasValue = toggleExtensionStateKeys[extension] !== undefined;
+			if (isLoaded && hasValue) {
 				// Build the args in the required format using the correct key and value.
 				const params = { [toggleExtensionStateKeys[extension]]: this.currentExtensionState[extension] };
 				const args = { type: extension, params };
@@ -122,10 +124,8 @@ export class VmServiceExtensions {
 			this.handleServiceRegistered(e.body.service, e.body.method);
 		} else if (e.event === "dart.flutter.firstFrame") {
 			// Send all values back to the VM on the first frame so that they persist across restarts.
-			for (const extension in VmServiceExtension) {
-				if (!isNaN(Number(extension)))
-					continue;
-				this.sendValueToVM(extension as VmServiceExtension);
+			for (const extension of Object.values(VmServiceExtension)) {
+				this.sendValueToVM(extension);
 			}
 		} else if (e.event === "dart.flutter.updateIsWidgetCreationTracked") {
 			vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
