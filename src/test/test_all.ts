@@ -22,6 +22,8 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
 		fs.mkdirSync(testEnv.DC_TEST_LOGS);
 
+	const codeVersion = process.env.BUILD_VERSION === "dev" ? "insiders" : process.env.BUILD_VERSION;
+
 	// The VS Code download is often flaky on GH Actions, so we want to retry
 	// if required - however we don't want to re-run tests if they fail, so do
 	// the download step separately.
@@ -30,7 +32,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	while (currentAttempt <= maxAttempts) {
 		try {
 			console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
-			await vstest.downloadAndUnzipVSCode(process.env.CODE_VERSION);
+			await vstest.downloadAndUnzipVSCode(codeVersion);
 			break;
 		} catch (e) {
 			if (currentAttempt >= maxAttempts)
@@ -65,7 +67,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 				"vscode.github-authentication",
 				"--disable-workspace-trust",
 			],
-			version: process.env.CODE_VERSION,
+			version: codeVersion,
 		});
 		exitCode = exitCode || res;
 	} catch (e) {
