@@ -19,7 +19,7 @@ jobs:
         run: echo "::set-output name=excludes::[{\"build-version\":\"stable\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]"
 
   build:
-
+    needs: build_exclusions
     name: "${{ matrix.bot }} (${{ matrix.dart-version }}/${{ matrix.code-version }}/${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
     # We want to run on external PRs, but not on our own internal PRs as they'll be run
