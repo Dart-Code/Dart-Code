@@ -63,6 +63,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 				"vscode.github",
 				"--disable-extension",
 				"vscode.github-authentication",
+				"--disable-workspace-trust",
 			],
 			version: process.env.CODE_VERSION,
 		});
