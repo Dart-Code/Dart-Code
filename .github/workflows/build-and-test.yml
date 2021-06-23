@@ -3,13 +3,28 @@ name: Run Tests
 on:
   push:
   pull_request:
+  schedule:
+    - cron: '0 7 * * *'
 
 jobs:
+
+  build_exclusions:
+
+    runs-on: ubuntu-latest
+    outputs:
+      excludes: ${{ join(steps.exclude.outputs.excludes) }}
+    steps:
+      - id: exclude
+        name: Exclude some builds if not running on schedule
+        if: github.event_name != 'schedule'
+        run: echo "::set-output name=excludes::[{\"build-version\":\"dev\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]"
+
 
   build:
 
     name: "${{ matrix.bot }} (${{ matrix.build-version }} ${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
+    needs: build_exclusions
     # We want to run on external PRs, but not on our own internal PRs as they'll be run
     # by the push to the branch.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
@@ -24,6 +39,7 @@ jobs:
         include:
           - os: ubuntu-latest
             bot: flutter_snap
+        exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
 
     steps:
 
