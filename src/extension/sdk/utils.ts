@@ -244,7 +244,7 @@ export class SdkUtils {
 		}
 
 		let flutterSdkPath;
-		if (workspaceConfig.forceFlutterMode) {
+		if (workspaceConfig.forceFlutterWorkspace) {
 			hasAnyFlutterProject = true;
 			hasAnyFlutterMobileProject = true;
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;

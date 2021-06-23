@@ -39,7 +39,8 @@ describe("extension", () => {
 		assert.ok(workspaceContext.config);
 		assert.strictEqual(workspaceContext.config?.disableAutomaticPackageGet, true);
 		assert.strictEqual(workspaceContext.config?.flutterVersion, MAX_VERSION);
-		assert.strictEqual(workspaceContext.config?.forceFlutterMode, true);
+		assert.strictEqual(workspaceContext.config?.forceFlutterWorkspace, true);
+		assert.strictEqual(workspaceContext.config?.forceFlutterDebug, true);
 		assert.strictEqual(workspaceContext.config?.skipFlutterInitialization, true);
 		assert.deepStrictEqual(workspaceContext.config?.flutterDaemonScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterDoctorScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"), replacesArgs: 1 });

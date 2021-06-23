@@ -184,10 +184,6 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): RunDaemonBase {
 		let appArgs = [];
-		if (!isAttach || args.program) {
-			appArgs.push("--target");
-			appArgs.push(this.sourceFileForArgs(args));
-		}
 
 		if (args.deviceId) {
 			appArgs.push("-d");
@@ -256,6 +252,13 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		if (args.forceFlutterVerboseMode === true && appArgs.indexOf("-v") === -1 && appArgs.indexOf("--verbose") === -1) {
 			appArgs.push("-v");
+		}
+
+		if (!isAttach || args.program) {
+			if (!args.workspaceConfig?.skipTargetFlag) {
+				appArgs.push("--target");
+			}
+			appArgs.push(this.sourceFileForArgs(args));
 		}
 
 		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterSdkPath, args.workspaceConfig, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
