@@ -1,23 +1,8 @@
 name: Run Tests
 
-on:
-  push:
-  pull_request:
-  schedule:
-    - cron: '55 * * * *'
+on: [push, pull_request]
 
 jobs:
-
-  build_exclusions:
-    runs-on: ubuntu-latest
-    outputs:
-      excludes: ${{ join(steps.exclude.outputs.excludes) }}
-    steps:
-      - id: exclude
-        name: Exclude some builds if not running on schedule
-        if: github.event_name != 'schedule'
-        run: echo "::set-output name=excludes::[{\"build-version\":\"stable\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]"
-
   build:
 
     name: "${{ matrix.bot }} (${{ matrix.dart-version }}/${{ matrix.code-version }}/${{ matrix.os }})"
@@ -44,7 +29,9 @@ jobs:
             code-version: insiders
           - os: ubuntu-latest
             bot: flutter_snap
-        exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
+        exclude:
+          - os: windows-latest
+            build-version: dev
 
     steps:
 
