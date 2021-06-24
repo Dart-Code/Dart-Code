@@ -1,15 +1,11 @@
 import { FlutterCapabilities } from "../capabilities/flutter";
 
-export function getFutterWebRendererArg(flutterCapabilities: FlutterCapabilities, renderer: "default" | "auto" | "html" | "canvaskit", existingArgs: string[] | undefined) {
+export function getFutterWebRenderer(flutterCapabilities: FlutterCapabilities, renderer: "auto" | "html" | "canvaskit") {
 	if (!flutterCapabilities.supportsWebRendererOption)
 		return;
 
-	if (!renderer || renderer === "default")
+	if (!renderer || renderer === "auto")
 		return;
 
-	const alreadyHasArg = existingArgs?.find((a) => a.startsWith("--web-renderer=") || a === "--web-renderer");
-	if (alreadyHasArg)
-		return;
-
-	return `--web-renderer=${renderer}`;
+	return renderer;
 }
