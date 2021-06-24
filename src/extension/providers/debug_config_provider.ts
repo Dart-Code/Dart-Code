@@ -89,7 +89,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		this.configureProgramAndCwd(debugConfig, folder, openFile);
 
 		// If we still don't have an entry point, the user will have to provide it.
-		if (!debugConfig.program) {
+		if (!isAttachRequest && !debugConfig.program) {
 			this.logger.warn("No program was set in launch config");
 			const exampleEntryPoint = this.wsContext.hasAnyFlutterProjects ? "lib/main.dart" : "bin/main.dart";
 			window.showInformationMessage(`Set the 'program' value in your launch config (eg '${exampleEntryPoint}') then launch again`);
@@ -230,7 +230,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				? Object.values(this.testTreeModel.suites)
 					.map((suite) => suite.path)
 					.filter((p) => p.startsWith(debugConfig.program!))
-				: [debugConfig.program];
+				: [debugConfig.program!];
 			for (const suitePath of suitePaths)
 				this.testTreeModel.flagSuiteStart(suitePath, !argsHaveTestNameFilter);
 		}
