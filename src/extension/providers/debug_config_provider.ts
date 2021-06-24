@@ -580,46 +580,45 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		else
 			this.addArgsIfNotExist(args, ...conf.flutterRunAdditionalArgs);
 
-		switch (debugConfig.flutterMode) {
-			case "profile":
-			case "release":
-				if (!args.includes(debugConfig.flutterMode))
-					args.push(`--${debugConfig.flutterMode}`);
-				break;
-
-			default: // Debug mode.
-				if (debugConfig.vmServicePort && isDebug)
-					this.addArgsIfNotExist(args, "--observatory-port", debugConfig.vmServicePort.toString());
-				if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
-					this.addArgsIfNotExist(args, "--no-track-widget-creation");
-				if (conf.flutterStructuredErrors && this.flutterCapabilities.supportsDartDefine)
-					this.addArgsIfNotExist(args, "--dart-define=flutter.inspector.structuredErrors=true");
-		}
-
 		if (debugConfig.deviceId)
 			this.addArgsIfNotExist(args, "-d", debugConfig.deviceId);
 
-		if (debugConfig.flutterPlatform && debugConfig.flutterPlatform !== "default")
-			this.addArgsIfNotExist(args, "--target-platform", debugConfig.flutterPlatform);
+		if (!isAttach) {
+			switch (debugConfig.flutterMode) {
+				case "profile":
+				case "release":
+					if (!args.includes(debugConfig.flutterMode))
+						args.push(`--${debugConfig.flutterMode}`);
+					break;
 
-		if (debugConfig.deviceId === "web-server") {
-			if (this.flutterCapabilities.supportsWsVmService && !args.includes("--web-server-debug-protocol"))
-				this.addArgsIfNotExist(args, "--web-server-debug-protocol", "ws");
-			if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsDebugBackend)
-				this.addArgsIfNotExist(args, "--web-server-debug-backend-protocol", config.debugExtensionBackendProtocol);
-			if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsInjectedClient)
-				this.addArgsIfNotExist(args, "--web-server-debug-injected-client-protocol", config.debugExtensionBackendProtocol);
-		}
-		if (this.flutterCapabilities.supportsExposeUrl)
-			this.addArgsIfNotExist(args, "--web-allow-expose-url");
+				default: // Debug mode.
+					if (debugConfig.vmServicePort && isDebug)
+						this.addArgsIfNotExist(args, "--observatory-port", debugConfig.vmServicePort.toString());
+					if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
+						this.addArgsIfNotExist(args, "--no-track-widget-creation");
+					if (conf.flutterStructuredErrors && this.flutterCapabilities.supportsDartDefine)
+						this.addArgsIfNotExist(args, "--dart-define=flutter.inspector.structuredErrors=true");
+			}
 
-		if (isLogging && !args.includes("--verbose"))
-			this.addArgsIfNotExist(args, "-v");
+			if (debugConfig.flutterPlatform && debugConfig.flutterPlatform !== "default")
+				this.addArgsIfNotExist(args, "--target-platform", debugConfig.flutterPlatform);
 
-		if (!isAttach && isWeb) {
-			const renderer = getFutterWebRenderer(this.flutterCapabilities, config.flutterWebRenderer);
-			if (renderer)
-				this.addArgsIfNotExist(args, "--web-renderer", renderer);
+			if (debugConfig.deviceId === "web-server") {
+				if (this.flutterCapabilities.supportsWsVmService && !args.includes("--web-server-debug-protocol"))
+					this.addArgsIfNotExist(args, "--web-server-debug-protocol", "ws");
+				if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsDebugBackend)
+					this.addArgsIfNotExist(args, "--web-server-debug-backend-protocol", config.debugExtensionBackendProtocol);
+				if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsInjectedClient)
+					this.addArgsIfNotExist(args, "--web-server-debug-injected-client-protocol", config.debugExtensionBackendProtocol);
+			}
+			if (this.flutterCapabilities.supportsExposeUrl)
+				this.addArgsIfNotExist(args, "--web-allow-expose-url");
+
+			if (isWeb) {
+				const renderer = getFutterWebRenderer(this.flutterCapabilities, config.flutterWebRenderer);
+				if (renderer)
+					this.addArgsIfNotExist(args, "--web-renderer", renderer);
+			}
 		}
 
 		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {
@@ -634,6 +633,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				this.logger.error(`Failed to get DevTools server address ${e}`);
 			}
 		}
+
+		if (isLogging && !args.includes("--verbose"))
+			this.addArgsIfNotExist(args, "-v");
 
 		return args;
 	}
