@@ -221,6 +221,10 @@ export function escapeDartString(input: string) {
 	return input.replace(/(['"\\])/g, "\\$1");
 }
 
+export function isWebDevice(deviceId: string | undefined): boolean {
+	return !!(deviceId?.startsWith("web") || deviceId === "chrome" || deviceId === "edge");
+}
+
 export function disposeAll(disposables: IAmDisposable[]) {
 	const toDispose = disposables.slice();
 	disposables.length = 0;

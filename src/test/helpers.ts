@@ -5,12 +5,14 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
+import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { TreeNode } from "../shared/test/test_model";
 import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
+import { arrayContainsArray } from "../shared/utils/array";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -631,6 +633,13 @@ export function ensureError(errors: vs.Diagnostic[], text: string) {
 	);
 }
 
+export function ensureArrayContainsArray<T>(haystack: T[], needle: T[]) {
+	assert.ok(
+		arrayContainsArray(haystack, needle),
+		`Did not find ${needle} in ${haystack}`,
+	);
+}
+
 export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string | undefined, uriOrMatch: vs.Uri | { endsWith?: string }): void {
 	const symbol = symbols.find((f) =>
 		f.name === name
@@ -869,13 +878,13 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 	});
 }
 
-export async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
+export async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs) | undefined | null> {
 	const debugConfig: vs.DebugConfiguration = Object.assign({}, {
 		name: "Dart & Flutter",
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig);
+	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as any;
 }
 
 export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {

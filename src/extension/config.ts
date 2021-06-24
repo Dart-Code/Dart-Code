@@ -163,7 +163,7 @@ class Config {
 	}
 }
 
-class ResourceConfig {
+export class ResourceConfig {
 	public uri?: Uri;
 	public config: WorkspaceConfiguration;
 

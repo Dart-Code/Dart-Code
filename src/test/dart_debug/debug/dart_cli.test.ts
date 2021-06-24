@@ -155,9 +155,10 @@ describe("dart cli debugger", () => {
 		);
 	});
 
-	it("passes launch.json's vmAdditionalArgs to the VM", async () => {
+	it("passes launch.json's toolArgs to the VM", async () => {
+		// TODO: Redo this like others...
 		const config = await startDebugger(dc, helloWorldMainFile);
-		config.vmAdditionalArgs = ["--fake-flag"];
+		config.toolArgs = ["--fake-flag"];
 		await waitAllThrowIfTerminates(dc,
 			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
 			// resolve this properly.

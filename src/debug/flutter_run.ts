@@ -7,7 +7,7 @@ import { usingCustomScript } from "../shared/utils";
 import { RunDaemonBase, RunMode } from "./run_daemon_base";
 
 export class FlutterRun extends RunDaemonBase {
-	constructor(mode: RunMode, flutterSdkPath: string, wsConfig: WorkspaceConfig | undefined, globalFlutterArgs: string[], projectFolder: string | undefined, args: string[], env: { envOverrides?: { [key: string]: string | undefined }, toolEnv: any }, logFile: string | undefined, logger: Logger, urlExposer: (url: string) => Promise<{ url: string }>, maxLogLineLength: number) {
+	constructor(mode: RunMode, flutterSdkPath: string, wsConfig: WorkspaceConfig | undefined, projectFolder: string | undefined, args: string[], env: { envOverrides?: { [key: string]: string | undefined }, toolEnv: any }, logFile: string | undefined, logger: Logger, urlExposer: (url: string) => Promise<{ url: string }>, maxLogLineLength: number) {
 		super(mode, logFile, new CategoryLogger(logger, LogCategory.FlutterRun), urlExposer, maxLogLineLength, true, true);
 
 		const command = mode === RunMode.Attach ? "attach" : "run";
@@ -18,6 +18,6 @@ export class FlutterRun extends RunDaemonBase {
 			mode === RunMode.Run ? wsConfig?.flutterRunScript || wsConfig?.flutterScript : undefined ,
 		);
 
-		this.createProcess(projectFolder, binPath, globalFlutterArgs.concat(binArgs).concat(args), env);
+		this.createProcess(projectFolder, binPath, binArgs.concat(args), env);
 	}
 }

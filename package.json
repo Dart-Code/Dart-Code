@@ -2416,7 +2416,7 @@
 							},
 							"args": {
 								"type": "array",
-								"description": "Arguments to be passed to your Dart script or the Flutter tool.",
+								"description": "Arguments to be passed to your Dart/Flutter script on the command line. These arguments go after the script filename.",
 								"items": {
 									"type": "string"
 								}
@@ -2424,10 +2424,10 @@
 							"env": {
 								"description": "Environment variables passed to the Dart / Flutter process."
 							},
-							"vmAdditionalArgs": {
+							"toolArgs": {
 								"type": "array",
 								"default": [],
-								"description": "Additional args to pass to the Dart VM when running / debugging command line apps.",
+								"description": "Arguments to be passed to the Dart VM/Flutter tools on the command line. These arguments go before the script filename.",
 								"items": {
 									"type": "string"
 								}

@@ -10,7 +10,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, defer, deferUntilLast, delay, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
+import { activate, defer, deferUntilLast, delay, ensureArrayContainsArray, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -23,7 +23,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			this.skip();
 	});
 
-
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.Flutter);
@@ -31,6 +30,36 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	beforeEach(() => {
 		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+	});
+
+	describe.only("resolves the correct debug config", () => {
+
+		it("for a simple script", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: flutterTestDeviceId,
+				program: fsPath(flutterHelloWorldMainFile),
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.program, fsPath(flutterHelloWorldMainFile));
+			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
+			assert.equal(resolvedConfig.toolArgs, []);
+			assert.equal(resolvedConfig.args, []);
+		});
+
+		it("when web renderer is set", async () => {
+			await setConfigForTest("dart", "flutterWebRenderer", "html");
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: flutterTestDeviceId,
+				program: fsPath(flutterHelloWorldMainFile),
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.program, fsPath(flutterHelloWorldMainFile));
+			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
+			ensureArrayContainsArray(resolvedConfig.vmArgs, ["--web-renderer", "html"]);
+			assert.equal(resolvedConfig.args, []);
+		});
 	});
 
 	it("runs and remains active until told to quit", async () => {

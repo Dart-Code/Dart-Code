@@ -6,13 +6,13 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, showErrorsAction } from "../../shared/constants";
-import { DartSharedArgs, FlutterLaunchRequestArguments } from "../../shared/debug/interfaces";
+import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRendererArg } from "../../shared/flutter/utils";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestTreeModel } from "../../shared/test/test_model";
-import { filenameSafe } from "../../shared/utils";
+import { filenameSafe, isWebDevice } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
@@ -20,7 +20,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
-import { config } from "../config";
+import { config, ResourceConfig } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
@@ -37,7 +37,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartSharedArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartLaunchArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
 		const logger = this.logger;
 		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
 			? fsPath(window.activeTextEditor.document.uri)
@@ -303,7 +303,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// TODO: This cast feels nasty?
-		await this.setupDebugConfig(folder, debugConfig as any as FlutterLaunchRequestArguments, isFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
+		await this.setupDebugConfig(folder, debugConfig, debugType, isFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -441,7 +441,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return vmServiceUriOrPort;
 	}
 
-	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: FlutterLaunchRequestArguments, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager): Promise<void> {
+	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: DartVsCodeLaunchArgs, debugType: DebuggerType, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager): Promise<void> {
 		const conf = config.for(folder && folder.uri);
 
 		// Attach any properties that weren't explicitly set.
@@ -460,7 +460,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.sendLogsToClient = true;
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.args = debugConfig.args || [];
-		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
+		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf);
 		debugConfig.vmServicePort = debugConfig.vmServicePort || (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_VM_SERVICE_PORT : 0);
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
 		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
@@ -482,61 +482,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (isFlutter && this.wsContext.sdks.flutter) {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
-			debugConfig.globalFlutterArgs = getGlobalFlutterArgs();
-			debugConfig.useFlutterStructuredErrors = conf.flutterStructuredErrors;
 			debugConfig.useInspectorNotificationsForWidgetErrors = config.showInspectorNotificationsForWidgetErrors;
-			debugConfig.debugExtensionBackendProtocol = config.debugExtensionBackendProtocol;
-			debugConfig.injectedClientProtocol = config.debugExtensionBackendProtocol;
-
-			const flutterAdditionalArgs = conf.flutterAdditionalArgs;
-			const flutterTestAdditionalArgs = conf.flutterTestAdditionalArgs;
-			const flutterAttachAdditionalArgs = conf.flutterAttachAdditionalArgs;
-			const flutterRunAdditionalArgs = conf.flutterRunAdditionalArgs;
-
-			const commandAdditionalArgs = (
-				isTest
-					? flutterTestAdditionalArgs
-					: isAttach
-						? flutterAttachAdditionalArgs
-						: flutterRunAdditionalArgs
-			).slice(); // https://github.com/Dart-Code/Dart-Code/issues/3198
-
-			if (!isTest && config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress) {
-				this.logger.info("Getting DevTools server address to pass to Flutter...");
-				try {
-					const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
-					if (devtoolsUrl) {
-						commandAdditionalArgs.push("--devtools-server-address");
-						commandAdditionalArgs.push(devtoolsUrl.toString());
-					} else {
-						this.logger.warn("DevTools server unavailable, not sending --devtools-server-address!");
-					}
-				} catch (e) {
-					this.logger.error(`Failed to get DevTools server address ${e}`);
-				}
-			}
-
-			// Theia gives us back the same debug config that we've already extended, so inserting new args may
-			// result in dupes, so we must first ensure the args were not already previous inserted before adding them.
-			let newArgs: string[] = [];
-			if (flutterAdditionalArgs && flutterAdditionalArgs.length && !debugConfig.args.includes(flutterAdditionalArgs[0])) {
-				newArgs = newArgs.concat(flutterAdditionalArgs);
-			}
-			if (commandAdditionalArgs && commandAdditionalArgs.length && !debugConfig.args.includes(commandAdditionalArgs[0])) {
-				newArgs = newArgs.concat(commandAdditionalArgs);
-			}
-			newArgs = newArgs.concat(debugConfig.args);
-			debugConfig.args = newArgs;
-
-			debugConfig.forceFlutterVerboseMode = isLogging;
-			debugConfig.flutterTrackWidgetCreation =
-				// Use from the launch.json if configured.
-				debugConfig.flutterTrackWidgetCreation !== undefined && debugConfig.flutterTrackWidgetCreation !== null
-					? debugConfig.flutterTrackWidgetCreation :
-					// Otherwise use the config.
-					conf.flutterTrackWidgetCreation;
-			debugConfig.flutterMode = debugConfig.flutterMode || "debug";
-			debugConfig.flutterPlatform = debugConfig.flutterPlatform || "default";
 			debugConfig.workspaceConfig = this.wsContext.config;
 			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
@@ -544,15 +490,141 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.deviceId = device.id;
 				debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
 			}
-			if (!isTest && !isAttach && device?.platformType === "web") {
-				const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
-				if (rendererArg)
-					debugConfig.args.push(rendererArg);
-			}
 			debugConfig.showMemoryUsage =
 				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false
 					? debugConfig.showMemoryUsage
 					: debugConfig.flutterMode === "profile";
+		}
+	}
+
+	/// Builds arguments to be passed to tools (Dart VM or Flutter tool) for a given launch config.
+	///
+	/// Arguments included here are usually based on convenience flags that are supported in launch.json, and are
+	/// just mapped to standard arguments in an array.
+	///
+	/// All arguments built here should be things that user the recognises based on the app they are trying to launch
+	/// or settings they have configured. It should not include things that are specifically required by the debugger
+	/// (for example, enabling the VM Service or starting paused). Those items should be handled inside the Debug Adapter.
+	protected async buildToolArgs(debugType: DebuggerType, debugConfig: DartLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+		let args: string[] = [];
+		args = args.concat(debugConfig.toolArgs ?? []);
+
+		switch (debugType) {
+			case DebuggerType.Dart:
+				args = args.concat(await this.buildDartToolArgs(debugConfig, conf));
+				break;
+			case DebuggerType.Flutter:
+				args = args.concat(await this.buildFlutterToolArgs(debugConfig, conf));
+				break;
+			case DebuggerType.FlutterTest:
+				args = args.concat(await this.buildFlutterTestToolArgs(debugConfig, conf));
+				break;
+		}
+
+		return args;
+	}
+
+	protected async buildDartToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+		const args: string[] = [];
+		const isDebug = debugConfig.noDebug !== true;
+
+		this.addArgsIfNotExist(args, ...conf.vmAdditionalArgs);
+
+		if (isDebug && debugConfig.enableAsserts !== false) // undefined = on
+			this.addArgsIfNotExist(args, "--enable-asserts");
+
+		return args;
+	}
+
+	protected async buildFlutterToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+		const args: string[] = [];
+		const isDebug = debugConfig.noDebug !== true;
+		const isAttach = debugConfig.request === "attach";
+		const isWeb = isWebDevice(debugConfig.deviceId);
+
+		this.addArgsIfNotExist(args, ...getGlobalFlutterArgs());
+		this.addArgsIfNotExist(args, ...conf.flutterAdditionalArgs);
+		if (isAttach)
+			this.addArgsIfNotExist(args, ...conf.flutterAttachAdditionalArgs);
+		else
+			this.addArgsIfNotExist(args, ...conf.flutterRunAdditionalArgs);
+
+		switch (debugConfig.flutterMode) {
+			case "profile":
+			case "release":
+				if (!args.includes(debugConfig.flutterMode))
+					args.push(`--${debugConfig.flutterMode}`);
+				break;
+
+			default: // Debug mode.
+				if (debugConfig.vmServicePort && isDebug)
+					this.addArgsIfNotExist(args, "--observatory-port", debugConfig.vmServicePort.toString());
+				if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
+					this.addArgsIfNotExist(args, "--no-track-widget-creation");
+				if (conf.flutterStructuredErrors && this.flutterCapabilities.supportsDartDefine)
+					this.addArgsIfNotExist(args, "--dart-define=flutter.inspector.structuredErrors=true");
+		}
+
+		if (debugConfig.deviceId)
+			this.addArgsIfNotExist(args, "-d", debugConfig.deviceId);
+
+		if (debugConfig.flutterPlatform && debugConfig.flutterPlatform !== "default")
+			this.addArgsIfNotExist(args, "--target-platform", debugConfig.flutterPlatform);
+
+		if (this.flutterCapabilities.supportsWsVmService && !args.includes("--web-server-debug-protocol"))
+			this.addArgsIfNotExist(args, "--web-server-debug-protocol", "ws");
+
+		if (debugConfig.deviceId === "web-server") {
+			if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsDebugBackend)
+				this.addArgsIfNotExist(args, "--web-server-debug-backend-protocol", config.debugExtensionBackendProtocol);
+			if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsInjectedClient)
+				this.addArgsIfNotExist(args, "--web-server-debug-injected-client-protocol", config.debugExtensionBackendProtocol);
+		}
+		if (this.flutterCapabilities.supportsExposeUrl)
+			this.addArgsIfNotExist(args, "--web-allow-expose-url");
+
+		if (isLogging && !args.includes("--verbose"))
+			this.addArgsIfNotExist(args, "-v");
+
+		if (!isAttach && isWeb) {
+			const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
+			if (rendererArg)
+				this.addArgsIfNotExist(args, "--web-renderer", rendererArg);
+		}
+
+		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {
+			this.logger.info("Getting DevTools server address to pass to Flutter...");
+			try {
+				const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
+				if (devtoolsUrl)
+					this.addArgsIfNotExist(args, "--devtools-server-address", devtoolsUrl.toString());
+				else
+					this.logger.warn("DevTools server unavailable, not sending --devtools-server-address!");
+			} catch (e) {
+				this.logger.error(`Failed to get DevTools server address ${e}`);
+			}
+		}
+
+		return args;
+	}
+
+	protected async buildFlutterTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+		const args: string[] = [];
+
+		this.addArgsIfNotExist(args, ...getGlobalFlutterArgs());
+		this.addArgsIfNotExist(args, ...conf.flutterAdditionalArgs);
+		if (debugConfig.request === "attach")
+			this.addArgsIfNotExist(args, ...conf.flutterTestAdditionalArgs);
+
+		if (debugConfig.deviceId)
+			this.addArgsIfNotExist(args, "-d", debugConfig.deviceId);
+
+		return args;
+	}
+
+	protected addArgsIfNotExist(args: string[], ...toAdd: string[]) {
+		if (!args.includes(toAdd[0])) {
+			toAdd.forEach((s) => args.push(s));
 		}
 	}
 

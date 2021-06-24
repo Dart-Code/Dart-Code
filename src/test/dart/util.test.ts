@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as path from "path";
 import { escapeDartString, generateTestNameFromFileName, isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
+import { arrayContainsArray } from "../../shared/utils/array";
 import { applyColor, red } from "../../shared/utils/colors";
 import { fsPath, isWithinPath, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder } from "../helpers";
@@ -206,5 +207,29 @@ describe("isWithinPathOrEqual", () => {
 		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldFolder), fsPath(flutterHelloWorldFolder)), true);
 		assert.equal(isWithinPathOrEqual(fsPath(flutterEmptyFile), fsPath(flutterEmptyFile)), true);
 		assert.equal(isWithinPathOrEqual(fsPath(flutterHelloWorldMainFile), fsPath(flutterHelloWorldMainFile)), true);
+	});
+});
+
+describe("arrayContainsArray", () => {
+	it("handles haystacks that equal needle", () => {
+		assert.equal(arrayContainsArray([1], [1]), true);
+		assert.equal(arrayContainsArray([1, 2], [1, 2]), true);
+	});
+	it("handles haystacks that start with needle", () => {
+		assert.equal(arrayContainsArray([1, 2], [1]), true);
+		assert.equal(arrayContainsArray([1, 2, 3], [1, 2]), true);
+	});
+	it("handles haystacks that contain needle", () => {
+		assert.equal(arrayContainsArray([0, 1, 2], [1]), true);
+		assert.equal(arrayContainsArray([0, 1, 2, 3], [1, 2]), true);
+	});
+	it("handles haystacks that end with needle", () => {
+		assert.equal(arrayContainsArray([0, 1], [1]), true);
+		assert.equal(arrayContainsArray([0, 1, 2], [1, 2]), true);
+	});
+	it("handles haystacks that do not contain needle", () => {
+		assert.equal(arrayContainsArray([], [1]), false);
+		assert.equal(arrayContainsArray([1], [1, 1]), false);
+		assert.equal(arrayContainsArray([0, 2, 3], [3, 2, 0]), false);
 	});
 });

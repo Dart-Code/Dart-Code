@@ -21,5 +21,15 @@ export function arraysEqual<T>(items1: T[], items2: T[]) {
 }
 
 export function arrayStartsWith<T>(items1: T[], items2: T[]) {
-	return items1.length >= items2.length && items1.slice(0, items2.length).every((val, i) => val === items2[i]);
+	return items1.length >= items2.length && arraysEqual(items1.slice(0, items2.length), items2);
+}
+
+export function arrayContainsArray<T>(haystack: T[], needle: T[]): boolean {
+	// Loop over valid starting points for the subarray
+	for (let i = 0; i <= haystack.length - needle.length; i++) {
+		// Check if the relevant length sublist equals the other array.
+		if (arraysEqual(haystack.slice(i, i + needle.length), needle))
+			return true;
+	}
+	return false;
 }

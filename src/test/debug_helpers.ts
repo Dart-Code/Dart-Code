@@ -3,7 +3,6 @@ import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, debugAdapterPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
-import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
 import { DebuggerType, LogCategory, TestStatus } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
@@ -224,7 +223,7 @@ export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string
 }
 
 export async function spawnFlutterProcess(script: string | Uri): Promise<DartProcess> {
-	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" }) as FlutterLaunchRequestArguments;
+	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);
 	const process = extApi.safeToolSpawn(

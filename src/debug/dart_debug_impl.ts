@@ -7,7 +7,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
 import { dartVMPath, debugLaunchProgressId, debugTerminatingProgressId, pleaseReportBug, vmServiceListeningBannerPattern } from "../shared/constants";
-import { DartAttachRequestArguments, DartLaunchRequestArguments, FileLocation } from "../shared/debug/interfaces";
+import { DartLaunchArgs, FileLocation } from "../shared/debug/interfaces";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { safeSpawn } from "../shared/processes";
@@ -153,7 +153,7 @@ export class DartDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
-	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): Promise<void> {
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchArgs & DebugProtocol.LaunchRequestArguments): Promise<void> {
 		this.logDapRequest("launchRequest", args);
 		if (!args || !args.dartSdkPath || (this.requiresProgram && !args.program)) {
 			this.logToUser("Unable to restart debugging. Please try ending the debug session and starting again.\n");
@@ -270,7 +270,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private readSharedArgs(args: DartLaunchRequestArguments | DartAttachRequestArguments) {
+	private readSharedArgs(args: DartLaunchArgs) {
 		this.debugExternalLibraries = args.debugExternalLibraries;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
@@ -280,11 +280,11 @@ export class DartDebugSession extends DebugSession {
 		this.sendLogsToClient = !!args.sendLogsToClient;
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.toolEnv = args.toolEnv;
-		this.useFlutterStructuredErrors = !!args.useFlutterStructuredErrors;
+		this.useFlutterStructuredErrors = args.toolArgs?.includes("--dart-define=flutter.inspector.structuredErrors=true") ?? false;
 		this.useInspectorNotificationsForWidgetErrors = !!args.useInspectorNotificationsForWidgetErrors;
 	}
 
-	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartAttachRequestArguments): Promise<void> {
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartLaunchArgs & DebugProtocol.AttachRequestArguments): Promise<void> {
 		this.logDapRequest("attachRequest", args);
 		const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
 		if (!args || (!vmServiceUri && !args.serviceInfoFile)) {
@@ -338,11 +338,11 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	protected sourceFileForArgs(args: DartLaunchRequestArguments): string {
+	protected sourceFileForArgs(args: DartLaunchArgs): string {
 		return args.cwd ? path.relative(args.cwd, args.program!) : args.program!;
 	}
 
-	protected async spawnProcess(args: DartLaunchRequestArguments): Promise<SpawnedProcess> {
+	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
 		const appArgs = this.buildAppArgs(args);
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
 
@@ -357,7 +357,7 @@ export class DartDebugSession extends DebugSession {
 		return process;
 	}
 
-	protected async spawnRemoteEditorProcess(args: DartLaunchRequestArguments): Promise<RemoteEditorTerminalProcess> {
+	protected async spawnRemoteEditorProcess(args: DartLaunchArgs): Promise<RemoteEditorTerminalProcess> {
 		const appArgs = this.buildAppArgs(args);
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
 
@@ -395,7 +395,7 @@ export class DartDebugSession extends DebugSession {
 		return this.remoteEditorTerminalLaunched;
 	}
 
-	private buildAppArgs(args: DartLaunchRequestArguments) {
+	private buildAppArgs(args: DartLaunchArgs) {
 		let appArgs = [];
 		if (this.shouldConnectDebugger) {
 			this.expectAdditionalPidToTerminate = true;
@@ -408,16 +408,15 @@ export class DartDebugSession extends DebugSession {
 			appArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
 			appArgs.push("-DSILENT_OBSERVATORY=true");
 		}
-		if (args.enableAsserts !== false) { // undefined = on
-			appArgs.push("--enable-asserts");
-		}
-		if (args.vmAdditionalArgs) {
-			appArgs = appArgs.concat(args.vmAdditionalArgs);
-		}
+
+		if (args.toolArgs)
+			appArgs = appArgs.concat(args.toolArgs);
+
 		appArgs.push(this.sourceFileForArgs(args));
-		if (args.args) {
+
+		if (args.args)
 			appArgs = appArgs.concat(args.args);
-		}
+
 		return appArgs;
 	}
 

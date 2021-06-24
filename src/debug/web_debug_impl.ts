@@ -1,4 +1,4 @@
-import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
+import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { FlutterDebugSession } from "./flutter_debug_impl";
@@ -15,7 +15,7 @@ export class WebDebugSession extends FlutterDebugSession {
 		this.logCategory = LogCategory.WebDaemon;
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): RunDaemonBase {
+	protected spawnRunDaemon(isAttach: boolean, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
 		let appArgs: string[] = [];
 
 		// TODO: Is any of this relevant?
@@ -27,9 +27,6 @@ export class WebDebugSession extends FlutterDebugSession {
 		// 	} else {
 		// 		// Debug mode
 
-		// 		if (this.flutterTrackWidgetCreation) {
-		// 			appArgs.push("--track-widget-creation");
-		// 		}
 		// 	}
 
 		// 	if (this.shouldConnectDebugger) {

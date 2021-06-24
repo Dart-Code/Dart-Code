@@ -2,12 +2,12 @@ import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
-import { FlutterAttachRequestArguments, FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
+import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
-import { getSdkVersion } from "../shared/utils/fs";
+import { isWebDevice } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
@@ -20,7 +20,6 @@ const flutterExceptionEndBannerPrefix = "═════════════
 
 export class FlutterDebugSession extends DartDebugSession {
 	private runDaemon?: RunDaemonBase;
-	public flutterTrackWidgetCreation = true;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
 	private appHasBeenToldToStopOrDetach = false;
@@ -58,22 +57,17 @@ export class FlutterDebugSession extends DartDebugSession {
 		super.initializeRequest(response, args);
 	}
 
-	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: FlutterLaunchRequestArguments): Promise<void> {
-		this.flutterCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.flutterSdkPath }) ?? this.flutterCapabilities.version;
-		this.flutterTrackWidgetCreation = args && args.flutterTrackWidgetCreation !== false;
-
-		await super.launchRequest(response, args);
-	}
-
-	protected async attachRequest(response: DebugProtocol.AttachResponse, args: FlutterAttachRequestArguments): Promise<void> {
+	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartLaunchArgs): Promise<void> {
 		// For flutter attach, we actually do the same thing as launch - we run a flutter process
 		// (flutter attach instead of flutter run).
 		this.subscribeToStdout = true;
 		return this.launchRequest(response, args);
 	}
 
-	protected async spawnProcess(args: FlutterLaunchRequestArguments): Promise<SpawnedProcess> {
+	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
 		const isAttach = args.request === "attach";
+		const deviceIdFlag = args.toolArgs?.indexOf("-d");
+		const deviceId = deviceIdFlag && deviceIdFlag !== -1 && args.toolArgs && args.toolArgs.length > deviceIdFlag ? args.toolArgs[deviceIdFlag + 1] : undefined;
 
 		if (args.showMemoryUsage) {
 			this.pollforMemoryMs = 1000;
@@ -91,11 +85,11 @@ export class FlutterDebugSession extends DartDebugSession {
 		// because it's on a remote device, however in the case of the flutter-tester, it is local
 		// and otherwise might be left hanging around.
 		// Unless, of course, we attached in which case we expect to detach by default.
-		this.allowTerminatingVmServicePid = args.deviceId === "flutter-tester" && !isAttach;
+		this.allowTerminatingVmServicePid = deviceId === "flutter-tester" && !isAttach;
 
 		const logger = new DebugAdapterLogger(this, this.logCategory);
 		this.expectAdditionalPidToTerminate = true;
-		this.runDaemon = this.spawnRunDaemon(isAttach, args, logger);
+		this.runDaemon = this.spawnRunDaemon(isAttach, deviceId, args, logger);
 		this.runDaemon.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 
 		// Set up subscriptions.
@@ -182,13 +176,12 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, args: FlutterLaunchRequestArguments, logger: Logger): RunDaemonBase {
+	protected spawnRunDaemon(isAttach: boolean, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
 		let appArgs = [];
 
-		if (args.deviceId) {
-			appArgs.push("-d");
-			appArgs.push(args.deviceId);
-		}
+		const isProfileMode = args.toolArgs?.includes("--profile");
+		const isReleaseMode = args.toolArgs?.includes("--release");
+		const isWeb = isWebDevice(deviceId);
 
 		if (isAttach) {
 			const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
@@ -200,72 +193,28 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 
 		if (!isAttach) {
-			if (args.flutterMode === "profile") {
-				appArgs.push("--profile");
-				// We also may not be able to connect a VM Service for profile modes for web.
-				if (this.isWebDevice(args.deviceId) && !this.flutterCapabilities.supportsDebuggerForWebProfileBuilds) {
-					this.noDebug = true;
-					this.connectVmEvenForNoDebug = false;
-				}
-			} else if (args.flutterMode === "release") {
-				appArgs.push("--release");
-				// We also can't connect a VM Service for release modes.
+			if (isReleaseMode || (isProfileMode && isWeb)) {
 				this.noDebug = true;
 				this.connectVmEvenForNoDebug = false;
-			} else {
-				// Debug mode
-				if (!this.flutterTrackWidgetCreation)
-					appArgs.push("--no-track-widget-creation");
-
-				if (this.useFlutterStructuredErrors && this.flutterCapabilities.supportsDartDefine)
-					appArgs.push("--dart-define=flutter.inspector.structuredErrors=true");
 			}
 
-			if (args.flutterPlatform && args.flutterPlatform !== "default") {
-				appArgs.push(`--target-platform=${args.flutterPlatform}`);
-			}
-
-			if (this.shouldConnectDebugger) {
+			if (this.shouldConnectDebugger)
 				appArgs.push("--start-paused");
-
-				if (args.vmServicePort && appArgs.indexOf("--observatory-port") === -1) {
-					appArgs.push("--observatory-port");
-					appArgs.push(args.vmServicePort.toString());
-				}
-			}
-
-			if (this.flutterCapabilities.supportsWsVmService)
-				appArgs.push("--web-server-debug-protocol", "ws");
-			if (args.deviceId === "web-server") {
-				if (args.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsDebugBackend)
-					appArgs.push("--web-server-debug-backend-protocol", args.debugExtensionBackendProtocol);
-				if (args.injectedClientProtocol && this.flutterCapabilities.supportsWsInjectedClient)
-					appArgs.push("--web-server-debug-injected-client-protocol", args.injectedClientProtocol);
-			}
-			if (this.flutterCapabilities.supportsExposeUrl)
-				appArgs.push("--web-allow-expose-url");
 		}
 
-		if (args.args) {
-			appArgs = appArgs.concat(args.args);
-		}
-
-		if (args.forceFlutterVerboseMode === true && appArgs.indexOf("-v") === -1 && appArgs.indexOf("--verbose") === -1) {
-			appArgs.push("-v");
-		}
+		if (args.toolArgs)
+			appArgs = appArgs.concat(args.toolArgs);
 
 		if (!isAttach || args.program) {
-			if (!args.workspaceConfig?.skipTargetFlag) {
+			if (!args.workspaceConfig?.skipTargetFlag)
 				appArgs.push("--target");
-			}
 			appArgs.push(this.sourceFileForArgs(args));
 		}
 
-		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterSdkPath, args.workspaceConfig, args.globalFlutterArgs || [], args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
-	}
+		if (args.args)
+			appArgs = appArgs.concat(args.args);
 
-	private isWebDevice(deviceId: string | undefined): boolean {
-		return !!(deviceId?.startsWith("web") || deviceId === "chrome" || deviceId === "edge");
+		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, args.flutterSdkPath!, args.workspaceConfig, args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 
 	private async connectToVmServiceIfReady() {

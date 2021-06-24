@@ -2,7 +2,7 @@ import * as path from "path";
 import { Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, debugTerminatingProgressId, pubSnapshotPath, vmServiceHttpLinkPattern } from "../shared/constants";
-import { DartLaunchRequestArguments } from "../shared/debug/interfaces";
+import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger, SpawnedProcess } from "../shared/interfaces";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
@@ -24,12 +24,12 @@ export class DartTestDebugSession extends DartDebugSession {
 		this.requiresProgram = false;
 	}
 
-	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchRequestArguments): Promise<void> {
+	protected async launchRequest(response: DebugProtocol.LaunchResponse, args: DartLaunchArgs): Promise<void> {
 		this.expectSingleTest = args.expectSingleTest;
 		return super.launchRequest(response, args);
 	}
 
-	protected async spawnProcess(args: DartLaunchRequestArguments): Promise<SpawnedProcess> {
+	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
 		let appArgs: string[] = [];
 
 		// To use the test framework in the supported debugging way we should
@@ -48,8 +48,8 @@ export class DartTestDebugSession extends DartDebugSession {
 			appArgs.push("--pause_isolates_on_start=true");
 		}
 
-		if (args.vmAdditionalArgs) {
-			appArgs = appArgs.concat(args.vmAdditionalArgs);
+		if (args.toolArgs) {
+			appArgs = appArgs.concat(args.toolArgs);
 		}
 
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
@@ -67,12 +67,14 @@ export class DartTestDebugSession extends DartDebugSession {
 		appArgs = appArgs.concat(["-r", "json"]);
 		appArgs.push("-j1"); // Only run single-threaded in the runner.
 
+		if (args.toolArgs)
+			appArgs = appArgs.concat(args.toolArgs);
+
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
 
-		if (args.args) {
+		if (args.args)
 			appArgs = appArgs.concat(args.args);
-		}
 
 		const logger = new DebugAdapterLogger(this, LogCategory.PubTest);
 		return this.createRunner(dartPath, args.cwd, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
