@@ -11,7 +11,7 @@ import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, disableDdsForTestForWindows, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, defer, delay, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ensureArrayContainsArray, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 
 describe("dart cli debugger", () => {
@@ -26,7 +26,6 @@ describe("dart cli debugger", () => {
 		dc = createDebugClient(DebuggerType.Dart);
 	});
 
-
 	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
 		const config = await getAttachConfiguration(Object.assign({ vmServiceUri }, extraConfiguration));
 		if (!config)
@@ -34,6 +33,23 @@ describe("dart cli debugger", () => {
 		await dc.start();
 		return config;
 	}
+
+	describe("resolves the correct debug config", () => {
+
+		it("passing launch.json's toolArgs to the VM", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(helloWorldMainFile),
+				toolArgs: ["--fake-flag"],
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.program, fsPath(helloWorldMainFile));
+			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--fake-flag"]);
+		});
+
+	});
+
 
 	it("runs to completion", async () => {
 		const config = await startDebugger(dc, helloWorldMainFile);
@@ -152,20 +168,6 @@ describe("dart cli debugger", () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.resume(),
-		);
-	});
-
-	it("passes launch.json's toolArgs to the VM", async () => {
-		// TODO: Redo this like others...
-		const config = await startDebugger(dc, helloWorldMainFile);
-		config.toolArgs = ["--fake-flag"];
-		await waitAllThrowIfTerminates(dc,
-			// TODO: Figure out if this is a bug - because we never connect to Observatory, we never
-			// resolve this properly.
-			// dc.configurationSequence(),
-			dc.assertOutputContains("stderr", "Unrecognized flags: fake-flag"),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
 		);
 	});
 
