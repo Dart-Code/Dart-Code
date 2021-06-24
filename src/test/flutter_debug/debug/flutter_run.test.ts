@@ -32,10 +32,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
-	describe("resolves the correct debug config", () => {
+	describe.only("resolves the correct debug config", () => {
 
 		it("for a simple script", async () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
+				args: ["--foo"],
 				deviceId: flutterTestDeviceId,
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
@@ -43,22 +44,50 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, fsPath(flutterHelloWorldMainFile));
 			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
-			assert.equal(resolvedConfig.toolArgs, []);
-			assert.equal(resolvedConfig.args, []);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["-d", "flutter-tester"]);
+			assert.equal(resolvedConfig.toolArgs!.includes("--web-server-debug-protocol"), false);
+			assert.deepStrictEqual(resolvedConfig.args, ["--foo"]);
+		});
+
+		it("when using the web-server service", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: "web-server",
+				program: fsPath(flutterHelloWorldMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-renderer", "html"]);
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-server-debug-protocol", "ws"]);
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-server-debug-injected-client-protocol", "ws"]);
 		});
 
 		it("when web renderer is set", async () => {
 			await setConfigForTest("dart", "flutterWebRenderer", "html");
 			const resolvedConfig = await getResolvedDebugConfiguration({
-				deviceId: flutterTestDeviceId,
+				deviceId: "web-server",
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
 
-			assert.ok(resolvedConfig);
-			assert.equal(resolvedConfig.program, fsPath(flutterHelloWorldMainFile));
-			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
-			ensureArrayContainsArray(resolvedConfig.vmArgs, ["--web-renderer", "html"]);
-			assert.equal(resolvedConfig.args, []);
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-renderer", "html"]);
+		});
+
+		it("when flutterMode is set", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: flutterTestDeviceId,
+				flutterMode: "release",
+				program: fsPath(flutterHelloWorldMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--release"]);
+		});
+
+		it("when flutterPlatform is set", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: flutterTestDeviceId,
+				flutterPlatform: "android-arm",
+				program: fsPath(flutterHelloWorldMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--target-platform", "android-arm"]);
 		});
 	});
 

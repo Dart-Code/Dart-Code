@@ -9,7 +9,7 @@ import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HA
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
-import { getFutterWebRendererArg } from "../../shared/flutter/utils";
+import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestTreeModel } from "../../shared/test/test_model";
 import { filenameSafe, isWebDevice } from "../../shared/utils";
@@ -571,10 +571,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.flutterPlatform && debugConfig.flutterPlatform !== "default")
 			this.addArgsIfNotExist(args, "--target-platform", debugConfig.flutterPlatform);
 
-		if (this.flutterCapabilities.supportsWsVmService && !args.includes("--web-server-debug-protocol"))
-			this.addArgsIfNotExist(args, "--web-server-debug-protocol", "ws");
-
 		if (debugConfig.deviceId === "web-server") {
+			if (this.flutterCapabilities.supportsWsVmService && !args.includes("--web-server-debug-protocol"))
+				this.addArgsIfNotExist(args, "--web-server-debug-protocol", "ws");
 			if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsDebugBackend)
 				this.addArgsIfNotExist(args, "--web-server-debug-backend-protocol", config.debugExtensionBackendProtocol);
 			if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsInjectedClient)
@@ -587,9 +586,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			this.addArgsIfNotExist(args, "-v");
 
 		if (!isAttach && isWeb) {
-			const rendererArg = getFutterWebRendererArg(this.flutterCapabilities, config.flutterWebRenderer, debugConfig.args);
-			if (rendererArg)
-				this.addArgsIfNotExist(args, "--web-renderer", rendererArg);
+			const renderer = getFutterWebRenderer(this.flutterCapabilities, config.flutterWebRenderer);
+			if (renderer)
+				this.addArgsIfNotExist(args, "--web-renderer", renderer);
 		}
 
 		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {
