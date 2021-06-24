@@ -55,7 +55,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-renderer", "html"]);
 			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-server-debug-protocol", "ws"]);
 			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-server-debug-injected-client-protocol", "ws"]);
 		});
