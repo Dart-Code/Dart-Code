@@ -456,6 +456,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.name = "Dart";
 			}
 		}
+
+		// Some properties depend ont he device, so infer that first if required.
+		if (isFlutter && !debugConfig.deviceId && device) {
+			debugConfig.deviceId = device.id;
+			debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
+		}
+
 		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = true;
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
@@ -486,10 +493,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.workspaceConfig = this.wsContext.config;
 			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
-			if (!debugConfig.deviceId && device) {
-				debugConfig.deviceId = device.id;
-				debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
-			}
 			debugConfig.showMemoryUsage =
 				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false
 					? debugConfig.showMemoryUsage
