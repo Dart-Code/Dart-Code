@@ -48,10 +48,6 @@ export class DartTestDebugSession extends DartDebugSession {
 			appArgs.push("--pause_isolates_on_start=true");
 		}
 
-		if (args.toolArgs) {
-			appArgs = appArgs.concat(args.toolArgs);
-		}
-
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
 		if (this.dartCapabilities.supportsDartRunTest) {
 			// Use "dart --vm-args run test:test"
