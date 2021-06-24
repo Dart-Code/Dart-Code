@@ -3,14 +3,15 @@ import { escapeRegExp } from "../../shared/utils";
 import { OpenedFileInformation } from "../interfaces";
 
 export function getLaunchConfig(noDebug: boolean, path: string, testNames: string[] | undefined, isGroup: boolean, runSkippedTests?: boolean, template?: any | undefined) {
-	const templateArgs = template?.args || [];
-	const testNameArgs = testNames
-		? ["--name", makeRegexForTests(testNames, isGroup)]
-		: [];
-	const args = templateArgs.concat(testNameArgs);
-
+	let toolArgs: string[] = [];
+	if (template?.toolArgs)
+		toolArgs = toolArgs.concat(template?.toolArgs);
+	if (testNames) {
+		toolArgs.push("--name");
+		toolArgs.push(makeRegexForTests(testNames, isGroup));
+	}
 	if (runSkippedTests)
-		args.push("--run-skipped");
+		toolArgs.push("--run-skipped");
 
 	return Object.assign(
 		{
@@ -22,9 +23,10 @@ export function getLaunchConfig(noDebug: boolean, path: string, testNames: strin
 		},
 		template,
 		{
-			args,
+			args: template?.args,
 			expectSingleTest: !isGroup && testNames?.length === 1 && !testNames[0].includes("$"),
 			program: path,
+			toolArgs,
 		},
 	);
 }
