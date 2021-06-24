@@ -15,7 +15,7 @@ export class WebDebugSession extends FlutterDebugSession {
 		this.logCategory = LogCategory.WebDaemon;
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
+	protected spawnRunDaemon(isAttach: boolean, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
 		let appArgs: string[] = [];
 
 		// TODO: Is any of this relevant?
