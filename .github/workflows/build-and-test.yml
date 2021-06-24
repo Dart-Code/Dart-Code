@@ -8,12 +8,17 @@ on:
 
 jobs:
 
+
   build_exclusions:
 
     runs-on: ubuntu-latest
     outputs:
-      excludes: ${{ join(steps.exclude.outputs.excludes) }}
+      excludes: ${{ join(steps.*.outputs.excludes) }}
     steps:
+      - id: no_exclude
+        name: Run all builds
+        if: github.event_name == 'schedule'
+        run: echo "::set-output name=excludes::[]"
       - id: exclude
         name: Exclude some builds if not running on schedule
         if: github.event_name != 'schedule'
