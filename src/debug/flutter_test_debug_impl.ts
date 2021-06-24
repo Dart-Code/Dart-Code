@@ -1,6 +1,6 @@
 import * as path from "path";
 import { flutterPath } from "../shared/constants";
-import { FlutterLaunchRequestArguments } from "../shared/debug/interfaces";
+import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { usingCustomScript } from "../shared/utils";
@@ -9,32 +9,28 @@ import { DebugAdapterLogger } from "./logging";
 
 export class FlutterTestDebugSession extends DartTestDebugSession {
 
-	protected async spawnProcess(args: FlutterLaunchRequestArguments): Promise<SpawnedProcess> {
+	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
 		let appArgs: string[] = [];
 
-		if (this.shouldConnectDebugger) {
+		if (this.shouldConnectDebugger)
 			appArgs.push("--start-paused");
-		}
 
-		if (args.args) {
-			appArgs = appArgs.concat(args.args);
-		}
-
-		if (args.deviceId) {
-			appArgs.push("-d");
-			appArgs.push(args.deviceId);
-		}
+		if (args.toolArgs)
+			appArgs = appArgs.concat(args.toolArgs);
 
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
 
+		if (args.args)
+			appArgs = appArgs.concat(args.args);
+
 		const { binPath, binArgs } = usingCustomScript(
-			path.join(args.flutterSdkPath, flutterPath),
+			path.join(args.flutterSdkPath!, flutterPath),
 			["test", "--machine"],
 			args.workspaceConfig?.flutterTestScript || args.workspaceConfig?.flutterScript,
 		);
 
 		const logger = new DebugAdapterLogger(this, LogCategory.FlutterTest);
-		return this.createRunner(binPath, args.cwd, (args.globalFlutterArgs || []).concat(binArgs).concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(binPath, args.cwd, binArgs.concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
 	}
 }
