@@ -37,30 +37,31 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
+	private warnOnUnresolvedVariables(property: string, input?: string): boolean {
+		if (!input) return false;
+		const v = this.getUnresolvedVariable(input);
+
+		if (v) {
+			this.logger.error(`Launch config property '${property}' has unresolvable variable ${v}`);
+			window.showErrorMessage(`Launch config property '${property}' has unresolvable variable ${v}`);
+			return true;
+		}
+		return false;
+	}
+
+	/** Gets the first unresolved variable from the given string. */
+	private getUnresolvedVariable(input?: string): string | undefined {
+		if (!input) return undefined;
+		const matches = /\${\w+}/.exec(input);
+		return matches ? matches[0] : undefined;
+	}
+
 	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartLaunchArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+		const isAttachRequest = debugConfig.request === "attach";
 		const logger = this.logger;
 		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
 			? fsPath(window.activeTextEditor.document.uri)
 			: undefined;
-
-		/** Gets the first unresolved variable from the given string. */
-		function getUnresolvedVariable(input?: string): string | undefined {
-			if (!input) return undefined;
-			const matches = /\${\w+}/.exec(input);
-			return matches ? matches[0] : undefined;
-		}
-
-		function warnOnUnresolvedVariables(property: string, input?: string): boolean {
-			if (!input) return false;
-			const v = getUnresolvedVariable(input);
-
-			if (v) {
-				logger.error(`Launch config property '${property}' has unresolvable variable ${v}`);
-				window.showErrorMessage(`Launch config property '${property}' has unresolvable variable ${v}`);
-				return true;
-			}
-			return false;
-		}
 
 		logger.info(`Starting debug session...`);
 		if (folder)
@@ -70,7 +71,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.cwd)
 			logger.info(`    cwd      : ${debugConfig.cwd}`);
 
-		if (warnOnUnresolvedVariables("program", debugConfig.program) || warnOnUnresolvedVariables("cwd", debugConfig.cwd)) {
+		if (this.warnOnUnresolvedVariables("program", debugConfig.program) || this.warnOnUnresolvedVariables("cwd", debugConfig.cwd)) {
 			// Warning is shown from inside warnOnUnresolvedVariables.
 			return null; // null means open launch.json.
 		}
@@ -85,125 +86,24 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				logger.info(`Setting workspace based on single open workspace: ${fsPath(folder.uri)}`);
 		}
 
-		// Convert to an absolute paths (if possible).
-		if (debugConfig.cwd && !path.isAbsolute(debugConfig.cwd) && folder) {
-			debugConfig.cwd = path.join(fsPath(folder.uri), debugConfig.cwd);
-			logger.info(`Converted cwd to absolute path: ${debugConfig.cwd}`);
-		}
-		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
-			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder!.uri), debugConfig.program);
-			logger.info(`Converted program to absolute path: ${debugConfig.program}`);
-		}
+		this.configureProgramAndCwd(debugConfig, folder, openFile);
 
-		const isAttachRequest = debugConfig.request === "attach";
-		if (!isAttachRequest) {
-			// If there's no program set, try to guess one.
-			if (!debugConfig.program) {
-				const preferredFolder = debugConfig.cwd
-					? debugConfig.cwd
-					: folder
-						? fsPath(folder.uri)
-						: undefined;
-
-				// If we have a folder specified, we should only consider open files if it's inside it.
-				const preferredFile = !preferredFolder || (!!openFile && isWithinPath(openFile, preferredFolder)) ? openFile : undefined;
-				debugConfig.program = debugConfig.program || this.guessBestEntryPoint(preferredFile, preferredFolder);
-			}
-
-			// If we still don't have an entry point, the user will have to provide it.
-			if (!debugConfig.program) {
-				logger.warn("No program was set in launch config");
-				const exampleEntryPoint = this.wsContext.hasAnyFlutterProjects ? "lib/main.dart" : "bin/main.dart";
-				window.showInformationMessage(`Set the 'program' value in your launch config (eg '${exampleEntryPoint}') then launch again`);
-				return null; // null means open launch.json.
-			}
+		// If we still don't have an entry point, the user will have to provide it.
+		if (!debugConfig.program) {
+			this.logger.warn("No program was set in launch config");
+			const exampleEntryPoint = this.wsContext.hasAnyFlutterProjects ? "lib/main.dart" : "bin/main.dart";
+			window.showInformationMessage(`Set the 'program' value in your launch config (eg '${exampleEntryPoint}') then launch again`);
+			return null; // null means open launch.json.
 		}
 
-		// If we don't have a cwd then find the best one from the project root.
-		if (!debugConfig.cwd && folder) {
-			debugConfig.cwd = fsPath(folder.uri);
-			logger.info(`Using workspace as cwd: ${debugConfig.cwd}`);
+		const debugType = this.selectDebuggerType(debugConfig, logger);
 
-			// If we have an entry point, see if we can make this more specific by finding a .packages file
-			if (debugConfig.program) {
-				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
-				if (bestProjectRoot && isWithinPath(bestProjectRoot, fsPath(folder.uri))) {
-					debugConfig.cwd = bestProjectRoot;
-					logger.info(`Found better project root to use as cwd: ${debugConfig.cwd}`);
-				}
-			}
-		}
-
-		// Ensure we have a full path.
-		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
-			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
-
-		if (debugConfig.program && path.isAbsolute(debugConfig.program) && !fs.existsSync(debugConfig.program)) {
-			logger.warn(`Launch config references non-existant file ${debugConfig.program}`);
-			window.showWarningMessage(`Your launch config references a program that does not exist. If you have problems launching, check the "program" field in your ".vscode/launch.json" file.`);
-		}
-
-		let debugType = DebuggerType.Dart;
-		if (debugConfig.cwd
-			// TODO: This isInsideFolderNamed often fails when we found a better project root above.
-			&& !isInsideFolderNamed(debugConfig.program, "bin")
-			&& !isInsideFolderNamed(debugConfig.program, "tool")
-			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
-			// Check if we're a Flutter or Web project.
-			if (isFlutterProjectFolder(debugConfig.cwd) || this.wsContext.config.forceFlutterDebug) {
-				debugType = DebuggerType.Flutter;
-			} else if (isInsideFolderNamed(debugConfig.program, "web") && !isInsideFolderNamed(debugConfig.program, "test"))
-				debugType = DebuggerType.Web;
-			else
-				logger.info(`Project (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
-		}
-		logger.info(`Detected launch project as ${DebuggerType[debugType]}`);
-
-		// Some helpers for conditions below.
-		const isFlutter = debugType === DebuggerType.Flutter;
-		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
+		const isFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterTest;
 		const isTest = isTestFileOrFolder(debugConfig.program);
-		const argsHaveTestNameFilter = isTest && debugConfig.args && (debugConfig.args.indexOf("--name") !== -1 || debugConfig.args.indexOf("--pname") !== -1);
+		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
+		const argsHaveTestNameFilter = debugConfig.args ? (debugConfig.args.includes("--name") || debugConfig.args.includes("--pname")) : false;
 
-		if (isTest)
-			logger.info(`Detected launch project as a Test project`);
-		const canPubRunTest = isTest && debugConfig.cwd && shouldUsePubForTests(debugConfig.cwd, this.wsContext.config);
-		if (isTest && !canPubRunTest)
-			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
-		if (isTest) {
-			switch (debugType) {
-				case DebuggerType.Dart:
-					if (canPubRunTest)
-						debugType = DebuggerType.PubTest;
-					break;
-				case DebuggerType.Flutter:
-					if (isIntegrationTest) {
-						// Integration tests always use "flutter test".
-						debugType = DebuggerType.FlutterTest;
-					} else if (debugConfig.runTestsOnDevice && argsHaveTestNameFilter) {
-						// Non-integration tests set to run on device but have a test name filter will also have
-						// to run with "flutter test".
-						vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
-						logger.info(`runTestsOnDevice is set but args have test filter so will still use Flutter`);
-						debugType = DebuggerType.FlutterTest;
-					} else if (debugConfig.runTestsOnDevice) {
-						// Anything else (eg. Non-integration tests without a test name filter) is allowed to
-						// run on a device if specified.
-						logger.info(`runTestsOnDevice is set, so will use Flutter instead of FlutterTest`);
-					} else {
-						// Otherwise, default is to use "flutter test".
-						debugType = DebuggerType.FlutterTest;
-					}
-					break;
-				case DebuggerType.Web:
-					debugType = DebuggerType.WebTest;
-					break;
-				default:
-					logger.info("Unknown debugType, unable to switch to test debugger");
-			}
-		}
-		logger.info(`Using ${DebuggerType[debugType]} debug adapter for this session`);
-
+		// Handle test_driver tests that can be pointed at an existing running instrumented app.
 		if (debugType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
 			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1);
 			if (runningInstrumentedApps.length === 0) {
@@ -311,40 +211,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// If we're launching (not attaching) then check there are no errors before we launch.
 		if (!isAttachRequest && debugConfig.cwd && config.promptToRunIfErrors && !debugConfig.suppressPromptOnErrors) {
-			logger.info("Checking for errors before launching");
-			const isDartError = (d: vs.Diagnostic) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error;
-			const dartErrors = vs.languages
-				.getDiagnostics()
-				.filter((file) => file[1].find(isDartError));
-			// Check if any are inside our CWD.
-			const firstRelevantDiagnostic = dartErrors.find((fd) => {
-				const file = fsPath(fd[0]);
-				return isWithinPath(file, debugConfig.cwd!)
-					// Ignore errors in test folder unless it's the file we're running.
-					&& ((!isInsideFolderNamed(file, "test") && !isInsideFolderNamed(file, "integration_test")) || file === debugConfig.program);
-			});
-			if (firstRelevantDiagnostic) {
-				logger.warn("Project has errors, prompting user");
-				const firstRelevantError = firstRelevantDiagnostic[1].find(isDartError)!;
-				const range = firstRelevantError.range;
-				logger.warn(`    ${fsPath(firstRelevantDiagnostic[0])}:${range.start.line}:${range.start.character}`);
-				logger.warn(`    ${firstRelevantError.message.split("\n")[0].trim()}`);
-				const action = await window.showErrorMessage(
-					"Build errors exist in your project.",
-					{ modal: true },
-					debugAnywayAction,
-					showErrorsAction,
-				);
-				if (action === debugAnywayAction) {
-					logger.info("Debugging anyway!");
-					// Do nothing, we'll just carry on.
-				} else {
-					logger.info("Aborting!");
-					if (action === showErrorsAction)
-						vs.commands.executeCommand("workbench.action.showErrorsWarnings");
-					return undefined; // undefined means silent (don't open launch.json).
-				}
-			}
+			if (await this.checkIfProjectHasErrors(debugConfig))
+				return undefined; // undefined means silent (don't open launch.json).
 		}
 
 		if (token && token.isCancellationRequested)
@@ -362,7 +230,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				? Object.values(this.testTreeModel.suites)
 					.map((suite) => suite.path)
 					.filter((p) => p.startsWith(debugConfig.program!))
-				: [debugConfig.program!];
+				: [debugConfig.program];
 			for (const suitePath of suitePaths)
 				this.testTreeModel.flagSuiteStart(suitePath, !argsHaveTestNameFilter);
 		}
@@ -384,6 +252,166 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		return debugConfig;
+	}
+
+	private async checkIfProjectHasErrors(debugConfig: vs.DebugConfiguration & DartLaunchArgs) {
+		const logger = this.logger;
+		logger.info("Checking for errors before launching");
+
+		const isDartError = (d: vs.Diagnostic) => d.source === "dart" && d.severity === vs.DiagnosticSeverity.Error;
+		const dartErrors = vs.languages
+			.getDiagnostics()
+			.filter((file) => file[1].find(isDartError));
+
+		// Check if any are inside our CWD.
+		const firstRelevantDiagnostic = dartErrors.find((fd) => {
+			const file = fsPath(fd[0]);
+			return isWithinPath(file, debugConfig.cwd!)
+				// Ignore errors in test folder unless it's the file we're running.
+				&& ((!isInsideFolderNamed(file, "test") && !isInsideFolderNamed(file, "integration_test")) || file === debugConfig.program);
+		});
+
+		if (firstRelevantDiagnostic) {
+			logger.warn("Project has errors, prompting user");
+			const firstRelevantError = firstRelevantDiagnostic[1].find(isDartError)!;
+			const range = firstRelevantError.range;
+			logger.warn(`    ${fsPath(firstRelevantDiagnostic[0])}:${range.start.line}:${range.start.character}`);
+			logger.warn(`    ${firstRelevantError.message.split("\n")[0].trim()}`);
+			const action = await window.showErrorMessage(
+				"Build errors exist in your project.",
+				{ modal: true },
+				debugAnywayAction,
+				showErrorsAction
+			);
+			if (action === debugAnywayAction) {
+				logger.info("Debugging anyway!");
+				// Do nothing, we'll just carry on.
+			} else {
+				logger.info("Aborting!");
+				if (action === showErrorsAction)
+					vs.commands.executeCommand("workbench.action.showErrorsWarnings");
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs, logger: Logger): DebuggerType {
+		const isTest = isTestFileOrFolder(debugConfig.program);
+		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
+		// TODO: Remove argsHaveTestNameFilter now that "flutter test" supports running tests on device (integration tests).
+		const argsHaveTestNameFilter = debugConfig.args ? (debugConfig.args.includes("--name") || debugConfig.args.includes("--pname")) : false;
+
+		let debugType = DebuggerType.Dart;
+		if (debugConfig.cwd
+			// TODO: This isInsideFolderNamed often fails when we found a better project root above.
+			&& !isInsideFolderNamed(debugConfig.program, "bin")
+			&& !isInsideFolderNamed(debugConfig.program, "tool")
+			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
+			// Check if we're a Flutter or Web project.
+			if (isFlutterProjectFolder(debugConfig.cwd) || this.wsContext.config.forceFlutterDebug) {
+				debugType = DebuggerType.Flutter;
+			} else if (isInsideFolderNamed(debugConfig.program, "web") && !isInsideFolderNamed(debugConfig.program, "test"))
+				debugType = DebuggerType.Web;
+
+			else
+				logger.info(`Project (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
+		}
+		logger.info(`Detected launch project as ${DebuggerType[debugType]}`);
+
+		if (isTest)
+			logger.info(`Detected launch project as a Test project`);
+		const canPubRunTest = isTest && debugConfig.cwd && shouldUsePubForTests(debugConfig.cwd, this.wsContext.config);
+		if (isTest && !canPubRunTest)
+			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
+		if (isTest) {
+			switch (debugType) {
+				case DebuggerType.Dart:
+					if (canPubRunTest)
+						debugType = DebuggerType.PubTest;
+					break;
+				case DebuggerType.Flutter:
+					if (isIntegrationTest) {
+						// Integration tests always use "flutter test".
+						debugType = DebuggerType.FlutterTest;
+					} else if (debugConfig.runTestsOnDevice && argsHaveTestNameFilter) {
+						// Non-integration tests set to run on device but have a test name filter will also have
+						// to run with "flutter test".
+						vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
+						logger.info(`runTestsOnDevice is set but args have test filter so will still use Flutter`);
+						debugType = DebuggerType.FlutterTest;
+					} else if (debugConfig.runTestsOnDevice) {
+						// Anything else (eg. Non-integration tests without a test name filter) is allowed to
+						// run on a device if specified.
+						logger.info(`runTestsOnDevice is set, so will use Flutter instead of FlutterTest`);
+					} else {
+						// Otherwise, default is to use "flutter test".
+						debugType = DebuggerType.FlutterTest;
+					}
+					break;
+				case DebuggerType.Web:
+					debugType = DebuggerType.WebTest;
+					break;
+				default:
+					logger.info("Unknown debugType, unable to switch to test debugger");
+			}
+		}
+		logger.info(`Using ${DebuggerType[debugType]} debug adapter for this session`);
+		return debugType;
+	}
+
+	protected configureProgramAndCwd(debugConfig: DartVsCodeLaunchArgs, folder: vs.WorkspaceFolder | undefined, openFile: string | undefined) {
+		const isAttachRequest = debugConfig.request === "attach";
+
+		// Convert to an absolute paths (if possible).
+		if (debugConfig.cwd && !path.isAbsolute(debugConfig.cwd) && folder) {
+			debugConfig.cwd = path.join(fsPath(folder.uri), debugConfig.cwd);
+			this.logger.info(`Converted cwd to absolute path: ${debugConfig.cwd}`);
+		}
+		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
+			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder!.uri), debugConfig.program);
+			this.logger.info(`Converted program to absolute path: ${debugConfig.program}`);
+		}
+
+		if (!isAttachRequest) {
+			// If there's no program set, try to guess one.
+			if (!debugConfig.program) {
+				const preferredFolder = debugConfig.cwd
+					? debugConfig.cwd
+					: folder
+						? fsPath(folder.uri)
+						: undefined;
+
+				// If we have a folder specified, we should only consider open files if it's inside it.
+				const preferredFile = !preferredFolder || (!!openFile && isWithinPath(openFile, preferredFolder)) ? openFile : undefined;
+				debugConfig.program = debugConfig.program || this.guessBestEntryPoint(preferredFile, preferredFolder);
+			}
+		}
+
+		// If we don't have a cwd then find the best one from the project root.
+		if (!debugConfig.cwd && folder) {
+			debugConfig.cwd = fsPath(folder.uri);
+			this.logger.info(`Using workspace as cwd: ${debugConfig.cwd}`);
+
+			// If we have an entry point, see if we can make this more specific by finding a .packages file
+			if (debugConfig.program) {
+				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
+				if (bestProjectRoot && isWithinPath(bestProjectRoot, fsPath(folder.uri))) {
+					debugConfig.cwd = bestProjectRoot;
+					this.logger.info(`Found better project root to use as cwd: ${debugConfig.cwd}`);
+				}
+			}
+		}
+
+		// Ensure we have a full path.
+		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
+			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
+
+		if (debugConfig.program && path.isAbsolute(debugConfig.program) && !fs.existsSync(debugConfig.program)) {
+			this.logger.warn(`Launch config references non-existant file ${debugConfig.program}`);
+			window.showWarningMessage(`Your launch config references a program that does not exist. If you have problems launching, check the "program" field in your ".vscode/launch.json" file.`);
+		}
 	}
 
 	private errorWithoutOpeningLaunchConfig(message: string) {
