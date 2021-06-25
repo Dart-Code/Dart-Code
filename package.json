@@ -2444,6 +2444,13 @@
 								"type": "string",
 								"description": "Path to the entry script (eg. lib/main.dart). This is required when attaching to Flutter apps if the entry point is not lib/main.dart."
 							},
+							"args": {
+								"type": "array",
+								"description": "Arguments to be passed when attaching on the command line. These arguments are only used for attach requests that run commands (like 'flutter attach') and not if connecting directly to a VM Service URI without any tooling.",
+								"items": {
+									"type": "string"
+								}
+							},
 							"deviceId": {
 								"type": "string",
 								"description": "The ID of the device to attach to. If not supplied, will use the selected device shown in the status bar."
