@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
-import { PubDeps } from "../../shared/pub/deps";
+import { PubDeps, PubDepsPackage, ShortestPaths } from "../../shared/pub/deps";
 import { PackageMap } from "../../shared/pub/package_map";
 import { sortBy } from "../../shared/utils/array";
 import { areSameFolder, fsPath } from "../../shared/utils/fs";
@@ -50,15 +50,27 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 				: nodes;
 
 		} else if (element instanceof PackageDepProject) {
-			const allPackages = await this.getPackages(element);
-			if (!this.dartCapabilities.supportsPubDepsJson)
+			// Try getting dependencies from `pub deps`.
+			let packages: { [key: string]: PubDepsPackage } | undefined;
+			let shortestPaths: ShortestPaths | undefined;
+			if (this.dartCapabilities.supportsPubDepsJson) {
+				// Fetch dependencies with "pub deps --json".
+				const root = await this.deps.getRootDependency(element.projectFolder);
+				packages = root ? this.deps.getPackageMap(root) : undefined;
+				shortestPaths = packages ? this.deps.computeShortestPaths(packages) : undefined;
+			}
+
+			// Get packages from package file.
+			const allPackages = await this.getPackages(element, shortestPaths);
+
+			if (!packages)
 				return allPackages;
 
-			// If we support "pub deps --json" split the packages into groups.
-			const packageKinds = await this.deps.getDependencyKinds(element.projectFolder);
-			const directPackages = allPackages.filter((p) => packageKinds[p.packageName] === "direct");
-			const devPackages = allPackages.filter((p) => packageKinds[p.packageName] === "dev");
-			const transitivePackages = allPackages.filter((p) => packageKinds[p.packageName] === "transitive");
+			// Split the packages into groups.
+			const directPackages = allPackages.filter((p) => packages![p.packageName]?.kind === "direct");
+			const devPackages = allPackages.filter((p) => packages![p.packageName]?.kind === "dev");
+			const transitivePackages = allPackages.filter((p) => packages![p.packageName]?.kind === "transitive");
+
 
 			const nodes: PackageDepProjectPackageGroup[] = [];
 			if (directPackages.length)
@@ -66,7 +78,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 			if (devPackages.length)
 				nodes.push(new PackageDepProjectPackageGroup("dev dependencies", devPackages));
 			if (transitivePackages.length)
-				nodes.push(new PackageDepProjectPackageGroup("transitive dependencies", transitivePackages));
+				nodes.push(new PackageDepProjectPackageGroup("transitive dependencies", transitivePackages, shortestPaths));
 			return nodes;
 		} else if (element instanceof PackageDepProjectPackageGroup) {
 			// For the package groups, we've already computed the children when we split
@@ -84,7 +96,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 		}
 	}
 
-	private async getPackages(project: PackageDepProject): Promise<PackageDepPackage[]> {
+	private async getPackages(project: PackageDepProject, shortestPaths: ShortestPaths | undefined): Promise<PackageDepPackage[]> {
 		const map = PackageMap.loadForProject(this.logger, project.projectFolder);
 		const packages = map.packages;
 		const packageNames = sortBy(Object.keys(packages), (s) => s.toLowerCase());
@@ -95,7 +107,8 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 				let packagePath = packages[name];
 				if (path.basename(packagePath) === "lib")
 					packagePath = path.normalize(path.join(packagePath, ".."));
-				return new PackageDepPackage(`${name}`, vs.Uri.file(packagePath));
+				const shortestPath = shortestPaths ? shortestPaths[name] : undefined;
+				return new PackageDepPackage(`${name}`, vs.Uri.file(packagePath), shortestPath);
 			});
 
 		return packageDepNodes;
@@ -186,6 +199,7 @@ export class PackageDepProjectPackageGroup extends PackageDep {
 	constructor(
 		label: string,
 		public readonly packages: PackageDepPackage[],
+		public readonly shortestPaths?: ShortestPaths,
 	) {
 		super(label, undefined, vs.TreeItemCollapsibleState.Collapsed);
 		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
@@ -196,8 +210,12 @@ export class PackageDepPackage extends PackageDep {
 	constructor(
 		public readonly packageName: string,
 		resourceUri: vs.Uri,
+		shortestPath: string[] | undefined,
 	) {
 		super(packageName, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
 		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
+
+		if (shortestPath)
+			this.tooltip = shortestPath.join(" → ");
 	}
 }
