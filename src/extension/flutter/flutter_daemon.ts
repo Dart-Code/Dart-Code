@@ -18,6 +18,8 @@ import { getGlobalFlutterArgs, getToolEnv, safeToolSpawn } from "../utils/proces
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
+	private hasShownTerminationError = false;
+	private isShuttingDown = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonStartedCompleter = new PromiseCompleter<void>();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
@@ -59,7 +61,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		}
 	}
 
+	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
+		if (code && !this.hasShownTerminationError && !this.isShuttingDown) {
+			this.hasShownTerminationError = true;
+			const message = this.hasStarted ? "has terminated" : "failed to start";
+			// tslint:disable-next-line: no-floating-promises
+			promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
+		}
+		super.handleExit(code, signal);
+	}
+
 	public dispose() {
+		this.isShuttingDown = true;
 		super.dispose();
 	}
 
@@ -67,9 +80,12 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			// tslint:disable-next-line: no-floating-promises
-			promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
-			throw e;
+			if (!this.hasShownTerminationError && !this.isShuttingDown) {
+				this.hasShownTerminationError = true;
+				// tslint:disable-next-line: no-floating-promises
+				promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
+				throw e;
+			}
 		}
 	}
 
