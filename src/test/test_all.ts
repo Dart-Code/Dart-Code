@@ -99,20 +99,20 @@ async function runAllTests(): Promise<void> {
 	try {
 		// TODO: Generate this from shared code with generate_launch_configs.ts.
 		if (!process.env.BOT || process.env.BOT === "dart") {
-			await runTests("dart", "hello_world");
+			await runTests("dart", "hello_world", undefined, { DART_CODE_FORCE_LSP: "false" });
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_lsp") {
 			await runTests("dart", "hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter") {
-			await runTests("flutter", "flutter_hello_world");
+			await runTests("flutter", "flutter_hello_world", undefined, { DART_CODE_FORCE_LSP: "false" });
 			await runTests("flutter_bazel", "bazel_workspace/flutter_hello_world_bazel");
-		}
-		if (!process.env.BOT || process.env.BOT === "flutter_snap") {
-			await runTests("flutter_snap", "empty");
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_lsp") {
 			await runTests("flutter", "flutter_hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
+		}
+		if (!process.env.BOT || process.env.BOT === "flutter_snap") {
+			await runTests("flutter_snap", "empty");
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_debug") {
 			await runTests("dart_debug", "hello_world");
