@@ -2,7 +2,7 @@ import { Thread, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
-import { errorString, PromiseCompleter } from "../shared/utils";
+import { errorString, PromiseCompleter, uriToFilePath } from "../shared/utils";
 import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 
@@ -260,7 +260,9 @@ export class ThreadInfo {
 					if (!this.manager.debugSession.vmService)
 						return undefined;
 
-					const result = await this.manager.debugSession.vmService.addBreakpointWithScriptUri(this.ref.id, uri, bp.line, bp.column);
+					const breakpointUri = this.manager.debugSession.packageMap?.convertFileToPackageUri(uriToFilePath(uri)) ?? uri;
+
+					const result = await this.manager.debugSession.vmService.addBreakpointWithScriptUri(this.ref.id, breakpointUri, bp.line, bp.column);
 					const vmBp: VMBreakpoint = (result.result as VMBreakpoint);
 					this.vmBps[uri]?.push(vmBp);
 					this.breakpoints[vmBp.id] = bp;

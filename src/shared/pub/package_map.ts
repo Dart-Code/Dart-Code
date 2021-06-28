@@ -1,9 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as url from "url";
+import { isWin } from "../constants";
 import { Logger } from "../interfaces";
 import { findFileInAncestor, uriToFilePath } from "../utils";
-import { normalizeSlashes } from "../utils/fs";
+import { isWithinPath, normalizeSlashes } from "../utils/fs";
 
 export abstract class PackageMap {
 	public static findPackagesFile<T extends string | undefined>(entryPoint: T): string | (undefined extends T ? undefined : never) {
@@ -66,6 +67,27 @@ export abstract class PackageMap {
 			return path.join(location, rest);
 		else
 			return undefined;
+	}
+
+	public convertFileToPackageUri(file: string | undefined): string | undefined {
+		if (!file)
+			return;
+		for (const name of Object.keys(this.packages)) {
+			const dir = this.packages[name];
+			if (isWithinPath(file, dir)) {
+				let rest = file.substring(dir.length);
+				// package: uri should always use forward slashes.
+				if (isWin)
+					rest = rest.replace(/\\/g, "/");
+				// Ensure we don't start with a slash if the map didn't have a trailing slash,
+				// else we'll end up with doubles. See https://github.com/Dart-Code/Dart-Code/issues/398
+				if (rest.startsWith("/"))
+					rest = rest.substr(1);
+				return `package:${name}/${rest}`;
+			}
+		}
+
+		return undefined;
 	}
 }
 
