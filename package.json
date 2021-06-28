@@ -1511,13 +1511,15 @@
 				"dart.cliConsole": {
 					"enum": [
 						"debugConsole",
-						"terminal"
+						"terminal",
+						"externalTerminal"
 					],
 					"default": "debugConsole",
-					"description": "Whether to run Dart CLI apps in the Debug Console or the VS Code integrated terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin.",
+					"description": "Whether to run Dart CLI apps in the Debug Console or a terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin.",
 					"enumDescriptions": [
 						"Run in the Debug Console pane, using the input as a REPL to evaluate expressions",
-						"Run in the VS Code integrated terminal where input will be sent to stdin "
+						"Run in the VS Code integrated terminal where input will be sent to stdin",
+						"Run in an external terminal where input will be sent to stdin"
 					],
 					"scope": "window"
 				},
@@ -2341,10 +2343,11 @@
 							"console": {
 								"enum": [
 									"debugConsole",
-									"terminal"
+									"terminal",
+									"externalTerminal"
 								],
 								"default": "debugConsole",
-								"description": "Whether to run Dart CLI apps in the Debug Console or the VS Code integrated terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin."
+								"description": "Whether to run Dart CLI apps in the Debug Console or a terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin."
 							},
 							"enableAsserts": {
 								"type": "boolean",

@@ -3,7 +3,7 @@ import { WorkspaceConfig } from "../interfaces";
 /// Launch arguments that are passed to (and understood by) the debug adapters.
 export interface DartLaunchArgs {
 	args?: string[];
-	console?: "debugConsole" | "terminal";
+	console?: "debugConsole" | "terminal" | "externalTerminal";
 	cwd?: string;
 	dartSdkPath: string;
 	debugExternalLibraries: boolean;

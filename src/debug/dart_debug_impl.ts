@@ -194,15 +194,21 @@ export class DartDebugSession extends DebugSession {
 			this.vmServiceInfoFile = path.join(os.tmpdir(), `dart-vm-service-${getRandomInt(0x1000, 0x10000).toString(16)}.json`);
 		}
 
+		const terminalType = args.console === "terminal"
+			? "integrated"
+			: args.console === "externalTerminal"
+				? "external"
+				: undefined;
+
 		try {
 			// Terminal mode is only supported if we can use writeServiceInfo.
 			// TODO: Move useWriteServiceInfo check to the client, so other clients do not need to provide this.
-			if (args.console === "terminal" && !this.supportsRunInTerminalRequest) {
+			if (terminalType && !this.supportsRunInTerminalRequest) {
 				this.log("Ignoring request to run in terminal because client does not support runInTerminalRequest", LogSeverity.Warn);
 			}
-			if (args.console === "terminal" && this.useWriteServiceInfo && this.supportsRunInTerminalRequest) {
+			if (terminalType && this.useWriteServiceInfo && this.supportsRunInTerminalRequest) {
 				this.deleteServiceFileAfterRead = true;
-				this.childProcess = await this.spawnRemoteEditorProcess(args);
+				this.childProcess = await this.spawnRemoteEditorProcess(args, terminalType);
 			} else {
 				const process = await this.spawnProcess(args);
 
@@ -357,7 +363,7 @@ export class DartDebugSession extends DebugSession {
 		return process;
 	}
 
-	protected async spawnRemoteEditorProcess(args: DartLaunchArgs): Promise<RemoteEditorTerminalProcess> {
+	protected async spawnRemoteEditorProcess(args: DartLaunchArgs, terminalType: "integrated" | "external"): Promise<RemoteEditorTerminalProcess> {
 		const appArgs = this.buildAppArgs(args);
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
 
@@ -370,7 +376,7 @@ export class DartDebugSession extends DebugSession {
 				args: [dartPath].concat(appArgs),
 				cwd: args.cwd,
 				env: args.env,
-				kind: "integrated",
+				kind: terminalType,
 				title: args.name,
 			} as DebugProtocol.RunInTerminalRequestArguments, 15000, (response: DebugProtocol.Response) => {
 				if (response.success) {
