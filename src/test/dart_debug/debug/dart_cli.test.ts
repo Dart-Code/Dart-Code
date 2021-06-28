@@ -891,7 +891,7 @@ describe("dart cli debugger", () => {
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
@@ -924,7 +924,7 @@ describe("dart cli debugger", () => {
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
@@ -940,7 +940,7 @@ describe("dart cli debugger", () => {
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year;`);
 			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
@@ -1004,7 +1004,7 @@ describe("dart cli debugger", () => {
 			const evaluateResult = await dc.evaluateRequest({ expression: `(new DateTime.now()).year` });
 			assert.ok(evaluateResult);
 			assert.ok(evaluateResult.body);
-			assert.equal(evaluateResult.body.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.body.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.body.variablesReference, 0);
 		});
 
@@ -1039,7 +1039,7 @@ describe("dart cli debugger", () => {
 			const evaluateResult = await dc.evaluateRequest({ expression: `(new DateTime.now()).year;` });
 			assert.ok(evaluateResult);
 			assert.ok(evaluateResult.body);
-			assert.equal(evaluateResult.body.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.body.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.body.variablesReference, 0);
 		});
 

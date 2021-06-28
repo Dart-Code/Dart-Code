@@ -291,7 +291,7 @@ describe.skip("web debugger", () => {
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
@@ -334,7 +334,7 @@ describe.skip("web debugger", () => {
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
 			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, (new Date()).getFullYear());
+			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 	});
