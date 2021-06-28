@@ -7,7 +7,7 @@ export class ColorRangeComputer {
 	private readonly materialNameColorPattern = "\\bColors\\.(?<mc>[\\w_\\[\\]\\.]+)";
 	private readonly cupertinoNameColorPattern = "\\bCupertinoColors\\.(?<cc>[\\w_\\[\\]\\.]+)";
 	private readonly colorConstructorPattern = "\\bColor\\(\\s*0x(?<cons>[A-Fa-f0-9]{8}),{0,1}\\s*\\)";
-	private readonly colorConstructorRgbo = "\\bColor\\.fromRGBO\\(\\s*(?<rgboR>[\\w_]+),\\s*(?<rgboG>[\\w_]+),\\s*(?<rgboB>[\\w_]+),\\s*(?<rgboA>[\\w_.]+),{0,1}\\s*\\)";
+	private readonly colorConstructorRgbo = "\\bColor\\.fromRGBO\\(\\s*(?<rgboR>[\\w_]+),\\s*(?<rgboG>[\\w_]+),\\s*(?<rgboB>[\\w_]+),\\s*(?<rgboO>[\\w_.]+),{0,1}\\s*\\)";
 	private readonly colorConstructorArgb = "\\bColor\\.fromARGB\\(\\s*(?<argbA>[\\w_]+),\\s*(?<argbR>[\\w_]+),\\s*(?<argbG>[\\w_]+),\\s*(?<argbB>[\\w_]+),{0,1}\\s*\\)";
 
 	private readonly allColors = [

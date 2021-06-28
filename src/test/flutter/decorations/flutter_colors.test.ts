@@ -41,11 +41,11 @@ var cupertino = [
 var formats = [
     Color.fromARGB(255, 30,
         30, 30),
-    Color.fromARGB(
-      255,
+    Color.fromRGBO(
       0x1e,
       0x1e,
       0x1e,
+      0.5,
     )
 ];
 		`));
@@ -55,7 +55,7 @@ var formats = [
 		const results = computer.compute(doc);
 
 		assert.ok(results);
-		assert.equal(Object.keys(results).length, 13);
+		assert.equal(Object.keys(results).length, 14);
 		const ensureColor = (hex: string, ranges: Range[]) => {
 			assert.ok(results[hex], `No results for ${hex}`);
 			assert.deepStrictEqual(results[hex].map(rangeString), ranges.map(rangeString), `Incorrect ranges for ${hex}`);
@@ -74,9 +74,7 @@ var formats = [
 		ensureColor("ffffcc00", rangesOf(" |CupertinoColors.systemYellow|,"));
 		ensureColor("ffffd426", rangesOf(" |CupertinoColors.systemYellow.darkHighContrastElevatedColor|"));
 
-		ensureColor("ff1e1e1e", [
-			rangeOf(" |Color.fromARGB(255, 30,\n        30, 30)|"),
-			rangeOf(" |Color.fromARGB(\n      255,\n      0x1e,\n      0x1e,\n      0x1e,\n    )|"),
-		]);
+		ensureColor("ff1e1e1e", [rangeOf(" |Color.fromARGB(255, 30,\n        30, 30)|")]);
+		ensureColor("801e1e1e", [rangeOf(" |Color.fromRGBO(\n      0x1e,\n      0x1e,\n      0x1e,\n      0.5,\n    )|")]);
 	});
 });
