@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { activate, extApi, getExpectedResults, helloWorldTestDiscoveryFile, makeTextTree, openFile, waitForResult } from "../../helpers";
 
 describe("dart test tree", () => {

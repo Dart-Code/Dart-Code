@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -756,15 +756,15 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const stack2 = await dc.getStack(1, 9); // frame 1-10
 		const stack3 = await dc.getStack(10, 10); // frame 10-19
 		const stack4 = await dc.getStack(20, 1000); // rest
-		assert.strictEqual(stack1.body.stackFrames.length, 1);
+		assert.equal(stack1.body.stackFrames.length, 1);
 		// For the first frame, we'll always get 1 + batchSize because we may short-cut going to the VM.
-		assert.strictEqual(stack1.body.totalFrames, 21); // Expect n + 20
-		assert.strictEqual(stack2.body.stackFrames.length, 9);
-		assert.strictEqual(stack2.body.totalFrames, expectFullCount ? fullStackFrameCount : 30); // offset+length+20
-		assert.strictEqual(stack3.body.stackFrames.length, 10);
-		assert.strictEqual(stack3.body.totalFrames, expectFullCount ? fullStackFrameCount : 40); // offset+length+20
-		assert.strictEqual(stack4.body.stackFrames.length, fullStackFrameCount - 20); // Full minus the 20 already fetched.
-		assert.strictEqual(stack4.body.totalFrames, fullStackFrameCount); // Always expect full count for rest
+		assert.equal(stack1.body.totalFrames, 21); // Expect n + 20
+		assert.equal(stack2.body.stackFrames.length, 9);
+		assert.equal(stack2.body.totalFrames, expectFullCount ? fullStackFrameCount : 30); // offset+length+20
+		assert.equal(stack3.body.stackFrames.length, 10);
+		assert.equal(stack3.body.totalFrames, expectFullCount ? fullStackFrameCount : 40); // offset+length+20
+		assert.equal(stack4.body.stackFrames.length, fullStackFrameCount - 20); // Full minus the 20 already fetched.
+		assert.equal(stack4.body.totalFrames, fullStackFrameCount); // Always expect full count for rest
 		const frameNames = [
 			...stack1.body.stackFrames,
 			...stack2.body.stackFrames,
@@ -777,7 +777,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// if that's expected.
 		const frameMultiplier = frameNames[0] === frameNames[1] ? 2 : 1;
 		for (let i = 0; i < 60; i++)
-			assert.strictEqual(frameNames[i * frameMultiplier], `func${60 - i}`);
+			assert.equal(frameNames[i * frameMultiplier], `func${60 - i}`);
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {

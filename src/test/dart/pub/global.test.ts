@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { twoHoursInMs } from "../../../shared/constants";
 import { VersionStatus } from "../../../shared/enums";

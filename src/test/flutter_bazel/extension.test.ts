@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { isWin, MAX_VERSION } from "../../shared/constants";
@@ -37,15 +37,15 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.config);
-		assert.strictEqual(workspaceContext.config?.disableAutomaticPackageGet, true);
-		assert.strictEqual(workspaceContext.config?.flutterVersion, MAX_VERSION);
-		assert.strictEqual(workspaceContext.config?.forceFlutterWorkspace, true);
-		assert.strictEqual(workspaceContext.config?.forceFlutterDebug, true);
-		assert.strictEqual(workspaceContext.config?.skipFlutterInitialization, true);
+		assert.equal(workspaceContext.config?.disableAutomaticPackageGet, true);
+		assert.equal(workspaceContext.config?.flutterVersion, MAX_VERSION);
+		assert.equal(workspaceContext.config?.forceFlutterWorkspace, true);
+		assert.equal(workspaceContext.config?.forceFlutterDebug, true);
+		assert.equal(workspaceContext.config?.skipFlutterInitialization, true);
 		assert.deepStrictEqual(workspaceContext.config?.flutterDaemonScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterDoctorScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterRunScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"), replacesArgs: 1 });
-		assert.strictEqual(workspaceContext.config?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
+		assert.equal(workspaceContext.config?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
 		assert.deepStrictEqual(workspaceContext.config?.flutterTestScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"), replacesArgs: 1 });
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});

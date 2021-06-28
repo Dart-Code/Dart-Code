@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { DART_DEP_PACKAGE_NODE_CONTEXT } from "../../../shared/constants";
 import { ensurePackageTreeNode, extApi, getPackages } from "../../helpers";
 

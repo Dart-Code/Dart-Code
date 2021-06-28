@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
@@ -79,7 +79,7 @@ describe("dart cli debugger", () => {
 
 			// Since we clicked Show Errors, we expect the resolved config to be undefined, since
 			// launch will have been aborted.
-			assert.strictEqual(config, undefined);
+			assert.equal(config, undefined);
 			assert(showErrorMessage.calledOnce);
 		});
 		it("and launches if they click Debug Anyway", async () => {
@@ -131,7 +131,7 @@ describe("dart cli debugger", () => {
 			const config = await getLaunchConfiguration(tempTestScript);
 
 			// Since the error is in the test script we're running, we expect the prompt.
-			assert.strictEqual(config, undefined);
+			assert.equal(config, undefined);
 			assert(showErrorMessage.calledOnce);
 		});
 	});
@@ -584,15 +584,15 @@ describe("dart cli debugger", () => {
 		const stack2 = await dc.getStack(1, 9); // frame 1-10
 		const stack3 = await dc.getStack(10, 10); // frame 10-19
 		const stack4 = await dc.getStack(20, 1000); // rest
-		assert.strictEqual(stack1.body.stackFrames.length, 1);
+		assert.equal(stack1.body.stackFrames.length, 1);
 		// For the first frame, we'll always get 1 + batchSize because we may short-cut going to the VM.
-		assert.strictEqual(stack1.body.totalFrames, 21); // Expect n + 20
-		assert.strictEqual(stack2.body.stackFrames.length, 9);
-		assert.strictEqual(stack2.body.totalFrames, expectFullCount ? fullStackFrameCount : 30); // offset+length+20
-		assert.strictEqual(stack3.body.stackFrames.length, 10);
-		assert.strictEqual(stack3.body.totalFrames, expectFullCount ? fullStackFrameCount : 40); // offset+length+20
-		assert.strictEqual(stack4.body.stackFrames.length, fullStackFrameCount - 20); // Full minus the 20 already fetched.
-		assert.strictEqual(stack4.body.totalFrames, fullStackFrameCount); // Always expect full count for rest
+		assert.equal(stack1.body.totalFrames, 21); // Expect n + 20
+		assert.equal(stack2.body.stackFrames.length, 9);
+		assert.equal(stack2.body.totalFrames, expectFullCount ? fullStackFrameCount : 30); // offset+length+20
+		assert.equal(stack3.body.stackFrames.length, 10);
+		assert.equal(stack3.body.totalFrames, expectFullCount ? fullStackFrameCount : 40); // offset+length+20
+		assert.equal(stack4.body.stackFrames.length, fullStackFrameCount - 20); // Full minus the 20 already fetched.
+		assert.equal(stack4.body.totalFrames, fullStackFrameCount); // Always expect full count for rest
 		const frameNames = [
 			...stack1.body.stackFrames,
 			...stack2.body.stackFrames,
@@ -602,7 +602,7 @@ describe("dart cli debugger", () => {
 			.map((f) => f.name);
 		// The top 60 frames should be from func60 down to func1.
 		for (let i = 0; i < 60; i++)
-			assert.strictEqual(frameNames[i], `func${60 - i}`);
+			assert.equal(frameNames[i], `func${60 - i}`);
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {

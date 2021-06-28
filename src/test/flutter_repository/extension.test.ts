@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { tenMinutesInMs } from "../../shared/constants";
@@ -43,9 +43,9 @@ describe("extension", () => {
 				+ filesWithErrors
 					.slice(0, Math.min(10, filesWithErrors.length))
 					.map((file) => "    "
-							+ path.basename(fsPath(file[0]))
-							+ ": "
-							+ file[1].find(warningOrError)!.message)
+						+ path.basename(fsPath(file[0]))
+						+ ": "
+						+ file[1].find(warningOrError)!.message)
 					.join("\n"),
 			);
 		}

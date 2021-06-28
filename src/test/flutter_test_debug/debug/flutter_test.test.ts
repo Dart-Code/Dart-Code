@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
@@ -104,7 +104,7 @@ describe("flutter test debugger", () => {
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 
 		const testDone = testDoneNotification.body.notification as TestDoneNotification;
-		assert.strictEqual(testDone.skipped, true);
+		assert.equal(testDone.skipped, true);
 	});
 
 	it("can run skipped tests from codelens if supported", async function () {
@@ -142,7 +142,7 @@ describe("flutter test debugger", () => {
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 
 		const testDone = testDoneNotification.body.notification as TestDoneNotification;
-		assert.strictEqual(testDone.skipped, false); // Test should have run.
+		assert.equal(testDone.skipped, false); // Test should have run.
 	});
 
 	it("receives the expected events from a Flutter test script", async () => {
@@ -373,7 +373,7 @@ test/widget_test.dart [2/2 passed, {duration}ms] (pass.svg)
 
 		// Get the actual tree, filtered only to those that ran in the last run.
 		const actualResults = (await makeTextTree(flutterTestMainFile, extApi.testTreeProvider, { onlyActive: true })).join("\n");
-		assert.strictEqual(actualResults, expectedResults);
+		assert.equal(actualResults, expectedResults);
 	});
 });
 

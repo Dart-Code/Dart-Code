@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as path from "path";
 import { DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -126,7 +126,7 @@ export function expectTopLevelTestNodeCount(topLevelNodes: SuiteNode[], expected
 		? ""
 		: topLevelNodes.map((n) => `        ${n.label ?? n.suiteData.path} (${TestStatus[n.getHighestStatus(true)]})`).join("\n");
 
-	assert.strictEqual(
+	assert.equal(
 		topLevelNodes.length,
 		expectedLength,
 		`Expected ${expectedLength} nodes but got\n\n${topLevelText}`,

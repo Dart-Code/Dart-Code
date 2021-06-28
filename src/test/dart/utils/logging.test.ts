@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { RingLog } from "../../../shared/logging";
 
 describe("ring_log", () => {

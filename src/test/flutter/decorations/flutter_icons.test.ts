@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as lsp from "../../../shared/analysis/lsp/custom_protocol";
 import * as das from "../../../shared/analysis_server_types";
 import { IconRangeComputer, IconRangeComputerLsp } from "../../../shared/vscode/icon_range_computer";

@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as fs from "fs";
 import { tmpdir } from "os";
 import * as path from "path";

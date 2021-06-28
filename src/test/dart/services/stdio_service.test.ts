@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { FakeProcessStdIOService } from "../../services/fake_stdio_service";
 
 describe("stdio_service", () => {

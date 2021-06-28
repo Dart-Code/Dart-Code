@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { maxStackFrameMessageLength, parseStackFrame } from "../../../shared/utils/stack_trace";
 
 const texts = [

@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { Range } from "vscode";
 import { ColorRangeComputer } from "../../../shared/vscode/color_range_computer";
 import { activate, currentDoc, rangeOf, rangesOf, rangeString, setTestContent, waitForNextAnalysis } from "../../helpers";

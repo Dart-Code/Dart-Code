@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType, TestStatus } from "../../../shared/enums";
@@ -186,7 +186,7 @@ describe("dart test debugger", () => {
 		await vs.commands.executeCommand("dart.clearTestResults");
 
 		const actualResults = await extApi.testTreeProvider.getChildren();
-		assert.strictEqual(actualResults?.length, 0);
+		assert.equal(actualResults?.length, 0);
 	});
 
 	it("builds the expected tree if tests are run in multiple overlapping sessions", async () => {
@@ -214,7 +214,7 @@ describe("dart test debugger", () => {
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
-		assert.strictEqual(actualResults, expectedResults);
+		assert.equal(actualResults, expectedResults);
 	});
 
 	it("warns if multiple tests run when one was expected", async () => {
@@ -262,7 +262,7 @@ ${helloWorldTestMainFile} (Passed / Passed)
 ${helloWorldTestSkipFile} (Skipped / Skipped)
 		`;
 
-		assert.strictEqual(actualOrder.trim(), expectedOrder.trim());
+		assert.equal(actualOrder.trim(), expectedOrder.trim());
 	});
 
 	it("runs all tests if given a folder", async () => {
@@ -394,7 +394,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 
 		// Get the actual tree, filtered only to those that ran in the last run.
 		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider, { onlyActive: true })).join("\n");
-		assert.strictEqual(actualResults, expectedResults);
+		assert.equal(actualResults, expectedResults);
 	});
 
 	it("can rerun only failed tests", async () => {
@@ -419,7 +419,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 			const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("fail.svg")).join("\n");
 			// Get the actual tree, filtered only to those that ran in the last run.
 			const actualResults = (await makeTextTree(file, extApi.testTreeProvider, { onlyActive: true })).join("\n");
-			assert.strictEqual(actualResults, expectedResults);
+			assert.equal(actualResults, expectedResults);
 		}
 	});
 
@@ -437,7 +437,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 		let expectedResults = getExpectedResults();
 		let actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 		assert.ok(actualResults);
-		assert.strictEqual(actualResults, expectedResults);
+		assert.equal(actualResults, expectedResults);
 
 		// Check toggling the setting results in the skipped nodes being removed.
 		await setConfigForTest("dart", "showSkippedTests", false);
@@ -458,7 +458,7 @@ test/tree_test.dart [4/6 passed, {duration}ms] (fail.svg)
 		`.trim();
 		actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
 		assert.ok(actualResults);
-		assert.strictEqual(actualResults, expectedResults);
+		assert.equal(actualResults, expectedResults);
 	});
 
 	it.skip("removes stale results when running a full suite", () => {

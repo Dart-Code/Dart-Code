@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { Position, Range } from "vscode";
 import { DocumentOffsetTracker, DocumentPositionTracker } from "../../../shared/vscode/trackers";
 import { activate, currentDoc, currentEditor, positionOf, setTestContent } from "../../helpers";

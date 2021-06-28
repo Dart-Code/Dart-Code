@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { commands, window } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
 import { runFlutterCreatePrompt, yesAction } from "../../shared/constants";
@@ -82,7 +82,7 @@ describe("device_manager", () => {
 		daemon.capabilities = new DaemonCapabilities("0.6.0");
 		let emulators = await dm.getPickableEmulators(true);
 		let coldBootable = emulators.filter((e) => e.coldBoot !== undefined && e.coldBoot === true);
-		assert.strictEqual(coldBootable.length, 0);
+		assert.equal(coldBootable.length, 0);
 
 		// Set a daemon version that supports cold boot
 		daemon.capabilities = new DaemonCapabilities("0.6.1");
@@ -90,9 +90,9 @@ describe("device_manager", () => {
 		coldBootable = emulators.filter((e) => e.coldBoot !== undefined && e.coldBoot === true);
 		const androidEmulators = emulators.filter((e) => e.device.platformType === "android" && e.device.type === "emulator");
 		// Expect that all android emulators have a coldboot version
-		assert.strictEqual(coldBootable.length, androidEmulators.length);
+		assert.equal(coldBootable.length, androidEmulators.length);
 		// All cold boot entries should have the type android
-		coldBootable.forEach((e) => assert.strictEqual(e.device.platformType, "android"));
+		coldBootable.forEach((e) => assert.equal(e.device.platformType, "android"));
 	});
 
 	it("overrides real emulators with custom definitions", async () => {

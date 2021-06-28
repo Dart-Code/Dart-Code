@@ -1,5 +1,4 @@
-/* eslint-disable camelcase */
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { Writable } from "stream";
 import { DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -92,6 +91,7 @@ export class DartDebugClient extends DebugClient {
 		const response: DebugProtocol.Response = {
 			body,
 			command: request.command,
+			// eslint-disable-next-line camelcase
 			request_seq: request.seq,
 			seq: me.sequence++,
 			success: true,

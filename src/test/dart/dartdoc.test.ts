@@ -1,4 +1,4 @@
-import * as assert from "assert";
+import { strict as assert } from "assert";
 import { Uri } from "vscode";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { cleanDartdoc, extensionPath } from "../../shared/vscode/extension_utils";
