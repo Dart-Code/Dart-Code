@@ -330,7 +330,7 @@ export class DebugCommands {
 		const configInspect = launchFile.inspect<any[]>("configurations");
 		const workspaceConfigs = configInspect?.workspaceValue ?? [];
 		const workspaceFolderConfigs = configInspect?.workspaceFolderValue ?? [];
-		const hasWorkspaceConfigs = !!workspaceConfigs.length;
+		const hasWorkspaceConfigs = !!vs.workspace.workspaceFile && !!workspaceConfigs.length;
 		const configs = hasWorkspaceConfigs ? workspaceConfigs : workspaceFolderConfigs;
 		const target = hasWorkspaceConfigs ? vs.ConfigurationTarget.Workspace : vs.ConfigurationTarget.WorkspaceFolder;
 		configs.push(newLaunchConfig);
