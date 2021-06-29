@@ -38,6 +38,14 @@ var cupertino = [
   CupertinoColors.systemYellow.darkHighContrastElevatedColor,
 ];
 
+var css = [
+  CSSColors.darkSalmon,
+  CSSColors.gold,
+  CSSColors.lavender,
+  CSSColors.olive,
+  CSSColors.snow,
+];
+
 var formats = [
     Color.fromARGB(255, 30,
         30, 30),
@@ -55,7 +63,7 @@ var formats = [
 		const results = computer.compute(doc);
 
 		assert.ok(results);
-		assert.equal(Object.keys(results).length, 14);
+		assert.equal(Object.keys(results).length, 19);
 		const ensureColor = (hex: string, ranges: Range[]) => {
 			assert.ok(results[hex], `No results for ${hex}`);
 			assert.deepStrictEqual(results[hex].map(rangeString), ranges.map(rangeString), `Incorrect ranges for ${hex}`);
@@ -73,6 +81,12 @@ var formats = [
 		ensureColor("ffff3b30", rangesOf(" |CupertinoColors.destructiveRed|"));
 		ensureColor("ffffcc00", rangesOf(" |CupertinoColors.systemYellow|,"));
 		ensureColor("ffffd426", rangesOf(" |CupertinoColors.systemYellow.darkHighContrastElevatedColor|"));
+
+		ensureColor("ffe9967a", rangesOf(" |CSSColors.darkSalmon|,"));
+		ensureColor("ffffd700", rangesOf(" |CSSColors.gold|"));
+		ensureColor("ffe6e6fa", rangesOf(" |CSSColors.lavender|"));
+		ensureColor("ff808000", rangesOf(" |CSSColors.olive|,"));
+		ensureColor("fffffafa", rangesOf(" |CSSColors.snow|"));
 
 		ensureColor("ff1e1e1e", [rangeOf(" |Color.fromARGB(255, 30,\n        30, 30)|")]);
 		ensureColor("801e1e1e", [rangeOf(" |Color.fromRGBO(\n      0x1e,\n      0x1e,\n      0x1e,\n      0.5,\n    )|")]);

@@ -1,11 +1,13 @@
 import * as vs from "vscode";
 import { flutterCupertinoColors, flutterMaterialColors } from "../flutter/colors";
+import { flutterCSSColors } from "../flutter/css_colors";
 import { asHexColor } from "../utils";
 import { toRange } from "./utils";
 
 export class ColorRangeComputer {
 	private readonly materialNameColorPattern = "\\bColors\\.(?<mc>[\\w_\\[\\]\\.]+)";
 	private readonly cupertinoNameColorPattern = "\\bCupertinoColors\\.(?<cc>[\\w_\\[\\]\\.]+)";
+	private readonly cssNameColorPattern = "\\bCSSColors\\.(?<css>[\\w]+)";
 	private readonly colorConstructorPattern = "\\bColor\\(\\s*0x(?<cons>[A-Fa-f0-9]{8}),{0,1}\\s*\\)";
 	private readonly colorConstructorRgbo = "\\bColor\\.fromRGBO\\(\\s*(?<rgboR>[\\w_]+),\\s*(?<rgboG>[\\w_]+),\\s*(?<rgboB>[\\w_]+),\\s*(?<rgboO>[\\w_.]+),{0,1}\\s*\\)";
 	private readonly colorConstructorArgb = "\\bColor\\.fromARGB\\(\\s*(?<argbA>[\\w_]+),\\s*(?<argbR>[\\w_]+),\\s*(?<argbG>[\\w_]+),\\s*(?<argbB>[\\w_]+),{0,1}\\s*\\)";
@@ -13,6 +15,7 @@ export class ColorRangeComputer {
 	private readonly allColors = [
 		this.materialNameColorPattern,
 		this.cupertinoNameColorPattern,
+		this.cssNameColorPattern,
 		this.colorConstructorPattern,
 		this.colorConstructorRgbo,
 		this.colorConstructorArgb,
@@ -41,6 +44,8 @@ export class ColorRangeComputer {
 				colorHex = this.extractMaterialColor(result.groups.mc);
 			else if (result.groups.cc)
 				colorHex = this.extractCupertinoColor(result.groups.cc);
+			else if (result.groups.css)
+				colorHex = this.extractCSSColor(result.groups.css);
 			else if (result.groups.cons)
 				colorHex = result.groups.cons.toLowerCase();
 			else if (result.groups.rgboR && result.groups.rgboG && result.groups.rgboB && result.groups.rgboO)
@@ -82,6 +87,13 @@ export class ColorRangeComputer {
 			return;
 
 		return (flutterCupertinoColors[colorName] || flutterCupertinoColors[`${colorName}.color`]).toLowerCase();
+	}
+
+	private extractCSSColor(input: string): string | undefined {
+		if (!(input in flutterCSSColors))
+			return;
+
+		return (flutterCSSColors[input]).toLowerCase();
 	}
 
 	private extractRgboColor(inputR: string, inputG: string, inputB: string, inputO: string): string | undefined {
