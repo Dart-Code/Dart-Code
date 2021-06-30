@@ -2155,6 +2155,15 @@
 					"markdownDescription": "The path to a log file for communication between Dart Code and the VM service. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use `${name}` in the log file name to prevent concurrent debug sessions overwriting each others logs.",
 					"scope": "machine-overridable"
 				},
+				"dart.dapLogFile": {
+					"type": [
+						"null",
+						"string"
+					],
+					"default": null,
+					"markdownDescription": "The path to a log file for communication with the DAP debug adapters. This is useful when trying to diagnose issues with debugging such as missed breakpoints.",
+					"scope": "machine-overridable"
+				},
 				"dart.useKnownChromeOSPorts": {
 					"type": "boolean",
 					"default": true,

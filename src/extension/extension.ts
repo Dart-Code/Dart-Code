@@ -177,6 +177,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Set up log files.
 	setupLog(config.analyzerLogFile, LogCategory.Analyzer);
 	setupLog(config.flutterDaemonLogFile, LogCategory.FlutterDaemon);
+	setupLog(config.dapLogFile, LogCategory.DAP);
 	setupLog(config.devToolsLogFile, LogCategory.DevTools);
 
 	analytics = new Analytics(logger, workspaceContextUnverified);

@@ -56,6 +56,7 @@ class Config {
 	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
 	get cliConsole(): "debugConsole" | "terminal" | "externalTerminal" { return this.getConfig<"debugConsole" | "terminal" | "externalTerminal">("cliConsole", "debugConsole"); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
+	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
 	get debugExtensionBackendProtocol(): "sse" | "ws" { return this.getConfig<"sse" | "ws">("debugExtensionBackendProtocol", "ws"); }
 	get debugExternalLibraries(): boolean { return this.getConfig<boolean>("debugExternalLibraries", false); }
 	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
@@ -181,6 +182,7 @@ export class ResourceConfig {
 	get analyzerLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null))); }
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get completeFunctionCalls(): boolean { return this.getConfig<boolean>("completeFunctionCalls", true); }
+	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
 	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
 	get doNotFormat(): string[] { return this.getConfig<string[]>("doNotFormat", []); }
 	get enableCompletionCommitCharacters(): boolean { return this.getConfig<boolean>("enableCompletionCommitCharacters", false); }
