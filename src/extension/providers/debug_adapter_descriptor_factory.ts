@@ -20,7 +20,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		}
 
 		if (config.experimentalDartDapPath) {
-			const args = [config.experimentalDartDapPath, debuggerName];
+			const args = [config.experimentalDartDapPath, "dap"];
 			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
 			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
 		} else {
