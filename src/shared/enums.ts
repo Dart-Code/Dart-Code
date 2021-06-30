@@ -53,6 +53,7 @@ export enum LogCategory {
 	General,
 	CI,
 	CommandProcesses,
+	DAP,
 	DevTools,
 	Analyzer,
 	PubTest,

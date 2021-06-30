@@ -115,6 +115,7 @@ describe("capture logs command", () => {
 
 		logger.info("This is a test"); // Should be logged
 		logger.info("This is a vm service event", LogCategory.VmService); // Should be logged
+		logger.info("This is a dap event", LogCategory.DAP); // Should be logged
 		logger.info("This is an analyzer event", LogCategory.Analyzer); // Should not be logged
 
 		const logFilename = await log.stopLogging();
@@ -123,6 +124,7 @@ describe("capture logs command", () => {
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
 		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
 		assert.ok(lines.find((l) => l.indexOf("This is a vm service event") !== -1), `Did not find 'This is a vm service event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.indexOf("This is a dap event") !== -1), `Did not find 'This is a dap event' in ${platformEol}${lines.join(platformEol)}`);
 		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") === -1), `Found 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 

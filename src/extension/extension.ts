@@ -82,6 +82,7 @@ import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { DartSignatureHelpProvider } from "./providers/dart_signature_help_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
+import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
@@ -470,6 +471,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, testTreeModel, flutterDaemon, deviceManager, debugCommands, dartCapabilities, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", new DartDebugAdapterLoggerFactory(logger)));
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", new DartDebugAdapterDescriptorFactory(sdks, logger, context)));
 	// Also the providers for the initial configs.
 	if (vs.DebugConfigurationProviderTriggerKind) { // Temporary workaround for GitPod/Theia not having this enum.
