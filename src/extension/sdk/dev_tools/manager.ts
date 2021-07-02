@@ -8,8 +8,8 @@ import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, FlutterWorkspaceContext, Logger, SomeError } from "../../../shared/interfaces";
-import { CategoryLogger, EmittingLogger } from "../../../shared/logging";
+import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger, SomeError } from "../../../shared/interfaces";
+import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
 import { disposeAll } from "../../../shared/utils";
@@ -19,7 +19,6 @@ import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
 import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions } from "../../commands/debug";
 import { config } from "../../config";
-import { FlutterDaemon } from "../../flutter/flutter_daemon";
 import { PubGlobal } from "../../pub/global";
 import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
@@ -48,18 +47,18 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, flutterDaemon?: IFlutterDaemon) {
 		this.devToolsStatusBarItem.name = "Dart/Flutter DevTools";
 		this.disposables.push(this.devToolsStatusBarItem);
 
-		this.handleEagerActivationAndStartup(workspaceContext);
+		this.handleEagerActivationAndStartup(workspaceContext, flutterDaemon);
 	}
 
-	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
+	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext, flutterDaemon?: IFlutterDaemon) {
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
 				if (workspaceContext.config?.startDevToolsServerEagerly) {
-					await this.spawnIfRequired(workspaceContext.config?.startDevToolsFromDaemon ? new FlutterDaemon(new EmittingLogger(), workspaceContext as FlutterWorkspaceContext, this.flutterCapabilities) : undefined, true);
+					await this.spawnIfRequired(workspaceContext.config?.startDevToolsFromDaemon ? flutterDaemon : undefined, true);
 				}
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
@@ -86,7 +85,7 @@ export class DevToolsManager implements vs.Disposable {
 		return page.id;
 	}
 
-	private async spawnIfRequired(flutterDaemon?: FlutterDaemon, silent = false): Promise<string | undefined> {
+	private async spawnIfRequired(flutterDaemon?: IFlutterDaemon, silent = false): Promise<string | undefined> {
 		// If we're mid-silent-activation, wait until that's finished.
 		await this.devToolsActivationPromise;
 
