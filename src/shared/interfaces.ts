@@ -107,6 +107,7 @@ export interface IFlutterDaemon extends IAmDisposable {
 	createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }>;
 	getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse>;
 	serveDevTools(): Thenable<f.ServeDevToolsResponse>;
+	shutdown(): Thenable<void>
 
 	registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): IAmDisposable;
 	registerForDeviceAdded(subscriber: (notification: f.Device) => void): IAmDisposable;

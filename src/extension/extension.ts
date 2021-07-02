@@ -891,6 +891,7 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 		await Promise.all(loggers.map((logger) => logger.dispose()));
 		loggers.length = 0;
 	}
+	await flutterDaemon?.shutdown();
 	vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
 	if (!isRestart) {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);

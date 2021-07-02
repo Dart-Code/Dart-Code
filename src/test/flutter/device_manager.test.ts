@@ -251,6 +251,10 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		return { host: "", port: ""};
 	}
 
+	public async shutdown(): Promise<void> {
+		return;
+	}
+
 	// Subscription methods.
 
 	public registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): IAmDisposable {
