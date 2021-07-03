@@ -1,16 +1,15 @@
 import { strict as assert } from "assert";
 import * as path from "path";
-import { DebugConfiguration, Uri } from "vscode";
+import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
-import { dartVMPath, debugAdapterPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
+import { dartVMPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
 import { DebuggerType, LogCategory, TestStatus } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { SuiteNode } from "../shared/test/test_model";
-import { getDebugAdapterName, getDebugAdapterPort } from "../shared/utils/debug";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, ext, extApi, getLaunchConfiguration, logger, setConfigForTest, watchPromise, withTimeout } from "./helpers";
+import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, setConfigForTest, watchPromise, withTimeout } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -38,23 +37,21 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 }
 
 export function createDebugClient(debugType: DebuggerType) {
-	const debugAdapterName = getDebugAdapterName(debugType);
-	const debugAdapterPort = getDebugAdapterPort(debugAdapterName);
-	const debuggerExecutablePath = path.join(fsPath(ext.extensionUri), debugAdapterPath);
-	const debuggerArgs = [debugAdapterName];
-
-	// TODO: Change this to go through DartDebugAdapterDescriptorFactory to ensure we don't have tests that pass
-	// if we've broken the real implementation.
-	const dc = process.env.DART_CODE_USE_DEBUG_SERVERS
-		? new DartDebugClient({ port: debugAdapterPort }, extApi.debugCommands, extApi.testCoordinator)
-		: new DartDebugClient({ runtime: "node", executable: debuggerExecutablePath, args: debuggerArgs }, extApi.debugCommands, extApi.testCoordinator);
+	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debugType);
+	const dc = descriptor instanceof DebugAdapterServer
+		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator)
+		: descriptor instanceof DebugAdapterExecutable
+			? new DartDebugClient({ runtime: descriptor.command, executable: descriptor.args[0], args: descriptor.args.slice(1) }, extApi.debugCommands, extApi.testCoordinator)
+			: undefined;
+	if (!dc)
+		throw Error(`Unknown debug descriptor type ${descriptor}`);
 
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
 	defer(() => {
 		if (!dc.hasStarted)
 			return;
-		if (debugAdapterName.endsWith("_test")) {
+		if (debugType === DebuggerType.PubTest) {
 			// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 			// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 			// a second request and that'll cause it to quit immediately.

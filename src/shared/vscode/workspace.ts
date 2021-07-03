@@ -1,11 +1,7 @@
 import { ExtensionContext } from "vscode";
 
 export class Context {
-	private context: ExtensionContext;
-
-	private constructor(context: ExtensionContext) {
-		this.context = context;
-	}
+	private constructor(private readonly context: ExtensionContext) { }
 
 	public static for(context: ExtensionContext): Context {
 		return new Context(context);
@@ -38,6 +34,10 @@ export class Context {
 	}
 	public get(key: string): any {
 		return this.context.globalState.get(key);
+	}
+
+	public asAbsolutePath(relativePath: string): string {
+		return this.context.asAbsolutePath(relativePath);
 	}
 
 	get subscriptions(): Array<{ dispose(): any }> { return this.context.subscriptions; }

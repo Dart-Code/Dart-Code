@@ -14,7 +14,6 @@ export class DartDebugAdapterLoggerFactory implements DebugAdapterTrackerFactory
 	}
 }
 
-
 class DartDebugAdapterLogger implements DebugAdapterTracker {
 	constructor(private readonly logger: Logger, private readonly session: DebugSession) { }
 

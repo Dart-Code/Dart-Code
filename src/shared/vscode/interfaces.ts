@@ -1,10 +1,10 @@
-import { CompletionItem, CompletionItemProvider, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CompletionItem, CompletionItemProvider, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
-import { VersionStatus, VmService, VmServiceExtension } from "../enums";
+import { DebuggerType, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { CustomScript, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
@@ -41,6 +41,7 @@ export interface InternalExtensionApi {
 	isInImplementationFileThatCanHaveTest: boolean;
 	isLsp: boolean;
 	dartCapabilities: DartCapabilities;
+	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;
 	debugProvider: DebugConfigurationProvider;
 	debugSessions: Array<{ loadedServiceExtensions: VmServiceExtension[] }>;
