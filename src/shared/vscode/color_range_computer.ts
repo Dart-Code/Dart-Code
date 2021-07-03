@@ -1,6 +1,5 @@
 import * as vs from "vscode";
-import { flutterCupertinoColors, flutterMaterialColors } from "../flutter/colors";
-import { flutterCSSColors } from "../flutter/css_colors";
+import { flutterCSSColors, flutterCupertinoColors, flutterMaterialColors } from "../flutter/colors";
 import { asHexColor } from "../utils";
 import { toRange } from "./utils";
 
