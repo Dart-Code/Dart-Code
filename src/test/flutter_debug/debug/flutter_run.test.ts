@@ -33,7 +33,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	describe("resolves the correct debug config", () => {
-
 		it("for a simple script", async () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				args: ["--foo"],
@@ -87,6 +86,15 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			})!;
 
 			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--target-platform", "android-arm"]);
+		});
+
+		it("with flutterRunAdditionalArgs is set", async () => {
+			await setConfigForTest("dart", "flutterRunAdditionalArgs", ["--no-sound-null-safety"]);
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(flutterHelloWorldMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--no-sound-null-safety"]);
 		});
 	});
 
