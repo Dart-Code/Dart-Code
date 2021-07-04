@@ -645,8 +645,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.addArgsIfNotExist(args, ...getGlobalFlutterArgs());
 		this.addArgsIfNotExist(args, ...conf.flutterAdditionalArgs);
-		if (debugConfig.request === "attach")
-			this.addArgsIfNotExist(args, ...conf.flutterTestAdditionalArgs);
+		this.addArgsIfNotExist(args, ...conf.flutterTestAdditionalArgs);
 
 		if (debugConfig.deviceId)
 			this.addArgsIfNotExist(args, "-d", debugConfig.deviceId);

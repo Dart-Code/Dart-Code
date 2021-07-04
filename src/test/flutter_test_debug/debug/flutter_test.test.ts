@@ -7,7 +7,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, deferUntilLast, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, makeTextTree, openFile, positionOf, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, deferUntilLast, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -19,6 +19,29 @@ describe("flutter test debugger", () => {
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.FlutterTest);
+	});
+
+	describe("resolves the correct debug config", () => {
+		it("for a simple script", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				args: ["--foo"],
+				program: fsPath(flutterTestMainFile),
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.program, fsPath(flutterTestMainFile));
+			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
+			assert.deepStrictEqual(resolvedConfig.args, ["--foo"]);
+		});
+
+		it("with flutterTestAdditionalArgs is set", async () => {
+			await setConfigForTest("dart", "flutterTestAdditionalArgs", ["--no-sound-null-safety"]);
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(flutterTestMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--no-sound-null-safety"]);
+		});
 	});
 
 	it("runs a Flutter test script to completion", async () => {
