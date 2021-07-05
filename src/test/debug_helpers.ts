@@ -9,7 +9,7 @@ import { logProcess } from "../shared/logging";
 import { SuiteNode } from "../shared/test/test_model";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, setConfigForTest, watchPromise, withTimeout } from "./helpers";
+import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, setConfigForTest, waitForResult, watchPromise, withTimeout } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -314,6 +314,15 @@ export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presen
 		assert.equal(frame.source!.presentationHint, presentationHint);
 		assert.equal(frame.source!.origin, origin);
 	}
+}
+
+/// Waits for a service extension call to not throw.
+export async function waitForServiceExtensionResponsive(id: VmServiceExtension, dc: DartDebugClient) {
+	const isResponsive = async () => extApi.debugCommands.vmServices.getCurrentServiceExtensionValue(dc.currentSession, id)
+		.then((_) => true)
+		.catch((_) => false);
+
+	await waitForResult(isResponsive);
 }
 
 export async function ensureServiceExtensionValue(id: VmServiceExtension, expected: unknown, dc: DartDebugClient) {
