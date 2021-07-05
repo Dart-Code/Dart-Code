@@ -17,6 +17,7 @@ export interface DebugCommandHandler {
 	vmServices: {
 		serviceIsRegistered(service: VmService): boolean;
 		serviceExtensionIsLoaded(extension: VmServiceExtension): boolean;
+		getCurrentServiceExtensionValue(session: unknown, id: VmServiceExtension): unknown;
 	};
 	handleDebugSessionStart(session: DebugSession): void;
 	handleDebugSessionEnd(session: DebugSession): void;

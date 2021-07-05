@@ -9,7 +9,7 @@ import { faint } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, defer, deferUntilLast, delay, ensureArrayContainsArray, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -168,6 +168,50 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false);
+	});
+
+	it("can toggle platform", async () => {
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		// Wait for Platform extension before trying to call it.
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.PlatformOverride));
+
+		await ensureServiceExtensionValue(VmServiceExtension.PlatformOverride, "android", dc);
+		await vs.commands.executeCommand("flutter.togglePlatform");
+		await ensureServiceExtensionValue(VmServiceExtension.PlatformOverride, "iOS", dc);
+		await vs.commands.executeCommand("flutter.togglePlatform");
+		await ensureServiceExtensionValue(VmServiceExtension.PlatformOverride, "android", dc);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
+	it("can toggle theme", async () => {
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		// Wait for Brightness extension before trying to call it.
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride));
+
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+		await vs.commands.executeCommand("flutter.toggleBrightness");
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+		await vs.commands.executeCommand("flutter.toggleBrightness");
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
 	});
 
 	it("can quit during a build", async function () {
