@@ -106,7 +106,7 @@ export class VmServiceExtensions {
 			const currentValue = await this.getCurrentServiceExtensionValue(session.session, id);
 			const newValue = currentValue !== val1 ? val1 : val2;
 			this.currentExtensionValues[id] = newValue;
-			await this.sendExtensionValue(session.session, id);
+			await this.sendExtensionValue(session.session, id, newValue);
 		};
 
 		await Promise.all(debugSessions.map((session) => toggleForSession(session).catch((e) => this.logger.error(e))));
@@ -122,16 +122,17 @@ export class VmServiceExtensions {
 			// Only ever send values for enabled and known extensions.
 			const isLoaded = this.loadedServiceExtensions.indexOf(extension) !== -1;
 			const isTogglableService = toggleExtensionStateKeys[extension] !== undefined;
-			const hasValue = this.currentExtensionValues[extension] !== undefined;
+			const value = this.currentExtensionValues[extension];
+			const hasValue = value !== undefined;
 
 			if (isLoaded && isTogglableService && hasValue) {
-				this.sendExtensionValue(session, extension).catch((e) => this.logger.error(e));
+				this.sendExtensionValue(session, extension, value).catch((e) => this.logger.error(e));
 			}
 		}
 	}
 
-	private async sendExtensionValue(session: vs.DebugSession, id: VmServiceExtension) {
-		const params = { [toggleExtensionStateKeys[id]]: this.currentExtensionValues[id] };
+	public async sendExtensionValue(session: vs.DebugSession, id: VmServiceExtension, value: unknown) {
+		const params = { [toggleExtensionStateKeys[id]]: value };
 		await session.customRequest("serviceExtension", { type: id, params });
 	}
 

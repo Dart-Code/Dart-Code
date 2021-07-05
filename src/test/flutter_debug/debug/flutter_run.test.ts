@@ -214,6 +214,65 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
+	it("re-sends theme on hot restart if set by us", async () => {
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("dart.flutter.firstFrame"),
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		// Set the brightness to Dark through our toggle. This leaves us in control so we should
+		// we-transmit it.
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+		await vs.commands.executeCommand("flutter.toggleBrightness");
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+
+		// Hot restart, and wait until after firstFrame so we know the service extension has been reloaded.
+		await Promise.all([
+			dc.waitForEvent("dart.flutter.firstFrame").then((_) => delay(300)), // Plus a short delay to allow DA to re-send
+			vs.commands.executeCommand("flutter.hotRestart"),
+		]);
+
+		// Ensure the current value is still Dark (ie. we re-sent it).
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
+	it("does not re-send theme on hot restart if set by someone else", async () => {
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("dart.flutter.firstFrame"),
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		// Set the brightness to Dark directly. It should be applied, but we would not have recorded it as
+		// being set by use.
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+		await extApi.debugCommands.vmServices.sendExtensionValue(dc.currentSession, VmServiceExtension.BrightnessOverride, "Brightness.dark");
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+
+		// Hot restart, and wait until after firstFrame so we know the service extension has been reloaded.
+		await Promise.all([
+			dc.waitForEvent("dart.flutter.firstFrame").then((_) => delay(300)), // Plus a short delay to allow DA to re-send
+			vs.commands.executeCommand("flutter.hotRestart"),
+		]);
+
+		// Ensure the current value has reverted (since it was the other tools job to re-send it, but in
+		// this case that other tool is fake and did not).
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
 	it("can quit during a build", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
