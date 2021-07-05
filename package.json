@@ -963,11 +963,11 @@
 				},
 				{
 					"command": "flutter.inspectWidget",
-					"when": "inDebugMode && dart-code:trackWidgetCreationEnabled"
+					"when": "inDebugMode"
 				},
 				{
 					"command": "flutter.cancelInspectWidget",
-					"when": "inDebugMode && dart-code:trackWidgetCreationEnabled && dart-code:flutter.isInspectingWidget"
+					"when": "inDebugMode && dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.hotRestart",

@@ -112,7 +112,6 @@ export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
 export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
 export const REFACTOR_ANYWAY = "Refactor Anyway";
 
-export const TRACK_WIDGET_CREATION_ENABLED = "dart-code:trackWidgetCreationEnabled";
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 export const HAS_LAST_TEST_DEBUG_CONFIG = "dart-code:hasLastTestDebugConfig";
 export const isInFlutterDebugModeDebugSessionContext = "dart-code:isInFlutterDebugModeDebugSession";

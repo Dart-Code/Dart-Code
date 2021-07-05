@@ -12,7 +12,7 @@ import { envUtils, getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { ServiceExtensionArgs, timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
+import { timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
@@ -57,7 +57,7 @@ export class DebugCommands {
 	private suppressFlutterWidgetErrors = false;
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
-		this.vmServices = new VmServiceExtensions(logger, this.sendServiceSetting);
+		this.vmServices = new VmServiceExtensions(logger);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, flutterCapabilities);
 		context.subscriptions.push(this.devTools);
 		this.debugOptions.name = "Dart Debug Options";
@@ -682,12 +682,6 @@ export class DebugCommands {
 				debugExternalLibraries,
 				debugSdkLibraries,
 			});
-		});
-	}
-
-	private sendServiceSetting(args: ServiceExtensionArgs) {
-		debugSessions.forEach((session) => {
-			session.session.customRequest("serviceExtension", args);
 		});
 	}
 

@@ -1,8 +1,9 @@
 import * as vs from "vscode";
-import { isWin, TRACK_WIDGET_CREATION_ENABLED } from "../../shared/constants";
+import { isWin } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { debugSessions } from "../commands/debug";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { getExcludedFolders } from "../utils";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -35,47 +36,17 @@ const toggleExtensionStateKeys: { [key: string]: string } = {
 export const timeDilationNormal = 1.0;
 export const timeDilationSlow = 5.0;
 
-/// Default values for each service extension.
-const defaultToggleExtensionState: { [key: string]: any } = {
-	[VmServiceExtension.PlatformOverride]: null, // We don't know the default here so we need to ask for it when the extension loads.
-	[VmServiceExtension.DebugBanner]: true,
-	[VmServiceExtension.CheckElevations]: false,
-	[VmServiceExtension.DebugPaint]: false,
-	[VmServiceExtension.PaintBaselines]: false,
-	[VmServiceExtension.InspectorSelectMode]: false,
-	[VmServiceExtension.BrightnessOverride]: null,
-	[VmServiceExtension.RepaintRainbow]: false,
-	[VmServiceExtension.PerformanceOverlay]: false,
-	[VmServiceExtension.SlowAnimations]: timeDilationNormal,
-};
-
 export interface ServiceExtensionArgs { type: VmServiceExtension; params: any; }
 
 /// Manages state for (mostly Flutter) VM service extensions.
 export class VmServiceExtensions {
 	private registeredServices: { [x in VmService]?: string } = {};
 	private loadedServiceExtensions: VmServiceExtension[] = [];
-	private currentExtensionState = Object.assign({}, defaultToggleExtensionState);
-	private sendValueToVM: (extension: VmServiceExtension) => void;
+	/// Extension values owned by us. If someone else updates a value, we should
+	/// remove it from here.
+	private currentExtensionValues: { [key: string]: any } = {};
 
-	constructor(private readonly logger: Logger, sendRequest: (args: ServiceExtensionArgs) => void) {
-		// To avoid any code in this class accidentally calling sendRequestToFlutter directly, we wrap it here and don't
-		// keep a reference to it.
-		this.sendValueToVM = (extension: VmServiceExtension) => {
-			// Only ever send values for enabled and known extensions.
-			const isLoaded = this.loadedServiceExtensions.indexOf(extension) !== -1;
-			const hasValue = toggleExtensionStateKeys[extension] !== undefined;
-			if (isLoaded && hasValue) {
-				// Build the args in the required format using the correct key and value.
-				const params = { [toggleExtensionStateKeys[extension]]: this.currentExtensionState[extension] };
-				const args = { type: extension, params };
-
-				sendRequest(args);
-
-				this.syncInspectingWidgetContext(extension);
-			}
-		};
-	}
+	constructor(private readonly logger: Logger) { }
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
 	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {
@@ -83,18 +54,7 @@ export class VmServiceExtensions {
 			this.handleServiceExtensionLoaded(session, e.body.id);
 
 			try {
-				// If the isWidgetCreationTracked extension loads, send a command to the debug adapter
-				// asking it to query whether it's enabled (it'll send us an event back with the answer).
-				if (e.body.id === "ext.flutter.inspector.isWidgetCreationTracked") {
-					// TODO: Why do we send these events to the editor for it to send one back? Why don't we just
-					// do the second request in the debug adapter directly and only transmit the result?
-					await e.session.customRequest("checkIsWidgetCreationTracked");
-					// If it's the PlatformOverride, send a request to get the current value.
-				} else if (e.body.id === VmServiceExtension.PlatformOverride) {
-					await e.session.customRequest("checkPlatformOverride");
-				} else if (e.body.id === VmServiceExtension.BrightnessOverride) {
-					await e.session.customRequest("checkBrightnessOverride");
-				} else if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
+				if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
 					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
 
 					const params: { [key: string]: string } = {
@@ -124,15 +84,7 @@ export class VmServiceExtensions {
 			this.handleServiceRegistered(e.body.service, e.body.method);
 		} else if (e.event === "dart.flutter.firstFrame") {
 			// Send all values back to the VM on the first frame so that they persist across restarts.
-			for (const extension of Object.values(VmServiceExtension)) {
-				this.sendValueToVM(extension);
-			}
-		} else if (e.event === "dart.flutter.updateIsWidgetCreationTracked") {
-			vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, e.body.isWidgetCreationTracked);
-		} else if (e.event === "dart.flutter.updatePlatformOverride") {
-			this.currentExtensionState[VmServiceExtension.PlatformOverride] = e.body.platform;
-		} else if (e.event === "dart.flutter.updateBrightnessOverride") {
-			this.currentExtensionState[VmServiceExtension.BrightnessOverride] = e.body.brightness;
+			this.sendExtensionValues(e.session);
 		} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
 			this.handleRemoteValueUpdate(e.body.extension, e.body.value);
 		}
@@ -148,23 +100,56 @@ export class VmServiceExtensions {
 
 	/// Toggles between two values. Always picks the value1 if the current value
 	// is not already value1 (eg. if it's neither of those, it'll pick val1).
-	public toggle(id: VmServiceExtension, val1: any = true, val2: any = false) {
-		this.currentExtensionState[id] = this.currentExtensionState[id] !== val1 ? val1 : val2;
-		this.sendValueToVM(id);
+	public async toggle(id: VmServiceExtension, val1: any = true, val2: any = false): Promise<void> {
+		/// Helper that toggles for one session.
+		const toggleForSession = async (session: DartDebugSessionInformation) => {
+			const currentValue = await this.getCurrentServiceExtensionValue(session.session, id);
+			const newValue = currentValue !== val1 ? val1 : val2;
+			this.currentExtensionValues[id] = newValue;
+			await this.sendExtensionValue(session.session, id);
+		};
+
+		await Promise.all(debugSessions.map((session) => toggleForSession(session).catch((e) => this.logger.error(e))));
 	}
 
-	/// Keep the context in sync so that the "Cancel Inspect Widget" command is enabled/disabled.
-	private syncInspectingWidgetContext(id: string) {
-		vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, this.currentExtensionState[VmServiceExtension.InspectorSelectMode]);
+	public async getCurrentServiceExtensionValue(session: vs.DebugSession, id: VmServiceExtension) {
+		const responseBody = await session.customRequest("serviceExtension", { type: id });
+		return this.extractServiceValue(responseBody[toggleExtensionStateKeys[id]]);
+	}
+
+	private sendExtensionValues(session: vs.DebugSession) {
+		for (const extension of Object.values(VmServiceExtension)) {
+			// Only ever send values for enabled and known extensions.
+			const isLoaded = this.loadedServiceExtensions.indexOf(extension) !== -1;
+			const isTogglableService = toggleExtensionStateKeys[extension] !== undefined;
+			const hasValue = this.currentExtensionValues[extension] !== undefined;
+
+			if (isLoaded && isTogglableService && hasValue) {
+				this.sendExtensionValue(session, extension).catch((e) => this.logger.error(e));
+			}
+		}
+	}
+
+	private async sendExtensionValue(session: vs.DebugSession, id: VmServiceExtension) {
+		const params = { [toggleExtensionStateKeys[id]]: this.currentExtensionValues[id] };
+		await session.customRequest("serviceExtension", { type: id, params });
 	}
 
 	/// Handles updates that come from the VM (eg. were updated by another tool).
 	private handleRemoteValueUpdate(id: string, value: any) {
 		// Don't try to process service extension we don't know about.
-		if (this.currentExtensionState[id] === undefined) {
+		if (this.currentExtensionValues[id] === undefined)
 			return;
-		}
 
+		value = this.extractServiceValue(value);
+
+		// If someone else updated it to something different to the value we're
+		// overriding, then remove our override.
+		if (this.currentExtensionValues[id] !== value)
+			delete this.currentExtensionValues[id];
+	}
+
+	private extractServiceValue(value: any) {
 		// HACK: Everything comes through as strings, but we need bools/ints and sometimes strings,
 		// so attempt to parse it, but keep the original string in the case of failure.
 		if (typeof value === "string") {
@@ -173,15 +158,13 @@ export class VmServiceExtensions {
 			} catch {
 			}
 		}
-
-		this.currentExtensionState[id] = value;
-		this.syncInspectingWidgetContext(id);
+		return value;
 	}
 
 	/// Resets all local state to defaults - used when terminating the last debug session (or
 	// starting the first) to ensure debug toggles don't "persist" across sessions.
 	public resetToDefaults() {
-		this.currentExtensionState = Object.assign({}, defaultToggleExtensionState);
+		this.currentExtensionValues = {};
 	}
 
 	/// Tracks registered services and updates contexts to enable VS Code commands.
@@ -207,7 +190,6 @@ export class VmServiceExtensions {
 			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
 		}
 		this.loadedServiceExtensions.length = 0;
-		vs.commands.executeCommand("setContext", TRACK_WIDGET_CREATION_ENABLED, false);
 	}
 
 	// TODO: These services should be per-session!
