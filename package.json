@@ -2428,7 +2428,7 @@
 							},
 							"args": {
 								"type": "array",
-								"description": "Arguments to be passed to your Dart/Flutter script on the command line. These arguments go after the script filename.",
+								"description": "Arguments to be passed to your Dart/Flutter script on the command line. These arguments usually go after the script filename but may be inserted before for some tools where required.",
 								"items": {
 									"type": "string"
 								}
@@ -2439,7 +2439,7 @@
 							"toolArgs": {
 								"type": "array",
 								"default": [],
-								"description": "Arguments to be passed to the Dart VM/Flutter tools on the command line. These arguments go before the script filename.",
+								"description": "Arguments to be passed to the Dart VM/Flutter tools on the command line. Unlike `args`, these arguments always go before the script filename.",
 								"items": {
 									"type": "string"
 								}

@@ -18,11 +18,14 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		if (args.toolArgs)
 			appArgs = appArgs.concat(args.toolArgs);
 
-		if (args.program)
-			appArgs.push(this.sourceFileForArgs(args));
-
+		// For `flutter test`, arguments cannot go after the script name or they will be interpreted
+		// as test scripts and fail, so insert them before [program]. If `flutter` is updated to work
+		// like `pub run test` and dart run test:test` in future, this should be moved below for consistency.
 		if (args.args)
 			appArgs = appArgs.concat(args.args);
+
+		if (args.program)
+			appArgs.push(this.sourceFileForArgs(args));
 
 		const { binPath, binArgs } = usingCustomScript(
 			path.join(args.flutterSdkPath!, flutterPath),
