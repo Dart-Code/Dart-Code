@@ -15,7 +15,7 @@ type DebugClientArgs = { runtime: string, executable: string, args: string[], po
 
 export class DartDebugClient extends DebugClient {
 	private readonly port: number | undefined;
-	private currentSession?: DebugSession;
+	public currentSession?: DebugSession;
 	public hasStarted = false;
 
 	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testCoordinator: TestSessionCoordinator | undefined) {
@@ -121,7 +121,7 @@ export class DartDebugClient extends DebugClient {
 		);
 		this.currentSession = {
 			configuration,
-			customRequest: (cmd, args) => this.customRequest(cmd, args),
+			customRequest: async (cmd, args) => (await this.customRequest(cmd, args)).body,
 			getDebugProtocolBreakpoint: () => { throw new Error("Not implemented for tests"); },
 			id: "INTEGRATION-TEST",
 			name: configuration.name,

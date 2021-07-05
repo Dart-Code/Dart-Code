@@ -3,7 +3,7 @@ import * as path from "path";
 import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
-import { DebuggerType, LogCategory, TestStatus } from "../shared/enums";
+import { DebuggerType, LogCategory, TestStatus, VmServiceExtension } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { SuiteNode } from "../shared/test/test_model";
@@ -314,4 +314,9 @@ export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presen
 		assert.equal(frame.source!.presentationHint, presentationHint);
 		assert.equal(frame.source!.origin, origin);
 	}
+}
+
+export async function ensureServiceExtensionValue(id: VmServiceExtension, expected: unknown, dc: DartDebugClient) {
+	const value = await extApi.debugCommands.vmServices.getCurrentServiceExtensionValue(dc.currentSession, id);
+	assert.equal(value, expected);
 }
