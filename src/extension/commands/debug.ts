@@ -137,18 +137,18 @@ export class DebugCommands {
 
 		// Misc custom debug commands.
 		context.subscriptions.push(vs.commands.registerCommand("_flutter.hotReload.touchBar", (args: any) => vs.commands.executeCommand("flutter.hotReload", args)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", (args?: any) => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotReloadEmitter.fire();
-			debugSessions.forEach((s) => s.session.customRequest("hotReload", args));
+			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotReload", args)));
 			analytics.logDebuggerHotReload();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", (args?: any) => {
+		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotRestartEmitter.fire();
-			debugSessions.forEach((s) => s.session.customRequest("hotRestart", args));
+			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotRestart", args)));
 			analytics.logDebuggerRestart();
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
