@@ -61,6 +61,6 @@ class Experiment {
 
 class LspDefaultExperiement extends Experiment {
 	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
-		super(logger, workspaceContext, context, "lsp-default", 75);
+		super(logger, workspaceContext, context, "lsp-default", 100);
 	}
 }
