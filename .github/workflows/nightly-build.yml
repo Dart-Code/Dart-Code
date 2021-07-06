@@ -1,0 +1,70 @@
+name: Nightly Build
+
+on:
+  push:
+  # schedule:
+  #    - cron: '0 6 * * 1-5'
+
+jobs:
+
+  build:
+
+    name: "Package Extension"
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v1
+
+      - name: Setup Node v${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - run: npm install -g vsce
+
+      - name: set up submodule
+        run: |
+          git submodule init
+          git submodule update
+        shell: pwsh
+
+      - name: npm install
+        run: npm install
+
+      - name: npm lint
+        run: npm run lint
+
+      - name: npm build
+        run: npm run build
+
+      - name: set version
+        run: |
+          CURRENT_VERSION=$(node -p -e "require('./package.json').version")
+          NEW_VERSION=$CURRENT_VERSION.$(date +%F)
+          npm version $NEW_VERSION --no-git-tag-version
+
+      - name: vsce package
+        run: vsce package
+
+      - name: Store vsix
+        uses: actions/upload-artifact@v2
+        with:
+          name: nightly-build-vsix
+          path: "*.vsix"
+
+
+  notify_failure:
+
+    name: Notify Discord of Failure
+    needs: build
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Send notification to Discord
+        run: 'Invoke-WebRequest -Headers @{ "Content-Type" = "application/json" } -Method Post -Body "{`"content`":`"Nightly build packaging failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/Dart-Code/Dart-Code/commit/$($env:GITHUB_SHA)/checks`"}" -Uri $env:DISCORD_WEBHOOK'
+        shell: pwsh
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
