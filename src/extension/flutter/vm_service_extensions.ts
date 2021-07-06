@@ -3,7 +3,7 @@ import { isWin } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
-import { debugSessions } from "../commands/debug";
+import { DebugCommands, debugSessions } from "../commands/debug";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { getExcludedFolders } from "../utils";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -46,7 +46,9 @@ export class VmServiceExtensions {
 	/// remove it from here.
 	private currentExtensionValues: { [key: string]: any } = {};
 
-	constructor(private readonly logger: Logger) { }
+	constructor(private readonly logger: Logger, private readonly debugCommands: DebugCommands) {
+		this.debugCommands.onWillHotRestart(() => this.markAllServicesUnloaded());
+	}
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
 	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {

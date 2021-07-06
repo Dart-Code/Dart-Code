@@ -230,8 +230,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		// Hot restart, and wait for the service extension to come back.
 		await vs.commands.executeCommand("flutter.hotRestart");
-		await waitForServiceExtensionResponsive(VmServiceExtension.BrightnessOverride, dc);
-		await delay(200); // Plus some delay to allow the DA to re-send.
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride));
+		await delay(100); // Allow time for the values to be re-sent.
 
 		// Ensure the current value is still Dark (ie. we re-sent it).
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
@@ -263,8 +263,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		// Hot restart, and wait for the service extension to come back.
 		await vs.commands.executeCommand("flutter.hotRestart");
-		await waitForServiceExtensionResponsive(VmServiceExtension.BrightnessOverride, dc);
-		await delay(200); // Plus some delay to allow the DA to re-send.
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride));
+		await delay(100); // Allow time for the values to be re-sent.
 
 		// Ensure the current value has reverted (since it was the other tools job to re-send it, but in
 		// this case that other tool is fake and did not).
