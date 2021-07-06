@@ -57,7 +57,7 @@ export class DebugCommands {
 	private suppressFlutterWidgetErrors = false;
 
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
-		this.vmServices = new VmServiceExtensions(logger);
+		this.vmServices = new VmServiceExtensions(logger, this);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, flutterCapabilities);
 		context.subscriptions.push(this.devTools);
 		this.debugOptions.name = "Dart Debug Options";
