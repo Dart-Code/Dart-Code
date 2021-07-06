@@ -9,7 +9,7 @@ import { faint } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates, waitForServiceExtensionResponsive } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, defer, deferUntilLast, delay, ensureArrayContainsArray, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -228,7 +228,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await vs.commands.executeCommand("flutter.toggleBrightness");
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
 
-		// Hot restart, and wait for the service extension to become responsive again.
+		// Hot restart, and wait for the service extension to come back.
 		await vs.commands.executeCommand("flutter.hotRestart");
 		await waitForServiceExtensionResponsive(VmServiceExtension.BrightnessOverride, dc);
 		await delay(200); // Plus some delay to allow the DA to re-send.
@@ -250,13 +250,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		// Set the brightness to Dark directly. It should be applied, but we would not have recorded it as
-		// being set by use.
+		// First toggle the brightness ourselves, so we have a local override value.
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+		await vs.commands.executeCommand("flutter.toggleBrightness");
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+		await vs.commands.executeCommand("flutter.toggleBrightness");
+		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+
+		// Now set it directly (emulating another tool). This should drop our override so we would not re-send it.
 		await extApi.debugCommands.vmServices.sendExtensionValue(dc.currentSession, VmServiceExtension.BrightnessOverride, "Brightness.dark");
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
 
-		// Hot restart, and wait for the service extension to become responsive again.
+		// Hot restart, and wait for the service extension to come back.
 		await vs.commands.executeCommand("flutter.hotRestart");
 		await waitForServiceExtensionResponsive(VmServiceExtension.BrightnessOverride, dc);
 		await delay(200); // Plus some delay to allow the DA to re-send.

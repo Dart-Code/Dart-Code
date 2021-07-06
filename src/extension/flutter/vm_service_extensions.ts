@@ -82,9 +82,6 @@ export class VmServiceExtensions {
 			}
 		} else if (e.event === "dart.serviceRegistered") {
 			this.handleServiceRegistered(e.body.service, e.body.method);
-		} else if (e.event === "dart.flutter.firstFrame") {
-			// Send all values back to the VM on the first frame so that they persist across restarts.
-			this.sendExtensionValues(e.session);
 		} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
 			this.handleRemoteValueUpdate(e.body.extension, e.body.value);
 		}
@@ -115,20 +112,6 @@ export class VmServiceExtensions {
 	public async getCurrentServiceExtensionValue(session: vs.DebugSession, id: VmServiceExtension) {
 		const responseBody = await session.customRequest("serviceExtension", { type: id });
 		return this.extractServiceValue(responseBody[toggleExtensionStateKeys[id]]);
-	}
-
-	private sendExtensionValues(session: vs.DebugSession) {
-		for (const extension of Object.values(VmServiceExtension)) {
-			// Only ever send values for enabled and known extensions.
-			const isLoaded = this.loadedServiceExtensions.indexOf(extension) !== -1;
-			const isTogglableService = toggleExtensionStateKeys[extension] !== undefined;
-			const value = this.currentExtensionValues[extension];
-			const hasValue = value !== undefined;
-
-			if (isLoaded && isTogglableService && hasValue) {
-				this.sendExtensionValue(session, extension, value).catch((e) => this.logger.error(e));
-			}
-		}
 	}
 
 	public async sendExtensionValue(session: vs.DebugSession, id: VmServiceExtension, value: unknown) {
@@ -179,6 +162,16 @@ export class VmServiceExtensions {
 		session.loadedServiceExtensions.push(id);
 		this.loadedServiceExtensions.push(id);
 		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, true);
+
+		// If this extension is one we have an override value for, then this must be the extension loading
+		// for a new isolate (perhaps after a restart), so send its value.
+		// Only ever send values for enabled and known extensions.
+		const isTogglableService = toggleExtensionStateKeys[id] !== undefined;
+		const value = this.currentExtensionValues[id];
+		const hasValue = value !== undefined;
+
+		if (isTogglableService && hasValue)
+			this.sendExtensionValue(session.session, id, value).catch((e) => this.logger.error(e));
 	}
 
 	/// Marks all services and service extensions as not-loaded in the context to disable VS Code Commands.
