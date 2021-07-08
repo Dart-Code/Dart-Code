@@ -476,6 +476,24 @@ export async function setTestContent(content: string): Promise<void> {
 	await extApi.currentAnalysis();
 }
 
+export function enableLint(project: string, lintName: string): void {
+	const analysisOptions = path.join(project, "analysis_options.yaml");
+	let contents = "";
+	if (fs.existsSync(analysisOptions)) {
+		contents = fs.readFileSync(analysisOptions).toString();
+		// Restore after test.
+		defer(() => fs.writeFileSync(analysisOptions, contents));
+	} else {
+		// Delete after test.
+		defer(() => tryDeleteFile(analysisOptions));
+	}
+	if (!contents.includes("linter:\n  rules:\n"))
+		contents += "\nlinter:\n  rules:\n";
+	if (!contents.includes(`\n    - ${lintName}\n`))
+		contents = contents.replace("linter:\n  rules:\n", `linter:\n  rules:\n    - ${lintName}\n`);
+	fs.writeFileSync(analysisOptions, contents);
+}
+
 export async function uncommentTestFile(): Promise<void> {
 	await setTestContent(currentDoc().getText().replace(/\n\/\/ /mg, "\n"));
 }

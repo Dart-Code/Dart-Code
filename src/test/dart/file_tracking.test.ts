@@ -8,7 +8,7 @@ export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder
 
 const file1 = helloWorldBrokenFile;
 const file2 = helloWorldMainFile;
-const allowSlowSubscriptionTests = false;
+export const allowSlowSubscriptionTests = false;
 
 describe("file tracker", () => {
 	beforeEach("activate", () => activate(null));
