@@ -6,7 +6,7 @@ environment:
 
 dependencies:
   http:
-  convert: ^2.0.1
+  convert:
   my_package:
     path: ../my_package
   protobuf:
