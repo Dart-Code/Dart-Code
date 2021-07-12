@@ -80,6 +80,6 @@ export interface SupportedPlatformsResponse {
 }
 
 export interface ServeDevToolsResponse {
-	host: string;
-	port: string;
+	host: string | null;
+	port: string | null;
 }
