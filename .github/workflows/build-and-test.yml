@@ -50,6 +50,17 @@ jobs:
 
       - uses: actions/checkout@v1
 
+      # upload-artifact fails if the path does not exist (it only supports
+      # silent failure for no-files-found, but the path must exist), so
+      # ensure these folders exist so that if the build/lint fails we don't
+      # get additional failures reported on the artifact uploads that make
+      # it less clear what the failure is.
+      - run: |
+          mkdir -p .dart_code_test_logs
+          mkdir -p .test_results
+          mkdir -p coverage
+        shell: pwsh
+
       - name: Setup XVFB
         if: matrix.os == 'ubuntu-latest'
         run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
@@ -139,17 +150,6 @@ jobs:
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter packages get
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
-
-      # upload-artifact fails if the path does not exist (it only supports
-      # silent failure for no-files-found, but the path must exist), so
-      # ensure these folders exist so that if the build/lint fails we don't
-      # get additional failures reported on the artifact uploads that make
-      # it less clear what the failure is.
-      - run: |
-          mkdir -p .dart_code_test_logs
-          mkdir -p .test_results
-          mkdir -p coverage
-        shell: pwsh
 
       - name: npm test
         run: npm test
