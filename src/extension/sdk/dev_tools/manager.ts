@@ -106,7 +106,7 @@ export class DevToolsManager implements vs.Disposable {
 			if (flutterDaemon != null) {
 				const result = await flutterDaemon.serveDevTools();
 				this.devtoolsUrl = new Promise<string>((resolve, reject) => {
-					if (result.host != null && result.port != null) {
+					if (result.host && result.port) {
 						resolve(`http://${result.host}:${result.port}/`);
 					} else {
 						reject("Unable to serve DevTools");
