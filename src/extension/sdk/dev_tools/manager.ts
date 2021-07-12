@@ -47,7 +47,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
 		this.devToolsStatusBarItem.name = "Dart/Flutter DevTools";
 		this.disposables.push(this.devToolsStatusBarItem);
 
@@ -58,7 +58,7 @@ export class DevToolsManager implements vs.Disposable {
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
 				if (workspaceContext.config?.startDevToolsServerEagerly) {
-					await this.spawnIfRequired(workspaceContext.config?.startDevToolsFromDaemon ? this.flutterDaemon : undefined, true);
+					await this.spawnIfRequired(true);
 				}
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
@@ -85,7 +85,7 @@ export class DevToolsManager implements vs.Disposable {
 		return page.id;
 	}
 
-	private async spawnIfRequired(flutterDaemon?: IFlutterDaemon, silent = false): Promise<string | undefined> {
+	private async spawnIfRequired(silent = false): Promise<string | undefined> {
 		// If we're mid-silent-activation, wait until that's finished.
 		await this.devToolsActivationPromise;
 
@@ -103,8 +103,11 @@ export class DevToolsManager implements vs.Disposable {
 				return undefined;
 			}
 			this.capabilities.version = installedVersion;
-			if (flutterDaemon != null) {
-				const result = await flutterDaemon.serveDevTools();
+			if (this.workspaceContext.config.startDevToolsFromDaemon) {
+				if (!this.flutterDaemon) {
+					throw new Error("Flutter daemon is undefined");
+				}
+				const result = await this.flutterDaemon.serveDevTools();
 				this.devtoolsUrl = new Promise<string>((resolve, reject) => {
 					if (result.host && result.port) {
 						resolve(`http://${result.host}:${result.port}/`);

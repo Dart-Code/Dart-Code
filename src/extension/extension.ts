@@ -118,7 +118,7 @@ export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
 export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
 
 let analyzer: Analyzer;
-let flutterDaemon: IFlutterDaemon;
+let flutterDaemon: IFlutterDaemon | undefined;
 let deviceManager: FlutterDeviceManager;
 const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
