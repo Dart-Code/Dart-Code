@@ -118,7 +118,7 @@ export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
 export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
 
 let analyzer: Analyzer;
-let flutterDaemon: IFlutterDaemon;
+let flutterDaemon: IFlutterDaemon | undefined;
 let deviceManager: FlutterDeviceManager;
 const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
@@ -258,10 +258,24 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 
+	// Fire up Flutter daemon if required.
+	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
+		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities);
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config);
+
+		context.subscriptions.push(deviceManager);
+		context.subscriptions.push(flutterDaemon);
+
+		setUpDaemonMessageHandler(logger, context, flutterDaemon);
+
+		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
+	}
+
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities, flutterCapabilities, deviceManager);
-	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal);
+	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
 
 	// Handle new projects before creating the analyer to avoid a few issues with
 	// showing errors while packages are fetched, plus issues like
@@ -447,20 +461,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 		// Hook editor changes to send updated contents to analyzer.
 		context.subscriptions.push(new FileChangeHandler(dasClient));
-	}
-
-	// Fire up Flutter daemon if required.
-	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
-		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities);
-		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config);
-
-		context.subscriptions.push(deviceManager);
-		context.subscriptions.push(flutterDaemon);
-
-		setUpDaemonMessageHandler(logger, context, flutterDaemon);
-
-		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
 	}
 
 	util.logTime("All other stuff before debugger..");
@@ -887,6 +887,7 @@ function getSettingsThatRequireRestart() {
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false);
 	analyzer?.dispose();
+	await flutterDaemon?.shutdown();
 	if (loggers) {
 		await Promise.all(loggers.map((logger) => logger.dispose()));
 		loggers.length = 0;

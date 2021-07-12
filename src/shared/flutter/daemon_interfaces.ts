@@ -78,3 +78,8 @@ export interface ShowMessage {
 export interface SupportedPlatformsResponse {
 	platforms: PlatformType[];
 }
+
+export interface ServeDevToolsResponse {
+	host: string | null;
+	port: string | null;
+}

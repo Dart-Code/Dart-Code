@@ -42,6 +42,7 @@ export interface WritableWorkspaceConfig {
 	// config.
 
 	startDevToolsServerEagerly?: boolean;
+	startDevToolsFromDaemon?: boolean;
 	disableAutomaticPackageGet?: boolean;
 	disableSdkUpdateChecks?: boolean;
 	flutterDaemonScript?: CustomScript;
@@ -105,6 +106,8 @@ export interface IFlutterDaemon extends IAmDisposable {
 	launchEmulator(emulatorId: string, coldBoot: boolean): Thenable<void>;
 	createEmulator(name?: string): Thenable<{ success: boolean, emulatorName: string, error: string }>;
 	getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse>;
+	serveDevTools(): Thenable<f.ServeDevToolsResponse>;
+	shutdown(): Thenable<void>
 
 	registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): IAmDisposable;
 	registerForDeviceAdded(subscriber: (notification: f.Device) => void): IAmDisposable;

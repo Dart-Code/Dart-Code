@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
@@ -56,9 +56,9 @@ export class DebugCommands {
 	public readonly devTools: DevToolsManager;
 	private suppressFlutterWidgetErrors = false;
 
-	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal) {
+	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
 		this.vmServices = new VmServiceExtensions(logger, this);
-		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, flutterCapabilities);
+		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, flutterCapabilities, flutterDaemon);
 		context.subscriptions.push(this.devTools);
 		this.debugOptions.name = "Dart Debug Options";
 		context.subscriptions.push(this.debugOptions);

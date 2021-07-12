@@ -204,6 +204,14 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("daemon.getSupportedPlatforms", { projectRoot });
 	}
 
+	public serveDevTools(): Thenable<f.ServeDevToolsResponse> {
+		return this.sendRequest("devtools.serve");
+	}
+
+	public shutdown(): Thenable<void> {
+		return this.sendRequest("daemon.shutdown");
+	}
+
 	// Subscription methods.
 
 	public registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): vs.Disposable {

@@ -8,7 +8,7 @@ import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, Logger, SomeError } from "../../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger, SomeError } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
@@ -47,7 +47,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
 		this.devToolsStatusBarItem.name = "Dart/Flutter DevTools";
 		this.disposables.push(this.devToolsStatusBarItem);
 
@@ -57,8 +57,9 @@ export class DevToolsManager implements vs.Disposable {
 	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
-				if (workspaceContext.config?.startDevToolsServerEagerly)
+				if (workspaceContext.config?.startDevToolsServerEagerly) {
 					await this.spawnIfRequired(true);
+				}
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
 				this.logger.error(e);
@@ -102,7 +103,19 @@ export class DevToolsManager implements vs.Disposable {
 				return undefined;
 			}
 			this.capabilities.version = installedVersion;
-			if (silent) {
+			if (this.workspaceContext.config.startDevToolsFromDaemon) {
+				if (!this.flutterDaemon) {
+					throw new Error("Flutter daemon is undefined");
+				}
+				const result = await this.flutterDaemon.serveDevTools();
+				this.devtoolsUrl = new Promise<string>((resolve, reject) => {
+					if (result.host && result.port) {
+						resolve(`http://${result.host}:${result.port}/`);
+					} else {
+						reject("Unable to serve DevTools");
+					}
+				});
+			} else if (silent) {
 				this.devtoolsUrl = this.startServer();
 			} else {
 				this.devtoolsUrl = vs.window.withProgress({
