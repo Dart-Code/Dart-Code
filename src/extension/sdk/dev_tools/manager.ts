@@ -47,18 +47,18 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, flutterDaemon?: IFlutterDaemon) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon) {
 		this.devToolsStatusBarItem.name = "Dart/Flutter DevTools";
 		this.disposables.push(this.devToolsStatusBarItem);
 
-		this.handleEagerActivationAndStartup(workspaceContext, flutterDaemon);
+		this.handleEagerActivationAndStartup(workspaceContext);
 	}
 
-	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext, flutterDaemon?: IFlutterDaemon) {
+	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
 				if (workspaceContext.config?.startDevToolsServerEagerly) {
-					await this.spawnIfRequired(workspaceContext.config?.startDevToolsFromDaemon ? flutterDaemon : undefined, true);
+					await this.spawnIfRequired(workspaceContext.config?.startDevToolsFromDaemon ? this.flutterDaemon : undefined, true);
 				}
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
