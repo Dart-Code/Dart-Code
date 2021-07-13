@@ -119,7 +119,7 @@ export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
 
 let analyzer: Analyzer;
 let flutterDaemon: IFlutterDaemon | undefined;
-let deviceManager: FlutterDeviceManager;
+let deviceManager: FlutterDeviceManager | undefined;
 const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
 let analysisRoots: string[] = [];

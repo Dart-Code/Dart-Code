@@ -28,7 +28,7 @@ import { getExcludedFolders, isFlutterProjectFolder, isInsideFolderNamed, isTest
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testTreeModel: TestTreeModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testTreeModel: TestTreeModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		debugConfig.type = debugConfig.type || "dart";
@@ -469,7 +469,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return vmServiceUriOrPort;
 	}
 
-	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: DartVsCodeLaunchArgs, debugType: DebuggerType, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager): Promise<void> {
+	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: DartVsCodeLaunchArgs, debugType: DebuggerType, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager | undefined): Promise<void> {
 		const conf = config.for(folder && folder.uri);
 
 		// Attach any properties that weren't explicitly set.
