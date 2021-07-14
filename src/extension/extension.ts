@@ -45,6 +45,7 @@ import { FlutterOutlineCommands } from "./commands/flutter_outline";
 import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
+import { PackageCommands } from "./commands/packages";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { cursorIsInTest, DasTestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation, LspTestCommands } from "./commands/test";
@@ -275,7 +276,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities, flutterCapabilities, deviceManager);
+	const packageCommands = new PackageCommands(logger, extContext, workspaceContext, dartCapabilities);
 	context.subscriptions.push(sdkCommands);
+	context.subscriptions.push(packageCommands);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
 	context.subscriptions.push(debugCommands);
 
@@ -663,7 +666,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		if (workspaceContext.config.disableAutomaticPackageGet)
 			return;
 		// tslint:disable-next-line: no-floating-promises
-		sdkCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
+		packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
 	}
 	if (!isRestart)
 		checkForPackages();
