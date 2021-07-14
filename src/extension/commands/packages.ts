@@ -11,7 +11,7 @@ import { config } from "../config";
 import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
 import * as util from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
-import { BaseSdkCommands, numProjectCreationsInProgress } from "./sdk";
+import { BaseSdkCommands, commandState } from "./sdk";
 
 let isFetchingPackages = false;
 let runPubGetDelayTimer: NodeJS.Timer | undefined;
@@ -155,7 +155,7 @@ export class PackageCommands extends BaseSdkCommands {
 
 		// Don't do anything if we're in the middle of creating projects, as packages
 		// may  be fetched automatically.
-		if (numProjectCreationsInProgress > 0) {
+		if (commandState.numProjectCreationsInProgress > 0) {
 			this.logger.info("Skipping package fetch because project creation is in progress");
 			return;
 		}

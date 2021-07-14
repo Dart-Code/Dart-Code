@@ -41,6 +41,7 @@ import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { DasEditCommands } from "./commands/edit_das";
 import { LspEditCommands } from "./commands/edit_lsp";
+import { FlutterCommands } from "./commands/flutter";
 import { FlutterOutlineCommands } from "./commands/flutter_outline";
 import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
@@ -275,10 +276,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
-	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities, flutterCapabilities, deviceManager);
+	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities);
 	const packageCommands = new PackageCommands(logger, extContext, workspaceContext, dartCapabilities);
+	const flutterCommands = new FlutterCommands(logger, extContext, workspaceContext, sdkUtils, dartCapabilities, flutterCapabilities, deviceManager);
 	context.subscriptions.push(sdkCommands);
 	context.subscriptions.push(packageCommands);
+	context.subscriptions.push(flutterCommands);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
 	context.subscriptions.push(debugCommands);
 
