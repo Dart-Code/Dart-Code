@@ -10,11 +10,17 @@ export class PubApi {
 		return this.get<PubPackage>(`packages/${packageID}`);
 	}
 
+	public async getPackageNames(): Promise<PackageNameCompletionData> {
+		return this.get<PackageNameCompletionData>(`package-name-completion-data`);
+	}
+
 	private async get<T>(url: string): Promise<T> {
 		const headers = {
 			Accept: "application/vnd.pub.v2+json",
+			"Accept-Encoding": "gzip",
 		};
-		return JSON.parse(await this.webClient.fetch(`${this.pubHost}/api/${url}`, headers)) as T;
+		const response = await this.webClient.fetch(`${this.pubHost}/api/${url}`, headers);
+		return JSON.parse(response) as T;
 	}
 }
 
@@ -35,4 +41,8 @@ interface PubPackageVersion {
 		description: string;
 		homepage: string;
 	};
+}
+
+interface PackageNameCompletionData {
+	packages: string[];
 }

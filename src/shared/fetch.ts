@@ -1,6 +1,7 @@
 import * as http from "http";
 import * as https from "https";
 import * as url from "url";
+import * as zlib from "zlib";
 
 export class WebClient {
 	private readonly userAgent: string;
@@ -37,11 +38,21 @@ export class WebClient {
 				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
 					reject({ message: `Failed to get ${path}: ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
 				} else {
-					const chunks: string[] = [];
-					resp.on("data", (b) => chunks.push(b.toString()));
+					const chunks: any[] = [];
+					resp.on("data", (b) => chunks.push(b));
 					resp.on("end", () => {
-						const data = chunks.join("");
-						resolve(data);
+						const buffer = Buffer.concat(chunks);
+						const encoding = resp.headers["content-encoding"];
+						if (encoding === "gzip") {
+							zlib.gunzip(buffer, (err, decoded) => {
+								if (err)
+									reject(err);
+								else
+									resolve(decoded?.toString());
+							});
+						} else {
+							resolve(buffer.toString());
+						}
 					});
 				}
 			});

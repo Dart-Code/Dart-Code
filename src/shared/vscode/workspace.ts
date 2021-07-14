@@ -1,5 +1,5 @@
 import { ExtensionContext } from "vscode";
-import { fsPath } from "../utils/fs";
+import { fsPath, mkDirRecursive } from "../utils/fs";
 
 export class Context {
 	private constructor(private readonly context: ExtensionContext) { }
@@ -9,8 +9,11 @@ export class Context {
 	}
 
 	get extensionStoragePath(): string | undefined {
-		const uri = this.context.extensionUri;
-		return uri.scheme === "file" ? fsPath(uri) : undefined;
+		const uri = this.context.globalStorageUri;
+		const path = uri.scheme === "file" ? fsPath(uri) : undefined;
+		if (path)
+			mkDirRecursive(path);
+		return path;
 	}
 
 	get devToolsNotificationLastShown(): number | undefined { return this.context.globalState.get("devToolsNotificationLastShown") as number; }
