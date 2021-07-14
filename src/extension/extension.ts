@@ -37,6 +37,7 @@ import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { LspTestCodeLensProvider } from "./code_lens/test_code_lens_provider_lsp";
 import { AnalyzerCommands } from "./commands/analyzer";
 import { getOutputChannel } from "./commands/channels";
+import { DartCommands } from "./commands/dart";
 import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { DasEditCommands } from "./commands/edit_das";
@@ -276,12 +277,14 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
-	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities);
-	const packageCommands = new PackageCommands(logger, extContext, workspaceContext, dartCapabilities);
+	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, dartCapabilities);
+	const dartCommands = new DartCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities);
 	const flutterCommands = new FlutterCommands(logger, extContext, workspaceContext, sdkUtils, dartCapabilities, flutterCapabilities, deviceManager);
+	const packageCommands = new PackageCommands(logger, extContext, workspaceContext, dartCapabilities);
 	context.subscriptions.push(sdkCommands);
-	context.subscriptions.push(packageCommands);
+	context.subscriptions.push(dartCommands);
 	context.subscriptions.push(flutterCommands);
+	context.subscriptions.push(packageCommands);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
 	context.subscriptions.push(debugCommands);
 

@@ -2,21 +2,15 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE, flutterPath, pubPath } from "../../shared/constants";
+import { dartVMPath, flutterPath, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
+import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
-import { sortBy } from "../../shared/utils/array";
-import { fsPath, nextAvailableFilename } from "../../shared/utils/fs";
-import { writeDartSdkSettingIntoProject } from "../../shared/utils/projects";
+import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
-import { PubGlobal } from "../pub/global";
-import { Stagehand } from "../pub/stagehand";
-import { DartCreate, DartProjectCreator } from "../sdk/dart/dart_create";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
-import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
 import { getGlobalFlutterArgs, safeToolSpawn } from "../utils/processes";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
@@ -171,7 +165,7 @@ export class BaseSdkCommands implements IAmDisposable {
 }
 
 export class SdkCommands extends BaseSdkCommands {
-	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, dartCapabilities: DartCapabilities) {
+	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
 		super(logger, context, workspace, dartCapabilities);
 		const dartSdkManager = new DartSdkManager(this.logger, this.workspace.sdks);
 		this.disposables.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
@@ -180,30 +174,9 @@ export class SdkCommands extends BaseSdkCommands {
 			this.disposables.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
 
-		// Flutter commands.
-		this.disposables.push(vs.commands.registerCommand("dart.createProject", this.createDartProject, this));
-		this.disposables.push(vs.commands.registerCommand("_dart.create", this.dartCreate, this));
-
 		// Monitor version files for SDK upgrades.
 		this.setupVersionWatcher();
 	}
-
-	private dartCreate(projectPath: string, templateName: string) {
-		// TODO: This should move inside DartCreate/Stagehand, but it requires extracting
-		// all the command executing also into a better base class ("run pub in folder" etc.)
-		// instead of being directly in here.
-		if (this.dartCapabilities.supportsDartCreate) {
-			const binPath = path.join(this.sdks.dart, dartVMPath);
-			const projectContainer = path.dirname(projectPath);
-			const projectName = path.basename(projectPath);
-			const args = ["create", "-t", templateName, projectName, "--force"];
-			return this.runCommandInFolder(templateName, projectContainer, binPath, args, false);
-		} else {
-			const args = ["global", "run", "stagehand", templateName];
-			return this.runPubInFolder(projectPath, args, templateName);
-		}
-	}
-
 
 	private async setupVersionWatcher() {
 		// On Windows, the watcher sometimes fires even if the file wasn't modified (could be when
@@ -246,100 +219,6 @@ export class SdkCommands extends BaseSdkCommands {
 		});
 
 		this.disposables.push({ dispose() { watcher.close(); } });
-	}
-
-
-	private async createDartProject(): Promise<void> {
-		const command = "dart.createProject";
-		const triggerFilename = DART_CREATE_PROJECT_TRIGGER_FILE;
-		const autoPickIfSingleItem = false;
-
-		if (!this.sdks || !this.sdks.dart) {
-			this.sdkUtils.showDartActivationFailure(command);
-			return;
-		}
-
-		// Get the JSON for the available templates by calling stagehand or 'dart create'.
-
-		const creator: DartProjectCreator = this.dartCapabilities.supportsDartCreate
-			? new DartCreate(this.logger, this.sdks)
-			: new Stagehand(this.logger, this.sdks, this.pubGlobal);
-		const isAvailable = await creator.installIfRequired();
-		if (!isAvailable) {
-			return;
-		}
-		let templates: DartProjectTemplate[];
-		try {
-			templates = await creator.getTemplates();
-		} catch (e) {
-			vs.window.showErrorMessage(`Unable to fetch project templates. ${e}`);
-			return;
-		}
-
-		const sortedTemplates = sortBy(templates, (s) => s.label);
-		const pickItems = sortedTemplates.map((t) => ({
-			description: t.name,
-			detail: t.description,
-			label: t.label,
-			template: t,
-		}));
-
-		// Get the user to pick a template (but pick for them if there's only one
-		// and autoPickIfSingleItem).
-		const selectedTemplate =
-			autoPickIfSingleItem && pickItems.length === 1
-				? pickItems[0]
-				: await vs.window.showQuickPick(
-					pickItems,
-					{
-						matchOnDescription: true,
-						placeHolder: "Which Dart template?",
-					},
-				);
-
-		if (!selectedTemplate)
-			return;
-
-		// If already in a workspace, set the default folder to something nearby.
-		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
-		if (!folders || folders.length !== 1)
-			return;
-		const folderPath = fsPath(folders[0]);
-
-		const defaultName = nextAvailableFilename(folderPath, "dart_application_");
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, folderPath) });
-		if (!name)
-			return;
-
-		const projectFolderUri = vs.Uri.file(path.join(folderPath, name));
-		const projectFolderPath = fsPath(projectFolderUri);
-
-		if (fs.existsSync(projectFolderPath)) {
-			vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderPath}`);
-			return;
-		}
-
-		// Create the empty folder so we can open it.
-		fs.mkdirSync(projectFolderPath);
-		// Create a temp dart file to force extension to load when we open this folder.
-		fs.writeFileSync(path.join(projectFolderPath, triggerFilename), JSON.stringify(selectedTemplate.template));
-		// If we're using a custom SDK, we need to apply it to the new project too.
-		if (config.workspaceSdkPath)
-			writeDartSdkSettingIntoProject(config.workspaceSdkPath, projectFolderPath);
-
-		vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
-	}
-
-	private validateDartProjectName(input: string, folderDir: string) {
-		if (!packageNameRegex.test(input))
-			return "Dart project names should be all lowercase, with underscores to separate words";
-
-		const bannedNames = ["dart", "test"];
-		if (bannedNames.includes(input))
-			return `You may not use ${input} as the name for a dart project`;
-
-		if (fs.existsSync(path.join(folderDir, input)))
-			return `A project with this name already exists within the selected directory`;
 	}
 }
 
