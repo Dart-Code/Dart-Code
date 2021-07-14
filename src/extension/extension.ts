@@ -48,6 +48,7 @@ import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
+import { AddPackageCommand } from "./commands/packages_add";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { cursorIsInTest, DasTestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation, LspTestCommands } from "./commands/test";
@@ -281,10 +282,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const dartCommands = new DartCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities);
 	const flutterCommands = new FlutterCommands(logger, extContext, workspaceContext, sdkUtils, dartCapabilities, flutterCapabilities, deviceManager);
 	const packageCommands = new PackageCommands(logger, extContext, workspaceContext, dartCapabilities);
+	const addPackageCommand = new AddPackageCommand(logger, extContext, workspaceContext, dartCapabilities, pubApi);
 	context.subscriptions.push(sdkCommands);
 	context.subscriptions.push(dartCommands);
 	context.subscriptions.push(flutterCommands);
 	context.subscriptions.push(packageCommands);
+	context.subscriptions.push(addPackageCommand);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
 	context.subscriptions.push(debugCommands);
 

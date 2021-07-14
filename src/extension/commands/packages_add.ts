@@ -1,0 +1,146 @@
+import * as fs from "fs";
+import * as path from "path";
+import * as vs from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
+import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
+import { PubApi } from "../../shared/pub/api";
+import { PackageDetailsCache } from "../../shared/pub/pub_add";
+import { Context } from "../../shared/vscode/workspace";
+import * as util from "../utils";
+import { getFolderToRunCommandIn } from "../utils/vscode/projects";
+import { BaseSdkCommands } from "./sdk";
+
+const cacheFilename = "package_cache.json";
+
+export class AddPackageCommand extends BaseSdkCommands {
+	private readonly extensionStoragePath: string | undefined;
+	private cache: PackageDetailsCache | undefined;
+	private nextPackageNameFetchTimeout: NodeJS.Timeout | undefined;
+
+	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly pubApi: PubApi) {
+		super(logger, context, workspace, dartCapabilities);
+
+		this.disposables.push(vs.commands.registerCommand("dart.addDependency", this.addDependency, this));
+
+		this.extensionStoragePath = context.extensionStoragePath;
+		// Kick off async work to fetch then queue a new check.
+		this.loadAndFetch().catch((e) => this.logger.error(e));
+	}
+
+	private async loadAndFetch() {
+		try {
+			await this.loadPackageCache();
+		} finally {
+			this.queueNextPackageNameFetch(this.cache?.cacheTimeRemainingMs ?? 0);
+		}
+	}
+
+	private async loadPackageCache(): Promise<void> {
+		if (!this.extensionStoragePath)
+			return;
+
+		const cacheFile = path.join(this.extensionStoragePath, cacheFilename);
+		try {
+			const contents = await fs.promises.readFile(cacheFile);
+			this.cache = PackageDetailsCache.fromJson(contents.toString());
+		} catch (e) {
+			this.logger.error(`Failed to read package cache file: $e`);
+		}
+	}
+
+	private async savePackageCache(): Promise<void> {
+		if (!this.extensionStoragePath)
+			return;
+
+		const cacheFile = path.join(this.extensionStoragePath, cacheFilename);
+		try {
+			const json = this.cache?.toJson();
+			if (json)
+				await fs.promises.writeFile(cacheFile, json);
+		} catch (e) {
+			this.logger.error(`Failed to read package cache file: $e`);
+		}
+	}
+
+	private queueNextPackageNameFetch(ms: number) {
+		if (this.nextPackageNameFetchTimeout)
+			clearTimeout(this.nextPackageNameFetchTimeout);
+		this.nextPackageNameFetchTimeout = setTimeout(() => this.fetchPackageNames(), ms);
+	}
+
+	private async fetchPackageNames(): Promise<void> {
+		this.logger.info(`Caching Pub package names from pub.dev...`);
+		try {
+			const results = await this.pubApi.getPackageNames();
+			this.cache = PackageDetailsCache.fromPackageNames(results.packages);
+			await this.savePackageCache();
+		} catch (e) {
+			this.logger.error(`Failed to fetch package cache: $e`);
+		}
+		this.queueNextPackageNameFetch(PackageDetailsCache.maxCacheAgeMs);
+	}
+
+	private async addDependency(uri: string | vs.Uri | undefined) {
+		if (!uri || !(uri instanceof vs.Uri)) {
+			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to add the dependency to");
+			// If the user cancelled, bail out (otherwise we'll prompt them again below).
+			if (!uri)
+				return;
+		}
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+
+		const selectedPackage = await this.promptForPackage();
+		if (!selectedPackage)
+			return;
+		const packageName = selectedPackage.packageName;
+
+		if (util.isInsideFlutterProject(uri)) {
+			return this.runFlutter(["pub", "add", packageName], uri);
+		} else {
+			return this.runPub(["add", packageName], uri);
+		}
+	}
+
+	private async promptForPackage(): Promise<PickablePackage | undefined> {
+		const quickPick = vs.window.createQuickPick<PickablePackage>();
+		quickPick.placeholder = "Enter a package name";
+		quickPick.items = this.getMatchingPackages();
+		quickPick.onDidChangeValue((prefix) => {
+			quickPick.items = this.getMatchingPackages(prefix);
+		});
+
+		const selectedPackage = await new Promise<PickablePackage | undefined>((resolve) => {
+			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
+			quickPick.onDidHide(() => resolve(undefined));
+			quickPick.show();
+		});
+
+		quickPick.dispose();
+
+		return selectedPackage;
+	}
+
+	private getMatchingPackages(prefix?: string): PickablePackage[] {
+		const max = 50;
+		const packageNames = this.cache?.packageNames ?? [];
+		let matches = [];
+		// This list can be quite large, so avoid using .filter() if we can bail out early.
+		if (prefix) {
+			for (let i = 0; i < packageNames.length && matches.length < max; i++) {
+				const packageName = packageNames[i];
+				if (packageName.startsWith(prefix))
+					matches.push(packageName);
+			}
+		} else {
+			matches = packageNames.slice(0, Math.min(max, packageNames.length));
+		}
+
+		return matches.map((packageName) => ({
+			label: packageName,
+			packageName,
+		} as PickablePackage));
+	}
+}
+
+type PickablePackage = vs.QuickPickItem & { packageName: string };
