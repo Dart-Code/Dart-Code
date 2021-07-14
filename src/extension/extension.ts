@@ -275,7 +275,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities, flutterCapabilities, deviceManager);
+	context.subscriptions.push(sdkCommands);
 	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
+	context.subscriptions.push(debugCommands);
 
 	// Handle new projects before creating the analyer to avoid a few issues with
 	// showing errors while packages are fetched, plus issues like

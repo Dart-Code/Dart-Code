@@ -1,10 +1,16 @@
 import { ExtensionContext } from "vscode";
+import { fsPath } from "../utils/fs";
 
 export class Context {
 	private constructor(private readonly context: ExtensionContext) { }
 
 	public static for(context: ExtensionContext): Context {
 		return new Context(context);
+	}
+
+	get extensionStoragePath(): string | undefined {
+		const uri = this.context.extensionUri;
+		return uri.scheme === "file" ? fsPath(uri) : undefined;
 	}
 
 	get devToolsNotificationLastShown(): number | undefined { return this.context.globalState.get("devToolsNotificationLastShown") as number; }
@@ -39,6 +45,4 @@ export class Context {
 	public asAbsolutePath(relativePath: string): string {
 		return this.context.asAbsolutePath(relativePath);
 	}
-
-	get subscriptions(): Array<{ dispose(): any }> { return this.context.subscriptions; }
 }

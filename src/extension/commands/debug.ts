@@ -4,8 +4,8 @@ import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
-import { PromiseCompleter } from "../../shared/utils";
+import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
+import { disposeAll, PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils, getAllProjectFolders } from "../../shared/vscode/utils";
@@ -42,7 +42,8 @@ export class LastTestDebugSession {
 	public static debugConfig?: vs.DebugConfiguration;
 }
 
-export class DebugCommands {
+export class DebugCommands implements IAmDisposable {
+	protected readonly disposables: vs.Disposable[] = [];
 	private debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
 	private currentDebugOption = DebugOption.MyCode;
 	private debugMetrics = vs.window.createStatusBarItem("dartStatusDebugMetrics", vs.StatusBarAlignment.Right, 0);
@@ -59,33 +60,33 @@ export class DebugCommands {
 	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
 		this.vmServices = new VmServiceExtensions(logger, this);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, flutterCapabilities, flutterDaemon);
-		context.subscriptions.push(this.devTools);
+		this.disposables.push(this.devTools);
 		this.debugOptions.name = "Dart Debug Options";
-		context.subscriptions.push(this.debugOptions);
+		this.disposables.push(this.debugOptions);
 		this.debugMetrics.name = "Dart Debug Metrics";
-		context.subscriptions.push(this.debugMetrics);
+		this.disposables.push(this.debugMetrics);
 
-		context.subscriptions.push(vs.debug.onDidChangeBreakpoints((e) => this.handleBreakpointChange(e)));
-		context.subscriptions.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
-		context.subscriptions.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
-		context.subscriptions.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
-		context.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)));
+		this.disposables.push(vs.debug.onDidChangeBreakpoints((e) => this.handleBreakpointChange(e)));
+		this.disposables.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
+		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
+		this.disposables.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
+		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)));
 		// Run for current open editor.
 		this.updateEditorContexts(vs.window.activeTextEditor);
 
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.vmServices.toggle(VmServiceExtension.PlatformOverride, "iOS", "android")));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.vmServices.toggle(VmServiceExtension.DebugPaint)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.vmServices.toggle(VmServiceExtension.PerformanceOverlay)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleBrightness", () => this.vmServices.toggle(VmServiceExtension.BrightnessOverride, "Brightness.dark", "Brightness.light")));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.vmServices.toggle(VmServiceExtension.RepaintRainbow)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.vmServices.toggle(VmServiceExtension.DebugBanner)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleCheckElevations", () => this.vmServices.toggle(VmServiceExtension.CheckElevations)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.vmServices.toggle(VmServiceExtension.PaintBaselines)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.vmServices.toggle(VmServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false)));
+		this.disposables.push(vs.commands.registerCommand("flutter.togglePlatform", () => this.vmServices.toggle(VmServiceExtension.PlatformOverride, "iOS", "android")));
+		this.disposables.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.vmServices.toggle(VmServiceExtension.DebugPaint)));
+		this.disposables.push(vs.commands.registerCommand("flutter.togglePerformanceOverlay", () => this.vmServices.toggle(VmServiceExtension.PerformanceOverlay)));
+		this.disposables.push(vs.commands.registerCommand("flutter.toggleBrightness", () => this.vmServices.toggle(VmServiceExtension.BrightnessOverride, "Brightness.dark", "Brightness.light")));
+		this.disposables.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.vmServices.toggle(VmServiceExtension.RepaintRainbow)));
+		this.disposables.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.vmServices.toggle(VmServiceExtension.DebugBanner)));
+		this.disposables.push(vs.commands.registerCommand("flutter.toggleCheckElevations", () => this.vmServices.toggle(VmServiceExtension.CheckElevations)));
+		this.disposables.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.vmServices.toggle(VmServiceExtension.PaintBaselines)));
+		this.disposables.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.vmServices.toggle(VmServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
+		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true)));
+		this.disposables.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false)));
 
-		context.subscriptions.push(vs.commands.registerCommand("dart.openObservatory", async () => {
+		this.disposables.push(vs.commands.registerCommand("dart.openObservatory", async () => {
 			const session = await this.getDebugSession();
 			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
 				await envUtils.openInBrowser(session.observatoryUri);
@@ -94,7 +95,7 @@ export class DebugCommands {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
+		this.disposables.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
 			const session = await this.getDebugSession();
 			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
 				await envUtils.openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
@@ -103,16 +104,16 @@ export class DebugCommands {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
+		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
 		devToolsPages.forEach((page) => {
-			context.subscriptions.push(vs.commands.registerCommand(page.commandId, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
+			this.disposables.push(vs.commands.registerCommand(page.commandId, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
 				options = Object.assign({}, options, { page });
 				return vs.commands.executeCommand("dart.openDevTools", options);
 			}));
 		});
-		context.subscriptions.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> =>
+		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> =>
 			vs.commands.executeCommand("dart.openDevTools", options)));
-		context.subscriptions.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> => {
+		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length)
 				return this.devTools.spawnForNoSession();
 
@@ -136,22 +137,22 @@ export class DebugCommands {
 		}));
 
 		// Misc custom debug commands.
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.hotReload.touchBar", (args: any) => vs.commands.executeCommand("flutter.hotReload", args)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.hotReload", async (args?: any) => {
+		this.disposables.push(vs.commands.registerCommand("_flutter.hotReload.touchBar", (args: any) => vs.commands.executeCommand("flutter.hotReload", args)));
+		this.disposables.push(vs.commands.registerCommand("flutter.hotReload", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotReloadEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotReload", args)));
 			analytics.logDebuggerHotReload();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.hotRestart", async (args?: any) => {
+		this.disposables.push(vs.commands.registerCommand("flutter.hotRestart", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotRestartEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotRestart", args)));
 			analytics.logDebuggerRestart();
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
 				{
 					name: dynamicDebugSessionName,
@@ -166,7 +167,7 @@ export class DebugCommands {
 			);
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
 				{
 					name: dynamicDebugSessionName,
@@ -181,8 +182,8 @@ export class DebugCommands {
 			);
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration, this));
-		context.subscriptions.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
+		this.disposables.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration, this));
+		this.disposables.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
 			const testFolders = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
 				.map((project) => path.join(project, "test"))
 				.filter((testFolder) => fs.existsSync(testFolder));
@@ -203,14 +204,14 @@ export class DebugCommands {
 				});
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.rerunLastDebugSession", () => {
+		this.disposables.push(vs.commands.registerCommand("dart.rerunLastDebugSession", () => {
 			if (LastDebugSession.debugConfig) {
 				vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);
 			} else {
 				vs.window.showErrorMessage("There is no previous debug session to run.");
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.rerunLastTestDebugSession", () => {
+		this.disposables.push(vs.commands.registerCommand("dart.rerunLastTestDebugSession", () => {
 			if (LastTestDebugSession.debugConfig) {
 				vs.debug.startDebugging(LastTestDebugSession.workspaceFolder, LastTestDebugSession.debugConfig);
 			} else {
@@ -219,14 +220,14 @@ export class DebugCommands {
 		}));
 
 		// Attach commands.
-		context.subscriptions.push(vs.commands.registerCommand("dart.attach", () => {
+		this.disposables.push(vs.commands.registerCommand("dart.attach", () => {
 			vs.debug.startDebugging(undefined, {
 				name: "Dart: Attach to Process",
 				request: "attach",
 				type: "dart",
 			});
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.attachProcess", () => {
+		this.disposables.push(vs.commands.registerCommand("flutter.attachProcess", () => {
 			vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Process",
 				request: "attach",
@@ -234,7 +235,7 @@ export class DebugCommands {
 				vmServiceUri: "${command:dart.promptForVmService}",
 			});
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.profileApp", async () => {
+		this.disposables.push(vs.commands.registerCommand("flutter.profileApp", async () => {
 			await vs.debug.startDebugging(undefined, {
 				flutterMode: "profile",
 				name: "Flutter: Run in Profile Mode",
@@ -247,14 +248,14 @@ export class DebugCommands {
 				vs.window.showInformationMessage("Profiling Flutter app with default configuration. To customize this, create a launch configuration (and include 'flutterMode': 'profile').");
 			}
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.attach", () => {
+		this.disposables.push(vs.commands.registerCommand("flutter.attach", () => {
 			vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Device",
 				request: "attach",
 				type: "dart",
 			});
 		}));
-		context.subscriptions.push(vs.commands.registerCommand("dart.promptForVmService", async (defaultValueOrConfig: string | vs.DebugConfiguration | undefined): Promise<string | undefined> => {
+		this.disposables.push(vs.commands.registerCommand("dart.promptForVmService", async (defaultValueOrConfig: string | vs.DebugConfiguration | undefined): Promise<string | undefined> => {
 			const defaultValue = typeof defaultValueOrConfig === "string" ? defaultValueOrConfig : undefined;
 			return vs.window.showInputBox({
 				ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
@@ -288,7 +289,7 @@ export class DebugCommands {
 			this.currentDebugOption = DebugOption.MyCodeSdk;
 		else if (config.debugExternalLibraries)
 			this.currentDebugOption = DebugOption.MyCodePackages;
-		context.subscriptions.push(vs.commands.registerCommand("_dart.toggleDebugOptions", this.toggleDebugOptions, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.toggleDebugOptions", this.toggleDebugOptions, this));
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
 		this.debugOptions.tooltip = `Controls whether to step into or stop at breakpoints in only files in this workspace or also those in SDK and/or external Pub packages`;
 		this.debugOptions.command = "_dart.toggleDebugOptions";
@@ -688,5 +689,9 @@ export class DebugCommands {
 	private updateEditorContexts(e: vs.TextEditor | undefined): void {
 		const isRunnable = !!(e && e.document && e.document.uri.scheme === "file" && isValidEntryFile(fsPath(e.document.uri)));
 		vs.commands.executeCommand("setContext", CURRENT_FILE_RUNNABLE, isRunnable);
+	}
+
+	public dispose(): any {
+		disposeAll(this.disposables);
 	}
 }

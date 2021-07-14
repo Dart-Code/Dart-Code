@@ -7,9 +7,9 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../shared/capabilities/vscode";
 import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE, defaultLaunchJson, flutterPath, iUnderstandAction, pubPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger, SpawnedProcess } from "../../shared/interfaces";
+import { CustomScript, DartProjectTemplate, DartSdks, DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { nullToUndefined, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
+import { disposeAll, nullToUndefined, PromiseCompleter, uniq, usingCustomScript } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { fsPath, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
@@ -38,50 +38,188 @@ let runPubGetDelayTimer: NodeJS.Timer | undefined;
 let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 let numProjectCreationsInProgress = 0;
 
-export class SdkCommands {
-	private readonly sdks: DartSdks;
-	private flutterScreenshotPath?: string;
+export class BaseSdkCommands implements IAmDisposable {
+	protected readonly sdks: DartSdks;
+	protected readonly disposables: vs.Disposable[] = [];
+
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined } = {};
 
-	constructor(private readonly logger: Logger, private readonly context: Context, private readonly workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager | undefined) {
+	constructor(protected readonly logger: Logger, protected readonly context: Context, protected readonly workspace: DartWorkspaceContext, protected readonly dartCapabilities: DartCapabilities) {
 		this.sdks = workspace.sdks;
+	}
+
+	protected async runCommandForWorkspace(
+		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean) => Thenable<number | undefined>,
+		placeHolder: string,
+		args: string[],
+		selection: vs.Uri | undefined,
+		alwaysShowOutput = false,
+	): Promise<number | undefined> {
+		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, selection);
+		if (!folderToRunCommandIn)
+			return;
+
+		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
+		if (!containingWorkspace) {
+			this.logger.error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
+			throw new Error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
+		}
+		const containingWorkspacePath = fsPath(containingWorkspace.uri);
+
+		// Display the relative path from the workspace root to the folder we're running, or if they're
+		// the same then the folder name we're running in.
+		const shortPath = path.relative(containingWorkspacePath, folderToRunCommandIn)
+			|| path.basename(folderToRunCommandIn);
+
+		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput);
+	}
+
+	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
+		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
+	}
+
+	protected runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, customScript?: CustomScript): Thenable<number | undefined> {
+		if (!this.sdks.flutter)
+			throw new Error("Flutter SDK not available");
+
+		const { binPath, binArgs } = usingCustomScript(
+			path.join(this.sdks.flutter, flutterPath),
+			args,
+			customScript,
+		);
+
+		const allArgs = getGlobalFlutterArgs()
+			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
+			.concat(binArgs);
+
+		return this.runCommandInFolder(shortPath, folder, binPath, allArgs, alwaysShowOutput);
+	}
+
+	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
+		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
+	}
+
+	protected runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Thenable<number | undefined> {
+		if (!this.sdks.dart)
+			throw new Error("Dart SDK not available");
+
+		let binPath: string;
+
+		if (this.dartCapabilities.supportsDartPub) {
+			binPath = path.join(this.sdks.dart, dartVMPath);
+			args = ["pub"].concat(args);
+		} else {
+			binPath = path.join(this.sdks.dart, pubPath);
+		}
+		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
+		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
+	}
+
+	protected runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {
+		shortPath = shortPath || path.basename(folder);
+		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
+
+		const channel = channels.getOutputChannel(`${commandName} (${shortPath})`, true);
+		if (alwaysShowOutput)
+			channel.show();
+
+		// Figure out if there's already one of this command running, in which case we'll chain off the
+		// end of it.
+		const commandId = `${folder}|${commandName}|${args}`;
+		const existingProcess = this.runningCommands[commandId];
+		if (existingProcess && !existingProcess.hasStarted) {
+			// We already have a queued version of this command so there's no value in queueing another
+			// just bail.
+			return Promise.resolve(undefined);
+		}
+
+		return vs.window.withProgress({
+			cancellable: true,
+			location: vs.ProgressLocation.Notification,
+			title: `${commandName} ${args.join(" ")}`,
+		}, (progress, token) => {
+			if (existingProcess) {
+				progress.report({ message: "terminating previous command..." });
+				existingProcess.cancel();
+			} else {
+				channel.clear();
+			}
+
+			const process = new ChainedProcess(() => {
+				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
+				progress.report({ message: "running..." });
+				const proc = safeToolSpawn(folder, binPath, args);
+				channels.runProcessInOutputChannel(proc, channel);
+				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
+				logProcess(this.logger, LogCategory.CommandProcesses, proc);
+
+				// If we complete with a non-zero code, or don't complete within 10s, we should show
+				// the output pane.
+				const completedWithErrorPromise = new Promise((resolve) => proc.on("close", resolve));
+				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), 10000));
+				// tslint:disable-next-line: no-floating-promises
+				Promise.race([completedWithErrorPromise, timedOutPromise]).then((showOutput) => {
+					if (showOutput)
+						channel.show(true);
+				});
+
+				return proc;
+			}, existingProcess);
+			this.runningCommands[commandId] = process;
+			token.onCancellationRequested(() => process.cancel());
+
+			return process.completed;
+		});
+	}
+
+	public dispose(): any {
+		disposeAll(this.disposables);
+	}
+}
+
+export class SdkCommands extends BaseSdkCommands {
+	// TODO: Split this into separate classes for different types of commands now there's a base class.
+	private flutterScreenshotPath?: string;
+
+	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager | undefined) {
+		super(logger, context, workspace, dartCapabilities);
 		const dartSdkManager = new DartSdkManager(this.logger, this.workspace.sdks);
-		context.subscriptions.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
+		this.disposables.push(vs.commands.registerCommand("dart.changeSdk", () => dartSdkManager.changeSdk()));
 		if (workspace.hasAnyFlutterProjects) {
 			const flutterSdkManager = new FlutterSdkManager(this.logger, workspace.sdks);
-			context.subscriptions.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
+			this.disposables.push(vs.commands.registerCommand("dart.changeFlutterSdk", () => flutterSdkManager.changeSdk()));
 		}
-		context.subscriptions.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
-		context.subscriptions.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
-		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
-		context.subscriptions.push(vs.commands.registerCommand("dart.upgradePackages.majorVersions", this.upgradePackagesMajorVersions, this));
+		this.disposables.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
+		this.disposables.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
+		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
+		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages.majorVersions", this.upgradePackagesMajorVersions, this));
 
 		// Pub commands.
-		context.subscriptions.push(vs.commands.registerCommand("pub.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
-		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
-		context.subscriptions.push(vs.commands.registerCommand("pub.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
-		context.subscriptions.push(vs.commands.registerCommand("pub.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("pub.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("pub.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("pub.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
+		this.disposables.push(vs.commands.registerCommand("pub.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
 
 		// Flutter commands.
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.clean", this.flutterClean, this));
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject.module", () => this.createFlutterProject("module"), this));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject.package", () => this.createFlutterProject("package"), this));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.createProject.plugin", () => this.createFlutterProject("plugin"), this));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
-		context.subscriptions.push(vs.commands.registerCommand("dart.createProject", this.createDartProject, this));
-		context.subscriptions.push(vs.commands.registerCommand("_dart.create", this.dartCreate, this));
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate, this));
-		context.subscriptions.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.packages.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("flutter.clean", this.flutterClean, this));
+		this.disposables.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
+		this.disposables.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("flutter.packages.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
+		this.disposables.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.createProject.module", () => this.createFlutterProject("module"), this));
+		this.disposables.push(vs.commands.registerCommand("flutter.createProject.package", () => this.createFlutterProject("package"), this));
+		this.disposables.push(vs.commands.registerCommand("flutter.createProject.plugin", () => this.createFlutterProject("plugin"), this));
+		this.disposables.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
+		this.disposables.push(vs.commands.registerCommand("dart.createProject", this.createDartProject, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.create", this.dartCreate, this));
+		this.disposables.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate, this));
+		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
 
 		// Hook saving pubspec to run pub.get.
 		this.setupPubspecWatcher();
@@ -337,12 +475,12 @@ export class SdkCommands {
 	}
 
 	private setupPubspecWatcher() {
-		this.context.subscriptions.push(vs.workspace.onWillSaveTextDocument((e) => {
+		this.disposables.push(vs.workspace.onWillSaveTextDocument((e) => {
 			if (path.basename(fsPath(e.document.uri)).toLowerCase() === "pubspec.yaml")
 				lastPubspecSaveReason = e.reason;
 		}));
 		const watcher = vs.workspace.createFileSystemWatcher("**/pubspec.yaml");
-		this.context.subscriptions.push(watcher);
+		this.disposables.push(watcher);
 		watcher.onDidChange(this.handlePubspecChange, this);
 		watcher.onDidCreate(this.handlePubspecChange, this);
 	}
@@ -388,7 +526,7 @@ export class SdkCommands {
 			setTimeout(() => util.promptToReloadExtension("Your Dart SDK has been updated. Reload using the new SDK?", undefined, false), 1000);
 		});
 
-		this.context.subscriptions.push({ dispose() { watcher.close(); } });
+		this.disposables.push({ dispose() { watcher.close(); } });
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
@@ -472,130 +610,6 @@ export class SdkCommands {
 		} finally {
 			isFetchingPackages = false;
 		}
-	}
-
-	private async runCommandForWorkspace(
-		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean) => Thenable<number | undefined>,
-		placeHolder: string,
-		args: string[],
-		selection: vs.Uri | undefined,
-		alwaysShowOutput = false,
-	): Promise<number | undefined> {
-		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, selection);
-		if (!folderToRunCommandIn)
-			return;
-
-		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
-		if (!containingWorkspace) {
-			this.logger.error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
-			throw new Error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
-		}
-		const containingWorkspacePath = fsPath(containingWorkspace.uri);
-
-		// Display the relative path from the workspace root to the folder we're running, or if they're
-		// the same then the folder name we're running in.
-		const shortPath = path.relative(containingWorkspacePath, folderToRunCommandIn)
-			|| path.basename(folderToRunCommandIn);
-
-		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput);
-	}
-
-	private runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
-		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
-	}
-
-	private runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, customScript?: CustomScript): Thenable<number | undefined> {
-		if (!this.sdks.flutter)
-			throw new Error("Flutter SDK not available");
-
-		const { binPath, binArgs } = usingCustomScript(
-			path.join(this.sdks.flutter, flutterPath),
-			args,
-			customScript,
-		);
-
-		const allArgs = getGlobalFlutterArgs()
-			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
-			.concat(binArgs);
-
-		return this.runCommandInFolder(shortPath, folder, binPath, allArgs, alwaysShowOutput);
-	}
-
-	private runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
-		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
-	}
-
-	private runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Thenable<number | undefined> {
-		if (!this.sdks.dart)
-			throw new Error("Dart SDK not available");
-
-		let binPath: string;
-
-		if (this.dartCapabilities.supportsDartPub) {
-			binPath = path.join(this.sdks.dart, dartVMPath);
-			args = ["pub"].concat(args);
-		} else {
-			binPath = path.join(this.sdks.dart, pubPath);
-		}
-		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
-		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
-	}
-
-	private runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {
-		shortPath = shortPath || path.basename(folder);
-		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
-
-		const channel = channels.getOutputChannel(`${commandName} (${shortPath})`, true);
-		if (alwaysShowOutput)
-			channel.show();
-
-		// Figure out if there's already one of this command running, in which case we'll chain off the
-		// end of it.
-		const commandId = `${folder}|${commandName}|${args}`;
-		const existingProcess = this.runningCommands[commandId];
-		if (existingProcess && !existingProcess.hasStarted) {
-			// We already have a queued version of this command so there's no value in queueing another
-			// just bail.
-			return Promise.resolve(undefined);
-		}
-
-		return vs.window.withProgress({
-			cancellable: true,
-			location: vs.ProgressLocation.Notification,
-			title: `${commandName} ${args.join(" ")}`,
-		}, (progress, token) => {
-			if (existingProcess) {
-				progress.report({ message: "terminating previous command..." });
-				existingProcess.cancel();
-			} else {
-				channel.clear();
-			}
-
-			const process = new ChainedProcess(() => {
-				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
-				progress.report({ message: "running..." });
-				const proc = safeToolSpawn(folder, binPath, args);
-				channels.runProcessInOutputChannel(proc, channel);
-				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
-				logProcess(this.logger, LogCategory.CommandProcesses, proc);
-
-				// If we complete with a non-zero code, or don't complete within 10s, we should show
-				// the output pane.
-				const completedWithErrorPromise = new Promise((resolve) => proc.on("close", resolve));
-				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), 10000));
-				// tslint:disable-next-line: no-floating-promises
-				Promise.race([completedWithErrorPromise, timedOutPromise]).then((showOutput) => {
-					if (showOutput)
-						channel.show(true);
-				});
-
-				return proc;
-			}, existingProcess);
-			this.runningCommands[commandId] = process;
-			token.onCancellationRequested(() => process.cancel());
-
-			return process.completed;
-		});
 	}
 
 	private async createDartProject(): Promise<void> {
