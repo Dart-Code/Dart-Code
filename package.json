@@ -133,6 +133,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.addDevDependency",
+				"title": "Add Dev Dependency",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.toggleDartdocComment",
 				"title": "Toggle Dartdoc Comment",
 				"category": "Dart"
@@ -754,6 +759,10 @@
 				},
 				{
 					"command": "dart.addDependency",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
+					"command": "dart.addDevDependency",
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{

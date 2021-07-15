@@ -4,23 +4,32 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { PubApi } from "../../shared/pub/api";
-import { PackageDetailsCache } from "../../shared/pub/pub_add";
+import { PackageCacheData } from "../../shared/pub/pub_add";
 import { Context } from "../../shared/vscode/workspace";
 import * as util from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands } from "./sdk";
 
 const cacheFilename = "package_cache.json";
+const knownFlutterSdkPackages = [
+	"flutter",
+	"flutter_test",
+	"flutter_driver",
+	"flutter_localizations",
+	"integration_test",
+];
 
 export class AddPackageCommand extends BaseSdkCommands {
 	private readonly extensionStoragePath: string | undefined;
-	private cache: PackageDetailsCache | undefined;
+	private cache: PackageCacheData | undefined;
 	private nextPackageNameFetchTimeout: NodeJS.Timeout | undefined;
 
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly pubApi: PubApi) {
 		super(logger, context, workspace, dartCapabilities);
 
-		this.disposables.push(vs.commands.registerCommand("dart.addDependency", this.addDependency, this));
+		this.disposables.push(vs.commands.registerCommand("dart.addDependency", (uri) => this.promptAndAddDependency(uri, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.addDevDependency", (uri) => this.promptAndAddDependency(uri, true)));
+		this.disposables.push(vs.commands.registerCommand("_dart.addDependency", this.addDependency, this));
 
 		this.extensionStoragePath = context.extensionStoragePath;
 		// Kick off async work to fetch then queue a new check.
@@ -42,7 +51,7 @@ export class AddPackageCommand extends BaseSdkCommands {
 		const cacheFile = path.join(this.extensionStoragePath, cacheFilename);
 		try {
 			const contents = await fs.promises.readFile(cacheFile);
-			this.cache = PackageDetailsCache.fromJson(contents.toString());
+			this.cache = PackageCacheData.fromJson(contents.toString());
 		} catch (e) {
 			this.logger.error(`Failed to read package cache file: $e`);
 		}
@@ -72,15 +81,15 @@ export class AddPackageCommand extends BaseSdkCommands {
 		this.logger.info(`Caching Pub package names from pub.dev...`);
 		try {
 			const results = await this.pubApi.getPackageNames();
-			this.cache = PackageDetailsCache.fromPackageNames(results.packages);
+			this.cache = PackageCacheData.fromPackageNames(results.packages);
 			await this.savePackageCache();
 		} catch (e) {
 			this.logger.error(`Failed to fetch package cache: $e`);
 		}
-		this.queueNextPackageNameFetch(PackageDetailsCache.maxCacheAgeMs);
+		this.queueNextPackageNameFetch(PackageCacheData.maxCacheAgeMs);
 	}
 
-	private async addDependency(uri: string | vs.Uri | undefined) {
+	private async promptAndAddDependency(uri: string | vs.Uri | undefined, isDevDependency: boolean) {
 		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to add the dependency to");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
@@ -95,10 +104,27 @@ export class AddPackageCommand extends BaseSdkCommands {
 			return;
 		const packageName = selectedPackage.packageName;
 
+		this.addDependency(uri, packageName, isDevDependency);
+	}
+
+	private async addDependency(uri: string | vs.Uri, packageName: string, isDevDependency: boolean) {
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+
+		const args = ["add", packageName];
+		if (isDevDependency)
+			args.push("--dev");
+
+		// Handle some known Flutter dependencies.
+		if (knownFlutterSdkPackages.includes(packageName)) {
+			args.push("--sdk");
+			args.push("flutter");
+		}
+
 		if (util.isInsideFlutterProject(uri)) {
-			return this.runFlutter(["pub", "add", packageName], uri);
+			return this.runFlutter(["pub", ...args], uri);
 		} else {
-			return this.runPub(["add", packageName], uri);
+			return this.runPub(args, uri);
 		}
 	}
 
