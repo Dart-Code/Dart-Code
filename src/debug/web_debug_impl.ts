@@ -18,17 +18,6 @@ export class WebDebugSession extends FlutterDebugSession {
 	protected spawnRunDaemon(isAttach: boolean, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
 		let appArgs: string[] = [];
 
-		// TODO: Is any of this relevant?
-		// if (!isAttach) {
-		// 	if (args.flutterMode === "profile") {
-		// 		appArgs.push("--profile");
-		// 	} else if (args.flutterMode === "release") {
-		// 		appArgs.push("--release");
-		// 	} else {
-		// 		// Debug mode
-
-		// 	}
-
 		// 	if (this.shouldConnectDebugger) {
 		// 		appArgs.push("--start-paused");
 		// 	}

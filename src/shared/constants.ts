@@ -116,6 +116,7 @@ export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 export const HAS_LAST_TEST_DEBUG_CONFIG = "dart-code:hasLastTestDebugConfig";
 export const isInFlutterDebugModeDebugSessionContext = "dart-code:isInFlutterDebugModeDebugSession";
 export const isInFlutterProfileModeDebugSessionContext = "dart-code:isInFlutterProfileModeDebugSession";
+export const isInFlutterReleaseModeDebugSessionContext = "dart-code:isInFlutterReleaseModeDebugSession";
 export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
 

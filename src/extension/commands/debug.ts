@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
+import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
 import { disposeAll, PromiseCompleter } from "../../shared/utils";
@@ -425,11 +425,15 @@ export class DebugCommands implements IAmDisposable {
 		debugSessions.push(session);
 
 		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.Web) {
-			const mode: "debug" | "profile" | "release" = s.configuration.flutterMode;
-			if (mode === "debug")
-				vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
-			if (mode === "profile")
+			const isProfileMode = s.configuration.toolArgs?.includes("--profile");
+			const isReleaseMode = s.configuration.toolArgs?.includes("--release");
+
+			if (isReleaseMode)
+				vs.commands.executeCommand("setContext", isInFlutterReleaseModeDebugSessionContext, true);
+			else if (isProfileMode)
 				vs.commands.executeCommand("setContext", isInFlutterProfileModeDebugSessionContext, true);
+			else
+				vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
 		}
 
 		// Process any queued events that came in before the session start

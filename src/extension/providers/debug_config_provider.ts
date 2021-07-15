@@ -587,8 +587,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			switch (debugConfig.flutterMode) {
 				case "profile":
 				case "release":
-					if (!args.includes(debugConfig.flutterMode))
-						args.push(`--${debugConfig.flutterMode}`);
+					this.addArgsIfNotExist(args, `--${debugConfig.flutterMode}`);
 					break;
 
 				default: // Debug mode.
