@@ -360,6 +360,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// registered providers.
 	const rankingCodeActionProvider = new RankingCodeActionProvider();
 
+	rankingCodeActionProvider.registerProvider(new AddDependencyCodeActionProvider(DART_MODE));
+
 	const triggerCharacters = ".(${'\"/\\".split("");
 	if (!isUsingLsp && dasClient) {
 		context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, new DartHoverProvider(logger, dasClient)));
