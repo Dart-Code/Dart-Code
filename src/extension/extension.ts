@@ -71,6 +71,7 @@ import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToSuperCommand } from "./lsp/go_to_super";
 import { TestDiscoverer } from "./lsp/test_discoverer";
+import { AddDependencyCodeActionProvider } from "./providers/add_dependency_code_action_provider";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
 import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
 import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";

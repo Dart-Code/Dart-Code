@@ -1,7 +1,7 @@
-export class PackageDetailsCache {
+export class PackageCacheData {
 	static cacheVersion = 1;
 	static maxCacheAgeHours = 18;
-	static get maxCacheAgeMs() { return PackageDetailsCache.maxCacheAgeHours * 60 * 60 * 1000; }
+	static get maxCacheAgeMs() { return PackageCacheData.maxCacheAgeHours * 60 * 60 * 1000; }
 	static maxPackageDetailsRequestsInFlight = 5;
 
 	constructor(
@@ -9,10 +9,10 @@ export class PackageDetailsCache {
 		private readonly packages: Map<string, string | undefined>,
 	) { }
 
-	static fromPackageNames(packages: string[]): PackageDetailsCache {
+	static fromPackageNames(packages: string[]): PackageCacheData {
 		const packageMap = new Map<string, string | undefined>();
 		packages.forEach((p) => packageMap.set(p, undefined));
-		return new PackageDetailsCache(
+		return new PackageCacheData(
 			new Date().getTime(),
 			packageMap,
 		);
@@ -26,19 +26,19 @@ export class PackageDetailsCache {
 
 	public get cacheTimeRemainingMs() {
 		const ageMs = new Date().getTime() - this.lastUpdated;
-		const timeRemainingMs = PackageDetailsCache.maxCacheAgeMs - ageMs;
+		const timeRemainingMs = PackageCacheData.maxCacheAgeMs - ageMs;
 		return timeRemainingMs < 0
 			? 0
 			: timeRemainingMs;
 	}
 
-	static fromJson(json: string): PackageDetailsCache | undefined {
-		const data = JSON.parse(json, PackageDetailsCache.mapReviver);
+	static fromJson(json: string): PackageCacheData | undefined {
+		const data = JSON.parse(json, PackageCacheData.mapReviver);
 
-		if (data.version !== PackageDetailsCache.cacheVersion)
+		if (data.version !== PackageCacheData.cacheVersion)
 			return undefined;
 
-		return new PackageDetailsCache(
+		return new PackageCacheData(
 			data.lastUpdated,
 			data.packages,
 		);
@@ -49,9 +49,9 @@ export class PackageDetailsCache {
 			{
 				lastUpdated: this.lastUpdated,
 				packages: this.packages,
-				version: PackageDetailsCache.cacheVersion,
+				version: PackageCacheData.cacheVersion,
 			},
-			PackageDetailsCache.mapReplacer,
+			PackageCacheData.mapReplacer,
 			2,
 		);
 	}
