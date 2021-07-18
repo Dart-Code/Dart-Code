@@ -1,6 +1,6 @@
+import * as vstest from "@vscode/test-electron";
 import * as fs from "fs";
 import * as path from "path";
-import * as vstest from "vscode-test";
 
 let exitCode = 0;
 const cwd = process.cwd();
