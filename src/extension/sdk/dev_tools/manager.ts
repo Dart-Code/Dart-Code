@@ -1,23 +1,18 @@
-import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { window, workspace } from "vscode";
 import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
-import { LogCategory, VmService } from "../../../shared/enums";
+import { LogCategory } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger, SomeError } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
 import { disposeAll } from "../../../shared/utils";
-import { getRandomInt } from "../../../shared/utils/fs";
-import { waitFor } from "../../../shared/utils/promises";
-import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
+import { envUtils } from "../../../shared/vscode/utils";
 import { Analytics } from "../../analytics";
-import { DebugCommands, debugSessions } from "../../commands/debug";
+import { DebugCommands } from "../../commands/debug";
 import { config } from "../../config";
 import { PubGlobal } from "../../pub/global";
 import { getToolEnv } from "../../utils/processes";
@@ -165,8 +160,6 @@ export class DevToolsManager implements vs.Disposable {
 
 		if (options.embed === undefined)
 			options.embed = config.embedDevTools && vsCodeVersion.supportsEmbeddedDevTools;
-		if (options.reuseWindows === undefined)
-			options.reuseWindows = config.devToolsReuseWindows;
 
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
@@ -181,18 +174,13 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		try {
-			await vs.window.withProgress({
-				location: vs.ProgressLocation.Notification,
-				title: "Opening DevTools...",
-			}, async () => {
-				const canLaunchDevToolsThroughService = isRunningLocally
-					&& !options.embed
-					&& !process.env.DART_CODE_IS_TEST_RUN
-					&& config.devToolsBrowser === "chrome"
-					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
-
-				await this.launch(!!canLaunchDevToolsThroughService, session, options);
-			});
+			await vs.window.withProgress(
+				{
+					location: vs.ProgressLocation.Notification,
+					title: "Opening DevTools...",
+				},
+				() => this.launch(session, options),
+			);
 
 			return { url, dispose: () => this.dispose() };
 		} catch (e) {
@@ -241,12 +229,12 @@ export class DevToolsManager implements vs.Disposable {
 			const reusablePanel = panels.find((p) => p.session.hasEnded);
 			if (reusablePanel) {
 				reusablePanel.session = session;
-				await this.launch(false, session, { embed: true, page });
+				await this.launch(session, { embed: true, page });
 			}
 		}
 	}
 
-	private async launch(allowLaunchThroughService: boolean, session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions) {
+	private async launch(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions) {
 		const url = await this.devtoolsUrl;
 		if (!url) {
 			this.showError(`DevTools URL not available`);
@@ -260,11 +248,6 @@ export class DevToolsManager implements vs.Disposable {
 			theme: config.useDevToolsDarkTheme && !options.embed ? "dark" : undefined,
 		};
 
-		// Try to launch via service if allowed.
-		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page) }))
-			return true;
-
-		// Otherwise, fall back to embedded or launching manually.
 		if (options.page)
 			queryParams.page = this.routeIdForPage(options.page);
 		if (options.embed)
@@ -305,42 +288,6 @@ export class DevToolsManager implements vs.Disposable {
 		frame?.load(session, uri);
 	}
 
-	private async launchThroughService(
-		session: DartDebugSessionInformation & { vmServiceUri: string },
-		params: {
-			notify?: boolean;
-			page?: string;
-			queryParams: { [key: string]: string | undefined };
-			reuseWindows?: boolean;
-		},
-	): Promise<boolean> {
-		try {
-			await session.session.customRequest(
-				"service",
-				{
-					params,
-					type: this.debugCommands.vmServices.getServiceMethodName(VmService.LaunchDevTools),
-				},
-			);
-
-			return true;
-		} catch (e) {
-			this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${e.message}`);
-			vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
-				if (res) {
-					const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
-					const tempPath = path.join(os.tmpdir(), fileName);
-					fs.writeFileSync(tempPath, e.message || e);
-					workspace.openTextDocument(tempPath).then((document) => {
-						window.showTextDocument(document);
-					});
-				}
-			});
-
-			return false;
-		}
-	}
-
 	/// Starts the devtools server and returns the URL of the running app.
 	private startServer(hasReinstalled = false): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
@@ -358,21 +305,11 @@ export class DevToolsManager implements vs.Disposable {
 			this.disposables.push(service);
 
 			service.registerForServerStarted((n) => {
-				// When a new debug session starts, we need to wait for its VM
-				// Service, then register it with this server.
 				this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(async (session) => {
-					if (session.vmServiceUri) {
-						service.vmRegister({ uri: session.vmServiceUri });
-						// Also reconnect any orphaned DevTools views.
-						await this.reconnectDisconnectedEmbeddedViews(session as DartDebugSessionInformation & { vmServiceUri: string });
-					}
-				}));
-
-				// And send any existing sessions we have.
-				for (const session of debugSessions) {
+					// When a new debug session starts, refresh any embedded views for it.
 					if (session.vmServiceUri)
-						service.vmRegister({ uri: session.vmServiceUri });
-				}
+						await this.reconnectDisconnectedEmbeddedViews(session as DartDebugSessionInformation & { vmServiceUri: string });
+				}));
 
 				portToBind = n.port;
 				resolve(`http://${n.host}:${n.port}/`);
@@ -465,10 +402,6 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	public registerForServerStarted(subscriber: (notification: ServerStartedNotification) => void): vs.Disposable {
 		return this.subscribe(this.serverStartedSubscriptions, subscriber);
 	}
-
-	public vmRegister(request: { uri: string }): Thenable<any> {
-		return this.sendRequest("vm.register", request);
-	}
 }
 
 export interface ServerStartedNotification {
@@ -479,8 +412,6 @@ export interface ServerStartedNotification {
 
 interface DevToolsOptions {
 	embed?: boolean;
-	reuseWindows?: boolean;
-	notify?: boolean;
 	page?: DevToolsPage | null; // undefined = unspecified (use default), null = force external so user can pick any
 	inspectorRef?: string;
 }

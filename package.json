@@ -1774,19 +1774,6 @@
 					"description": "The theme to use for Dart DevTools.",
 					"scope": "window"
 				},
-				"dart.devToolsBrowser": {
-					"enum": [
-						"chrome",
-						"default"
-					],
-					"enumDescriptions": [
-						"Locate and launch Google Chrome from your system",
-						"Use your systems default web browser"
-					],
-					"default": "chrome",
-					"description": "Whether to launch external DevTools windows using Chrome or the system default browser.",
-					"scope": "window"
-				},
 				"dart.showDevToolsDebugToolBarButtons": {
 					"type": "boolean",
 					"default": true,
@@ -2099,12 +2086,6 @@
 					],
 					"default": null,
 					"description": "The port number to be used for the Dart DevTools.",
-					"scope": "window"
-				},
-				"dart.devToolsReuseWindows": {
-					"type": "boolean",
-					"default": true,
-					"description": "Whether to try to reuse existing DevTools windows instead of launching new ones. Only works for instances of DevTools launched by the DevTools server on the local machine.",
 					"scope": "window"
 				},
 				"dart.shareDevToolsWithFlutter": {
