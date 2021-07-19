@@ -29,6 +29,7 @@ export interface DebugCommandHandler {
 }
 
 export interface InternalExtensionApi {
+	addDependencyCommand: any,
 	analyzerCapabilities?: {
 		supportsGetSignature: boolean;
 		supportsAvailableSuggestions: boolean;

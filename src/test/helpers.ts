@@ -83,6 +83,7 @@ export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTes
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
+export const flutterHelloWorldPubspec = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "pubspec.yaml"));
 export const flutterHelloWorldCounterAppFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/counter.dart"));
 export const flutterHelloWorldOutlineFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/outline.dart"));
 export const flutterHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/broken.dart"));
