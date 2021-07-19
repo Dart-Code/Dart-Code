@@ -115,12 +115,13 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			args.push("--dev");
 
 		// Handle some known Flutter dependencies.
-		if (knownFlutterSdkPackages.includes(packageName)) {
+		const isFlutterSdkPackage = knownFlutterSdkPackages.includes(packageName);
+		if (isFlutterSdkPackage) {
 			args.push("--sdk");
 			args.push("flutter");
 		}
 
-		if (util.isInsideFlutterProject(uri)) {
+		if (this.sdks.flutter && (isFlutterSdkPackage || util.isInsideFlutterProject(uri))) {
 			return this.runFlutter(["pub", ...args], uri);
 		} else {
 			return this.runPub(args, uri);
