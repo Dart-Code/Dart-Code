@@ -19,7 +19,7 @@ const knownFlutterSdkPackages = [
 	"integration_test",
 ];
 
-export class AddPackageCommand extends BaseSdkCommands {
+export class AddDependencyCommand extends BaseSdkCommands {
 	private readonly extensionStoragePath: string | undefined;
 	private cache: PackageCacheData | undefined;
 	private nextPackageNameFetchTimeout: NodeJS.Timeout | undefined;
@@ -99,12 +99,11 @@ export class AddPackageCommand extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-		const selectedPackage = await this.promptForPackage();
-		if (!selectedPackage)
+		const selectedPackageName = await this.promptForPackage();
+		if (!selectedPackageName)
 			return;
-		const packageName = selectedPackage.packageName;
 
-		this.addDependency(uri, packageName, isDevDependency);
+		this.addDependency(uri, selectedPackageName, isDevDependency);
 	}
 
 	private async addDependency(uri: string | vs.Uri, packageName: string, isDevDependency: boolean) {
@@ -128,7 +127,7 @@ export class AddPackageCommand extends BaseSdkCommands {
 		}
 	}
 
-	private async promptForPackage(): Promise<PickablePackage | undefined> {
+	private async promptForPackage(): Promise<string | undefined> {
 		const quickPick = vs.window.createQuickPick<PickablePackage>();
 		quickPick.placeholder = "Enter a package name";
 		quickPick.items = this.getMatchingPackages();
@@ -144,7 +143,7 @@ export class AddPackageCommand extends BaseSdkCommands {
 
 		quickPick.dispose();
 
-		return selectedPackage;
+		return selectedPackage?.packageName;
 	}
 
 	private getMatchingPackages(prefix?: string): PickablePackage[] {
@@ -169,4 +168,4 @@ export class AddPackageCommand extends BaseSdkCommands {
 	}
 }
 
-type PickablePackage = vs.QuickPickItem & { packageName: string };
+export type PickablePackage = vs.QuickPickItem & { packageName: string };
