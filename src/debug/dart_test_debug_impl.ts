@@ -128,7 +128,7 @@ export class DartTestDebugSession extends DartDebugSession {
 
 	private readonly suitePaths: string[] = [];
 	private readonly tests: Test[] = [];
-	private testCount = 0;
+	private testCounts: { [key: string]: number } = {};
 	protected async handleTestEvent(notification: any) {
 		// Handle basic output
 		switch (notification.type) {
@@ -162,10 +162,11 @@ export class DartTestDebugSession extends DartDebugSession {
 				const testDone = notification as TestDoneNotification;
 				if (testDone.hidden)
 					return;
-				this.testCount++;
+				const name = this.tests[testDone.testID].name ?? "";
 				const pass = testDone.result === "success";
 				const symbol = pass ? tick : cross;
-				this.sendEvent(new OutputEvent(`${symbol} ${this.tests[testDone.testID].name}\n`, "stdout"));
+				this.testCounts[name] = (this.testCounts[name] ?? 0) + 1;
+				this.sendEvent(new OutputEvent(`${symbol} ${name}\n`, "stdout"));
 				break;
 			case "print":
 				const print = notification as PrintNotification;
@@ -177,8 +178,14 @@ export class DartTestDebugSession extends DartDebugSession {
 				this.logToUser(`${error.stackTrace}\n`, "stderr");
 				break;
 			case "done":
-				if (this.expectSingleTest && this.testCount > 1 && this.sourceFileForArgs) {
-					this.logToUser(`${this.testCount} tests ran but only one was expected.\nYou may have multiple tests with the same name.\n`, "console");
+				if (this.expectSingleTest && this.sourceFileForArgs) {
+					const testNames = Object.keys(this.testCounts);
+					const firstTestWithMultipleRuns = testNames.find((name) => this.testCounts[name] > 1);
+					// It's possible that we ran multiple tests because of a variant argument in Flutter, so only actually report
+					// if there were multiple tests with the same name.
+					if (firstTestWithMultipleRuns) {
+						this.logToUser(`Multiple tests named "${firstTestWithMultipleRuns}" ran but only one was expected.\nYou may have multiple tests with the same name.\n`, "console");
+					}
 				}
 				break;
 		}
