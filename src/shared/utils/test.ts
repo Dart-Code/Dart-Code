@@ -37,7 +37,7 @@ export function makeRegexForTests(names: string[], isGroup: boolean) {
 	for (const name of names) {
 		const prefix = "^";
 		// We can't anchor to the end for groups, as we want them to run all children.
-		const suffix = isGroup ? "" : "$";
+		const suffix = isGroup ? "" : "( \\(variant: .*\\))?$";
 		const escapedName = escapeRegExp(name);
 
 		// If a test name contains interpolated expressions, passing the exact
