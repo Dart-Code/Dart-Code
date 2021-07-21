@@ -53,7 +53,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			const contents = await fs.promises.readFile(cacheFile);
 			this.cache = PackageCacheData.fromJson(contents.toString());
 		} catch (e) {
-			this.logger.error(`Failed to read package cache file: $e`);
+			this.logger.error(`Failed to read package cache file: ${e}`);
 		}
 	}
 
@@ -67,7 +67,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			if (json)
 				await fs.promises.writeFile(cacheFile, json);
 		} catch (e) {
-			this.logger.error(`Failed to read package cache file: $e`);
+			this.logger.error(`Failed to read package cache file: ${e}`);
 		}
 	}
 
