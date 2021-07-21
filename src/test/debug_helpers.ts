@@ -9,19 +9,10 @@ import { logProcess } from "../shared/logging";
 import { SuiteNode } from "../shared/test/test_model";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, setConfigForTest, watchPromise, withTimeout } from "./helpers";
+import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
-
-export function disableDdsForTestForWindows() {
-	// DDS currently fails to start on Windows quite a lot, so pass
-	// `--disable-dart-dev` if it's supported as a workaround until this is fixed.
-	// https://github.com/dart-lang/sdk/issues/44787
-	if (isWin && extApi.dartCapabilities.supportsDisableDartDev && !extApi.dartCapabilities.hasDdsTimingFix) {
-		setConfigForTest("dart", "vmAdditionalArgs", ["--disable-dart-dev"]);
-	}
-}
 
 export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: { [key: string]: any }): Promise<DebugConfiguration> {
 	extraConfiguration = Object.assign(

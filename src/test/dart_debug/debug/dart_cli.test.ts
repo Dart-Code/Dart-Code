@@ -10,7 +10,7 @@ import { faint } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, disableDdsForTestForWindows, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ensureArrayContainsArray, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 
@@ -18,8 +18,6 @@ describe("dart cli debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
-
-	beforeEach("disable DDS for Windows", disableDdsForTestForWindows);
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
@@ -49,7 +47,6 @@ describe("dart cli debugger", () => {
 		});
 
 	});
-
 
 	it("runs to completion", async () => {
 		const config = await startDebugger(dc, helloWorldMainFile);
