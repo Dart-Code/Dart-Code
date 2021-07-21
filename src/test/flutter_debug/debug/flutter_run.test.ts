@@ -180,7 +180,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Wait for Platform extension before trying to call it.
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.PlatformOverride));
 
-		await ensureServiceExtensionValue(VmServiceExtension.PlatformOverride, "android", dc);
+		// TODO: This currently assumes we only support these two platforms, but that's no longer true.
+		// https://github.com/Dart-Code/Dart-Code/issues/3487
+		// await ensureServiceExtensionValue(VmServiceExtension.PlatformOverride, "android", dc);
 		await vs.commands.executeCommand("flutter.togglePlatform");
 		await ensureServiceExtensionValue(VmServiceExtension.PlatformOverride, "iOS", dc);
 		await vs.commands.executeCommand("flutter.togglePlatform");
