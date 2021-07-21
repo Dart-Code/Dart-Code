@@ -43,7 +43,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, fsPath(flutterHelloWorldMainFile));
 			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["-d", "flutter-tester"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["-d", flutterTestDeviceId]);
 			assert.equal(resolvedConfig.toolArgs!.includes("--web-server-debug-protocol"), false);
 			assert.deepStrictEqual(resolvedConfig.args, ["--foo"]);
 		});
