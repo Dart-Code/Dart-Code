@@ -72,6 +72,29 @@
 				"  }",
 				"}"
 			]
+		},
+		"Flutter page widget with stateless view": {
+			"prefix": "pge",
+			"description": "Insert a Page with a StatelessWidget view",
+			"body": [
+				"class $1Page extends Page {",
+				"  const $1Page() : super(key: const ValueKey('$1 Page'));",
+				"",
+				"  Route createRoute(BuildContext context) {",
+				"    return MaterialPageRoute(",
+				"        settings: this, builder: (BuildContext context) => $1View());",
+				"  }",
+				"}",
+				"",
+				"class $1View extends StatelessWidget {",
+				"  const $1View();",
+				"",
+				"  @override",
+				"  Widget build(BuildContext context) {",
+				"    return Scaffold(${0:body: Text('Hello, world!')});",
+				"  }",
+				"}"
+			]
 		}
 	}
 }
