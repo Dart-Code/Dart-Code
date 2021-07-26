@@ -11,8 +11,8 @@ jobs:
       - uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          stale-issue-message: 'This issue has been marked stale because it is tagged awaiting-info for 30 days with no activity. Remove the stale label or comment to prevent the issue being closed in 10 days.'
+          stale-issue-message: 'This issue has been marked stale because it is tagged awaiting-info for 20 days with no activity. Remove the stale label or comment to prevent the issue being closed in 10 days.'
           stale-issue-label: 'stale'
           only-labels: 'awaiting info'
-          days-before-stale: 30
+          days-before-stale: 20
           days-before-close: 10
