@@ -97,13 +97,30 @@ export class VmServiceExtensions {
 			: path;
 	}
 
+	public async overridePlatform() {
+		const selection = await vs.window.showQuickPick([
+			{ label: "Android", platform: "android" },
+			{ label: "iOS", platform: "iOS" },
+			{ label: "macOS", platform: "macOS" },
+			{ label: "Windows", platform: "windows" },
+			{ label: "Linux", platform: "linux" },
+		]);
+		if (!selection)
+			return;
+		// Pass the same value for both options as we will always set it.
+		return this.toggle(VmServiceExtension.PlatformOverride, selection.platform, selection.platform);
+	}
+
 	/// Toggles between two values. Always picks the value1 if the current value
-	// is not already value1 (eg. if it's neither of those, it'll pick val1).
+	/// is not already value1 (eg. if it's neither of those, it'll pick val1).
 	public async toggle(id: VmServiceExtension, val1: any = true, val2: any = false): Promise<void> {
 		/// Helper that toggles for one session.
 		const toggleForSession = async (session: DartDebugSessionInformation) => {
-			const currentValue = await this.getCurrentServiceExtensionValue(session.session, id);
-			const newValue = currentValue !== val1 ? val1 : val2;
+			const newValue = val1 === val2
+				? val1
+				: await this.getCurrentServiceExtensionValue(session.session, id) !== val1
+					? val1
+					: val2;
 			this.currentExtensionValues[id] = newValue;
 			await this.sendExtensionValue(session.session, id, newValue);
 		};
