@@ -30,6 +30,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("dart.addDependency", (uri) => this.promptAndAddDependency(uri, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.addDevDependency", (uri) => this.promptAndAddDependency(uri, true)));
 		this.disposables.push(vs.commands.registerCommand("_dart.addDependency", this.addDependency, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.removeDependency", this.removeDependency, this));
 
 		this.extensionStoragePath = context.extensionStoragePath;
 		// Kick off async work to fetch then queue a new check.
@@ -122,6 +123,19 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		}
 
 		if (this.sdks.flutter && (isFlutterSdkPackage || util.isInsideFlutterProject(uri))) {
+			return this.runFlutter(["pub", ...args], uri);
+		} else {
+			return this.runPub(args, uri);
+		}
+	}
+
+	private async removeDependency(uri: string | vs.Uri, packageName: string) {
+		if (typeof uri === "string")
+			uri = vs.Uri.file(uri);
+
+		const args = ["remove", packageName];
+
+		if (this.sdks.flutter && util.isInsideFlutterProject(uri)) {
 			return this.runFlutter(["pub", ...args], uri);
 		} else {
 			return this.runPub(args, uri);

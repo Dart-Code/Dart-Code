@@ -138,6 +138,16 @@
 				"category": "Dart"
 			},
 			{
+				"command": "_dart.removeDependency",
+				"title": "Remove Dependency",
+				"category": "Dart"
+			},
+			{
+				"command": "_dart.removeDependencyFromTreeNode",
+				"title": "Remove Dependency",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.toggleDartdocComment",
 				"title": "Toggle Dartdoc Comment",
 				"category": "Dart"
@@ -766,6 +776,14 @@
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{
+					"command": "_dart.removeDependency",
+					"when": "false"
+				},
+				{
+					"command": "_dart.removeDependencyFromTreeNode",
+					"when": "false"
+				},
+				{
 					"command": "dart.toggleDartdocComment",
 					"when": "dart-code:anyProjectLoaded"
 				},
@@ -823,7 +841,7 @@
 				},
 				{
 					"command": "_dart.displayTestOutput",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "false"
 				},
 				{
 					"command": "dart.debugTestAtCursor",
@@ -1432,6 +1450,10 @@
 				{
 					"when": "view == dartDependencyTree && viewItem == dart-code:depDevDependenciesNode",
 					"command": "dart.addDevDependency"
+				},
+				{
+					"when": "viewItem == dart-code:depDependencyPackageNode || viewItem == dart-code:depDevDependencyPackageNode",
+					"command": "_dart.removeDependencyFromTreeNode"
 				}
 			]
 		},

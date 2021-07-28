@@ -2,16 +2,18 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { DART_DEP_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT } from "../../shared/constants";
-import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
+import { DART_DEP_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT } from "../../shared/constants";
+import { DartWorkspaceContext, IAmDisposable, Logger } from "../../shared/interfaces";
 import { PubDeps, PubDepsPackage, ShortestPaths } from "../../shared/pub/deps";
 import { PackageMap } from "../../shared/pub/package_map";
+import { disposeAll } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { areSameFolder, fsPath } from "../../shared/utils/fs";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { getExcludedFolders } from "../utils";
 
-export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
+export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IAmDisposable {
+	protected readonly disposables: vs.Disposable[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 	private readonly deps: PubDeps;
@@ -19,6 +21,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 	private processPackageMapChangeEvents = true;
 
 	constructor(private readonly logger: Logger, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) {
+		this.disposables.push(vs.commands.registerCommand("_dart.removeDependencyFromTreeNode", this.removeDependency, this));
 		context.events.onPackageMapChange.listen(() => {
 			// Calling "pub deps --json" modifies .dart_tool/package_config.json which
 			// causes a loop here. The file is modified, we rebuild the tree, which triggers
@@ -71,6 +74,13 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 			const devPackages = allPackages.filter((p) => packages![p.packageName]?.kind === "dev");
 			const transitivePackages = allPackages.filter((p) => packages![p.packageName]?.kind === "transitive");
 
+			for (const p of directPackages)
+				p.contextValue = DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT;
+			for (const p of devPackages)
+				p.contextValue = DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT;
+			for (const p of transitivePackages)
+				p.contextValue = DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT;
+
 
 			const nodes: PackageDepProjectPackageGroup[] = [];
 			if (directPackages.length)
@@ -108,7 +118,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 				if (path.basename(packagePath) === "lib")
 					packagePath = path.normalize(path.join(packagePath, ".."));
 				const shortestPath = shortestPaths ? shortestPaths[name] : undefined;
-				return new PackageDepPackage(`${name}`, vs.Uri.file(packagePath), shortestPath);
+				return new PackageDepPackage(`${name}`, vs.Uri.file(packagePath), project.projectFolder, shortestPath);
 			});
 
 		return packageDepNodes;
@@ -133,6 +143,17 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 		});
 
 		return [...folders, ...files];
+	}
+
+	private async removeDependency(treeNode: PackageDepPackage) {
+		const packageName = treeNode?.packageName;
+		const projectFolder = treeNode?.projectFolder;
+		if (packageName && projectFolder)
+			await vs.commands.executeCommand("_dart.removeDependency", treeNode.projectFolder, treeNode.packageName);
+	}
+
+	public dispose(): any {
+		disposeAll(this.disposables);
 	}
 }
 
@@ -211,10 +232,11 @@ export class PackageDepPackage extends PackageDep {
 	constructor(
 		public readonly packageName: string,
 		resourceUri: vs.Uri,
+		public readonly projectFolder: string,
 		shortestPath: string[] | undefined,
 	) {
 		super(packageName, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
-		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
+		this.contextValue = DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT;
 
 		if (shortestPath)
 			this.tooltip = shortestPath.join(" → ");
