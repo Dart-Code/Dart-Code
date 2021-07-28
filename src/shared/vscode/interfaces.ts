@@ -11,6 +11,7 @@ import { EmittingLogger } from "../logging";
 import { TestSessionCoordinator } from "../test/coordinator";
 import { TestTreeModel, TreeNode } from "../test/test_model";
 import { WorkspaceContext } from "../workspace";
+import { FlutterDeviceManager } from "./device_manager";
 import { Context } from "./workspace";
 
 export interface DebugCommandHandler {
@@ -48,6 +49,7 @@ export interface InternalExtensionApi {
 	debugCommands: DebugCommandHandler;
 	debugProvider: DebugConfigurationProvider;
 	debugSessions: Array<{ loadedServiceExtensions: VmServiceExtension[] }>;
+	deviceManager: FlutterDeviceManager | undefined;
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;
 	};

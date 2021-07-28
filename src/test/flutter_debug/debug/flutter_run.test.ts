@@ -7,7 +7,7 @@ import { DebuggerType, VmService, VmServiceExtension } from "../../../shared/enu
 import { versionIsAtLeast } from "../../../shared/utils";
 import { faint } from "../../../shared/utils/colors";
 import { fsPath } from "../../../shared/utils/fs";
-import { resolvedPromise } from "../../../shared/utils/promises";
+import { resolvedPromise, waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, defer, deferUntilLast, delay, ensureArrayContainsArray, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
@@ -21,6 +21,15 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// TODO: Remove branch check when Flutter removes it.
 		if (flutterTestDeviceIsWeb && (process.env.CODE_VERSION === "stable" || process.env.CODE_VERSION === "beta"))
 			this.skip();
+	});
+
+	beforeEach("Wait for device to be available", async () => {
+		// For web, the device doesn't show up immediately so we need to wait
+		// otherwise we will prompt to select a device when starting the debug
+		// session in the test. This is not required for flutter-tester as that
+		// bypasses the device check.
+		if (flutterTestDeviceIsWeb)
+			await waitFor(() => extApi.deviceManager!.getDevice(flutterTestDeviceId));
 	});
 
 	let dc: DartDebugClient;

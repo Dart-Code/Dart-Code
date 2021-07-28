@@ -746,6 +746,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			debugCommands,
 			debugProvider,
 			debugSessions,
+			deviceManager,
 			envUtils,
 			fileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : (lspAnalyzer ? lspAnalyzer.fileTracker : undefined),
 			flutterCapabilities,
