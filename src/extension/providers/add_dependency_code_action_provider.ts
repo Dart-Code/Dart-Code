@@ -90,7 +90,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 	private createActions(document: TextDocument, diagnostic: Diagnostic, packageName: string): CodeAction[] {
 		const createAction = (isDevDependency: boolean) => {
 			const dependencyTypeName = isDevDependency ? "dev_dependencies" : "dependencies";
-			const title = `Add '${packageName}' to ${dependencyTypeName} in pubspec.yaml`;
+			const title = `Add '${packageName}' to ${dependencyTypeName}`;
 			const action = new CodeAction(title, CodeActionKind.QuickFix);
 			action.command = {
 				arguments: [

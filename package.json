@@ -130,7 +130,8 @@
 			{
 				"command": "dart.addDependency",
 				"title": "Add Dependency",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "$(add)"
 			},
 			{
 				"command": "dart.addDevDependency",
@@ -1357,6 +1358,15 @@
 				{
 					"when": "view == dartTestTree && !config.dart.showSkippedTests",
 					"command": "_dart.toggleSkippedTestVisibilityOn"
+				},
+				{
+					"when": "view == dartDependencyTree",
+					"command": "dart.addDependency",
+					"group": "navigation@1"
+				},
+				{
+					"when": "view == dartDependencyTree",
+					"command": "dart.addDevDependency"
 				}
 			],
 			"view/item/context": [

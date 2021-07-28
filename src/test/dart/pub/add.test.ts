@@ -40,7 +40,7 @@ describe("pub add", () => {
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
 
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`)) as Thenable<vs.CodeAction[]>);
-		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies in pubspec.yaml`) !== -1);
+		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies`) !== -1);
 		assert.equal(!!addDependency, true);
 	});
 
@@ -50,7 +50,7 @@ describe("pub add", () => {
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
 
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`)) as Thenable<vs.CodeAction[]>);
-		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies in pubspec.yaml`) !== -1);
+		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies`) !== -1);
 		assert.equal(!!addDependency, false);
 	});
 });
