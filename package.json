@@ -1424,6 +1424,14 @@
 					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
 					"command": "_dart.displayTestOutput",
 					"group": "9_misc@1"
+				},
+				{
+					"when": "view == dartDependencyTree && viewItem == dart-code:depDependenciesNode",
+					"command": "dart.addDependency"
+				},
+				{
+					"when": "view == dartDependencyTree && viewItem == dart-code:depDevDependenciesNode",
+					"command": "dart.addDevDependency"
 				}
 			]
 		},
@@ -1464,7 +1472,7 @@
 		"views": {
 			"explorer": [
 				{
-					"id": "dartPackages",
+					"id": "dartDependencyTree",
 					"name": "Dependencies",
 					"when": "dart-code:anyProjectLoaded"
 				}

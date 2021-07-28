@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../shared/constants";
+import { DART_DEP_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { PubDeps, PubDepsPackage, ShortestPaths } from "../../shared/pub/deps";
 import { PackageMap } from "../../shared/pub/package_map";
@@ -74,11 +74,11 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep> {
 
 			const nodes: PackageDepProjectPackageGroup[] = [];
 			if (directPackages.length)
-				nodes.push(new PackageDepProjectPackageGroup("direct dependencies", directPackages));
+				nodes.push(new PackageDepProjectPackageGroup("direct dependencies", DART_DEP_DEPENDENCIES_NODE_CONTEXT, directPackages));
 			if (devPackages.length)
-				nodes.push(new PackageDepProjectPackageGroup("dev dependencies", devPackages));
+				nodes.push(new PackageDepProjectPackageGroup("dev dependencies", DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT, devPackages));
 			if (transitivePackages.length)
-				nodes.push(new PackageDepProjectPackageGroup("transitive dependencies", transitivePackages, shortestPaths));
+				nodes.push(new PackageDepProjectPackageGroup("transitive dependencies", DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT, transitivePackages, shortestPaths));
 			return nodes;
 		} else if (element instanceof PackageDepProjectPackageGroup) {
 			// For the package groups, we've already computed the children when we split
@@ -198,11 +198,12 @@ export class PackageDepProject extends PackageDep {
 export class PackageDepProjectPackageGroup extends PackageDep {
 	constructor(
 		label: string,
+		context: string,
 		public readonly packages: PackageDepPackage[],
 		public readonly shortestPaths?: ShortestPaths,
 	) {
 		super(label, undefined, vs.TreeItemCollapsibleState.Collapsed);
-		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
+		this.contextValue = context;
 	}
 }
 

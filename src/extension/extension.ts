@@ -592,7 +592,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext, dartCapabilities);
-	const packagesTreeView = vs.window.createTreeView("dartPackages", { treeDataProvider: dartPackagesProvider });
+	const packagesTreeView = vs.window.createTreeView("dartDependencyTree", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(
 		packagesTreeView,
 	);

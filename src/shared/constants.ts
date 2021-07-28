@@ -45,6 +45,9 @@ export const DART_TEST_TEST_NODE_CONTEXT = "dart-code:testTestNode";
 export const DART_TEST_CAN_RUN_SKIPPED_CONTEXT = "dart-code:canRunSkipped";
 
 export const DART_DEP_PROJECT_NODE_CONTEXT = "dart-code:depProjectNode";
+export const DART_DEP_DEPENDENCIES_NODE_CONTEXT = "dart-code:depDependenciesNode";
+export const DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT = "dart-code:depDevDependenciesNode";
+export const DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT = "dart-code:depTransitiveDependenciesNode";
 export const DART_DEP_PACKAGE_NODE_CONTEXT = "dart-code:depPackageNode";
 export const DART_DEP_FOLDER_NODE_CONTEXT = "dart-code:depFolderNode";
 export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
