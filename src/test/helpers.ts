@@ -1055,7 +1055,7 @@ export function clearAllContext(context: Context): Promise<void> {
 	context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, undefined);
 	context.setFlutterSurveyNotificationDoNotShow(flutterTestSurveyID, undefined);
 
-	// HACK Updating context is async, but since we use setters we can't easily wait
+	// HACK: Updating context is async, but since we use setters we can't easily wait
 	// and this is only test code...
 	return new Promise((resolve) => setTimeout(resolve, 50));
 }

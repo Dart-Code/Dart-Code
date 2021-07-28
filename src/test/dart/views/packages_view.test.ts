@@ -1,11 +1,28 @@
 import { strict as assert } from "assert";
-import { DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT } from "../../../shared/constants";
+import { DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { ensurePackageTreeNode, extApi, getPackages, myPackageThingFile, renderedItemLabel } from "../../helpers";
 
 describe("packages tree", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
+
+	let depDirect: string;
+	let depDev: string;
+	let depTransitive: string;
+	beforeEach("", () => {
+		// Set some useful vars based on whether "pub deps -json" is supported
+		// to simplify tests.
+		if (extApi.dartCapabilities.supportsPubDepsJson) {
+			depDirect = DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT;
+			depDev = DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT;
+			depTransitive = DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT;
+		} else {
+			depDirect = DART_DEP_PACKAGE_NODE_CONTEXT;
+			depDev = DART_DEP_PACKAGE_NODE_CONTEXT;
+			depTransitive = DART_DEP_PACKAGE_NODE_CONTEXT;
+		}
+	});
 
 	it("includes multiple projects from single workspace folder", async () => {
 		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
@@ -26,15 +43,15 @@ describe("packages tree", () => {
 			const devDependencies = await extApi.packagesTreeProvider.getChildren(dependencyGroups?.find((node) => node.label === "dev dependencies"));
 			const transitiveDependencies = await extApi.packagesTreeProvider.getChildren(dependencyGroups?.find((node) => node.label === "transitive dependencies"));
 
-			ensurePackageTreeNode(directDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
-			ensurePackageTreeNode(devDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "test");
-			ensurePackageTreeNode(transitiveDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "meta");
+			ensurePackageTreeNode(directDependencies, depDirect, "my_package");
+			ensurePackageTreeNode(devDependencies, depDev, "test");
+			ensurePackageTreeNode(transitiveDependencies, depTransitive, "meta");
 		} else {
 			const allDependencies = await extApi.packagesTreeProvider.getChildren(packageNode);
 
-			ensurePackageTreeNode(allDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
-			ensurePackageTreeNode(allDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "test");
-			ensurePackageTreeNode(allDependencies, DART_DEP_PACKAGE_NODE_CONTEXT, "meta");
+			ensurePackageTreeNode(allDependencies, depDirect, "my_package");
+			ensurePackageTreeNode(allDependencies, depDev, "test");
+			ensurePackageTreeNode(allDependencies, depTransitive, "meta");
 		}
 	});
 
@@ -64,7 +81,7 @@ describe("packages tree", () => {
 			: packageNode;
 		const packagesNodes = await extApi.packagesTreeProvider.getChildren(packagesContainer);
 
-		const myPackage = ensurePackageTreeNode(packagesNodes, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
+		const myPackage = ensurePackageTreeNode(packagesNodes, depDirect, "my_package");
 		const myPackageContents = await extApi.packagesTreeProvider.getChildren(myPackage);
 		const libFolder = ensurePackageTreeNode(myPackageContents, DART_DEP_FOLDER_NODE_CONTEXT, "lib");
 		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(libFolder);
@@ -83,7 +100,7 @@ describe("packages tree", () => {
 			: packageNode;
 		const packagesNodes = await extApi.packagesTreeProvider.getChildren(packagesContainer);
 
-		const myPackage = ensurePackageTreeNode(packagesNodes, DART_DEP_PACKAGE_NODE_CONTEXT, "my_package");
+		const myPackage = ensurePackageTreeNode(packagesNodes, depDirect, "my_package");
 		const myPackageContents = await extApi.packagesTreeProvider.getChildren(myPackage);
 		const libFolder = ensurePackageTreeNode(myPackageContents, DART_DEP_FOLDER_NODE_CONTEXT, "lib");
 		const myPackageLibContents = await extApi.packagesTreeProvider.getChildren(libFolder);

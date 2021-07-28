@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { DART_DEP_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT } from "../../shared/constants";
+import { DART_DEP_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT } from "../../shared/constants";
 import { DartWorkspaceContext, IAmDisposable, Logger } from "../../shared/interfaces";
 import { PubDeps, PubDepsPackage, ShortestPaths } from "../../shared/pub/deps";
 import { PackageMap } from "../../shared/pub/package_map";
@@ -236,7 +236,7 @@ export class PackageDepPackage extends PackageDep {
 		shortestPath: string[] | undefined,
 	) {
 		super(packageName, resourceUri, vs.TreeItemCollapsibleState.Collapsed);
-		this.contextValue = DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT;
+		this.contextValue = DART_DEP_PACKAGE_NODE_CONTEXT;
 
 		if (shortestPath)
 			this.tooltip = shortestPath.join(" → ");
