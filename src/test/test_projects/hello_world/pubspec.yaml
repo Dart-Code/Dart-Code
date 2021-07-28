@@ -13,7 +13,6 @@ dependencies:
     git:
       url: git://github.com/dart-lang/protobuf.git
       path: protobuf
-      ref: null_safety
 
 dev_dependencies:
   test: '>=0.12.34'
