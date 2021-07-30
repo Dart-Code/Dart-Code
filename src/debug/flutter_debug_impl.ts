@@ -208,7 +208,11 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (!isAttach || args.program) {
 			if (!args.workspaceConfig?.skipTargetFlag)
 				appArgs.push("--target");
-			appArgs.push(this.sourceFileForArgs(args));
+			if (!!args.workspaceConfig?.nonMainTargetPrefix && args.program!.startsWith(args.workspaceConfig?.nonMainTargetPrefix)) {
+				appArgs.push(args.program!);
+			} else {
+				appArgs.push(this.sourceFileForArgs(args));
+			}
 		}
 
 		if (args.args)
