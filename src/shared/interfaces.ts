@@ -58,6 +58,7 @@ export interface WritableWorkspaceConfig {
 	forceFlutterDebug?: boolean;
 	skipFlutterInitialization?: boolean;
 	skipTargetFlag?: boolean;
+	nonMainTargetPrefix?: string;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
