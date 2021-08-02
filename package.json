@@ -1659,7 +1659,7 @@
 					"markdownDescription": "Whether to mark Dart SDK libraries (`dart:*`) as debuggable, enabling stepping into them while debugging.",
 					"scope": "window"
 				},
-				"dart.debugExternalLibraries": {
+				"dart.debugExternalPackageLibraries": {
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Whether to mark external pub package libraries (including `package:flutter`) as debuggable, enabling stepping into them while debugging.",

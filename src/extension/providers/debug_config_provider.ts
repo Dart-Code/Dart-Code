@@ -505,9 +505,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries
 			: !!config.debugSdkLibraries;
-		debugConfig.debugExternalLibraries = debugConfig.debugExternalLibraries !== undefined && debugConfig.debugExternalLibraries !== null
-			? debugConfig.debugExternalLibraries
-			: config.debugExternalLibraries;
+		debugConfig.debugExternalPackageLibraries = debugConfig.debugExternalPackageLibraries !== undefined && debugConfig.debugExternalPackageLibraries !== null
+			? debugConfig.debugExternalPackageLibraries
+			: config.debugExternalPackageLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;

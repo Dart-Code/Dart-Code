@@ -262,11 +262,11 @@ export class Analytics {
 	}
 
 	private getDebuggerPreference(): string {
-		if (config.debugSdkLibraries && config.debugExternalLibraries)
+		if (config.debugSdkLibraries && config.debugExternalPackageLibraries)
 			return "All code";
 		else if (config.debugSdkLibraries)
 			return "My code + SDK";
-		else if (config.debugExternalLibraries)
+		else if (config.debugExternalPackageLibraries)
 			return "My code + Libraries";
 		else
 			return "My code";

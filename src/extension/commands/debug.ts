@@ -283,11 +283,11 @@ export class DebugCommands implements IAmDisposable {
 		}));
 
 		// Debug options.
-		if (config.debugSdkLibraries && config.debugExternalLibraries)
+		if (config.debugSdkLibraries && config.debugExternalPackageLibraries)
 			this.currentDebugOption = DebugOption.MyCodePackagesSdk;
 		else if (config.debugSdkLibraries)
 			this.currentDebugOption = DebugOption.MyCodeSdk;
-		else if (config.debugExternalLibraries)
+		else if (config.debugExternalPackageLibraries)
 			this.currentDebugOption = DebugOption.MyCodePackages;
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleDebugOptions", this.toggleDebugOptions, this));
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
@@ -382,7 +382,7 @@ export class DebugCommands implements IAmDisposable {
 
 	public promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(e: vs.Breakpoint): void {
 		// If the user has enabled any of these, assume they understand the setting.
-		if (config.debugSdkLibraries || config.debugExternalLibraries)
+		if (config.debugSdkLibraries || config.debugExternalPackageLibraries)
 			return;
 
 		if (hasPromptedAboutDebugSettings || this.context.breakpointOutsideWorkspaceDoNotShow || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
@@ -676,15 +676,15 @@ export class DebugCommands implements IAmDisposable {
 	private applyNewDebugOption() {
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
 
-		const debugExternalLibraries = this.currentDebugOption === DebugOption.MyCodePackages || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
+		const debugExternalPackageLibraries = this.currentDebugOption === DebugOption.MyCodePackages || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
 		const debugSdkLibraries = this.currentDebugOption === DebugOption.MyCodeSdk || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
 
-		config.setGlobalDebugExternalLibraries(debugExternalLibraries);
+		config.setGlobalDebugExternalPackageLibraries(debugExternalPackageLibraries);
 		config.setGlobalDebugSdkLibraries(debugSdkLibraries);
 
 		debugSessions.forEach((session) => {
 			session.session.customRequest("updateDebugOptions", {
-				debugExternalLibraries,
+				debugExternalPackageLibraries,
 				debugSdkLibraries,
 			});
 		});

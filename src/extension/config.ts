@@ -58,7 +58,7 @@ class Config {
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
 	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
 	get debugExtensionBackendProtocol(): "sse" | "ws" { return this.getConfig<"sse" | "ws">("debugExtensionBackendProtocol", "ws"); }
-	get debugExternalLibraries(): boolean { return this.getConfig<boolean>("debugExternalLibraries", false); }
+	get debugExternalPackageLibraries(): boolean { return this.getConfig<boolean>("debugExternalPackageLibraries", false); }
 	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
 	get devToolsBrowser(): "chrome" | "default" { return this.getConfig<"chrome" | "default">("devToolsBrowser", "chrome"); }
 	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
@@ -149,7 +149,7 @@ class Config {
 	public setFlutterSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
 	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
 	public setGlobalDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value, ConfigurationTarget.Global); }
-	public setGlobalDebugExternalLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalLibraries", value, ConfigurationTarget.Global); }
+	public setGlobalDebugExternalPackageLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalPackageLibraries", value, ConfigurationTarget.Global); }
 	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
 	public setPreviewLsp(value: boolean): Thenable<void> { return this.setConfig("previewLsp", value, ConfigurationTarget.Global); }
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Thenable<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }

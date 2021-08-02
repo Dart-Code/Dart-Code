@@ -306,7 +306,7 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read`
 		const def = await getDefinition(positionOf("http.re^ad"));
-		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, breakpointFor(def));
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
@@ -385,12 +385,12 @@ describe("dart cli debugger", () => {
 		);
 	});
 
-	it("steps into an external library if debugExternalLibraries is true", async () => {
+	it("steps into an external library if debugExternalPackageLibraries is true", async () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
-		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1,
 			path: fsPath(helloWorldHttpFile),
@@ -410,11 +410,11 @@ describe("dart cli debugger", () => {
 		);
 	});
 
-	it("does not step into an external library if debugExternalLibraries is false", async () => {
+	it("does not step into an external library if debugExternalPackageLibraries is false", async () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
-		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line,
 			path: fsPath(helloWorldHttpFile),
@@ -428,12 +428,12 @@ describe("dart cli debugger", () => {
 		);
 	});
 
-	it("steps into a local library even if debugExternalLibraries is false", async () => {
+	it("steps into a local library even if debugExternalPackageLibraries is false", async () => {
 		await openFile(helloWorldLocalPackageFile);
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const config = await startDebugger(dc, helloWorldLocalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldLocalPackageFile, { debugExternalPackageLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
 			path: fsPath(helloWorldLocalPackageFile),
@@ -515,9 +515,9 @@ describe("dart cli debugger", () => {
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
-	it("correctly marks non-debuggable external library frames when debugExternalLibraries is false", async () => {
+	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async () => {
 		await openFile(helloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -528,9 +528,9 @@ describe("dart cli debugger", () => {
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
-	it("correctly marks debuggable external library frames when debugExternalLibraries is true", async () => {
+	it("correctly marks debuggable external library frames when debugExternalPackageLibraries is true", async () => {
 		await openFile(helloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -541,9 +541,9 @@ describe("dart cli debugger", () => {
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
-	it("correctly marks debuggable local library frames even when debugExternalLibraries is false", async () => {
+	it("correctly marks debuggable local library frames even when debugExternalPackageLibraries is false", async () => {
 		await openFile(helloWorldThrowInLocalPackageFile);
-		const config = await startDebugger(dc, helloWorldThrowInLocalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, helloWorldThrowInLocalPackageFile, { debugExternalPackageLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),

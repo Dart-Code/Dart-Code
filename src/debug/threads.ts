@@ -110,7 +110,7 @@ export class ThreadManager {
 			const shouldDebug = !(
 				// Inside here is shouldNotDebug!
 				(debugSession.isSdkLibrary(library.uri) && !debugSession.debugSdkLibraries)
-				|| (debugSession.isExternalLibrary(library.uri) && !debugSession.debugExternalLibraries));
+				|| (debugSession.isExternalLibrary(library.uri) && !debugSession.debugExternalPackageLibraries));
 			return debugSession.vmService.setLibraryDebuggable(isolate.id, library.id, shouldDebug);
 		}
 

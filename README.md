@@ -30,7 +30,7 @@ Dart Code can be [installed from the Visual Studio Code Marketplace](https://mar
 - [Automatically finds SDKs from `PATH`](https://dartcode.org/docs/configuring-path-and-environment-variables/)
 - [Notification of new stable Dart SDK releases](https://dartcode.org/docs/settings/#dartcheckforsdkupdates)
 - [Sort Members command](https://dartcode.org/docs/commands/#dart-sort-members)
-- Support for debugging "just my code" or SDK/libraries too ([`dart.debugSdkLibraries`](https://dartcode.org/docs/settings/#dartdebugsdklibraries) and [`dart.debugExternalLibraries`](https://dartcode.org/docs/settings/#dartdebugexternallibraries))
+- Support for debugging "just my code" or SDK/libraries too ([`dart.debugSdkLibraries`](https://dartcode.org/docs/settings/#dartdebugsdklibraries) and [`dart.debugExternalPackageLibraries`](https://dartcode.org/docs/settings/#dartdebugexternalpackagelibraries))
 - [Prompts to get packages when out of date](https://dartcode.org/docs/settings/#dartprompttogetpackages)
 - Syntax highlighting
 - Code completion

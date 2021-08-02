@@ -69,7 +69,7 @@ export class DartDebugSession extends DebugSession {
 	protected toolEnv?: any;
 	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
-	public debugExternalLibraries = false;
+	public debugExternalPackageLibraries = false;
 	public showDartDeveloperLogs = true;
 	protected subscribeToStdout = false;
 	public useFlutterStructuredErrors = false;
@@ -277,7 +277,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private readSharedArgs(args: DartLaunchArgs) {
-		this.debugExternalLibraries = args.debugExternalLibraries;
+		this.debugExternalPackageLibraries = args.debugExternalPackageLibraries;
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
@@ -1134,7 +1134,7 @@ export class DartDebugSession extends DebugSession {
 	private getNonDebuggableFrameReason(uri: string): "SDK" | "PACKAGE" | undefined {
 		if (!this.isValidToDebug(uri) || (this.isSdkLibrary(uri) && !this.debugSdkLibraries)) {
 			return "SDK";
-		} else if (this.isExternalLibrary(uri) && !this.debugExternalLibraries) {
+		} else if (this.isExternalLibrary(uri) && !this.debugExternalPackageLibraries) {
 			return "PACKAGE";
 		} else {
 			return undefined;
@@ -1690,7 +1690,7 @@ export class DartDebugSession extends DebugSession {
 						completer.resolve({ url: args.exposedUrl });
 					break;
 				case "updateDebugOptions":
-					this.debugExternalLibraries = !!args.debugExternalLibraries;
+					this.debugExternalPackageLibraries = !!args.debugExternalPackageLibraries;
 					this.debugSdkLibraries = !!args.debugSdkLibraries;
 					await this.threadManager.setLibrariesDuggableForAllIsolates();
 					this.logDapResponse(response);

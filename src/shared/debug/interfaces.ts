@@ -6,7 +6,7 @@ export interface DartLaunchArgs {
 	console?: "debugConsole" | "terminal" | "externalTerminal";
 	cwd?: string;
 	dartSdkPath: string;
-	debugExternalLibraries: boolean;
+	debugExternalPackageLibraries: boolean;
 	debugSdkLibraries: boolean;
 	deleteServiceInfoFile?: boolean;
 	env?: { [key: string]: string | undefined };

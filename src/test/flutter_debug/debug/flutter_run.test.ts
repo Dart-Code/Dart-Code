@@ -644,7 +644,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("steps into an external library if debugExternalLibraries is true", async function () {
+	it("steps into an external library if debugExternalPackageLibraries is true", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
@@ -652,7 +652,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
-		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1,
 			path: fsPath(flutterHelloWorldHttpFile),
@@ -677,14 +677,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("does not step into an external library if debugExternalLibraries is false", async function () {
+	it("does not step into an external library if debugExternalPackageLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
 		await openFile(flutterHelloWorldHttpFile);
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
-		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line,
 			path: fsPath(flutterHelloWorldHttpFile),
@@ -703,7 +703,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("steps into a local library even if debugExternalLibraries is false", async function () {
+	it("steps into a local library even if debugExternalPackageLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
@@ -711,7 +711,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const config = await startDebugger(dc, flutterHelloWorldLocalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, flutterHelloWorldLocalPackageFile, { debugExternalPackageLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
 			path: fsPath(flutterHelloWorldLocalPackageFile),
@@ -784,12 +784,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks non-debuggable external library frames when debugExternalLibraries is false", async function () {
+	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
@@ -807,12 +807,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks debuggable external library frames when debugExternalLibraries is true", async function () {
+	it("correctly marks debuggable external library frames when debugExternalPackageLibraries is true", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalLibraries: true });
+		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
@@ -830,12 +830,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks debuggable local library frames even when debugExternalLibraries is false", async function () {
+	it("correctly marks debuggable local library frames even when debugExternalPackageLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
 		await openFile(flutterHelloWorldThrowInLocalPackageFile);
-		const config = await startDebugger(dc, flutterHelloWorldThrowInLocalPackageFile, { debugExternalLibraries: false });
+		const config = await startDebugger(dc, flutterHelloWorldThrowInLocalPackageFile, { debugExternalPackageLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
