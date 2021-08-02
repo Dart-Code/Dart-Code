@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { Writable } from "stream";
-import { DebugSession, DebugSessionCustomEvent, window } from "vscode";
+import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
@@ -16,9 +16,10 @@ type DebugClientArgs = { runtime: string, executable: string, args: string[], po
 export class DartDebugClient extends DebugClient {
 	private readonly port: number | undefined;
 	public currentSession?: DebugSession;
+	public currentTracker?: DebugAdapterTracker;
 	public hasStarted = false;
 
-	constructor(args: DebugClientArgs, private debugCommands: DebugCommandHandler, testCoordinator: TestSessionCoordinator | undefined) {
+	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactory: DebugAdapterTrackerFactory) {
 		super(args.runtime, args.executable, args.args, "dart", undefined, true);
 		this.port = args.port;
 
@@ -27,6 +28,8 @@ export class DartDebugClient extends DebugClient {
 		const oldDispatch = me.dispatch;
 		me.dispatch = (body: string) => {
 			const rawData = JSON.parse(body);
+			if (this.currentTracker?.onWillReceiveMessage)
+				this.currentTracker.onWillReceiveMessage(rawData);
 			if (rawData.type === "request") {
 				const request = rawData as DebugProtocol.Request;
 				this.emit(request.command, request);
@@ -75,6 +78,12 @@ export class DartDebugClient extends DebugClient {
 			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(e));
 			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id));
 		}
+	}
+
+	public send(command: string, args?: any): Promise<any> {
+		if (this.currentTracker?.onDidSendMessage)
+			this.currentTracker.onDidSendMessage({ command, args });
+		return super.send(command, args);
 	}
 
 	public start(port?: number): Promise<void> {
@@ -128,6 +137,15 @@ export class DartDebugClient extends DebugClient {
 			type: configuration.type,
 			workspaceFolder: undefined,
 		};
+
+		// Set up logging.
+		this.currentTracker = (await this.debugTrackerFactory.createDebugAdapterTracker(this.currentSession))!;
+		this.currentTracker.onWillStartSession!();
+		this.on("terminated", (e: DebugProtocol.TerminatedEvent) => {
+			if (this.currentTracker?.onWillStopSession)
+				this.currentTracker.onWillStopSession();
+		});
+
 		this.debugCommands.handleDebugSessionStart(this.currentSession);
 		this.waitForEvent("terminated")
 			.then(() => this.debugCommands.handleDebugSessionEnd(this.currentSession!))

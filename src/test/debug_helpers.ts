@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as path from "path";
-import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, Uri } from "vscode";
+import { DebugAdapterExecutable, DebugAdapterServer, DebugAdapterTrackerFactory, DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
 import { DebuggerType, LogCategory, TestStatus, VmServiceExtension } from "../shared/enums";
@@ -29,10 +29,11 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 
 export function createDebugClient(debugType: DebuggerType) {
 	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debugType);
+	const trackerFactory = extApi.debugLogger as DebugAdapterTrackerFactory;
 	const dc = descriptor instanceof DebugAdapterServer
-		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator)
+		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactory)
 		: descriptor instanceof DebugAdapterExecutable
-			? new DartDebugClient({ runtime: descriptor.command, executable: descriptor.args[0], args: descriptor.args.slice(1) }, extApi.debugCommands, extApi.testCoordinator)
+			? new DartDebugClient({ runtime: descriptor.command, executable: descriptor.args[0], args: descriptor.args.slice(1) }, extApi.debugCommands, extApi.testCoordinator, trackerFactory)
 			: undefined;
 	if (!dc)
 		throw Error(`Unknown debug descriptor type ${descriptor}`);
