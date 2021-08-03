@@ -47,7 +47,7 @@ export class VmServiceExtensions {
 	private currentExtensionValues: { [key: string]: any } = {};
 
 	constructor(private readonly logger: Logger, private readonly debugCommands: DebugCommands) {
-		this.debugCommands.onWillHotRestart(() => this.markAllServicesUnloaded());
+		this.debugCommands.onWillHotRestart(() => this.markAllServiceExtensionsUnloaded());
 	}
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
@@ -193,12 +193,16 @@ export class VmServiceExtensions {
 			this.sendExtensionValue(session.session, id, value).catch((e) => this.logger.error(e));
 	}
 
-	/// Marks all services and service extensions as not-loaded in the context to disable VS Code Commands.
+	/// Marks all services as not-loaded (happens after session ends).
 	public markAllServicesUnloaded() {
 		for (const id of Object.keys(this.registeredServices)) {
 			vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${id}`, undefined);
 		}
 		this.registeredServices = {};
+	}
+
+	/// Marks all service extensions as not-loaded (happens after session ends or after hot restart).
+	public markAllServiceExtensionsUnloaded() {
 		for (const id of this.loadedServiceExtensions) {
 			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
 		}
