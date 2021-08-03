@@ -50,6 +50,8 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			return;
 
 		const cacheFile = path.join(this.extensionStoragePath, cacheFilename);
+		if (!fs.existsSync(cacheFile))
+			return;
 		try {
 			const contents = await fs.promises.readFile(cacheFile);
 			this.cache = PackageCacheData.fromJson(contents.toString());

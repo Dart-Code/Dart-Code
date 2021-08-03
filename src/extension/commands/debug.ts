@@ -487,6 +487,7 @@ export class DebugCommands implements IAmDisposable {
 		// SDK at a time are practically zero.
 		if (debugSessions.length === 0) {
 			this.vmServices.markAllServicesUnloaded();
+			this.vmServices.markAllServiceExtensionsUnloaded();
 			this.debugOptions.hide();
 			this.debugMetrics.hide();
 			for (const debugContext of [
