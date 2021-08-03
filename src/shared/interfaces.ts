@@ -50,6 +50,7 @@ export interface WritableWorkspaceConfig {
 	flutterRunScript?: CustomScript;
 	flutterScript?: CustomScript;
 	flutterSdkHome?: string;
+	flutterSyncScript?: string;
 	flutterTestScript?: CustomScript;
 	flutterVersion?: string;
 	useLsp?: boolean;
