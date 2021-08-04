@@ -66,6 +66,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);
+		config.flutterSyncScript = makeFullPath(flutterConfig.syncScript);
 		config.flutterTestScript = makeScript(flutterConfig.testScript);
 	} catch (e) {
 		logger.error(e);

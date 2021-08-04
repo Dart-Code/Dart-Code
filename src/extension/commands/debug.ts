@@ -17,6 +17,7 @@ import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
 import { getExcludedFolders, isDartFile, isFlutterProjectFolder, isValidEntryFile } from "../utils";
+import { runToolProcess } from "../utils/processes";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
@@ -141,6 +142,9 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("flutter.hotReload", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
+			if (!!workspaceContext.config?.flutterSyncScript) {
+				await runToolProcess(logger, workspaceContext.sdks.flutter, workspaceContext.config.flutterSyncScript, []);
+			}
 			this.onWillHotReloadEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotReload", args)));
 			analytics.logDebuggerHotReload();
@@ -148,6 +152,9 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("flutter.hotRestart", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
+			if (!!workspaceContext.config?.flutterSyncScript) {
+				await runToolProcess(logger, workspaceContext.sdks.flutter, workspaceContext.config.flutterSyncScript, []);
+			}
 			this.onWillHotRestartEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotRestart", args)));
 			analytics.logDebuggerRestart();
