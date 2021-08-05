@@ -1,10 +1,11 @@
 import * as vs from "vscode";
 import { Event, EventEmitter } from "../../../shared/events";
 import { DevToolsPage } from "../../../shared/interfaces";
-import { firstNonEditorColumn } from "../../../shared/vscode/utils";
+import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 
 const pageScript = `
+const vscode = acquireVsCodeApi();
 window.addEventListener('message', (event) => {
 	const message = event.data;
 	const devToolsFrame = document.getElementById('devToolsFrame');
@@ -25,6 +26,9 @@ window.addEventListener('message', (event) => {
 			// https://github.com/flutter/devtools/issues/2775
 			window.dispatchEvent(new KeyboardEvent('keydown', message.data));
 			break;
+		case "launchUrl":
+			vscode.postMessage({command: 'launchUrl', data: message.data});
+			break;
 	}
 });
 `;
@@ -36,6 +40,7 @@ const cssNonce = Buffer.from(frameCss).toString("base64");
 export class DevToolsEmbeddedView {
 	private readonly panel: vs.WebviewPanel;
 	private onDisposeEmitter: EventEmitter<void> = new EventEmitter<void>();
+	private messageDisposable: vs.Disposable;
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
 
 	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: vs.Uri, readonly page: DevToolsPage) {
@@ -57,6 +62,14 @@ export class DevToolsEmbeddedView {
 			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0"></iframe></body>
 			</html>
 			`;
+
+		this.messageDisposable = this.panel.webview.onDidReceiveMessage(
+			async (message) => {
+				if (message.command === "launchUrl") {
+					await envUtils.openInBrowser(message.data);
+				}
+			},
+		);
 	}
 
 	public load(session: DartDebugSessionInformation, uri: vs.Uri): void {
@@ -69,5 +82,6 @@ export class DevToolsEmbeddedView {
 		if (!panelDisposed)
 			this.panel.dispose();
 		this.onDisposeEmitter.fire();
+		this.messageDisposable.dispose();
 	}
 }
