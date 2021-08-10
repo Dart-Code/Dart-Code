@@ -1026,8 +1026,7 @@ export class DartDebugSession extends DebugSession {
 				if (levels && vmFrames.length > levels)
 					vmFrames = vmFrames.slice(0, levels);
 
-				const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.getNonDebuggableFrameReason(f.location?.script?.uri) === undefined);
-
+				const hasAnyDebuggableFrames = !!vmFrames.find((f) => f.location?.script?.uri && this.isDebuggable(f.location?.script?.uri));
 
 				stackFrames = await Promise.all(vmFrames.map((f, i) => this.convertStackFrame(thread, f, startFrame + i === 0, hasAnyDebuggableFrames, firstAsyncMarkerIndex)));
 
@@ -1103,15 +1102,15 @@ export class DartDebugSession extends DebugSession {
 		const allowDeemphasizingFrame = !isTopFrame || (isStoppedAtException && hasDebuggableFrames);
 
 		// If we wouldn't debug this source, then deemphasize in the stack.
-		if (stackFrame.source && allowDeemphasizingFrame) {
-			const nonDebuggableFrameReason = this.getNonDebuggableFrameReason(uri);
-			if (nonDebuggableFrameReason === "SDK") {
-				stackFrame.source.origin = "from the Dart SDK";
+		if (stackFrame.source) {
+			if (this.isSdkLibrary(uri))
+				stackFrame.source.origin = "from the SDK";
+			else if (this.isExternalLibrary(uri))
+				stackFrame.source.origin = uri.startsWith("package:flutter/") ? "from the Flutter framework" : "from external packages";
+
+			if (allowDeemphasizingFrame && !this.isDebuggable(uri))
 				stackFrame.source.presentationHint = "deemphasize";
-			} else if (nonDebuggableFrameReason === "PACKAGE") {
-				stackFrame.source.origin = uri.startsWith("package:flutter/") ? "from the Flutter framework" : "from Pub packages";
-				stackFrame.source.presentationHint = "deemphasize";
-			}
+
 		}
 
 		stackFrame.canRestart = !isTopFrame && frame.index < firstAsyncMarkerIndex;
@@ -1131,14 +1130,14 @@ export class DartDebugSession extends DebugSession {
 		return stackFrame;
 	}
 
-	private getNonDebuggableFrameReason(uri: string): "SDK" | "PACKAGE" | undefined {
-		if (!this.isValidToDebug(uri) || (this.isSdkLibrary(uri) && !this.debugSdkLibraries)) {
-			return "SDK";
-		} else if (this.isExternalLibrary(uri) && !this.debugExternalPackageLibraries) {
-			return "PACKAGE";
-		} else {
-			return undefined;
-		}
+	private isDebuggable(uri: string): boolean {
+		if (!this.isValidToDebug(uri))
+			return false;
+		if (this.isSdkLibrary(uri))
+			return this.debugSdkLibraries;
+		if (this.isExternalLibrary(uri))
+			return this.debugExternalPackageLibraries;
+		return true;
 	}
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {

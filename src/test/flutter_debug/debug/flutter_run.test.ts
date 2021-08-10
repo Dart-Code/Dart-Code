@@ -785,7 +785,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the Dart SDK");
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the SDK");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
 		await waitAllThrowIfTerminates(dc,

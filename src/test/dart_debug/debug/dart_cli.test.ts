@@ -514,7 +514,7 @@ describe("dart cli debugger", () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the Dart SDK");
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the SDK");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
@@ -527,7 +527,7 @@ describe("dart cli debugger", () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, "from the SDK");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
@@ -548,7 +548,7 @@ describe("dart cli debugger", () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from Pub packages");
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from external packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
@@ -569,7 +569,7 @@ describe("dart cli debugger", () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, "from external packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 	});
 
