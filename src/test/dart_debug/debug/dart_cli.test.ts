@@ -688,7 +688,7 @@ describe("dart cli debugger", () => {
 	it("does not stop at a breakpoint with a condition returning false", testBreakpointCondition("1 == 0", false));
 	it("does not stop at a breakpoint with a condition returning 0", testBreakpointCondition("3 - 3", false));
 	it("does not stop at a breakpoint with a condition returning null", testBreakpointCondition("print('test');", false));
-	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, "Debugger failed to evaluate expression `1 + '1'`"));
+	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, `Debugger failed to evaluate breakpoint condition "1 + '1'"`));
 
 	it("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(helloWorldMainFile);
@@ -705,7 +705,7 @@ describe("dart cli debugger", () => {
 				source: { path: fsPath(helloWorldMainFile) },
 			})).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
+			dc.assertOutputContains(dc.isDartDap ? "console" : "stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 			dc.launch(config),
 		);
 	});

@@ -1900,7 +1900,7 @@ export class DartDebugSession extends DebugSession {
 							.replace(/\\({)/g, "$1") // Remove slashes
 							.replace(/"""/g, '\\"\\"\\"'); // Escape triple-quotes
 						const printCommand = `print("""${logMessage}""")`;
-						await this.evaluateAndSendErrors(thread, printCommand);
+						await this.evaluateAndSendErrors(thread, printCommand, "log message");
 					}
 				}
 			} else if (kind === "PauseBreakpoint") {
@@ -1961,7 +1961,7 @@ export class DartDebugSession extends DebugSession {
 
 	private async anyBreakpointConditionReturnsTrue(breakpoints: Array<DebugProtocol.SourceBreakpoint & { condition: string }>, thread: ThreadInfo) {
 		for (const bp of breakpoints) {
-			const evalResult = await this.evaluateAndSendErrors(thread, bp.condition);
+			const evalResult = await this.evaluateAndSendErrors(thread, bp.condition, "condition");
 			if (evalResult) {
 				// To be considered true, we need to have a value and either be not-a-bool
 				const breakpointconditionEvaluatesToTrue =
@@ -1982,7 +1982,7 @@ export class DartDebugSession extends DebugSession {
 		return this.vmService.callMethod(type, args);
 	}
 
-	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string): Promise<VMInstanceRef | undefined> {
+	private async evaluateAndSendErrors(thread: ThreadInfo, expression: string, type: "condition" | "log message"): Promise<VMInstanceRef | undefined> {
 		if (!this.vmService)
 			return;
 		try {
@@ -1990,10 +1990,10 @@ export class DartDebugSession extends DebugSession {
 			if (result.result.type !== "@Error") {
 				return result.result as VMInstanceRef;
 			} else {
-				this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
+				this.logToUser(`Debugger failed to evaluate breakpoint ${type} "${expression}"\n`);
 			}
 		} catch {
-			this.logToUser(`Debugger failed to evaluate expression \`${expression}\`\n`);
+			this.logToUser(`Debugger failed to evaluate breakpoint ${type} "${expression}"\n`);
 		}
 	}
 

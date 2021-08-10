@@ -18,9 +18,11 @@ export class DartDebugClient extends DebugClient {
 	public currentSession?: DebugSession;
 	public currentTracker?: DebugAdapterTracker;
 	public hasStarted = false;
+	public readonly isDartDap: boolean;
 
 	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactory: DebugAdapterTrackerFactory) {
 		super(args.runtime, args.executable, args.args, "dart", undefined, true);
+		this.isDartDap = args.runtime !== undefined && args.runtime !== "node";
 		this.port = args.port;
 
 		// HACK to handle incoming requests..
