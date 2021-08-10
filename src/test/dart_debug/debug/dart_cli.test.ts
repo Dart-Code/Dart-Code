@@ -414,7 +414,15 @@ describe("dart cli debugger", () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
-		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: false });
+		const config = await startDebugger(
+			dc,
+			helloWorldHttpFile,
+			{
+				// Override this since it's not really open in the workspace.
+				additionalProjectPaths: [fsPath(myPackageFolder)],
+				debugExternalPackageLibraries: false,
+			},
+		);
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line,
 			path: fsPath(helloWorldHttpFile),
@@ -433,7 +441,15 @@ describe("dart cli debugger", () => {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const config = await startDebugger(dc, helloWorldLocalPackageFile, { debugExternalPackageLibraries: false });
+		const config = await startDebugger(
+			dc,
+			helloWorldLocalPackageFile,
+			{
+				// Override this since it's not really open in the workspace.
+				additionalProjectPaths: [fsPath(myPackageFolder)],
+				debugExternalPackageLibraries: false,
+			},
+		);
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
 			path: fsPath(helloWorldLocalPackageFile),
@@ -517,7 +533,15 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async () => {
 		await openFile(helloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
+		const config = await startDebugger(
+			dc,
+			helloWorldThrowInExternalPackageFile,
+			{
+				// Override this since it's not really open in the workspace.
+				additionalProjectPaths: [fsPath(myPackageFolder)],
+				debugExternalPackageLibraries: false,
+			},
+		);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -530,7 +554,15 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks debuggable external library frames when debugExternalPackageLibraries is true", async () => {
 		await openFile(helloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(dc, helloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: true });
+		const config = await startDebugger(
+			dc,
+			helloWorldThrowInExternalPackageFile,
+			{
+				// Override this since it's not really open in the workspace.
+				additionalProjectPaths: [fsPath(myPackageFolder)],
+				debugExternalPackageLibraries: true,
+			},
+		);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),
@@ -543,7 +575,14 @@ describe("dart cli debugger", () => {
 
 	it("correctly marks debuggable local library frames even when debugExternalPackageLibraries is false", async () => {
 		await openFile(helloWorldThrowInLocalPackageFile);
-		const config = await startDebugger(dc, helloWorldThrowInLocalPackageFile, { debugExternalPackageLibraries: false });
+		const config = await startDebugger(
+			dc,
+			helloWorldThrowInLocalPackageFile,
+			{
+				// Override this since it's not really open in the workspace.
+				additionalProjectPaths: [fsPath(myPackageFolder)],
+				debugExternalPackageLibraries: false,
+			});
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("stopped"),

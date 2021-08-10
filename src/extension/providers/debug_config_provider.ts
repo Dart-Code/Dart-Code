@@ -494,6 +494,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = true;
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
+		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf);
 		debugConfig.vmServicePort = debugConfig.vmServicePort || (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_VM_SERVICE_PORT : 0);
