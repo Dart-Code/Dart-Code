@@ -1152,7 +1152,7 @@ export class DartDebugSession extends DebugSession {
 		const scopes: Scope[] = [];
 
 		if (data.thread.exceptionReference) {
-			scopes.push(new Scope("Exception", data.thread.exceptionReference));
+			scopes.push(new Scope("Exceptions", data.thread.exceptionReference));
 		}
 
 		scopes.push(new Scope("Locals", variablesReference));

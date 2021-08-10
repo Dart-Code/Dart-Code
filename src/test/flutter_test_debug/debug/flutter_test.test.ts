@@ -289,7 +289,7 @@ describe("flutter test debugger", () => {
 			dc.launch(config),
 		);
 
-		const variables = await dc.getTopFrameVariables("Exception");
+		const variables = await dc.getTopFrameVariables("Exceptions");
 		assert.ok(variables);
 		const v = variables.find((v) => v.name === "message");
 		assert.ok(v);

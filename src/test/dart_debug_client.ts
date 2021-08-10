@@ -221,7 +221,7 @@ export class DartDebugClient extends DebugClient {
 		return this.stackTraceRequest({ threadId: thread.id, startFrame, levels });
 	}
 
-	public async getTopFrameVariables(scope: "Exception" | "Locals"): Promise<DebugProtocol.Variable[]> {
+	public async getTopFrameVariables(scope: "Exceptions" | "Locals"): Promise<DebugProtocol.Variable[]> {
 		const stack = await this.getStack();
 		const scopes = await this.scopesRequest({ frameId: stack.body.stackFrames[0].id });
 		const exceptionScope = scopes.body.scopes.find((s) => s.name === scope);

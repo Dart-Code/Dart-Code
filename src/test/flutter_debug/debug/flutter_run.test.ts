@@ -1473,7 +1473,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		const variables = await dc.getTopFrameVariables("Exception");
+		const variables = await dc.getTopFrameVariables("Exceptions");
 		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 
 		await waitAllThrowIfTerminates(dc,

@@ -1168,7 +1168,7 @@ insp=<inspected variable>
 			dc.launch(config),
 		);
 
-		const variables = await dc.getTopFrameVariables("Exception");
+		const variables = await dc.getTopFrameVariables("Exceptions");
 		ensureVariable(variables, "$e.message", "message", `"Oops"`);
 	});
 
