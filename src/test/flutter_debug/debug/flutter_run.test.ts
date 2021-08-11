@@ -808,7 +808,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, "from the SDK");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
 		await waitAllThrowIfTerminates(dc,
@@ -831,7 +831,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from Pub packages");
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from external packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
 		await waitAllThrowIfTerminates(dc,
@@ -854,7 +854,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, undefined);
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, "from external packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 
 		await waitAllThrowIfTerminates(dc,
