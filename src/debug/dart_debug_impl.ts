@@ -29,6 +29,8 @@ const unoptimizedPrefix = "[Unoptimized] ";
 const trailingSemicolonPattern = new RegExp(`;\\s*$`, "m");
 const logDapTraffic = false;
 
+const threadExceptionExpression = "$_threadException";
+
 // TODO: supportsSetVariable
 // TODO: class variables?
 // TODO: library variables?
@@ -1549,11 +1551,11 @@ export class DartDebugSession extends DebugSession {
 				result = await this.withTimeout(this.vmService.evaluate(thread.ref.id, rootLib.id, expression, true));
 			} else {
 				const frame = data.data as VMFrame;
-				if ((expression === "$e" || expression.startsWith("$e.")) && thread.exceptionReference) {
+				if ((expression === threadExceptionExpression || expression.startsWith(`${threadExceptionExpression}.`)) && thread.exceptionReference) {
 					const exceptionData = this.threadManager.getStoredData(thread.exceptionReference);
 					const exceptionInstanceRef = exceptionData && exceptionData.data as VMInstanceRef;
 
-					if (expression === "$e") {
+					if (expression === threadExceptionExpression) {
 						response.body = {
 							result: await this.fullValueAsString(thread.ref, exceptionInstanceRef) || "<unknown>",
 							variablesReference: thread.exceptionReference,
@@ -1566,7 +1568,7 @@ export class DartDebugSession extends DebugSession {
 					const exceptionId = exceptionInstanceRef && exceptionInstanceRef.id;
 
 					if (exceptionId)
-						result = await this.vmService!.evaluate(thread.ref.id, exceptionId, expression.substr(3), true);
+						result = await this.vmService!.evaluate(thread.ref.id, exceptionId, expression.substr(threadExceptionExpression.length + 1), true);
 				}
 				if (!result) {
 					// Don't wait more than a second for the response:

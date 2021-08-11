@@ -1169,7 +1169,7 @@ insp=<inspected variable>
 		);
 
 		const variables = await dc.getTopFrameVariables("Exceptions");
-		ensureVariable(variables, "$e.message", "message", `"Oops"`);
+		ensureVariable(variables, "$_threadException.message", "message", `"Oops"`);
 	});
 
 	it("writes exception to stderr", async () => {

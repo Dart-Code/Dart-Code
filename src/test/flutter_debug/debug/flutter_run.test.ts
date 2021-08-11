@@ -1474,7 +1474,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		const variables = await dc.getTopFrameVariables("Exceptions");
-		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
+		ensureVariable(variables, "$_threadException.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),

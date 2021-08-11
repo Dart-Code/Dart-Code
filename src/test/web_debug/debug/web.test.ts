@@ -372,7 +372,7 @@ describe.skip("web debugger", () => {
 		);
 
 		const variables = await dc.getTopFrameVariables("Exceptions");
-		ensureVariable(variables, "$e.message", "message", `"(TODO WHEN UNSKIPPING)"`);
+		ensureVariable(variables, "$_threadException.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
 	// Skipped because unable to set logpoints reliably without start-paused

@@ -129,7 +129,7 @@ describe("dart test debugger", () => {
 		assert.ok(variables);
 		const v = variables.find((v) => v.name === "message");
 		assert.ok(v);
-		assert.equal(v.evaluateName, "$e.message");
+		assert.equal(v.evaluateName, "$_threadException.message");
 		const expectedStart = `"Expected: <2>\n  Actual: <1>`;
 		assert.ok(
 			v.value.startsWith(expectedStart),
