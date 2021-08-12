@@ -1245,9 +1245,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.ok(evaluateResult);
 			if (variable.value.endsWith("…\"")) {
 				// If the value was truncated, the evaluate responses should be longer
-				const prefix = variable.value.slice(1, -2);
+				const prefix = variable.value.slice(1, -2); // Strip quotes
 				assert.ok(evaluateResult.result.length > prefix.length);
-				assert.equal(evaluateResult.result.slice(0, prefix.length), prefix);
+				assert.equal(evaluateResult.result.slice(1, prefix.length + 1), prefix);
 			} else {
 				// Otherwise it should be the same.
 				assert.equal(evaluateResult.result, variable.value);
