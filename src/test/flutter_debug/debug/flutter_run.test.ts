@@ -1156,7 +1156,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// https://github.com/dart-lang/sdk/issues/39330
 		if (!isLinux)
 			ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
-		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
+		ensureVariable(classInstance, undefined, "throws", { starts: "<Oops!" });
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),

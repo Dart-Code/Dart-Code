@@ -746,8 +746,8 @@ describe("dart cli debugger", () => {
 		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
 		ensureVariable(mapVariables, undefined, "3", `"hundredDates" -> List (100 items)`);
 		ensureVariable(mapVariables, undefined, "4", `"s" -> "Hello!"`);
-		ensureVariable(mapVariables, undefined, "5", `DateTime -> "valentines-2000"`);
-		ensureVariable(mapVariables, undefined, "6", `DateTime -> "new-year-2005"`);
+		ensureVariable(mapVariables, undefined, "5", dc.isDartDap ? `DateTime (2000-02-14 00:00:00.000) -> "valentines-2000"` : `DateTime -> "valentines-2000"`);
+		ensureVariable(mapVariables, undefined, "6", dc.isDartDap ? `DateTime (2005-01-01 00:00:00.000) -> "new-year-2005"` : `DateTime -> "new-year-2005"`);
 		ensureVariable(mapVariables, undefined, "7", `true -> true`);
 		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
@@ -818,7 +818,7 @@ describe("dart cli debugger", () => {
 		// Getters
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
 		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
-		ensureVariable(classInstance, undefined, "throws", { starts: "Unhandled exception:\nOops!" });
+		ensureVariable(classInstance, undefined, "throws", { starts: "<Oops!" });
 	});
 
 	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async () => {
@@ -887,9 +887,9 @@ describe("dart cli debugger", () => {
 			assert.ok(evaluateResult);
 			if (variable.value.endsWith("…\"")) {
 				// If the value was truncated, the evaluate responses should be longer
-				const prefix = variable.value.slice(1, -2);
+				const prefix = variable.value.slice(1, -2); // Strip quotes
 				assert.ok(evaluateResult.result.length > prefix.length);
-				assert.equal(evaluateResult.result.slice(0, prefix.length), prefix);
+				assert.equal(evaluateResult.result.slice(1, prefix.length + 1), prefix);
 			} else {
 				// Otherwise it should be the same.
 				assert.equal(evaluateResult.result, variable.value);
@@ -1005,7 +1005,7 @@ describe("dart cli debugger", () => {
 			);
 
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
-			assert.equal(error.message, "not available");
+			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the class 'DateTime'." : "not available");
 		});
 	});
 
@@ -1104,7 +1104,7 @@ describe("dart cli debugger", () => {
 			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
 
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
-			assert.equal(error.message, "not available");
+			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the class 'DateTime'." : "not available");
 		});
 	});
 

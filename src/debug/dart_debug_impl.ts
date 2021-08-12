@@ -1318,7 +1318,12 @@ export class DartDebugSession extends DebugSession {
 									try {
 										const getterResult = await this.vmService!.evaluate(thread.ref.id, instanceRef.id, getterName, true);
 										if (getterResult.result.type === "@Error") {
-											return { name: getterName, value: (getterResult.result as VMErrorRef).message, variablesReference: 0 };
+											const message = (getterResult.result as VMErrorRef).message.replace("Unhandled exception:", "").trim();
+											return {
+												name: getterName,
+												value: `<${message}>`,
+												variablesReference: 0,
+											};
 										} else if (getterResult.result.type === "Sentinel") {
 											return { name: getterName, value: (getterResult.result as VMSentinel).valueAsString, variablesReference: 0 };
 										} else {
@@ -1399,7 +1404,7 @@ export class DartDebugSession extends DebugSession {
 		return kind === "String" || kind === "Bool" || kind === "Int" || kind === "Num" || kind === "Double" || kind === "Null" || kind === "Closure";
 	}
 
-	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false): Promise<string | undefined> {
+	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false, suppressQuotesAroundStrings: boolean = false): Promise<string | undefined> {
 		if (!this.vmService)
 			return;
 
@@ -1417,7 +1422,7 @@ export class DartDebugSession extends DebugSession {
 					evalResult = result.result as VMInstanceRef;
 				}
 
-				return this.valueAsString(evalResult, undefined, true);
+				return this.valueAsString(evalResult, undefined, suppressQuotesAroundStrings);
 			}
 		} catch (e) {
 			this.logger.error(e);
@@ -1948,7 +1953,7 @@ export class DartDebugSession extends DebugSession {
 		if (!instanceRef.valueAsStringIsTruncated)
 			text = this.valueAsString(instanceRef, false, suppressQuotesAroundStrings);
 		if (!text && isolate)
-			text = await this.callToString(isolate, instanceRef, true);
+			text = await this.callToString(isolate, instanceRef, true, instanceRef.kind !== "String");
 		// If it has a custom toString(), put that in parens after the type name.
 		if (instanceRef.kind === "PlainInstance" && instanceRef.class && instanceRef.class.name) {
 			if (text === `Instance of '${instanceRef.class.name}'` || text === instanceRef.class.name || !text)

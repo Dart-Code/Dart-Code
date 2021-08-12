@@ -355,7 +355,7 @@ export class ThreadInfo {
 		this.atAsyncSuspension = pauseEvent.atAsyncSuspension === true;
 		if (pauseEvent.exception) {
 			const exception = pauseEvent.exception;
-			(exception as InstanceWithEvaluateName).evaluateName = "$e";
+			(exception as InstanceWithEvaluateName).evaluateName = "$_threadException";
 			this.exceptionReference = this.storeData(exception);
 		}
 		this.paused = true;
