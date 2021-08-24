@@ -54,7 +54,7 @@ export class LspAnalyzer extends Analyzer {
 			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
 		}
 
-		function cleanDocString<T extends MarkedString>(input: T): T {
+		function cleanDocString<T extends MarkedString | MarkdownString | string>(input: T): T {
 			if (input instanceof MarkdownString)
 				return new MarkdownString(cleanDartdoc(input.value)) as T;
 			else if (typeof input === "string")
@@ -72,8 +72,10 @@ export class LspAnalyzer extends Analyzer {
 			if (item.label === "import '';")
 				return true;
 
-			if (item.kind === CompletionItemKind.Folder && item.label.endsWith("/"))
-				return true;
+			if (item.kind === CompletionItemKind.Folder) {
+				const label = typeof item.label === "string" ? item.label : item.label.label;
+				return label.endsWith("/");
+			}
 
 			return false;
 		}
