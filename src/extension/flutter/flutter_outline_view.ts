@@ -56,7 +56,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 
 	protected abstract loadExistingOutline(): Promise<void>;
 
-	public async setContexts(selection: FlutterWidgetItem[]) {
+	public async setContexts(selection: FlutterWidgetItem[] | undefined) {
 		// Unmark the old node as being selected.
 		if (this.lastSelectedWidget) {
 			this.lastSelectedWidget.contextValue = undefined;

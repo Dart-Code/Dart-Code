@@ -78,7 +78,7 @@ export class DartDebugClient extends DebugClient {
 		// debug session.
 		if (testCoordinator) {
 			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(e));
-			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id));
+			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID));
 		}
 	}
 

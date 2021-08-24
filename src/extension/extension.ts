@@ -100,6 +100,7 @@ import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
 import { DartTerminalLinkProvider } from "./terminal/link_provider";
+import { VsCodeTestController } from "./test/vs_test_controller";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
@@ -485,6 +486,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const testModel = new TestModel(config, util.isPathInsideFlutterProject);
 	const testCoordinator = new TestSessionCoordinator(logger, testModel);
 	context.subscriptions.push(testCoordinator);
+	const vsCodeTestController = config.previewVsCodeTestRunner ? new VsCodeTestController(logger, testModel) : undefined;
+	if (vsCodeTestController)
+		context.subscriptions.push(vsCodeTestController);
 
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
@@ -569,9 +573,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	if (dasAnalyzer)
-		context.subscriptions.push(new DasTestCommands(logger, testModel, workspaceContext, dasAnalyzer.fileTracker, flutterCapabilities));
+		context.subscriptions.push(new DasTestCommands(logger, testModel, workspaceContext, vsCodeTestController, dasAnalyzer.fileTracker, flutterCapabilities));
 	if (lspAnalyzer)
-		context.subscriptions.push(new LspTestCommands(logger, testModel, workspaceContext, lspAnalyzer.fileTracker, flutterCapabilities));
+		context.subscriptions.push(new LspTestCommands(logger, testModel, workspaceContext, vsCodeTestController, lspAnalyzer.fileTracker, flutterCapabilities));
 
 	if (lspClient && lspAnalyzer) {
 		// TODO: LSP equivs of the others...
