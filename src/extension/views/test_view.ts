@@ -71,7 +71,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	}
 
 	public handleDebugSessionEnd(session: vs.DebugSession) {
-		this.coordinator.handleDebugSessionEnd(session.id);
+		this.coordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID);
 	}
 
 	private async writeTestOutput(treeNode: TestNode) {

@@ -56,3 +56,5 @@ export interface FileLocation {
 	line: number;
 	column: number;
 }
+
+export interface DebugSessionWithDartCodeSessionId { id: string, configuration: { dartCodeDebugSessionID: string | undefined } }

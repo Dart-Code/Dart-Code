@@ -15,6 +15,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { DasFileTracker } from "../analysis/file_tracker_das";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { isDartDocument } from "../editors";
+import { VsCodeTestController } from "../test/vs_test_controller";
 import { isInsideFlutterProject, isTestFile } from "../utils";
 
 const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
@@ -29,14 +30,14 @@ export type SuiteList = [SuiteNode, string[]];
 abstract class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, protected readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
-			vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode, testRun?: vs.TestRun) => this.runTests(treeNode, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode)),
-			vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode, testRun?: vs.TestRun) => this.runTests(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode)),
-			vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)),
-			vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)),
-			vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false, false)),
-			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
+			vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode, testRun?: vs.TestRun) => this.runTestsForNode(treeNode, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode, undefined, testRun)),
+			vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode, testRun?: vs.TestRun) => this.runTestsForNode(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode, undefined, testRun)),
+			vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)),
+			vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)),
+			vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false, false)),
+			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
 			vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()),
 			vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()),
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
@@ -89,21 +90,33 @@ abstract class TestCommands implements vs.Disposable {
 						break;
 					const suiteName = path.basename(node.suiteData.path);
 					progress.report({ message: suiteName });
-					await this.runTests(node, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
+					await this.runTestsForNode(node, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
 					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
 				}
 			},
 		);
 	}
 
-	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
-		// TODO: We should report these to a VS Code test run?
-		// https://code.visualstudio.com/api/extension-guides/testing#publishonly-controllers
+	private async runTestsForNode(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
+		const programPath = fsPath(treeNode.suiteData.path);
+		const isGroup = treeNode instanceof GroupNode;
+		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(treeNode.suiteData.path));
+		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
+
+		return this.runTests(programPath, debug, testNames, isGroup, shouldRunSkippedTests, suppressPromptOnErrors, undefined, testRun, token);
+	}
+
+	private runTests(programPath: string, debug: boolean, testNames: string[] | undefined, isGroup: boolean, shouldRunSkippedTests: boolean, suppressPromptOnErrors: boolean, launchTemplate: any | undefined, testRun: vs.TestRun | undefined, token: vs.CancellationToken | undefined) {
+		const vsTest = this.vsCodeTestController?.controller;
+		if (vsTest)
+			testRun ??= vsTest.createTestRun(new vs.TestRunRequest(), undefined, true);
 
 		const subs: vs.Disposable[] = [];
 		return new Promise<void>(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
 			const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+			if (testRun)
+				this.vsCodeTestController?.registerTestRun(dartCodeDebugSessionID, testRun);
 			if (token) {
 				subs.push(vs.debug.onDidStartDebugSession((e) => {
 					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
@@ -114,11 +127,8 @@ abstract class TestCommands implements vs.Disposable {
 				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
 					resolve();
 			}));
-			const programPath = fsPath(treeNode.suiteData.path);
-			const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(treeNode.suiteData.path));
-			const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
 			const didStart = await vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(vs.Uri.file(treeNode.suiteData.path)),
+				vs.workspace.getWorkspaceFolder(vs.Uri.file(programPath)),
 				{
 					dartCodeDebugSessionID,
 					suppressPromptOnErrors,
@@ -126,15 +136,19 @@ abstract class TestCommands implements vs.Disposable {
 						!debug,
 						programPath,
 						testNames,
-						treeNode instanceof GroupNode,
+						isGroup,
 						shouldRunSkippedTests,
+						launchTemplate,
 					),
 					name: `Tests ${path.basename(programPath)}`,
 				}
 			);
 			if (!didStart)
 				reject();
-		}).finally(() => disposeAll(subs));
+		}).finally(() => {
+			testRun?.end();
+			disposeAll(subs);
+		});
 	}
 
 	private getTestNames(treeNode: TreeNode, onlyOfStatus?: TestStatus): string[] | undefined {
@@ -164,10 +178,18 @@ abstract class TestCommands implements vs.Disposable {
 
 	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
 		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
+		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
-		return vs.debug.startDebugging(
-			vs.workspace.getWorkspaceFolder(vs.Uri.file(test.file)),
-			getLaunchConfig(noDebug, test.file, [test.fullName], test.isGroup, canRunSkippedTest, launchTemplate),
+		return this.runTests(
+			test.file,
+			!noDebug,
+			[test.fullName],
+			test.isGroup,
+			shouldRunSkippedTests,
+			false,
+			launchTemplate,
+			undefined,
+			undefined,
 		);
 	}
 
@@ -296,8 +318,8 @@ abstract class TestCommands implements vs.Disposable {
 }
 
 export class DasTestCommands extends TestCommands {
-	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, private readonly fileTracker: DasFileTracker, flutterCapabilities: FlutterCapabilities) {
-		super(logger, testModel, wsContext, flutterCapabilities);
+	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, vsCodeTestController: VsCodeTestController | undefined, private readonly fileTracker: DasFileTracker, flutterCapabilities: FlutterCapabilities) {
+		super(logger, testModel, wsContext, vsCodeTestController, flutterCapabilities);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
@@ -327,8 +349,8 @@ export class DasTestCommands extends TestCommands {
 }
 
 export class LspTestCommands extends TestCommands {
-	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, private readonly fileTracker: LspFileTracker, flutterCapabilities: FlutterCapabilities) {
-		super(logger, testModel, wsContext, flutterCapabilities);
+	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, vsCodeTestController: VsCodeTestController | undefined, private readonly fileTracker: LspFileTracker, flutterCapabilities: FlutterCapabilities) {
+		super(logger, testModel, wsContext, vsCodeTestController, flutterCapabilities);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): LspTestOutlineInfo | undefined {

@@ -2335,6 +2335,12 @@
 					"description": "EXPERIMENTAL: Whether to enable custom tracking of Flutter UI guidelines (to hide some latency of waiting for the next Flutter Outline).",
 					"scope": "window"
 				},
+				"dart.previewVsCodeTestRunner": {
+					"type": "boolean",
+					"default": false,
+					"description": "PREVIEW: Whether to enable reporting tests into the VS Code Test Runner (requires restart).",
+					"scope": "window"
+				},
 				"dart.evaluateToStringInDebugViews": {
 					"type": "boolean",
 					"default": true,

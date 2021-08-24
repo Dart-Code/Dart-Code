@@ -18,6 +18,8 @@ function getTestSortOrder(statuses: Set<TestStatus>): TestSortOrder {
 }
 
 export abstract class TreeNode {
+	public abstract parent: TreeNode | undefined;
+
 	public isStale = false;
 	// To avoid the sort changing on every status change (stale, running, etc.) this
 	// field will be the last status the user would care about (pass/fail/skip).
@@ -33,7 +35,7 @@ export abstract class TreeNode {
 	public abstract testPassCount: number;
 
 	public abstract duration: number | undefined;
-	public description: string | boolean | undefined;
+	public description: string | undefined;
 
 	constructor(public readonly suiteData: SuiteData) { }
 
@@ -107,6 +109,8 @@ export class SuiteNode extends TestContainerNode {
 	constructor(suiteData: SuiteData) {
 		super(suiteData);
 	}
+
+	get parent(): undefined { return undefined; }
 
 	get label(): undefined { return undefined; }
 
@@ -203,18 +207,24 @@ export class TestModel {
 	public isNewTestRun = true;
 	public nextFailureIsFirst = true;
 
-	private onDidStartTestsEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
+	private readonly onDidStartTestsEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
 	public readonly onDidStartTests: Event<TreeNode> = this.onDidStartTestsEmitter.event;
-	private onFirstFailureEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
+	private readonly onFirstFailureEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
 	public readonly onFirstFailure: Event<TreeNode> = this.onFirstFailureEmitter.event;
 
-	private onDidChangeDataEmitter: EventEmitter<TreeNode | undefined> = new EventEmitter<TreeNode | undefined>();
+	private readonly onDidChangeDataEmitter: EventEmitter<TreeNode | undefined> = new EventEmitter<TreeNode | undefined>();
 	public readonly onDidChangeTreeData: Event<TreeNode | undefined> = this.onDidChangeDataEmitter.event;
+
+	private readonly testEventListeners: TestEventListener[] = [];
 
 	// TODO: Make private?
 	public readonly suites: { [key: string]: SuiteData } = {};
 
 	public constructor(private readonly config: { showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
+
+	public addTestEventListener(listener: TestEventListener) {
+		this.testEventListeners.push(listener);
+	}
 
 	public flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
 		this.isNewTestRun = true;
@@ -317,7 +327,7 @@ export class TestModel {
 		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed, ${node.duration}ms`;
 	}
 
-	public suiteDiscovered(suitePath: string): void {
+	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): void {
 		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
 		suite.node.appendStatus(TestStatus.Waiting);
 		this.updateNode(suite.node);
@@ -328,9 +338,12 @@ export class TestModel {
 			this.isNewTestRun = false;
 			this.onDidStartTestsEmitter.fire(suite.node);
 		}
+
+		if (dartCodeDebugSessionID)
+			this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 	}
 
-	public groupDiscovered(suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, line: number | undefined, column: number | undefined): void {
+	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, line: number | undefined, column: number | undefined): void {
 		const suite = this.suites[suitePath];
 		const existingGroup = suite.getCurrentGroup(groupID) || suite.reuseMatchingGroup(suite.currentRunNumber, groupID, groupName, line);
 		const oldParent = existingGroup?.parent;
@@ -363,9 +376,12 @@ export class TestModel {
 		groupNode.appendStatus(TestStatus.Running);
 		this.updateNode(groupNode);
 		this.updateNode(groupNode.parent);
+
+		if (dartCodeDebugSessionID)
+			this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
 	}
 
-	public testStarted(suitePath: string, testID: number, testName: string | undefined, groupIDs: number[] | undefined, testPath: string | undefined, line: number | undefined, column: number | undefined, startTime: number | undefined): void {
+	public testStarted(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, testName: string | undefined, groupIDs: number[] | undefined, testPath: string | undefined, line: number | undefined, column: number | undefined, startTime: number | undefined): void {
 		const suite = this.suites[suitePath];
 		const existingTest = suite.getCurrentTest(testID) || suite.reuseMatchingTest(suite.currentRunNumber, testID, testName, line);
 		const oldParent = existingTest?.parent;
@@ -411,9 +427,12 @@ export class TestModel {
 		this.updateNode(testNode.parent);
 		if (!testNode.hidden)
 			this.rebuildSuiteNode(suite);
+
+		if (dartCodeDebugSessionID && !testNode.hidden)
+			this.testEventListeners.forEach((l) => l.testStarted(dartCodeDebugSessionID, testNode));
 	}
 
-	public testDone(suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, hidden: boolean, endTime: number | undefined): void {
+	public testDone(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, hidden: boolean, endTime: number | undefined): void {
 		const suite = this.suites[suitePath];
 		const testNode = suite.getCurrentTest(testID);
 
@@ -445,9 +464,12 @@ export class TestModel {
 			this.nextFailureIsFirst = false;
 			this.onFirstFailureEmitter.fire(testNode);
 		}
+
+		if (dartCodeDebugSessionID && !testNode.hidden)
+			this.testEventListeners.forEach((l) => l.testDone(dartCodeDebugSessionID, testNode, result));
 	}
 
-	public suiteEnd(suitePath: string): void {
+	public suiteDone(dartCodeDebugSessionID: string | undefined, suitePath: string): void {
 		const suite = this.suites[suitePath];
 		if (!suite)
 			return;
@@ -470,15 +492,18 @@ export class TestModel {
 		});
 
 		this.rebuildSuiteNode(suite);
+
+		if (dartCodeDebugSessionID)
+			this.testEventListeners.forEach((l) => l.suiteDone(dartCodeDebugSessionID, suite.node));
 	}
 
-	public testOutput(suitePath: string, testID: number, message: string) {
+	public testOutput(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, message: string) {
 		const suite = this.suites[suitePath];
 		const test = suite.getCurrentTest(testID);
 		// DO STUFF
 	}
 
-	public testErrorOutput(suitePath: string, testID: number, isFailure: boolean, message: string, stack: string) {
+	public testErrorOutput(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, isFailure: boolean, message: string, stack: string) {
 		const suite = this.suites[suitePath];
 		const test = suite.getCurrentTest(testID);
 		// DO STUFF
@@ -558,4 +583,14 @@ export class SuiteData {
 		}
 		return match;
 	}
+}
+
+export interface TestEventListener {
+	suiteDiscovered(sessionID: string, node: SuiteNode): void;
+	groupDiscovered(sessionID: string, node: GroupNode): void;
+	testStarted(sessionID: string, node: TestNode): void;
+	testOutput(sessionID: string, node: TestNode, message: string): void;
+	testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void;
+	testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void;
+	suiteDone(sessionID: string, node: SuiteNode): void;
 }
