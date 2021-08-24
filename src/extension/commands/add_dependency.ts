@@ -166,19 +166,24 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	private getMatchingPackages(prefix?: string): PickablePackage[] {
 		const max = 50;
 		const packageNames = this.cache?.packageNames ?? [];
-		let matches = [];
+		let matches = new Set<string>();
 		// This list can be quite large, so avoid using .filter() if we can bail out early.
 		if (prefix) {
-			for (let i = 0; i < packageNames.length && matches.length < max; i++) {
+			for (let i = 0; i < packageNames.length && matches.size < max; i++) {
 				const packageName = packageNames[i];
 				if (packageName.startsWith(prefix))
-					matches.push(packageName);
+					matches.add(packageName);
+			}
+			// Also add on any Flutter-SDK packages that match.
+			for (const packageName of knownFlutterSdkPackages) {
+				if (packageName.startsWith(prefix))
+					matches.add(packageName);
 			}
 		} else {
-			matches = packageNames.slice(0, Math.min(max, packageNames.length));
+			matches = new Set(packageNames.slice(0, Math.min(max, packageNames.length)));
 		}
 
-		return matches.map((packageName) => ({
+		return Array.from(matches).map((packageName) => ({
 			label: packageName,
 			packageName,
 		} as PickablePackage));
