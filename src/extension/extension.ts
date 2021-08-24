@@ -615,11 +615,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(
 		testTreeProvider,
 		testTreeView,
-		testCoordinator.onDidStartTests.listen(async (node) => {
+		testModel.onDidStartTests.listen(async (node) => {
 			if (config.openTestViewOnStart)
 				tryReveal(node);
 		}),
-		testCoordinator.onFirstFailure.listen(async (node) => {
+		testModel.onFirstFailure.listen(async (node) => {
 			if (config.openTestViewOnFailure)
 				// HACK: Because the tree update is async, this code may fire before
 				// the tree has been re-sorted, so wait a short period before revealing

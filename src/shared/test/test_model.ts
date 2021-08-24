@@ -1,7 +1,7 @@
 import * as path from "path";
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
-import { ErrorNotification, Group, PrintNotification, Test } from "../test_protocol";
+import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { flatMap, notUndefined, uniq } from "../utils";
 import { sortBy } from "../utils/array";
 import { fsPath } from "../utils/fs";
@@ -203,6 +203,11 @@ export class TestModel {
 	public isNewTestRun = true;
 	public nextFailureIsFirst = true;
 
+	private onDidStartTestsEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
+	public readonly onDidStartTests: Event<TreeNode> = this.onDidStartTestsEmitter.event;
+	private onFirstFailureEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
+	public readonly onFirstFailure: Event<TreeNode> = this.onFirstFailureEmitter.event;
+
 	private onDidChangeDataEmitter: EventEmitter<TreeNode | undefined> = new EventEmitter<TreeNode | undefined>();
 	public readonly onDidChangeTreeData: Event<TreeNode | undefined> = this.onDidChangeDataEmitter.event;
 
@@ -311,6 +316,173 @@ export class TestModel {
 
 		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed, ${node.duration}ms`;
 	}
+
+	public suiteDiscovered(suitePath: string): void {
+		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
+		suite.node.appendStatus(TestStatus.Waiting);
+		this.updateNode(suite.node);
+		this.updateNode();
+		// If this is the first suite, we've started a run and can show the tree.
+		// We need to wait for the tree node to have been rendered though so setTimeout :(
+		if (this.isNewTestRun) {
+			this.isNewTestRun = false;
+			this.onDidStartTestsEmitter.fire(suite.node);
+		}
+	}
+
+	public groupDiscovered(suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, line: number | undefined, column: number | undefined): void {
+		const suite = this.suites[suitePath];
+		const existingGroup = suite.getCurrentGroup(groupID) || suite.reuseMatchingGroup(suite.currentRunNumber, groupID, groupName, line);
+		const oldParent = existingGroup?.parent;
+		const parent = parentID ? suite.getMyGroup(suite.currentRunNumber, parentID) : suite.node;
+		const groupNode = existingGroup || new GroupNode(suite, parent, groupID, groupName, groupPath, line, column);
+
+		if (!existingGroup) {
+			groupNode.suiteRunNumber = suite.currentRunNumber;
+			suite.storeGroup(groupNode);
+		} else {
+			groupNode.parent = parent;
+			groupNode.id = groupID;
+			groupNode.name = groupName;
+			groupNode.path = groupPath;
+			groupNode.line = line;
+			groupNode.column = column;
+		}
+
+		// Remove from old parent if required
+		const hasChangedParent = oldParent !== parent;
+		if (oldParent && hasChangedParent) {
+			oldParent.groups.splice(oldParent.groups.indexOf(groupNode), 1);
+			this.updateNode(oldParent);
+		}
+
+		// Push to new parent if required.
+		if (!existingGroup || hasChangedParent)
+			groupNode.parent.groups.push(groupNode);
+
+		groupNode.appendStatus(TestStatus.Running);
+		this.updateNode(groupNode);
+		this.updateNode(groupNode.parent);
+	}
+
+	public testStarted(suitePath: string, testID: number, testName: string | undefined, groupIDs: number[] | undefined, testPath: string | undefined, line: number | undefined, column: number | undefined, startTime: number | undefined): void {
+		const suite = this.suites[suitePath];
+		const existingTest = suite.getCurrentTest(testID) || suite.reuseMatchingTest(suite.currentRunNumber, testID, testName, line);
+		const oldParent = existingTest?.parent;
+		const parent = groupIDs?.length ? suite.getMyGroup(suite.currentRunNumber, groupIDs[groupIDs.length - 1]) : suite.node;
+		const testNode = existingTest || new TestNode(suite, parent, testID, testName, testPath, line, column);
+
+		if (!existingTest) {
+			testNode.suiteRunNumber = suite.currentRunNumber;
+			suite.storeTest(testNode);
+		} else {
+			testNode.parent = parent;
+			testNode.id = testID;
+			testNode.name = testName;
+			testNode.path = testPath;
+			testNode.line = line;
+			testNode.column = column;
+		}
+		testNode.testStartTime = startTime;
+
+		// If this is a "loading" test then mark it as hidden because it looks wonky in
+		// the tree with a full path and we already have the "running" icon on the suite.
+		if (testNode.name && testNode.name.startsWith("loading ") && testNode.parent instanceof SuiteNode)
+			testNode.hidden = true;
+		else
+			testNode.hidden = false;
+
+		// Remove from old parent if required.
+		const hasChangedParent = oldParent && oldParent !== testNode.parent;
+		if (oldParent && hasChangedParent) {
+			oldParent.tests.splice(oldParent.tests.indexOf(testNode), 1);
+			this.updateNode(oldParent);
+		}
+
+		// Push to new parent if required.
+		if (!existingTest || hasChangedParent)
+			testNode.parent.tests.push(testNode);
+
+		// Clear any test output from previous runs.
+		testNode.outputEvents.length = 0;
+
+		testNode.status = TestStatus.Running;
+		this.updateNode(testNode);
+		this.updateNode(testNode.parent);
+		if (!testNode.hidden)
+			this.rebuildSuiteNode(suite);
+	}
+
+	public testDone(suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, hidden: boolean, endTime: number | undefined): void {
+		const suite = this.suites[suitePath];
+		const testNode = suite.getCurrentTest(testID);
+
+		testNode.hidden = hidden;
+		if (result === "skipped") {
+			testNode.status = TestStatus.Skipped;
+		} else if (result === "success") {
+			testNode.status = TestStatus.Passed;
+		} else if (result === "failure") {
+			testNode.status = TestStatus.Failed;
+		} else if (result === "error")
+			testNode.status = TestStatus.Failed;
+		else {
+			testNode.status = TestStatus.Unknown;
+		}
+		if (endTime && testNode.testStartTime) {
+			testNode.duration = endTime - testNode.testStartTime;
+			testNode.description = `${testNode.duration}ms`;
+			// Don't clear this, as concurrent runs will overwrite each
+			// other and then we'll get no time at the end.
+			// testNode.testStartTime = undefined;
+		}
+
+		this.updateNode(testNode);
+		this.updateNode(testNode.parent);
+		this.rebuildSuiteNode(suite);
+
+		if (testNode.status === TestStatus.Failed && this.nextFailureIsFirst) {
+			this.nextFailureIsFirst = false;
+			this.onFirstFailureEmitter.fire(testNode);
+		}
+	}
+
+	public suiteEnd(suitePath: string): void {
+		const suite = this.suites[suitePath];
+		if (!suite)
+			return;
+
+		// TODO: Some notification that things are complete?
+		// TODO: Maybe a progress bar during the run?
+
+		// Hide nodes that were marked as potentially deleted and then never updated.
+		// This means they weren't run in the last run, so probably were deleted (or
+		// renamed and got new nodes, which still means the old ones should be removed).
+		suite.getAllTests(true).filter((t) => t.isPotentiallyDeleted || t.hidden).forEach((t) => {
+			t.hidden = true;
+			this.updateNode(t.parent);
+		});
+
+		// Anything marked as running should be set back to Unknown
+		suite.getAllTests().filter((t) => t.status === TestStatus.Running).forEach((t) => {
+			t.status = TestStatus.Unknown;
+			this.updateNode(t);
+		});
+
+		this.rebuildSuiteNode(suite);
+	}
+
+	public testOutput(suitePath: string, testID: number, message: string) {
+		const suite = this.suites[suitePath];
+		const test = suite.getCurrentTest(testID);
+		// DO STUFF
+	}
+
+	public testErrorOutput(suitePath: string, testID: number, isFailure: boolean, message: string, stack: string) {
+		const suite = this.suites[suitePath];
+		const test = suite.getCurrentTest(testID);
+		// DO STUFF
+	}
 }
 
 export class SuiteData {
@@ -358,29 +530,29 @@ export class SuiteData {
 	public storeTest(node: TestNode) {
 		return this.tests[`${node.suiteRunNumber}_${node.id}`] = node;
 	}
-	public reuseMatchingGroup(currentSuiteRunNumber: number, group: Group): GroupNode | undefined {
+	public reuseMatchingGroup(currentSuiteRunNumber: number, groupID: number, groupName: string | undefined, groupLine: number | undefined): GroupNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllGroups(true).filter((g) => g.name === group.name
+		const matches = this.getAllGroups(true).filter((g) => g.name === groupName
 			&& g.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.line || 0) - (group.line || 0)) - Math.abs((g2.line || 0) - (group.line || 0)));
+		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.line || 0) - (groupLine || 0)) - Math.abs((g2.line || 0) - (groupLine || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
-			match.id = group.id;
+			match.id = groupID;
 			match.suiteRunNumber = this.currentRunNumber;
 			this.storeGroup(match);
 		}
 		return match;
 	}
-	public reuseMatchingTest(currentSuiteRunNumber: number, test: Test): TestNode | undefined {
+	public reuseMatchingTest(currentSuiteRunNumber: number, testID: number, testName: string | undefined, testLine: number | undefined): TestNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllTests().filter((t) => t.name === test.name
+		const matches = this.getAllTests().filter((t) => t.name === testName
 			&& t.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = sortBy(matches, (t) => Math.abs((t.line || 0) - (test.line || 0)));
+		const sortedMatches = sortBy(matches, (t) => Math.abs((t.line || 0) - (testLine || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
-			match.id = test.id;
+			match.id = testID;
 			match.suiteRunNumber = this.currentRunNumber;
 			this.storeTest(match);
 		}
