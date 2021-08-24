@@ -9,7 +9,7 @@ import { WebClient } from "../fetch";
 import { CustomScript, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { TestSessionCoordinator } from "../test/coordinator";
-import { TestTreeModel, TreeNode } from "../test/test_model";
+import { TestModel, TreeNode } from "../test/test_model";
 import { WorkspaceContext } from "../workspace";
 import { FlutterDeviceManager } from "./device_manager";
 import { Context } from "./workspace";
@@ -79,7 +79,7 @@ export interface InternalExtensionApi {
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
 	testTreeProvider: TreeDataProvider<TreeNode>;
 	testCoordinator: TestSessionCoordinator;
-	testTreeModel: TestTreeModel;
+	testModel: TestModel;
 	webClient: WebClient;
 	workspaceContext: WorkspaceContext;
 }

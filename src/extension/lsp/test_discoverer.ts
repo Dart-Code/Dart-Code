@@ -2,7 +2,7 @@
 
 import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { GroupNode, SuiteNode, TestNode, TestTreeModel } from "../../shared/test/test_model";
+import { GroupNode, SuiteNode, TestModel, TestNode } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
@@ -13,7 +13,7 @@ import { isTestFile } from "../utils";
 export class TestDiscoverer implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
-	constructor(private readonly logger: Logger, fileTracker: LspFileTracker, private readonly model: TestTreeModel) {
+	constructor(private readonly logger: Logger, fileTracker: LspFileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
 	}
 

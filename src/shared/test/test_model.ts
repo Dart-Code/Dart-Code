@@ -196,7 +196,7 @@ export class TestNode extends TreeNode {
 	}
 }
 
-export class TestTreeModel {
+export class TestModel {
 	// Set this flag we know when a new run starts so we can show the tree; however
 	// we can't show it until we render a node (we can only call reveal on a node) so
 	// we need to delay this until the suite starts.

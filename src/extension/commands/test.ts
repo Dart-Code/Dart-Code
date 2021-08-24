@@ -3,9 +3,11 @@ import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
+import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
-import { escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
-import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
+import { GroupNode, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
+import { disposeAll, escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
+import { fsPath, getRandomInt, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig } from "../../shared/utils/test";
@@ -22,11 +24,21 @@ export let cursorIsInTest = false;
 export let isInTestFileThatHasImplementation = false;
 export let isInImplementationFileThatCanHaveTest = false;
 
+export type SuiteList = [SuiteNode, string[]];
+
 abstract class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext, protected readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
+			vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode, testRun?: vs.TestRun) => this.runTests(treeNode, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode)),
+			vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode, testRun?: vs.TestRun) => this.runTests(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode)),
+			vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)),
+			vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)),
+			vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false, false)),
+			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
+			vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()),
+			vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()),
 			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
@@ -41,6 +53,113 @@ abstract class TestCommands implements vs.Disposable {
 			this.startTestFromOutline(false, test, launchTemplate)));
 		this.disposables.push(vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) =>
 			this.startTestFromOutline(true, test, launchTemplate)));
+	}
+
+
+	private async runAllSkippedTests(): Promise<void> {
+		await this.runAllTests(TestStatus.Skipped);
+	}
+
+	private async runAllFailedTests(): Promise<void> {
+		await this.runAllTests(TestStatus.Failed);
+	}
+
+	private async runAllTests(onlyOfType: TestStatus): Promise<void> {
+		const topLevelNodes = Object.values(this.testModel.suites).map((suite) => suite.node);
+
+		const suiteList = topLevelNodes
+			.filter((node) => node instanceof SuiteNode && node.hasStatus(onlyOfType))
+			.map((m) => [m, this.getTestNames(m, onlyOfType)] as SuiteList);
+		if (suiteList.length === 0)
+			return;
+
+		const percentProgressPerTest = 99 / suiteList.map((sl) => sl[1].length).reduce((a, b) => a + b);
+		await vs.window.withProgress(
+			{
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: `Running ${TestStatus[onlyOfType].toString().toLowerCase()} tests`,
+			},
+			async (progress, token) => {
+				progress.report({ increment: 1 });
+				for (const suite of suiteList) {
+					const node = suite[0];
+					const failedTestNames = suite[1];
+					if (token.isCancellationRequested)
+						break;
+					const suiteName = path.basename(node.suiteData.path);
+					progress.report({ message: suiteName });
+					await this.runTests(node, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
+					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
+				}
+			},
+		);
+	}
+
+	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
+		// TODO: We should report these to a VS Code test run?
+		// https://code.visualstudio.com/api/extension-guides/testing#publishonly-controllers
+
+		const subs: vs.Disposable[] = [];
+		return new Promise<void>(async (resolve, reject) => {
+			// Construct a unique ID for this session so we can track when it completes.
+			const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+			if (token) {
+				subs.push(vs.debug.onDidStartDebugSession((e) => {
+					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
+						subs.push(token.onCancellationRequested(() => e.customRequest("disconnect")));
+				}));
+			}
+			subs.push(vs.debug.onDidTerminateDebugSession((e) => {
+				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
+					resolve();
+			}));
+			const programPath = fsPath(treeNode.suiteData.path);
+			const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(treeNode.suiteData.path));
+			const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
+			const didStart = await vs.debug.startDebugging(
+				vs.workspace.getWorkspaceFolder(vs.Uri.file(treeNode.suiteData.path)),
+				{
+					dartCodeDebugSessionID,
+					suppressPromptOnErrors,
+					...getLaunchConfig(
+						!debug,
+						programPath,
+						testNames,
+						treeNode instanceof GroupNode,
+						shouldRunSkippedTests,
+					),
+					name: `Tests ${path.basename(programPath)}`,
+				}
+			);
+			if (!didStart)
+				reject();
+		}).finally(() => disposeAll(subs));
+	}
+
+	private getTestNames(treeNode: TreeNode, onlyOfStatus?: TestStatus): string[] | undefined {
+		// If we're getting all tests, we can just use the test name/group name (or undefined for suite) directly.
+		if (onlyOfStatus === undefined) {
+			if ((treeNode instanceof TestNode || treeNode instanceof GroupNode) && treeNode.name !== undefined)
+				return [treeNode.name];
+
+			return undefined;
+		}
+
+		// Otherwise, collect all descendant tests that are of the specified type.
+		let names: string[] = [];
+		if (treeNode instanceof SuiteNode || treeNode instanceof GroupNode) {
+			for (const child of treeNode.children) {
+				const childNames = this.getTestNames(child, onlyOfStatus);
+				if (childNames)
+					names = names.concat(childNames);
+			}
+		} else if (treeNode instanceof TestNode && treeNode.name !== undefined) {
+			if (treeNode.status === onlyOfStatus)
+				names.push(treeNode.name);
+		}
+
+		return names;
 	}
 
 	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
@@ -171,15 +290,14 @@ abstract class TestCommands implements vs.Disposable {
 	protected abstract testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined;
 
 	public dispose(): any {
-		for (const command of this.disposables)
-			command.dispose();
+		disposeAll(this.disposables);
 	}
 
 }
 
 export class DasTestCommands extends TestCommands {
-	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: DasFileTracker, flutterCapabilities: FlutterCapabilities) {
-		super(logger, wsContext, flutterCapabilities);
+	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, private readonly fileTracker: DasFileTracker, flutterCapabilities: FlutterCapabilities) {
+		super(logger, testModel, wsContext, flutterCapabilities);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
@@ -209,8 +327,8 @@ export class DasTestCommands extends TestCommands {
 }
 
 export class LspTestCommands extends TestCommands {
-	constructor(logger: Logger, wsContext: WorkspaceContext, private readonly fileTracker: LspFileTracker, flutterCapabilities: FlutterCapabilities) {
-		super(logger, wsContext, flutterCapabilities);
+	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, private readonly fileTracker: LspFileTracker, flutterCapabilities: FlutterCapabilities) {
+		super(logger, testModel, wsContext, flutterCapabilities);
 	}
 
 	protected testForCursor(editor: vs.TextEditor): LspTestOutlineInfo | undefined {

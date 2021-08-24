@@ -11,7 +11,7 @@ import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
-import { TestTreeModel } from "../../shared/test/test_model";
+import { TestModel } from "../../shared/test/test_model";
 import { filenameSafe, isWebDevice } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
@@ -28,7 +28,7 @@ import { getExcludedFolders, isFlutterProjectFolder, isInsideFolderNamed, isTest
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testTreeModel: TestTreeModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		debugConfig.type = debugConfig.type || "dart";
@@ -227,12 +227,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
 		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.PubTest) {
 			const suitePaths = isTestFolder(debugConfig.program)
-				? Object.values(this.testTreeModel.suites)
+				? Object.values(this.testModel.suites)
 					.map((suite) => suite.path)
 					.filter((p) => p.startsWith(debugConfig.program!))
 				: [debugConfig.program!];
 			for (const suitePath of suitePaths)
-				this.testTreeModel.flagSuiteStart(suitePath, !argsHaveTestNameFilter);
+				this.testModel.flagSuiteStart(suitePath, !argsHaveTestNameFilter);
 		}
 
 		debugConfig.debuggerType = debugType;

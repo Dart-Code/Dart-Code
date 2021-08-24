@@ -3,7 +3,7 @@ import { Event, EventEmitter } from "../events";
 import { IAmDisposable, Logger } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
 import { disposeAll, uriToFilePath } from "../utils";
-import { GroupNode, SuiteData, SuiteNode, TestNode, TestTreeModel, TreeNode } from "./test_model";
+import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "./test_model";
 
 /// Handles results from a test debug session and provides them to the test model.
 export class TestSessionCoordinator implements IAmDisposable {
@@ -17,7 +17,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	/// A link between a suite path and the debug session ID that owns it.
 	private owningDebugSessions: { [key: string]: string | undefined } = {};
 
-	constructor(private readonly logger: Logger, private readonly data: TestTreeModel) { }
+	constructor(private readonly logger: Logger, private readonly data: TestModel) { }
 
 	public handleDebugSessionCustomEvent(e: { session: { id: string }; event: string; body?: any }) {
 		if (e.event === "dart.testRunNotification") {

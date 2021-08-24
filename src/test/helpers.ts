@@ -304,11 +304,11 @@ export async function closeAllOpenFiles(): Promise<void> {
 
 export async function clearTestTree(): Promise<void> {
 	logger.info(`Clearing test tree...`);
-	for (const key of Object.keys(extApi.testTreeModel.suites))
-		delete extApi.testTreeModel.suites[key];
-	extApi.testTreeModel.isNewTestRun = true;
-	extApi.testTreeModel.nextFailureIsFirst = true;
-	extApi.testTreeModel.updateNode();
+	for (const key of Object.keys(extApi.testModel.suites))
+		delete extApi.testModel.suites[key];
+	extApi.testModel.isNewTestRun = true;
+	extApi.testModel.nextFailureIsFirst = true;
+	extApi.testModel.updateNode();
 	await delay(50); // Allow tree to be updated.
 	logger.info(`Done clearing test tree!`);
 }

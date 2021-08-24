@@ -4,18 +4,13 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { DART_TEST_CAN_RUN_SKIPPED_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { TestSessionCoordinator } from "../../shared/test/coordinator";
-import { GroupNode, SuiteNode, TestContainerNode, TestNode, TestTreeModel, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, SuiteNode, TestContainerNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll } from "../../shared/utils";
 import { brightRed, yellow } from "../../shared/utils/colors";
-import { fsPath, getRandomInt } from "../../shared/utils/fs";
-import { getLaunchConfig } from "../../shared/utils/test";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
-import { isInsideFlutterProject } from "../utils";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
-
-type SuiteList = [SuiteNode, string[]];
 
 export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<TreeNode> {
 	private disposables: vs.Disposable[] = [];
@@ -24,7 +19,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private currentTestTerminal: [vs.Terminal, vs.EventEmitter<string>] | undefined;
 	private readonly treeItemBuilder: TreeItemBuilder;
 
-	constructor(private readonly data: TestTreeModel, private readonly coordinator: TestSessionCoordinator, private readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(private readonly data: TestModel, private readonly coordinator: TestSessionCoordinator, private readonly flutterCapabilities: FlutterCapabilities) {
 		this.treeItemBuilder = new TreeItemBuilder(flutterCapabilities);
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
 		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => this.handleConfigChange(e)));
@@ -33,14 +28,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOff", () => config.setShowSkippedTests(false)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOn", () => config.setShowSkippedTests(true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), true, false, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTests(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()));
-		this.disposables.push(vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()));
 
 		this.disposables.push(vs.commands.registerCommand("dart.clearTestResults", () => {
 			// The command shouldn't ordinarily be available in debug mode, but check just in case it was dynamically invoked.
@@ -85,108 +72,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 
 	public handleDebugSessionEnd(session: vs.DebugSession) {
 		this.coordinator.handleDebugSessionEnd(session.id);
-	}
-
-	private async runAllSkippedTests(): Promise<void> {
-		await this.runAllTests(TestStatus.Skipped);
-	}
-
-	private async runAllFailedTests(): Promise<void> {
-		await this.runAllTests(TestStatus.Failed);
-	}
-
-	private async runAllTests(onlyOfType: TestStatus): Promise<void> {
-		const topLevelNodes = this.getChildren() || [];
-		const suiteList = topLevelNodes
-			.filter((node) => node instanceof SuiteNode && node.hasStatus(onlyOfType))
-			.map((m) => [m as SuiteNode, this.getTestNames(m, onlyOfType)] as SuiteList);
-		if (suiteList.length === 0)
-			return;
-
-		const percentProgressPerTest = 99 / suiteList.map((sl) => sl[1].length).reduce((a, b) => a + b);
-		await vs.window.withProgress(
-			{
-				cancellable: true,
-				location: vs.ProgressLocation.Notification,
-				title: `Running ${TestStatus[onlyOfType].toString().toLowerCase()} tests`,
-			},
-			async (progress, token) => {
-				progress.report({ increment: 1 });
-				for (const suite of suiteList) {
-					const node = suite[0];
-					const failedTestNames = suite[1];
-					if (token.isCancellationRequested)
-						break;
-					const suiteName = path.basename(node.suiteData.path);
-					progress.report({ message: suiteName });
-					await this.runTests(node, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
-					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
-				}
-			},
-		);
-	}
-
-	private async runTests(treeNode: GroupNode | SuiteNode | TestNode, testNames: string[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken) {
-		const subs: vs.Disposable[] = [];
-		return new Promise<void>(async (resolve, reject) => {
-			// Construct a unique ID for this session so we can track when it completes.
-			const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
-			if (token) {
-				subs.push(vs.debug.onDidStartDebugSession((e) => {
-					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
-						subs.push(token.onCancellationRequested(() => e.customRequest("disconnect")));
-				}));
-			}
-			subs.push(vs.debug.onDidTerminateDebugSession((e) => {
-				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
-					resolve();
-			}));
-			const programPath = fsPath(treeNode.suiteData.path);
-			const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(treeNode.suiteData.path));
-			const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
-			const didStart = await vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(vs.Uri.file(treeNode.suiteData.path)),
-				{
-					dartCodeDebugSessionID,
-					suppressPromptOnErrors,
-					...getLaunchConfig(
-						!debug,
-						programPath,
-						testNames,
-						treeNode instanceof GroupNode,
-						shouldRunSkippedTests,
-					),
-					name: `Tests ${path.basename(programPath)}`,
-				}
-			);
-			if (!didStart)
-				reject();
-		}).finally(() => disposeAll(subs));
-	}
-
-	private getTestNames(treeNode: TreeNode, onlyOfStatus?: TestStatus): string[] | undefined {
-		// If we're getting all tests, we can just use the test name/group name (or undefined for suite) directly.
-		if (onlyOfStatus === undefined) {
-			if ((treeNode instanceof TestNode || treeNode instanceof GroupNode) && treeNode.name !== undefined)
-				return [treeNode.name];
-
-			return undefined;
-		}
-
-		// Otherwise, collect all descendant tests that are of the specified type.
-		let names: string[] = [];
-		if (treeNode instanceof SuiteNode || treeNode instanceof GroupNode) {
-			for (const child of treeNode.children) {
-				const childNames = this.getTestNames(child, onlyOfStatus);
-				if (childNames)
-					names = names.concat(childNames);
-			}
-		} else if (treeNode instanceof TestNode && treeNode.name !== undefined) {
-			if (treeNode.status === onlyOfStatus)
-				names.push(treeNode.name);
-		}
-
-		return names;
 	}
 
 	private async writeTestOutput(treeNode: TestNode) {
@@ -256,7 +141,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 		if (element instanceof SuiteNode || element instanceof GroupNode)
 			return element.children.filter(this.skippedSettingFilter);
 
-		// Notes without children (TestNode, or other unknown).
+		// Nodes without children (TestNode, or other unknown).
 		if (element)
 			return [];
 
