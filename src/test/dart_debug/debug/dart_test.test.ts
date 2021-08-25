@@ -9,7 +9,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, clearTestTree, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, clearTestTree, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -163,7 +163,7 @@ describe("dart test debugger", () => {
 		);
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
+		const actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
@@ -210,7 +210,7 @@ describe("dart test debugger", () => {
 		]);
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTextTree(helloWorldTestShortFile, extApi.testTreeProvider)).join("\n");
+		const actualResults = (await makeTestTextTree(helloWorldTestShortFile)).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
@@ -288,11 +288,11 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 		async function checkResults(description: string): Promise<void> {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
+			const actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
-			assert.equal(actualResults, expectedResults);
+			assert.equal(actualResults, expectedResults, description);
 		}
 
 		await runWithoutDebugging(helloWorldTestTreeFile);
@@ -328,7 +328,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 		async function checkResults(description: string): Promise<void> {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTextTree(helloWorldTestDupeNameFile, extApi.testTreeProvider)).join("\n");
+			const actualResults = (await makeTestTextTree(helloWorldTestDupeNameFile)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -393,7 +393,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 		`.trim();
 
 		// Get the actual tree, filtered only to those that ran in the last run.
-		const actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider, { onlyActive: true })).join("\n");
+		const actualResults = (await makeTestTextTree(helloWorldTestTreeFile, { onlyActive: true })).join("\n");
 		assert.equal(actualResults, expectedResults);
 	});
 
@@ -418,7 +418,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 			// Get the expected tree and filter it to only failed tests.
 			const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("fail.svg")).join("\n");
 			// Get the actual tree, filtered only to those that ran in the last run.
-			const actualResults = (await makeTextTree(file, extApi.testTreeProvider, { onlyActive: true })).join("\n");
+			const actualResults = (await makeTestTextTree(file, { onlyActive: true })).join("\n");
 			assert.equal(actualResults, expectedResults);
 		}
 	});
@@ -435,7 +435,7 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 
 		// First ensure the full results appear.
 		let expectedResults = getExpectedResults();
-		let actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
+		let actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
 		assert.ok(actualResults);
 		assert.equal(actualResults, expectedResults);
 
@@ -456,7 +456,7 @@ test/tree_test.dart [4/6 passed, {duration}ms] (fail.svg)
     passing group 3 [1/1 passed, {duration}ms] (pass.svg)
         passing test 1 [{duration}ms] (pass.svg)
 		`.trim();
-		actualResults = (await makeTextTree(helloWorldTestTreeFile, extApi.testTreeProvider)).join("\n");
+		actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
 		assert.ok(actualResults);
 		assert.equal(actualResults, expectedResults);
 	});

@@ -7,7 +7,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, deferUntilLast, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, deferUntilLast, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -238,7 +238,7 @@ describe("flutter test debugger", () => {
 		for (const file of testFiles) {
 			await openFile(file);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTextTree(file, extApi.testTreeProvider)).join("\n");
+			const actualResults = (await makeTestTextTree(file)).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -395,7 +395,7 @@ test/widget_test.dart [2/2 passed, {duration}ms] (pass.svg)
 		`.trim();
 
 		// Get the actual tree, filtered only to those that ran in the last run.
-		const actualResults = (await makeTextTree(flutterTestMainFile, extApi.testTreeProvider, { onlyActive: true })).join("\n");
+		const actualResults = (await makeTestTextTree(flutterTestMainFile, { onlyActive: true })).join("\n");
 		assert.equal(actualResults, expectedResults);
 	});
 });
