@@ -1,4 +1,3 @@
-import { DebugSessionWithDartCodeSessionId } from "../../shared/debug/interfaces";
 import { IAmDisposable, Logger } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
 import { disposeAll, uriToFilePath } from "../utils";
@@ -13,11 +12,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	constructor(private readonly logger: Logger, private readonly data: TestModel) { }
 
-	public handleDebugSessionCustomEvent(e: { session: { id: string }; event: string; body?: any }) {
-		const session = e.session as DebugSessionWithDartCodeSessionId;
-		if (e.event === "dart.testRunNotification") {
+	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
+		if (event === "dart.testRunNotification") {
 			// tslint:disable-next-line: no-floating-promises
-			this.handleNotification(session.id, session.configuration.dartCodeDebugSessionID, e.body.suitePath, e.body.notification).catch((e) => this.logger.error(e));
+			this.handleNotification(debugSessionID, dartCodeDebugSessionID, body.suitePath, body.notification).catch((e) => this.logger.error(e));
 		}
 	}
 
