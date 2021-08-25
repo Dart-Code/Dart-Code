@@ -456,6 +456,8 @@ export async function uncommentTestFile(): Promise<void> {
 }
 
 export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
+	// TODO: Remove this when it's the only option and update the comments in the test files.
+	const isVsCodeTestRunner = !!vs.workspace.getConfiguration("dart").get("previewVsCodeTestRunner");
 	const start = positionOf("// == EXPECTED RESULTS ==^");
 	const end = positionOf("^// == /EXPECTED RESULTS ==");
 	const results = doc.getText(new vs.Range(start, end));
@@ -463,6 +465,9 @@ export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
 		.map((l) => l.trim())
 		.filter((l) => l.startsWith("// ") && !l.startsWith("// #")) // Allow "comment" lines within the comment
 		.map((l) => l.substr(3))
+		// Strip the description/status off the end. VS Code doesn't allow us to
+		// access these through the TestItems so we can't verify them.
+		.map((l) => isVsCodeTestRunner ? l.replace(/ \[.*\] (.*)/g, "") : l)
 		.join("\n");
 }
 
@@ -1086,15 +1091,31 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 	return treeLabel(item) || path.basename(fsPath(item.resourceUri!));
 }
 
-export async function makeTestTextTree(parent: TreeNode | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+export async function makeTestTextTree(parent: vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
 	const result = vs.workspace.getConfiguration("dart").get("previewVsCodeTestRunner")
 		? await makeTextTreeUsingVsCodeTestController(parent, { buffer, indent, onlyFailures, onlyActive })
 		: await makeTextTreeUsingCustomTree(parent, extApi.testTreeProvider, { buffer, indent, onlyFailures, onlyActive });
 	return buffer;
 }
 
-export async function makeTextTreeUsingVsCodeTestController(parent: TreeNode | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
-	throw Error("err");
+export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+	const collection = items instanceof vs.Uri
+		? extApi.testController.items
+		: items ?? extApi.testController.items;
+	const parentResourceUri = items instanceof vs.Uri ? items : undefined;
+
+	const testItems: vs.TestItem[] = [];
+	collection.forEach((item) => {
+		if (!parentResourceUri || item.uri?.toString() === parentResourceUri.toString())
+			testItems.push(item);
+	});
+
+	for (const item of testItems) {
+		buffer.push(`${" ".repeat(indent * 4)}${item.label}`);
+		makeTextTreeUsingVsCodeTestController(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive });
+	}
+
+	return buffer;
 }
 
 export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {

@@ -170,6 +170,27 @@ describe("dart test debugger", () => {
 		assert.equal(actualResults, expectedResults);
 	});
 
+	it.skip("builds the expected tree from a test run (VS Code Test Runner)", async () => {
+		// Skipped because we need this setting to be enabled before the extension activates
+		// for the controller to be setup.
+		setConfigForTest("dart", "previewVsCodeTestRunner", true);
+		await openFile(helloWorldTestTreeFile);
+		const config = await startDebugger(dc, helloWorldTestTreeFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		const expectedResults = getExpectedResults();
+		const actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
+
+		assert.ok(expectedResults);
+		assert.ok(actualResults);
+		assert.equal(actualResults, expectedResults);
+	});
+
 	it("clears the results from the test tree", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(dc, helloWorldTestTreeFile);
