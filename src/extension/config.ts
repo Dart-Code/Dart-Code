@@ -146,19 +146,23 @@ class Config {
 	get workspaceFlutterSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("flutterSdkPath")); }
 
 	// Options that can be set programatically.
-	public setCheckForSdkUpdates(value: boolean): Thenable<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
-	public setFlutterSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
-	public setGlobalDartSdkPath(value: string): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
-	public setGlobalDebugSdkLibraries(value: boolean): Thenable<void> { return this.setConfig("debugSdkLibraries", value, ConfigurationTarget.Global); }
-	public setGlobalDebugExternalPackageLibraries(value: boolean): Thenable<void> { return this.setConfig("debugExternalPackageLibraries", value, ConfigurationTarget.Global); }
-	public setGlobalFlutterSdkPath(value: string): Thenable<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
-	public setPreviewLsp(value: boolean): Thenable<void> { return this.setConfig("previewLsp", value, ConfigurationTarget.Global); }
-	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Thenable<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
-	public setShowInspectorNotificationsForWidgetErrors(value: boolean): Thenable<void> { return this.setConfig("showInspectorNotificationsForWidgetErrors", value, ConfigurationTarget.Global); }
-	public setShowSkippedTests(value: boolean): Thenable<void> { return this.setConfig("showSkippedTests", value, ConfigurationTarget.Global); }
-	public setSdkPath(value: string | undefined): Thenable<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
-	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
-	public setWarnWhenEditingFilesInPubCache(value: boolean): Thenable<void> { return this.setConfig("warnWhenEditingFilesInPubCache", value, ConfigurationTarget.Global); }
+	public setCheckForSdkUpdates(value: boolean): Promise<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
+	public setFlutterCreateOrganization(value: string | undefined): Promise<void> { return this.setConfig("flutterCreateOrganization", value, ConfigurationTarget.Global); }
+	public setFlutterCreateAndroidLanguage(value: "java" | "kotlin" | undefined): Promise<void> { return this.setConfig("flutterCreateAndroidLanguage", value, ConfigurationTarget.Global); }
+	public setFlutterCreateIOSLanguage(value: "objc" | "swift" | undefined): Promise<void> { return this.setConfig("flutterCreateIOSLanguage", value, ConfigurationTarget.Global); }
+	public setFlutterCreateOffline(value: boolean | undefined): Promise<void> { return this.setConfig("flutterCreateOffline", value, ConfigurationTarget.Global); }
+	public setFlutterSdkPath(value: string | undefined): Promise<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
+	public setGlobalDartSdkPath(value: string): Promise<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
+	public setGlobalDebugSdkLibraries(value: boolean): Promise<void> { return this.setConfig("debugSdkLibraries", value, ConfigurationTarget.Global); }
+	public setGlobalDebugExternalPackageLibraries(value: boolean): Promise<void> { return this.setConfig("debugExternalPackageLibraries", value, ConfigurationTarget.Global); }
+	public setGlobalFlutterSdkPath(value: string): Promise<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
+	public setPreviewLsp(value: boolean): Promise<void> { return this.setConfig("previewLsp", value, ConfigurationTarget.Global); }
+	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Promise<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
+	public setShowInspectorNotificationsForWidgetErrors(value: boolean): Promise<void> { return this.setConfig("showInspectorNotificationsForWidgetErrors", value, ConfigurationTarget.Global); }
+	public setShowSkippedTests(value: boolean): Promise<void> { return this.setConfig("showSkippedTests", value, ConfigurationTarget.Global); }
+	public setSdkPath(value: string | undefined): Promise<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
+	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Promise<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
+	public setWarnWhenEditingFilesInPubCache(value: boolean): Promise<void> { return this.setConfig("warnWhenEditingFilesInPubCache", value, ConfigurationTarget.Global); }
 
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);

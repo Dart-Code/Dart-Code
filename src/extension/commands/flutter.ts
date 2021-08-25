@@ -19,6 +19,7 @@ import { config } from "../config";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
+import { PickableSetting, showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands, commandState, packageNameRegex } from "./sdk";
 
@@ -209,7 +210,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		const folderPath = fsPath(folders[0]);
 
 		const defaultName = nextAvailableFilename(folderPath, "flutter_application_");
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateFlutterProjectName(s, folderPath) });
+		const name = await this.promptForNameWithSettings(defaultName, folderPath);
 		if (!name)
 			return;
 
@@ -234,6 +235,34 @@ export class FlutterCommands extends BaseSdkCommands {
 		vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
 
 		return projectFolderUri;
+	}
+
+	private async promptForNameWithSettings(defaultName: string, folderPath: string): Promise<string | undefined> {
+		while (true) {
+			const response = await showInputBoxWithSettings(
+				this.context,
+				{
+					placeholder: defaultName,
+					prompt: "Enter a name for your new project",
+					title: "Project Name",
+					validation: (s) => this.validateFlutterProjectName(s, folderPath),
+					value: defaultName,
+				},
+			);
+
+			if (response === "SETTINGS") {
+				await showSimpleSettingsEditor(
+					"Settings for new Flutter projects",
+					"Select a setting to change (or 'Escape' to cancel)",
+					flutterCreateSettings,
+				);
+				continue;
+			} else if (response) {
+				return response.value;
+			} else {
+				return undefined;
+			}
+		}
 	}
 
 	private async createFlutterSampleProject(): Promise<vs.Uri | undefined> {
@@ -283,3 +312,40 @@ export class FlutterCommands extends BaseSdkCommands {
 			return `A project with this name already exists within the selected directory`;
 	}
 }
+
+const flutterCreateSettings: PickableSetting[] = [
+	{
+		currentValue: config.flutterCreateOrganization || "com.example",
+		description: config.flutterCreateOrganization || "com.example",
+		detail: "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier.",
+		label: "Organization",
+		setValue: (newValue) => config.setFlutterCreateOrganization(newValue),
+		settingKind: "STRING",
+	},
+	{
+		currentValue: config.flutterCreateAndroidLanguage || "kotlin",
+		description: config.flutterCreateAndroidLanguage || "kotlin",
+		detail: "The language to use for Android-specific code, either Java (legacy) or Kotlin (recommended).",
+		enumValues: ["kotlin", "java"],
+		label: "Android Language",
+		setValue: (newValue) => config.setFlutterCreateAndroidLanguage(newValue),
+		settingKind: "ENUM",
+	},
+	{
+		currentValue: config.flutterCreateIOSLanguage || "swift",
+		description: config.flutterCreateIOSLanguage || "swift",
+		detail: "The language to use for iOS-specific code, either ObjectiveC (legacy) or Swift (recommended).",
+		enumValues: ["swift", "objc"],
+		label: "iOS Language",
+		setValue: (newValue) => config.setFlutterCreateIOSLanguage(newValue),
+		settingKind: "ENUM",
+	},
+	{
+		currentValue: config.flutterCreateOffline ? "enabled" : "not enabled",
+		description: config.flutterCreateOffline ? "enabled" : "not enabled",
+		detail: "When \"flutter pub get\" is run by the create command, this indicates whether to run it in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
+		label: "Create Projects Offline",
+		setValue: (newValue) => config.setFlutterCreateOffline(newValue),
+		settingKind: "BOOL",
+	},
+];
