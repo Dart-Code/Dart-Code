@@ -125,7 +125,7 @@ abstract class TestCommands implements vs.Disposable {
 			}
 			subs.push(vs.debug.onDidTerminateDebugSession((e) => {
 				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
-					resolve();
+					resolve(true);
 			}));
 			const didStart = await vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(programPath)),

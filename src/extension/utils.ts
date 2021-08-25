@@ -170,6 +170,14 @@ export function isInsideFolderNamed(file: string | undefined, folderName: string
 	return segments.indexOf(folderName.toLowerCase()) !== -1;
 }
 
+export function hasTestNameFilter(...argss: Array<string[] | undefined>) {
+	for (const args of argss) {
+		if (args && (args.includes("--name") || args.includes("--pname")))
+			return true;
+	}
+	return false;
+}
+
 export function isValidEntryFile(file: string | undefined) {
 	return file && isDartFile(file) &&
 		(
