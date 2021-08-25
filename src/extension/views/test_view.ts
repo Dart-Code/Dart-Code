@@ -67,7 +67,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	}
 
 	public handleDebugSessionCustomEvent(e: { session: vs.DebugSession; event: string; body?: any; }) {
-		this.coordinator.handleDebugSessionCustomEvent(e);
+		this.coordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID, e.event, e.body);
 	}
 
 	public handleDebugSessionEnd(session: vs.DebugSession) {
