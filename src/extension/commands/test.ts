@@ -106,13 +106,13 @@ abstract class TestCommands implements vs.Disposable {
 		return this.runTests(programPath, debug, testNames, isGroup, shouldRunSkippedTests, suppressPromptOnErrors, undefined, testRun, token);
 	}
 
-	private runTests(programPath: string, debug: boolean, testNames: string[] | undefined, isGroup: boolean, shouldRunSkippedTests: boolean, suppressPromptOnErrors: boolean, launchTemplate: any | undefined, testRun: vs.TestRun | undefined, token: vs.CancellationToken | undefined) {
+	private runTests(programPath: string, debug: boolean, testNames: string[] | undefined, isGroup: boolean, shouldRunSkippedTests: boolean, suppressPromptOnErrors: boolean, launchTemplate: any | undefined, testRun: vs.TestRun | undefined, token: vs.CancellationToken | undefined): Promise<boolean> {
 		const vsTest = this.vsCodeTestController?.controller;
 		if (vsTest)
 			testRun ??= vsTest.createTestRun(new vs.TestRunRequest(), undefined, true);
 
 		const subs: vs.Disposable[] = [];
-		return new Promise<void>(async (resolve, reject) => {
+		return new Promise<boolean>(async (resolve, reject) => {
 			// Construct a unique ID for this session so we can track when it completes.
 			const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
 			if (testRun)
