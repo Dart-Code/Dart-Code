@@ -57,4 +57,10 @@ export interface FileLocation {
 	column: number;
 }
 
+export interface BasicDebugConfiguration {
+	name: string;
+	type: string;
+	request: string;
+}
+
 export interface DebugSessionWithDartCodeSessionId { id: string, configuration: { dartCodeDebugSessionID: string | undefined } }

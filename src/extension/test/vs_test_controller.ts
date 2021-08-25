@@ -12,8 +12,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
 	private testRuns: { [key: string]: vs.TestRun | undefined } = {};
 
-	public registerTestRun(debugSessionId: string, run: vs.TestRun): void {
-		this.testRuns[debugSessionId] = run;
+	public registerTestRun(dartCodeDebugSessionId: string, run: vs.TestRun): void {
+		this.testRuns[dartCodeDebugSessionId] = run;
 	}
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel) {
@@ -163,36 +163,41 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
+	private getOrCreateTestRun(sessionID: string) {
+		let run = this.testRuns[sessionID];
+		if (!run) {
+			run = this.controller.createTestRun(new vs.TestRunRequest(), undefined, true);
+			this.registerTestRun(sessionID, run);
+		}
+		return run;
+	}
+
 	public suiteDiscovered(sessionID: string, node: SuiteNode): void {
-		const run = this.testRuns[sessionID];
-		const item = this.itemForNode.get(node);
-		if (run && item)
-			run.started(item);
+		// const run = this.getOrCreateTestRun(sessionID);
+		// const item = this.itemForNode.get(node);
 	}
 
 	public groupDiscovered(sessionID: string, node: GroupNode): void {
-		const run = this.testRuns[sessionID];
-		const item = this.itemForNode.get(node);
-		if (run && item)
-			run.started(item);
+		// const run = this.getOrCreateTestRun(sessionID);
+		// const item = this.itemForNode.get(node);
 	}
 
 	public testStarted(sessionID: string, node: TestNode): void {
-		const run = this.testRuns[sessionID];
+		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
 			run.started(item);
 	}
 
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
-		const run = this.testRuns[sessionID];
+		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
 			run.appendOutput(message);
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
-		const run = this.testRuns[sessionID];
+		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			// TODO: isFailure??
@@ -202,7 +207,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void {
-		const run = this.testRuns[sessionID];
+		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			switch (result) {
@@ -223,6 +228,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public suiteDone(sessionID: string, node: SuiteNode): void {
+		const run = this.getOrCreateTestRun(sessionID);
+		run.end();
 	}
 
 	public dispose(): any {

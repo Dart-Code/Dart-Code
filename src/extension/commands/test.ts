@@ -7,7 +7,7 @@ import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
-import { fsPath, getRandomInt, mkDirRecursive } from "../../shared/utils/fs";
+import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig } from "../../shared/utils/test";
@@ -16,7 +16,7 @@ import { DasFileTracker } from "../analysis/file_tracker_das";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { isDartDocument } from "../editors";
 import { VsCodeTestController } from "../test/vs_test_controller";
-import { isInsideFlutterProject, isTestFile } from "../utils";
+import { ensureDebugLaunchUniqueId, isInsideFlutterProject, isTestFile } from "../utils";
 
 const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
@@ -107,16 +107,29 @@ abstract class TestCommands implements vs.Disposable {
 	}
 
 	private runTests(programPath: string, debug: boolean, testNames: string[] | undefined, isGroup: boolean, shouldRunSkippedTests: boolean, suppressPromptOnErrors: boolean, launchTemplate: any | undefined, testRun: vs.TestRun | undefined, token: vs.CancellationToken | undefined): Promise<boolean> {
-		const vsTest = this.vsCodeTestController?.controller;
-		if (vsTest)
-			testRun ??= vsTest.createTestRun(new vs.TestRunRequest(), undefined, true);
-
 		const subs: vs.Disposable[] = [];
 		return new Promise<boolean>(async (resolve, reject) => {
-			// Construct a unique ID for this session so we can track when it completes.
-			const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+			const launchConfiguration = {
+				suppressPromptOnErrors,
+				...getLaunchConfig(
+					!debug,
+					programPath,
+					testNames,
+					isGroup,
+					shouldRunSkippedTests,
+					launchTemplate,
+				),
+				name: `Tests ${path.basename(programPath)}`,
+			};
+
+			// Ensure we have a unique ID for this session so we can track when it completes.
+			const dartCodeDebugSessionID = ensureDebugLaunchUniqueId(launchConfiguration);
+
+			// If we were given a test to use by VS Code, use it. Otherwise we'll lazily create one at the
+			// other end.
 			if (testRun)
 				this.vsCodeTestController?.registerTestRun(dartCodeDebugSessionID, testRun);
+
 			if (token) {
 				subs.push(vs.debug.onDidStartDebugSession((e) => {
 					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
@@ -129,24 +142,11 @@ abstract class TestCommands implements vs.Disposable {
 			}));
 			const didStart = await vs.debug.startDebugging(
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(programPath)),
-				{
-					dartCodeDebugSessionID,
-					suppressPromptOnErrors,
-					...getLaunchConfig(
-						!debug,
-						programPath,
-						testNames,
-						isGroup,
-						shouldRunSkippedTests,
-						launchTemplate,
-					),
-					name: `Tests ${path.basename(programPath)}`,
-				}
+				launchConfiguration
 			);
 			if (!didStart)
 				reject();
 		}).finally(() => {
-			testRun?.end();
 			disposeAll(subs);
 		});
 	}

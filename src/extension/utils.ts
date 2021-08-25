@@ -4,6 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
+import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { WorkspaceConfig } from "../shared/interfaces";
 import { fsPath, getRandomInt, hasPubspec, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
@@ -176,6 +177,17 @@ export function hasTestNameFilter(...argss: Array<string[] | undefined>) {
 			return true;
 	}
 	return false;
+}
+
+/// Ensures a debug config always has a unique ID we can use to match things up.
+///
+/// Although VS Code assigns an ID, we cannot get at it until after the debug session starts
+/// which might be after we recieve some events (since VS Code fires its event late - after all
+/// initialisation has completed).
+export function ensureDebugLaunchUniqueId(config: BasicDebugConfiguration): string {
+	const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+	(config as any).dartCodeDebugSessionID = dartCodeDebugSessionID;
+	return dartCodeDebugSessionID;
 }
 
 export function isValidEntryFile(file: string | undefined) {
