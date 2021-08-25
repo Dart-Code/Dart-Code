@@ -24,7 +24,7 @@ import { config, ResourceConfig } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { getExcludedFolders, isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { getExcludedFolders, hasTestNameFilter, isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -101,7 +101,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterTest;
 		const isTest = isTestFileOrFolder(debugConfig.program);
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
-		const argsHaveTestNameFilter = debugConfig.toolArgs ? (debugConfig.toolArgs.includes("--name") || debugConfig.toolArgs.includes("--pname")) : false;
+		const argsHaveTestNameFilter = hasTestNameFilter(debugConfig.toolArgs, debugConfig.args);
 
 		// Handle test_driver tests that can be pointed at an existing running instrumented app.
 		if (debugType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
@@ -301,7 +301,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isTest = isTestFileOrFolder(debugConfig.program);
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
 		// TODO: Remove argsHaveTestNameFilter now that "flutter test" supports running tests on device (integration tests).
-		const argsHaveTestNameFilter = debugConfig.toolArgs ? (debugConfig.toolArgs.includes("--name") || debugConfig.toolArgs.includes("--pname")) : false;
+		const argsHaveTestNameFilter = hasTestNameFilter(debugConfig.toolArgs, debugConfig.args);
 
 		let debugType = DebuggerType.Dart;
 		if (debugConfig.cwd
