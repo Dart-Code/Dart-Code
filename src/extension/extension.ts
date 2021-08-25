@@ -774,6 +774,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			pubGlobal,
 			renameProvider,
 			safeToolSpawn,
+			testController: vsCodeTestController?.controller,
 			testCoordinator,
 			testModel,
 			testTreeProvider,

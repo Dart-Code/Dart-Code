@@ -1086,7 +1086,18 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 	return treeLabel(item) || path.basename(fsPath(item.resourceUri!));
 }
 
-export async function makeTextTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+export async function makeTestTextTree(parent: TreeNode | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+	const result = vs.workspace.getConfiguration("dart").get("previewVsCodeTestRunner")
+		? await makeTextTreeUsingVsCodeTestController(parent, { buffer, indent, onlyFailures, onlyActive })
+		: await makeTextTreeUsingCustomTree(parent, extApi.testTreeProvider, { buffer, indent, onlyFailures, onlyActive });
+	return buffer;
+}
+
+export async function makeTextTreeUsingVsCodeTestController(parent: TreeNode | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+	throw Error("err");
+}
+
+export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
 	const parentNode = parent instanceof vs.Uri ? undefined : parent;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
 
@@ -1124,7 +1135,7 @@ export async function makeTextTree(parent: TreeNode | vs.Uri | undefined, provid
 			includeNode = false;
 		if (includeNode)
 			buffer.push(`${" ".repeat(indent * 4)}${expectedLabel}${expectedDesc} (${iconFile})`);
-		await makeTextTree(item, provider, { buffer, indent: indent + 1, onlyFailures, onlyActive });
+		await makeTestTextTree(item, { buffer, indent: indent + 1, onlyFailures, onlyActive });
 	}
 	return buffer;
 }

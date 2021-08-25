@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { activate, extApi, getExpectedResults, helloWorldTestDiscoveryFile, makeTextTree, openFile, waitForResult } from "../../helpers";
+import { activate, extApi, getExpectedResults, helloWorldTestDiscoveryFile, makeTestTextTree, openFile, waitForResult } from "../../helpers";
 
 describe("dart test tree", () => {
 	beforeEach("activate", () => activate());
@@ -10,7 +10,7 @@ describe("dart test tree", () => {
 			this.skip();
 
 		// Ensure no results before we start.
-		const initialResults = (await makeTextTree(helloWorldTestDiscoveryFile, extApi.testTreeProvider)).join("\n");
+		const initialResults = (await makeTestTextTree(helloWorldTestDiscoveryFile)).join("\n");
 		assert.equal(initialResults, "");
 
 		// Open the file and allow time for the outline.
@@ -18,7 +18,7 @@ describe("dart test tree", () => {
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryFile));
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTextTree(helloWorldTestDiscoveryFile, extApi.testTreeProvider)).join("\n");
+		const actualResults = (await makeTestTextTree(helloWorldTestDiscoveryFile)).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
