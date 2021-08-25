@@ -1135,7 +1135,7 @@ export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | un
 			includeNode = false;
 		if (includeNode)
 			buffer.push(`${" ".repeat(indent * 4)}${expectedLabel}${expectedDesc} (${iconFile})`);
-		await makeTestTextTree(item, { buffer, indent: indent + 1, onlyFailures, onlyActive });
+		await makeTextTreeUsingCustomTree(item, provider, { buffer, indent: indent + 1, onlyFailures, onlyActive });
 	}
 	return buffer;
 }
