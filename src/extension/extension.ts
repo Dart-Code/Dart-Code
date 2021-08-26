@@ -689,8 +689,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		// tslint:disable-next-line: no-floating-promises
 		packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
 	}
-	if (!isRestart)
-		checkForPackages();
+	checkForPackages();
 
 	// Begin activating dependant packages.
 	if (workspaceContext.shouldLoadFlutterExtension) {

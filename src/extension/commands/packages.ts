@@ -199,7 +199,7 @@ export class PackageCommands extends BaseSdkCommands {
 			const foldersRequiringPackageGet = uniq(folders)
 				.map(vs.Uri.file)
 				.filter((uri) => config.for(uri).promptToGetPackages)
-				.filter(isPubGetProbablyRequired);
+				.filter((uri) => isPubGetProbablyRequired(this.sdks, this.logger, uri));
 			this.logger.info(`Found ${foldersRequiringPackageGet.length} folders requiring "pub get":${foldersRequiringPackageGet.map((uri) => `\n    ${fsPath(uri)}`).join("")}`);
 			if (!forcePrompt && foldersRequiringPackageGet.length === 0)
 				await vs.commands.executeCommand("dart.getPackages", uri);
