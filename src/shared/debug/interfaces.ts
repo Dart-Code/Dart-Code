@@ -62,5 +62,3 @@ export interface BasicDebugConfiguration {
 	type: string;
 	request: string;
 }
-
-export interface DebugSessionWithDartCodeSessionId { id: string, configuration: { dartCodeDebugSessionID: string | undefined } }

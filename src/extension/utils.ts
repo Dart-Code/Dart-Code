@@ -185,9 +185,12 @@ export function hasTestNameFilter(...argss: Array<string[] | undefined>) {
 /// which might be after we recieve some events (since VS Code fires its event late - after all
 /// initialisation has completed).
 export function ensureDebugLaunchUniqueId(config: BasicDebugConfiguration): string {
-	const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
-	(config as any).dartCodeDebugSessionID = dartCodeDebugSessionID;
-	return dartCodeDebugSessionID;
+	const conf = config as any;
+	if (!conf.dartCodeDebugSessionID) {
+		const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+		conf.dartCodeDebugSessionID = dartCodeDebugSessionID;
+	}
+	return conf.dartCodeDebugSessionID;
 }
 
 export function isValidEntryFile(file: string | undefined) {
