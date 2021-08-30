@@ -285,6 +285,31 @@ export function captureOutput(name: string) {
 	return buffer;
 }
 
+export function stubCreateInputBox(valueToReturn: string) {
+	const result = {
+		promptedValue: undefined as string | undefined,
+	};
+	const createInputBox = sb.stub(vs.window, "createInputBox");
+	createInputBox.callsFake(function (this: any, ...args) {
+		// Call the underlying VS Code method to create the input box.
+		const input = (createInputBox as any).wrappedMethod.apply(this, args);
+
+		// Capture the onDidAccept method to capture the callback.
+		let acceptCallback: () => void;
+		sb.stub(input, "onDidAccept").callsFake((func) => acceptCallback = func);
+
+		// Capture the show method to then call that callback with our fake answer.
+		// Also stash the original value so we can check it was pre-populated correctly.
+		sb.stub(input, "show").callsFake(() => {
+			result.promptedValue = input.value;
+			input.value = valueToReturn;
+			setImmediate(() => acceptCallback());
+		});
+		return input;
+	});
+	return result;
+}
+
 export async function closeAllOpenFiles(): Promise<void> {
 	logger.info(`Closing all open editors...`);
 	logOpenEditors();

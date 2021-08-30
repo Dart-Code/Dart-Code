@@ -7,7 +7,7 @@ import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { FlutterCreateTriggerData } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../../shared/vscode/interfaces";
-import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb } from "../../helpers";
+import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb, stubCreateInputBox } from "../../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -37,8 +37,7 @@ describe("command", () => {
 		const tempFolder = getRandomTempFolder();
 		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
 
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("my_test_flutter_proj");
+		const inputBox = stubCreateInputBox("my_test_flutter_proj");
 
 		// Create some folders in the temp folder to check the default name is correctly incremented.
 		fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
@@ -50,7 +49,7 @@ describe("command", () => {
 
 		await vs.commands.executeCommand("flutter.createProject");
 
-		assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "flutter_application_3")));
+		assert.equal(inputBox.promptedValue, "flutter_application_3");
 		assert.ok(showOpenDialog.calledOnce);
 		assert.ok(openFolder.calledOnce);
 		assert.ok(fs.existsSync(path.join(tempFolder, "my_test_flutter_proj", FLUTTER_CREATE_PROJECT_TRIGGER_FILE)));
@@ -101,8 +100,7 @@ async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: s
 	const tempFolder = getRandomTempFolder();
 	showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
 
-	const showInputBox = sb.stub(vs.window, "showInputBox");
-	showInputBox.resolves("my_test_flutter_proj");
+	const inputBox = stubCreateInputBox("my_test_flutter_proj");
 
 	// Create some folders in the temp folder to check the default name is correctly incremented.
 	fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
@@ -114,7 +112,7 @@ async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: s
 	const projectFolderUri: string | undefined = await vs.commands.executeCommand(commandToExecute);
 
 	assert.ok(projectFolderUri);
-	assert.ok(showInputBox.calledOnceWith(sinon.match.has("value", "flutter_application_3")));
+	assert.equal(inputBox.promptedValue, "flutter_application_3");
 	assert.ok(showOpenDialog.calledOnce);
 	assert.ok(openFolder.calledOnce);
 
