@@ -766,20 +766,20 @@ export async function getSnippetCompletionsAt(searchText: string, triggerCharact
 	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
 }
 
-export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): vs.CompletionItem {
+export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind | vs.CompletionItemKind[], label: string, filterText?: string, documentation?: string): vs.CompletionItem {
+	const kinds = Array.isArray(kind) ? kind : [kind];
 	const completion = items.find((item) =>
 		item.label === label
 		&& (item.filterText === filterText || (item.filterText === undefined && filterText === label))
-		&& item.kind === kind,
+		&& kinds.includes(item.kind!),
 	);
 	assert.ok(
 		completion,
 		`Couldn't find completion for ${label}/${filterText} in\n`
 		+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${item.label}/${item.filterText}`).join("\n"),
 	);
-	if (documentation) {
+	if (documentation)
 		assert.equal((completion.documentation as any).value.trim(), documentation);
-	}
 	return completion;
 }
 

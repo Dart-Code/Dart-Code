@@ -6,15 +6,16 @@ import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletio
 describe("completion_item_provider", () => {
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
 
-	// This is not implemented. Turns out it's hard to detect this without having false positives
-	// since we can't easily tell we're in a show/hide reliably.
-	it.skip("does not add parens on functions in show/hide", async () => {
+	it("does not add parens on functions in show/hide", async function () {
+		if (!extApi.isLsp)
+			this.skip();
 		const doc = currentDoc();
 		await setTestContent(doc.getText().replace(/\/\/ IMPORTS HERE/mg, "import 'dart:io' show ;"));
 
 		const completions = await getCompletionsAt("show ^;");
 
-		ensureCompletion(completions, vs.CompletionItemKind.Function, "exit");
+		const completion = ensureCompletion(completions, vs.CompletionItemKind.Function, "exit(…)", "exit");
+		assert.equal(completion.insertText, "exit");
 	});
 
 	it("adds parens on functions in code", async () => {
@@ -48,7 +49,8 @@ describe("completion_item_provider", () => {
 		ensureCompletion(completions, vs.CompletionItemKind.Function, "doSomeStuff()", "doSomeStuff");
 		ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo", "foo"); // We don't know it's constant from DAS.
 		ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
-		ensureCompletion(completions, extApi.isLsp ? vs.CompletionItemKind.Enum : vs.CompletionItemKind.EnumMember, "Theme.Light", "Theme.Light");
+		// TODO: Remove Enum when the LSP change makes stable.
+		ensureCompletion(completions, [vs.CompletionItemKind.Enum, vs.CompletionItemKind.EnumMember], "Theme.Light", "Theme.Light");
 
 		// TODO: vs.CompletionItemKind.File/Folder?
 
