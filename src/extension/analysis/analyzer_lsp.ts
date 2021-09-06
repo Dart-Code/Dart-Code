@@ -239,7 +239,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		middleware,
 		outputChannelName: "LSP",
 		uriConverters: {
-			code2Protocol: (uri) => Uri.file(fsPath(uri, { useRealCasing: true })).toString(),
+			code2Protocol: (uri) => Uri.file(fsPath(uri, { useRealCasing: !!config.normalizeFileCasing })).toString(),
 			protocol2Code: (file) => Uri.parse(file),
 		},
 	};
