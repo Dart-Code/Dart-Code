@@ -7,7 +7,7 @@ import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
-import { isWebDevice } from "../shared/utils";
+import { errorString, isWebDevice } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
@@ -307,7 +307,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					break;
 			}
 		} catch (e: any) {
-			const error = e && e.message ? e.message : e;
+			const error = errorString(e);
 			const message = `Error handling '${request}' custom request: ${error}`;
 
 			if (!this.isTerminating)

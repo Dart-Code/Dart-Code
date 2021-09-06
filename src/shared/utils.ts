@@ -132,10 +132,12 @@ export function errorString(error: any): string {
 		return "<empty error>";
 	else if (error instanceof Error)
 		return error.message + (error.stack ? `\n${error.stack}` : "");
+	else if (error.message)
+		return error.message;
 	else if (typeof error === "string")
 		return error;
 	else
-		return error.message || "<empty error message>";
+		return `${error}`;
 }
 
 type BufferedLogMessage =

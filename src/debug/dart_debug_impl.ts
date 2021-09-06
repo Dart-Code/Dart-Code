@@ -825,7 +825,7 @@ export class DartDebugSession extends DebugSession {
 			await this.terminate(false);
 		} catch (e: any) {
 			this.logger.error(e);
-			this.logToUser(e.message || e);
+			this.logToUser(errorString(e));
 		}
 	}
 
@@ -1369,11 +1369,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private errorAsDisplayValue(error: any) {
-		if (!error)
-			return `<unknown error>`;
-		const message = `${error.message || error}`;
-		if (!message)
-			return `<unknown error>`;
+		const message = errorString(errorString);
 		return `<${message.split("\n")[0].trim()}>`;
 	}
 
@@ -1614,10 +1610,8 @@ export class DartDebugSession extends DebugSession {
 				this.errorResponse(response, `not available`);
 			else if (e && e.data && e.data.details)
 				this.errorResponse(response, `${e.data.details}`);
-			else if (e && e.message)
-				this.errorResponse(response, `${e.message}`);
 			else
-				this.errorResponse(response, `${e}`);
+				this.errorResponse(response, errorString(e));
 		}
 	}
 
@@ -1722,7 +1716,7 @@ export class DartDebugSession extends DebugSession {
 			}
 		} catch (e: any) {
 			this.logger.error(`Error handling '${request}' custom request: ${e}`);
-			this.errorResponse(response, e && e.message);
+			this.errorResponse(response, errorString(e));
 		}
 	}
 

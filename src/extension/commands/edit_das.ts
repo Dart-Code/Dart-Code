@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { Logger } from "../../shared/interfaces";
+import { errorString } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import * as editors from "../editors";
@@ -83,7 +84,7 @@ export class DasEditCommands implements vs.Disposable {
 			});
 			await vs.workspace.applyEdit(editBuilder);
 		} catch (error) {
-			vs.window.showErrorMessage(`Error running ${commandName}: ${error.message}.`);
+			vs.window.showErrorMessage(`Error running ${commandName}: ${errorString(error)}.`);
 		}
 	}
 
