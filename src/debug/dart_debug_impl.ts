@@ -823,7 +823,7 @@ export class DartDebugSession extends DebugSession {
 
 		try {
 			await this.terminate(false);
-		} catch (e) {
+		} catch (e: any) {
 			this.logger.error(e);
 			this.logToUser(e.message || e);
 		}
@@ -1605,7 +1605,7 @@ export class DartDebugSession extends DebugSession {
 				this.logDapResponse(response);
 				this.sendResponse(response);
 			}
-		} catch (e) {
+		} catch (e: any) {
 			if (e && e.message && e.message.indexOf("UnimplementedError") !== -1)
 				this.errorResponse(response, `<not yet implemented>`);
 			else if (isWatchContext && e && e.message && e.message.indexOf("Expression compilation error") !== -1)
@@ -1720,7 +1720,7 @@ export class DartDebugSession extends DebugSession {
 					super.customRequest(request, response, args);
 					break;
 			}
-		} catch (e) {
+		} catch (e: any) {
 			this.logger.error(`Error handling '${request}' custom request: ${e}`);
 			this.errorResponse(response, e && e.message);
 		}
@@ -1851,7 +1851,7 @@ export class DartDebugSession extends DebugSession {
 			}
 			try {
 				await this.vmService.resume(event.isolate.id);
-			} catch (e) {
+			} catch (e: any) {
 				// Ignore failed-to-resume errors https://github.com/flutter/flutter/issues/10934
 				if (e.code !== 106)
 					throw e;

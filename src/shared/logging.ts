@@ -4,7 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import { platformEol } from "./constants";
 import { LogCategory, LogSeverity } from "./enums";
-import { IAmDisposable, Logger, LogMessage, SomeError, SpawnedProcess } from "./interfaces";
+import { IAmDisposable, Logger, LogMessage, SpawnedProcess } from "./interfaces";
 import { errorString } from "./utils";
 
 class LogEmitter extends EventEmitter {
@@ -30,10 +30,10 @@ export class EmittingLogger implements Logger, IAmDisposable {
 	public info(message: string, category?: LogCategory): void {
 		this.log(message, LogSeverity.Info, category);
 	}
-	public warn(errorOrMessage: SomeError, category?: LogCategory): void {
+	public warn(errorOrMessage: any, category?: LogCategory): void {
 		this.log(errorString(errorOrMessage), LogSeverity.Warn, category);
 	}
-	public error(errorOrMessage: SomeError, category?: LogCategory): void {
+	public error(errorOrMessage: any, category?: LogCategory): void {
 		this.log(errorString(errorOrMessage), LogSeverity.Error, category);
 	}
 
@@ -68,10 +68,10 @@ export class CategoryLogger implements Logger {
 	public info(message: string, category: LogCategory = this.defaultCategory): void {
 		this.base.info(message, category);
 	}
-	public warn(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
+	public warn(errorOrMessage: any, category: LogCategory = this.defaultCategory): void {
 		this.base.warn(errorOrMessage, category);
 	}
-	public error(errorOrMessage: SomeError, category: LogCategory = this.defaultCategory): void {
+	public error(errorOrMessage: any, category: LogCategory = this.defaultCategory): void {
 		this.base.error(errorOrMessage, category);
 	}
 }
@@ -80,9 +80,9 @@ class NullLogger implements Logger {
 	// tslint:disable-next-line: no-empty
 	public info(message: string, category?: LogCategory): void { }
 	// tslint:disable-next-line: no-empty
-	public warn(message: SomeError, category?: LogCategory): void { }
+	public warn(message: any, category?: LogCategory): void { }
 	// tslint:disable-next-line: no-empty
-	public error(error: SomeError, category?: LogCategory): void { }
+	public error(error: any, category?: LogCategory): void { }
 }
 
 export const nullLogger = new NullLogger();

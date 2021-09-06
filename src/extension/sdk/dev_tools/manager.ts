@@ -8,7 +8,7 @@ import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger, SomeError } from "../../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
@@ -219,7 +219,7 @@ export class DevToolsManager implements vs.Disposable {
 			return undefined; // Shouldn't get here...
 	}
 
-	private showError(e: SomeError) {
+	private showError(e: any) {
 		this.logger.error(e);
 		vs.window.showErrorMessage(`${e}`);
 	}
@@ -324,7 +324,7 @@ export class DevToolsManager implements vs.Disposable {
 			);
 
 			return true;
-		} catch (e) {
+		} catch (e: any) {
 			this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${e.message}`);
 			vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
 				if (res) {

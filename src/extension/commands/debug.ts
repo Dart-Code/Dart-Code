@@ -560,7 +560,7 @@ export class DebugCommands implements IAmDisposable {
 			if (!launched) {
 				try {
 					await envUtils.openInBrowser(e.body.url, this.logger);
-				} catch (e) {
+				} catch (e: any) {
 					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
 				}
 			}

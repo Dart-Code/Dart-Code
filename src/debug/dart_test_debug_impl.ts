@@ -101,13 +101,13 @@ export class DartTestDebugSession extends DartDebugSession {
 		runner.registerForAllTestNotifications(async (n) => {
 			try {
 				await this.handleTestEvent(n);
-			} catch (e) {
+			} catch (e: any) {
 				this.log(e);
 				this.logToUser(`${e}\n`);
 			}
 			try {
 				this.sendTestEventToEditor(n);
-			} catch (e) {
+			} catch (e: any) {
 				this.log(e);
 				this.logToUser(`${e}\n`);
 			}

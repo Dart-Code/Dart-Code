@@ -306,7 +306,7 @@ export class FlutterDebugSession extends DartDebugSession {
 					await super.customRequest(request, response, args);
 					break;
 			}
-		} catch (e) {
+		} catch (e: any) {
 			const error = e && e.message ? e.message : e;
 			const message = `Error handling '${request}' custom request: ${error}`;
 

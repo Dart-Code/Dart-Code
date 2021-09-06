@@ -83,11 +83,9 @@ export interface FlutterCreateTriggerData {
 
 export interface Logger {
 	info(message: string, category?: LogCategory): void;
-	warn(message: SomeError, category?: LogCategory): void;
-	error(error: SomeError, category?: LogCategory): void;
+	warn(message: any, category?: LogCategory): void;
+	error(error: any, category?: LogCategory): void;
 }
-
-export type SomeError = string | Error | undefined | { message: string };
 
 export interface LogMessage {
 	readonly message: string;

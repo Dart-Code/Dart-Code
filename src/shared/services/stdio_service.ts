@@ -150,7 +150,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 			if (this.messagesWrappedInBrackets && msg && msg.length === 1)
 				msg = msg[0];
-		} catch (e) {
+		} catch (e: any) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
 				this.logger.error(`Unexpected non-JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				return this.processUnhandledMessage(message);
@@ -171,7 +171,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				this.logger.error(`Unexpected JSON message, assuming normal stdout : ${message}`);
 				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
 			}
-		} catch (e) {
+		} catch (e: any) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
 				this.logger.error(`Failed to handle JSON message, assuming normal stdout (${e})\n\n${e.stack}\n\n${message}`);
 				this.processUnhandledMessage(message).catch((e) => this.logger.error(e));
@@ -290,7 +290,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		for (const pid of this.additionalPidsToTerminate) {
 			try {
 				process.kill(pid);
-			} catch (e) {
+			} catch (e: any) {
 				// TODO: Logger knows the category!
 				this.logger.error({ message: e.toString() });
 			}
@@ -308,7 +308,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.disposables.forEach(async (d) => {
 			try {
 				return await d.dispose();
-			} catch (e) {
+			} catch (e: any) {
 				this.logger.error({ message: e.toString() });
 			}
 		});

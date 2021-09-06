@@ -3,7 +3,7 @@ import * as path from "path";
 import * as semver from "semver";
 import { executableNames, isWin } from "./constants";
 import { LogCategory } from "./enums";
-import { CustomScript, IAmDisposable, Logger, SomeError } from "./interfaces";
+import { CustomScript, IAmDisposable, Logger } from "./interfaces";
 
 export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
@@ -127,7 +127,7 @@ export function usingCustomScript(binPath: string, binArgs: string[], customScri
 	return { binPath, binArgs };
 }
 
-export function errorString(error: SomeError): string {
+export function errorString(error: any): string {
 	if (!error)
 		return "<empty error>";
 	else if (error instanceof Error)
@@ -140,8 +140,8 @@ export function errorString(error: SomeError): string {
 
 type BufferedLogMessage =
 	{ type: "info", message: string, category?: LogCategory }
-	| { type: "warn", message: SomeError, category?: LogCategory }
-	| { type: "error", message: SomeError, category?: LogCategory };
+	| { type: "warn", message: any, category?: LogCategory }
+	| { type: "error", message: any, category?: LogCategory };
 
 export class BufferedLogger implements Logger {
 	private buffer: BufferedLogMessage[] = [];
@@ -149,10 +149,10 @@ export class BufferedLogger implements Logger {
 	public info(message: string, category?: LogCategory): void {
 		this.buffer.push({ type: "info", message, category });
 	}
-	public warn(message: SomeError, category?: LogCategory): void {
+	public warn(message: any, category?: LogCategory): void {
 		this.buffer.push({ type: "warn", message, category });
 	}
-	public error(error: SomeError, category?: LogCategory): void {
+	public error(error: any, category?: LogCategory): void {
 		this.buffer.push({ type: "error", message: error, category });
 	}
 
