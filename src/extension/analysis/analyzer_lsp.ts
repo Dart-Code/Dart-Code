@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as stream from "stream";
-import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, window } from "vscode";
+import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window } from "vscode";
 import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
@@ -10,6 +10,7 @@ import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../sha
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
+import { fsPath } from "../../shared/utils/fs";
 import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
@@ -237,6 +238,10 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		},
 		middleware,
 		outputChannelName: "LSP",
+		uriConverters: {
+			code2Protocol: (uri) => Uri.file(fsPath(uri, { useRealCasing: true })).toString(),
+			protocol2Code: (file) => Uri.parse(file),
+		},
 	};
 
 	const client = new LanguageClient(

@@ -126,7 +126,7 @@ export class SdkUtils {
 				const selectedFolders =
 					await window.showOpenDialog({ canSelectFolders: true, openLabel: `Set ${sdkType} SDK folder` });
 				if (selectedFolders && selectedFolders.length > 0) {
-					const matchingSdkFolder = search(selectedFolders.map(fsPath));
+					const matchingSdkFolder = search(selectedFolders.map((f) => fsPath(f)));
 					if (matchingSdkFolder.sdkPath) {
 						await saveSdkPath(matchingSdkFolder.sdkPath);
 						await promptToReloadExtension();

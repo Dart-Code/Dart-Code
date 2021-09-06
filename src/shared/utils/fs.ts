@@ -6,9 +6,24 @@ import { Logger } from "../interfaces";
 import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
 
-export function fsPath(uri: { fsPath: string } | string) {
+export function fsPath(uri: { fsPath: string } | string, { useRealCasing = false }: { useRealCasing?: boolean; } = {}) {
 	// tslint:disable-next-line:disallow-fspath
-	return forceWindowsDriveLetterToUppercase(typeof uri === "string" ? uri : uri.fsPath);
+	let newPath = typeof uri === "string" ? uri : uri.fsPath;
+
+	if (useRealCasing) {
+		const realPath = fs.existsSync(newPath) && fs.realpathSync.native(newPath);
+		// Since realpathSync.native will resolve symlinks, only do anything if the paths differ
+		// _only_ by case.
+		// when there was no symlink (eg. the lowercase version of both paths match).
+		if (realPath && realPath.toLowerCase() === newPath.toLowerCase() && realPath !== newPath) {
+			console.warn(`Rewriting path:\n  ${newPath}\nto:\n  ${realPath} because the casing appears munged`);
+			newPath = realPath;
+		}
+	}
+
+	newPath = forceWindowsDriveLetterToUppercase(newPath);
+
+	return newPath;
 }
 
 export function forceWindowsDriveLetterToUppercase<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {

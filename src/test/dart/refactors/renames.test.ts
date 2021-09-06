@@ -35,10 +35,11 @@ describe("renames", () => {
 		fs.renameSync(fsPath(originalFileUri), fsPath(fixedFileUri));
 		await waitUntilAllTextDocumentsAreClosed();
 		await openFile(fixedFileUri);
-		await delay(200); // Allow time for the diagnostic to come back (if it will).
+		await delay(500); // Allow time for the diagnostic to come back (if it will).
 
 		// Ensure error disappears.
 		await waitForResult(() => vs.languages.getDiagnostics(originalFileUri).length === 0, "Error should have disappeared");
+		await waitForResult(() => vs.languages.getDiagnostics(fixedFileUri).length === 0, "Error should have disappeared");
 	});
 
 });
