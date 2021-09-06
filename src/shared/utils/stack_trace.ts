@@ -1,6 +1,6 @@
 export const maxStackFrameMessageLength = 1000;
 const containsStackFramePattern = new RegExp(`(?:dart:|package:|\\.dart)`);
-const stackFramePattern = new RegExp(`\\(*((?:dart|package):[\\w\\-]+|\\S*\\.dart)(?:[: ](\\d+):(\\d+))?\\)*(\\s+.*)?$`, "m");
+const stackFramePattern = new RegExp(`\\(?(?:\\w+:)?((?:(?:dart:|package:)[\\w\\-]+|file:\\/\\/(?:\\w:)?)?\\/[^\\s:]+\\.dart)(?:[: ](\\d+):(\\d+))?\\)?`, "m");
 
 export function mayContainStackFrame(message: string) {
 	return containsStackFramePattern.test(message);
