@@ -2368,6 +2368,16 @@
 					"markdownDescription": "Whether to enable [Snippet support in LSP TextEdits](https://github.com/rust-analyzer/rust-analyzer/blob/979e788957ced1957ee9ac1da70fb97abf9fe2b1/docs/dev/lsp-extensions.md#snippet-textedit).",
 					"scope": "window"
 				},
+				"dart.renameFilesWithClasses": {
+					"default": "never",
+					"enum": [
+						"never",
+						"prompt",
+						"always"
+					],
+					"markdownDescription": "Whether to rename files when renaming classes with matching names (for example renaming 'class Person' inside 'person.dart'). If set to 'prompt', will ask each time before renaming. If set to 'always', the file will automatically be renamed. This setting requires using LSP and a Dart SDK of at least v2.15.",
+					"scope": "window"
+				},
 				"dart.autoImportCompletions": {
 					"type": "boolean",
 					"default": true,
