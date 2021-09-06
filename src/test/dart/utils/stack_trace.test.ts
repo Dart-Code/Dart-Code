@@ -15,8 +15,8 @@ const texts = [
 	"<fn> ",
 ];
 const uris = [
-	"dart:async",
-	"package:test_api",
+	"dart:async/async.dart",
+	"package:test_api/test.dart",
 	"dart:isolate-patch/isolate_patch.dart",
 	"package:foo/foo.dart",
 	"package:flutter/src/scheduler/binding.dart",
