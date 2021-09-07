@@ -355,7 +355,7 @@ foo(Theme theme) {
 			`);
 			const completions = await getCompletionsAt("theme =^");
 
-			const completion = ensureCompletion(completions, extApi.isLsp ? vs.CompletionItemKind.Enum : vs.CompletionItemKind.EnumMember, "Theme.Dark", "Theme.Dark");
+			const completion = ensureCompletion(completions, [vs.CompletionItemKind.Enum, vs.CompletionItemKind.EnumMember], "Theme.Dark", "Theme.Dark");
 			// 1100 from boost
 			//    8 from includedSuggestionSet
 			// TODO: Find a reliable way to test ranking.
@@ -372,7 +372,7 @@ foo(Theme theme) {
 			const completions = await getCompletionsAt("theme =^");
 
 			ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
-			ensureCompletion(completions, extApi.isLsp ? vs.CompletionItemKind.Enum : vs.CompletionItemKind.EnumMember, "Theme.Dark", "Theme.Dark");
+			ensureCompletion(completions, [vs.CompletionItemKind.Enum, vs.CompletionItemKind.EnumMember], "Theme.Dark", "Theme.Dark");
 		});
 
 		it("correctly filters (does not include enum constants at top level)", async () => {
@@ -384,7 +384,7 @@ import 'package:hello_world/everything.dart';
 			const completions = await getCompletionsAt("^// top level");
 
 			ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
-			ensureNoCompletion(completions, extApi.isLsp ? vs.CompletionItemKind.Enum : vs.CompletionItemKind.EnumMember, "Theme.Dark");
+			ensureNoCompletion(completions, [vs.CompletionItemKind.Enum, vs.CompletionItemKind.EnumMember], "Theme.Dark");
 		});
 	});
 });

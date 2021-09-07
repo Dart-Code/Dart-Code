@@ -807,10 +807,11 @@ export function ensureSnippet(items: vs.CompletionItem[], label: string, filterT
 	ensureCompletion(items, vs.CompletionItemKind.Snippet, label, filterText, documentation);
 }
 
-export function ensureNoCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string): void {
+export function ensureNoCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind | vs.CompletionItemKind[], label: string): void {
+	const kinds = Array.isArray(kind) ? kind : [kind];
 	const completion = items.find((item) =>
 		(item.label === label || item.filterText === label)
-		&& item.kind === kind,
+		&& kinds.includes(item.kind!),
 	);
 	assert.ok(
 		!completion,
