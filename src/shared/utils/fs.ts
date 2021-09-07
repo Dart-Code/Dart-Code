@@ -37,7 +37,7 @@ export function forceWindowsDriveLetterToUppercase<T extends string | undefined>
 }
 
 export function isWithinPath(file: string, folder: string) {
-	const relative = path.relative(folder, file);
+	const relative = path.relative(folder.toLowerCase(), file.toLowerCase());
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);
 }
 
@@ -47,7 +47,7 @@ export function isWithinPathOrEqual(file: string, folder: string) {
 }
 
 export function isEqualOrWithinPath(file: string, folder: string) {
-	const relative = path.relative(folder, file);
+	const relative = path.relative(folder.toLowerCase(), file.toLowerCase());
 	return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
 }
 

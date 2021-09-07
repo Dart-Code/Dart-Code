@@ -165,7 +165,7 @@ export function isInsideFolderNamed(file: string | undefined, folderName: string
 	if (!ws)
 		return false;
 
-	const relPath = path.relative(fsPath(ws.uri), file).toLowerCase();
+	const relPath = path.relative(fsPath(ws.uri).toLowerCase(), file.toLowerCase());
 	const segments = relPath.split(path.sep);
 
 	return segments.indexOf(folderName.toLowerCase()) !== -1;
