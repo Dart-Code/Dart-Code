@@ -25,7 +25,14 @@ describe("completion_item_provider", () => {
 
 		const completions = await getCompletionsAt("exi^ //");
 
-		ensureCompletion(completions, vs.CompletionItemKind.Function, "exit(…)", "exit");
+		const completion = ensureCompletion(completions, vs.CompletionItemKind.Function, "exit(…)", "exit");
+		const completionInsertText = (completion.insertText as vs.SnippetString).value;
+		// LSP:
+		if (completionInsertText.includes("${0"))
+			assert.equal(completionInsertText, "exit(${0:code})");
+		// Legacy:
+		else
+			assert.equal(completionInsertText, "exit(${1:code})");
 	});
 
 	it("includes expected completions", async () => {
