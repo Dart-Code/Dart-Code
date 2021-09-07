@@ -40,6 +40,12 @@ describe("pub add", () => {
 		await vs.commands.executeCommand("dart.addDevDependency");
 		await waitFor(() => pubspecContains("flutter_localizations"));
 
-		assert.equal(fs.readFileSync(pubspecPath).includes("flutter_localizations: \n    sdk: flutter"), true);
+		const fileContents = fs.readFileSync(pubspecPath);
+		const expectedString = "flutter_localizations: \n    sdk: flutter";
+		assert.equal(
+			fileContents.includes(expectedString),
+			true,
+			`Did not find string "${expectedString}" in file contents:\n${fileContents}`,
+		);
 	});
 });
