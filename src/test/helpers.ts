@@ -311,6 +311,8 @@ export function stubCreateInputBox(valueToReturn: string) {
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
+	logger.info(`Reverting current editor...`);
+	await vs.commands.executeCommand("workbench.action.files.revert");
 	logger.info(`Closing all open editors...`);
 	logOpenEditors();
 	try {
