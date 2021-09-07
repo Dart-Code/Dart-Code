@@ -21,6 +21,8 @@ const uris = [
 	"package:foo/foo.dart",
 	"package:flutter/src/scheduler/binding.dart",
 	"file:///Users/danny/Dev/flutter_gallery/lib/pages/demo.dart",
+	"file:///c:/Users/danny/Dev/flutter_gallery/lib/pages/demo.dart",
+	"file://c:/Users/danny/Dev/flutter_gallery/lib/pages/demo.dart",
 	// Flutter web
 	"lib/_engine/engine/window.dart",
 ];
