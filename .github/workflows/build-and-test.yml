@@ -22,7 +22,7 @@ jobs:
       - id: exclude
         name: Exclude some builds if not running on schedule
         if: github.event_name != 'schedule'
-        run: echo "::set-output name=excludes::[]"
+        run: echo "::set-output name=excludes::[{\"build-version\":\"dev\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]"
 
 
   build:
