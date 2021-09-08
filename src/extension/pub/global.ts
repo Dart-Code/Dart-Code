@@ -1,9 +1,10 @@
-import * as path from "path";
 import * as vs from "vscode";
-import { moreInfoAction, noRepeatPromptThreshold, pubGlobalDocsUrl, pubPath } from "../../shared/constants";
+import { DartCapabilities } from "../../shared/capabilities/dart";
+import { moreInfoAction, noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
 import { CustomScript, DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
+import { getPubExecutionInfo } from "../../shared/processes";
 import { PubApi } from "../../shared/pub/api";
 import { pubVersionIsAtLeast, usingCustomScript } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -11,7 +12,7 @@ import { Context } from "../../shared/vscode/workspace";
 import { safeToolSpawn } from "../utils/processes";
 
 export class PubGlobal {
-	constructor(private readonly logger: Logger, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
+	constructor(private readonly logger: Logger, private readonly dartCapabilities: DartCapabilities, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
 	public async installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; customActivateScript?: CustomScript; autoUpdate?: boolean; silent?: boolean; }): Promise<string | undefined> {
 		const packageID = options.packageID;
@@ -148,15 +149,17 @@ export class PubGlobal {
 	}
 
 	private runCommand(packageName: string, args: string[], customScript?: CustomScript): Thenable<string> {
-		const { binPath, binArgs } = usingCustomScript(
-			path.join(this.sdks.dart, pubPath),
-			args,
+		let pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
+
+		pubExecution = usingCustomScript(
+			pubExecution.executable,
+			pubExecution.args,
 			customScript,
 		);
 
 		return new Promise((resolve, reject) => {
-			this.logger.info(`Spawning ${binPath} with args ${JSON.stringify(binArgs)}`);
-			const proc = safeToolSpawn(undefined, binPath, binArgs);
+			this.logger.info(`Spawning ${pubExecution.executable} with args ${JSON.stringify(pubExecution.args)}`);
+			const proc = safeToolSpawn(undefined, pubExecution.executable, pubExecution.args);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 
 			const stdout: string[] = [];

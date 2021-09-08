@@ -27,13 +27,13 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
 
-		const { binPath, binArgs } = usingCustomScript(
+		const execution = usingCustomScript(
 			path.join(args.flutterSdkPath!, flutterPath),
 			["test", "--machine"],
 			args.workspaceConfig?.flutterTestScript || args.workspaceConfig?.flutterScript,
 		);
 
 		const logger = new DebugAdapterLogger(this, LogCategory.FlutterTest);
-		return this.createRunner(binPath, args.cwd, binArgs.concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(execution.executable, args.cwd, execution.args.concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
 	}
 }

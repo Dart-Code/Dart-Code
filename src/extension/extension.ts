@@ -279,7 +279,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	}
 
 	const pubApi = new PubApi(webClient);
-	const pubGlobal = new PubGlobal(logger, extContext, sdks, pubApi);
+	const pubGlobal = new PubGlobal(logger, dartCapabilities, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, dartCapabilities);
 	const dartCommands = new DartCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities);
 	const flutterCommands = new FlutterCommands(logger, extContext, workspaceContext, sdkUtils, dartCapabilities, flutterCapabilities, deviceManager);
@@ -290,7 +290,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(flutterCommands);
 	context.subscriptions.push(packageCommands);
 	context.subscriptions.push(addDependencyCommand);
-	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
+	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, dartCapabilities, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
 	context.subscriptions.push(debugCommands);
 
 	// Handle new projects before creating the analyer to avoid a few issues with

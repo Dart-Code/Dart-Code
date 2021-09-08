@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
@@ -58,9 +59,9 @@ export class DebugCommands implements IAmDisposable {
 	public readonly devTools: DevToolsManager;
 	private suppressFlutterWidgetErrors = false;
 
-	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, private readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
+	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
 		this.vmServices = new VmServiceExtensions(logger, this);
-		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, flutterCapabilities, flutterDaemon);
+		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
 		this.disposables.push(this.devTools);
 		this.debugOptions.name = "Dart Debug Options";
 		this.disposables.push(this.debugOptions);

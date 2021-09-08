@@ -2,10 +2,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, flutterPath, pubPath } from "../../shared/constants";
+import { flutterPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
+import { getPubExecutionInfo } from "../../shared/processes";
 import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
@@ -69,7 +70,7 @@ export class BaseSdkCommands implements IAmDisposable {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 
-		const { binPath, binArgs } = usingCustomScript(
+		const execution = usingCustomScript(
 			path.join(this.sdks.flutter, flutterPath),
 			args,
 			customScript,
@@ -77,9 +78,9 @@ export class BaseSdkCommands implements IAmDisposable {
 
 		const allArgs = getGlobalFlutterArgs()
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
-			.concat(binArgs);
+			.concat(execution.args);
 
-		return this.runCommandInFolder(shortPath, folder, binPath, allArgs, alwaysShowOutput);
+		return this.runCommandInFolder(shortPath, folder, execution.executable, allArgs, alwaysShowOutput);
 	}
 
 	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
@@ -90,16 +91,11 @@ export class BaseSdkCommands implements IAmDisposable {
 		if (!this.sdks.dart)
 			throw new Error("Dart SDK not available");
 
-		let binPath: string;
-
-		if (this.dartCapabilities.supportsDartPub) {
-			binPath = path.join(this.sdks.dart, dartVMPath);
-			args = ["pub"].concat(args);
-		} else {
-			binPath = path.join(this.sdks.dart, pubPath);
-		}
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
-		return this.runCommandInFolder(shortPath, folder, binPath, args, alwaysShowOutput);
+
+		const pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
+
+		return this.runCommandInFolder(shortPath, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput);
 	}
 
 	protected runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {

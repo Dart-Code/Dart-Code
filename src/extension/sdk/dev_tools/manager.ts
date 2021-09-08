@@ -3,13 +3,15 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
+import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, pubPath, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
+import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
+import { getPubExecutionInfo } from "../../../shared/processes";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
 import { disposeAll } from "../../../shared/utils";
@@ -47,7 +49,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
 		this.devToolsStatusBarItem.name = "Dart/Flutter DevTools";
 		this.disposables.push(this.devToolsStatusBarItem);
 
@@ -353,7 +355,7 @@ export class DevToolsManager implements vs.Disposable {
 					this.logger.error(e);
 				}
 			}
-			this.service = new DevToolsService(this.logger, this.workspaceContext, this.capabilities);
+			this.service = new DevToolsService(this.logger, this.workspaceContext, this.dartCapabilities, this.capabilities);
 			const service = this.service;
 			this.disposables.push(service);
 
@@ -415,14 +417,15 @@ export class DevToolsManager implements vs.Disposable {
 class DevToolsService extends StdIOService<UnknownNotification> {
 	private spawnedArgs?: string[];
 
-	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, private readonly capabilities: DevToolsCapabilities) {
+	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly capabilities: DevToolsCapabilities) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
 		this.spawnedArgs = this.getDevToolsArgs();
 
 		// TODO(helin24): Use daemon instead to start DevTools if internal workspace
-		const binPath = path.join(workspaceContext.sdks.dart, pubPath);
-		const binArgs = this.spawnedArgs;
+		const pubExecution = getPubExecutionInfo(dartCapabilities, workspaceContext.sdks.dart, this.spawnedArgs);
+		const binPath = pubExecution.executable;
+		const binArgs = pubExecution.args;
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
 		portToBind = config.devToolsPort // Always config first

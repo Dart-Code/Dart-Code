@@ -1,4 +1,7 @@
 import * as child_process from "child_process";
+import * as path from "path";
+import { DartCapabilities } from "./capabilities/dart";
+import { dartVMPath, pubPath } from "./constants";
 import { LogCategory } from "./enums";
 import { Logger, SpawnedProcess } from "./interfaces";
 import { logProcess } from "./logging";
@@ -36,3 +39,22 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 }
 
 type SpawnFunction = (workingDirectory: string | undefined, binPath: string, args: string[], env: { [key: string]: string | undefined } | undefined) => SpawnedProcess;
+
+export function getPubExecutionInfo(dartCapabilities: DartCapabilities, dartSdkPath: string, args: string[]) {
+	if (dartCapabilities.supportsDartPub) {
+		return {
+			args: ["pub", ...args],
+			executable: path.join(dartSdkPath, dartVMPath),
+		};
+	} else {
+		return {
+			args,
+			executable: path.join(dartSdkPath, pubPath),
+		};
+	}
+}
+
+export interface ExecutionInfo {
+	executable: string;
+	args: string[];
+}

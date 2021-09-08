@@ -4,6 +4,7 @@ import * as semver from "semver";
 import { executableNames, isWin } from "./constants";
 import { LogCategory } from "./enums";
 import { CustomScript, IAmDisposable, Logger } from "./interfaces";
+import { ExecutionInfo } from "./processes";
 
 export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
@@ -118,13 +119,13 @@ export function isStableSdk(sdkVersion?: string): boolean {
 	return !!(sdkVersion && !semver.prerelease(sdkVersion));
 }
 
-export function usingCustomScript(binPath: string, binArgs: string[], customScript: CustomScript | undefined) {
+export function usingCustomScript(binPath: string, binArgs: string[], customScript: CustomScript | undefined): ExecutionInfo {
 	if (customScript) {
 		binPath = customScript.script;
 		binArgs = binArgs.slice(customScript.replacesArgs);
 	}
 
-	return { binPath, binArgs };
+	return { executable: binPath, args: binArgs };
 }
 
 export function errorString(error: any): string {

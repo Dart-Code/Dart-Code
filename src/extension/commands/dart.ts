@@ -54,7 +54,7 @@ export class DartCommands extends BaseSdkCommands {
 
 		const creator: DartProjectCreator = this.dartCapabilities.supportsDartCreate
 			? new DartCreate(this.logger, this.sdks)
-			: new Stagehand(this.logger, this.sdks, this.pubGlobal);
+			: new Stagehand(this.logger, this.dartCapabilities, this.sdks, this.pubGlobal);
 		const isAvailable = await creator.installIfRequired();
 		if (!isAvailable) {
 			return;

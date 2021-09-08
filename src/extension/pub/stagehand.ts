@@ -1,9 +1,10 @@
-import * as path from "path";
 import * as vs from "vscode";
-import { pubPath, stagehandInstallationInstructionsUrl } from "../../shared/constants";
+import { DartCapabilities } from "../../shared/capabilities/dart";
+import { stagehandInstallationInstructionsUrl } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartProjectTemplate, DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
+import { getPubExecutionInfo } from "../../shared/processes";
 import { cleanPubOutput } from "../../shared/pub/utils";
 import { safeToolSpawn } from "../utils/processes";
 import { PubGlobal } from "./global";
@@ -12,7 +13,7 @@ const packageName = "Stagehand";
 const packageID = "stagehand";
 
 export class Stagehand {
-	constructor(private logger: Logger, private sdks: DartSdks, private pubGlobal: PubGlobal) { }
+	constructor(private logger: Logger, private dartCapabilities: DartCapabilities, private sdks: DartSdks, private pubGlobal: PubGlobal) { }
 
 	public installIfRequired() {
 		return this.pubGlobal.installIfRequired({ packageName, packageID, moreInfoLink: stagehandInstallationInstructionsUrl, requiredVersion: "3.3.0" });
@@ -35,11 +36,10 @@ export class Stagehand {
 	}
 
 	private runCommand(args: string[]): Thenable<string> {
-		const dartSdkPath = this.sdks.dart;
-		const pubBinPath = path.join(dartSdkPath, pubPath);
+		const pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
 
 		return new Promise((resolve, reject) => {
-			const proc = safeToolSpawn(undefined, pubBinPath, args);
+			const proc = safeToolSpawn(undefined, pubExecution.executable, pubExecution.args);
 			logProcess(this.logger, LogCategory.CommandProcesses, proc);
 
 			const stdout: string[] = [];

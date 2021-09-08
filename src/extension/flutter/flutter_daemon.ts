@@ -43,15 +43,15 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		if (showWebServer && flutterCapabilities.supportsShowWebServerDevice)
 			daemonArgs.push("--show-web-server-device");
 
-		const { binPath, binArgs } = usingCustomScript(
+		const execution = usingCustomScript(
 			path.join(workspaceContext.sdks.flutter, flutterPath),
 			["daemon"].concat(daemonArgs),
 			workspaceContext.config?.flutterDaemonScript || workspaceContext.config?.flutterScript,
 		);
 
 		const flutterAdditionalArgs = config.for(vs.Uri.file(folder)).flutterAdditionalArgs;
-		const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(binArgs);
-		this.createProcess(folder, binPath, args, { toolEnv: getToolEnv() });
+		const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(execution.args);
+		this.createProcess(folder, execution.executable, args, { toolEnv: getToolEnv() });
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");
