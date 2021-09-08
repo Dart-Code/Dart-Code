@@ -30,41 +30,20 @@ describe("extension", () => {
 // Other tests must go in their own folders and be listed in test_all/launch.json individually.
 
 describe("command", () => {
-	it("Flutter: New Application Project can be invoked and creates trigger file", async () => {
-		attachLoggingWhenExtensionAvailable();
-
-		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
-		const tempFolder = getRandomTempFolder();
-		showOpenDialog.resolves([vs.Uri.file(tempFolder)]);
-
-		const inputBox = stubCreateInputBox("my_test_flutter_proj");
-
-		// Create some folders in the temp folder to check the default name is correctly incremented.
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
-		fs.mkdirSync(path.join(tempFolder, "flutter_application_2"));
-
-		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const openFolder = executeCommand.withArgs("vscode.openFolder", sinon.match.any).resolves();
-
-		await vs.commands.executeCommand("flutter.createProject");
-
-		assert.equal(inputBox.promptedValue, "flutter_application_3");
-		assert.ok(showOpenDialog.calledOnce);
-		assert.ok(openFolder.calledOnce);
-		assert.ok(fs.existsSync(path.join(tempFolder, "my_test_flutter_proj", FLUTTER_CREATE_PROJECT_TRIGGER_FILE)));
+	it("Flutter: New Project can be invoked and creates app trigger file", async () => {
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "app");
 	});
 
-	it("Flutter: New Module Project can be invoked and creates trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject.module", "module");
+	it("Flutter: New Project can be invoked and creates module trigger file", async () => {
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "module");
 	});
 
-	it("Flutter: New Package Project can be invoked and creates trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject.package", "package");
+	it("Flutter: New Project can be invoked and creates package trigger file", async () => {
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "package");
 	});
 
-	it("Flutter: New Plugin Project can be invoked and creates trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject.plugin", "plugin");
+	it("Flutter: New Project can be invoked and creates plugin trigger file", async () => {
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "plugin");
 	});
 
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
@@ -96,6 +75,11 @@ describe("command", () => {
 async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string): Promise<void> {
 	attachLoggingWhenExtensionAvailable();
 
+	// Return the expected project type from the prompt.
+	const showQuickPick = sb.stub(vs.window, "showQuickPick");
+	showQuickPick.resolves({ template: { id: expectedTemplate } });
+
+	// Choose a random temp folder for the project output.
 	const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
 	const tempFolder = getRandomTempFolder();
 	showOpenDialog.resolves([vs.Uri.file(tempFolder)]);

@@ -76,6 +76,10 @@ export interface DartProjectTemplate {
 	readonly entrypoint: string;
 }
 
+export interface FlutterProjectTemplate {
+	readonly id: string;
+}
+
 export interface FlutterCreateTriggerData {
 	readonly sample?: string;
 	readonly template?: string;

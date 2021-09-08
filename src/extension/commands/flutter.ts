@@ -6,7 +6,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../shared/capabilities/vscode";
 import { defaultLaunchJson } from "../../shared/constants";
-import { DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../../shared/interfaces";
+import { DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, FlutterProjectTemplate, Logger } from "../../shared/interfaces";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { fsPath, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
@@ -35,9 +35,6 @@ export class FlutterCommands extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
 		this.disposables.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
 		this.disposables.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
-		this.disposables.push(vs.commands.registerCommand("flutter.createProject.module", () => this.createFlutterProject("module"), this));
-		this.disposables.push(vs.commands.registerCommand("flutter.createProject.package", () => this.createFlutterProject("package"), this));
-		this.disposables.push(vs.commands.registerCommand("flutter.createProject.plugin", () => this.createFlutterProject("plugin"), this));
 		this.disposables.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
 		this.disposables.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate, this));
 		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
@@ -197,7 +194,56 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 	}
 
-	private async createFlutterProject(template?: string): Promise<vs.Uri | undefined> {
+	private getFlutterTemplates(): Array<vs.QuickPickItem & { template: FlutterProjectTemplate }> {
+		const templates = [
+			{
+				detail: "Generate a Flutter application.",
+				label: "Application",
+				template: { id: "app" },
+			},
+			{
+				detail: "Generate a project to add a Flutter module to an existing Android or iOS application.",
+				label: "Module",
+				template: { id: "module" },
+			},
+			{
+				detail: "Generate a shareable Flutter project containing modular Dart code.",
+				label: "Package",
+				template: { id: "package" },
+			},
+			{
+				detail: "Generate a shareable Flutter project containing an API in Dart code with a platform-specific implementation for Android, for iOS code, or for both.",
+				label: "Plugin",
+				template: { id: "plugin" },
+			},
+		];
+
+		return templates;
+	}
+
+	private async createFlutterProject(): Promise<vs.Uri | undefined> {
+		if (!this.sdks || !this.sdks.flutter) {
+			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
+			return;
+		}
+
+		const pickItems = this.getFlutterTemplates();
+
+		const selectedTemplate = await vs.window.showQuickPick(
+			pickItems,
+			{
+				matchOnDescription: true,
+				placeHolder: "Which Flutter template?",
+			},
+		);
+
+		if (!selectedTemplate)
+			return;
+
+		return this.createFlutterProjectForTemplate(selectedTemplate.template.id);
+	}
+
+	private async createFlutterProjectForTemplate(template: string): Promise<vs.Uri | undefined> {
 		if (!this.sdks || !this.sdks.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
