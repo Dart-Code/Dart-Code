@@ -141,7 +141,10 @@ export const reactivateDevToolsAction = "Reactivate DevTools";
 export const vmServiceListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
 export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
-export const runFlutterCreatePrompt = (platformType: string) => `Run 'flutter create --platforms ${platformType} .' to enable support for this platform?`;
+export const runFlutterCreatePrompt = (platformType: string, platformNeedsGloballyEnabling: boolean) =>
+	platformNeedsGloballyEnabling
+		? `Enable the ${platformType} platform and add it to this project?`
+		: `Add the ${platformType} platform to this project?`;
 export const cancelAction = "Cancel";
 
 export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");

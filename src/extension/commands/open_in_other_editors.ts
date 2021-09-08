@@ -1,11 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { androidStudioPaths, flutterPath, isMac } from "../../shared/constants";
-import { LogCategory } from "../../shared/enums";
+import { androidStudioPaths, isMac } from "../../shared/constants";
 import { Logger, Sdks } from "../../shared/interfaces";
-import { logProcess } from "../../shared/logging";
 import { fsPath } from "../../shared/utils/fs";
+import { getFlutterConfigValue } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 
 export class OpenInOtherEditorCommands implements vs.Disposable {
@@ -62,33 +61,8 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 		safeToolSpawn(folder, "open", [file]);
 	}
 
-	private getAndroidStudioDir(folder: string): Promise<string> {
-		// TODO: Move this to call shared runProcess().
-		return new Promise((resolve, reject) => {
-			if (!this.sdks.flutter) {
-				reject("Cannot find Android Studio without a Flutter SDK");
-				return;
-			}
-			const binPath = path.join(this.sdks.flutter, flutterPath);
-			const proc = safeToolSpawn(folder, binPath, ["config", "--machine"]);
-			logProcess(this.logger, LogCategory.CommandProcesses, proc);
-			const output: string[] = [];
-			proc.stdout.on("data", (data: Buffer) => {
-				output.push(data.toString());
-			});
-			proc.on("exit", () => {
-				try {
-					if (output.length) {
-						const json = JSON.parse(output.join(""));
-						resolve(json["android-studio-dir"] as string);
-						return;
-					}
-				} catch (e) {
-					this.logger.error(e);
-				}
-				reject();
-			});
-		});
+	private async getAndroidStudioDir(folder: string): Promise<string> {
+		return getFlutterConfigValue(this.logger, this.sdks.flutter, folder, "android-studio-dir");
 	}
 
 	public dispose(): any {

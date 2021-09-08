@@ -186,7 +186,7 @@ describe("device_manager", () => {
 		assert.equal(d.label, `Enable macos for this project`);
 
 		const runCreatePrompt = sb.stub(window, "showInformationMessage")
-			.withArgs(runFlutterCreatePrompt(desktop.platformType), sinon.match.any)
+			.withArgs(runFlutterCreatePrompt(desktop.platformType, false), sinon.match.any)
 			.resolves(yesAction);
 
 		const flutterCreateCommand = sb.stub(commands, "executeCommand")
@@ -205,6 +205,12 @@ describe("device_manager", () => {
 class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlutterDaemon {
 	public capabilities = DaemonCapabilities.empty;
 	public supportedPlatforms: f.PlatformType[] = [];
+
+	public async enablePlatformGlobally(platformType: string): Promise<void> { }
+
+	public async checkIfPlatformGloballyDisabled(platformType: string): Promise<boolean> {
+		return false;
+	}
 
 	public async connect(d: f.Device, markTypeAsValid: boolean): Promise<void> {
 		if (markTypeAsValid && d.platformType)
@@ -248,7 +254,7 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	}
 
 	public async serveDevTools(): Promise<f.ServeDevToolsResponse> {
-		return { host: "", port: ""};
+		return { host: "", port: "" };
 	}
 
 	public async shutdown(): Promise<void> {

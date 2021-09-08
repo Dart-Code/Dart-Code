@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { disposeAll, flatMap, notNullOrUndefined, uniq } from "../../shared/utils";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
-import { cancelAction, runFlutterCreatePrompt, yesAction } from "../constants";
+import { cancelAction, runFlutterCreatePrompt, skipAction, yesAction } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
 import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, FlutterCreateCommandArgs, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
@@ -168,15 +168,28 @@ export class FlutterDeviceManager implements vs.Disposable {
 				this.updateStatusBar();
 				break;
 			case "platform-enabler":
+				const platformType = selection.device.platformType;
+				const platformNeedsGloballyEnabling = await this.daemon.checkIfPlatformGloballyDisabled(platformType);
 				const action = await vs.window.showInformationMessage(
-					runFlutterCreatePrompt(selection.device.platformType),
+					runFlutterCreatePrompt(platformType, platformNeedsGloballyEnabling),
 					yesAction,
 					cancelAction,
 				);
 				if (action !== yesAction)
 					return false;
+
+				if (platformNeedsGloballyEnabling)
+					await this.daemon.enablePlatformGlobally(platformType);
+
 				const createArgs = { platform: selection.device.platformType } as FlutterCreateCommandArgs;
 				await vs.commands.executeCommand("_flutter.create", createArgs);
+
+				if (platformNeedsGloballyEnabling) {
+					const restartAction = "Reload";
+					const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
+					if (chosenAction === restartAction)
+						vs.commands.executeCommand("_dart.reloadExtension");
+				}
 
 				break;
 			case "device":

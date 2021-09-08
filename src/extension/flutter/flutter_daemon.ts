@@ -14,7 +14,8 @@ import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
 import { promptToReloadExtension } from "../utils";
-import { getGlobalFlutterArgs, getToolEnv, safeToolSpawn } from "../utils/processes";
+import { getFlutterConfigValue } from "../utils/misc";
+import { getGlobalFlutterArgs, getToolEnv, runToolProcess, safeToolSpawn } from "../utils/processes";
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
@@ -24,7 +25,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonStartedCompleter = new PromiseCompleter<void>();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities) {
+	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
 
 		const folder = workspaceContext.sdks.flutter;
@@ -146,6 +147,20 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				}
 			}
 		}
+	}
+
+	public async enablePlatformGlobally(platformType: string): Promise<void> {
+		const flutterSdkPath = this.workspaceContext.sdks.flutter;
+		const binPath = path.join(flutterSdkPath, flutterPath);
+		const args = ["config", `--enable-${platformType}`];
+		await runToolProcess(this.logger, flutterSdkPath, binPath, args);
+	}
+
+	public async checkIfPlatformGloballyDisabled(platformType: string): Promise<boolean> {
+		const flutterSdkPath = this.workspaceContext.sdks.flutter;
+		const value = await getFlutterConfigValue(this.logger, flutterSdkPath, flutterSdkPath, `enable-${platformType}`);
+		// Only consider it disabled if it's specifically false (if it's not present, don't assume).
+		return value === false;
 	}
 
 	// TODO: Can we code-gen all this like the analysis server?

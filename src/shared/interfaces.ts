@@ -105,6 +105,9 @@ export interface IAmDisposable {
 export interface IFlutterDaemon extends IAmDisposable {
 	capabilities: DaemonCapabilities;
 
+	enablePlatformGlobally(platformType: string): Promise<void>;
+	checkIfPlatformGloballyDisabled(platformType: string): Promise<boolean>;
+
 	deviceEnable(): Thenable<UnknownResponse>;
 	getEmulators(): Thenable<f.FlutterEmulator[]>;
 	launchEmulator(emulatorId: string, coldBoot: boolean): Thenable<void>;
