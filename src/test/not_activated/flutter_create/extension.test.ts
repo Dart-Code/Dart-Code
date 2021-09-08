@@ -46,6 +46,10 @@ describe("command", () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "plugin");
 	});
 
+	it("Flutter: New Project can be invoked and creates skeleton trigger file", async () => {
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "skeleton");
+	});
+
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
 		type SnippetOption = vs.QuickPickItem & { snippet: FlutterSampleSnippet };

@@ -9,6 +9,7 @@ export class FlutterCapabilities {
 		this.version = flutterVersion;
 	}
 
+	get supportsCreateSkeleton() { return versionIsAtLeast(this.version, "2.5.0"); }
 	get supportsCreatingSamples() { return versionIsAtLeast(this.version, "1.0.0"); }
 	get hasLatestStructuredErrorsWork() { return versionIsAtLeast(this.version, "1.21.0-5.0"); }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }

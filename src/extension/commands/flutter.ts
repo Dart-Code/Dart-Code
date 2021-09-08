@@ -218,6 +218,14 @@ export class FlutterCommands extends BaseSdkCommands {
 			},
 		];
 
+		if (this.flutterCapabilities.supportsCreateSkeleton) {
+			templates.push({
+				detail: "Generate a List View / Detail View Flutter application that follows community best practices.",
+				label: "Skeleton",
+				template: { id: "skeleton" },
+			});
+		}
+
 		return templates;
 	}
 
