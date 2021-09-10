@@ -870,7 +870,13 @@ export class DartDebugSession extends DebugSession {
 		// Format the path correctly for the VM.
 		// TODO: The `|| source.name` stops a crash (#1566) but doesn't actually make
 		// the breakpoints work. This needs more work.
-		const uri = formatPathForVm(source.path || source.name!);
+		let uri = formatPathForVm(source.path || source.name!);
+
+		// Replace 'dart:' prefix to satisfy VMService lookup code (#3551)
+		// https://github.com/Dart-Code/Dart-Code/issues/3551
+		if (uri.startsWith("dart:")) {
+			uri = uri.replace("dart:", "/");
+		}
 
 		try {
 			const result = await this.threadManager.setBreakpoints(uri, breakpoints);

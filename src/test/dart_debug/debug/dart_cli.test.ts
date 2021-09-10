@@ -302,6 +302,22 @@ describe("dart cli debugger", () => {
 		assert.equal(frames[0].source!.name, "dart:core/print.dart");
 	});
 
+	// Doesn't work for Dart app, works for Flutter app
+	// https://github.com/Dart-Code/Dart-Code/issues/3551
+	it.skip("stops at a breakpoint with 'dart:core/' prefix", async () => {
+		await openFile(helloWorldMainFile);
+		const config = await startDebugger(dc, helloWorldMainFile);
+		await dc.hitBreakpoint(
+			config,
+			{line: 11, path: "dart:core/print.dart"},
+			{line: 11}, // source.path not returned for SDK file
+		);
+		const stack = await dc.getStack();
+		const frames = stack.body.stackFrames;
+		assert.equal(frames[0].name, "print");
+		assert.equal(frames[0].source!.name, "dart:core/print.dart");
+	});
+
 	it("stops at a breakpoint in an external package", async () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read`

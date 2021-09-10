@@ -616,6 +616,24 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
 	it.skip("stops at a breakpoint in the SDK");
 
+	it("stops at a breakpoint with 'dart:core/' prefix", async function() {
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(dc, flutterHelloWorldMainFile, { debugSdkLibraries: true });
+		await dc.hitBreakpoint(
+			config,
+			{line: 11, path: "dart:core/print.dart"},
+			{line: 11}, // source.path not returned for SDK file
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
 	it("stops at a breakpoint in an external package");
 
 	it("steps into the SDK if debugSdkLibraries is true", async function () {
