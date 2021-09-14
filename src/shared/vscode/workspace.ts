@@ -34,6 +34,8 @@ export class Context {
 	set hasNotifiedAboutProfileModeDefaultConfiguration(value: boolean) { this.context.globalState.update("hasNotifiedAboutProfileModeDefaultConfiguration", value); }
 	get lastSeenVersion(): string | undefined { return this.context.globalState.get("lastSeenVersion"); }
 	set lastSeenVersion(value: string | undefined) { this.context.globalState.update("lastSeenVersion", value); }
+	get lastUsedNewProjectPath(): string | undefined { return this.context.globalState.get("lastUsedNewProjectPath"); }
+	set lastUsedNewProjectPath(value: string | undefined) { this.context.globalState.update("lastUsedNewProjectPath", value); }
 
 	public getPackageLastCheckedForUpdates(packageID: string): number | undefined { return this.context.globalState.get(`packageLastCheckedForUpdates:${packageID}`) as number; }
 	public setPackageLastCheckedForUpdates(packageID: string, value: number | undefined) { this.context.globalState.update(`packageLastCheckedForUpdates:${packageID}`, value); }

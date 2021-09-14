@@ -92,10 +92,15 @@ export class DartCommands extends BaseSdkCommands {
 			return;
 
 		// If already in a workspace, set the default folder to something nearby.
-		const folders = await vs.window.showOpenDialog({ canSelectFolders: true, openLabel: "Select a folder to create the project in" });
+		const folders = await vs.window.showOpenDialog({
+			canSelectFolders: true,
+			defaultUri: this.context.lastUsedNewProjectPath ? vs.Uri.file(this.context.lastUsedNewProjectPath) : undefined,
+			openLabel: "Select a folder to create the project in",
+		});
 		if (!folders || folders.length !== 1)
 			return;
 		const folderPath = fsPath(folders[0]);
+		this.context.lastUsedNewProjectPath = folderPath;
 
 		const defaultName = nextAvailableFilename(folderPath, "dart_application_");
 		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, folderPath) });
