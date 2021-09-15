@@ -4,23 +4,23 @@ import "package:test/test.dart";
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// test/tree_test.dart [4/11 passed, {duration}ms] (fail.svg)
-//     failing group 1 [2/4 passed, {duration}ms] (fail.svg)
-//         group 1.1 [1/1 passed, {duration}ms] (pass.svg)
-//             passing test 1 with ' some " quotes and newlines in name [{duration}ms] (pass.svg)
-//         passing test 1 2 [{duration}ms] (pass.svg)
-//         failing test 1 some string [{duration}ms] (fail.svg)
-//         skipped test 1 some string [{duration}ms] (skip.svg)
-//     skipped group 2 [1/6 passed, {duration}ms] (fail.svg)
-//         skipped group 2.1 [0/3 passed, {duration}ms] (skip.svg)
-//             passing test 1 [{duration}ms] (skip.svg)
-//             failing test 1 [{duration}ms] (skip.svg)
-//             skipped test 1 [{duration}ms] (skip.svg)
-//         passing test 1 [{duration}ms] (pass.svg)
-//         failing test 1 [{duration}ms] (fail.svg)
-//         skipped test 1 [{duration}ms] (skip.svg)
-//     passing group 3 [1/1 passed, {duration}ms] (pass.svg)
-//         passing test 1 [{duration}ms] (pass.svg)
+// test/tree_test.dart [4/11 passed] Failed
+//     failing group 1 [2/4 passed] Failed
+//         passing test 1 2 Passed
+//         failing test 1 some string Failed
+//         skipped test 1 some string Skipped
+//         group 1.1 [1/1 passed] Passed
+//             passing test 1 with ' some " quotes and newlines in name Passed
+//     skipped group 2 [1/6 passed] Failed
+//         passing test 1 Passed
+//         failing test 1 Failed
+//         skipped test 1 Skipped
+//         skipped group 2.1 [0/3 passed] Skipped
+//             passing test 1 Skipped
+//             failing test 1 Skipped
+//             skipped test 1 Skipped
+//     passing group 3 [1/1 passed] Passed
+//         passing test 1 Passed
 // == /EXPECTED RESULTS ==
 
 void main() {
