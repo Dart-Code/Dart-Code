@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemProvider, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TestController, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CompletionItem, CompletionItemProvider, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TestController, TestItem, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
@@ -77,8 +77,8 @@ export interface InternalExtensionApi {
 	};
 	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
-	testTreeProvider: TreeDataProvider<TreeNode>;
-	testController: TestController;
+	testTreeProvider: TreeDataProvider<TreeNode> | undefined;
+	testController: { controller: TestController; getLatestData(test: TestItem): TreeNode | undefined } | undefined;
 	testCoordinator: TestSessionCoordinator;
 	testModel: TestModel;
 	webClient: WebClient;

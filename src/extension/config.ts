@@ -116,7 +116,7 @@ class Config {
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
 	get previewLsp(): undefined | boolean { return this.getConfig<null | boolean>("previewLsp", null); }
-	get previewVsCodeTestRunner(): boolean { return this.getConfig<boolean>("previewVsCodeTestRunner", false); }
+	get useVsCodeTestRunner(): boolean { return this.getConfig<boolean>("useVsCodeTestRunner", true); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get pubTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("pubTestLogFile", null))); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }

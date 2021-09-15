@@ -3,7 +3,6 @@ import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { DART_TEST_CAN_RUN_SKIPPED_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
-import { TestSessionCoordinator } from "../../shared/test/coordinator";
 import { GroupNode, SuiteNode, TestContainerNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll } from "../../shared/utils";
@@ -19,13 +18,11 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private currentTestTerminal: [vs.Terminal, vs.EventEmitter<string>] | undefined;
 	private readonly treeItemBuilder: TreeItemBuilder;
 
-	constructor(private readonly data: TestModel, private readonly coordinator: TestSessionCoordinator, private readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(private readonly data: TestModel, readonly flutterCapabilities: FlutterCapabilities) {
 		this.treeItemBuilder = new TreeItemBuilder(flutterCapabilities);
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
 		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => this.handleConfigChange(e)));
 
-		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
-		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => this.handleDebugSessionEnd(session)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOff", () => config.setShowSkippedTests(false)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOn", () => config.setShowSkippedTests(true)));
 
@@ -64,14 +61,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	private handleConfigChange(e: vs.ConfigurationChangeEvent) {
 		if (e.affectsConfiguration("dart.showSkippedTests"))
 			this.data.handleConfigChange();
-	}
-
-	public handleDebugSessionCustomEvent(e: { session: vs.DebugSession; event: string; body?: any; }) {
-		this.coordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID, e.event, e.body);
-	}
-
-	public handleDebugSessionEnd(session: vs.DebugSession) {
-		this.coordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID);
 	}
 
 	private async writeTestOutput(treeNode: TestNode) {
@@ -150,18 +139,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			// We don't filter skipped out, as we want the node as a convenient
 			// way for the user to click the node and run Run Skipped Tests
 			// for the suite.
-			.map((suite) => suite.node)
-			.sort((a, b) => {
-				// Sort by .sort first.
-				if (a.sort > b.sort) return 1;
-				if (a.sort < b.sort) return -1;
-				// If they're the same, sort by label.
-				const aLabel = a.label || (a.suiteData.path || "");
-				const bLabel = b.label || (b.suiteData.path || "");
-				if (aLabel > bLabel) return 1;
-				if (aLabel < bLabel) return -1;
-				return 0;
-			});
+			.map((suite) => suite.node);
 	}
 
 	public getParent?(element: vs.TreeItem): SuiteNode | GroupNode | undefined {
