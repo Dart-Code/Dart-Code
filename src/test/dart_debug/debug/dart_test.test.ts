@@ -1,15 +1,14 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { DebuggerType, TestStatus } from "../../../shared/enums";
-import { SuiteNode } from "../../../shared/test/test_model";
+import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, clearTestTree, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestSkipFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, clearTestTree, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -170,46 +169,6 @@ describe("dart test debugger", () => {
 		assert.equal(actualResults, expectedResults);
 	});
 
-	it.skip("builds the expected tree from a test run (VS Code Test Runner)", async () => {
-		// Skipped because we need this setting to be enabled before the extension activates
-		// for the controller to be setup.
-		setConfigForTest("dart", "previewVsCodeTestRunner", true);
-		await openFile(helloWorldTestTreeFile);
-		const config = await startDebugger(dc, helloWorldTestTreeFile);
-		config.noDebug = true;
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		);
-
-		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
-
-		assert.ok(expectedResults);
-		assert.ok(actualResults);
-		assert.equal(actualResults, expectedResults);
-	});
-
-	it("clears the results from the test tree", async () => {
-		await openFile(helloWorldTestTreeFile);
-		const config = await startDebugger(dc, helloWorldTestTreeFile);
-		config.noDebug = true;
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		);
-
-		const preclearActualResults = await extApi.testTreeProvider.getChildren();
-		assert.ok(preclearActualResults && preclearActualResults.length >= 1, "There should be at least one test item to ensure the tree was actually cleared");
-
-		await vs.commands.executeCommand("dart.clearTestResults");
-
-		const actualResults = await extApi.testTreeProvider.getChildren();
-		assert.equal(actualResults?.length, 0);
-	});
-
 	it("builds the expected tree if tests are run in multiple overlapping sessions", async () => {
 		// https://github.com/Dart-Code/Dart-Code/issues/2934
 		await openFile(helloWorldTestShortFile);
@@ -250,42 +209,6 @@ describe("dart test debugger", () => {
 		);
 	});
 
-	it("sorts suites correctly", async () => {
-		// Run each test file in a different order to how we expect the results.
-		for (const file of [helloWorldTestSkipFile, helloWorldTestMainFile, helloWorldTestTreeFile, helloWorldTestBrokenFile]) {
-			const config = await startDebugger(dc, file);
-			config.noDebug = true;
-			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
-				dc.waitForEvent("terminated"),
-				dc.launch(config),
-			);
-		}
-
-		let topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[];
-		// Filter out any nodes that are Unknown, as sometimes they show up from discovery from being opened
-		// by other tests while this one is running, making this test flaky. This test is checking orders, not
-		// functionality of test discovery.
-		topLevelNodes = topLevelNodes.filter((n) => !(n.statuses.size === 1 && n.hasStatus(TestStatus.Unknown)));
-		assert.ok(topLevelNodes);
-		expectTopLevelTestNodeCount(topLevelNodes, 4);
-
-		let actualOrder = "";
-		for (const node of topLevelNodes) {
-			const treeItem = await extApi.testTreeProvider.getTreeItem(node);
-			actualOrder += `${treeItem.resourceUri!.toString()} (${TestStatus[node.getHighestStatus(true)]} / ${TestStatus[node.getHighestStatus(false)]})\n`;
-		}
-
-		const expectedOrder = `
-${helloWorldTestBrokenFile} (Failed / Failed)
-${helloWorldTestTreeFile} (Failed / Failed)
-${helloWorldTestMainFile} (Passed / Passed)
-${helloWorldTestSkipFile} (Skipped / Skipped)
-		`;
-
-		assert.equal(actualOrder.trim(), expectedOrder.trim());
-	});
-
 	it("runs all tests if given a folder", async () => {
 		const config = await startDebugger(dc, "./test/");
 		config.noDebug = true;
@@ -295,7 +218,7 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 			dc.launch(config),
 		);
 
-		const topLevelNodes = await extApi.testTreeProvider.getChildren() as SuiteNode[];
+		const topLevelNodes = extApi.testController!.controller.items;
 		assert.ok(topLevelNodes);
 		expectTopLevelTestNodeCount(topLevelNodes, 7);
 	});
@@ -402,15 +325,15 @@ ${helloWorldTestSkipFile} (Skipped / Skipped)
 		// and also the parent groups/suite status will be recomputed so they will be not-stale
 		// in the new results (so we can't just filter to skipped, like we do in the failed test).
 		const expectedResults = `
-test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
-    failing group 1 [3/4 passed, {duration}ms] (fail.svg)
-        skipped test 1 some string [{duration}ms] (pass.svg)
-    skipped group 2 [4/6 passed, {duration}ms] (fail.svg)
-        skipped group 2.1 [2/3 passed, {duration}ms] (fail.svg)
-            passing test 1 [{duration}ms] (pass.svg)
-            failing test 1 [{duration}ms] (fail.svg)
-            skipped test 1 [{duration}ms] (pass.svg)
-        skipped test 1 [{duration}ms] (pass.svg)
+test/tree_test.dart [8/11 passed] Failed
+    failing group 1 [3/4 passed] Failed
+        skipped test 1 some string Passed
+    skipped group 2 [4/6 passed] Failed
+        skipped test 1 Passed
+        skipped group 2.1 [2/3 passed] Failed
+            passing test 1 Passed
+            failing test 1 Failed
+            skipped test 1 Passed
 		`.trim();
 
 		// Get the actual tree, filtered only to those that ran in the last run.
@@ -465,17 +388,17 @@ test/tree_test.dart [8/11 passed, {duration}ms] (fail.svg)
 		// Expected results differ from what's in the file not only because skipped tests are hidden, but because
 		// the counts on the containing nodes will also be reduced.
 		expectedResults = `
-test/tree_test.dart [4/6 passed, {duration}ms] (fail.svg)
-    failing group 1 [2/3 passed, {duration}ms] (fail.svg)
-        group 1.1 [1/1 passed, {duration}ms] (pass.svg)
-            passing test 1 with ' some " quotes and newlines in name [{duration}ms] (pass.svg)
-        passing test 1 2 [{duration}ms] (pass.svg)
-        failing test 1 some string [{duration}ms] (fail.svg)
-    skipped group 2 [1/2 passed, {duration}ms] (fail.svg)
-        passing test 1 [{duration}ms] (pass.svg)
-        failing test 1 [{duration}ms] (fail.svg)
-    passing group 3 [1/1 passed, {duration}ms] (pass.svg)
-        passing test 1 [{duration}ms] (pass.svg)
+test/tree_test.dart [4/6 passed] Failed
+    failing group 1 [2/3 passed] Failed
+        group 1.1 [1/1 passed] Passed
+            passing test 1 with ' some " quotes and newlines in name Passed
+        passing test 1 2 Passed
+        failing test 1 some string Failed
+    skipped group 2 [1/2 passed] Failed
+        passing test 1 Passed
+        failing test 1 Failed
+    passing group 3 [1/1 passed] Passed
+        passing test 1 Passed
 		`.trim();
 		actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
 		assert.ok(actualResults);

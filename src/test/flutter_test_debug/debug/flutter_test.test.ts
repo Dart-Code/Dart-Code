@@ -231,9 +231,9 @@ describe("flutter test debugger", () => {
 			flutterTestBrokenFile,
 		];
 
-		const topLevelNodes = await extApi.testTreeProvider.getChildren();
+		const topLevelNodes = extApi.testController!.controller.items;
 		assert.ok(topLevelNodes);
-		assert.equal(topLevelNodes.length, testFiles.length);
+		assert.equal(topLevelNodes.size, testFiles.length);
 
 		for (const file of testFiles) {
 			await openFile(file);
@@ -390,8 +390,8 @@ describe("flutter test debugger", () => {
 		// and also the parent groups/suite status will be recomputed so they will be not-stale
 		// in the new results (so we can't just filter to skipped, like we do in the failed test).
 		const expectedResults = `
-test/widget_test.dart [2/2 passed, {duration}ms] (pass.svg)
-    Skipped test [{duration}ms] (pass.svg)
+test/widget_test.dart [2/2 passed] Passed
+    Skipped test Passed
 		`.trim();
 
 		// Get the actual tree, filtered only to those that ran in the last run.
