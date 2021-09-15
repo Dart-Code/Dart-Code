@@ -30,7 +30,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) => {
 			this.runTests(true, request, token);
 		});
+	}
 
+	public getLatestData(test: vs.TestItem): TreeNode | undefined {
+		return this.nodeForItem.get(test);
 	}
 
 	private async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {

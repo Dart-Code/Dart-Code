@@ -6,26 +6,10 @@ import { flatMap, notUndefined, uniq } from "../utils";
 import { sortBy } from "../utils/array";
 import { fsPath } from "../utils/fs";
 
-enum TestSortOrder {
-	Top, // Fails
-	Bottom,
-}
-
-function getTestSortOrder(statuses: Set<TestStatus>): TestSortOrder {
-	if (statuses.has(TestStatus.Failed))
-		return TestSortOrder.Top;
-	return TestSortOrder.Bottom;
-}
-
 export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
 
 	public isStale = false;
-	// To avoid the sort changing on every status change (stale, running, etc.) this
-	// field will be the last status the user would care about (pass/fail/skip).
-	// Default to Passed just so things default to the most likely (hopefully) place. This should
-	// never be used for rendering; only sorting.
-	protected _sort: TestSortOrder = TestSortOrder.Bottom; // tslint:disable-line:variable-name
 	public suiteRunNumber = 1;
 	public isPotentiallyDeleted = false;
 
@@ -38,10 +22,6 @@ export abstract class TreeNode {
 	public description: string | undefined;
 
 	constructor(public readonly suiteData: SuiteData) { }
-
-	get sort(): TestSortOrder {
-		return this._sort;
-	}
 }
 
 export abstract class TestContainerNode extends TreeNode {
@@ -60,8 +40,6 @@ export abstract class TestContainerNode extends TreeNode {
 		}
 
 		this.statuses.add(status);
-
-		this._sort = getTestSortOrder(this.statuses);
 	}
 
 	public clearStatuses() {
@@ -195,8 +173,6 @@ export class TestNode extends TreeNode {
 			this.isStale = false;
 			this.isPotentiallyDeleted = false;
 		}
-
-		this._sort = getTestSortOrder(new Set<TestStatus>([this.status]));
 	}
 }
 
@@ -324,7 +300,7 @@ export class TestModel {
 			this.updateNode();
 		}
 
-		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed, ${node.duration}ms`;
+		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed`;
 	}
 
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): void {
@@ -450,7 +426,7 @@ export class TestModel {
 		}
 		if (endTime && testNode.testStartTime) {
 			testNode.duration = endTime - testNode.testStartTime;
-			testNode.description = `${testNode.duration}ms`;
+			testNode.description = ``;
 			// Don't clear this, as concurrent runs will overwrite each
 			// other and then we'll get no time at the end.
 			// testNode.testStartTime = undefined;
@@ -560,7 +536,7 @@ export class SuiteData {
 		const matches = this.getAllGroups(true).filter((g) => g.name === groupName
 			&& g.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = matches.sort((g1, g2) => Math.abs((g1.line || 0) - (groupLine || 0)) - Math.abs((g2.line || 0) - (groupLine || 0)));
+		const sortedMatches = matches.slice().sort((g1, g2) => Math.abs((g1.line || 0) - (groupLine || 0)) - Math.abs((g2.line || 0) - (groupLine || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			match.id = groupID;
@@ -574,7 +550,7 @@ export class SuiteData {
 		const matches = this.getAllTests().filter((t) => t.name === testName
 			&& t.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = sortBy(matches, (t) => Math.abs((t.line || 0) - (testLine || 0)));
+		const sortedMatches = sortBy(matches.slice(), (t) => Math.abs((t.line || 0) - (testLine || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			match.id = testID;

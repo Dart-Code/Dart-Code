@@ -6,13 +6,13 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
-import { LogCategory } from "../shared/enums";
+import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { TreeNode } from "../shared/test/test_model";
+import { TestContainerNode, TestNode, TreeNode } from "../shared/test/test_model";
 import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
-import { arrayContainsArray } from "../shared/utils/array";
+import { arrayContainsArray, sortBy } from "../shared/utils/array";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -502,7 +502,7 @@ export async function uncommentTestFile(): Promise<void> {
 
 export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
 	// TODO: Remove this when it's the only option and update the comments in the test files.
-	const isVsCodeTestRunner = !!vs.workspace.getConfiguration("dart").get("previewVsCodeTestRunner");
+	const isVsCodeTestRunner = !!vs.workspace.getConfiguration("dart").get("useVsCodeTestRunner");
 	const start = positionOf("// == EXPECTED RESULTS ==^");
 	const end = positionOf("^// == /EXPECTED RESULTS ==");
 	const results = doc.getText(new vs.Range(start, end));
@@ -510,9 +510,6 @@ export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
 		.map((l) => l.trim())
 		.filter((l) => l.startsWith("// ") && !l.startsWith("// #")) // Allow "comment" lines within the comment
 		.map((l) => l.substr(3))
-		// Strip the description/status off the end. VS Code doesn't allow us to
-		// access these through the TestItems so we can't verify them.
-		.map((l) => isVsCodeTestRunner ? l.replace(/ \[.*\] (.*)/g, "") : l)
 		.join("\n");
 }
 
@@ -1138,16 +1135,34 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 }
 
 export async function makeTestTextTree(parent: vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
-	const result = vs.workspace.getConfiguration("dart").get("previewVsCodeTestRunner")
+	const result = vs.workspace.getConfiguration("dart").get("useVsCodeTestRunner")
 		? await makeTextTreeUsingVsCodeTestController(parent, { buffer, indent, onlyFailures, onlyActive })
-		: await makeTextTreeUsingCustomTree(parent, extApi.testTreeProvider, { buffer, indent, onlyFailures, onlyActive });
+		: await makeTextTreeUsingCustomTree(parent, extApi.testTreeProvider!, { buffer, indent, onlyFailures, onlyActive });
 	return buffer;
+}
+
+/// Gets the source line for a TestItem.
+///
+/// If the item has no source, will return the line of its earliest child (recursively).
+function getSourceLine(item: vs.TestItem): number {
+	// If we have our own line, always use that.
+	const line = item.range?.start.line;
+	if (line)
+		return line;
+
+	// Otherwise, collect all child lines.
+	const lines: number[] = [];
+	item.children.forEach((child) => lines.push(getSourceLine(child)));
+
+	// Return the lowest child line, or something really high to put us at the end (this
+	// shouldn't really happen, but the API allows for it).
+	return Math.min(99999999, ...lines);
 }
 
 export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
 	const collection = items instanceof vs.Uri
-		? extApi.testController.items
-		: items ?? extApi.testController.items;
+		? extApi.testController!.controller.items
+		: items ?? extApi.testController!.controller.items;
 	const parentResourceUri = items instanceof vs.Uri ? items : undefined;
 
 	const testItems: vs.TestItem[] = [];
@@ -1156,8 +1171,37 @@ export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCo
 			testItems.push(item);
 	});
 
+	// Sort the items by their locations so we get stable results. Otherwise the order that items
+	// are created would be used, which is usually source-order, but could be different if the user
+	// selectively runs tests starting at the end of the file.
+	sortBy(testItems, getSourceLine);
+
 	for (const item of testItems) {
-		buffer.push(`${" ".repeat(indent * 4)}${item.label}`);
+		const lastResult = extApi.testController!.getLatestData(item);
+		const lastResultTestNode = lastResult as TestNode;
+		const lastResultTestContainerNode = lastResult as TestContainerNode;
+
+		let nodeString = item.label;
+		if (item.description)
+			nodeString += ` [${item.description}]`;
+
+		let includeNode = true;
+		if (lastResult) {
+			if (lastResultTestNode.status)
+				nodeString += ` ${TestStatus[lastResultTestNode.status]}`;
+			if (lastResultTestContainerNode.statuses?.size)
+				nodeString += ` ${TestStatus[lastResultTestContainerNode.getHighestStatus(true)]}`;
+			const isStale = lastResult.isStale;
+			const isFailure = lastResultTestNode.status === TestStatus.Failed;
+			if ((isStale && onlyActive) || (!isFailure && onlyFailures))
+				includeNode = false;
+		} else {
+			nodeString += " (not found in model)";
+		}
+
+		if (includeNode)
+			buffer.push(`${" ".repeat(indent * 4)}${nodeString}`);
+
 		makeTextTreeUsingVsCodeTestController(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive });
 	}
 
@@ -1167,8 +1211,6 @@ export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCo
 export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
 	const parentNode = parent instanceof vs.Uri ? undefined : parent;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
-
-	const durationPattern = /\d+ms/;
 
 	const items = await provider.getChildren(parentNode) || [];
 
@@ -1188,7 +1230,7 @@ export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | un
 				fsPath(treeItem.resourceUri!),
 			).replace("\\", "/")
 			: treeItem.label;
-		const expectedDesc = treeItem.description ? ` [${treeItem.description?.toString().replace(durationPattern, "{duration}ms")}]` : "";
+		const expectedDesc = treeItem.description ? ` [${treeItem.description}]` : "";
 		const iconUri = treeItem.iconPath instanceof vs.Uri
 			? treeItem.iconPath
 			: "dark" in (treeItem.iconPath as any)

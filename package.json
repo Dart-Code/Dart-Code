@@ -799,7 +799,7 @@
 				},
 				{
 					"command": "dart.runTestAtCursor",
-					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest"
+					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest && !config.dart.useVsCodeTestRunner"
 				},
 				{
 					"command": "dart.goToTestOrImplementationFile",
@@ -807,7 +807,7 @@
 				},
 				{
 					"command": "dart.clearTestResults",
-					"when": "dart-code:anyProjectLoaded && !inDebugMode"
+					"when": "dart-code:anyProjectLoaded && !inDebugMode && !config.dart.useVsCodeTestRunner"
 				},
 				{
 					"command": "dart.goToTests",
@@ -819,7 +819,7 @@
 				},
 				{
 					"command": "dart.debugTestAtCursor",
-					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest"
+					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest && !config.dart.useVsCodeTestRunner"
 				},
 				{
 					"command": "dart.startWithoutDebugging",
@@ -1493,7 +1493,7 @@
 				{
 					"id": "dartTestTree",
 					"name": "Dart & Flutter",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && !config.dart.useVsCodeTestRunner"
 				}
 			]
 		},
@@ -2308,10 +2308,10 @@
 					"description": "EXPERIMENTAL: Whether to enable custom tracking of Flutter UI guidelines (to hide some latency of waiting for the next Flutter Outline).",
 					"scope": "window"
 				},
-				"dart.previewVsCodeTestRunner": {
+				"dart.useVsCodeTestRunner": {
 					"type": "boolean",
-					"default": false,
-					"description": "PREVIEW: Whether to enable reporting tests into the VS Code Test Runner (requires restart).",
+					"default": true,
+					"description": "Whether to use the built-in VS Code test runner. Otherwises uses the legacy custom test runner.",
 					"scope": "window"
 				},
 				"dart.evaluateToStringInDebugViews": {

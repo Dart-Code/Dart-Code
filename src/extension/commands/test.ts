@@ -14,6 +14,7 @@ import { createTestFileAction, defaultTestFileContents, getLaunchConfig } from "
 import { WorkspaceContext } from "../../shared/workspace";
 import { DasFileTracker } from "../analysis/file_tracker_das";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
+import { config } from "../config";
 import { isDartDocument } from "../editors";
 import { VsCodeTestController } from "../test/vs_test_controller";
 import { ensureDebugLaunchUniqueId, isInsideFlutterProject, isTestFile } from "../utils";
@@ -40,13 +41,18 @@ abstract class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
 			vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()),
 			vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()),
-			vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
-			vs.commands.registerCommand("dart.debugTestAtCursor", () => this.runTestAtCursor(true), this),
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
 		);
+
+		if (!config.useVsCodeTestRunner)
+			this.disposables.push(
+				vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
+				vs.commands.registerCommand("dart.debugTestAtCursor", () => this.runTestAtCursor(true), this),
+			);
+
 		// Run for current open editor.
 		this.updateEditorContexts(vs.window.activeTextEditor);
 

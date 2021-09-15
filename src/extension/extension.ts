@@ -485,8 +485,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	const testModel = new TestModel(config, util.isPathInsideFlutterProject);
 	const testCoordinator = new TestSessionCoordinator(logger, testModel);
-	context.subscriptions.push(testCoordinator);
-	const vsCodeTestController = config.previewVsCodeTestRunner ? new VsCodeTestController(logger, testModel) : undefined;
+	context.subscriptions.push(
+		testCoordinator,
+		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID, e.event, e.body)),
+		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID)),
+	);
+	const vsCodeTestController = config.useVsCodeTestRunner ? new VsCodeTestController(logger, testModel) : undefined;
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
 
@@ -606,31 +610,34 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	);
 	if (lspAnalyzer)
 		context.subscriptions.push(new TestDiscoverer(logger, lspAnalyzer.fileTracker, testModel));
-	const testTreeProvider = new TestResultsProvider(testModel, testCoordinator, flutterCapabilities);
-	const testTreeView = vs.window.createTreeView<TreeNode>("dartTestTree", { treeDataProvider: testTreeProvider });
-	const tryReveal = async (node: TreeNode) => {
-		try {
-			await testTreeView.reveal(node);
-		} catch {
-			// Reveal can fail if something else triggers an update to the tree
-			// while it's asynchronously locating the node. These errors can just be discarded.
-		}
-	};
-	context.subscriptions.push(
-		testTreeProvider,
-		testTreeView,
-		testModel.onDidStartTests.listen(async (node) => {
-			if (config.openTestViewOnStart)
-				tryReveal(node);
-		}),
-		testModel.onFirstFailure.listen(async (node) => {
-			if (config.openTestViewOnFailure)
-				// HACK: Because the tree update is async, this code may fire before
-				// the tree has been re-sorted, so wait a short period before revealing
-				// to let the tree update complete.
-				setTimeout(() => tryReveal(node), 100);
-		}),
-	);
+	let testTreeProvider: TestResultsProvider | undefined;
+	if (!vsCodeTestController) {
+		testTreeProvider = new TestResultsProvider(testModel, flutterCapabilities);
+		const testTreeView = vs.window.createTreeView<TreeNode>("dartTestTree", { treeDataProvider: testTreeProvider });
+		const tryReveal = async (node: TreeNode) => {
+			try {
+				await testTreeView.reveal(node);
+			} catch {
+				// Reveal can fail if something else triggers an update to the tree
+				// while it's asynchronously locating the node. These errors can just be discarded.
+			}
+		};
+		context.subscriptions.push(
+			testTreeProvider,
+			testTreeView,
+			testModel.onDidStartTests.listen(async (node) => {
+				if (config.openTestViewOnStart)
+					tryReveal(node);
+			}),
+			testModel.onFirstFailure.listen(async (node) => {
+				if (config.openTestViewOnFailure)
+					// HACK: Because the tree update is async, this code may fire before
+					// the tree has been re-sorted, so wait a short period before revealing
+					// to let the tree update complete.
+					setTimeout(() => tryReveal(node), 100);
+			}),
+		);
+	}
 
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
 	if (config.flutterOutline) {
@@ -773,7 +780,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			pubGlobal,
 			renameProvider,
 			safeToolSpawn,
-			testController: vsCodeTestController?.controller,
+			testController: vsCodeTestController,
 			testCoordinator,
 			testModel,
 			testTreeProvider,
