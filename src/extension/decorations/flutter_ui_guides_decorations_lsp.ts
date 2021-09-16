@@ -40,7 +40,7 @@ export class FlutterUiGuideDecorationsLsp extends FlutterUiGuideDecorations {
 		const guides = this.extractGuides(editor.document, outline);
 		if (this.tracker)
 			this.tracker.trackDoc(editor.document, guides);
-		this.renderGuides(editor, guides, "#A3A3A3");
+		this.renderGuides(editor, guides);
 	}
 
 	private extractGuides(document: vs.TextDocument, node: lsp.FlutterOutline): WidgetGuide[] {

@@ -91,6 +91,15 @@
 					"light": "tab.inactiveForeground",
 					"highContrast": "tab.inactiveForeground"
 				}
+			},
+			{
+				"id": "dart.flutterUiGuides",
+				"description": "The color of the Flutter UI Guidelines shown in the editor.",
+				"defaults": {
+					"dark": "#A3A3A3",
+					"light": "#A3A3A3",
+					"highContrast": "#A3A3A3"
+				}
 			}
 		],
 		"commands": [
