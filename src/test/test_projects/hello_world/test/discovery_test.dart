@@ -4,10 +4,10 @@ import "package:test/test.dart";
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// test/discovery_test.dart (unknown.svg)
-//     group 1 (unknown.svg)
-//         test 1 (unknown.svg)
-//     test 1 (unknown.svg)
+// test/discovery_test.dart Unknown
+//     group 1 Unknown
+//         test 1 Unknown
+//     test 1 Unknown
 // == /EXPECTED RESULTS ==
 
 void main() {
