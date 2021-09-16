@@ -55,7 +55,7 @@ describe("flutter test debugger", () => {
 
 	it("can run tests from codelens", async function () {
 		const editor = await openFile(flutterTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^Widgets('Hello world test`);
@@ -97,7 +97,7 @@ describe("flutter test debugger", () => {
 			this.skip();
 
 		const editor = await openFile(flutterTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^Widgets('Skipped test`);
@@ -135,7 +135,7 @@ describe("flutter test debugger", () => {
 			this.skip();
 
 		const editor = await openFile(flutterTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^Widgets('Skipped test`);
