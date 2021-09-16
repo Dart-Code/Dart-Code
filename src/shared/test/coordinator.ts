@@ -1,6 +1,8 @@
-import { IAmDisposable, Logger } from "../interfaces";
+import { Outline } from "../analysis/lsp/custom_protocol";
+import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
 import { disposeAll, uriToFilePath } from "../utils";
+import { LspTestOutlineVisitor } from "../utils/outline_lsp";
 import { SuiteData, TestModel } from "./test_model";
 
 /// Handles results from a test debug session and provides them to the test model.
@@ -10,7 +12,11 @@ export class TestSessionCoordinator implements IAmDisposable {
 	/// A link between a suite path and the debug session ID that owns it.
 	private owningDebugSessions: { [key: string]: string | undefined } = {};
 
-	constructor(private readonly logger: Logger, private readonly data: TestModel) { }
+	/// A link between a suite path and a visitor for visiting its latest outline data.
+	/// This data is refreshed when a test suite starts running.
+	private suiteOutlineVisitors: { [key: string]: LspTestOutlineVisitor | undefined } = {};
+
+	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(file: { fsPath: string } | string): Outline | undefined } | undefined) { }
 
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
 		if (event === "dart.testRunNotification") {
@@ -79,13 +85,28 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	private handleSuiteNotification(dartCodeDebugSessionID: string | undefined, suitePath: string, evt: SuiteNotification) {
 		this.data.suiteDiscovered(dartCodeDebugSessionID, evt.suite.path);
+
+		// Also capture the test nodes from the outline so that we can look up the full range for a test (instead of online its line/col)
+		// to provide to VS Code to better support "run test at cursor".
+		this.captureTestOutlne(evt.suite.path);
+	}
+
+	private captureTestOutlne(path: string) {
+		const visitor = new LspTestOutlineVisitor(this.logger, path);
+		this.suiteOutlineVisitors[path] = visitor;
+		const outline = this.fileTracker?.getOutlineFor(path);
+		if (outline)
+			visitor.visit(outline);
 	}
 
 	private handleTestStartNotifcation(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestStartNotification) {
 		const path = (evt.test.root_url || evt.test.url) ? uriToFilePath(evt.test.root_url || evt.test.url!) : undefined;
 		const line = evt.test.root_line || evt.test.line;
-		const column = evt.test.root_column || evt.test.column;
-		this.data.testStarted(dartCodeDebugSessionID, suite.path, evt.test.id, evt.test.name, evt.test.groupIDs, path, line, column, evt.time);
+		const character = evt.test.root_column || evt.test.column;
+
+		const range = this.getRangeForNode(suite, line, character);
+
+		this.data.testStarted(dartCodeDebugSessionID, suite.path, evt.test.id, evt.test.name, evt.test.groupIDs, path, range, evt.time);
 	}
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestDoneNotification) {
@@ -96,8 +117,9 @@ export class TestSessionCoordinator implements IAmDisposable {
 	private handleGroupNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: GroupNotification) {
 		const path = (evt.group.root_url || evt.group.url) ? uriToFilePath(evt.group.root_url || evt.group.url!) : undefined;
 		const line = evt.group.root_line || evt.group.line;
-		const column = evt.group.root_column || evt.group.column;
-		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, evt.group.id, evt.group.name, evt.group.parentID, path, line, column);
+		const character = evt.group.root_column || evt.group.column;
+		const range = this.getRangeForNode(suite, line, character);
+		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, evt.group.id, evt.group.name, evt.group.parentID, path, range);
 	}
 
 	private handleSuiteEnd(dartCodeDebugSessionID: string | undefined, suite: SuiteData) {
@@ -114,6 +136,21 @@ export class TestSessionCoordinator implements IAmDisposable {
 		const test = suite.getCurrentTest(evt.testID);
 		test.outputEvents.push(evt);
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
+	}
+
+	private getRangeForNode(suite: SuiteData, line: number | undefined, character: number | undefined): Range | undefined {
+		if (!line || !character)
+			return;
+
+		// In test notifications, we only get the start line/column but we need to give VS Code the full range for "Run Test at Cursor" to work.
+		// The outline data was captured when the suite started, so we can assume it's reasonable accurate, so try to look up the node
+		// there and use its range. Otherwise, just make a range that goes from the start position to the next line (assuming the rest
+		// of the line is the test name, and we can at least support running it there).
+		const testsOnLine = line ? this.suiteOutlineVisitors[suite.path]?.testsByLine[line - 1] : undefined;
+		const test = testsOnLine ? testsOnLine.find((t) => t.range.start.character === character - 1) : undefined;
+
+		const range = line && character ? test?.range ?? { start: { line, character }, end: { line: line + 1, character } } : undefined;
+		return range;
 	}
 
 	public dispose(): any {

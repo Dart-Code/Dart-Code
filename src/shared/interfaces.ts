@@ -209,3 +209,15 @@ export interface WidgetErrorInspectData {
 	devToolsUrl: string;
 	inspectorReference: string;
 }
+
+export interface Range {
+	start: Position;
+	end: Position;
+}
+
+export interface Position {
+	// Zero-based line number.
+	line: number;
+	// Zero-based line number.
+	character: number;
+}

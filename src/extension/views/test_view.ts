@@ -41,8 +41,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			return vs.commands.executeCommand(
 				"_dart.jumpToLineColInUri",
 				vs.Uri.file(treeNode.path),
-				treeNode.line,
-				treeNode.column,
+				treeNode.range ? treeNode.range.start.line + 1 : undefined,
+				treeNode.range ? treeNode.range.start.character + 1 : undefined,
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTest", (treeNode: TestNode) => {
@@ -51,8 +51,8 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			return vs.commands.executeCommand(
 				"_dart.jumpToLineColInUri",
 				vs.Uri.file(treeNode.path),
-				treeNode.line,
-				treeNode.column,
+				treeNode.range ? treeNode.range.start.line + 1 : undefined,
+				treeNode.range ? treeNode.range.start.character + 1 : undefined,
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTestOutput", this.writeTestOutput, this));

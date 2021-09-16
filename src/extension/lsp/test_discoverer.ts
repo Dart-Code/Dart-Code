@@ -49,8 +49,8 @@ export class TestDiscoverer implements IAmDisposable {
 							? `${parent.name} ${name}`
 							: name;
 						const item = isGroup
-							? new GroupNode(suite, parent, id++, fullName, suitePath, range.start.line + 1, range.start.character)
-							: new TestNode(suite, parent, id++, fullName, suitePath, range.start.line + 1, range.start.character);
+							? new GroupNode(suite, parent, id++, fullName, suitePath, range)
+							: new TestNode(suite, parent, id++, fullName, suitePath, range);
 
 						// Set this to something that does not overlap with real runs, so that if a real
 						// test run is running at the same time, it cannot consider these nodes as part

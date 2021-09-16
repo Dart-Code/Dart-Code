@@ -484,7 +484,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	util.logTime("All other stuff before debugger..");
 
 	const testModel = new TestModel(config, util.isPathInsideFlutterProject);
-	const testCoordinator = new TestSessionCoordinator(logger, testModel);
+	const testCoordinator = new TestSessionCoordinator(logger, testModel, lspAnalyzer?.fileTracker);
 	context.subscriptions.push(
 		testCoordinator,
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID, e.event, e.body)),

@@ -1,6 +1,7 @@
 import * as path from "path";
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
+import { Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { flatMap, notUndefined, uniq } from "../utils";
 import { sortBy } from "../utils/array";
@@ -105,7 +106,7 @@ export class SuiteNode extends TestContainerNode {
 }
 
 export class GroupNode extends TestContainerNode {
-	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public line: number | undefined, public column: number | undefined) {
+	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -142,7 +143,7 @@ export class TestNode extends TreeNode {
 	public hidden = false;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public line: number | undefined, public column: number | undefined) {
+	constructor(public suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -319,12 +320,12 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, line: number | undefined, column: number | undefined): void {
+	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined): void {
 		const suite = this.suites[suitePath];
-		const existingGroup = suite.getCurrentGroup(groupID) || suite.reuseMatchingGroup(suite.currentRunNumber, groupID, groupName, line);
+		const existingGroup = suite.getCurrentGroup(groupID) || suite.reuseMatchingGroup(suite.currentRunNumber, groupID, groupName, range);
 		const oldParent = existingGroup?.parent;
 		const parent = parentID ? suite.getMyGroup(suite.currentRunNumber, parentID) : suite.node;
-		const groupNode = existingGroup || new GroupNode(suite, parent, groupID, groupName, groupPath, line, column);
+		const groupNode = existingGroup || new GroupNode(suite, parent, groupID, groupName, groupPath, range);
 
 		if (!existingGroup) {
 			groupNode.suiteRunNumber = suite.currentRunNumber;
@@ -334,8 +335,7 @@ export class TestModel {
 			groupNode.id = groupID;
 			groupNode.name = groupName;
 			groupNode.path = groupPath;
-			groupNode.line = line;
-			groupNode.column = column;
+			groupNode.range = range;
 		}
 
 		// Remove from old parent if required
@@ -357,12 +357,12 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
 	}
 
-	public testStarted(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, testName: string | undefined, groupIDs: number[] | undefined, testPath: string | undefined, line: number | undefined, column: number | undefined, startTime: number | undefined): void {
+	public testStarted(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, testName: string | undefined, groupIDs: number[] | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined): void {
 		const suite = this.suites[suitePath];
-		const existingTest = suite.getCurrentTest(testID) || suite.reuseMatchingTest(suite.currentRunNumber, testID, testName, line);
+		const existingTest = suite.getCurrentTest(testID) || suite.reuseMatchingTest(suite.currentRunNumber, testID, testName, range);
 		const oldParent = existingTest?.parent;
 		const parent = groupIDs?.length ? suite.getMyGroup(suite.currentRunNumber, groupIDs[groupIDs.length - 1]) : suite.node;
-		const testNode = existingTest || new TestNode(suite, parent, testID, testName, testPath, line, column);
+		const testNode = existingTest || new TestNode(suite, parent, testID, testName, testPath, range);
 
 		if (!existingTest) {
 			testNode.suiteRunNumber = suite.currentRunNumber;
@@ -372,8 +372,7 @@ export class TestModel {
 			testNode.id = testID;
 			testNode.name = testName;
 			testNode.path = testPath;
-			testNode.line = line;
-			testNode.column = column;
+			testNode.range = range;
 		}
 		testNode.testStartTime = startTime;
 
@@ -531,12 +530,12 @@ export class SuiteData {
 	public storeTest(node: TestNode) {
 		return this.tests[`${node.suiteRunNumber}_${node.id}`] = node;
 	}
-	public reuseMatchingGroup(currentSuiteRunNumber: number, groupID: number, groupName: string | undefined, groupLine: number | undefined): GroupNode | undefined {
+	public reuseMatchingGroup(currentSuiteRunNumber: number, groupID: number, groupName: string | undefined, groupRange: Range | undefined): GroupNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
 		const matches = this.getAllGroups(true).filter((g) => g.name === groupName
 			&& g.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = matches.slice().sort((g1, g2) => Math.abs((g1.line || 0) - (groupLine || 0)) - Math.abs((g2.line || 0) - (groupLine || 0)));
+		const sortedMatches = matches.slice().sort((g1, g2) => Math.abs((g1.range?.start.line || 0) - (groupRange?.start.line || 0)) - Math.abs((g2.range?.start.line || 0) - (groupRange?.start.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			match.id = groupID;
@@ -545,12 +544,12 @@ export class SuiteData {
 		}
 		return match;
 	}
-	public reuseMatchingTest(currentSuiteRunNumber: number, testID: number, testName: string | undefined, testLine: number | undefined): TestNode | undefined {
+	public reuseMatchingTest(currentSuiteRunNumber: number, testID: number, testName: string | undefined, testRange: Range | undefined): TestNode | undefined {
 		// To reuse a node, the name must match and it must have not been used for the current run.
 		const matches = this.getAllTests().filter((t) => t.name === testName
 			&& t.suiteRunNumber !== currentSuiteRunNumber);
 		// Reuse the one nearest to the source position.
-		const sortedMatches = sortBy(matches.slice(), (t) => Math.abs((t.line || 0) - (testLine || 0)));
+		const sortedMatches = sortBy(matches.slice(), (t) => Math.abs((t.range?.start.line || 0) - (testRange?.start.line || 0)));
 		const match = sortedMatches.length ? sortedMatches[0] : undefined;
 		if (match) {
 			match.id = testID;

@@ -14,7 +14,7 @@ export abstract class LspOutlineVisitor {
 	private visitChildren(outline: Outline) {
 		if (outline.children) {
 			for (const child of outline.children) {
-				this.visit(child);
+				this.visitNode(child);
 			}
 		}
 	}
@@ -136,8 +136,21 @@ export class LspTestOutlineVisitor extends LspOutlineVisitor {
 	constructor(logger: Logger, private readonly file: string) {
 		super(logger);
 	}
+
 	public readonly tests: LspTestOutlineInfo[] = [];
+	public readonly testsByLine: { [key: number]: LspTestOutlineInfo[] } = {};
+
 	private readonly names: string[] = [];
+
+	public visit(outline: Outline) {
+		this.tests.length = 0;
+		for (const line of Object.keys(this.testsByLine)) {
+			delete this.testsByLine[parseInt(line)];
+		}
+
+		super.visit(outline);
+	}
+
 	protected visitUnitTestTest(outline: Outline) {
 		this.addTest(outline, super.visitUnitTestTest);
 	}
@@ -152,12 +165,19 @@ export class LspTestOutlineVisitor extends LspOutlineVisitor {
 		this.names.push(name);
 		const fullName = this.names.join(" ");
 		const isGroup = outline.element.kind === "UNIT_TEST_GROUP";
-		this.tests.push({
+		const range = outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined);
+		const info = {
 			file: this.file,
 			fullName,
 			isGroup,
-			range: outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined),
-		});
+			range,
+		};
+		this.tests.push(info);
+		if (range) {
+			if (!this.testsByLine[range.start.line])
+				this.testsByLine[range.start.line] = [];
+			this.testsByLine[range.start.line].push(info);
+		}
 		try {
 			base.bind(this)(outline);
 		} finally {
