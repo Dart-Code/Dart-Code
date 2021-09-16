@@ -160,9 +160,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	private updateFields(item: vs.TestItem, node: TreeNode) {
 		item.description = node.description;
-		if ((node instanceof GroupNode || node instanceof TestNode) && node.line) {
-			const pos = new vs.Position(node.line - 1, node.column ?? 0);
-			item.range = new vs.Range(pos, pos);
+		if ((node instanceof GroupNode || node instanceof TestNode) && node.range) {
+			item.range = new vs.Range(
+				new vs.Position(node.range.start.line, node.range.start.character),
+				new vs.Position(node.range.end.line, node.range.end.character),
+			);
 		}
 	}
 
