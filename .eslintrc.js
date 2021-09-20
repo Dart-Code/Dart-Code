@@ -46,7 +46,7 @@ module.exports = {
 		"eol-last": "error",
 		"eqeqeq": [
 			"error",
-			"smart"
+			"always"
 		],
 		"guard-for-in": "error",
 		"id-blacklist": [
