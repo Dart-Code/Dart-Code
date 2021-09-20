@@ -79,7 +79,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 
 		// Don't do if we have errors for the saved file.
 		const errors = languages.getDiagnostics(file.uri);
-		const hasErrors = errors && errors.find((d) => d.source === "dart" && d.severity === DiagnosticSeverity.Error) != null;
+		const hasErrors = errors && !!errors.find((d) => d.source === "dart" && d.severity === DiagnosticSeverity.Error);
 		if (hasErrors)
 			return;
 

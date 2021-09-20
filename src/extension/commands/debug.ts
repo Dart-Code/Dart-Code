@@ -582,7 +582,7 @@ export class DebugCommands implements IAmDisposable {
 			// Open or prompt for DevTools when appropriate.
 			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
 			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.Web) {
-				if (session.session.configuration.openDevTools != null) {
+				if (session.session.configuration.openDevTools) {
 					const pageId = session.session.configuration.openDevTools;
 					const page = devToolsPages.find((p) => p.id === pageId);
 					if (pageId) {
