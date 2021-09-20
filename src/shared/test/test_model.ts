@@ -25,8 +25,7 @@ export abstract class TreeNode {
 }
 
 export abstract class TestContainerNode extends TreeNode {
-	public readonly groups: GroupNode[] = [];
-	public readonly tests: TestNode[] = [];
+	public readonly children: Array<GroupNode | TestNode> = [];
 
 	public readonly statuses = new Set<TestStatus>([TestStatus.Unknown]);
 
@@ -44,7 +43,7 @@ export abstract class TestContainerNode extends TreeNode {
 
 	public clearStatuses() {
 		this.statuses.clear();
-		this.description = undefined;		// Clear old run duration.
+		this.description = undefined; // Clear old run duration.
 	}
 
 	public hasStatus(status: TestStatus): boolean {
@@ -80,7 +79,6 @@ export abstract class TestContainerNode extends TreeNode {
 	}
 
 	abstract get label(): string | undefined;
-	abstract get children(): Array<GroupNode | TestNode>;
 }
 
 export class SuiteNode extends TestContainerNode {
@@ -91,13 +89,6 @@ export class SuiteNode extends TestContainerNode {
 	get parent(): undefined { return undefined; }
 
 	get label(): undefined { return undefined; }
-
-	get children(): Array<GroupNode | TestNode> {
-		return [
-			...this.groups,
-			...this.tests,
-		];
-	}
 }
 
 export class GroupNode extends TestContainerNode {
@@ -114,13 +105,6 @@ export class GroupNode extends TestContainerNode {
 	// TODO: Remove phantom groups from this model, and handle only in the test notification handler.
 	get isPhantomGroup() {
 		return !this.name && this.parent instanceof SuiteNode;
-	}
-
-	get children(): Array<GroupNode | TestNode> {
-		return [
-			...this.groups,
-			...this.tests,
-		];
 	}
 }
 
@@ -270,6 +254,21 @@ export class TestModel {
 
 	public updateNode(node?: TreeNode) {
 		this.onDidChangeDataEmitter.fire(node);
+
+		function dumpNode(node: TreeNode, indent: number) {
+			console.log(`${" ".repeat(indent * 2)}${node.label} ${node.isPotentiallyDeleted}`);
+			if (node instanceof TestContainerNode)
+				node.children.forEach((n) => dumpNode(n, 1));
+		}
+
+		// if (!node) {
+		console.log();
+		console.log();
+		for (const suite of Object.values(this.suites)) {
+			console.log(suite.path);
+			suite.node.children.forEach((n) => dumpNode(n, 1));
+		}
+		// }
 	}
 
 	public rebuildSuiteNode(suite: SuiteData) {
@@ -343,13 +342,13 @@ export class TestModel {
 		// Remove from old parent if required
 		const hasChangedParent = oldParent !== parent;
 		if (oldParent && hasChangedParent) {
-			oldParent.groups.splice(oldParent.groups.indexOf(groupNode), 1);
+			oldParent.children.splice(oldParent.children.indexOf(groupNode), 1);
 			this.updateNode(oldParent);
 		}
 
 		// Push to new parent if required.
 		if (!existingGroup || hasChangedParent)
-			groupNode.parent.groups.push(groupNode);
+			groupNode.parent.children.push(groupNode);
 
 		if (hasStarted) {
 			groupNode.appendStatus(TestStatus.Running);
@@ -386,13 +385,13 @@ export class TestModel {
 		// Remove from old parent if required.
 		const hasChangedParent = oldParent && oldParent !== testNode.parent;
 		if (oldParent && hasChangedParent) {
-			oldParent.tests.splice(oldParent.tests.indexOf(testNode), 1);
+			oldParent.children.splice(oldParent.children.indexOf(testNode), 1);
 			this.updateNode(oldParent);
 		}
 
 		// Push to new parent if required.
 		if (!existingTest || hasChangedParent)
-			testNode.parent.tests.push(testNode);
+			testNode.parent.children.push(testNode);
 
 
 		if (hasStarted) {
@@ -481,20 +480,12 @@ export class TestModel {
 		// DO STUFF
 	}
 
-	private removeNode(node: TreeNode) {
-		if (node instanceof GroupNode) {
-			const parent = node.parent;
-			const index = parent.groups.indexOf(node);
-			if (index > -1)
-				parent.groups.splice(index, 1);
-			node.suiteData.dropGroup(node);
-		} else if (node instanceof TestNode) {
-			const parent = node.parent;
-			const index = parent.tests.indexOf(node);
-			if (index > -1)
-				parent.tests.splice(index, 1);
-			node.suiteData.dropTest(node);
-		}
+	private removeNode(node: GroupNode | TestNode) {
+		const parent = node.parent;
+		const index = parent.children.indexOf(node);
+		if (index > -1)
+			parent.children.splice(index, 1);
+		node.suiteData.dropNode(node);
 	}
 }
 
@@ -523,22 +514,21 @@ export class SuiteData {
 		return this.tests.get(`${suiteRunNumber}_${id}`);
 	}
 	public storeGroup(groupID: number, node: GroupNode) {
-		this.dropGroup(node);
+		this.dropNode(node);
 		return this.groups.set(`${node.suiteRunNumber}_${groupID}`, node);
 	}
 	public storeTest(testID: number, node: TestNode) {
-		this.dropTest(node);
+		this.dropNode(node);
 		return this.tests.set(`${node.suiteRunNumber}_${testID}`, node);
 	}
-	public dropGroup(node: GroupNode) {
-		const entry = [...this.groups].find((g) => g[1] === node);
-		if (entry)
-			this.groups.delete(entry[0]);
-	}
-	public dropTest(node: TestNode) {
-		const entry = [...this.tests].find((t) => t[1] === node);
-		if (entry)
-			this.tests.delete(entry[0]);
+	public dropNode(node: GroupNode | TestNode) {
+		const group = [...this.groups].find((g) => g[1] === node);
+		if (group)
+			this.groups.delete(group[0]);
+
+		const test = [...this.tests].find((t) => t[1] === node);
+		if (test)
+			this.tests.delete(test[0]);
 	}
 	public reuseMatchingGroup(groupName: string | undefined): GroupNode | undefined {
 		return this.getAllGroups().find((g) => g.name === groupName);
