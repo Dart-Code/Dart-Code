@@ -16,6 +16,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 	/// This data is refreshed when a test suite starts running.
 	private suiteOutlineVisitors: { [key: string]: LspTestOutlineVisitor | undefined } = {};
 
+	/// For each debug session ID, stores a mapping of phantom (empty) groups and their parent IDs so we can
+	/// jump over them.
+	private phantomGroupParents: { [key: string]: { [key: number]: number | null | undefined } } = {};
+
 	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(file: { fsPath: string } | string): Outline | undefined } | undefined) { }
 
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
@@ -61,7 +65,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 				this.handleSuiteNotification(dartCodeDebugSessionID, suitePath, evt as SuiteNotification);
 				break;
 			case "testStart":
-				this.handleTestStartNotifcation(dartCodeDebugSessionID, suite, evt as TestStartNotification);
+				this.handleTestStartNotification(dartCodeDebugSessionID, suite, evt as TestStartNotification);
 				break;
 			case "testDone":
 				this.handleTestDoneNotification(dartCodeDebugSessionID, suite, evt as TestDoneNotification);
@@ -99,27 +103,57 @@ export class TestSessionCoordinator implements IAmDisposable {
 			visitor.visit(outline);
 	}
 
-	private handleTestStartNotifcation(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestStartNotification) {
+	private handleTestStartNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestStartNotification) {
+		// Skip loading tests.
+		if (evt.test.name?.startsWith("loading ") && !evt.test.groupIDs?.length)
+			return;
+
 		const path = (evt.test.root_url || evt.test.url) ? uriToFilePath(evt.test.root_url || evt.test.url!) : undefined;
 		const line = evt.test.root_line || evt.test.line;
 		const character = evt.test.root_column || evt.test.column;
 
 		const range = this.getRangeForNode(suite, line, character);
+		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
 
-		this.data.testStarted(dartCodeDebugSessionID, suite.path, evt.test.id, evt.test.name, evt.test.groupIDs, path, range, evt.time);
+		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
 	}
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestDoneNotification) {
 		const result = evt.skipped ? "skipped" : evt.result;
-		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.hidden, evt.time);
+
+		// If we don't have a test, it was probably a "loading foo.dart" test that we skipped over, so skip the result too.
+		const test = suite.getCurrentTest(evt.testID);
+		if (!test)
+			return;
+
+		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time);
 	}
 
 	private handleGroupNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: GroupNotification) {
+		// Skip phantom groups.
+		if (!evt.group.name) {
+			if (dartCodeDebugSessionID) {
+				this.phantomGroupParents[dartCodeDebugSessionID] = this.phantomGroupParents[dartCodeDebugSessionID] || {};
+				this.phantomGroupParents[dartCodeDebugSessionID][evt.group.id] = evt.group.parentID ?? null; // Null signifies top-level.
+			}
+			return;
+		}
+
 		const path = (evt.group.root_url || evt.group.url) ? uriToFilePath(evt.group.root_url || evt.group.url!) : undefined;
 		const line = evt.group.root_line || evt.group.line;
 		const character = evt.group.root_column || evt.group.column;
 		const range = this.getRangeForNode(suite, line, character);
-		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, evt.group.id, evt.group.name, evt.group.parentID, path, range);
+		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
+	}
+
+	private getRealGroupId(dartCodeDebugSessionID: string | undefined, groupID: number | undefined) {
+		const mapping = dartCodeDebugSessionID ? this.phantomGroupParents[dartCodeDebugSessionID] : undefined;
+		const mappedValue = mapping && groupID ? mapping[groupID] : undefined;
+		// Null is a special value that means undefined top-level)
+		return mappedValue === null
+			? undefined
+			// Whereas a real undefined we just pass-through as it was.
+			: mappedValue ?? groupID;
 	}
 
 	private handleSuiteEnd(dartCodeDebugSessionID: string | undefined, suite: SuiteData) {
@@ -127,13 +161,13 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private handlePrintNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: PrintNotification) {
-		const test = suite.getCurrentTest(evt.testID);
+		const test = suite.getCurrentTest(evt.testID)!;
 		test.outputEvents.push(evt);
 		this.data.testOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.message);
 	}
 
 	private handleErrorNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: ErrorNotification) {
-		const test = suite.getCurrentTest(evt.testID);
+		const test = suite.getCurrentTest(evt.testID)!;
 		test.outputEvents.push(evt);
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
 	}

@@ -3,12 +3,11 @@ import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
 import { Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
-import { flatMap, notUndefined, uniq } from "../utils";
-import { sortBy } from "../utils/array";
+import { flatMap, notUndefined } from "../utils";
 import { fsPath } from "../utils/fs";
 
 export abstract class TreeNode {
-	public abstract parent: TreeNode | undefined;
+	public abstract parent: TestContainerNode | undefined;
 
 	public isStale = false;
 	public suiteRunNumber = 1;
@@ -81,7 +80,7 @@ export abstract class TestContainerNode extends TreeNode {
 	}
 
 	abstract get label(): string | undefined;
-	abstract get children(): TreeNode[];
+	abstract get children(): Array<GroupNode | TestNode>;
 }
 
 export class SuiteNode extends TestContainerNode {
@@ -93,20 +92,16 @@ export class SuiteNode extends TestContainerNode {
 
 	get label(): undefined { return undefined; }
 
-	get children(): TreeNode[] {
-		// Children should be:
-		// 1. All children of any of our phantom groups
-		// 2. Our children excluding our phantom groups
+	get children(): Array<GroupNode | TestNode> {
 		return [
-			...flatMap(this.groups.filter((g) => g.isPhantomGroup), (g) => g.children),
-			...this.groups.filter((g) => !g.isPhantomGroup && !g.hidden),
-			...this.tests.filter((t) => !t.hidden),
+			...this.groups,
+			...this.tests,
 		];
 	}
 }
 
 export class GroupNode extends TestContainerNode {
-	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
+	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -121,16 +116,11 @@ export class GroupNode extends TestContainerNode {
 		return !this.name && this.parent instanceof SuiteNode;
 	}
 
-	get hidden(): boolean {
-		// If every child is hidden, we are hidden.
-		return this.children.every((c) => (c instanceof GroupNode && c.hidden)
-			|| (c instanceof TestNode && c.hidden));
-	}
-
-	get children(): TreeNode[] {
-		return ([] as TreeNode[])
-			.concat(this.groups.filter((t) => !t.hidden))
-			.concat(this.tests.filter((t) => !t.hidden));
+	get children(): Array<GroupNode | TestNode> {
+		return [
+			...this.groups,
+			...this.tests,
+		];
 	}
 }
 
@@ -140,10 +130,9 @@ export class TestNode extends TreeNode {
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
 	public duration: number | undefined;
-	public hidden = false;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public parent: SuiteNode | GroupNode, public id: number, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
+	constructor(public suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -216,22 +205,41 @@ export class TestModel {
 				suite.getAllGroups().forEach((g) => g.isStale = true);
 				suite.getAllTests().forEach((t) => t.isStale = true);
 
-				// When running the whole suite, we flag all tests as being potentially deleted
-				// and then any tests that aren't run are removed from the tree. This is to ensure
-				// if a test is renamed, we don't keep the old version of it in the test tree forever
-				// since we don't have the necessary information to know the test was renamed.
-				if (isRunningWholeSuite) {
-					if (suite) {
-						suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
-						suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
-					}
+				if (isRunningWholeSuite && suite) {
+					this.markAllAsPotentiallyDeleted(suite);
 				}
 			}
 		}
 
 		// Also increase the currentRunNumber to ensure we know all results are from
 		// the newest run.
-		Object.values(this.suites).forEach((suite) => suite.node.suiteRunNumber++);
+		Object.values(this.suites).forEach((suite) => this.flagNewDiscovery(suite));
+	}
+
+	public flagNewDiscovery(suite: SuiteData) {
+		suite.node.suiteRunNumber++;
+	}
+
+	// When running the whole suite (or updating from Outline), we flag all tests as being
+	// potentially deleted and then any tests that aren't run are removed from the tree. This
+	// is to ensure if a test is renamed, we don't keep the old version of it in the test tree
+	// forever since we don't have the necessary information to know the test was renamed.
+	public markAllAsPotentiallyDeleted(suite: SuiteData) {
+		suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
+		suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
+	}
+
+	public removeAllPotentiallyDeletedNodes(suite: SuiteData) {
+		// Delete nodes that were marked as potentially deleted and then never updated.
+		// This means they weren't run in the last run, so probably were deleted (or
+		// renamed and got new nodes, which still means the old ones should be removed).
+		const toDelete = [
+			...suite.getAllGroups(),
+			...suite.getAllTests(),
+		].filter((t) => t.isPotentiallyDeleted);
+		const toUpdate = new Set(toDelete.map((node) => node.parent));
+		toDelete.forEach((node) => this.removeNode(node));
+		toUpdate.forEach((node) => this.updateNode(node));
 	}
 
 	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
@@ -267,19 +275,14 @@ export class TestModel {
 	public rebuildSuiteNode(suite: SuiteData) {
 		// Walk the tree to get the status.
 		this.rebuildNode(suite.node);
-
-		// Update top level list, as we could've changed order.
-		this.updateNode();
+		this.updateNode(suite.node);
 	}
 
 	/// Rebuilds any data on a node that is dependent on its children.
 	private rebuildNode(node: SuiteNode | GroupNode): void {
 		const childStatuses = node.children.length
 			? flatMap(
-				node.children.filter((c) =>
-					(c instanceof GroupNode && !c.isPhantomGroup)
-					|| (c instanceof TestNode && !c.hidden),
-				).map((c) => {
+				node.children.map((c) => {
 					if (c instanceof GroupNode) {
 						this.rebuildNode(c);
 						return [...c.statuses];
@@ -298,7 +301,6 @@ export class TestModel {
 		if (!statusAreEqual) {
 			node.clearStatuses();
 			childStatuses.forEach((s) => node.appendStatus(s));
-			this.updateNode();
 		}
 
 		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed`;
@@ -320,19 +322,19 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined): void {
+	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
 		const suite = this.suites[suitePath];
-		const existingGroup = suite.getCurrentGroup(groupID) || suite.reuseMatchingGroup(suite.currentRunNumber, groupID, groupName, range);
+		const existingGroup = suite.reuseMatchingGroup(groupName);
 		const oldParent = existingGroup?.parent;
-		const parent = parentID ? suite.getMyGroup(suite.currentRunNumber, parentID) : suite.node;
-		const groupNode = existingGroup || new GroupNode(suite, parent, groupID, groupName, groupPath, range);
+		const parent = parentID ? suite.getMyGroup(suite.currentRunNumber, parentID)! : suite.node;
+		const groupNode = existingGroup || new GroupNode(suite, parent, groupName, groupPath, range);
 
-		if (!existingGroup) {
-			groupNode.suiteRunNumber = suite.currentRunNumber;
-			suite.storeGroup(groupNode);
-		} else {
+		groupNode.suiteRunNumber = suite.currentRunNumber;
+		groupNode.isPotentiallyDeleted = false;
+		suite.storeGroup(groupID, groupNode);
+
+		if (existingGroup) {
 			groupNode.parent = parent;
-			groupNode.id = groupID;
 			groupNode.name = groupName;
 			groupNode.path = groupPath;
 			groupNode.range = range;
@@ -349,39 +351,37 @@ export class TestModel {
 		if (!existingGroup || hasChangedParent)
 			groupNode.parent.groups.push(groupNode);
 
-		groupNode.appendStatus(TestStatus.Running);
+		if (hasStarted) {
+			groupNode.appendStatus(TestStatus.Running);
+		}
+
 		this.updateNode(groupNode);
 		this.updateNode(groupNode.parent);
 
 		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
+
+		return groupNode;
 	}
 
-	public testStarted(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, testName: string | undefined, groupIDs: number[] | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined): void {
+	public testDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
 		const suite = this.suites[suitePath];
-		const existingTest = suite.getCurrentTest(testID) || suite.reuseMatchingTest(suite.currentRunNumber, testID, testName, range);
+		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
-		const parent = groupIDs?.length ? suite.getMyGroup(suite.currentRunNumber, groupIDs[groupIDs.length - 1]) : suite.node;
-		const testNode = existingTest || new TestNode(suite, parent, testID, testName, testPath, range);
+		const parent = groupID ? suite.getMyGroup(suite.currentRunNumber, groupID)! : suite.node;
+		const testNode = existingTest || new TestNode(suite, parent, testName, testPath, range);
 
-		if (!existingTest) {
-			testNode.suiteRunNumber = suite.currentRunNumber;
-			suite.storeTest(testNode);
-		} else {
+		testNode.suiteRunNumber = suite.currentRunNumber;
+		testNode.isPotentiallyDeleted = false;
+		suite.storeTest(testID, testNode);
+
+		if (existingTest) {
 			testNode.parent = parent;
-			testNode.id = testID;
 			testNode.name = testName;
 			testNode.path = testPath;
 			testNode.range = range;
 		}
 		testNode.testStartTime = startTime;
-
-		// If this is a "loading" test then mark it as hidden because it looks wonky in
-		// the tree with a full path and we already have the "running" icon on the suite.
-		if (testNode.name && testNode.name.startsWith("loading ") && testNode.parent instanceof SuiteNode)
-			testNode.hidden = true;
-		else
-			testNode.hidden = false;
 
 		// Remove from old parent if required.
 		const hasChangedParent = oldParent && oldParent !== testNode.parent;
@@ -394,24 +394,27 @@ export class TestModel {
 		if (!existingTest || hasChangedParent)
 			testNode.parent.tests.push(testNode);
 
-		// Clear any test output from previous runs.
-		testNode.outputEvents.length = 0;
 
-		testNode.status = TestStatus.Running;
+		if (hasStarted) {
+			// Clear any test output from previous runs.
+			testNode.outputEvents.length = 0;
+			testNode.status = TestStatus.Running;
+		}
+
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
-		if (!testNode.hidden)
-			this.rebuildSuiteNode(suite);
+		this.rebuildSuiteNode(suite);
 
-		if (dartCodeDebugSessionID && !testNode.hidden)
+		if (hasStarted && dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testStarted(dartCodeDebugSessionID, testNode));
+
+		return testNode;
 	}
 
-	public testDone(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, hidden: boolean, endTime: number | undefined): void {
+	public testDone(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {
 		const suite = this.suites[suitePath];
-		const testNode = suite.getCurrentTest(testID);
+		const testNode = suite.getCurrentTest(testID)!;
 
-		testNode.hidden = hidden;
 		if (result === "skipped") {
 			testNode.status = TestStatus.Skipped;
 		} else if (result === "success") {
@@ -440,7 +443,7 @@ export class TestModel {
 			this.onFirstFailureEmitter.fire(testNode);
 		}
 
-		if (dartCodeDebugSessionID && !testNode.hidden)
+		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testDone(dartCodeDebugSessionID, testNode, result));
 	}
 
@@ -452,13 +455,7 @@ export class TestModel {
 		// TODO: Some notification that things are complete?
 		// TODO: Maybe a progress bar during the run?
 
-		// Hide nodes that were marked as potentially deleted and then never updated.
-		// This means they weren't run in the last run, so probably were deleted (or
-		// renamed and got new nodes, which still means the old ones should be removed).
-		suite.getAllTests(true).filter((t) => t.isPotentiallyDeleted || t.hidden).forEach((t) => {
-			t.hidden = true;
-			this.updateNode(t.parent);
-		});
+		this.removeAllPotentiallyDeletedNodes(suite);
 
 		// Anything marked as running should be set back to Unknown
 		suite.getAllTests().filter((t) => t.status === TestStatus.Running).forEach((t) => {
@@ -483,86 +480,78 @@ export class TestModel {
 		const test = suite.getCurrentTest(testID);
 		// DO STUFF
 	}
+
+	private removeNode(node: TreeNode) {
+		if (node instanceof GroupNode) {
+			const parent = node.parent;
+			const index = parent.groups.indexOf(node);
+			if (index > -1)
+				parent.groups.splice(index, 1);
+			node.suiteData.dropGroup(node);
+		} else if (node instanceof TestNode) {
+			const parent = node.parent;
+			const index = parent.tests.indexOf(node);
+			if (index > -1)
+				parent.tests.splice(index, 1);
+			node.suiteData.dropTest(node);
+		}
+	}
 }
 
 export class SuiteData {
 	public get currentRunNumber() { return this.node.suiteRunNumber; }
 	public readonly node: SuiteNode;
-	private readonly groups: { [key: string]: GroupNode } = {};
-	private readonly tests: { [key: string]: TestNode } = {};
+	private readonly groups = new Map<string, GroupNode>();
+	private readonly tests = new Map<string, TestNode>();
 	constructor(public readonly path: string, public readonly isFlutterSuite: boolean) {
 		this.node = new SuiteNode(this);
 	}
 
-	public getAllGroups(includeHidden = false) {
-		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
-		// so that stale nodes can still look up their parents.
-		return uniq(
-			Object.keys(this.groups)
-				.map((gKey) => this.groups[gKey])
-				.filter((g) => includeHidden || (!g.hidden && !g.isPhantomGroup)),
-		);
+	public getAllGroups(): GroupNode[] {
+		return [...this.groups.values()];
 	}
-	public getAllTests(includeHidden = false) {
-		// Have to unique these, as we keep dupes in the lookup with the "old" IDs
-		// so that stale nodes can still look up their parents.
-		return uniq(
-			Object.keys(this.tests)
-				.map((tKey) => this.tests[tKey])
-				.filter((t) => includeHidden || !t.hidden),
-		);
-	}
-	public getCurrentGroup(id: number) {
-		return this.groups[`${this.currentRunNumber}_${id}`];
+	public getAllTests(): TestNode[] {
+		return [...this.tests.values()];
 	}
 	public getCurrentTest(id: number) {
-		return this.tests[`${this.currentRunNumber}_${id}`];
+		return this.tests.get(`${this.currentRunNumber}_${id}`);
 	}
-	public getMyGroup(suiteRunNumber: number, id: number) {
-		return this.groups[`${suiteRunNumber}_${id}`];
+	public getMyGroup(suiteRunNumber: number, id: number): GroupNode | undefined {
+		return this.groups.get(`${suiteRunNumber}_${id}`);
 	}
-	public getMyTest(suiteRunNumber: number, id: number) {
-		return this.tests[`${suiteRunNumber}_${id}`];
+	public getMyTest(suiteRunNumber: number, id: number): TestNode | undefined {
+		return this.tests.get(`${suiteRunNumber}_${id}`);
 	}
-	public storeGroup(node: GroupNode) {
-		return this.groups[`${node.suiteRunNumber}_${node.id}`] = node;
+	public storeGroup(groupID: number, node: GroupNode) {
+		this.dropGroup(node);
+		return this.groups.set(`${node.suiteRunNumber}_${groupID}`, node);
 	}
-	public storeTest(node: TestNode) {
-		return this.tests[`${node.suiteRunNumber}_${node.id}`] = node;
+	public storeTest(testID: number, node: TestNode) {
+		this.dropTest(node);
+		return this.tests.set(`${node.suiteRunNumber}_${testID}`, node);
 	}
-	public reuseMatchingGroup(currentSuiteRunNumber: number, groupID: number, groupName: string | undefined, groupRange: Range | undefined): GroupNode | undefined {
-		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllGroups(true).filter((g) => g.name === groupName
-			&& g.suiteRunNumber !== currentSuiteRunNumber);
-		// Reuse the one nearest to the source position.
-		const sortedMatches = matches.slice().sort((g1, g2) => Math.abs((g1.range?.start.line || 0) - (groupRange?.start.line || 0)) - Math.abs((g2.range?.start.line || 0) - (groupRange?.start.line || 0)));
-		const match = sortedMatches.length ? sortedMatches[0] : undefined;
-		if (match) {
-			match.id = groupID;
-			match.suiteRunNumber = this.currentRunNumber;
-			this.storeGroup(match);
-		}
-		return match;
+	public dropGroup(node: GroupNode) {
+		const entry = [...this.groups].find((g) => g[1] === node);
+		if (entry)
+			this.groups.delete(entry[0]);
 	}
-	public reuseMatchingTest(currentSuiteRunNumber: number, testID: number, testName: string | undefined, testRange: Range | undefined): TestNode | undefined {
-		// To reuse a node, the name must match and it must have not been used for the current run.
-		const matches = this.getAllTests().filter((t) => t.name === testName
-			&& t.suiteRunNumber !== currentSuiteRunNumber);
-		// Reuse the one nearest to the source position.
-		const sortedMatches = sortBy(matches.slice(), (t) => Math.abs((t.range?.start.line || 0) - (testRange?.start.line || 0)));
-		const match = sortedMatches.length ? sortedMatches[0] : undefined;
-		if (match) {
-			match.id = testID;
-			match.suiteRunNumber = this.currentRunNumber;
-			this.storeTest(match);
-		}
-		return match;
+	public dropTest(node: TestNode) {
+		const entry = [...this.tests].find((t) => t[1] === node);
+		if (entry)
+			this.tests.delete(entry[0]);
+	}
+	public reuseMatchingGroup(groupName: string | undefined): GroupNode | undefined {
+		return this.getAllGroups().find((g) => g.name === groupName);
+	}
+	public reuseMatchingTest(testName: string | undefined): TestNode | undefined {
+		return this.getAllTests().find((t) => t.name === testName);
 	}
 }
 
 export interface TestEventListener {
-	suiteDiscovered(sessionID: string, node: SuiteNode): void;
-	groupDiscovered(sessionID: string, node: GroupNode): void;
+	suiteDiscovered(sessionID: string | undefined, node: SuiteNode): void;
+	groupDiscovered(sessionID: string | undefined, node: GroupNode): void;
+	testDiscovered(sessionID: string | undefined, node: TestNode): void;
 	testStarted(sessionID: string, node: TestNode): void;
 	testOutput(sessionID: string, node: TestNode, message: string): void;
 	testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void;
