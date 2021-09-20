@@ -69,15 +69,13 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	/// Creates a node (including its children), or if it already exists, updates it
 	/// and its children.
+
+	/// Does not add the item to its parent, so that the calling code can .replace()
+	/// all children if required.
 	///
 	/// Returns undefined if in the case of an error or a node that should
 	/// not be shown in the tree.
 	private createOrUpdateNode(node: TreeNode): vs.TestItem | undefined {
-		if (node instanceof TestNode && node.hidden)
-			return;
-		if (node instanceof GroupNode && node.isPhantomGroup)
-			return;
-
 		let collection;
 		if (node instanceof SuiteNode) {
 			collection = this.controller.items;
@@ -95,24 +93,21 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			this.logger.error(`Failed to find parent (${node.parent?.label}) of node (${node.label})`);
 			return;
 		}
-		const existingItem = collection.get(this.idForNode(node));
+		let existingItem = collection.get(this.idForNode(node));
 
 		// Create new item if required.
 		if (!existingItem) {
 			const newItem = this.createTestItem(node);
-			collection.add(newItem);
-			return newItem;
+			existingItem = newItem;
+		} else {
+			// Otherwise, update this item to match the latest state.
+			this.updateFields(existingItem, node);
 		}
 
-		// Otherwise, update this item to match the latest state.
-		this.updateFields(existingItem, node);
-
 		if (node instanceof TestContainerNode) {
-			// Update al children. Note: crrateOrUpdateNode() adds the child to the tree
-			// so we don't need to do anything with the result here.
-			for (const child of node.children) {
-				this.createOrUpdateNode(child);
-			}
+			existingItem.children.replace(
+				node.children.map((c) => this.createOrUpdateNode(c)).filter(notUndefined),
+			);
 		}
 
 		return existingItem;
@@ -149,10 +144,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.nodeForItem.set(item, node);
 		this.itemForNode.set(node, item);
 
-		if (node instanceof TestContainerNode && node.children) {
-			for (const child of node.children) {
-				item.children.add(this.createTestItem(child));
-			}
+		if (node instanceof TestContainerNode) {
+			item.children.replace(
+				node.children.map((c) => this.createTestItem(c)),
+			);
 		}
 
 		return item;
@@ -177,17 +172,24 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return run;
 	}
 
-	public suiteDiscovered(sessionID: string, node: SuiteNode): void {
+	public suiteDiscovered(sessionID: string | undefined, node: SuiteNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
 	}
 
-	public groupDiscovered(sessionID: string, node: GroupNode): void {
+	public groupDiscovered(sessionID: string | undefined, node: GroupNode): void {
+		// const run = this.getOrCreateTestRun(sessionID);
+		// const item = this.itemForNode.get(node);
+	}
+
+	public testDiscovered(sessionID: string | undefined, node: TestNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
 	}
 
 	public testStarted(sessionID: string, node: TestNode): void {
+		this.testDiscovered(sessionID, node);
+
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
