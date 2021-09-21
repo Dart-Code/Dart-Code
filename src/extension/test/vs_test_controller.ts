@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { GroupNode, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 
@@ -41,19 +41,34 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const testsToRun = new Set<vs.TestItem>();
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
 
-		// For each item in the set, remove any of its children because they will be run by the parent.
-		// Really this should recurse all the way around (eg. don't run grand-children), but that's more
-		// expensive and the common case is only when using gutter icons for dynamic nodes with their
-		// children that share the same range.
+		// For each item in the set, remove any of its descendants because they will be run by the parent.
+		function removeWithDescendants(item: vs.TestItem) {
+			testsToRun.delete(item);
+			item.children.forEach((child) => removeWithDescendants(child));
+		}
 		const all = [...testsToRun];
-		all.forEach((item) => item.children.forEach((child) => testsToRun.delete(child)));
+		all.forEach((item) => item.children.forEach((child) => removeWithDescendants(child)));
 
-		for (const test of testsToRun) {
+		// Group into suites since we need to run each seperately (although we can run
+		// multiple tests witthin one suite together).
+		const testsBySuite = new Map<SuiteData, TreeNode[]>();
+
+		testsToRun.forEach((test) => {
 			const node = this.nodeForItem.get(test);
-			if (!node) continue;
+			if (!node) return;
+			const testNodes = testsBySuite.get(node.suiteData) ?? [];
+			testsBySuite.set(node.suiteData, testNodes);
+			testNodes.push(node);
+		});
 
-			const command = debug ? "dart.startDebuggingTest" : "dart.startWithoutDebuggingTest";
-			await vs.commands.executeCommand(command, node, run);
+		for (const suite of testsBySuite.keys()) {
+			const nodes = testsBySuite.get(suite);
+			if (!nodes) continue;
+
+			const command = debug
+				? "_dart.startDebuggingTestsFromVsTestController"
+				: "_dart.startWithoutDebuggingTestsFromVsTestController";
+			await vs.commands.executeCommand(command, suite, nodes, run);
 		}
 	}
 
