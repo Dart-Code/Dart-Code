@@ -109,8 +109,3 @@ export function extractTestNameFromOutline(elementName: string): string | undefi
 
 	return elementName;
 }
-
-/// Checks whether a test name is a simple string (and does not include interpolation).
-export function isSimpleTestName(name: string): boolean {
-	return !!name && !name.includes("$");
-}

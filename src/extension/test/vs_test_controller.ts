@@ -38,8 +38,15 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	private async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
 		const run = this.controller.createTestRun(request);
-		const testsToRun: vs.TestItem[] = [];
-		(request.include ?? this.controller.items).forEach((item) => testsToRun.push(item));
+		const testsToRun = new Set<vs.TestItem>();
+		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
+
+		// For each item in the set, remove any of its children because they will be run by the parent.
+		// Really this should recurse all the way around (eg. don't run grand-children), but that's more
+		// expensive and the common case is only when using gutter icons for dynamic nodes with their
+		// children that share the same range.
+		const all = [...testsToRun];
+		all.forEach((item) => item.children.forEach((child) => testsToRun.delete(child)));
 
 		for (const test of testsToRun) {
 			const node = this.nodeForItem.get(test);

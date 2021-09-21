@@ -2,7 +2,7 @@
 
 import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { TestModel } from "../../shared/test/test_model";
+import { TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
@@ -30,7 +30,7 @@ export class TestDiscoverer implements IAmDisposable {
 			model.flagNewDiscovery(suite);
 			// Mark everything in the suite as potentially-deleted so that we can detect anything
 			// that was not present in the new list to remove it afterwards.
-			model.markAllAsPotentiallyDeleted(suite);
+			model.markAllAsPotentiallyDeleted(suite, TestSource.Outline);
 
 			const visitor = new class extends LspOutlineVisitor {
 				protected visitUnitTestTest(outline: Outline) {
@@ -54,10 +54,9 @@ export class TestDiscoverer implements IAmDisposable {
 
 					const thisID = id++;
 					if (isGroup)
-						model.groupDiscovered(undefined, suitePath, thisID, fullName, parent?.id, undefined, range);
+						model.groupDiscovered(undefined, suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range);
 					else
-						model.testDiscovered(undefined, suitePath, thisID, fullName, parent?.id, undefined, range, undefined);
-
+						model.testDiscovered(undefined, suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined);
 
 					if (isGroup)
 						stack.push({ id: thisID, name: fullName });
