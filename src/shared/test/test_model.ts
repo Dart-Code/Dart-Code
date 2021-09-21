@@ -12,6 +12,7 @@ export abstract class TreeNode {
 
 	public isStale = false;
 	public suiteRunNumber = 1;
+	public testSource = TestSource.Outline;
 	public isPotentiallyDeleted = false;
 	public ownDuration: number | undefined;
 
@@ -87,18 +88,6 @@ export class SuiteNode extends TreeNode {
 }
 
 export class GroupNode extends TreeNode {
-	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
-		super(suiteData);
-	}
-
-	get label(): string {
-		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.name} `)
-			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
-			: this.name || "<unnamed>";
-	}
-}
-
-export class DynamicTestNode extends TreeNode {
 	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
 	}
@@ -191,7 +180,7 @@ export class TestModel {
 				suite.getAllTests().forEach((t) => t.isStale = true);
 
 				if (isRunningWholeSuite && suite) {
-					this.markAllAsPotentiallyDeleted(suite);
+					this.markAllAsPotentiallyDeleted(suite, TestSource.Result);
 				}
 			}
 		}
@@ -209,9 +198,17 @@ export class TestModel {
 	// potentially deleted and then any tests that aren't run are removed from the tree. This
 	// is to ensure if a test is renamed, we don't keep the old version of it in the test tree
 	// forever since we don't have the necessary information to know the test was renamed.
-	public markAllAsPotentiallyDeleted(suite: SuiteData) {
-		suite.getAllGroups().forEach((g) => g.isPotentiallyDeleted = true);
-		suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
+	//
+	// When updating from the outline, we'll skip children of dynamic nodes as we don't
+	// know if they've been deleted or not, and don't want to cause their results to
+	// immediately disappear.
+	public markAllAsPotentiallyDeleted(suite: SuiteData, source: TestSource) {
+		function doNode(node: TreeNode) {
+			if (node.testSource === source)
+				node.isPotentiallyDeleted = true;
+			node.children.forEach(doNode);
+		}
+		doNode(suite.node);
 	}
 
 	// Marks a node and all of its parents as not-deleted so they will not be cleaned up.
@@ -315,11 +312,17 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
+	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
 		const suite = this.suites[suitePath];
 		const existingGroup = suite.reuseMatchingGroup(groupName);
 		const oldParent = existingGroup?.parent;
-		const parent = parentID ? suite.getMyGroup(suite.currentRunNumber, parentID)! : suite.node;
+		let parent = parentID ? suite.getMyGroup(suite.currentRunNumber, parentID)! : suite.node;
+
+		/// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
+		/// the analyzer.
+		if (groupName && source === TestSource.Result)
+			parent = this.findMatchingDynamicNode(parent, groupName) ?? parent;
+
 		const groupNode = existingGroup || new GroupNode(suite, parent, groupName, groupPath, range);
 
 		groupNode.suiteRunNumber = suite.currentRunNumber;
@@ -330,6 +333,8 @@ export class TestModel {
 			groupNode.name = groupName;
 			groupNode.path = groupPath;
 			groupNode.range = range;
+		} else {
+			groupNode.testSource = source;
 		}
 
 		this.markAsNotDeleted(groupNode);
@@ -358,39 +363,16 @@ export class TestModel {
 		return groupNode;
 	}
 
-	/// Find a matching node in 'parent' that might be a node for a dynamic test that testName is
-	/// an instance of.
-	private findMatchingDynamicTest(parent: TreeNode, testName: string): TreeNode | undefined {
-		// If the parent has any children exactly named us, they should be used regardless.
-		if (parent.children.find((c) => c.name === testName))
-			return;
-
-		for (const child of parent.children) {
-			if (!child.name)
-				continue;
-			const regex = new RegExp(makeRegexForTests([child.name], child instanceof GroupNode));
-			if (regex.test(testName))
-				return child;
-		}
-	}
-
-	public testDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
+	public testDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
 		const suite = this.suites[suitePath];
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
 		let parent: TreeNode = groupID ? suite.getMyGroup(suite.currentRunNumber, groupID)! : suite.node;
 
-		// If we're a dynamic test, we should be re-parented under the dynamic node that came from
-		// the analyzer.
-		if (parent && testName) {
-			const dynamicTestNode = this.findMatchingDynamicTest(parent, testName);
-			if (dynamicTestNode) {
-				parent = dynamicTestNode;
-				if (existingTest === parent) {
-					console.log("!");
-				}
-			}
-		}
+		/// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
+		/// the analyzer.
+		if (testName && source === TestSource.Result)
+			parent = this.findMatchingDynamicNode(parent, testName) ?? parent;
 
 		const testNode = existingTest || new TestNode(suite, parent, testName, testPath, range);
 
@@ -402,6 +384,8 @@ export class TestModel {
 			testNode.name = testName;
 			testNode.path = testPath;
 			testNode.range = range;
+		} else {
+			testNode.testSource = source;
 		}
 
 		this.markAsNotDeleted(testNode);
@@ -433,6 +417,22 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.testStarted(dartCodeDebugSessionID, testNode));
 
 		return testNode;
+	}
+
+	/// Find a matching node in 'parent' that might be a node for a dynamic test/group that name is
+	/// an instance of.
+	private findMatchingDynamicNode<T extends TreeNode>(parent: T, name: string): T | undefined {
+		// If the parent has any children exactly named us, they should be used regardless.
+		if (parent.children.find((c) => c.name === name))
+			return;
+
+		for (const child of parent.children) {
+			if (!child.name || typeof child !== typeof parent)
+				continue;
+			const regex = new RegExp(makeRegexForTests([child.name], child instanceof GroupNode));
+			if (regex.test(name))
+				return child as any as T;
+		}
 	}
 
 	public testDone(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {
@@ -572,4 +572,9 @@ export interface TestEventListener {
 	testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void;
 	testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void;
 	suiteDone(sessionID: string, node: SuiteNode): void;
+}
+
+export enum TestSource {
+	Outline,
+	Result,
 }

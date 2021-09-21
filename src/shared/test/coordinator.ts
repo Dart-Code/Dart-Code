@@ -3,7 +3,7 @@ import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
 import { disposeAll, uriToFilePath } from "../utils";
 import { LspTestOutlineVisitor } from "../utils/outline_lsp";
-import { SuiteData, TestModel } from "./test_model";
+import { SuiteData, TestModel, TestSource } from "./test_model";
 
 /// Handles results from a test debug session and provides them to the test model.
 export class TestSessionCoordinator implements IAmDisposable {
@@ -115,7 +115,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		const range = this.getRangeForNode(suite, line, character);
 		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
 
-		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
+		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
 	}
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestDoneNotification) {
@@ -143,7 +143,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		const line = evt.group.root_line || evt.group.line;
 		const character = evt.group.root_column || evt.group.column;
 		const range = this.getRangeForNode(suite, line, character);
-		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
+		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
 	}
 
 	private getRealGroupId(dartCodeDebugSessionID: string | undefined, groupID: number | undefined) {
