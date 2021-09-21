@@ -199,7 +199,7 @@ describe("dart test debugger", () => {
 
 	it("warns if multiple tests run when one was expected", async () => {
 		await openFile(helloWorldTestDupeNameFile);
-		const config = await getResolvedDebugConfiguration(testUtils.getLaunchConfig(true, fsPath(helloWorldTestDupeNameFile), ["group test"], false));
+		const config = await getResolvedDebugConfiguration(testUtils.getLaunchConfig(true, fsPath(helloWorldTestDupeNameFile), [{ name: "group test", isGroup: false }], false));
 		await dc.start();
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -251,7 +251,7 @@ describe("dart test debugger", () => {
 			// Run the test.
 			await runWithoutDebugging(
 				helloWorldTestTreeFile,
-				["--name", testUtils.makeRegexForTests([test.fullName], test.isGroup)],
+				["--name", testUtils.makeRegexForTests([{ name: test.fullName, isGroup: test.isGroup }])],
 				// Ensure the output contained the test name as a sanity check
 				// that it ran. Because some tests have variables added to the
 				// end, just stop at the $ to avoid failing on them.
@@ -296,12 +296,12 @@ describe("dart test debugger", () => {
 				await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
 			// Re-run each test.
 			for (const test of visitor.tests.filter((t) => !t.isGroup)) {
-				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", testUtils.makeRegexForTests([test.fullName], test.isGroup)]);
+				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", testUtils.makeRegexForTests([{ name: test.fullName, isGroup: test.isGroup }])]);
 				await checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
 			}
 			// Re-run each group.
 			for (const group of visitor.tests.filter((t) => t.isGroup)) {
-				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", testUtils.makeRegexForTests([group.fullName], group.isGroup)]);
+				await runWithoutDebugging(helloWorldTestDupeNameFile, ["--name", testUtils.makeRegexForTests([{ name: group.fullName, isGroup: group.isGroup }])]);
 				await checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
 			}
 		}

@@ -3,13 +3,13 @@ import { BasicDebugConfiguration } from "../../shared/debug/interfaces";
 import { escapeRegExp } from "../../shared/utils";
 import { OpenedFileInformation } from "../interfaces";
 
-export function getLaunchConfig(noDebug: boolean, path: string, testNames: string[] | undefined, isGroup: boolean, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
+export function getLaunchConfig(noDebug: boolean, path: string, testNames: TestName[] | undefined, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
 		toolArgs = toolArgs.concat(template?.toolArgs);
 	if (testNames) {
 		toolArgs.push("--name");
-		toolArgs.push(makeRegexForTests(testNames, isGroup));
+		toolArgs.push(makeRegexForTests(testNames));
 	}
 	if (runSkippedTests)
 		toolArgs.push("--run-skipped");
@@ -25,21 +25,23 @@ export function getLaunchConfig(noDebug: boolean, path: string, testNames: strin
 		template,
 		{
 			args: template?.args,
-			expectSingleTest: !isGroup && testNames?.length === 1 && !testNames[0].includes("$"),
+			expectSingleTest: testNames?.length === 1 && !testNames[0].name.includes("$") && !testNames[0].isGroup,
 			program: path,
 			toolArgs,
 		},
 	);
 }
 
+export interface TestName { name: string, isGroup: boolean }
+
 const regexEscapedInterpolationExpressionPattern = /\\\$(?:(?:\w+)|(?:\\\{.*\\\}))/g;
-export function makeRegexForTests(names: string[], isGroup: boolean) {
+export function makeRegexForTests(names: TestName[]) {
 	const regexSegments: string[] = [];
 	for (const name of names) {
 		const prefix = "^";
 		// We can't anchor to the end for groups, as we want them to run all children.
-		const suffix = isGroup ? "" : "( \\(variant: .*\\))?$";
-		const escapedName = escapeRegExp(name);
+		const suffix = name.isGroup ? "" : "( \\(variant: .*\\))?$";
+		const escapedName = escapeRegExp(name.name);
 
 		// If a test name contains interpolated expressions, passing the exact
 		// name won't match. So we just replace them out with wildcards. We'll need
