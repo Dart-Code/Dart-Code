@@ -5,26 +5,22 @@ import { Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { flatMap, notUndefined } from "../utils";
 import { fsPath } from "../utils/fs";
+import { makeRegexForTests } from "../utils/test";
 
 export abstract class TreeNode {
-	public abstract parent: TestContainerNode | undefined;
+	public abstract parent: TreeNode | undefined;
 
 	public isStale = false;
 	public suiteRunNumber = 1;
 	public isPotentiallyDeleted = false;
+	public ownDuration: number | undefined;
 
-	public abstract label: string | undefined;
+	abstract get label(): string | undefined;
 
-	public abstract getTestCount(includeSkipped: boolean): number;
-	public abstract testPassCount: number;
-
-	public abstract duration: number | undefined;
 	public description: string | undefined;
 
 	constructor(public readonly suiteData: SuiteData) { }
-}
 
-export abstract class TestContainerNode extends TreeNode {
 	public readonly children: Array<GroupNode | TestNode> = [];
 
 	public readonly statuses = new Set<TestStatus>([TestStatus.Unknown]);
@@ -75,13 +71,12 @@ export abstract class TestContainerNode extends TreeNode {
 		return this.children
 			.map((t) => t.duration)
 			.filter(notUndefined)
-			.reduce((total, value) => total + value, 0);
+			.reduce((total, value) => total + value, 0)
+			+ (this.ownDuration ?? 0);
 	}
-
-	abstract get label(): string | undefined;
 }
 
-export class SuiteNode extends TestContainerNode {
+export class SuiteNode extends TreeNode {
 	constructor(suiteData: SuiteData) {
 		super(suiteData);
 	}
@@ -91,7 +86,7 @@ export class SuiteNode extends TestContainerNode {
 	get label(): undefined { return undefined; }
 }
 
-export class GroupNode extends TestContainerNode {
+export class GroupNode extends TreeNode {
 	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
 	}
@@ -101,10 +96,17 @@ export class GroupNode extends TestContainerNode {
 			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
 			: this.name || "<unnamed>";
 	}
+}
 
-	// TODO: Remove phantom groups from this model, and handle only in the test notification handler.
-	get isPhantomGroup() {
-		return !this.name && this.parent instanceof SuiteNode;
+export class DynamicTestNode extends TreeNode {
+	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
+		super(suiteData);
+	}
+
+	get label(): string {
+		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.name} `)
+			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
+			: this.name || "<unnamed>";
 	}
 }
 
@@ -113,10 +115,9 @@ export class TestNode extends TreeNode {
 
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
-	public duration: number | undefined;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
+	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -213,6 +214,14 @@ export class TestModel {
 		suite.getAllTests().forEach((t) => t.isPotentiallyDeleted = true);
 	}
 
+	// Marks a node and all of its parents as not-deleted so they will not be cleaned up.
+	private markAsNotDeleted(node: TreeNode | undefined) {
+		while (node) {
+			node.isPotentiallyDeleted = false;
+			node = node.parent;
+		}
+	}
+
 	public removeAllPotentiallyDeletedNodes(suite: SuiteData) {
 		// Delete nodes that were marked as potentially deleted and then never updated.
 		// This means they weren't run in the last run, so probably were deleted (or
@@ -254,21 +263,6 @@ export class TestModel {
 
 	public updateNode(node?: TreeNode) {
 		this.onDidChangeDataEmitter.fire(node);
-
-		function dumpNode(node: TreeNode, indent: number) {
-			console.log(`${" ".repeat(indent * 2)}${node.label} ${node.isPotentiallyDeleted}`);
-			if (node instanceof TestContainerNode)
-				node.children.forEach((n) => dumpNode(n, 1));
-		}
-
-		// if (!node) {
-		console.log();
-		console.log();
-		for (const suite of Object.values(this.suites)) {
-			console.log(suite.path);
-			suite.node.children.forEach((n) => dumpNode(n, 1));
-		}
-		// }
 	}
 
 	public rebuildSuiteNode(suite: SuiteData) {
@@ -329,7 +323,6 @@ export class TestModel {
 		const groupNode = existingGroup || new GroupNode(suite, parent, groupName, groupPath, range);
 
 		groupNode.suiteRunNumber = suite.currentRunNumber;
-		groupNode.isPotentiallyDeleted = false;
 		suite.storeGroup(groupID, groupNode);
 
 		if (existingGroup) {
@@ -338,6 +331,8 @@ export class TestModel {
 			groupNode.path = groupPath;
 			groupNode.range = range;
 		}
+
+		this.markAsNotDeleted(groupNode);
 
 		// Remove from old parent if required
 		const hasChangedParent = oldParent !== parent;
@@ -363,15 +358,43 @@ export class TestModel {
 		return groupNode;
 	}
 
+	/// Find a matching node in 'parent' that might be a node for a dynamic test that testName is
+	/// an instance of.
+	private findMatchingDynamicTest(parent: TreeNode, testName: string): TreeNode | undefined {
+		// If the parent has any children exactly named us, they should be used regardless.
+		if (parent.children.find((c) => c.name === testName))
+			return;
+
+		for (const child of parent.children) {
+			if (!child.name)
+				continue;
+			const regex = new RegExp(makeRegexForTests([child.name], child instanceof GroupNode));
+			if (regex.test(testName))
+				return child;
+		}
+	}
+
 	public testDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
 		const suite = this.suites[suitePath];
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
-		const parent = groupID ? suite.getMyGroup(suite.currentRunNumber, groupID)! : suite.node;
+		let parent: TreeNode = groupID ? suite.getMyGroup(suite.currentRunNumber, groupID)! : suite.node;
+
+		// If we're a dynamic test, we should be re-parented under the dynamic node that came from
+		// the analyzer.
+		if (parent && testName) {
+			const dynamicTestNode = this.findMatchingDynamicTest(parent, testName);
+			if (dynamicTestNode) {
+				parent = dynamicTestNode;
+				if (existingTest === parent) {
+					console.log("!");
+				}
+			}
+		}
+
 		const testNode = existingTest || new TestNode(suite, parent, testName, testPath, range);
 
 		testNode.suiteRunNumber = suite.currentRunNumber;
-		testNode.isPotentiallyDeleted = false;
 		suite.storeTest(testID, testNode);
 
 		if (existingTest) {
@@ -380,6 +403,8 @@ export class TestModel {
 			testNode.path = testPath;
 			testNode.range = range;
 		}
+
+		this.markAsNotDeleted(testNode);
 		testNode.testStartTime = startTime;
 
 		// Remove from old parent if required.
@@ -426,7 +451,7 @@ export class TestModel {
 			testNode.status = TestStatus.Unknown;
 		}
 		if (endTime && testNode.testStartTime) {
-			testNode.duration = endTime - testNode.testStartTime;
+			testNode.ownDuration = endTime - testNode.testStartTime;
 			testNode.description = ``;
 			// Don't clear this, as concurrent runs will overwrite each
 			// other and then we'll get no time at the end.
