@@ -3,7 +3,7 @@ import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
 import { Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
-import { flatMap, notUndefined } from "../utils";
+import { flatMap, notUndefined, uniq } from "../utils";
 import { fsPath } from "../utils/fs";
 import { makeRegexForTests } from "../utils/test";
 
@@ -11,12 +11,9 @@ export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
 
 	public isStale = false;
-	public suiteRunNumber = 1;
 	public testSource = TestSource.Outline;
 	public isPotentiallyDeleted = false;
 	public ownDuration: number | undefined;
-
-	abstract get label(): string | undefined;
 
 	public description: string | undefined;
 
@@ -48,11 +45,14 @@ export abstract class TreeNode {
 	}
 
 	getHighestStatus(includeSkipped: boolean): TestStatus {
+		const statuses = this instanceof TestNode
+			? new Set(this.children.map((c) => (c as TestNode).status))
+			: this.statuses;
 		// Always include Skipped status for Suite nodes that have only that status, else they'll
 		// show as unknown.
-		if (!includeSkipped && this instanceof SuiteNode && this.statuses.size === 1 && this.statuses.has(TestStatus.Skipped))
+		if (!includeSkipped && this instanceof SuiteNode && statuses.size === 1 && statuses.has(TestStatus.Skipped))
 			includeSkipped = true;
-		const validStatues = [...this.statuses].filter((s) => includeSkipped || s !== TestStatus.Skipped);
+		const validStatues = [...statuses].filter((s) => includeSkipped || s !== TestStatus.Skipped);
 		return validStatues.length
 			? Math.max(...validStatues)
 			: TestStatus.Unknown;
@@ -61,6 +61,30 @@ export abstract class TreeNode {
 	getTestCount(includeSkipped: boolean): number {
 		return this.children.map((t) => t.getTestCount(includeSkipped))
 			.reduce((total, value) => total + value, 0);
+	}
+
+	get label(): string | undefined {
+		const name = this instanceof GroupNode
+			? this.name
+			: this instanceof TestNode
+				? this.name
+				: undefined;
+
+		let parent = this.parent;
+		while (name && parent) {
+			const parentName = parent instanceof GroupNode
+				? parent.name
+				: parent instanceof TestNode
+					? parent.name
+					: undefined;
+			if (parentName && name.startsWith(`${parentName} `))
+				return name.substr(parentName.length + 1); // +1 because of the space (included above).
+
+			// Otherwise try next parent up.
+			parent = parent?.parent;
+		}
+
+		return name ?? "<unnamed>";
 	}
 
 	get testPassCount(): number {
@@ -83,19 +107,11 @@ export class SuiteNode extends TreeNode {
 	}
 
 	get parent(): undefined { return undefined; }
-
-	get label(): undefined { return undefined; }
 }
 
 export class GroupNode extends TreeNode {
 	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
-	}
-
-	get label(): string {
-		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.name} `)
-			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
-			: this.name || "<unnamed>";
 	}
 }
 
@@ -110,21 +126,21 @@ export class TestNode extends TreeNode {
 		super(suiteData);
 	}
 
-	get label(): string {
-		return this.parent && this.parent instanceof GroupNode && this.parent.name && this.name && this.name.startsWith(`${this.parent.name} `)
-			? this.name.substr(this.parent.name.length + 1) // +1 because of the space (included above).
-			: (this.name || "<unnamed>");
-	}
-
 	getTestCount(includeSkipped: boolean): number {
+		if (this.children.length)
+			return super.getTestCount(includeSkipped);
 		return includeSkipped || this.status !== TestStatus.Skipped ? 1 : 0;
 	}
 
 	get testPassCount(): number {
+		if (this.children.length)
+			return super.testPassCount;
 		return this.status === TestStatus.Passed ? 1 : 0;
 	}
 
 	get status(): TestStatus {
+		if (this.children.length)
+			return super.getHighestStatus(true);
 		return this._status;
 	}
 
@@ -184,14 +200,6 @@ export class TestModel {
 				}
 			}
 		}
-
-		// Also increase the currentRunNumber to ensure we know all results are from
-		// the newest run.
-		Object.values(this.suites).forEach((suite) => this.flagNewDiscovery(suite));
-	}
-
-	public flagNewDiscovery(suite: SuiteData) {
-		suite.node.suiteRunNumber++;
 	}
 
 	// When running the whole suite (or updating from Outline), we flag all tests as being
@@ -312,11 +320,11 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
+	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
 		const suite = this.suites[suitePath];
 		const existingGroup = suite.reuseMatchingGroup(groupName);
 		const oldParent = existingGroup?.parent;
-		let parent = parentID ? suite.getMyGroup(suite.currentRunNumber, parentID)! : suite.node;
+		let parent = parentID ? suite.getMyGroup(dartCodeDebugSessionID, parentID)! : suite.node;
 
 		/// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
 		/// the analyzer.
@@ -325,8 +333,7 @@ export class TestModel {
 
 		const groupNode = existingGroup || new GroupNode(suite, parent, groupName, groupPath, range);
 
-		groupNode.suiteRunNumber = suite.currentRunNumber;
-		suite.storeGroup(groupID, groupNode);
+		suite.storeGroup(dartCodeDebugSessionID, groupID, groupNode);
 
 		if (existingGroup) {
 			groupNode.parent = parent;
@@ -354,7 +361,6 @@ export class TestModel {
 			groupNode.appendStatus(TestStatus.Running);
 		}
 
-		this.updateNode(groupNode);
 		this.updateNode(groupNode.parent);
 
 		if (dartCodeDebugSessionID)
@@ -363,11 +369,11 @@ export class TestModel {
 		return groupNode;
 	}
 
-	public testDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
+	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
 		const suite = this.suites[suitePath];
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
-		let parent: TreeNode = groupID ? suite.getMyGroup(suite.currentRunNumber, groupID)! : suite.node;
+		let parent: TreeNode = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
 
 		/// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
 		/// the analyzer.
@@ -376,8 +382,7 @@ export class TestModel {
 
 		const testNode = existingTest || new TestNode(suite, parent, testName, testPath, range);
 
-		testNode.suiteRunNumber = suite.currentRunNumber;
-		suite.storeTest(testID, testNode);
+		suite.storeTest(dartCodeDebugSessionID, testID, testNode);
 
 		if (existingTest) {
 			testNode.parent = parent;
@@ -409,7 +414,6 @@ export class TestModel {
 			testNode.status = TestStatus.Running;
 		}
 
-		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
 		this.rebuildSuiteNode(suite);
 
@@ -435,9 +439,9 @@ export class TestModel {
 		}
 	}
 
-	public testDone(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {
+	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {
 		const suite = this.suites[suitePath];
-		const testNode = suite.getCurrentTest(testID)!;
+		const testNode = suite.getCurrentTest(dartCodeDebugSessionID, testID)!;
 
 		if (result === "skipped") {
 			testNode.status = TestStatus.Skipped;
@@ -493,15 +497,15 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.suiteDone(dartCodeDebugSessionID, suite.node));
 	}
 
-	public testOutput(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, message: string) {
+	public testOutput(dartCodeDebugSessionID: string, suitePath: string, testID: number, message: string) {
 		const suite = this.suites[suitePath];
-		const test = suite.getCurrentTest(testID);
+		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
 		// DO STUFF
 	}
 
-	public testErrorOutput(dartCodeDebugSessionID: string | undefined, suitePath: string, testID: number, isFailure: boolean, message: string, stack: string) {
+	public testErrorOutput(dartCodeDebugSessionID: string, suitePath: string, testID: number, isFailure: boolean, message: string, stack: string) {
 		const suite = this.suites[suitePath];
-		const test = suite.getCurrentTest(testID);
+		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
 		// DO STUFF
 	}
 
@@ -510,12 +514,10 @@ export class TestModel {
 		const index = parent.children.indexOf(node);
 		if (index > -1)
 			parent.children.splice(index, 1);
-		node.suiteData.dropNode(node);
 	}
 }
 
 export class SuiteData {
-	public get currentRunNumber() { return this.node.suiteRunNumber; }
 	public readonly node: SuiteNode;
 	private readonly groups = new Map<string, GroupNode>();
 	private readonly tests = new Map<string, TestNode>();
@@ -524,36 +526,31 @@ export class SuiteData {
 	}
 
 	public getAllGroups(): GroupNode[] {
-		return [...this.groups.values()];
+		// We need to uniq() these because we store values in the map from
+		// other runs so that concurrent runs can look up parent nodes from
+		// their own IDs.
+		return uniq([...this.groups.values()]);
 	}
 	public getAllTests(): TestNode[] {
-		return [...this.tests.values()];
+		// We need to uniq() these because we store values in the map from
+		// other runs so that concurrent runs can look up parent nodes from
+		// their own IDs.
+		return uniq([...this.tests.values()]);
 	}
-	public getCurrentTest(id: number) {
-		return this.tests.get(`${this.currentRunNumber}_${id}`);
+	public getCurrentTest(sessionID: string, id: number) {
+		return this.tests.get(`${sessionID}_${id}`);
 	}
-	public getMyGroup(suiteRunNumber: number, id: number): GroupNode | undefined {
-		return this.groups.get(`${suiteRunNumber}_${id}`);
+	public getMyGroup(sessionID: string, id: number): GroupNode | undefined {
+		return this.groups.get(`${sessionID}_${id}`);
 	}
-	public getMyTest(suiteRunNumber: number, id: number): TestNode | undefined {
-		return this.tests.get(`${suiteRunNumber}_${id}`);
+	public getMyTest(sessionID: string, id: number): TestNode | undefined {
+		return this.tests.get(`${sessionID}_${id}`);
 	}
-	public storeGroup(groupID: number, node: GroupNode) {
-		this.dropNode(node);
-		return this.groups.set(`${node.suiteRunNumber}_${groupID}`, node);
+	public storeGroup(sessionID: string, groupID: number, node: GroupNode) {
+		return this.groups.set(`${sessionID}_${groupID}`, node);
 	}
-	public storeTest(testID: number, node: TestNode) {
-		this.dropNode(node);
-		return this.tests.set(`${node.suiteRunNumber}_${testID}`, node);
-	}
-	public dropNode(node: GroupNode | TestNode) {
-		const group = [...this.groups].find((g) => g[1] === node);
-		if (group)
-			this.groups.delete(group[0]);
-
-		const test = [...this.tests].find((t) => t[1] === node);
-		if (test)
-			this.tests.delete(test[0]);
+	public storeTest(sessionID: string, testID: number, node: TestNode) {
+		return this.tests.set(`${sessionID}_${testID}`, node);
 	}
 	public reuseMatchingGroup(groupName: string | undefined): GroupNode | undefined {
 		return this.getAllGroups().find((g) => g.name === groupName);

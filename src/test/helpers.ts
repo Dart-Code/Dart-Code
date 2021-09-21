@@ -1188,7 +1188,7 @@ export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCo
 		if (lastResult) {
 			if (lastResultTestNode.status)
 				nodeString += ` ${TestStatus[lastResultTestNode.status]}`;
-			if (lastResult.children.length && lastResult.statuses?.size)
+			else if (lastResult.children.length && lastResult.statuses?.size)
 				nodeString += ` ${TestStatus[lastResult.getHighestStatus(true)]}`;
 			const isStale = lastResult.isStale;
 			const isFailure = lastResultTestNode.status === TestStatus.Failed;

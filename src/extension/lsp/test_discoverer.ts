@@ -4,7 +4,7 @@ import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protoco
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercase } from "../../shared/utils/fs";
+import { forceWindowsDriveLetterToUppercase, getRandomInt } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
@@ -27,7 +27,10 @@ export class TestDiscoverer implements IAmDisposable {
 
 			let id = 1;
 
-			model.flagNewDiscovery(suite);
+			// Generate a unique ID for these IDs to be owned by so that they can be looked
+			// up independent of any other ongoing runs.
+			const dartCodeDebugSessionID = `discovery-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+
 			// Mark everything in the suite as potentially-deleted so that we can detect anything
 			// that was not present in the new list to remove it afterwards.
 			model.markAllAsPotentiallyDeleted(suite, TestSource.Outline);
@@ -54,9 +57,9 @@ export class TestDiscoverer implements IAmDisposable {
 
 					const thisID = id++;
 					if (isGroup)
-						model.groupDiscovered(undefined, suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range);
+						model.groupDiscovered(dartCodeDebugSessionID, suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range);
 					else
-						model.testDiscovered(undefined, suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined);
+						model.testDiscovered(dartCodeDebugSessionID, suitePath, TestSource.Outline, thisID, fullName, parent?.id, undefined, range, undefined);
 
 					if (isGroup)
 						stack.push({ id: thisID, name: fullName });
