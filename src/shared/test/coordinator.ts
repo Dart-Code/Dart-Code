@@ -25,7 +25,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
 		if (event === "dart.testRunNotification") {
 			// tslint:disable-next-line: no-floating-promises
-			this.handleNotification(debugSessionID, dartCodeDebugSessionID, body.suitePath, body.notification).catch((e) => this.logger.error(e));
+			this.handleNotification(debugSessionID, dartCodeDebugSessionID ?? `untagged-session-${debugSessionID}`, body.suitePath, body.notification).catch((e) => this.logger.error(e));
 		}
 	}
 
@@ -44,7 +44,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 	}
 
-	public async handleNotification(debugSessionID: string, dartCodeDebugSessionID: string | undefined, suitePath: string, evt: Notification): Promise<void> {
+	public async handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, suitePath: string, evt: Notification): Promise<void> {
 		// If we're starting a suite, record us as the owner so we can clean up later
 		if (evt.type === "suite")
 			this.owningDebugSessions[suitePath] = debugSessionID;
@@ -103,7 +103,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 			visitor.visit(outline);
 	}
 
-	private handleTestStartNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestStartNotification) {
+	private handleTestStartNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: TestStartNotification) {
 		// Skip loading tests.
 		if (evt.test.name?.startsWith("loading ") && !evt.test.groupIDs?.length)
 			return;
@@ -118,18 +118,18 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
 	}
 
-	private handleTestDoneNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: TestDoneNotification) {
+	private handleTestDoneNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: TestDoneNotification) {
 		const result = evt.skipped ? "skipped" : evt.result;
 
 		// If we don't have a test, it was probably a "loading foo.dart" test that we skipped over, so skip the result too.
-		const test = suite.getCurrentTest(evt.testID);
+		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
 		if (!test)
 			return;
 
 		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time);
 	}
 
-	private handleGroupNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: GroupNotification) {
+	private handleGroupNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: GroupNotification) {
 		// Skip phantom groups.
 		if (!evt.group.name) {
 			if (dartCodeDebugSessionID) {
@@ -146,7 +146,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
 	}
 
-	private getRealGroupId(dartCodeDebugSessionID: string | undefined, groupID: number | undefined) {
+	private getRealGroupId(dartCodeDebugSessionID: string, groupID: number | undefined) {
 		const mapping = dartCodeDebugSessionID ? this.phantomGroupParents[dartCodeDebugSessionID] : undefined;
 		const mappedValue = mapping && groupID ? mapping[groupID] : undefined;
 		// Null is a special value that means undefined top-level)
@@ -160,14 +160,28 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.data.suiteDone(dartCodeDebugSessionID, suite.path);
 	}
 
-	private handlePrintNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: PrintNotification) {
-		const test = suite.getCurrentTest(evt.testID)!;
+	private handlePrintNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: PrintNotification) {
+		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
+
+		// It's possible we'll get notifications for tests we don't track (like loading tests) - for example package:test
+		// may send "Consider enabling the flag chain-stack-traces to receive more detailed exceptions" against the first
+		// loading test.
+		if (!test)
+			return;
+
 		test.outputEvents.push(evt);
 		this.data.testOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.message);
 	}
 
-	private handleErrorNotification(dartCodeDebugSessionID: string | undefined, suite: SuiteData, evt: ErrorNotification) {
-		const test = suite.getCurrentTest(evt.testID)!;
+	private handleErrorNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: ErrorNotification) {
+		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
+
+		// It's possible we'll get notifications for tests we don't track (like loading tests) - for example package:test
+		// may send "Consider enabling the flag chain-stack-traces to receive more detailed exceptions" against the first
+		// loading test.
+		if (!test)
+			return;
+
 		test.outputEvents.push(evt);
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
 	}

@@ -4,6 +4,7 @@ import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSes
 import { DebugProtocol } from "vscode-debugprotocol";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
+import { getRandomInt } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
@@ -139,7 +140,7 @@ export class DartDebugClient extends DebugClient {
 			configuration,
 			customRequest: async (cmd, args) => (await this.customRequest(cmd, args)).body,
 			getDebugProtocolBreakpoint: () => { throw new Error("Not implemented for tests"); },
-			id: "INTEGRATION-TEST",
+			id: `INTEGRATION-TEST-${getRandomInt(0x1000, 0x10000).toString(16)}`,
 			name: configuration.name,
 			type: configuration.type,
 			workspaceFolder: undefined,
