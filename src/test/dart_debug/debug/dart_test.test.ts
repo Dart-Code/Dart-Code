@@ -261,14 +261,7 @@ describe("dart test debugger", () => {
 		}
 	});
 
-	it("merges same name groups but not tests from the same run", async () => {
-		// This test is similar to above but contains adjacent tests with the same name.
-		// In a single run the tests must not be merged (groups are ok). When individual tests
-		// are re-run we may re-use nodes, but always pick the closest one (source line number)
-		// and only never a node that's already been "claimed" by the current run.
-		// We re-run the groups as well as tests, to ensure consistent results when running
-		// multiple of the duplicated tests.
-
+	it("merges same name items together", async () => {
 		async function checkResults(description: string): Promise<void> {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
@@ -360,7 +353,7 @@ test/tree_test.dart [8/11 passed] Failed
 		for (const file of testFiles) {
 			await openFile(file);
 			// Get the expected tree and filter it to only failed tests.
-			const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("fail.svg")).join("\n");
+			const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("Failed")).join("\n");
 			// Get the actual tree, filtered only to those that ran in the last run.
 			const actualResults = (await makeTestTextTree(file, { onlyActive: true })).join("\n");
 			assert.equal(actualResults, expectedResults);
