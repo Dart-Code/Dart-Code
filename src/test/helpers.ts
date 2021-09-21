@@ -10,7 +10,7 @@ import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { TestContainerNode, TestNode, TreeNode } from "../shared/test/test_model";
+import { TestNode, TreeNode } from "../shared/test/test_model";
 import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
@@ -1179,7 +1179,6 @@ export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCo
 	for (const item of testItems) {
 		const lastResult = extApi.testController!.getLatestData(item);
 		const lastResultTestNode = lastResult as TestNode;
-		const lastResultTestContainerNode = lastResult as TestContainerNode;
 
 		let nodeString = item.label;
 		if (item.description)
@@ -1189,8 +1188,8 @@ export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCo
 		if (lastResult) {
 			if (lastResultTestNode.status)
 				nodeString += ` ${TestStatus[lastResultTestNode.status]}`;
-			if (lastResultTestContainerNode.statuses?.size)
-				nodeString += ` ${TestStatus[lastResultTestContainerNode.getHighestStatus(true)]}`;
+			if (lastResult.children.length && lastResult.statuses?.size)
+				nodeString += ` ${TestStatus[lastResult.getHighestStatus(true)]}`;
 			const isStale = lastResult.isStale;
 			const isFailure = lastResultTestNode.status === TestStatus.Failed;
 			if ((isStale && onlyActive) || (!isFailure && onlyFailures))

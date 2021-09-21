@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { GroupNode, SuiteNode, TestContainerNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 
@@ -79,12 +79,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		let collection;
 		if (node instanceof SuiteNode) {
 			collection = this.controller.items;
-		} else if (node instanceof GroupNode) {
-			// If the parent is a Phantom group, jump over it.
-			let parent = node.parent;
-			while (parent instanceof GroupNode && parent.isPhantomGroup)
-				parent = parent.parent;
-			collection = this.itemForNode.get(parent)?.children;
 		} else {
 			collection = this.itemForNode.get(node.parent!)?.children;
 		}
@@ -104,11 +98,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			this.updateFields(existingItem, node);
 		}
 
-		if (node instanceof TestContainerNode) {
-			existingItem.children.replace(
-				node.children.map((c) => this.createOrUpdateNode(c)).filter(notUndefined),
-			);
-		}
+		existingItem.children.replace(
+			node.children.map((c) => this.createOrUpdateNode(c)).filter(notUndefined),
+		);
 
 		return existingItem;
 	}
@@ -144,11 +136,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.nodeForItem.set(item, node);
 		this.itemForNode.set(node, item);
 
-		if (node instanceof TestContainerNode) {
-			item.children.replace(
-				node.children.map((c) => this.createTestItem(c)),
-			);
-		}
+		item.children.replace(
+			node.children.map((c) => this.createTestItem(c)),
+		);
 
 		return item;
 	}

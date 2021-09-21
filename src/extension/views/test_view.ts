@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { DART_TEST_CAN_RUN_SKIPPED_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT, DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT, DART_TEST_GROUP_NODE_CONTEXT, DART_TEST_SUITE_NODE_CONTEXT, DART_TEST_TEST_NODE_CONTEXT } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
-import { GroupNode, SuiteNode, TestContainerNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll } from "../../shared/utils";
 import { brightRed, yellow } from "../../shared/utils/colors";
@@ -142,7 +142,7 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			.map((suite) => suite.node);
 	}
 
-	public getParent?(element: vs.TreeItem): SuiteNode | GroupNode | undefined {
+	public getParent?(element: vs.TreeItem): TreeNode | undefined {
 		if (element instanceof TestNode || element instanceof GroupNode)
 			return element.parent;
 	}
@@ -222,7 +222,7 @@ class TreeItemBuilder {
 		return label.trim().split("\n").map((l) => l.trim()).join(" ");
 	}
 
-	private getContextValueForNode(node: TestContainerNode | TestNode): string {
+	private getContextValueForNode(node: TreeNode): string {
 		let contexts = "";
 
 		if (node instanceof SuiteNode)
@@ -232,7 +232,7 @@ class TreeItemBuilder {
 		else
 			contexts = `${DART_TEST_TEST_NODE_CONTEXT} `;
 
-		if (node instanceof TestContainerNode) {
+		if (node.children.length) {
 			if (node.hasStatus(TestStatus.Failed))
 				contexts += `${DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT} `;
 
