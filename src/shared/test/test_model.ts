@@ -10,7 +10,7 @@ import { makeRegexForTests } from "../utils/test";
 export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
 
-	public isStale = false;
+	public _isStale = false;
 	public testSource = TestSource.Outline;
 	public isPotentiallyDeleted = false;
 	public ownDuration: number | undefined;
@@ -99,6 +99,14 @@ export abstract class TreeNode {
 			.reduce((total, value) => total + value, 0)
 			+ (this.ownDuration ?? 0);
 	}
+
+	get isStale(): boolean {
+		return this._isStale;
+	}
+
+	set isStale(value: boolean) {
+		this._isStale = value;
+	}
 }
 
 export class SuiteNode extends TreeNode {
@@ -153,6 +161,16 @@ export class TestNode extends TreeNode {
 			this.isStale = false;
 			this.isPotentiallyDeleted = false;
 		}
+	}
+
+	get isStale(): boolean {
+		if (this.children.length)
+			return !!this.children.find((c) => c.isStale);
+		return super.isStale;
+	}
+
+	set isStale(value: boolean) {
+		super.isStale = value;
 	}
 }
 
