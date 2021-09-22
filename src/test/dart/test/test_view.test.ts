@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { activate, extApi, getExpectedResults, helloWorldTestDiscoveryFile, makeTestTextTree, openFile, waitForResult } from "../../helpers";
+import { activate, delay, extApi, getExpectedResults, helloWorldTestDiscoveryFile, makeTestTextTree, openFile, waitForResult } from "../../helpers";
 
 describe("dart test tree", () => {
 	beforeEach("activate", () => activate());
@@ -16,6 +16,8 @@ describe("dart test tree", () => {
 		// Open the file and allow time for the outline.
 		await openFile(helloWorldTestDiscoveryFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryFile));
+
+		await delay(1500); // Account for debounce.
 
 		const expectedResults = getExpectedResults();
 		const actualResults = (await makeTestTextTree(helloWorldTestDiscoveryFile)).join("\n");
