@@ -295,21 +295,22 @@ export class TestModel {
 	}
 
 	/// Rebuilds any data on a node that is dependent on its children.
-	private rebuildNode(node: SuiteNode | GroupNode): void {
-		const childStatuses = node.children.length
-			? flatMap(
-				node.children.map((c) => {
-					if (c instanceof GroupNode) {
-						this.rebuildNode(c);
-						return [...c.statuses];
-					}
-					if (c instanceof TestNode)
-						return [c.status];
-					return [TestStatus.Unknown];
-				}),
-				(s) => s,
-			)
-			: [TestStatus.Unknown];
+	private rebuildNode(node: SuiteNode | GroupNode | TestNode): void {
+		if (!node.children.length)
+			return;
+
+		const childStatuses = flatMap(
+			node.children.map((c) => {
+				this.rebuildNode(c);
+				if (c instanceof GroupNode) {
+					return [...c.statuses];
+				}
+				if (c instanceof TestNode)
+					return [c.status];
+				return [TestStatus.Unknown];
+			}),
+			(s) => s,
+		);
 
 		const childStatusesSet = new Set<TestStatus>(childStatuses);
 		const statusAreEqual = node.statuses.size === childStatusesSet.size && [...childStatusesSet].every((s) => node.statuses.has(s));
