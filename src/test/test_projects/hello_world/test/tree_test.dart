@@ -6,11 +6,11 @@ import "package:test/test.dart";
 // == EXPECTED RESULTS ==
 // test/tree_test.dart [4/11 passed] Failed
 //     failing group 1 [2/4 passed] Failed
-//         passing test 1 ${1 + 1} Passed
+//         passing test 1 ${1 + 1} [1/1 passed] Passed
 //             passing test 1 2 Passed
-//         failing test 1 $foo Failed
+//         failing test 1 $foo [0/1 passed] Failed
 //             failing test 1 some string Failed
-//         skipped test 1 $foo Skipped
+//         skipped test 1 $foo [0/1 passed] Skipped
 //             skipped test 1 some string Skipped
 //         group 1.1 [1/1 passed] Passed
 //             passing test 1 with ' some " quotes and newlines in name Passed
