@@ -8,7 +8,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, clearTestTree, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, clearTestTree, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -320,7 +320,8 @@ describe("dart test debugger", () => {
 		const expectedResults = `
 test/tree_test.dart [8/11 passed] Failed
     failing group 1 [3/4 passed] Failed
-        skipped test 1 some string Passed
+        skipped test 1 $foo [1/1 passed] Passed
+            skipped test 1 some string Passed
     skipped group 2 [4/6 passed] Failed
         skipped test 1 Passed
         skipped group 2.1 [2/3 passed] Failed
@@ -378,15 +379,18 @@ test/tree_test.dart [8/11 passed] Failed
 
 		// Check toggling the setting results in the skipped nodes being removed.
 		await setConfigForTest("dart", "showSkippedTests", false);
+		await delay(500); // Allow time for tree to rebuild.
 		// Expected results differ from what's in the file not only because skipped tests are hidden, but because
 		// the counts on the containing nodes will also be reduced.
 		expectedResults = `
 test/tree_test.dart [4/6 passed] Failed
     failing group 1 [2/3 passed] Failed
+        passing test 1 \${1 + 1} [1/1 passed] Passed
+            passing test 1 2 Passed
+        failing test 1 $foo [0/1 passed] Failed
+            failing test 1 some string Failed
         group 1.1 [1/1 passed] Passed
             passing test 1 with ' some " quotes and newlines in name Passed
-        passing test 1 2 Passed
-        failing test 1 some string Failed
     skipped group 2 [1/2 passed] Failed
         passing test 1 Passed
         failing test 1 Failed
