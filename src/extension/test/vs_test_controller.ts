@@ -1,9 +1,11 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { TestStatus } from "../../shared/enums";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { config } from "../config";
 
 export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -98,6 +100,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	/// Returns undefined if in the case of an error or a node that should
 	/// not be shown in the tree.
 	private createOrUpdateNode(node: TreeNode): vs.TestItem | undefined {
+		if (!this.shouldShowNode(node))
+			return;
+
 		let collection;
 		if (node instanceof SuiteNode) {
 			collection = this.controller.items;
@@ -125,6 +130,27 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		);
 
 		return existingItem;
+	}
+
+	private shouldShowNode(node: TreeNode): boolean {
+		if (config.showSkippedTests)
+			return true;
+
+		if (node instanceof TestNode && node.children.length === 0) {
+			// Simple test node.
+			// Show only if not skipped.
+			return node.status !== TestStatus.Skipped;
+		} else if (node instanceof TestNode) {
+			// Dynamic test node with children.
+			// Show only if any child not skipped.
+			return !!node.children.find((c) => (c as TestNode).status !== TestStatus.Skipped);
+		} else if (node instanceof GroupNode) {
+			// Show only if status is not exactly skipped.
+			return node.statuses.size !== 1 || !node.statuses.has(TestStatus.Skipped);
+		} else {
+			// Otherwise show eg. suites are always shown.
+			return true;
+		}
 	}
 
 	private idForNode(node: TreeNode) {

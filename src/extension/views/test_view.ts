@@ -21,7 +21,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 	constructor(private readonly data: TestModel, readonly flutterCapabilities: FlutterCapabilities) {
 		this.treeItemBuilder = new TreeItemBuilder(flutterCapabilities);
 		this.disposables.push(data.onDidChangeTreeData.listen((node) => this.onDidChangeTreeDataEmitter.fire(node)));
-		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => this.handleConfigChange(e)));
 
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOff", () => config.setShowSkippedTests(false)));
 		this.disposables.push(vs.commands.registerCommand("_dart.toggleSkippedTestVisibilityOn", () => config.setShowSkippedTests(true)));
@@ -56,11 +55,6 @@ export class TestResultsProvider implements vs.Disposable, vs.TreeDataProvider<T
 			);
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.displayTestOutput", this.writeTestOutput, this));
-	}
-
-	private handleConfigChange(e: vs.ConfigurationChangeEvent) {
-		if (e.affectsConfiguration("dart.showSkippedTests"))
-			this.data.handleConfigChange();
 	}
 
 	private async writeTestOutput(treeNode: TestNode) {
