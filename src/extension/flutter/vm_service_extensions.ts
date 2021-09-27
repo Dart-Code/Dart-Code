@@ -53,10 +53,10 @@ export class VmServiceExtensions {
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
 	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {
 		if (e.event === "dart.serviceExtensionAdded") {
-			this.handleServiceExtensionLoaded(session, e.body.id);
+			this.handleServiceExtensionLoaded(session, e.body.extensionRPC, e.body.isolateId);
 
 			try {
-				if (e.body.id === VmServiceExtension.InspectorSetPubRootDirectories) {
+				if (e.body.extensionRPC === VmServiceExtension.InspectorSetPubRootDirectories) {
 					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
 
 					const params: { [key: string]: string } = {
@@ -84,7 +84,7 @@ export class VmServiceExtensions {
 			}
 		} else if (e.event === "dart.serviceRegistered") {
 			this.handleServiceRegistered(e.body.service, e.body.method);
-		} else if (e.event === "dart.flutter.serviceExtensionStateChanged") {
+		} else if (e.event === "flutter.serviceExtensionStateChanged") {
 			this.handleRemoteValueUpdate(e.body.extension, e.body.value);
 		}
 	}
@@ -177,20 +177,20 @@ export class VmServiceExtensions {
 	}
 
 	/// Tracks loaded service extensions and updates contexts to enable VS Code commands.
-	private handleServiceExtensionLoaded(session: DartDebugSessionInformation, id: VmServiceExtension) {
 		session.loadedServiceExtensions.push(id);
 		this.loadedServiceExtensions.push(id);
 		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, true);
+	private handleServiceExtensionLoaded(session: DartDebugSessionInformation, extensionRPC: VmServiceExtension, isolateId: string | undefined | null) {
 
 		// If this extension is one we have an override value for, then this must be the extension loading
 		// for a new isolate (perhaps after a restart), so send its value.
 		// Only ever send values for enabled and known extensions.
-		const isTogglableService = toggleExtensionStateKeys[id] !== undefined;
-		const value = this.currentExtensionValues[id];
+		const isTogglableService = toggleExtensionStateKeys[extensionRPC] !== undefined;
+		const value = this.currentExtensionValues[extensionRPC];
 		const hasValue = value !== undefined;
 
 		if (isTogglableService && hasValue)
-			this.sendExtensionValue(session.session, id, value).catch((e) => this.logger.error(e));
+			this.sendExtensionValue(session.session, extensionRPC, value).catch((e) => this.logger.error(e));
 	}
 
 	/// Marks all services as not-loaded (happens after session ends).

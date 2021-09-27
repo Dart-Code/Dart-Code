@@ -2010,8 +2010,8 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	protected notifyServiceExtensionAvailable(id: string, isolateId: string | undefined) {
-		const evt = new Event("dart.serviceExtensionAdded", { id, isolateId });
+	protected notifyServiceExtensionAvailable(extensionRPC: string, isolateId: string | undefined) {
+		const evt = new Event("dart.serviceExtensionAdded", { extensionRPC, isolateId });
 		this.logDapEvent(evt);
 		this.sendEvent(evt);
 	}

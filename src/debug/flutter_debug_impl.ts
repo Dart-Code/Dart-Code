@@ -473,7 +473,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (event.kind === "Extension" && event.extensionKind === "Flutter.Error") {
 			this.handleFlutterErrorEvent(event);
 		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.ServiceExtensionStateChanged") {
-			this.sendEvent(new Event("dart.flutter.serviceExtensionStateChanged", event.extensionData));
+			this.sendEvent(new Event("flutter.serviceExtensionStateChanged", event.extensionData));
 		} else {
 			super.handleExtensionEvent(event);
 		}
