@@ -368,13 +368,13 @@ export class DebugClient extends ProtocolClient {
 		}).then(response => {
 			const frame = response.body.stackFrames[0];
 			if (typeof expected.path === 'string' || expected.path instanceof RegExp) {
-				this.assertPath(frame.source!.path!, expected.path, 'stopped location: path mismatch');
+				this.assertPath(frame.source!.path!, expected.path, `stopped location: path mismatch\n  expected: ${expected.path}\n  actual: ${frame.source!.path!}`);
 			}
 			if (typeof expected.line === 'number') {
-				assert.equal(frame.line, expected.line, 'stopped location: line mismatch');
+				assert.equal(frame.line, expected.line, `stopped location: line mismatch\n  expected: ${expected.line}\n  actual: ${frame.line}`);
 			}
 			if (typeof expected.column === 'number') {
-				assert.equal(frame.column, expected.column, 'stopped location: column mismatch');
+				assert.equal(frame.column, expected.column, `stopped location: column mismatch\n  expected: ${expected.column}\n  actual: ${frame.column}`);
 			}
 			return response;
 		});
@@ -454,7 +454,7 @@ export class DebugClient extends ProtocolClient {
 		const setupBreakpointWait = launchArgs.request === "attach"
 			? async () => {
 				const event = await this.waitForEvent("stopped") as DebugProtocol.StoppedEvent;
-				assert.equal(event.body.reason, "step");
+				assert.equal(event.body.reason, "entry");
 
 				// We don't need to send a resume, as this is done in the launch method; we can just wait.
 				return this.assertStoppedLocation('breakpoint', expectedStopLocation || location);
@@ -473,8 +473,8 @@ export class DebugClient extends ProtocolClient {
 
 				const bp = response.body.breakpoints[0];
 
-				const verified = (typeof location.verified === 'boolean') ? location.verified : true;
-				assert.equal(bp.verified, verified, 'breakpoint verification mismatch: verified');
+				if (typeof location.verified === 'boolean')
+					assert.equal(bp.verified, location.verified, 'breakpoint verification mismatch: verified');
 
 				const actualLocation: ILocation = {
 					column: bp.column,

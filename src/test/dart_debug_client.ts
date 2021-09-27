@@ -171,7 +171,7 @@ export class DartDebugClient extends DebugClient {
 		if (launchArgs.request === "attach" && launchArgs.deviceId !== "flutter-tester") {
 			logger.info("Attaching to process...");
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
-			logger.info("Waiting for stopped (step) event...");
+			logger.info("Waiting for stopped (step/entry) event...");
 			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped"));
 			assert.equal(event.body.reason, "step");
 			// HACK: Put a fake delay in after attachRequest to ensure isolates become runnable and breakpoints are transmitted

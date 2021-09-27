@@ -163,7 +163,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true, "Hot restart registered");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true, "Hot restart registered", 30000);
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
@@ -196,10 +196,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			vs.commands.executeCommand("flutter.hotRestart") as Promise<void>,
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true, "Hot restart registered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === true, "Hot restart registered 2");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered 2");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded 2");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded 2");
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
@@ -324,14 +324,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			return this.skip();
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		const configSequence = dc.configurationSequence();
 		// Kick off a build, but do not await it...
 		// tslint:disable-next-line: no-floating-promises
-		Promise.all([
-			dc.configurationSequence(),
-			dc.launch(config),
-		]);
+		dc.launch(config);
 
-		// Wait 5 seconds to ensure the build is in progress...
+		// Wait 5 seconds after configuration sequence ceompletes to ensure the build is in progress...
+		await configSequence;
 		await delay(5000);
 
 		// Send a disconnect request and ensure it happens within 5 seconds.
