@@ -2206,7 +2206,7 @@
 				},
 				"dart.useKnownChromeOSPorts": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Whether to use specific ports for the VM service and DevTools when running in Chrome OS. This is required to connect from the native Chrome OS browser but will prevent apps from launching if the ports are already in-use (for example if trying to run a second app).",
 					"scope": "window"
 				},
