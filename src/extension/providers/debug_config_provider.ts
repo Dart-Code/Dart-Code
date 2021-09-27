@@ -437,26 +437,30 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Use the open file as a clue to find the best project root, then search from there.
 		const projectRoot = (openFile && locateBestProjectRoot(openFile)) || folder;
-		if (!projectRoot)
-			return;
-
-		const commonLaunchPaths = [
-			path.join(projectRoot, "lib", "main.dart"),
-			path.join(projectRoot, "bin", "main.dart"),
-		];
-		for (const launchPath of commonLaunchPaths) {
-			if (fs.existsSync(launchPath)) {
-				this.logger.info(`Using found common entry point: ${launchPath}`);
-				return launchPath;
+		if (projectRoot) {
+			const commonLaunchPaths = [
+				path.join(projectRoot, "lib", "main.dart"),
+				path.join(projectRoot, "bin", "main.dart"),
+			];
+			for (const launchPath of commonLaunchPaths) {
+				if (fs.existsSync(launchPath)) {
+					this.logger.info(`Using found common entry point: ${launchPath}`);
+					return launchPath;
+				}
 			}
+
+			// If we don't have a bin folder, or a lib/main.dart, or a web folder, then
+			// see if we have an example and try that.
+			if (!fs.existsSync(path.join(projectRoot, "bin"))
+				&& !fs.existsSync(path.join(projectRoot, "web"))
+				&& fs.existsSync(path.join(projectRoot, "example")))
+				return this.guessBestEntryPoint(undefined, path.join(projectRoot, "example"));
 		}
 
-		// If we don't have a bin folder, or a lib/main.dart, or a web folder, then
-		// see if we have an example and try that.
-		if (!fs.existsSync(path.join(projectRoot, "bin"))
-			&& !fs.existsSync(path.join(projectRoot, "web"))
-			&& fs.existsSync(path.join(projectRoot, "example")))
-			return this.guessBestEntryPoint(undefined, path.join(projectRoot, "example"));
+		// Finally, if we don't have any workspace folder open, assume the user just wants to
+		// run this file.
+		if (!workspace.workspaceFolders?.length)
+			return openFile;
 	}
 
 	private async getFullVmServiceUri(vmServiceUriOrPort: string | undefined): Promise<string | undefined> {

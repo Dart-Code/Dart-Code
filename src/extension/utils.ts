@@ -194,12 +194,16 @@ export function ensureDebugLaunchUniqueId(config: BasicDebugConfiguration): stri
 }
 
 export function isValidEntryFile(file: string | undefined) {
-	return file && isDartFile(file) &&
-		(
-			isTestFile(file)
-			|| isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")
-			|| file.endsWith(`lib${path.sep}main.dart`)
-		);
+	if (!file || !isDartFile(file))
+		return false;
+
+	// When in a no-folder workspace, all Dart files are considered runnable.
+	if (!workspace.workspaceFolders?.length)
+		return true;
+
+	return isTestFile(file)
+		|| isInsideFolderNamed(file, "bin") || isInsideFolderNamed(file, "tool") || isInsideFolderNamed(file, "test_driver")
+		|| file.endsWith(`lib${path.sep}main.dart`);
 }
 
 export function getLatestSdkVersion(): Promise<string> {

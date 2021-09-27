@@ -1,11 +1,12 @@
 import * as path from "path";
+import { workspace } from "vscode";
 import { hasPackagesFile, hasPubspec } from "../shared/utils/fs";
 import { isWithinWorkspace } from "./utils";
 
 export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
 
 export function locateBestProjectRoot(folder: string): string | undefined {
-	if (!folder || !isWithinWorkspace(folder))
+	if (!folder || (!isWithinWorkspace(folder) && workspace.workspaceFolders?.length))
 		return undefined;
 
 	let dir = folder;
