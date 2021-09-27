@@ -142,7 +142,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// If we're attaching to Dart, ensure we get a VM service URI.
-		if (isAttachRequest && !debugConfig.serviceInfoFile) {
+		if (isAttachRequest && !debugConfig.vmServiceInfoFile) {
 			// For attaching, the VM service address must be specified. If it's not provided already, prompt for it.
 			if (!isFlutter) { // TEMP Condition because there's no point asking yet as the user doesn't know how to get this..
 				debugConfig.vmServiceUri = await this.getFullVmServiceUri(debugConfig.vmServiceUri || debugConfig.observatoryUri);

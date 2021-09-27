@@ -85,7 +85,7 @@ export class DartDebugSession extends DebugSession {
 	private serviceInfoPollTimer?: NodeJS.Timer;
 	protected deleteServiceFileAfterRead = false;
 	private remoteEditorTerminalLaunched?: Promise<RemoteEditorTerminalProcess>;
-	private serviceInfoFileCompleter?: PromiseCompleter<string>;
+	private vmServiceInfoFileCompleter?: PromiseCompleter<string>;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
 	protected sendStdOutToConsole: boolean = true;
@@ -295,7 +295,7 @@ export class DartDebugSession extends DebugSession {
 	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartLaunchArgs & DebugProtocol.AttachRequestArguments): Promise<void> {
 		this.logDapRequest("attachRequest", args);
 		const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
-		if (!args || (!vmServiceUri && !args.serviceInfoFile)) {
+		if (!args || (!vmServiceUri && !args.vmServiceInfoFile)) {
 			return this.errorResponse(response, "Unable to attach; no VM service address or service info file provided.");
 		}
 
@@ -305,7 +305,7 @@ export class DartDebugSession extends DebugSession {
 		this.cwd = args.cwd;
 		this.readSharedArgs(args);
 
-		this.log(`Attaching to process via ${vmServiceUri || args.serviceInfoFile}`);
+		this.log(`Attaching to process via ${vmServiceUri || args.vmServiceInfoFile}`);
 
 		// If we were given an explicity packages path, use it (otherwise we'll try
 		// to extract from the VM)
@@ -331,7 +331,7 @@ export class DartDebugSession extends DebugSession {
 				// this may end up being incorrect.
 				url = this.convertObservatoryUriToVmServiceUri(vmServiceUri);
 			} else {
-				this.vmServiceInfoFile = args.serviceInfoFile;
+				this.vmServiceInfoFile = args.vmServiceInfoFile;
 				this.updateProgress(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}`);
 				url = await this.startServiceFilePolling();
 				this.endProgress(debugLaunchProgressId);
@@ -339,7 +339,7 @@ export class DartDebugSession extends DebugSession {
 			this.subscribeToStdout = true;
 			await this.initDebugger(url);
 		} catch (e) {
-			const messageSuffix = args.serviceInfoFile ? `\n    VM info was read from ${args.serviceInfoFile}` : "";
+			const messageSuffix = args.vmServiceInfoFile ? `\n    VM info was read from ${args.vmServiceInfoFile}` : "";
 			this.logToUser(`Unable to connect to VM service at ${url || "??"}${messageSuffix}\n    ${e}`);
 			this.sendEvent(new TerminatedEvent());
 			return;
@@ -461,11 +461,11 @@ export class DartDebugSession extends DebugSession {
 		// Ensure we stop if we were already running, to avoid leaving timers running
 		// if this is somehow called twice.
 		this.stopServiceFilePolling(false);
-		if (this.serviceInfoFileCompleter)
-			this.serviceInfoFileCompleter.reject("Cancelled");
-		this.serviceInfoFileCompleter = new PromiseCompleter<string>();
+		if (this.vmServiceInfoFileCompleter)
+			this.vmServiceInfoFileCompleter.reject("Cancelled");
+		this.vmServiceInfoFileCompleter = new PromiseCompleter<string>();
 		this.serviceInfoPollTimer = setInterval(() => this.tryReadServiceFile(), 50);
-		return this.serviceInfoFileCompleter.promise;
+		return this.vmServiceInfoFileCompleter.promise;
 	}
 
 	private stopServiceFilePolling(allowDelete: boolean) {
@@ -511,10 +511,10 @@ export class DartDebugSession extends DebugSession {
 				await this.remoteEditorTerminalLaunched;
 				await new Promise((resolve) => setTimeout(resolve, 5));
 			}
-			this.serviceInfoFileCompleter?.resolve(serviceInfo.uri);
+			this.vmServiceInfoFileCompleter?.resolve(serviceInfo.uri);
 		} catch (e) {
 			this.logger.error(e);
-			this.serviceInfoFileCompleter?.reject(e);
+			this.vmServiceInfoFileCompleter?.reject(e);
 		}
 	}
 

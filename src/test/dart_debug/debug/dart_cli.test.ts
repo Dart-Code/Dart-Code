@@ -1238,7 +1238,7 @@ insp=<inspected variable>
 			];
 			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 
-			const config = await attachDebugger(undefined, { serviceInfoFile: tempVmServiceInfoFile });
+			const config = await attachDebugger(undefined, { vmServiceInfoFile: tempVmServiceInfoFile });
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),

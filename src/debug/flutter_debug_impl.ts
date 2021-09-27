@@ -75,8 +75,8 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		// If we have a service info file, read the URI from it and then use that
 		// as if it was supplied.
-		if (isAttach && (!args.vmServiceUri && args.serviceInfoFile)) {
-			this.vmServiceInfoFile = args.serviceInfoFile;
+		if (isAttach && (!args.vmServiceUri && args.vmServiceInfoFile)) {
+			this.vmServiceInfoFile = args.vmServiceInfoFile;
 			this.updateProgress(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}`);
 			args.vmServiceUri = await this.startServiceFilePolling();
 		}

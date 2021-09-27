@@ -26,13 +26,13 @@ export interface DartLaunchArgs {
 	pubTestLogFile?: string;
 	request: "launch" | "attach";
 	sendLogsToClient?: boolean;
-	serviceInfoFile?: string;
 	showDartDeveloperLogs: boolean;
 	showMemoryUsage?: boolean;
 	toolEnv?: { [key: string]: string | undefined };
 	type: "dart";
 	useInspectorNotificationsForWidgetErrors?: boolean;
 	toolArgs?: string[];
+	vmServiceInfoFile?: string;
 	vmServiceLogFile?: string;
 	vmServicePort?: number;
 	vmServiceUri?: string;
