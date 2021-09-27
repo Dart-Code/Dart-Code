@@ -454,7 +454,9 @@ export class DebugClient extends ProtocolClient {
 		const setupBreakpointWait = launchArgs.request === "attach"
 			? async () => {
 				const event = await this.waitForEvent("stopped") as DebugProtocol.StoppedEvent;
-				assert.equal(event.body.reason, "entry");
+				// Allow either step (old DC DA) or entry (SDK DA).
+				if (event.body.reason !== "step")
+					assert.equal(event.body.reason, "entry");
 
 				// We don't need to send a resume, as this is done in the launch method; we can just wait.
 				return this.assertStoppedLocation('breakpoint', expectedStopLocation || location);
