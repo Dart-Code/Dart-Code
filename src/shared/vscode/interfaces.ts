@@ -80,6 +80,7 @@ export interface InternalExtensionApi {
 	testTreeProvider: TreeDataProvider<TreeNode> | undefined;
 	testController: { controller: TestController; getLatestData(test: TestItem): TreeNode | undefined } | undefined;
 	testCoordinator: TestSessionCoordinator;
+	testDiscoverer: { forceUpdate(uri: Uri): void },
 	testModel: TestModel;
 	webClient: WebClient;
 	workspaceContext: WorkspaceContext;

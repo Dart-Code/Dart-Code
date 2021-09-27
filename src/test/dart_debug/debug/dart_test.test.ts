@@ -8,7 +8,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, clearTestTree, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, clearTestTree, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -26,6 +26,15 @@ describe("dart test debugger", () => {
 	});
 
 	beforeEach("clear test tree", () => clearTestTree());
+
+	/// Wrap openFile to force test discovery to re-run since we clear the test
+	/// tree state between tests, but some tests rely on the Outline-populated test
+	/// nodes to verify trees.
+	async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
+		const editor = await openFileBasic(file);
+		extApi.testDiscoverer.forceUpdate(file);
+		return editor;
+	}
 
 	it("runs a Dart test script to completion", async () => {
 		await openFile(helloWorldTestMainFile);

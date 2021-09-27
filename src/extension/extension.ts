@@ -609,8 +609,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(
 		packagesTreeView,
 	);
-	if (lspAnalyzer)
-		context.subscriptions.push(new TestDiscoverer(logger, lspAnalyzer.fileTracker, testModel));
+	const testDiscoverer = lspAnalyzer ? new TestDiscoverer(logger, lspAnalyzer.fileTracker, testModel) : undefined;
+	if (testDiscoverer)
+		context.subscriptions.push(testDiscoverer);
 	let testTreeProvider: TestResultsProvider | undefined;
 	if (!vsCodeTestController) {
 		testTreeProvider = new TestResultsProvider(testModel, flutterCapabilities);
@@ -783,6 +784,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			safeToolSpawn,
 			testController: vsCodeTestController,
 			testCoordinator,
+			testDiscoverer,
 			testModel,
 			testTreeProvider,
 			webClient,

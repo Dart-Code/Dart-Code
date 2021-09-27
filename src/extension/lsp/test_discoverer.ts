@@ -1,10 +1,11 @@
 // TODO: Move this to Shared (and remove dependencies on extension/)
 
+import * as vs from "vscode";
 import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercase, getRandomInt } from "../../shared/utils/fs";
+import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
@@ -16,8 +17,18 @@ export class TestDiscoverer implements IAmDisposable {
 	private readonly debounceTimers: { [key: string]: NodeJS.Timeout } = {};
 	private readonly debounceDuration = 1500;
 
-	constructor(private readonly logger: Logger, fileTracker: LspFileTracker, private readonly model: TestModel) {
+	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
+	}
+
+	/// Forces an update for a file based on the last Outline data (if any).
+	///
+	/// Used by tests to ensure discovery results are available if the test tree state has
+	/// been cleared between test runs.
+	public forceUpdate(uri: vs.Uri) {
+		const outline = this.fileTracker.getOutlineFor(uri);
+		if (outline)
+			this.rebuildFromOutline(fsPath(uri), outline);
 	}
 
 	private handleOutline(outline: OutlineParams) {
@@ -26,10 +37,10 @@ export class TestDiscoverer implements IAmDisposable {
 		const existingTimeout = this.debounceTimers[suitePath];
 		if (existingTimeout)
 			clearTimeout(existingTimeout);
-		this.debounceTimers[suitePath] = setTimeout(() => this.rebuildFromOutline(suitePath, outline), this.debounceDuration);
+		this.debounceTimers[suitePath] = setTimeout(() => this.rebuildFromOutline(suitePath, outline.outline), this.debounceDuration);
 	}
 
-	private rebuildFromOutline(suitePath: string, outline: OutlineParams) {
+	private rebuildFromOutline(suitePath: string, outline: Outline) {
 		if (isTestFile(suitePath)) {
 			// Force creation of a node if it's not already there.
 			const [suite, _] = this.model.getOrCreateSuite(suitePath);
@@ -43,7 +54,7 @@ export class TestDiscoverer implements IAmDisposable {
 			this.model.markAllAsPotentiallyDeleted(suite, TestSource.Outline);
 
 			const visitor = new TestDiscoveryVisitor(this.logger, this.model, dartCodeDebugSessionID, suitePath);
-			visitor.visit(outline.outline);
+			visitor.visit(outline);
 
 			this.model.removeAllPotentiallyDeletedNodes(suite);
 			this.model.updateNode();
