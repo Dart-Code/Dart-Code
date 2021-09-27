@@ -510,11 +510,7 @@ export class DebugCommands implements IAmDisposable {
 		if (e.event === "dart.log") {
 			const message: LogMessage = e.body;
 			const logMessage = `[${e.session.name}] ${message.message}`;
-			// TODO: Can we get rid of this switch?
 			switch (message.severity) {
-				case LogSeverity.Info:
-					this.logger.info(logMessage, message.category);
-					break;
 				case LogSeverity.Warn:
 					this.logger.warn(logMessage, message.category);
 					break;
@@ -522,7 +518,7 @@ export class DebugCommands implements IAmDisposable {
 					this.logger.error(logMessage, message.category);
 					break;
 				default:
-					this.logger.warn(`Failed to handle log event [${e.session.name}] ${JSON.stringify(message)}`);
+					this.logger.info(logMessage, message.category);
 			}
 		} else if (e.event === "dart.hotRestartRequest") {
 			// This event comes back when the user restarts with the Restart button

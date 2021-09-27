@@ -173,7 +173,9 @@ export class DartDebugClient extends DebugClient {
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
 			logger.info("Waiting for stopped (step/entry) event...");
 			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped"));
-			assert.equal(event.body.reason, "step");
+			// Allow either step (old DC DA) or entry (SDK DA).
+			if (event.body.reason !== "step")
+				assert.equal(event.body.reason, "entry");
 			// HACK: Put a fake delay in after attachRequest to ensure isolates become runnable and breakpoints are transmitted
 			// This should help fix the tests so we can be sure they're otherwise good, before we fix this properly.
 			// https://github.com/Dart-Code/Dart-Code/issues/911
