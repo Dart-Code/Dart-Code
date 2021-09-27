@@ -318,10 +318,10 @@ export class DevToolsManager implements vs.Disposable {
 	): Promise<boolean> {
 		try {
 			await session.session.customRequest(
-				"service",
+				"callService",
 				{
+					method: this.debugCommands.vmServices.getServiceMethodName(VmService.LaunchDevTools),
 					params,
-					type: this.debugCommands.vmServices.getServiceMethodName(VmService.LaunchDevTools),
 				},
 			);
 

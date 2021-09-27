@@ -284,12 +284,6 @@ export class FlutterDebugSession extends DartDebugSession {
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
 		try {
 			switch (request) {
-				case "serviceExtension":
-					if (this.currentRunningAppId && this.runDaemon)
-						response.body = await this.runDaemon.callServiceExtension(this.currentRunningAppId, args.type, args.params);
-					this.sendResponse(response);
-					break;
-
 				case "hotReload":
 					if (this.currentRunningAppId)
 						await this.performReload(false, args);

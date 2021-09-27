@@ -1679,8 +1679,8 @@ export class DartDebugSession extends DebugSession {
 		this.logDapRequest("customRequest", args);
 		try {
 			switch (request) {
-				case "service":
-					await this.callService(args.type, args.params);
+				case "callService":
+					await this.callService(args.method, args.params);
 					this.logDapResponse(response);
 					this.sendResponse(response);
 					break;
@@ -1697,11 +1697,7 @@ export class DartDebugSession extends DebugSession {
 					this.sendResponse(response);
 					break;
 				// Flutter requests that may be sent during test runs or other places
-				// that we don't currently support. TODO: Fix this by moving all the
-				// service extension stuff out of Flutter to here, and making it not
-				// Flutter-specific. This requires sending all service extensions
-				// directly to the VM and not via Flutter's run daemon.
-				case "serviceExtension":
+				// that we don't currently support.
 				case "hotReload":
 				case "hotRestart":
 					// TODO: Get rid of this!

@@ -42,6 +42,7 @@ export interface ServiceExtensionArgs { type: VmServiceExtension; params: any; }
 export class VmServiceExtensions {
 	private registeredServices: { [x in VmService]?: string } = {};
 	private loadedServiceExtensions: VmServiceExtension[] = [];
+	private readonly loadedServiceExtensionIsolateIds = new Map<VmServiceExtension, string>();
 	/// Extension values owned by us. If someone else updates a value, we should
 	/// remove it from here.
 	private currentExtensionValues: { [key: string]: any } = {};
@@ -71,13 +72,7 @@ export class VmServiceExtensions {
 							params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
 					}
 
-					await e.session.customRequest(
-						"serviceExtension",
-						{
-							params,
-							type: "ext.flutter.inspector.setPubRootDirectories",
-						},
-					);
+					await this.callServiceExtension(e.session, VmServiceExtension.InspectorSetPubRootDirectories, params);
 				}
 			} catch (e) {
 				this.logger.error(e);
@@ -128,14 +123,22 @@ export class VmServiceExtensions {
 		await Promise.all(debugSessions.map((session) => toggleForSession(session).catch((e) => this.logger.error(e))));
 	}
 
-	public async getCurrentServiceExtensionValue(session: vs.DebugSession, id: VmServiceExtension) {
-		const responseBody = await session.customRequest("serviceExtension", { type: id });
-		return this.extractServiceValue(responseBody[toggleExtensionStateKeys[id]]);
+	public async getCurrentServiceExtensionValue(session: vs.DebugSession, method: VmServiceExtension) {
+		const responseBody = await this.callServiceExtension(session, method);
+		return this.extractServiceValue(responseBody[toggleExtensionStateKeys[method]]);
 	}
 
-	public async sendExtensionValue(session: vs.DebugSession, id: VmServiceExtension, value: unknown) {
-		const params = { [toggleExtensionStateKeys[id]]: value };
-		await session.customRequest("serviceExtension", { type: id, params });
+	public async sendExtensionValue(session: vs.DebugSession, method: VmServiceExtension, value: unknown) {
+		const params = { [toggleExtensionStateKeys[method]]: value };
+		await this.callServiceExtension(session, method, params);
+	}
+
+	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: any) {
+		if (!params?.isolateId) {
+			params = params || {};
+			params.isolateId = this.loadedServiceExtensionIsolateIds.get(method);
+		}
+		return await session.customRequest("callService", { method, params });
 	}
 
 	/// Handles updates that come from the VM (eg. were updated by another tool).
@@ -177,10 +180,12 @@ export class VmServiceExtensions {
 	}
 
 	/// Tracks loaded service extensions and updates contexts to enable VS Code commands.
-		session.loadedServiceExtensions.push(id);
-		this.loadedServiceExtensions.push(id);
-		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, true);
 	private handleServiceExtensionLoaded(session: DartDebugSessionInformation, extensionRPC: VmServiceExtension, isolateId: string | undefined | null) {
+		session.loadedServiceExtensions.push(extensionRPC);
+		this.loadedServiceExtensions.push(extensionRPC);
+		if (isolateId)
+			this.loadedServiceExtensionIsolateIds.set(extensionRPC, isolateId);
+		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${extensionRPC}`, true);
 
 		// If this extension is one we have an override value for, then this must be the extension loading
 		// for a new isolate (perhaps after a restart), so send its value.
@@ -207,6 +212,7 @@ export class VmServiceExtensions {
 			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
 		}
 		this.loadedServiceExtensions.length = 0;
+		this.loadedServiceExtensionIsolateIds.clear();
 	}
 
 	// TODO: These services should be per-session!
