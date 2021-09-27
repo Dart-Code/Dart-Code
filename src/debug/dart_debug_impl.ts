@@ -1680,7 +1680,8 @@ export class DartDebugSession extends DebugSession {
 		try {
 			switch (request) {
 				case "callService":
-					await this.callService(args.method, args.params);
+					const result = await this.callService(args.method, args.params);
+					response.body = result?.result;
 					this.logDapResponse(response);
 					this.sendResponse(response);
 					break;
