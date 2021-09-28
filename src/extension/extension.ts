@@ -491,7 +491,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID)),
 		vs.workspace.onDidChangeConfiguration((e) => testModel.handleConfigChange()),
 	);
-	const vsCodeTestController = config.useVsCodeTestRunner ? new VsCodeTestController(logger, testModel) : undefined;
+	const vsCodeTestController = config.useVsCodeTestRunner && vs.tests?.createTestController ? new VsCodeTestController(logger, testModel) : undefined;
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
 
