@@ -1019,7 +1019,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					source: { path: fsPath(flutterHelloWorldMainFile) },
 				}))
 				.then(() => dc.configurationDoneRequest()),
-			dc.assertOutputContains("stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
+			dc.assertOutputContains(dc.isDartDap ? "console" : "stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
 				.then(() => delay(2000))
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),
