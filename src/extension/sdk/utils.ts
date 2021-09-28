@@ -285,13 +285,16 @@ export class SdkUtils {
 
 		// If we're a Flutter workspace but we couldn't get the version, try running Flutter to initialise it first.
 		// Do this before searching for the Dart SDK, as it might download the Dart SDK we'd like to find.
+		let hasAttemptedFlutterInitialization = false;
 		if (hasAnyFlutterProject && flutterSdkPath && !workspaceConfig.skipFlutterInitialization) {
 			const flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath });
 			const flutterNeedsInitializing = !flutterVersion
 				|| !fs.existsSync(path.join(flutterSdkPath, "bin/cache/dart-sdk"));
 
-			if (flutterNeedsInitializing)
+			if (flutterNeedsInitializing) {
+				hasAttemptedFlutterInitialization = true;
 				await initializeFlutterSdk(this.logger, path.join(flutterSdkPath, flutterPath));
+			}
 		}
 
 		const dartSdkSearchPaths = [
@@ -313,11 +316,19 @@ export class SdkUtils {
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
 
-		const dartSdkResult = this.findDartSdk(dartSdkSearchPaths);
-		const dartSdkPath = dartSdkResult.sdkPath;
+		let dartSdkPath = this.findDartSdk(dartSdkSearchPaths).sdkPath;
 
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
+
+		// If we still don't have a Dart SDK, but we do have a Flutter SDK and we did not already try to initialize, then
+		// try again here. This could happen if we were not in a Flutter project (so didn't try to initialize before) but
+		// still need a Dart SDK (for example, we were activated by running Flutter: New Project in an empty workspace.. we
+		// wouldn't trigger the code above).
+		if (!hasAttemptedFlutterInitialization && flutterSdkPath && !dartSdkPath) {
+			await initializeFlutterSdk(this.logger, path.join(flutterSdkPath, flutterPath));
+			dartSdkPath = this.findDartSdk([path.join(flutterSdkPath, "bin/cache/dart-sdk")]).sdkPath;
+		}
 
 		return new WorkspaceContext(
 			{
