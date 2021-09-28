@@ -1,6 +1,6 @@
 import { version as codeVersion } from "vscode";
 import { versionIsAtLeast } from "../utils";
-import { isKnownCloudIde, isTheia } from "../vscode/utils_cloud";
+import { isCloudShell, isKnownCloudIde, isTheia } from "../vscode/utils_cloud";
 
 export class CodeCapabilities {
 	public version: string;
@@ -17,6 +17,7 @@ export class CodeCapabilities {
 	get supportsDebugWithoutLaunchJson() { return !isTheia; }
 	// Cloud IDEs may have authentication issues trying to use embedded DevTools so just disable it.
 	get supportsEmbeddedDevTools() { return !isKnownCloudIde; }
+	get supportsDevTools() { return !isCloudShell; } // Until DevTools can work without SSE, it will not work on Cloud Shell.
 	get editorConfigFolder() { return isTheia ? ".theia" : ".vscode"; }
 }
 

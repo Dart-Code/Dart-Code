@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
+import { vsCodeVersion } from "../capabilities/vscode";
 import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyAnalyticsText, flutterSurveyDataUrl, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
 import { FlutterSurveyData, Logger } from "../interfaces";
@@ -87,6 +88,9 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 }
 
 export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<{ didOpen: boolean, shouldAlwaysOpen?: boolean }> {
+	if (!vsCodeVersion.supportsDevTools)
+		return { didOpen: false };
+
 	const lastShown = context.devToolsNotificationLastShown;
 	const doNotShow = context.devToolsNotificationDoNotShow;
 
