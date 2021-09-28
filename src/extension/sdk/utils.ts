@@ -261,7 +261,7 @@ export class SdkUtils {
 				process.env.FLUTTER_ROOT,
 				isLinux ? "~/snap/flutter/common/flutter" : undefined,
 				"~/flutter-sdk",
-				"~/.flutter-sdk",
+				"/google/flutter",
 			].concat(paths).filter(notUndefined);
 
 			let flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
