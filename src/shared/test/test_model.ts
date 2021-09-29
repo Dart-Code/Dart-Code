@@ -373,7 +373,7 @@ export class TestModel {
 		}
 
 		// Push to new parent if required.
-		if (!existingGroup || hasChangedParent)
+		if (!groupNode.parent.children.find((n) => n === groupNode))
 			groupNode.parent.children.push(groupNode);
 
 		if (hasStarted) {
@@ -423,9 +423,8 @@ export class TestModel {
 		}
 
 		// Push to new parent if required.
-		if (!existingTest || hasChangedParent)
+		if (!testNode.parent.children.find((n) => n === testNode))
 			testNode.parent.children.push(testNode);
-
 
 		if (hasStarted) {
 			// Clear any test output from previous runs.
