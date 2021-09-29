@@ -57,6 +57,7 @@ export class TestDiscoverer implements IAmDisposable {
 			visitor.visit(outline);
 
 			this.model.removeAllPotentiallyDeletedNodes(suite);
+			this.model.rebuildSuiteNode(suite);
 			this.model.updateNode();
 		}
 	}
