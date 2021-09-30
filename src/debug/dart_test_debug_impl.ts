@@ -223,8 +223,8 @@ export class DartTestDebugSession extends DartDebugSession {
 		const suitePath = suiteID !== undefined ? this.suitePaths[suiteID] : undefined;
 		if (suitePath) {
 			this.sendEvent(new Event(
-				"dart.testRunNotification",
-				{ suitePath, notification },
+				"dart.testNotification",
+				notification ,
 			));
 		}
 	}

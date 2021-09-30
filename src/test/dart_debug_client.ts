@@ -78,7 +78,7 @@ export class DartDebugClient extends DebugClient {
 		// it as it won't receive the events normally because this is not a Code-spawned
 		// debug session.
 		if (testCoordinator) {
-			this.on("dart.testRunNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID, e.event, e.body));
+			this.on("dart.testNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID, e.event, e.body));
 			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID));
 		}
 	}
@@ -306,7 +306,7 @@ export class DartDebugClient extends DebugClient {
 
 	public async waitForTestNotification<T extends Notification>(type: string, filter: (notification: T) => boolean): Promise<void> {
 		await this.waitForCustomEvent<{ suitePath: string, notification: T }>(
-			"dart.testRunNotification",
+			"dart.testNotification",
 			(event) => event.notification.type === type && filter(event.notification),
 		);
 	}

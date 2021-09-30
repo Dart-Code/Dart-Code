@@ -9,8 +9,13 @@ import { SuiteData, TestModel, TestSource } from "./test_model";
 export class TestSessionCoordinator implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
-	/// A link between a suite path and the debug session ID that owns it.
+	/// A link between a suite path and the debug session ID that owns it, so we can ensure
+	/// it is correctly ended when the debug session ends, even if we don't get the correct
+	/// end events.
 	private owningDebugSessions: { [key: string]: string | undefined } = {};
+
+	/// The path of the suite being run by the current debug session.
+	private sessionCurrentSuitePath: { [key: string]: string | undefined } = {};
 
 	/// A link between a suite path and a visitor for visiting its latest outline data.
 	/// This data is refreshed when a test suite starts running.
@@ -23,9 +28,9 @@ export class TestSessionCoordinator implements IAmDisposable {
 	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(file: { fsPath: string } | string): Outline | undefined } | undefined) { }
 
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
-		if (event === "dart.testRunNotification") {
+		if (event === "dart.testNotification") {
 			// tslint:disable-next-line: no-floating-promises
-			this.handleNotification(debugSessionID, dartCodeDebugSessionID ?? `untagged-session-${debugSessionID}`, body.suitePath, body.notification).catch((e) => this.logger.error(e));
+			this.handleNotification(debugSessionID, dartCodeDebugSessionID ?? `untagged-session-${debugSessionID}`, body).catch((e) => this.logger.error(e));
 		}
 	}
 
@@ -42,12 +47,24 @@ export class TestSessionCoordinator implements IAmDisposable {
 			this.owningDebugSessions[suitePath] = undefined;
 			delete this.owningDebugSessions[suitePath];
 		}
+		this.sessionCurrentSuitePath[debugSessionID] = undefined;
 	}
 
-	public async handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, suitePath: string, evt: Notification): Promise<void> {
-		// If we're starting a suite, record us as the owner so we can clean up later
-		if (evt.type === "suite")
+	public async handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, evt: Notification): Promise<void> {
+		let suitePath: string;
+		if (evt.type === "suite") {
+			suitePath = (evt as SuiteNotification).suite.path;
 			this.owningDebugSessions[suitePath] = debugSessionID;
+			this.sessionCurrentSuitePath[debugSessionID] = (evt as SuiteNotification).suite.path;
+		} else {
+			const maybeSuitePath = this.sessionCurrentSuitePath[debugSessionID];
+			if (!maybeSuitePath) {
+				if (evt.type !== "start" && evt.type !== "allSuites")
+					this.logger.warn(`Unable to handle ${evt.type} notification because there is no active suite`);
+				return;
+			}
+			suitePath = maybeSuitePath;
+		}
 
 		const suite = this.data.suites[suitePath];
 		switch (evt.type) {

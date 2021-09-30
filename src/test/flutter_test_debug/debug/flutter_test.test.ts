@@ -81,14 +81,14 @@ describe("flutter test debugger", () => {
 			assert.ok(didStart);
 		});
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-		const testDoneNotification = customEvents.find((e) => e.event === "dart.testRunNotification" && e.body.notification.type === "testDone");
+		const testDoneNotification = customEvents.find((e) => e.event === "dart.testNotification" && e.body.type === "testDone");
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	});
 
 	function isTestDoneNotification(e: vs.DebugSessionCustomEvent) {
-		if (e.event !== "dart.testRunNotification")
+		if (e.event !== "dart.testNotification")
 			return false;
-		const notification = e.body.notification as TestDoneNotification;
+		const notification = e.body as TestDoneNotification;
 		return notification.type === "testDone" && !notification.hidden;
 	}
 

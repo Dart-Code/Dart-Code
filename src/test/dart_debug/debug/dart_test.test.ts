@@ -74,7 +74,7 @@ describe("dart test debugger", () => {
 			assert.ok(didStart);
 		});
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-		const testDoneNotification = customEvents.find((e) => e.event === "dart.testRunNotification" && e.body.notification.type === "testDone");
+		const testDoneNotification = customEvents.find((e) => e.event === "dart.testNotification" && e.body.type === "testDone");
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	});
 
