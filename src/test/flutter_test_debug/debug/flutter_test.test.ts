@@ -126,7 +126,7 @@ describe("flutter test debugger", () => {
 		const testDoneNotification = customEvents.find(isTestDoneNotification);
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 
-		const testDone = testDoneNotification.body.notification as TestDoneNotification;
+		const testDone = testDoneNotification.body as TestDoneNotification;
 		assert.equal(testDone.skipped, true);
 	});
 
@@ -164,7 +164,7 @@ describe("flutter test debugger", () => {
 		const testDoneNotification = customEvents.find(isTestDoneNotification);
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 
-		const testDone = testDoneNotification.body.notification as TestDoneNotification;
+		const testDone = testDoneNotification.body as TestDoneNotification;
 		assert.equal(testDone.skipped, false); // Test should have run.
 	});
 

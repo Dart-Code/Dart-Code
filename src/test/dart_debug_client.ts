@@ -305,9 +305,9 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public async waitForTestNotification<T extends Notification>(type: string, filter: (notification: T) => boolean): Promise<void> {
-		await this.waitForCustomEvent<{ suitePath: string, notification: T }>(
+		await this.waitForCustomEvent<T>(
 			"dart.testNotification",
-			(event) => event.notification.type === type && filter(event.notification),
+			(event) => event.type === type && filter(event),
 		);
 	}
 	public async tryWaitUntilGlobalEvaluationIsAvailable(): Promise<void> {
