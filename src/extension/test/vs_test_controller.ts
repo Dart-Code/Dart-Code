@@ -267,7 +267,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				default:
 					const errors = node.outputEvents.map((e) => this.formatError(e)).filter(notUndefined);
 					const errorString = errors.join("\n");
-					if (result == "failure")
+					if (result === "failure")
 						run.failed(item, new vs.TestMessage(errorString), node.duration);
 					else
 						run.errored(item, new vs.TestMessage(errorString), node.duration);
