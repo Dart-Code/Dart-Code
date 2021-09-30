@@ -8,7 +8,7 @@ export function writeToPseudoTerminal(messages: string[]): [vs.Terminal, vs.Even
 		open: () => {
 			for (const output of messages) {
 				if (output)
-					emitter.fire(output.replace(/\n/g, "\r\n"));
+					emitter.fire(formatForTerminal(output));
 			}
 		},
 	};
@@ -18,4 +18,9 @@ export function writeToPseudoTerminal(messages: string[]): [vs.Terminal, vs.Even
 	];
 	currentTestTerminal[0].show();
 	return currentTestTerminal;
+}
+
+export function formatForTerminal(output: string) {
+	// For terminal, if we send \n without a \r the rendering will be bad.
+	return output.replace(/\n/g, "\r\n");
 }

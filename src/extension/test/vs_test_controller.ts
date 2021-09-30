@@ -3,9 +3,11 @@ import * as vs from "vscode";
 import { TestStatus } from "../../shared/enums";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
+import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
+import { formatForTerminal } from "../utils/vscode/terminals";
 
 export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -238,7 +240,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
-			run.appendOutput(message);
+			run.appendOutput(`${formatForTerminal(message)}\r\n`);
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
@@ -246,8 +248,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			// TODO: isFailure??
-			run.appendOutput(message);
-			run.appendOutput(stack);
+			run.appendOutput(`${formatForTerminal(message)}\r\n`);
+			run.appendOutput(`${formatForTerminal(stack)}\r\n`);
 		}
 	}
 
@@ -262,14 +264,26 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				case "success":
 					run.passed(item, node.duration);
 					break;
-				case "failure":
-					run.failed(item, new vs.TestMessage("FAILURE TODO"), node.duration);
-					break;
 				default:
-					run.errored(item, new vs.TestMessage("FAILURE TODO"), node.duration);
+					const errors = node.outputEvents.map((e) => this.formatError(e)).filter(notUndefined);
+					const errorString = errors.join("\n");
+					if (result == "failure")
+						run.failed(item, new vs.TestMessage(errorString), node.duration);
+					else
+						run.errored(item, new vs.TestMessage(errorString), node.duration);
 					break;
 			}
 		}
+	}
+
+	private formatError(error: ErrorNotification | PrintNotification) {
+		if (!("error" in error))
+			return;
+
+		return [
+			error.error ?? "",
+			error.stackTrace ?? "",
+		].join("\n").trim();
 	}
 
 	public suiteDone(sessionID: string, node: SuiteNode): void {

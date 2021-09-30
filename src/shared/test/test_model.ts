@@ -518,13 +518,17 @@ export class TestModel {
 	public testOutput(dartCodeDebugSessionID: string, suitePath: string, testID: number, message: string) {
 		const suite = this.suites[suitePath];
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
-		// DO STUFF
+
+		if (test)
+			this.testEventListeners.forEach((l) => l.testOutput(dartCodeDebugSessionID, test, message));
 	}
 
 	public testErrorOutput(dartCodeDebugSessionID: string, suitePath: string, testID: number, isFailure: boolean, message: string, stack: string) {
 		const suite = this.suites[suitePath];
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
-		// DO STUFF
+
+		if (test)
+			this.testEventListeners.forEach((l) => l.testErrorOutput(dartCodeDebugSessionID, test, message, isFailure, stack));
 	}
 
 	private removeNode(node: GroupNode | TestNode) {
