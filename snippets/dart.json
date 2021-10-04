@@ -4,7 +4,7 @@
 			"prefix": "main",
 			"description": "Insert a main function, used as an entry point.",
 			"body": [
-				"main(List<String> args) {",
+				"void main(List<String> args) {",
 				"  $0",
 				"}"
 			]
