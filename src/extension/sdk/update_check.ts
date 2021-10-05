@@ -11,9 +11,8 @@ export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceCo
 	if (!config.checkForSdkUpdates || workspaceContext.config.disableSdkUpdateChecks)
 		return;
 
-	// Someties people use the Dart SDK inside Flutter for non-Flutter projects. Since we'll never want
-	// to do SDK update checks in that situation (esp. as it's VERSION file is bad!) we should skip in
-	// that case.
+	// Sometimes people use the Dart SDK inside Flutter for non-Flutter projects. Since that SDK is
+	// versioned with Flutter, it never makes sense to prompt the user to update the Dart SDK.
 	if (workspaceContext.sdks.dartSdkIsFromFlutter)
 		return;
 
