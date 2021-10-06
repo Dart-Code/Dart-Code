@@ -16,15 +16,13 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
 	private testRuns: { [key: string]: vs.TestRun | undefined } = {};
 
-	public registerTestRun(dartCodeDebugSessionId: string, run: vs.TestRun): void {
-		this.testRuns[dartCodeDebugSessionId] = run;
-	}
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel) {
 		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
 		this.controller = controller;
 		this.disposables.push(controller);
 		this.disposables.push(model.onDidChangeTreeData.listen((node) => this.onDidChangeTreeData(node)));
+		this.disposables.push(vs.debug.onDidTerminateDebugSession((e) => this.handleDebugSessionEnd(e)));
 		model.addTestEventListener(this);
 
 		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) => {
@@ -36,11 +34,24 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		});
 	}
 
+	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun): void {
+		this.testRuns[dartCodeDebugSessionID] = run;
+	}
+
+	private handleDebugSessionEnd(e: vs.DebugSession): any {
+		this.testRuns[e.configuration.dartCodeDebugSessionID]?.end();
+	}
+
 	public getLatestData(test: vs.TestItem): TreeNode | undefined {
 		return this.nodeForItem.get(test);
 	}
 
 	private async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
+		// As an optimiations, if we're no-debug and running all tests, we can use our command that will run
+		// the test folders directly.
+		if (!debug && !request.include?.length && !request.exclude?.length)
+			return vs.commands.executeCommand("dart.runAllTestsWithoutDebugging");
+
 		const run = this.controller.createTestRun(request);
 		const testsToRun = new Set<vs.TestItem>();
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
@@ -289,8 +300,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public suiteDone(sessionID: string, node: SuiteNode): void {
-		const run = this.getOrCreateTestRun(sessionID);
-		run.end();
 	}
 
 	public dispose(): any {

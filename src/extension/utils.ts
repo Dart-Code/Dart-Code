@@ -187,7 +187,7 @@ export function hasTestNameFilter(...argss: Array<string[] | undefined>) {
 export function ensureDebugLaunchUniqueId(config: BasicDebugConfiguration): string {
 	const conf = config as any;
 	if (!conf.dartCodeDebugSessionID) {
-		const dartCodeDebugSessionID = `session-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+		const dartCodeDebugSessionID = `session-${getRandomInt(0x10000, 0x100000).toString(16)}`;
 		conf.dartCodeDebugSessionID = dartCodeDebugSessionID;
 	}
 	return conf.dartCodeDebugSessionID;
