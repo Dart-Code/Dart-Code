@@ -4,7 +4,7 @@ import { Event, EventEmitter } from "../events";
 import { Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { flatMap, notUndefined, uniq } from "../utils";
-import { fsPath } from "../utils/fs";
+import { fsPath, isWithinPath } from "../utils/fs";
 import { makeRegexForTests } from "../utils/test";
 
 export abstract class TreeNode {
@@ -269,11 +269,39 @@ export class TestModel {
 	}
 
 	public clearAllResults(): void {
-		for (const suiteData of Object.keys(this.suites)) {
-			delete this.suites[suiteData];
+		for (const suitePath of Object.keys(this.suites)) {
+			delete this.suites[suitePath];
 		}
 
 		this.updateNode();
+	}
+
+	public clearSuite(suitePath: string): void {
+		if (!this.suites[suitePath])
+			return;
+
+		delete this.suites[suitePath];
+		this.updateNode();
+	}
+
+	public clearSuiteOrDirectory(suiteOrDirectoryPath: string): void {
+		// We can't tell if it's a file or directory because it's already been deleted, so just
+		// try both.
+		let found = false;
+		if (this.suites[suiteOrDirectoryPath]) {
+			found = true;
+			delete this.suites[suiteOrDirectoryPath];
+		} else {
+			for (const suitePath of Object.keys(this.suites)) {
+				if (isWithinPath(suitePath, suiteOrDirectoryPath)) {
+					delete this.suites[suitePath];
+					found = true;
+				}
+			}
+		}
+
+		if (found)
+			this.updateNode();
 	}
 
 	public handleConfigChange(): void {
@@ -335,8 +363,7 @@ export class TestModel {
 			this.onDidStartTestsEmitter.fire(suite.node);
 		}
 
-		if (dartCodeDebugSessionID)
-			this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
+		this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 	}
 
 	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
@@ -382,8 +409,7 @@ export class TestModel {
 
 		this.updateNode(groupNode.parent);
 
-		if (dartCodeDebugSessionID)
-			this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
+		this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
 
 		return groupNode;
 	}

@@ -1,5 +1,6 @@
 // TODO: Move this to Shared (and remove dependencies on extension/)
 
+import * as path from "path";
 import * as vs from "vscode";
 import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
@@ -8,6 +9,7 @@ import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
+import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { isTestFile } from "../utils";
 
@@ -19,6 +21,60 @@ export class TestDiscoverer implements IAmDisposable {
 
 	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
+		this.startTestDiscovery();
+	}
+
+	private startTestDiscovery() {
+		// Set up events for create/rename/delete.
+		this.disposables.push(
+			vs.workspace.onDidCreateFiles((e) => {
+				e.files.forEach((file) => {
+					const filePath = fsPath(file);
+					if (isTestFile(filePath))
+						this.model.suiteDiscovered(undefined, filePath);
+				});
+			}),
+			vs.workspace.onDidRenameFiles(async (e) => {
+				e.files.forEach(async (file) => {
+					this.model.clearSuiteOrDirectory(fsPath(file.oldUri));
+					this.discoverTests(fsPath(file.newUri));
+				});
+			}),
+			vs.workspace.onDidDeleteFiles(async (e) => {
+				e.files.forEach(async (file) => {
+					this.model.clearSuiteOrDirectory(fsPath(file));
+				});
+			}),
+		);
+
+		// Process any existing things in the workspace.
+		try {
+			const workspaceFolders = getDartWorkspaceFolders();
+			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
+			topLevelFolders.forEach((folder) => this.discoverTests(folder));
+		} catch (e) {
+			this.logger.error(`Failed to discover tests: ${e}`);
+		}
+	}
+
+	private async discoverTests(fileOrDirectory: string, isDirectory?: boolean, level = 0) {
+		if (level > 5) return; // Max levels to discover tests.
+
+		if (isTestFile(fileOrDirectory)) {
+			this.model.suiteDiscovered(undefined, fileOrDirectory);
+		} else if (isDirectory !== false) { // undefined or true are allowed
+			try {
+				const children = await vs.workspace.fs.readDirectory(vs.Uri.file(fileOrDirectory));
+
+				children
+					.map((item) => ({ name: item[0], type: item[1] }))
+					.filter((item) => !item.name.startsWith("."))
+					.forEach((item) => this.discoverTests(path.join(fileOrDirectory, item.name), item.type === vs.FileType.Directory, level + 1));
+			} catch (e: any) {
+				if (e.code !== "FileNotADirectory")
+					this.logger.error(`Failed to discover tests: ${e}`);
+			}
+		}
 	}
 
 	/// Forces an update for a file based on the last Outline data (if any).
