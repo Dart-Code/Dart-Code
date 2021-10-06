@@ -11,13 +11,14 @@ import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig, TestName } from "../../shared/utils/test";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { DasFileTracker } from "../analysis/file_tracker_das";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { config } from "../config";
 import { isDartDocument } from "../editors";
 import { VsCodeTestController } from "../test/vs_test_controller";
-import { ensureDebugLaunchUniqueId, isInsideFlutterProject, isTestFile } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isTestFile } from "../utils";
 
 const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
@@ -33,8 +34,8 @@ abstract class TestCommands implements vs.Disposable {
 
 	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
-			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, testRun?: vs.TestRun) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, false, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, testRun?: vs.TestRun) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, false, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
+			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("dart.startDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode), true, false, treeNode instanceof TestNode, undefined)),
 			vs.commands.registerCommand("dart.startWithoutDebuggingTest", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode), false, false, treeNode instanceof TestNode, undefined)),
 			vs.commands.registerCommand("dart.startDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode, TestStatus.Skipped), true, false, true)),
@@ -43,6 +44,7 @@ abstract class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
 			vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()),
 			vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()),
+			vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => this.runAllTestsWithoutDebugging()),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
@@ -64,6 +66,22 @@ abstract class TestCommands implements vs.Disposable {
 			this.startTestFromOutline(true, test, launchTemplate)));
 	}
 
+	private async runAllTestsWithoutDebugging(): Promise<void> {
+		const testFolders = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
+			.map((project) => path.join(project, "test"))
+			.filter((testFolder) => fs.existsSync(testFolder));
+		if (testFolders.length === 0) {
+			vs.window.showErrorMessage("Unable to find any test folders");
+			return;
+		}
+		let suppressPromptOnErrors = false;
+		for (const folder of testFolders) {
+			const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
+			const name = path.basename(path.dirname(folder));
+			this.runTests(folder, false, undefined, false, suppressPromptOnErrors, undefined, undefined, undefined);
+			suppressPromptOnErrors = true; // Only prompt for first one.
+		}
+	}
 
 	private async runAllSkippedTests(): Promise<void> {
 		await this.runAllTests(TestStatus.Skipped);
@@ -116,6 +134,10 @@ abstract class TestCommands implements vs.Disposable {
 	private runTests(programPath: string, debug: boolean, testNames: TestName[] | undefined, shouldRunSkippedTests: boolean, suppressPromptOnErrors: boolean, launchTemplate: any | undefined, testRun: vs.TestRun | undefined, token: vs.CancellationToken | undefined): Promise<boolean> {
 		const subs: vs.Disposable[] = [];
 		return new Promise<boolean>(async (resolve, reject) => {
+			let testsName = path.basename(programPath);
+			// Handle when running whole test folder.
+			if (testsName === "test")
+				testsName = path.basename(path.dirname(programPath));
 			const launchConfiguration = {
 				suppressPromptOnErrors,
 				...getLaunchConfig(
@@ -125,7 +147,7 @@ abstract class TestCommands implements vs.Disposable {
 					shouldRunSkippedTests,
 					launchTemplate,
 				),
-				name: `Tests ${path.basename(programPath)}`,
+				name: `${path.basename(programPath)} tests`,
 			};
 
 			// Ensure we have a unique ID for this session so we can track when it completes.

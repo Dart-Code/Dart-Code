@@ -524,9 +524,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	const numReloads = 1;
-	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // https://github.com/dart-lang/webdev/issues/1416
+	it.only(`stops at a breakpoint after each reload (${numReloads})`, async () => {
+		// if (flutterTestDeviceIsWeb)
+		// 	return this.skip(); // https://github.com/dart-lang/webdev/issues/1416
 
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);

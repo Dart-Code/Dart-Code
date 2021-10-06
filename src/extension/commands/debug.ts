@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
@@ -9,7 +8,7 @@ import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, Logg
 import { disposeAll, PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
-import { envUtils, getAllProjectFolders } from "../../shared/vscode/utils";
+import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -17,7 +16,7 @@ import { timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../fl
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
-import { getExcludedFolders, isDartFile, isFlutterProjectFolder, isValidEntryFile } from "../utils";
+import { isDartFile, isFlutterProjectFolder, isValidEntryFile } from "../utils";
 import { runToolProcess } from "../utils/processes";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
@@ -191,27 +190,6 @@ export class DebugCommands implements IAmDisposable {
 			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration, this));
-		this.disposables.push(vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", async () => {
-			const testFolders = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
-				.map((project) => path.join(project, "test"))
-				.filter((testFolder) => fs.existsSync(testFolder));
-			if (testFolders.length === 0) {
-				vs.window.showErrorMessage("Unable to find any test folders");
-				return;
-			}
-			for (const folder of testFolders) {
-				const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
-				const name = path.basename(path.dirname(folder));
-				vs.debug.startDebugging(ws, {
-					name: `${name} tests`,
-					noDebug: true,
-					// To run all tests, we set `program` to a test folder.
-					program: folder,
-					request: "launch",
-					type: "dart",
-				});
-			}
-		}));
 		this.disposables.push(vs.commands.registerCommand("dart.rerunLastDebugSession", () => {
 			if (LastDebugSession.debugConfig) {
 				vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);

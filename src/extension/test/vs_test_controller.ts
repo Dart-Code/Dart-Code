@@ -65,6 +65,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			testNodes.push(node);
 		});
 
+		let suppressPromptOnErrors = false;
 		for (const suite of testsBySuite.keys()) {
 			const nodes = testsBySuite.get(suite);
 			if (!nodes) continue;
@@ -72,7 +73,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			const command = debug
 				? "_dart.startDebuggingTestsFromVsTestController"
 				: "_dart.startWithoutDebuggingTestsFromVsTestController";
-			await vs.commands.executeCommand(command, suite, nodes, run);
+			await vs.commands.executeCommand(command, suite, nodes, suppressPromptOnErrors, run);
+			suppressPromptOnErrors = true; // Only prompt on first
 		}
 	}
 
