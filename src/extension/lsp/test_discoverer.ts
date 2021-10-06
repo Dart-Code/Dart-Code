@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { TestModel, TestSource } from "../../shared/test/test_model";
+import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
@@ -21,10 +21,9 @@ export class TestDiscoverer implements IAmDisposable {
 
 	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
-		this.startTestDiscovery();
 	}
 
-	private startTestDiscovery() {
+	public beginTestDiscovery() {
 		// Set up events for create/rename/delete.
 		this.disposables.push(
 			vs.workspace.onDidCreateFiles((e) => {
@@ -77,6 +76,11 @@ export class TestDiscoverer implements IAmDisposable {
 		}
 	}
 
+	public async discoverTestsForSuite(node: SuiteNode): Promise<void> {
+		const doc = await vs.workspace.openTextDocument(node.suiteData.path);
+		await this.fileTracker.waitForOutline(doc, undefined);
+	}
+
 	/// Forces an update for a file based on the last Outline data (if any).
 	///
 	/// Used by tests to ensure discovery results are available if the test tree state has
@@ -93,7 +97,12 @@ export class TestDiscoverer implements IAmDisposable {
 		const existingTimeout = this.debounceTimers[suitePath];
 		if (existingTimeout)
 			clearTimeout(existingTimeout);
-		this.debounceTimers[suitePath] = setTimeout(() => this.rebuildFromOutline(suitePath, outline.outline), this.debounceDuration);
+
+		// If this is the first outline for a file (eg. we've never had a timeout)
+		// we should skip the debounce so things are initially more responsive.
+		const debounceDuration = existingTimeout ? this.debounceDuration : 0;
+
+		this.debounceTimers[suitePath] = setTimeout(() => this.rebuildFromOutline(suitePath, outline.outline), debounceDuration);
 	}
 
 	private rebuildFromOutline(suitePath: string, outline: Outline) {

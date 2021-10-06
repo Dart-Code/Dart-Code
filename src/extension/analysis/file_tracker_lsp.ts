@@ -43,6 +43,10 @@ export class LspFileTracker implements IAmDisposable {
 		return this.outlines[fsPath(file)];
 	}
 
+	public async waitForOutline(document: TextDocument, token?: CancellationToken): Promise<Outline | undefined> {
+		return waitFor(() => this.outlines[fsPath(document.uri)], 50, 5000, token);
+	}
+
 	// TODO: Change this to withVersion when server sends versions.
 	public async waitForOutlineWithLength(document: TextDocument, length: number, token: CancellationToken): Promise<Outline | undefined> {
 		return waitFor(() => {

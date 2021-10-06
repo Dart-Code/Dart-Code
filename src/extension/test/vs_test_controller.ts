@@ -7,6 +7,7 @@ import { ErrorNotification, PrintNotification } from "../../shared/test_protocol
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
+import { TestDiscoverer } from "../lsp/test_discoverer";
 import { formatForTerminal } from "../utils/vscode/terminals";
 
 export class VsCodeTestController implements TestEventListener, IAmDisposable {
@@ -16,14 +17,16 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
 	private testRuns: { [key: string]: vs.TestRun | undefined } = {};
 
-
-	constructor(private readonly logger: Logger, private readonly model: TestModel) {
+	constructor(private readonly logger: Logger, private readonly model: TestModel, private readonly discoverer: TestDiscoverer | undefined) {
 		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
 		this.controller = controller;
 		this.disposables.push(controller);
 		this.disposables.push(model.onDidChangeTreeData.listen((node) => this.onDidChangeTreeData(node)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((e) => this.handleDebugSessionEnd(e)));
 		model.addTestEventListener(this);
+
+		if (discoverer)
+			controller.resolveHandler = (item: vs.TestItem | undefined) => this.resolveTestItem(item);
 
 		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) => {
 			this.runTests(false, request, token);
@@ -32,6 +35,20 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) => {
 			this.runTests(true, request, token);
 		});
+	}
+
+	private async resolveTestItem(item: vs.TestItem | undefined): Promise<void> {
+		if (!this.discoverer)
+			return;
+
+		if (!item) {
+			this.discoverer.beginTestDiscovery();
+			return;
+		}
+
+		const node = this.nodeForItem.get(item);
+		if (node instanceof SuiteNode)
+			await this.discoverer.discoverTestsForSuite(node);
 	}
 
 	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun): void {
@@ -139,6 +156,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			// Otherwise, update this item to match the latest state.
 			this.updateFields(existingItem, node);
 		}
+
+		// For new suites without chilren, set canResolveChildren because we can
+		// open the file and discover tests from the Outline if the user expands them.
+		if (node instanceof SuiteNode && node.children.length === 0)
+			existingItem.canResolveChildren = true;
 
 		existingItem.children.replace(
 			node.children.map((c) => this.createOrUpdateNode(c)).filter(notUndefined),

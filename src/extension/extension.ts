@@ -491,8 +491,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID)),
 		vs.workspace.onDidChangeConfiguration((e) => testModel.handleConfigChange()),
 	);
+	const testDiscoverer = lspAnalyzer ? new TestDiscoverer(logger, lspAnalyzer.fileTracker, testModel) : undefined;
+	if (testDiscoverer)
+		context.subscriptions.push(testDiscoverer);
 	const vsCodeTestController = config.useVsCodeTestRunner && vs.tests?.createTestController // Feature-detect for Theia
-		? new VsCodeTestController(logger, testModel)
+		? new VsCodeTestController(logger, testModel, testDiscoverer)
 		: undefined;
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
@@ -611,9 +614,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(
 		packagesTreeView,
 	);
-	const testDiscoverer = lspAnalyzer ? new TestDiscoverer(logger, lspAnalyzer.fileTracker, testModel) : undefined;
-	if (testDiscoverer)
-		context.subscriptions.push(testDiscoverer);
 	let testTreeProvider: TestResultsProvider | undefined;
 	if (!vsCodeTestController) {
 		testTreeProvider = new TestResultsProvider(testModel, flutterCapabilities);
