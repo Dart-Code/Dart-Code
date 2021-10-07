@@ -14,17 +14,14 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public readonly controller: vs.TestController;
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
-	private testRuns: { [key: string]: vs.TestRun | undefined } = {};
-
-	public registerTestRun(dartCodeDebugSessionId: string, run: vs.TestRun): void {
-		this.testRuns[dartCodeDebugSessionId] = run;
-	}
+	private testRuns: { [key: string]: { run: vs.TestRun, shouldEndWithSession: boolean } | undefined } = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel) {
 		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
 		this.controller = controller;
 		this.disposables.push(controller);
 		this.disposables.push(model.onDidChangeTreeData.listen((node) => this.onDidChangeTreeData(node)));
+		this.disposables.push(vs.debug.onDidTerminateDebugSession((e) => this.handleDebugSessionEnd(e)));
 		model.addTestEventListener(this);
 
 		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) => {
@@ -36,14 +33,25 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		});
 	}
 
+	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun, shouldEndWithSession: boolean): void {
+		this.testRuns[dartCodeDebugSessionID] = { run, shouldEndWithSession };
+	}
+
+	private handleDebugSessionEnd(e: vs.DebugSession): any {
+		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
+		if (run?.shouldEndWithSession)
+			run.run.end();
+	}
+
 	public getLatestData(test: vs.TestItem): TreeNode | undefined {
 		return this.nodeForItem.get(test);
 	}
 
 	private async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
-		const run = this.controller.createTestRun(request);
 		const testsToRun = new Set<vs.TestItem>();
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
+		request.exclude?.forEach((item) => testsToRun.delete(item));
+
 
 		// For each item in the set, remove any of its descendants because they will be run by the parent.
 		function removeWithDescendants(item: vs.TestItem) {
@@ -65,14 +73,19 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			testNodes.push(node);
 		});
 
-		for (const suite of testsBySuite.keys()) {
-			const nodes = testsBySuite.get(suite);
-			if (!nodes) continue;
+		const run = this.controller.createTestRun(request);
+		try {
+			for (const suite of testsBySuite.keys()) {
+				const nodes = testsBySuite.get(suite);
+				if (!nodes) continue;
 
-			const command = debug
-				? "_dart.startDebuggingTestsFromVsTestController"
-				: "_dart.startWithoutDebuggingTestsFromVsTestController";
-			await vs.commands.executeCommand(command, suite, nodes, run);
+				const command = debug
+					? "_dart.startDebuggingTestsFromVsTestController"
+					: "_dart.startWithoutDebuggingTestsFromVsTestController";
+				await vs.commands.executeCommand(command, suite, nodes, run);
+			}
+		} finally {
+			run.end();
 		}
 	}
 
@@ -204,10 +217,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private getOrCreateTestRun(sessionID: string) {
-		let run = this.testRuns[sessionID];
+		let run = this.testRuns[sessionID]?.run;
 		if (!run) {
 			run = this.controller.createTestRun(new vs.TestRunRequest(), undefined, true);
-			this.registerTestRun(sessionID, run);
+			this.registerTestRun(sessionID, run, true);
 		}
 		return run;
 	}
@@ -276,6 +289,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
+	public suiteDone(sessionID: string, node: SuiteNode): void { }
+
 	private formatError(error: ErrorNotification | PrintNotification) {
 		if (!("error" in error))
 			return;
@@ -286,10 +301,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		].join("\n").trim();
 	}
 
-	public suiteDone(sessionID: string, node: SuiteNode): void {
-		const run = this.getOrCreateTestRun(sessionID);
-		run.end();
-	}
 
 	public dispose(): any {
 		disposeAll(this.disposables);
