@@ -15,7 +15,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public readonly controller: vs.TestController;
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
-	private testRuns: { [key: string]: vs.TestRun | undefined } = {};
+	private testRuns: { [key: string]: { run: vs.TestRun, shouldEndWithSession: boolean } | undefined } = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, private readonly discoverer: TestDiscoverer | undefined) {
 		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
@@ -51,12 +51,14 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			await this.discoverer.discoverTestsForSuite(node);
 	}
 
-	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun): void {
-		this.testRuns[dartCodeDebugSessionID] = run;
+	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun, shouldEndWithSession: boolean): void {
+		this.testRuns[dartCodeDebugSessionID] = { run, shouldEndWithSession };
 	}
 
 	private handleDebugSessionEnd(e: vs.DebugSession): any {
-		this.testRuns[e.configuration.dartCodeDebugSessionID]?.end();
+		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
+		if (run?.shouldEndWithSession)
+			run.run.end();
 	}
 
 	public getLatestData(test: vs.TestItem): TreeNode | undefined {
@@ -68,8 +70,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
 		request.exclude?.forEach((item) => testsToRun.delete(item));
 
-
-		const run = this.controller.createTestRun(request);
 
 		// For each item in the set, remove any of its descendants because they will be run by the parent.
 		function removeWithDescendants(item: vs.TestItem) {
@@ -96,14 +96,19 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			testNodes.push(node);
 		});
 
-		for (const suite of testsBySuite.keys()) {
-			const nodes = testsBySuite.get(suite);
-			if (!nodes) continue;
+		const run = this.controller.createTestRun(request);
+		try {
+			for (const suite of testsBySuite.keys()) {
+				const nodes = testsBySuite.get(suite);
+				if (!nodes) continue;
 
-			const command = debug
-				? "_dart.startDebuggingTestsFromVsTestController"
-				: "_dart.startWithoutDebuggingTestsFromVsTestController";
-			await vs.commands.executeCommand(command, suite, nodes, true, run);
+				const command = debug
+					? "_dart.startDebuggingTestsFromVsTestController"
+					: "_dart.startWithoutDebuggingTestsFromVsTestController";
+				await vs.commands.executeCommand(command, suite, nodes, true, run);
+			}
+		} finally {
+			run.end();
 		}
 	}
 
@@ -240,10 +245,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private getOrCreateTestRun(sessionID: string) {
-		let run = this.testRuns[sessionID];
+		let run = this.testRuns[sessionID]?.run;
 		if (!run) {
 			run = this.controller.createTestRun(new vs.TestRunRequest(), undefined, true);
-			this.registerTestRun(sessionID, run);
+			this.registerTestRun(sessionID, run, true);
 		}
 		return run;
 	}
