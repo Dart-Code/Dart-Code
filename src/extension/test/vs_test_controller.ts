@@ -64,14 +64,12 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
-		// As an optimiations, if we're no-debug and running all tests, we can use our command that will run
-		// the test folders directly.
-		if (!debug && !request.include?.length && !request.exclude?.length)
-			return vs.commands.executeCommand("dart.runAllTestsWithoutDebugging");
-
-		const run = this.controller.createTestRun(request);
 		const testsToRun = new Set<vs.TestItem>();
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
+		request.exclude?.forEach((item) => testsToRun.delete(item));
+
+
+		const run = this.controller.createTestRun(request);
 
 		// For each item in the set, remove any of its descendants because they will be run by the parent.
 		function removeWithDescendants(item: vs.TestItem) {
@@ -80,6 +78,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 		const all = [...testsToRun];
 		all.forEach((item) => item.children.forEach((child) => removeWithDescendants(child)));
+
+		// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
+		// suites), we can run the "fast path" in a single `dart test` invocation.
+		if (!debug && [...testsToRun].every((item) => this.nodeForItem.get(item) instanceof SuiteNode))
+			return vs.commands.executeCommand("dart.runAllTestsWithoutDebugging", [...testsToRun].map((item) => this.nodeForItem.get(item)));
 
 		// Group into suites since we need to run each seperately (although we can run
 		// multiple tests witthin one suite together).
@@ -93,7 +96,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			testNodes.push(node);
 		});
 
-		let suppressPromptOnErrors = false;
 		for (const suite of testsBySuite.keys()) {
 			const nodes = testsBySuite.get(suite);
 			if (!nodes) continue;
@@ -101,8 +103,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			const command = debug
 				? "_dart.startDebuggingTestsFromVsTestController"
 				: "_dart.startWithoutDebuggingTestsFromVsTestController";
-			await vs.commands.executeCommand(command, suite, nodes, suppressPromptOnErrors, run);
-			suppressPromptOnErrors = true; // Only prompt on first
+			await vs.commands.executeCommand(command, suite, nodes, true, run);
 		}
 	}
 

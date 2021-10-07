@@ -7,7 +7,7 @@ import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
-import { fsPath, mkDirRecursive } from "../../shared/utils/fs";
+import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig, TestName } from "../../shared/utils/test";
@@ -44,7 +44,7 @@ abstract class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
 			vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()),
 			vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()),
-			vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", () => this.runAllTestsWithoutDebugging()),
+			vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", (suites?: SuiteNode[]) => this.runAllTestsWithoutDebugging(suites)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
@@ -66,20 +66,34 @@ abstract class TestCommands implements vs.Disposable {
 			this.startTestFromOutline(true, test, launchTemplate)));
 	}
 
-	private async runAllTestsWithoutDebugging(): Promise<void> {
-		const testFolders = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
-			.map((project) => path.join(project, "test"))
-			.filter((testFolder) => fs.existsSync(testFolder));
-		if (testFolders.length === 0) {
+	private async runAllTestsWithoutDebugging(suites?: SuiteNode[]): Promise<void> {
+		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
+		// will be appended immediately after `program`. However, this only works for things in the same project
+		// as the first one that runs will be used for resolving package: URIs etc.
+		// So, fetch all project folders, then if we have suites, group them into those folders, and otherwise
+		// use their 'test' folders.
+		function getItemsToRunInProject(projectFolder: string) {
+			if (suites) {
+				return suites
+					.map((suite) => suite.suiteData.path)
+					.filter((suitePath) => isWithinPath(suitePath, projectFolder));
+			} else {
+				const testFolder = path.join(projectFolder, "test");
+				return fs.existsSync(testFolder) ? [testFolder] : [];
+			}
+		}
+
+		const projectsWithTests = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true })).map(getItemsToRunInProject);
+		if (projectsWithTests.length === 0) {
 			vs.window.showErrorMessage("Unable to find any test folders");
 			return;
 		}
-		let suppressPromptOnErrors = false;
-		for (const folder of testFolders) {
-			const ws = vs.workspace.getWorkspaceFolder(vs.Uri.file(folder));
-			const name = path.basename(path.dirname(folder));
-			this.runTests(folder, false, undefined, false, suppressPromptOnErrors, undefined, undefined, undefined);
-			suppressPromptOnErrors = true; // Only prompt for first one.
+
+		for (const projectWithTests of projectsWithTests) {
+			const template = projectWithTests.length > 1
+				? { args: projectWithTests.slice(1) }
+				: undefined;
+			this.runTests(projectWithTests[0], false, undefined, false, true, template, undefined, undefined);
 		}
 	}
 
