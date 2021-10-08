@@ -317,6 +317,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
+	public suiteDone(sessionID: string, node: SuiteNode): void { }
+
 	private formatError(error: ErrorNotification | PrintNotification) {
 		if (!("error" in error))
 			return;
@@ -325,9 +327,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			error.error ?? "",
 			error.stackTrace ?? "",
 		].join("\n").trim();
-	}
-
-	public suiteDone(sessionID: string, node: SuiteNode): void {
 	}
 
 	public dispose(): any {
