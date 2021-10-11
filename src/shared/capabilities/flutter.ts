@@ -28,6 +28,7 @@ export class FlutterCapabilities {
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
 	get webSupportsHotReload() { return false; }
+	get webHasReloadBug() { return !versionIsAtLeast(this.version, "2.6.0"); } // https://github.com/dart-lang/webdev/issues/1416
 }
 
 export class DaemonCapabilities {

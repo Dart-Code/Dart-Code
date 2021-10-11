@@ -370,7 +370,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
 
-	it("can hot reload with customRequest", async () => {
+	it("can hot reload with customRequest", async function () {
+		if (flutterTestDeviceIsWeb && !extApi.flutterCapabilities.webSupportsHotReload)
+			return this.skip();
+
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
@@ -446,7 +449,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("can hot restart using customRequest", async () => {
+	it("can hot restart using customRequest", async function () {
+		if (flutterTestDeviceIsWeb && extApi.flutterCapabilities.webHasReloadBug)
+			return this.skip();
+
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -467,7 +473,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("can hot restart using command", async () => {
+	it("can hot restart using command", async function () {
+		if (flutterTestDeviceIsWeb && extApi.flutterCapabilities.webHasReloadBug)
+			return this.skip();
+
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -525,8 +534,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // https://github.com/dart-lang/webdev/issues/1416
+		if (flutterTestDeviceIsWeb && extApi.flutterCapabilities.webHasReloadBug)
+			return this.skip();
 
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
