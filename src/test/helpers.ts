@@ -75,6 +75,7 @@ export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldTes
 export const helloWorldTestEmptyFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "empty_test.dart"));
 export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "tree_test.dart"));
 export const helloWorldTestShortFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "short_test.dart"));
+export const helloWorldTestShort2File = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "short2_test.dart"));
 export const helloWorldTestDiscoveryFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "discovery_test.dart"));
 export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dupe_name_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));
@@ -501,10 +502,8 @@ export async function uncommentTestFile(): Promise<void> {
 }
 
 export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
-	// TODO: Remove this when it's the only option and update the comments in the test files.
-	const isVsCodeTestRunner = !!vs.workspace.getConfiguration("dart").get("useVsCodeTestRunner");
-	const start = positionOf("// == EXPECTED RESULTS ==^");
-	const end = positionOf("^// == /EXPECTED RESULTS ==");
+	const start = positionOf("// == EXPECTED RESULTS ==^", doc);
+	const end = positionOf("^// == /EXPECTED RESULTS ==", doc);
 	const results = doc.getText(new vs.Range(start, end));
 	return results.split("\n")
 		.map((l) => l.trim())
@@ -537,12 +536,12 @@ export async function executeCodeAction({ kind, title }: { kind?: vs.CodeActionK
 	await waitForEditorChange(() => vs.commands.executeCommand(matchingActions[0].command!.command, ...matchingActions[0].command!.arguments!));
 }
 
-export function positionOf(searchText: string): vs.Position {
+export function positionOf(searchText: string, doc?: vs.TextDocument): vs.Position {
 	// Normalise search text to match the document, since our literal template
 	// strings in tests end up compiled as only \n on Windows even thouh the
 	// source file is \r\n!
 	searchText = searchText.replace(/\r/g, "").replace(/\n/g, documentEol);
-	const doc = currentDoc();
+	doc ??= currentDoc();
 	logger.info(`Searching for "${searchText}" in ${doc.uri}`);
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
