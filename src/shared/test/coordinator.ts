@@ -14,8 +14,13 @@ export class TestSessionCoordinator implements IAmDisposable {
 	/// end events.
 	private owningDebugSessions: { [key: string]: string | undefined } = {};
 
-	/// The path of the suite being run by the current debug session.
-	private sessionCurrentSuitePath: { [key: string]: string | undefined } = {};
+	/// For a given debug session, lookups by IDs to get back to the suite.
+	private debugSessionLookups: {
+		[key: string]: {
+			suiteForID: { [key: string]: SuiteData | undefined },
+			suiteForTestID: { [key: string]: SuiteData | undefined },
+		} | undefined
+	} = {};
 
 	/// A link between a suite path and a visitor for visiting its latest outline data.
 	/// This data is refreshed when a test suite starts running.
@@ -47,26 +52,9 @@ export class TestSessionCoordinator implements IAmDisposable {
 			this.owningDebugSessions[suitePath] = undefined;
 			delete this.owningDebugSessions[suitePath];
 		}
-		this.sessionCurrentSuitePath[debugSessionID] = undefined;
 	}
 
 	public async handleNotification(debugSessionID: string, dartCodeDebugSessionID: string, evt: Notification): Promise<void> {
-		let suitePath: string;
-		if (evt.type === "suite") {
-			suitePath = (evt as SuiteNotification).suite.path;
-			this.owningDebugSessions[suitePath] = debugSessionID;
-			this.sessionCurrentSuitePath[debugSessionID] = (evt as SuiteNotification).suite.path;
-		} else {
-			const maybeSuitePath = this.sessionCurrentSuitePath[debugSessionID];
-			if (!maybeSuitePath) {
-				if (evt.type !== "start" && evt.type !== "allSuites")
-					this.logger.warn(`Unable to handle ${evt.type} notification because there is no active suite`);
-				return;
-			}
-			suitePath = maybeSuitePath;
-		}
-
-		const suite = this.data.suites[suitePath];
 		switch (evt.type) {
 			// We won't get notifications that aren't directly tied to Suites because
 			// of how the DA works.
@@ -79,16 +67,16 @@ export class TestSessionCoordinator implements IAmDisposable {
 			// 	this.handleAllSuitesNotification(evt as AllSuitesNotification);
 			// 	break;
 			case "suite":
-				this.handleSuiteNotification(dartCodeDebugSessionID, suitePath, evt as SuiteNotification);
+				this.handleSuiteNotification(dartCodeDebugSessionID, evt as SuiteNotification);
 				break;
 			case "testStart":
-				this.handleTestStartNotification(dartCodeDebugSessionID, suite, evt as TestStartNotification);
+				this.handleTestStartNotification(dartCodeDebugSessionID, evt as TestStartNotification);
 				break;
 			case "testDone":
-				this.handleTestDoneNotification(dartCodeDebugSessionID, suite, evt as TestDoneNotification);
+				this.handleTestDoneNotification(dartCodeDebugSessionID, evt as TestDoneNotification);
 				break;
 			case "group":
-				this.handleGroupNotification(dartCodeDebugSessionID, suite, evt as GroupNotification);
+				this.handleGroupNotification(dartCodeDebugSessionID, evt as GroupNotification);
 				break;
 			// We won't get notifications that aren't directly tied to Suites because
 			// of how the DA works.
@@ -96,16 +84,21 @@ export class TestSessionCoordinator implements IAmDisposable {
 			// 	this.handleDoneNotification(suite, evt as DoneNotification);
 			// 	break;
 			case "print":
-				this.handlePrintNotification(dartCodeDebugSessionID, suite, evt as PrintNotification);
+				this.handlePrintNotification(dartCodeDebugSessionID, evt as PrintNotification);
 				break;
 			case "error":
-				this.handleErrorNotification(dartCodeDebugSessionID, suite, evt as ErrorNotification);
+				this.handleErrorNotification(dartCodeDebugSessionID, evt as ErrorNotification);
 				break;
 		}
 	}
 
-	private handleSuiteNotification(dartCodeDebugSessionID: string | undefined, suitePath: string, evt: SuiteNotification) {
-		this.data.suiteDiscovered(dartCodeDebugSessionID, evt.suite.path);
+	private handleSuiteNotification(dartCodeDebugSessionID: string, evt: SuiteNotification) {
+		if (!this.debugSessionLookups[dartCodeDebugSessionID])
+			this.debugSessionLookups[dartCodeDebugSessionID] = { suiteForID: {}, suiteForTestID: {} };
+
+		const suiteData = this.data.suiteDiscovered(dartCodeDebugSessionID, evt.suite.path);
+
+		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForID[evt.suite.id] = suiteData;
 
 		// Also capture the test nodes from the outline so that we can look up the full range for a test (instead of online its line/col)
 		// to provide to VS Code to better support "run test at cursor".
@@ -120,10 +113,17 @@ export class TestSessionCoordinator implements IAmDisposable {
 			visitor.visit(outline);
 	}
 
-	private handleTestStartNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: TestStartNotification) {
+	private handleTestStartNotification(dartCodeDebugSessionID: string, evt: TestStartNotification) {
 		// Skip loading tests.
 		if (evt.test.name?.startsWith("loading ") && !evt.test.groupIDs?.length)
 			return;
+
+		const suite = this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForID[evt.test.suiteID];
+		if (!suite) {
+			this.logger.warn(`Could not find suite ${evt.test.suiteID} for session ${dartCodeDebugSessionID}`);
+			return;
+		}
+		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForTestID[evt.test.id] = suite;
 
 		const path = (evt.test.root_url || evt.test.url) ? uriToFilePath(evt.test.root_url || evt.test.url!) : undefined;
 		const line = evt.test.root_line || evt.test.line;
@@ -135,24 +135,35 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
 	}
 
-	private handleTestDoneNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: TestDoneNotification) {
-		const result = evt.skipped ? "skipped" : evt.result;
+	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
+		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
+		if (!suite) {
+			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
+			return;
+		}
 
 		// If we don't have a test, it was probably a "loading foo.dart" test that we skipped over, so skip the result too.
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
 		if (!test)
 			return;
 
+		const result = evt.skipped ? "skipped" : evt.result;
 		this.data.testDone(dartCodeDebugSessionID, suite.path, evt.testID, result, evt.time);
 	}
 
-	private handleGroupNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: GroupNotification) {
+	private handleGroupNotification(dartCodeDebugSessionID: string, evt: GroupNotification) {
 		// Skip phantom groups.
 		if (!evt.group.name) {
 			if (dartCodeDebugSessionID) {
 				this.phantomGroupParents[dartCodeDebugSessionID] = this.phantomGroupParents[dartCodeDebugSessionID] || {};
 				this.phantomGroupParents[dartCodeDebugSessionID][evt.group.id] = evt.group.parentID ?? null; // Null signifies top-level.
 			}
+			return;
+		}
+
+		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForID[evt.group.suiteID];
+		if (!suite) {
+			this.logger.warn(`Could not find suite ${evt.group.suiteID} for session ${dartCodeDebugSessionID}`);
 			return;
 		}
 
@@ -177,7 +188,13 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.data.suiteDone(dartCodeDebugSessionID, suite.path);
 	}
 
-	private handlePrintNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: PrintNotification) {
+	private handlePrintNotification(dartCodeDebugSessionID: string, evt: PrintNotification) {
+		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
+		if (!suite) {
+			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
+			return;
+		}
+
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
 
 		// It's possible we'll get notifications for tests we don't track (like loading tests) - for example package:test
@@ -190,7 +207,13 @@ export class TestSessionCoordinator implements IAmDisposable {
 		this.data.testOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.message);
 	}
 
-	private handleErrorNotification(dartCodeDebugSessionID: string, suite: SuiteData, evt: ErrorNotification) {
+	private handleErrorNotification(dartCodeDebugSessionID: string, evt: ErrorNotification) {
+		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
+		if (!suite) {
+			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
+			return;
+		}
+
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
 
 		// It's possible we'll get notifications for tests we don't track (like loading tests) - for example package:test
