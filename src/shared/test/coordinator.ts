@@ -136,13 +136,11 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
+		// If we don't have a test, it was likely a "loading foo.dart" test that we skipped over, so skip the result too.
 		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
 		if (!suite) {
-			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
 			return;
 		}
-
-		// If we don't have a test, it was probably a "loading foo.dart" test that we skipped over, so skip the result too.
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, evt.testID);
 		if (!test)
 			return;
