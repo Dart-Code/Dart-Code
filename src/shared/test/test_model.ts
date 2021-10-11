@@ -1,7 +1,7 @@
 import * as path from "path";
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
-import { Range } from "../interfaces";
+import { Position, Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { flatMap, notUndefined, uniq } from "../utils";
 import { fsPath, isWithinPath } from "../utils/fs";
@@ -435,7 +435,19 @@ export class TestModel {
 			testNode.parent = parent;
 			testNode.name = testName;
 			testNode.path = testPath;
+			const originalRange = testNode.range;
 			testNode.range = range;
+
+			// If we're an Outline node being updated, and we have Results children that
+			// had the same range as us, they should be updated too, so Results nodes do not
+			// drift away from the location over time.
+			if (testNode.testSource === TestSource.Outline) {
+				const children = testNode.children
+					.filter((c) => c.testSource === TestSource.Result)
+					.filter((c) => !c.range || (originalRange && this.rangeEquals(c.range, originalRange)));
+				for (const child of children)
+					child.range = range;
+			}
 		} else {
 			testNode.testSource = source;
 		}
@@ -564,6 +576,14 @@ export class TestModel {
 		const index = parent.children.indexOf(node);
 		if (index > -1)
 			parent.children.splice(index, 1);
+	}
+
+	private rangeEquals(r1: Range, r2: Range): boolean {
+		return this.positionEquals(r1.start, r2.start) && this.positionEquals(r1.end, r2.end);
+	}
+
+	private positionEquals(p1: Position, p2: Position): boolean {
+		return p1.line === p2.line && p1.character === p2.character;
 	}
 }
 
