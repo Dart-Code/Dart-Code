@@ -323,7 +323,7 @@ export class TestModel {
 		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed`;
 	}
 
-	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): void {
+	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
 		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
 		suite.node.appendStatus(TestStatus.Waiting);
 		this.updateNode(suite.node);
@@ -337,6 +337,8 @@ export class TestModel {
 
 		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
+
+		return suite;
 	}
 
 	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
