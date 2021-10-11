@@ -215,7 +215,7 @@ describe("flutter test debugger", () => {
 		);
 	});
 
-	it.only("runs all tests if given a folder", async () => {
+	it("runs all tests if given a folder", async () => {
 		const config = await startDebugger(dc, "./test/");
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
