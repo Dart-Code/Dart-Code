@@ -515,18 +515,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
-			dc.configurationSequence(),
-			dc.launch(config),
+			watchPromise("assertOutputContains", dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`)),
+			watchPromise("configurationSequence", dc.configurationSequence()),
+			watchPromise("launch", dc.launch(config)),
 		);
 
-		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		const devTools = await watchPromise("executeCommand", vs.commands.executeCommand("dart.openDevTools")) as { url: string, dispose: () => void };
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		defer(devTools.dispose);
 		assert.ok(devTools.url);
 
-		const serverResponse = await extApi.webClient.fetch(devTools.url);
+		const serverResponse = await watchPromise("fetch", extApi.webClient.fetch(devTools.url));
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
 		await waitAllThrowIfTerminates(dc,
