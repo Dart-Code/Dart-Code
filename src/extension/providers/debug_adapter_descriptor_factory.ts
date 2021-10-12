@@ -18,9 +18,17 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const debuggerName = getDebugAdapterName(debuggerType);
 		this.logger.info(`Using ${debuggerName} debugger for ${DebuggerType[debuggerType]}`);
 
-		if (config.experimentalDartDapPath) {
-			const args = [config.experimentalDartDapPath, "dap"];
+		if (config.experimentalDartDapPath && (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.PubTest)) {
+			const args = [config.experimentalDartDapPath, "debug_adapter"];
+			if (debuggerType === DebuggerType.PubTest)
+				args.push("--test");
 			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
+			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
+		} else if (config.experimentalFlutterDapPath && (debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterTest)) {
+			const args = [config.experimentalFlutterDapPath, "debug_adapter"];
+			if (debuggerType === DebuggerType.FlutterTest)
+				args.push("--test");
+			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")}`);
 			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
 		}
 

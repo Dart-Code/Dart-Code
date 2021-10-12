@@ -72,6 +72,7 @@ class Config {
 	get env(): any { return this.getConfig<any>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
 	get experimentalDartDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("experimentalDartDapPath", null)); }
+	get experimentalFlutterDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("experimentalFlutterDapPath", null)); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
 	get flutterAdbConnectOnChromeOs(): boolean { return this.getConfig<boolean>("flutterAdbConnectOnChromeOs", false); }
 	get flutterCreateAndroidLanguage(): "java" | "kotlin" { return this.getConfig<"java" | "kotlin">("flutterCreateAndroidLanguage", "kotlin"); }
