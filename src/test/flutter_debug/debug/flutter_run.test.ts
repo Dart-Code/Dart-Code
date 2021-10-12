@@ -179,7 +179,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
 
-	it("expected debugger services/extensions are available after a hot restart", async () => {
+	it("expected debugger services/extensions are available after a hot restart", async function () {
+		if (flutterTestDeviceIsWeb && extApi.flutterCapabilities.webHasReloadBug)
+			return this.skip();
+
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),

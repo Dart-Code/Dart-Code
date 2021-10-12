@@ -23,7 +23,7 @@ export class LoggingReporter extends reporters.Base {
 			runner.on("pending", (test: Test) => {
 				const logger = getLogger();
 				if (logger)
-					logger.info(`Test ${test.fullTitle()} pending/skipped`, LogCategory.CI);
+					logger.info(`Test ${test.fullTitle()} pending/skipped (${test.state})`, LogCategory.CI);
 			});
 
 			runner.on("pass", (test: Test) => {
