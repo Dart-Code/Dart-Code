@@ -928,7 +928,7 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 
 export async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs) | undefined | null> {
 	const debugConfig: vs.DebugConfiguration = Object.assign({}, {
-		name: "Dart & Flutter",
+		name: `Dart & Flutter (${currentTestName})`,
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
