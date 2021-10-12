@@ -281,7 +281,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
-			run.appendOutput(`${formatForTerminal(message)}\r\n`);
+			run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
@@ -289,8 +289,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			// TODO: isFailure??
-			run.appendOutput(`${formatForTerminal(message)}\r\n`);
-			run.appendOutput(`${formatForTerminal(stack)}\r\n`);
+			run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
+			run.appendOutput(`${formatForTerminal(stack)}\r\n`, undefined, item);
 		}
 	}
 
