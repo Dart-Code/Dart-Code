@@ -3,9 +3,10 @@ import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { toRange, toRangeOnLine } from "../../shared/vscode/utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
+import { DasFileTracker } from "../analysis/file_tracker_das";
 
 export class DartReferenceProvider implements ReferenceProvider, DefinitionProvider {
-	constructor(private readonly analyzer: DasAnalyzerClient) { }
+	constructor(private readonly analyzer: DasAnalyzerClient, private readonly fileTracker: DasFileTracker) { }
 
 	public async provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[] | undefined> {
 		// If we want to include the decleration, kick off a request for that.
@@ -33,11 +34,16 @@ export class DartReferenceProvider implements ReferenceProvider, DefinitionProvi
 	}
 
 	public async provideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<DefinitionLink[] | undefined> {
-		const resp = await this.analyzer.analysisGetNavigation({
-			file: fsPath(document.uri),
-			length: 0,
-			offset: document.offsetAt(position),
-		});
+		let resp1 = this.fileTracker.getNavigationTargets(fsPath(document.uri), document.offsetAt(position));
+		if (!resp1) {
+			resp1 = await this.analyzer.analysisGetNavigation({
+				file: fsPath(document.uri),
+				length: 0,
+				offset: document.offsetAt(position),
+			});
+		}
+		if (!resp1) return undefined;
+		const resp = resp1;
 
 		if (token && token.isCancellationRequested)
 			return;
