@@ -91,16 +91,21 @@ export class DevToolsManager implements vs.Disposable {
 
 		if (!this.devtoolsUrl) {
 			this.devToolsStatusBarItem.hide();
-			const installedVersion = await this.pubGlobal.installIfRequired({
-				autoUpdate: true,
-				moreInfoLink: undefined,
-				packageID: devtoolsPackageID,
-				packageName: devtoolsPackageName,
-				requiredVersion: "0.9.6",
-				silent,
-			});
-			if (!installedVersion) {
-				return undefined;
+			// Ensure the Pub version of DevTools is installed if we're not launching from the daemon or
+			// the version from the Dart SDK.
+			if (!this.workspaceContext.config.startDevToolsFromDaemon && !this.dartCapabilities.supportsDartDevTools) {
+				const installedVersion = await this.pubGlobal.installIfRequired({
+					autoUpdate: true,
+					moreInfoLink: undefined,
+					packageID: devtoolsPackageID,
+					packageName: devtoolsPackageName,
+					requiredVersion: "0.9.6",
+					silent,
+				});
+				// If install failed, we can't start.
+				if (!installedVersion) {
+					return undefined;
+				}
 			}
 
 			// Using daemon takes priority over SDK or pub.
@@ -413,17 +418,16 @@ export class DevToolsManager implements vs.Disposable {
 ///
 /// This is not used for internal workspaces (see startDevToolsFromDaemon).
 class DevToolsService extends StdIOService<UnknownNotification> {
-	private spawnedArgs?: string[];
+	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
+		super(new CategoryLogger(logger, LogCategory.General), config.maxLogLineLength);
 
-	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly capabilities: DevToolsCapabilities) {
-		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
+		const devToolsArgs = ["--machine", "--try-ports", "10", "--allow-embedding"];
 
-		this.spawnedArgs = this.getDevToolsArgs();
-
-		// TODO(helin24): Use daemon instead to start DevTools if internal workspace
-		const pubExecution = getPubExecutionInfo(dartCapabilities, workspaceContext.sdks.dart, this.spawnedArgs);
-		const binPath = pubExecution.executable;
-		const binArgs = pubExecution.args;
+		const executionInfo = dartCapabilities.supportsDartDevTools
+			? { executable: path.join(workspaceContext.sdks.dart, dartVMPath), args: ["devtools"] }
+			: getPubExecutionInfo(dartCapabilities, workspaceContext.sdks.dart, ["global", "run", "devtools"]);
+		const binPath = executionInfo.executable;
+		const binArgs = [...executionInfo.args, ...devToolsArgs];
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
 		portToBind = config.devToolsPort // Always config first
@@ -438,10 +442,6 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
 
 		this.createProcess(undefined, binPath, binArgs, { toolEnv: getToolEnv() });
-	}
-
-	private getDevToolsArgs() {
-		return ["global", "run", "devtools", "--machine", "--try-ports", "10", "--allow-embedding"];
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
