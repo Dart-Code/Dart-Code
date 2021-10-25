@@ -272,6 +272,13 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		this.isReloadInProgress = true;
 		const restartType = hotRestart ? "hot-restart" : "hot-reload";
+
+		// To avoid issues with hot restart pausing on exceptions during the restart, we remove
+		// exception-pause behaviour here, and it will be re-added as part of the startup code
+		// when the new isolate appears.
+		if (hotRestart)
+			await this.threadManager.setExceptionPauseMode("None", false);
+
 		try {
 			await this.runDaemon.restart(this.currentRunningAppId, !this.noDebug, hotRestart, args);
 		} catch (e) {

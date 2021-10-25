@@ -77,8 +77,10 @@ export class ThreadManager {
 		return this.threads.map((thread: ThreadInfo) => new Thread(thread.num, thread.ref.name));
 	}
 
-	public async setExceptionPauseMode(mode: VmExceptionMode) {
-		this.exceptionMode = mode;
+	public async setExceptionPauseMode(mode: VmExceptionMode, persist = true) {
+		if (persist) {
+			this.exceptionMode = mode;
+		}
 		if (!this.debugSession.vmService)
 			return;
 
