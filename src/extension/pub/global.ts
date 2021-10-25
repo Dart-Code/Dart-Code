@@ -6,7 +6,7 @@ import { CustomScript, DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { getPubExecutionInfo } from "../../shared/processes";
 import { PubApi } from "../../shared/pub/api";
-import { pubVersionIsAtLeast, usingCustomScript } from "../../shared/utils";
+import { pubVersionIsAtLeast } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { safeToolSpawn } from "../utils/processes";
@@ -14,25 +14,20 @@ import { safeToolSpawn } from "../utils/processes";
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private readonly dartCapabilities: DartCapabilities, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
-	public async installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; customActivateScript?: CustomScript; autoUpdate?: boolean; silent?: boolean; }): Promise<string | undefined> {
+	public async installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; autoUpdate?: boolean; silent?: boolean; }): Promise<string | undefined> {
 		const packageID = options.packageID;
 		const packageName = options.packageName ?? packageID;
-		const customActivateScript = options.customActivateScript;
 		const moreInfoLink = options.moreInfoLink ?? pubGlobalDocsUrl;
 		const requiredVersion = options.requiredVersion;
 		const silent = !!options.silent;
 		let autoUpdate = !!options.autoUpdate;
 
 		let installedVersion = await this.getInstalledVersion(packageName, packageID);
-		const versionStatus = customActivateScript
-			? VersionStatus.UpdateRequired
-			: await this.checkVersionStatus(packageID, installedVersion, requiredVersion);
+		const versionStatus = await this.checkVersionStatus(packageID, installedVersion, requiredVersion);
 		if (versionStatus === VersionStatus.Valid)
 			return installedVersion!;
 
-		// Custom activation scripts always auto run without prompt since we
-		// are unable to check whether they are required.
-		if (customActivateScript || silent)
+		if (silent)
 			autoUpdate = true;
 
 		const activateForMe = versionStatus === VersionStatus.NotInstalled ? `Activate ${packageName}` : `Update ${packageName}`;
@@ -60,9 +55,9 @@ export class PubGlobal {
 			const args = ["global", "activate", packageID];
 			try {
 				if (silent)
-					await this.runCommand(packageName, args, customActivateScript);
+					await this.runCommand(packageName, args);
 				else
-					await this.runCommandWithProgress(packageName, `${actionName}...`, args, customActivateScript);
+					await this.runCommandWithProgress(packageName, `${actionName}...`, args);
 				installedVersion = await this.getInstalledVersion(packageName, packageID);
 				const newVersionStatus = await this.checkVersionStatus(packageID, installedVersion);
 				if (newVersionStatus !== VersionStatus.Valid) {
@@ -145,17 +140,11 @@ export class PubGlobal {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title,
-		}, () => this.runCommand(packageName, args, customScript));
+		}, () => this.runCommand(packageName, args));
 	}
 
-	private runCommand(packageName: string, args: string[], customScript?: CustomScript): Thenable<string> {
-		let pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
-
-		pubExecution = usingCustomScript(
-			pubExecution.executable,
-			pubExecution.args,
-			customScript,
-		);
+	private runCommand(packageName: string, args: string[]): Thenable<string> {
+		const pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
 
 		return new Promise((resolve, reject) => {
 			this.logger.info(`Spawning ${pubExecution.executable} with args ${JSON.stringify(pubExecution.args)}`);

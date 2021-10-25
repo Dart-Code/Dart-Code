@@ -4,10 +4,9 @@ import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
-import { DevToolsCapabilities } from "../../../shared/capabilities/devtools";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CHROME_OS_DEVTOOLS_PORT, devToolsPages, isChromeOS, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
+import { CHROME_OS_DEVTOOLS_PORT, dartVMPath, devToolsPages, isChromeOS, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -43,7 +42,6 @@ export class DevToolsManager implements vs.Disposable {
 	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
 	public get devToolsActivation() { return this.devToolsActivationPromise; }
 	private service?: DevToolsService;
-	private capabilities = DevToolsCapabilities.empty;
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
@@ -104,7 +102,8 @@ export class DevToolsManager implements vs.Disposable {
 			if (!installedVersion) {
 				return undefined;
 			}
-			this.capabilities.version = installedVersion;
+
+			// Using daemon takes priority over SDK or pub.
 			if (this.workspaceContext.config.startDevToolsFromDaemon) {
 				if (!this.flutterDaemon) {
 					throw new Error("Flutter daemon is undefined");
@@ -130,11 +129,7 @@ export class DevToolsManager implements vs.Disposable {
 		const url = await this.devtoolsUrl;
 
 		this.devToolsStatusBarItem.text = "Dart DevTools";
-		if (this.capabilities.version !== DevToolsCapabilities.empty.version) {
-			this.devToolsStatusBarItem.tooltip = `DevTools ${this.capabilities.version} is running at ${url}`;
-		} else {
-			this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
-		}
+		this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
 		this.devToolsStatusBarItem.command = "dart.openDevTools";
 		this.devToolsStatusBarItem.show();
 
@@ -355,7 +350,7 @@ export class DevToolsManager implements vs.Disposable {
 					this.logger.error(e);
 				}
 			}
-			this.service = new DevToolsService(this.logger, this.workspaceContext, this.dartCapabilities, this.capabilities);
+			this.service = new DevToolsService(this.logger, this.workspaceContext, this.dartCapabilities);
 			const service = this.service;
 			this.disposables.push(service);
 
@@ -414,6 +409,9 @@ export class DevToolsManager implements vs.Disposable {
 	}
 }
 
+/// Handles running the DevTools process (via pub, or dart).
+///
+/// This is not used for internal workspaces (see startDevToolsFromDaemon).
 class DevToolsService extends StdIOService<UnknownNotification> {
 	private spawnedArgs?: string[];
 
