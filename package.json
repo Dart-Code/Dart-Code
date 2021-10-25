@@ -2335,13 +2335,10 @@
 					"markdownDescription": "Whether to perform hot reload on save based on a filesystem watcher for Dart files rather than using VS Code's `onDidSave` event. This allows reloads to trigger when external tools modify Dart source files.",
 					"scope": "window"
 				},
-				"dart.previewLsp": {
-					"type": [
-						"null",
-						"boolean"
-					],
-					"default": null,
-					"markdownDescription": "Whether to run the analyzer in [LSP mode](https://microsoft.github.io/language-server-protocol/) (requires restart).",
+				"dart.useLsp": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Whether to run the analyzer in [LSP mode](https://microsoft.github.io/language-server-protocol/). Some features are not supported if this setting is disabled and in a future release LSP will be the only supported option.",
 					"scope": "window"
 				},
 				"dart.lspSnippetTextEdits": {

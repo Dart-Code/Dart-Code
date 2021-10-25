@@ -116,7 +116,7 @@ class Config {
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
-	get previewLsp(): undefined | boolean { return this.getConfig<null | boolean>("previewLsp", null); }
+	get useLsp(): boolean { return this.getConfig<boolean>("useLsp", true); }
 	get useVsCodeTestRunner(): boolean { return this.getConfig<boolean>("useVsCodeTestRunner", true); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get pubTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("pubTestLogFile", null))); }
@@ -158,7 +158,6 @@ class Config {
 	public setGlobalDebugSdkLibraries(value: boolean): Promise<void> { return this.setConfig("debugSdkLibraries", value, ConfigurationTarget.Global); }
 	public setGlobalDebugExternalPackageLibraries(value: boolean): Promise<void> { return this.setConfig("debugExternalPackageLibraries", value, ConfigurationTarget.Global); }
 	public setGlobalFlutterSdkPath(value: string): Promise<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Global); }
-	public setPreviewLsp(value: boolean): Promise<void> { return this.setConfig("previewLsp", value, ConfigurationTarget.Global); }
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Promise<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
 	public setShowInspectorNotificationsForWidgetErrors(value: boolean): Promise<void> { return this.setConfig("showInspectorNotificationsForWidgetErrors", value, ConfigurationTarget.Global); }
 	public setShowSkippedTests(value: boolean): Promise<void> { return this.setConfig("showSkippedTests", value, ConfigurationTarget.Global); }

@@ -7,13 +7,19 @@ import { WorkspaceContext } from "../shared/workspace";
 const clearAllExperiments = false;
 
 export interface KnownExperiments {
-	lspDefault: Experiment,
+	// example: Experiment,
 }
 export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
 	return {
-		lspDefault: new LspDefaultExperiement(logger, workspaceContext, context),
+		// example: new ExampleExperiement(logger, workspaceContext, context),
 	};
 }
+
+// class ExampleExperiement extends Experiment {
+// 	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
+// 		super(logger, workspaceContext, context, "example", 10);
+// 	}
+// }
 
 class Experiment {
 	private readonly randomNumber: number;
@@ -59,8 +65,3 @@ class Experiment {
 	protected async activate(isFirstActivation: boolean): Promise<undefined | false> { return; }
 }
 
-class LspDefaultExperiement extends Experiment {
-	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
-		super(logger, workspaceContext, context, "lsp-default", 100);
-	}
-}
