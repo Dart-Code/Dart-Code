@@ -1697,9 +1697,13 @@ export class DartDebugSession extends DebugSession {
 					this.logDapResponse(response);
 					this.sendResponse(response);
 					break;
+				case "hotReload":
+					await this.reloadSources();
+					this.logDapResponse(response);
+					this.sendResponse(response);
+					break;
 				// Flutter requests that may be sent during test runs or other places
 				// that we don't currently support.
-				case "hotReload":
 				case "hotRestart":
 					// TODO: Get rid of this!
 					this.log(`Ignoring Flutter customRequest ${request} for non-Flutter-run app`, LogSeverity.Warn);
@@ -2191,6 +2195,16 @@ export class DartDebugSession extends DebugSession {
 
 		if (this.pollforMemoryMs)
 			setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs).unref();
+	}
+
+	private async reloadSources(): Promise<void> {
+		if (!this.vmService)
+			return;
+
+		const result = await this.vmService.getVM();
+		const vm = result.result as VM;
+
+		await Promise.all(vm.isolates.map((isolateRef) => this.vmService!.callMethod("reloadSources", { isolateId: isolateRef.id })));
 	}
 
 	protected logStdout(message: string) {

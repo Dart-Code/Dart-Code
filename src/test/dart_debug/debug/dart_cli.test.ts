@@ -11,7 +11,7 @@ import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, defer, delay, ensureArrayContainsArray, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, sb, setConfigForTest, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, breakpointFor, closeAllOpenFiles, currentEditor, defer, delay, ensureArrayContainsArray, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldReloadFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 
 describe("dart cli debugger", () => {
@@ -205,6 +205,26 @@ describe("dart cli debugger", () => {
 		const config = await getLaunchConfiguration(undefined, { cwd: "example" });
 		assert.equal(config!.program, fsPath(helloWorldExampleSubFolderMainFile));
 		assert.equal(config!.cwd, fsPath(helloWorldExampleSubFolder));
+	});
+
+	it("can hot reload", async () => {
+		await openFile(helloWorldReloadFile);
+		const config = await startDebugger(dc, helloWorldReloadFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertOutputContains("stdout", "ORIGINAL CONTENT"),
+			dc.launch(config),
+		);
+
+		// Replace the content and trigger hot reload.
+		const editor = currentEditor();
+		await setTestContent(editor.document.getText().replace("ORIGINAL CONTENT", "NEW CONTENT"));
+		await editor.document.save();
+
+		await vs.commands.executeCommand("dart.hotReload");
+		await dc.assertOutputContains("stdout", "NEW CONTENT");
+
+		await dc.terminateRequest();
 	});
 
 	it("can launch DevTools externally", async () => {

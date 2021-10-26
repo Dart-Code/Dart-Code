@@ -552,6 +552,11 @@
 				}
 			},
 			{
+				"command": "dart.hotReload",
+				"title": "Hot Reload",
+				"category": "Dart"
+			},
+			{
 				"command": "flutter.openTimeline",
 				"title": "Open Observatory Timeline",
 				"category": "Flutter"
@@ -1003,6 +1008,10 @@
 				{
 					"command": "flutter.openTimeline",
 					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode"
+				},
+				{
+					"command": "dart.hotReload",
+					"when": "inDebugMode"
 				},
 				{
 					"command": "dart.openDevTools",

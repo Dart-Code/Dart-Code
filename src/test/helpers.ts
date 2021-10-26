@@ -38,6 +38,7 @@ const testFolder = path.join(ext.extensionPath, "src/test");
 // Dart
 export const helloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
+export const helloWorldReloadFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/reload.dart"));
 export const helloWorldInspectionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/inspect.dart"));
 export const helloWorldLongRunningFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/long_running.dart"));
 export const helloWorldMainLibFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/basic.dart"));
