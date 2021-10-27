@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CHROME_OS_DEVTOOLS_PORT, dartVMPath, devToolsPages, isChromeOS, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
+import { dartVMPath, devToolsPages, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -430,9 +430,8 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		const binArgs = [...executionInfo.args, ...devToolsArgs];
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
-		portToBind = config.devToolsPort // Always config first
-			|| portToBind                // Then try the last port we bound this session
-			|| (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_DEVTOOLS_PORT : undefined);
+		portToBind = config.devToolsPort  // Always config first
+			|| portToBind;                // Then try the last port we bound this session
 
 		if (portToBind) {
 			binArgs.push("--port");

@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { CHROME_OS_VM_SERVICE_PORT, debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isChromeOS, showErrorsAction } from "../../shared/constants";
+import { debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, showErrorsAction } from "../../shared/constants";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
@@ -503,7 +503,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf);
-		debugConfig.vmServicePort = debugConfig.vmServicePort || (isChromeOS && config.useKnownChromeOSPorts ? CHROME_OS_VM_SERVICE_PORT : 0);
+		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
 		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
 		debugConfig.webDaemonLogFile = this.insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
