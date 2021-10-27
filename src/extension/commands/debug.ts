@@ -148,7 +148,7 @@ export class DebugCommands implements IAmDisposable {
 			}
 			this.onWillHotReloadEmitter.fire();
 			await Promise.all(debugSessions.map(async (s) => {
-				if (!args.onlyFlutter || s.debuggerType === DebuggerType.Flutter)
+				if (!args?.onlyFlutter || s.debuggerType === DebuggerType.Flutter)
 					await s.session.customRequest("hotReload", args);
 			}));
 			analytics.logDebuggerHotReload();
