@@ -83,7 +83,12 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		if (hasErrors)
 			return;
 
-		const args = { reason: restartReasonSave, debounce: this.flutterCapabilities.supportsRestartDebounce };
+		const args = {
+			debounce: this.flutterCapabilities.supportsRestartDebounce,
+			// TODO: Support Dart too, but it'll need a local debounce etc.
+			onlyFlutter: true,
+			reason: restartReasonSave,
+		};
 
 		if (this.flutterCapabilities.supportsRestartDebounce) {
 			commands.executeCommand(commandToRun, args);

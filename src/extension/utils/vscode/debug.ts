@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { VmServiceExtension } from "../../../shared/enums";
+import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { PromiseCompleter } from "../../../shared/utils";
 
 export class DartDebugSessionInformation {
@@ -9,7 +9,7 @@ export class DartDebugSessionInformation {
 	public hasEnded = false;
 	public progress: { [key: string]: ProgressMessage } = {};
 	public readonly loadedServiceExtensions: VmServiceExtension[] = [];
-	constructor(public readonly session: vs.DebugSession, public readonly debuggerType: string) { }
+	constructor(public readonly session: vs.DebugSession, public readonly debuggerType: DebuggerType) { }
 }
 
 export class ProgressMessage {
