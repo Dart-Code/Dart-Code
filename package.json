@@ -1854,7 +1854,7 @@
 				"dart.completeFunctionCalls": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Whether to insert parentheses and parameter placeholders during code completions when using LSP. This feature is automatically disabled if commit characters are enabled.",
+					"markdownDescription": "Whether to insert parentheses and placeholders for positional and required arguments during code completions when using LSP. This feature is automatically disabled if commit characters are enabled.",
 					"scope": "resource"
 				},
 				"dart.showMainCodeLens": {
