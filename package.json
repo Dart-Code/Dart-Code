@@ -2383,6 +2383,12 @@
 					"default": false,
 					"description": "Whether to normalize file casings before sending them to the LSP server. This may fix issues with file_names lints not disappearing after renaming a file if the VS Code API continues to use the original casing.",
 					"scope": "window"
+				},
+				"dart.onlyAnalyzeProjectsWithOpenFiles": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to ignore workspace folders and perform analysis based on the open files, as if no workspace was open at all. This allows opening large folders without causing them to be completely analyzed.",
+					"scope": "window"
 				}
 			}
 		},
