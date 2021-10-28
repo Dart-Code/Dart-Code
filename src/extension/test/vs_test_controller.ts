@@ -8,7 +8,6 @@ import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
-import { formatForTerminal } from "../utils/vscode/terminals";
 
 export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -281,7 +280,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item)
-			run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
+			this.appendTestOutputLines(run, item, message);
 	}
 
 	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
@@ -289,9 +288,18 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const item = this.itemForNode.get(node);
 		if (run && item) {
 			// TODO: isFailure??
-			run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
-			run.appendOutput(`${formatForTerminal(stack)}\r\n`, undefined, item);
+			this.appendTestOutputLines(run, item, message);
+			this.appendTestOutputLines(run, item, stack);
 		}
+	}
+
+	public appendTestOutputLines(run: vs.TestRun, item: vs.TestItem, message: string) {
+		// Multi-line text doesn't show up correctly so split up
+		// https://github.com/microsoft/vscode/issues/136036
+		// run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
+		message.split("\n").forEach((line) => {
+			run.appendOutput(line, undefined, item);
+		});
 	}
 
 	public testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void {
