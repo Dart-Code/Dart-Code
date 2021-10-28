@@ -230,9 +230,9 @@ export class LspAnalyzer extends Analyzer {
 function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: Middleware): LanguageClient {
 	const clientOptions: LanguageClientOptions = {
 		initializationOptions: {
-			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			closingLabels: config.closingLabels,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
+			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
 		},
