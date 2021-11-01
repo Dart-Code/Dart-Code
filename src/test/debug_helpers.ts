@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as path from "path";
-import { DebugAdapterExecutable, DebugAdapterServer, DebugAdapterTrackerFactory, DebugConfiguration, TestItemCollection, Uri } from "vscode";
+import { DebugAdapterExecutable, DebugAdapterServer, DebugAdapterTrackerFactory, DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";
@@ -107,18 +107,6 @@ export function ensureNoVariable(variables: DebugProtocol.Variable[], name: stri
 	assert.ok(variables, "No variables given to search");
 	const v = variables.find((v) => v.name === name);
 	assert.ok(!v, `Found unexpected variable ${name}!`);
-}
-
-export function expectTopLevelTestNodeCount(testItems: TestItemCollection, expectedLength: number) {
-	const itemString: string[] = [];
-	testItems.forEach((n) => itemString.push(`        ${n.label ?? n.description}`));
-	const topLevelText = itemString.join("\n");
-
-	assert.equal(
-		testItems.size,
-		expectedLength,
-		`Expected ${expectedLength} nodes but got\n\n${topLevelText}`,
-	);
 }
 
 export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], index: number, evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {

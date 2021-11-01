@@ -7,7 +7,7 @@ import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/ou
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, expectTopLevelTestNodeCount, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, captureDebugSessionCustomEvents, clearTestTree, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
@@ -229,7 +229,24 @@ describe("dart test debugger", () => {
 
 		const topLevelNodes = extApi.testController!.controller.items;
 		assert.ok(topLevelNodes);
-		expectTopLevelTestNodeCount(topLevelNodes, 7);
+
+		const nodeLabels: string[] = [];
+		topLevelNodes.forEach((n) => nodeLabels.push(n.label ?? n.description));
+		nodeLabels.sort(); // Sorting is done by VS Code so the model is unsorted.
+
+		assert.deepStrictEqual(
+			nodeLabels,
+			[
+				"test/basic_test.dart",
+				"test/broken_test.dart",
+				"test/discovery_test.dart",
+				"test/dupe_name_test.dart",
+				"test/nested/nested_test.dart",
+				"test/short_test.dart",
+				"test/skip_test.dart",
+				"test/tree_test.dart",
+			],
+		);
 	});
 
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {

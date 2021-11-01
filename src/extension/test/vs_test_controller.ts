@@ -210,7 +210,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const wf = vs.workspace.getWorkspaceFolder(vs.Uri.file(suitePath));
 
 		return wf
-			? path.relative(fsPath(wf.uri), node.suiteData.path).replace("\\", "/")
+			? path.relative(fsPath(wf.uri), node.suiteData.path).replace(/\\/g, "/")
 			: path.basename(suitePath);
 	}
 
