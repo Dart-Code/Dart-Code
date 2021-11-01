@@ -853,6 +853,13 @@ export async function ensureTestContentWithSelection(expected: string): Promise<
 	ensureTestSelection(rangeOf(expected));
 }
 
+export function checkTreeNodeResults(actual: string, expected: string, description?: string) {
+	// To simplify testing, expected always has forward slashes, but in reality should
+	// match the platform, so we should replace here. We must not replace on actual, as
+	// we need to verify that's correct for the platform.
+	assert.equal(actual, expected.replace(/[\/\\]/g, path.sep), description);
+}
+
 export function delay(milliseconds: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }

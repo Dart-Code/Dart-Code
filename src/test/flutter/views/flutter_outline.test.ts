@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { waitFor } from "../../../shared/utils/promises";
-import { activate, extApi, flutterHelloWorldOutlineFile, getExpectedResults, getPackages, makeTextTreeUsingCustomTree, openFile, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, extApi, flutterHelloWorldOutlineFile, getExpectedResults, getPackages, makeTextTreeUsingCustomTree, openFile, waitForResult } from "../../helpers";
 
 describe("flutter_outline", () => {
 	// We have tests that require external packages.
@@ -24,6 +24,6 @@ describe("flutter_outline", () => {
 
 		assert.ok(expectedResults, "Expected results were empty");
 		assert.ok(actualResults, "Actual results were empty");
-		assert.equal(actualResults, expectedResults);
+		checkTreeNodeResults(actualResults, expectedResults);
 	});
 });
