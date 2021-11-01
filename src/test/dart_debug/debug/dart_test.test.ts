@@ -11,7 +11,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
-describe("dart test debugger", () => {
+describe.only("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate(null));
