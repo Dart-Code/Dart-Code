@@ -83,7 +83,9 @@ abstract class TestCommands implements vs.Disposable {
 			}
 		}
 
-		const projectsWithTests = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true })).map(getItemsToRunInProject);
+		const projectsWithTests = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
+			.map(getItemsToRunInProject)
+			.filter((tests) => tests.length);
 		if (projectsWithTests.length === 0) {
 			vs.window.showErrorMessage("Unable to find any test folders");
 			return;
