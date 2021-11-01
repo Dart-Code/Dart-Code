@@ -7,7 +7,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, deferUntilLast, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, deferUntilLast, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -238,7 +238,7 @@ describe("flutter test debugger", () => {
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
-			assert.equal(actualResults, expectedResults);
+			checkTreeNodeResults(actualResults, expectedResults);
 		}
 	});
 
@@ -392,7 +392,7 @@ test/widget_test.dart [2/2 passed] Passed
 
 		// Get the actual tree, filtered only to those that ran in the last run.
 		const actualResults = (await makeTestTextTree(flutterTestMainFile, { onlyActive: true })).join("\n");
-		assert.equal(actualResults, expectedResults);
+		checkTreeNodeResults(actualResults, expectedResults);
 	});
 });
 
