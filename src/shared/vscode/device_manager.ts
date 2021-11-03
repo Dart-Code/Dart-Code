@@ -278,9 +278,21 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public labelForDevice(device: f.Device) {
-		return device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
+		let icon;
+		switch (device.category) {
+			case "mobile":
+				return "$(device-mobile) ";
+				break;
+			case "web":
+				icon = "$(browser) ";
+				break;
+			case "desktop":
+				icon = "$(device-desktop) ";
+		}
+		const name = device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
 			? this.knownEmulatorNames[device.emulatorId]
 			: device.name;
+		return `${icon}${name}`;
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
