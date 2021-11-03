@@ -48,7 +48,7 @@ describe("device_manager", () => {
 	it("generates the correct label for web devices", async () => {
 		assert.equal(dm.currentDevice, undefined);
 
-		await daemon.connect(desktop, true);
+		await daemon.connect(webChrome, true);
 		assert.deepStrictEqual(dm.currentDevice, webChrome);
 		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(browser) " + webChrome.name);
 	});
