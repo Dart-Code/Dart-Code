@@ -281,7 +281,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		let icon;
 		switch (device.category) {
 			case "mobile":
-				return "$(device-mobile) ";
+				icon = "$(device-mobile) ";
 				break;
 			case "web":
 				icon = "$(browser) ";
