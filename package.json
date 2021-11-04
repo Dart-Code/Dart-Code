@@ -1623,100 +1623,6 @@
 				}
 			},
 			{
-				"title": "Debugging",
-				"properties": {
-					"dart.buildRunnerAdditionalArgs": {
-						"type": "array",
-						"default": [],
-						"markdownDescription": "Additional args to pass to the `build_runner` when building/watching/serving.",
-						"scope": "window",
-						"items": {
-							"type": "string"
-						}
-					},
-					"dart.cliConsole": {
-						"enum": [
-							"debugConsole",
-							"terminal",
-							"externalTerminal"
-						],
-						"default": "debugConsole",
-						"description": "Whether to run Dart CLI apps in the Debug Console or a terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin.",
-						"enumDescriptions": [
-							"Run in the Debug Console pane, using the input as a REPL to evaluate expressions",
-							"Run in the VS Code integrated terminal where input will be sent to stdin",
-							"Run in an external terminal where input will be sent to stdin"
-						],
-						"scope": "window"
-					},
-					"dart.debugExtensionBackendProtocol": {
-						"enum": [
-							"sse",
-							"ws"
-						],
-						"enumDescriptions": [
-							"Server-Sent Events",
-							"WebSockets"
-						],
-						"default": "ws",
-						"description": "The protocol to use for the Dart Debug Extension backend service and injected client. Using WebSockets can improve performance but may fail when connecting through some proxy servers.",
-						"scope": "window"
-					},
-					"dart.debugExternalPackageLibraries": {
-						"type": "boolean",
-						"default": false,
-						"markdownDescription": "Whether to mark external pub package libraries (including `package:flutter`) as debuggable, enabling stepping into them while debugging.",
-						"scope": "window"
-					},
-					"dart.evaluateGettersInDebugViews": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to evaluate getters in order to display them in debug views (such as the Variables, Watch and Hovers views).",
-						"scope": "resource"
-					},
-					"dart.evaluateToStringInDebugViews": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to call toString() on objects when rendering them in debug views (such as the Variables, Watch and Hovers views). Only applies to views of 100 or fewer values for performance reasons.",
-						"scope": "window"
-					},
-					"dart.hotReloadProgress": {
-						"enum": [
-							"notification",
-							"statusBar"
-						],
-						"enumDescriptions": [
-							"Hot reload progress will be shown in a toast notification",
-							"Hot reload progress will be shown only in the status bar"
-						],
-						"default": "notification",
-						"description": "Determines how to display Hot Restart and Hot Reload progress.",
-						"scope": "window"
-					},
-					"dart.promptToRunIfErrors": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to prompt before running if there are errors in your project. Test scripts will be excluded from the check unless they're the script being run.",
-						"scope": "window"
-					},
-					"dart.showDartDeveloperLogs": {
-						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to show logs from the `dart:developer` `log()` function in the debug console.",
-						"scope": "resource"
-					},
-					"dart.vmAdditionalArgs": {
-						"type": "array",
-						"default": [],
-						"description": "Additional args to pass to the Dart VM when running/debugging command line apps.",
-						"scope": "resource",
-						"items": {
-							"type": "string"
-						}
-					}
-				}
-			},
-			{
 				"title": "DevTools",
 				"properties": {
 					"dart.devToolsBrowser": {
@@ -1780,7 +1686,7 @@
 					"dart.shareDevToolsWithFlutter": {
 						"type": "boolean",
 						"default": true,
-						"description": "Whether to eagerly run DevTools for Flutter workspaces and share the spawned server with `flutter run`.",
+						"markdownDescription": "Whether to eagerly run DevTools for Flutter workspaces and share the spawned server with `flutter run`.",
 						"scope": "window"
 					},
 					"dart.showDevToolsDebugToolBarButtons": {
@@ -2285,6 +2191,100 @@
 						"default": true,
 						"markdownDescription": "Whether to automatically run `pub get` whenever `pubspec.yaml` is saved.",
 						"scope": "resource"
+					}
+				}
+			},
+			{
+				"title": "Run and Debug",
+				"properties": {
+					"dart.buildRunnerAdditionalArgs": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "Additional args to pass to the `build_runner` when building/watching/serving.",
+						"scope": "window",
+						"items": {
+							"type": "string"
+						}
+					},
+					"dart.cliConsole": {
+						"enum": [
+							"debugConsole",
+							"terminal",
+							"externalTerminal"
+						],
+						"default": "debugConsole",
+						"description": "Whether to run Dart CLI apps in the Debug Console or a terminal. The Debug Console has more functionality because the process is controlled by the debug adapter, but is unable to accept input from the user via stdin.",
+						"enumDescriptions": [
+							"Run in the Debug Console pane, using the input as a REPL to evaluate expressions",
+							"Run in the VS Code integrated terminal where input will be sent to stdin",
+							"Run in an external terminal where input will be sent to stdin"
+						],
+						"scope": "window"
+					},
+					"dart.debugExtensionBackendProtocol": {
+						"enum": [
+							"sse",
+							"ws"
+						],
+						"enumDescriptions": [
+							"Server-Sent Events",
+							"WebSockets"
+						],
+						"default": "ws",
+						"description": "The protocol to use for the Dart Debug Extension backend service and injected client. Using WebSockets can improve performance but may fail when connecting through some proxy servers.",
+						"scope": "window"
+					},
+					"dart.debugExternalPackageLibraries": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Whether to mark external pub package libraries (including `package:flutter`) as debuggable, enabling stepping into them while debugging.",
+						"scope": "window"
+					},
+					"dart.evaluateGettersInDebugViews": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to evaluate getters in order to display them in debug views (such as the Variables, Watch and Hovers views).",
+						"scope": "resource"
+					},
+					"dart.evaluateToStringInDebugViews": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to call toString() on objects when rendering them in debug views (such as the Variables, Watch and Hovers views). Only applies to views of 100 or fewer values for performance reasons.",
+						"scope": "window"
+					},
+					"dart.hotReloadProgress": {
+						"enum": [
+							"notification",
+							"statusBar"
+						],
+						"enumDescriptions": [
+							"Hot reload progress will be shown in a toast notification",
+							"Hot reload progress will be shown only in the status bar"
+						],
+						"default": "notification",
+						"description": "Determines how to display Hot Restart and Hot Reload progress.",
+						"scope": "window"
+					},
+					"dart.promptToRunIfErrors": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to prompt before running if there are errors in your project. Test scripts will be excluded from the check unless they're the script being run.",
+						"scope": "window"
+					},
+					"dart.showDartDeveloperLogs": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "Whether to show logs from the `dart:developer` `log()` function in the debug console.",
+						"scope": "resource"
+					},
+					"dart.vmAdditionalArgs": {
+						"type": "array",
+						"default": [],
+						"description": "Additional args to pass to the Dart VM when running/debugging command line apps.",
+						"scope": "resource",
+						"items": {
+							"type": "string"
+						}
 					}
 				}
 			},
