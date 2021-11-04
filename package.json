@@ -1689,12 +1689,6 @@
 						"markdownDescription": "Whether to eagerly run DevTools for Flutter workspaces and share the spawned server with `flutter run`.",
 						"scope": "window"
 					},
-					"dart.showDevToolsDebugToolBarButtons": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to show DevTools buttons in the Debug toolbar.",
-						"scope": "window"
-					},
 					"dart.showInspectorNotificationsForWidgetErrors": {
 						"type": "boolean",
 						"default": true,
@@ -2276,6 +2270,12 @@
 						"default": true,
 						"markdownDescription": "Whether to show logs from the `dart:developer` `log()` function in the debug console.",
 						"scope": "resource"
+					},
+					"dart.showDevToolsDebugToolBarButtons": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to show DevTools buttons in the floating Debug toolbar.",
+						"scope": "window"
 					},
 					"dart.vmAdditionalArgs": {
 						"type": "array",
