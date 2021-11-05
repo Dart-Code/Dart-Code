@@ -443,7 +443,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				coldBoot: false,
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
 				device: e,
-				label: showAsEmulators ? `Start ${e.name}` : e.name,
+				label: showAsEmulators ? "$(play) " + `Start ${e.name}` : e.name,
 			}));
 
 		// Add a cold boot option for each android based emulator
@@ -463,7 +463,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			emulators.push({
 				alwaysShow: true,
 				device: { type: "emulator-creator", platformType: "android", name: "Create Android emulator" } as EmulatorCreator,
-				label: "Create Android emulator",
+				label: "$(plus) " + "Create Android emulator",
 			});
 		}
 		return emulators;
