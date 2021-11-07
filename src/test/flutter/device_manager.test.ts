@@ -90,7 +90,7 @@ describe("device_manager", () => {
 		assert.deepEqual(em.device.args, ["args"]);
 		assert.equal(em.device.platformType, undefined);
 		assert.equal(em.device.type, "custom-emulator");
-		assert.equal(em.label, "Start My custom emulator");
+		assert.equal(em.label, "$(play) Start My custom emulator");
 	});
 
 	it("includes cold boot option for Android emulators only", async () => {
@@ -127,7 +127,7 @@ describe("device_manager", () => {
 		assert.deepEqual(em.device.args, ["args"]);
 		assert.equal(em.device.platformType, "android"); // Preserved from base
 		assert.equal(em.device.type, "custom-emulator");
-		assert.equal(em.label, "Start My emulator override");
+		assert.equal(em.label, "$(play) Start My emulator override");
 	});
 
 	it("auto-selects devices if supported platforms are not known", async () => {
