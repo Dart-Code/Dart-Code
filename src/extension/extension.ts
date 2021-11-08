@@ -332,7 +332,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new LspClosingLabelsDecorations(lspClient));
 
 	const completionItemProvider = isUsingLsp || !dasClient ? undefined : new DartCompletionItemProvider(logger, dasClient);
-	const referenceProvider = isUsingLsp || !dasClient ? undefined : new DartReferenceProvider(dasClient);
+	const referenceProvider = isUsingLsp || !dasClient || !dasAnalyzer ? undefined : new DartReferenceProvider(dasClient, dasAnalyzer.fileTracker);
 
 	const activeFileFilters: vs.DocumentFilter[] = [DART_MODE];
 
