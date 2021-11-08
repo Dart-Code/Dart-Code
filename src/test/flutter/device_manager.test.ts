@@ -37,15 +37,31 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, emulatedAndroidMobile);
 	});
 
+	it("generates the correct label for desktop devices", async () => {
+		assert.equal(dm.currentDevice, undefined);
+
+		await daemon.connect(desktop, true);
+		assert.deepStrictEqual(dm.currentDevice, desktop);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(device-desktop) " + desktop.name);
+	});
+
+	it("generates the correct label for web devices", async () => {
+		assert.equal(dm.currentDevice, undefined);
+
+		await daemon.connect(webChrome, true);
+		assert.deepStrictEqual(dm.currentDevice, webChrome);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(browser) " + webChrome.name);
+	});
+
 	it("generates the correct label for Android emulator devices", async () => {
 		assert.equal(dm.currentDevice, undefined);
 
-		// connect a device that has an emaultor ID and ensure we correctly build
+		// connect a device that has an emulator ID and ensure we correctly build
 		// it's label (which happens by fetching the emulator list up-front and
 		// then looking it up).
 		await daemon.connect(emulatedAndroidMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatedAndroidMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), androidEmulator.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(device-mobile) " + androidEmulator.name);
 	});
 
 	it("uses the standard device name for iOS simulator devices", async () => {
@@ -55,7 +71,7 @@ describe("device_manager", () => {
 		// instead of "iPhone X" etc.
 		await daemon.connect(emulatediOSMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatediOSMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), emulatediOSMobile.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(device-mobile) " + emulatediOSMobile.name);
 	});
 
 	it("includes custom emulators", async () => {
@@ -74,7 +90,7 @@ describe("device_manager", () => {
 		assert.deepEqual(em.device.args, ["args"]);
 		assert.equal(em.device.platformType, undefined);
 		assert.equal(em.device.type, "custom-emulator");
-		assert.equal(em.label, "Start My custom emulator");
+		assert.equal(em.label, "$(play) Start My custom emulator");
 	});
 
 	it("includes cold boot option for Android emulators only", async () => {
@@ -111,7 +127,7 @@ describe("device_manager", () => {
 		assert.deepEqual(em.device.args, ["args"]);
 		assert.equal(em.device.platformType, "android"); // Preserved from base
 		assert.equal(em.device.type, "custom-emulator");
-		assert.equal(em.label, "Start My emulator override");
+		assert.equal(em.label, "$(play) Start My emulator override");
 	});
 
 	it("auto-selects devices if supported platforms are not known", async () => {
@@ -297,6 +313,18 @@ const desktop: f.Device & { platformType: string } = {
 	name: "My MacBook",
 	platform: "darwin-x64",
 	platformType: "macos",
+	type: "device",
+};
+
+const webChrome: f.Device & { platformType: string } = {
+	category: "web",
+	emulator: false,
+	emulatorId: undefined,
+	ephemeral: false,
+	id: "chrome",
+	name: "Chrome",
+	platform: "web-javascript",
+	platformType: "web",
 	type: "device",
 };
 

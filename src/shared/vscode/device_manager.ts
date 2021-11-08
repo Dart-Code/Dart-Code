@@ -278,9 +278,21 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public labelForDevice(device: f.Device) {
-		return device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
+		let icon;
+		switch (device.category) {
+			case "mobile":
+				icon = "$(device-mobile) ";
+				break;
+			case "web":
+				icon = "$(browser) ";
+				break;
+			case "desktop":
+				icon = "$(device-desktop) ";
+		}
+		const name = device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
 			? this.knownEmulatorNames[device.emulatorId]
 			: device.name;
+		return `${icon}${name}`;
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
@@ -431,7 +443,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				coldBoot: false,
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
 				device: e,
-				label: showAsEmulators ? `Start ${e.name}` : e.name,
+				label: showAsEmulators ? "$(play) " + `Start ${e.name}` : e.name,
 			}));
 
 		// Add a cold boot option for each android based emulator
@@ -451,7 +463,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			emulators.push({
 				alwaysShow: true,
 				device: { type: "emulator-creator", platformType: "android", name: "Create Android emulator" } as EmulatorCreator,
-				label: "Create Android emulator",
+				label: "$(plus) " + "Create Android emulator",
 			});
 		}
 		return emulators;
