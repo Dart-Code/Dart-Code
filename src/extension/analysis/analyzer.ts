@@ -9,11 +9,15 @@ import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 
 export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, isLsp: boolean) {
-	const analyzerPath = config.analyzerPath || path.join(sdks.dart, analyzerSnapshotPath);
+	const analyzerPath = config.analyzerPath || (
+		dartCapabilities.supportsLanguageServerCommand
+			? "language-server"
+			: path.join(sdks.dart, analyzerSnapshotPath)
+	);
 
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
 	// might not exist on the local machine.
-	if (!config.analyzerSshHost && !fs.existsSync(analyzerPath)) {
+	if (!config.analyzerSshHost && analyzerPath !== "language-server" && !fs.existsSync(analyzerPath)) {
 		const msg = "Could not find a Dart Analysis Server at " + analyzerPath;
 		vs.window.showErrorMessage(msg);
 		logger.error(msg);
@@ -38,8 +42,13 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 
 	analyzerArgs.push(analyzerPath);
 
-	if (isLsp)
-		analyzerArgs.push("--lsp");
+	if (analyzerPath === "language-server") {
+		if (!isLsp)
+			analyzerArgs.push("--protocol=analyzer");
+	} else {
+		if (isLsp)
+			analyzerArgs.push("--lsp");
+	}
 
 	// Optionally start the analyzer's diagnostic web server on the given port.
 	if (config.analyzerDiagnosticsPort)
