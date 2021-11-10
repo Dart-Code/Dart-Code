@@ -524,8 +524,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (isFlutter && this.wsContext.sdks.flutter) {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
+			debugConfig.omitTargetFlag = this.wsContext.config.omitTargetFlag;
 			debugConfig.useInspectorNotificationsForWidgetErrors = config.showInspectorNotificationsForWidgetErrors;
-			debugConfig.workspaceConfig = this.wsContext.config;
+			if (!isAttach) {
+				const customScript = isTest
+					? this.wsContext.config.flutterTestScript
+					: this.wsContext.config.flutterRunScript;
+				debugConfig.customTool = customScript?.script;
+				debugConfig.customToolReplacesArgs = customScript?.replacesArgs;
+			}
 			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
 			debugConfig.showMemoryUsage =

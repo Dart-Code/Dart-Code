@@ -120,9 +120,10 @@ export function isStableSdk(sdkVersion?: string): boolean {
 }
 
 export function usingCustomScript(binPath: string, binArgs: string[], customScript: CustomScript | undefined): ExecutionInfo {
-	if (customScript) {
+	if (customScript?.script) {
 		binPath = customScript.script;
-		binArgs = binArgs.slice(customScript.replacesArgs);
+		if (customScript.replacesArgs)
+			binArgs = binArgs.slice(customScript.replacesArgs);
 	}
 
 	return { executable: binPath, args: binArgs };

@@ -33,8 +33,6 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.dart);
 		assert.equal(workspaceContext.sdks.flutter, `${path.join(os.homedir(), "/snap/flutter/common/flutter")}`);
 		assert.equal(workspaceContext.sdks.dart, `${path.join(os.homedir(), "/snap/flutter/common/flutter/bin/cache/dart-sdk")}`);
-		assert.ok(workspaceContext.config);
-		assert.equal(workspaceContext.config?.flutterScript, undefined);
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});
 });

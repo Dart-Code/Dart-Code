@@ -116,7 +116,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 		if (!fs.existsSync(tempDir))
 			fs.mkdirSync(tempDir);
-		return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, this.workspace.config?.flutterDoctorScript || this.workspace.config?.flutterScript);
+		return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, this.workspace.config?.flutterDoctorScript);
 	}
 
 	private async flutterUpgrade() {

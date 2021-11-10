@@ -30,7 +30,10 @@ export class FlutterTestDebugSession extends DartTestDebugSession {
 		const execution = usingCustomScript(
 			path.join(args.flutterSdkPath!, flutterPath),
 			["test", "--machine"],
-			args.workspaceConfig?.flutterTestScript || args.workspaceConfig?.flutterScript,
+			{
+				replacesArgs: args.customToolReplacesArgs,
+				script: args.customTool,
+			}
 		);
 
 		const logger = new DebugAdapterLogger(this, LogCategory.FlutterTest);
