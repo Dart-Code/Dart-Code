@@ -206,9 +206,9 @@ export class FlutterDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.toolArgs);
 
 		if (!isAttach || args.program) {
-			if (!args.workspaceConfig?.skipTargetFlag)
+			if (!args.omitTargetFlag)
 				appArgs.push("--target");
-			if (!!args.workspaceConfig?.nonMainTargetPrefix && args.program!.startsWith(args.workspaceConfig?.nonMainTargetPrefix)) {
+			if (args.program!.startsWith("//")) {
 				appArgs.push(args.program!);
 			} else {
 				appArgs.push(this.sourceFileForArgs(args));
@@ -218,7 +218,11 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (args.args)
 			appArgs = appArgs.concat(args.args);
 
-		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, this.dartCapabilities, args.flutterSdkPath!, args.workspaceConfig, args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+		const customTool = {
+			replacesArgs: args.customToolReplacesArgs,
+			script: args.customTool,
+		};
+		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, this.dartCapabilities, args.flutterSdkPath!, customTool, args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 
 	private async connectToVmServiceIfReady() {

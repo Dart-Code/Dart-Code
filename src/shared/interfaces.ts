@@ -48,7 +48,6 @@ export interface WritableWorkspaceConfig {
 	flutterDaemonScript?: CustomScript;
 	flutterDoctorScript?: CustomScript;
 	flutterRunScript?: CustomScript;
-	flutterScript?: CustomScript;
 	flutterSdkHome?: string;
 	flutterSyncScript?: string;
 	flutterTestScript?: CustomScript;
@@ -58,14 +57,13 @@ export interface WritableWorkspaceConfig {
 	forceFlutterWorkspace?: boolean;
 	forceFlutterDebug?: boolean;
 	skipFlutterInitialization?: boolean;
-	skipTargetFlag?: boolean;
-	nonMainTargetPrefix?: string;
+	omitTargetFlag?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
 export interface CustomScript {
-	script: string;
-	replacesArgs: number;
+	script: string | undefined;
+	replacesArgs: number | undefined;
 }
 
 export interface DartProjectTemplate {

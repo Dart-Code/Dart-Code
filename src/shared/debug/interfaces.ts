@@ -1,10 +1,11 @@
-import { WorkspaceConfig } from "../interfaces";
 
 /// Launch arguments that are passed to (and understood by) the debug adapters.
 export interface DartLaunchArgs {
 	additionalProjectPaths?: string[];
 	args?: string[];
 	console?: "debugConsole" | "terminal" | "externalTerminal";
+	customTool?: string,
+	customToolReplacesArgs?: number,
 	cwd?: string;
 	dartSdkPath: string;
 	debugExternalPackageLibraries: boolean;
@@ -21,6 +22,7 @@ export interface DartLaunchArgs {
 	name: string;
 	noDebug?: boolean;
 	observatoryUri?: string; // For backwards compatibility
+	omitTargetFlag?: boolean; // Flutter Bazel
 	packages?: string;
 	program?: string;
 	pubTestLogFile?: string;
@@ -37,7 +39,6 @@ export interface DartLaunchArgs {
 	vmServicePort?: number;
 	vmServiceUri?: string;
 	webDaemonLogFile?: string;
-	workspaceConfig?: WorkspaceConfig;
 }
 
 /// Launch arguments that are valid in launch.json and map be mapped into
