@@ -90,6 +90,11 @@ export class FlutterColorDecorations implements vs.Disposable {
 	}
 
 	public dispose() {
+		if (this.activeEditor) {
+			for (const colorHex of Object.keys(this.decorationTypes))
+				this.activeEditor.setDecorations(this.decorationTypes[colorHex], []);
+		}
+
 		this.activeEditor = undefined;
 		disposeAll(this.subscriptions);
 	}

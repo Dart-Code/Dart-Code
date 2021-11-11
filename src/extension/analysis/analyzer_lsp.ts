@@ -2,6 +2,7 @@ import * as path from "path";
 import * as stream from "stream";
 import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window } from "vscode";
 import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
@@ -10,6 +11,7 @@ import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../sha
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
+import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { cleanDartdoc } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -26,6 +28,9 @@ export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
 	public readonly fileTracker: LspFileTracker;
 	public readonly snippetTextEdits: SnippetTextEditFeature;
+
+	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
+	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
 
 	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
@@ -129,6 +134,11 @@ export class LspAnalyzer extends Analyzer {
 				if (item?.contents)
 					item.contents = item.contents.map((s) => cleanDocString(s));
 				return item;
+			},
+
+			provideDocumentColors: (document: TextDocument, token: CancellationToken, next: ProvideDocumentColorsSignature) => {
+				this.onDocumentColorsRequestedCompleter.resolve();
+				return next(document, token);
 			},
 
 			async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken, next: ProvideCodeActionsSignature) {

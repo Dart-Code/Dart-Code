@@ -509,8 +509,15 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger), vs.DebugConfigurationProviderTriggerKind.Dynamic));
 	}
 
-	if (config.flutterGutterIcons)
-		context.subscriptions.push(new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors")));
+	if (config.flutterGutterIcons) {
+		const colorDecorations = new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors"));
+		context.subscriptions.push(colorDecorations);
+
+		// If the server registers for colors and we see a request go out, then we should
+		// remove our own handler.
+		if (lspAnalyzer)
+			lspAnalyzer.onDocumentColorsRequested.then(() => colorDecorations.dispose());
+	}
 
 	if (!isUsingLsp && dasClient && dasAnalyzer) {
 		if (config.previewFlutterUiGuides)
