@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as stream from "stream";
-import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window } from "vscode";
+import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window, workspace } from "vscode";
 import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
@@ -86,6 +86,26 @@ export class LspAnalyzer extends Analyzer {
 			return false;
 		}
 
+		/// Whether or not to trigger signature help on this item. This is used because if a user doesn't
+		/// type the ( manually (but it's inserted as part of the completion) then the parameter hints do
+		/// not show up.
+		function shouldTriggerSignatureHelp(item: CompletionItem): boolean {
+			let insertText: string | undefined;
+			if (item.insertText) {
+				if (typeof item.insertText === "string")
+					insertText = item.insertText;
+				else
+					insertText = item.insertText.value;
+			} else {
+				const label = typeof item.label === "string" ? item.label : item.label.label;
+				insertText = label;
+			}
+			if (insertText?.includes("(${0"))
+				return true;
+
+			return false;
+		}
+
 		const snippetTextEdits = this.snippetTextEdits;
 		const ignoreActionProvider = new IgnoreLintCodeActionProvider(DART_MODE);
 
@@ -112,12 +132,19 @@ export class LspAnalyzer extends Analyzer {
 					items = results as CompletionItem[];
 				}
 
-				// Attach a command for any we should re-trigger for.
-				for (const item of items.filter(shouldTriggerCompletionAgain)) {
-					item.command = {
-						command: "editor.action.triggerSuggest",
-						title: "Suggest",
-					};
+				const parameterHintsEnabled = !!workspace.getConfiguration("editor").get("parameterHints.enabled");
+				for (const item of items) {
+					if (shouldTriggerCompletionAgain(item)) {
+						item.command = {
+							command: "editor.action.triggerSuggest",
+							title: "Suggest",
+						};
+					} else if (parameterHintsEnabled && shouldTriggerSignatureHelp(item)) {
+						item.command = {
+							command: "editor.action.triggerParameterHints",
+							title: "Suggest",
+						};
+					}
 				}
 
 				return results;
