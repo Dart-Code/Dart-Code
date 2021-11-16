@@ -44,7 +44,7 @@ abstract class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
 			vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()),
 			vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()),
-			vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", (suites?: SuiteNode[]) => this.runAllTestsWithoutDebugging(suites)),
+			vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", (suites?: SuiteNode[], testRun?: vs.TestRun) => this.runAllTestsWithoutDebugging(suites, testRun)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
@@ -66,7 +66,7 @@ abstract class TestCommands implements vs.Disposable {
 			this.startTestFromOutline(true, test, launchTemplate)));
 	}
 
-	private async runAllTestsWithoutDebugging(suites?: SuiteNode[]): Promise<void> {
+	private async runAllTestsWithoutDebugging(suites?: SuiteNode[], testRun?: vs.TestRun): Promise<void> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
 		// as the first one that runs will be used for resolving package: URIs etc.
@@ -91,12 +91,12 @@ abstract class TestCommands implements vs.Disposable {
 			return;
 		}
 
-		for (const projectWithTests of projectsWithTests) {
+		await Promise.all(projectsWithTests.map((projectWithTests) => {
 			const template = projectWithTests.length > 1
 				? { args: projectWithTests.slice(1) }
 				: undefined;
-			this.runTests(projectWithTests[0], false, undefined, false, true, template, undefined, undefined);
-		}
+			return this.runTests(projectWithTests[0], false, undefined, false, true, template, testRun, undefined);
+		}));
 	}
 
 	private async runAllSkippedTests(): Promise<void> {

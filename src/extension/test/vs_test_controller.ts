@@ -69,7 +69,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
 		request.exclude?.forEach((item) => testsToRun.delete(item));
 
-
 		// For each item in the set, remove any of its descendants because they will be run by the parent.
 		function removeWithDescendants(item: vs.TestItem) {
 			testsToRun.delete(item);
@@ -78,25 +77,27 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const all = [...testsToRun];
 		all.forEach((item) => item.children.forEach((child) => removeWithDescendants(child)));
 
-		// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
-		// suites), we can run the "fast path" in a single `dart test` invocation.
-		if (!debug && [...testsToRun].every((item) => this.nodeForItem.get(item) instanceof SuiteNode))
-			return vs.commands.executeCommand("dart.runAllTestsWithoutDebugging", [...testsToRun].map((item) => this.nodeForItem.get(item)));
-
-		// Group into suites since we need to run each seperately (although we can run
-		// multiple tests witthin one suite together).
-		const testsBySuite = new Map<SuiteData, TreeNode[]>();
-
-		testsToRun.forEach((test) => {
-			const node = this.nodeForItem.get(test);
-			if (!node) return;
-			const testNodes = testsBySuite.get(node.suiteData) ?? [];
-			testsBySuite.set(node.suiteData, testNodes);
-			testNodes.push(node);
-		});
-
 		const run = this.controller.createTestRun(request);
 		try {
+			// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
+			// suites), we can run the "fast path" in a single `dart test` invocation.
+			if (!debug && [...testsToRun].every((item) => this.nodeForItem.get(item) instanceof SuiteNode)) {
+				await vs.commands.executeCommand("dart.runAllTestsWithoutDebugging", [...testsToRun].map((item) => this.nodeForItem.get(item)), run);
+				return;
+			}
+
+			// Group into suites since we need to run each seperately (although we can run
+			// multiple tests witthin one suite together).
+			const testsBySuite = new Map<SuiteData, TreeNode[]>();
+
+			testsToRun.forEach((test) => {
+				const node = this.nodeForItem.get(test);
+				if (!node) return;
+				const testNodes = testsBySuite.get(node.suiteData) ?? [];
+				testsBySuite.set(node.suiteData, testNodes);
+				testNodes.push(node);
+			});
+
 			for (const suite of testsBySuite.keys()) {
 				const nodes = testsBySuite.get(suite);
 				if (!nodes) continue;
