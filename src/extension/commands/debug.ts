@@ -143,12 +143,19 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("dart.hotReload", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
-			if (!!workspaceContext.config?.flutterSyncScript) {
+			const onlyDart = !!args?.onlyDart;
+			const onlyFlutter = !!args?.onlyFlutter;
+			if (!!workspaceContext.config?.flutterSyncScript && !onlyDart) {
 				await runToolProcess(logger, workspaceContext.sdks.flutter, workspaceContext.config.flutterSyncScript, []);
 			}
 			this.onWillHotReloadEmitter.fire();
 			await Promise.all(debugSessions.map(async (s) => {
-				if (!args?.onlyFlutter || s.debuggerType === DebuggerType.Flutter)
+				const shouldReload = onlyDart
+					? (s.debuggerType === DebuggerType.Dart || s.debuggerType === DebuggerType.Web)
+					: onlyFlutter
+						? (s.debuggerType === DebuggerType.Flutter)
+						: true;
+				if (shouldReload)
 					await s.session.customRequest("hotReload", args);
 			}));
 			analytics.logDebuggerHotReload();

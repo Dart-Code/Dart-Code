@@ -1949,7 +1949,22 @@
 							"Only reload for manual saves (requires pressing Save explicitly if using autosave)"
 						],
 						"default": "manual",
-						"markdownDescription": "Whether to automatically send a Hot Reload request during a debug session when saving files.",
+						"markdownDescription": "Whether to automatically send a Hot Reload request to Flutter apps during a debug session when saving files. Dart apps are controlled by the hotReloadOnSave setting.",
+						"scope": "window"
+					},
+					"dart.hotReloadOnSave": {
+						"enum": [
+							"never",
+							"always",
+							"manual"
+						],
+						"enumDescriptions": [
+							"Do not reload when saving",
+							"Reload for all saves, manual or automatic",
+							"Only reload for manual saves (requires pressing Save explicitly if using autosave)"
+						],
+						"default": "never",
+						"markdownDescription": "Whether to automatically send a Hot Reload request to Dart apps during a debug session when saving files. Flutter apps are controlled by the flutterHotReloadOnSave setting.",
 						"scope": "window"
 					},
 					"dart.flutterHotRestartOnSave": {

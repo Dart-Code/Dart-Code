@@ -82,6 +82,7 @@ class Config {
 	get flutterCustomEmulators(): Array<{ id: string, name: string, executable: string, args?: string[] }> { return this.getConfig<Array<{ id: string, name: string, executable: string, args?: string[] }>>("flutterCustomEmulators", []); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
+	get hotReloadOnSave(): "never" | "always" | "manual" { return this.getConfig<"never" | "always" | "manual">("hotReloadOnSave", "never"); }
 	get flutterHotReloadOnSave(): "never" | "always" | "manual" {
 		const value = this.getConfig<"never" | "always" | "manual" | true | false>("flutterHotReloadOnSave", "manual");
 

@@ -12,7 +12,8 @@ import { isWithinWorkspace, shouldHotReloadFor } from "../utils";
 
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
-	private hotReloadDelayTimer: NodeJS.Timer | undefined;
+	private flutterHotReloadDelayTimer: NodeJS.Timer | undefined;
+	private dartHotReloadDelayTimer: NodeJS.Timer | undefined;
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
 	private lastSaveReason: TextDocumentSaveReason | undefined;
@@ -47,17 +48,54 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	}
 
 	private triggerReload(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
-		if (config.flutterHotReloadOnSave === "never")
-			return;
-
 		const isAutoSave = this.lastSaveReason === TextDocumentSaveReason.FocusOut ||
 			this.lastSaveReason === TextDocumentSaveReason.AfterDelay;
 
-		if (isAutoSave && config.flutterHotReloadOnSave === "manual")
-			return;
-
 		// Never do anything for files inside .dart_tool folders.
 		if (fsPath(file.uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
+			return;
+
+		// Bail out if we're in an external file, or not Dart.
+		if (!isWithinWorkspace(fsPath(file.uri)) || !shouldHotReloadFor(file))
+			return;
+
+		// Don't do if we have errors for the saved file.
+		const errors = languages.getDiagnostics(file.uri);
+		const hasErrors = errors && !!errors.find((d) => d.source === "dart" && d.severity === DiagnosticSeverity.Error);
+		if (hasErrors)
+			return;
+
+		this.reloadDart(isAutoSave);
+		this.reloadFlutter(isAutoSave);
+	}
+
+	private reloadDart(isAutoSave: boolean) {
+		const configSetting = config.hotReloadOnSave;
+		if (configSetting === "never" || (isAutoSave && configSetting === "manual"))
+			return;
+
+
+		const commandToRun = "dart.hotReload";
+		const args = {
+			onlyDart: true,
+			reason: restartReasonSave,
+		};
+
+		// Debounce to avoid reloading multiple times during multi-file-save (Save All).
+		// Hopefully we can improve in future: https://github.com/microsoft/vscode/issues/86087
+		if (this.dartHotReloadDelayTimer) {
+			clearTimeout(this.dartHotReloadDelayTimer);
+		}
+
+		this.dartHotReloadDelayTimer = setTimeout(() => {
+			this.dartHotReloadDelayTimer = undefined;
+			commands.executeCommand(commandToRun, args);
+		}, 200);
+	}
+
+	private reloadFlutter(isAutoSave: boolean) {
+		const configSetting = config.flutterHotReloadOnSave;
+		if (configSetting === "never" || (isAutoSave && configSetting === "manual"))
 			return;
 
 		const shouldHotReload = this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload);
@@ -71,21 +109,9 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		if (!shouldHotReload && !shouldHotRestart)
 			return;
 
-		const commandToRun = shouldHotReload ? "flutter.hotReload" : "flutter.hotRestart";
-
-		// Bail out if we're in an external file, or not Dart.
-		if (!isWithinWorkspace(fsPath(file.uri)) || !shouldHotReloadFor(file))
-			return;
-
-		// Don't do if we have errors for the saved file.
-		const errors = languages.getDiagnostics(file.uri);
-		const hasErrors = errors && !!errors.find((d) => d.source === "dart" && d.severity === DiagnosticSeverity.Error);
-		if (hasErrors)
-			return;
-
+		const commandToRun = shouldHotReload ? "dart.hotReload" : "flutter.hotRestart";
 		const args = {
 			debounce: this.flutterCapabilities.supportsRestartDebounce,
-			// TODO: Support Dart too, but it'll need a local debounce etc.
 			onlyFlutter: true,
 			reason: restartReasonSave,
 		};
@@ -95,20 +121,22 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		} else {
 			// Debounce to avoid reloading multiple times during multi-file-save (Save All).
 			// Hopefully we can improve in future: https://github.com/microsoft/vscode/issues/86087
-			if (this.hotReloadDelayTimer) {
-				clearTimeout(this.hotReloadDelayTimer);
+			if (this.flutterHotReloadDelayTimer) {
+				clearTimeout(this.flutterHotReloadDelayTimer);
 			}
 
-			this.hotReloadDelayTimer = setTimeout(() => {
-				this.hotReloadDelayTimer = undefined;
+			this.flutterHotReloadDelayTimer = setTimeout(() => {
+				this.flutterHotReloadDelayTimer = undefined;
 				commands.executeCommand(commandToRun, args);
 			}, 200);
 		}
 	}
 
 	public dispose(): void | Promise<void> {
-		if (this.hotReloadDelayTimer)
-			clearTimeout(this.hotReloadDelayTimer);
+		if (this.dartHotReloadDelayTimer)
+			clearTimeout(this.dartHotReloadDelayTimer);
+		if (this.flutterHotReloadDelayTimer)
+			clearTimeout(this.flutterHotReloadDelayTimer);
 
 		disposeAll(this.disposables);
 	}

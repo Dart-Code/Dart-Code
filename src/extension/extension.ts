@@ -55,6 +55,7 @@ import { cursorIsInTest, DasTestCommands, isInImplementationFileThatCanHaveTest,
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
+import { HotReloadOnSaveHandler } from "./dart/hot_reload_save_handler";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterColorDecorations } from "./decorations/flutter_color_decorations";
 import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decorations_das";
@@ -66,7 +67,6 @@ import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { DasFlutterOutlineProvider, FlutterOutlineProvider, FlutterWidgetItem, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
-import { HotReloadOnSaveHandler } from "./flutter/hot_reload_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToSuperCommand } from "./lsp/go_to_super";
