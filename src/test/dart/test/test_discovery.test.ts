@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import { activate, checkTreeNodeResults, delay, extApi, getExpectedResults, helloWorldTestDiscoveryFile, makeTestTextTree, openFile, waitForResult } from "../../helpers";
 
-describe("dart test tree", () => {
+describe("dart tests", () => {
 	beforeEach("activate", () => activate());
 
 	it("discovers test when opening a file", async function () {
@@ -10,7 +10,7 @@ describe("dart test tree", () => {
 			this.skip();
 
 		// Ensure no results before we start.
-		const initialResults = (await makeTestTextTree(helloWorldTestDiscoveryFile)).join("\n");
+		const initialResults = makeTestTextTree(helloWorldTestDiscoveryFile).join("\n");
 		assert.equal(initialResults, "");
 
 		// Open the file and allow time for the outline.
@@ -20,7 +20,7 @@ describe("dart test tree", () => {
 		await delay(1500); // Account for debounce.
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTestTextTree(helloWorldTestDiscoveryFile)).join("\n");
+		const actualResults = makeTestTextTree(helloWorldTestDiscoveryFile).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
