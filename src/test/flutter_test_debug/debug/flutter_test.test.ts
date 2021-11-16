@@ -234,7 +234,7 @@ describe("flutter test debugger", () => {
 		for (const file of testFiles) {
 			await openFile(file);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTestTextTree(file)).join("\n");
+			const actualResults = makeTestTextTree(file).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -363,36 +363,6 @@ describe("flutter test debugger", () => {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: fsPath(flutterHelloWorldCounterAppFile),
 		});
-	});
-
-	it("can rerun only skipped tests", async function () {
-		if (!extApi.flutterCapabilities.supportsRunSkippedTests)
-			this.skip();
-
-		await openFile(flutterTestMainFile);
-		const config = await startDebugger(dc, flutterTestMainFile);
-		config.noDebug = true;
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		);
-
-		// Now run only skipped tests.
-		await vs.commands.executeCommand("dart.runAllSkippedTestsWithoutDebugging");
-
-		await openFile(flutterTestMainFile);
-		// Expected results differ from what's in the file as the skipped tests will be run
-		// and also the parent groups/suite status will be recomputed so they will be not-stale
-		// in the new results (so we can't just filter to skipped, like we do in the failed test).
-		const expectedResults = `
-test/widget_test.dart [2/2 passed] Passed
-    Skipped test Passed
-		`.trim();
-
-		// Get the actual tree, filtered only to those that ran in the last run.
-		const actualResults = (await makeTestTextTree(flutterTestMainFile, { onlyActive: true })).join("\n");
-		checkTreeNodeResults(actualResults, expectedResults);
 	});
 });
 

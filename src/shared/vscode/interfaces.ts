@@ -40,7 +40,6 @@ export interface InternalExtensionApi {
 	completionItemProvider: CompletionItemProvider;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
-	cursorIsInTest: boolean;
 	isInTestFileThatHasImplementation: boolean;
 	isInImplementationFileThatCanHaveTest: boolean;
 	isLsp: boolean;
@@ -77,7 +76,6 @@ export interface InternalExtensionApi {
 	};
 	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
-	testTreeProvider: TreeDataProvider<TreeNode> | undefined;
 	testController: { controller: TestController; getLatestData(test: TestItem): TreeNode | undefined } | undefined;
 	testCoordinator: TestSessionCoordinator;
 	testDiscoverer: { forceUpdate(uri: Uri): void },

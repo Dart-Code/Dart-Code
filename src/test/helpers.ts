@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { dartCodeExtensionIdentifier, DART_TEST_SUITE_NODE_CONTEXT } from "../shared/constants";
+import { dartCodeExtensionIdentifier } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
@@ -334,8 +334,6 @@ export async function clearTestTree(): Promise<void> {
 	logger.info(`Clearing test tree...`);
 	for (const key of Object.keys(extApi.testModel.suites))
 		delete extApi.testModel.suites[key];
-	extApi.testModel.isNewTestRun = true;
-	extApi.testModel.nextFailureIsFirst = true;
 	extApi.testModel.updateNode();
 	await delay(50); // Allow tree to be updated.
 	logger.info(`Done clearing test tree!`);
@@ -1140,13 +1138,6 @@ export function renderedItemLabel(item: vs.TreeItem): string {
 	return treeLabel(item) || path.basename(fsPath(item.resourceUri!));
 }
 
-export async function makeTestTextTree(parent: vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
-	const result = vs.workspace.getConfiguration("dart").get("useVsCodeTestRunner")
-		? await makeTextTreeUsingVsCodeTestController(parent, { buffer, indent, onlyFailures, onlyActive })
-		: await makeTextTreeUsingCustomTree(parent, extApi.testTreeProvider!, { buffer, indent, onlyFailures, onlyActive });
-	return buffer;
-}
-
 /// Gets the source line for a TestItem.
 ///
 /// If the item has no source, will return the line of its earliest child (recursively).
@@ -1165,7 +1156,7 @@ function getSourceLine(item: vs.TestItem): number {
 	return Math.min(99999999, ...lines);
 }
 
-export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {
 	const collection = items instanceof vs.Uri
 		? extApi.testController!.controller.items
 		: items ?? extApi.testController!.controller.items;
@@ -1207,13 +1198,13 @@ export async function makeTextTreeUsingVsCodeTestController(items: vs.TestItemCo
 		if (includeNode)
 			buffer.push(`${" ".repeat(indent * 4)}${nodeString}`);
 
-		makeTextTreeUsingVsCodeTestController(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive });
+		makeTestTextTree(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive });
 	}
 
 	return buffer;
 }
 
-export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): Promise<string[]> {
+export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0 }: { buffer?: string[]; indent?: number } = {}): Promise<string[]> {
 	const parentNode = parent instanceof vs.Uri ? undefined : parent;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
 
@@ -1225,31 +1216,16 @@ export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | un
 		if (parentResourceUri && fsPath(treeItem.resourceUri!) !== fsPath(parentResourceUri))
 			continue;
 
-		// Suites don't have a .label (since the rendering is based on the resourceUri) so just
-		// fabricate one here that can be compared in the test. Note: For simplity we always use
-		// forward slashes in these names, since the comparison is against hard-coded comments
-		// in the file that can only be on way.
-		const expectedLabel = treeItem.contextValue?.startsWith(DART_TEST_SUITE_NODE_CONTEXT)
-			? path.relative(
-				fsPath(vs.workspace.getWorkspaceFolder(treeItem.resourceUri!)!.uri),
-				fsPath(treeItem.resourceUri!),
-			).replace("\\", "/")
-			: treeItem.label;
-		const expectedDesc = treeItem.description ? ` [${treeItem.description}]` : "";
+		const label = treeItem.label;
+		const description = treeItem.description ? ` [${treeItem.description}]` : "";
 		const iconUri = treeItem.iconPath instanceof vs.Uri
 			? treeItem.iconPath
 			: "dark" in (treeItem.iconPath as any)
 				? (treeItem.iconPath as any).dark
 				: undefined;
-		const isStale = iconUri instanceof vs.Uri && iconUri.toString().includes("_stale");
-		const isFailure = iconUri instanceof vs.Uri && iconUri.toString().includes("fail");
-		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("_stale", "").replace("-dark", "") : "<unknown icon>";
-		let includeNode = true;
-		if ((isStale && onlyActive) || (!isFailure && onlyFailures))
-			includeNode = false;
-		if (includeNode)
-			buffer.push(`${" ".repeat(indent * 4)}${expectedLabel}${expectedDesc} (${iconFile})`);
-		await makeTextTreeUsingCustomTree(item, provider, { buffer, indent: indent + 1, onlyFailures, onlyActive });
+		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("-dark", "") : "<unknown icon>";
+		buffer.push(`${" ".repeat(indent * 4)}${label}${description} (${iconFile})`);
+		await makeTextTreeUsingCustomTree(item, provider, { buffer, indent: indent + 1 });
 	}
 	return buffer;
 }

@@ -215,33 +215,6 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.runAllTestsWithoutDebugging",
-				"title": "Run All Tests",
-				"category": "Dart",
-				"icon": {
-					"dark": "./media/commands/test-run-all-dark.svg",
-					"light": "./media/commands/test-run-all-light.svg"
-				}
-			},
-			{
-				"command": "dart.runAllSkippedTestsWithoutDebugging",
-				"title": "Run All Skipped Tests",
-				"category": "Dart",
-				"icon": {
-					"dark": "./media/commands/test-run-skipped-dark.svg",
-					"light": "./media/commands/test-run-skipped-light.svg"
-				}
-			},
-			{
-				"command": "dart.runAllFailedTestsWithoutDebugging",
-				"title": "Run All Failed Tests",
-				"category": "Dart",
-				"icon": {
-					"dark": "./media/commands/test-run-failed-dark.svg",
-					"light": "./media/commands/test-run-failed-light.svg"
-				}
-			},
-			{
 				"command": "dart.rerunLastDebugSession",
 				"title": "Rerun Last Debug Session",
 				"category": "Dart"
@@ -267,37 +240,13 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.runTestAtCursor",
-				"title": "Run Test At Cursor",
-				"category": "Dart"
-			},
-			{
 				"command": "dart.goToTestOrImplementationFile",
 				"title": "Go to Test/Implementation File",
 				"category": "Dart"
 			},
 			{
-				"command": "dart.clearTestResults",
-				"title": "Clear Test Results",
-				"category": "Dart",
-				"icon": {
-					"dark": "./media/commands/test-clear-dark.svg",
-					"light": "./media/commands/test-clear-light.svg"
-				}
-			},
-			{
 				"command": "dart.goToTests",
 				"title": "Go to Tests",
-				"category": "Dart"
-			},
-			{
-				"command": "_dart.displayTestOutput",
-				"title": "Display Test Output",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.debugTestAtCursor",
-				"title": "Debug Test At Cursor",
 				"category": "Dart"
 			},
 			{
@@ -662,16 +611,6 @@
 				"command": "_flutter.outline.refactor.flutter.removeWidget",
 				"title": "Remove this widget",
 				"category": "Flutter"
-			},
-			{
-				"command": "_dart.toggleSkippedTestVisibilityOn",
-				"title": "Show skipped tests",
-				"category": "Dart"
-			},
-			{
-				"command": "_dart.toggleSkippedTestVisibilityOff",
-				"title": "Hide skipped tests",
-				"category": "Dart"
 			}
 		],
 		"keybindings": [
@@ -780,18 +719,6 @@
 					"when": "false"
 				},
 				{
-					"command": "dart.runAllTestsWithoutDebugging",
-					"when": "dart-code:anyProjectLoaded"
-				},
-				{
-					"command": "dart.runAllSkippedTestsWithoutDebugging",
-					"when": "dart-code:anyProjectLoaded"
-				},
-				{
-					"command": "dart.runAllFailedTestsWithoutDebugging",
-					"when": "dart-code:anyProjectLoaded"
-				},
-				{
 					"command": "dart.rerunLastDebugSession",
 					"when": "dart-code:anyProjectLoaded && dart-code:hasLastDebugConfig"
 				},
@@ -812,28 +739,12 @@
 					"when": "dart-code:anyProjectLoaded && editorHasSelection"
 				},
 				{
-					"command": "dart.runTestAtCursor",
-					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest && !config.dart.useVsCodeTestRunner"
-				},
-				{
 					"command": "dart.goToTestOrImplementationFile",
 					"when": "dart-code:anyProjectLoaded && dart-code:canGoToTestOrImplementationFile"
 				},
 				{
-					"command": "dart.clearTestResults",
-					"when": "dart-code:anyProjectLoaded && !inDebugMode && !config.dart.useVsCodeTestRunner"
-				},
-				{
 					"command": "dart.goToTests",
 					"when": "false"
-				},
-				{
-					"command": "_dart.displayTestOutput",
-					"when": "false"
-				},
-				{
-					"command": "dart.debugTestAtCursor",
-					"when": "dart-code:anyProjectLoaded && dart-code:cursorIsInTest && !config.dart.useVsCodeTestRunner"
 				},
 				{
 					"command": "dart.startWithoutDebugging",
@@ -865,14 +776,6 @@
 				},
 				{
 					"command": "dart.startWithoutDebuggingFailedTests",
-					"when": "false"
-				},
-				{
-					"command": "_dart.toggleSkippedTestVisibilityOn",
-					"when": "false"
-				},
-				{
-					"command": "_dart.toggleSkippedTestVisibilityOff",
 					"when": "false"
 				},
 				{
@@ -1323,34 +1226,6 @@
 					"command": "_flutter.outline.refactor.flutter.removeWidget"
 				},
 				{
-					"when": "view == dartTestTree",
-					"command": "dart.runAllTestsWithoutDebugging",
-					"group": "navigation@1"
-				},
-				{
-					"when": "view == dartTestTree",
-					"command": "dart.runAllFailedTestsWithoutDebugging",
-					"group": "navigation@2"
-				},
-				{
-					"when": "view == dartTestTree",
-					"command": "dart.runAllSkippedTestsWithoutDebugging",
-					"group": "navigation@3"
-				},
-				{
-					"when": "view == dartTestTree",
-					"command": "dart.clearTestResults",
-					"group": "navigation@4"
-				},
-				{
-					"when": "view == dartTestTree && config.dart.showSkippedTests",
-					"command": "_dart.toggleSkippedTestVisibilityOff"
-				},
-				{
-					"when": "view == dartTestTree && !config.dart.showSkippedTests",
-					"command": "_dart.toggleSkippedTestVisibilityOn"
-				},
-				{
 					"when": "view == dartDependencyTree",
 					"command": "dart.addDependency",
 					"group": "navigation@1"
@@ -1388,61 +1263,6 @@
 				{
 					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.removeWidget",
 					"command": "_flutter.outline.refactor.flutter.removeWidget"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /^dart-code:testSuiteNode/",
-					"command": "dart.startDebuggingTest",
-					"group": "4.5_exec@1"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /^dart-code:testSuiteNode/",
-					"command": "dart.startWithoutDebuggingTest",
-					"group": "4.5_exec@2"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithFailures/",
-					"command": "dart.startDebuggingFailedTests",
-					"group": "4.5_exec@3"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithFailures/",
-					"command": "dart.startWithoutDebuggingFailedTests",
-					"group": "4.5_exec@4"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:canRunSkipped/",
-					"command": "dart.startDebuggingSkippedTests",
-					"group": "4.5_exec@5"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testContainerNodeWithSkips/ && viewItem =~ /dart-code:canRunSkipped/",
-					"command": "dart.startWithoutDebuggingSkippedTests",
-					"group": "4.5_exec@6"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testGroupNode/",
-					"command": "dart.startDebuggingTest",
-					"group": "4.5_exec@1"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testGroupNode/",
-					"command": "dart.startWithoutDebuggingTest",
-					"group": "4.5_exec@2"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
-					"command": "dart.startDebuggingTest",
-					"group": "4.5_exec@1"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
-					"command": "dart.startWithoutDebuggingTest",
-					"group": "4.5_exec@2"
-				},
-				{
-					"when": "dart-code:anyProjectLoaded && viewItem =~ /dart-code:testTestNode/",
-					"command": "_dart.displayTestOutput",
-					"group": "9_misc@1"
 				},
 				{
 					"when": "view == dartDependencyTree && viewItem == dart-code:depDependenciesNode",
@@ -1505,13 +1325,6 @@
 					"id": "dartFlutterOutline",
 					"name": "Outline",
 					"when": "dart-code:anyFlutterProjectLoaded && dart-code:showFlutterOutline"
-				}
-			],
-			"test": [
-				{
-					"id": "dartTestTree",
-					"name": "Dart & Flutter",
-					"when": "dart-code:anyProjectLoaded && !config.dart.useVsCodeTestRunner"
 				}
 			]
 		},
@@ -2383,12 +2196,6 @@
 						"type": "boolean",
 						"default": true,
 						"markdownDescription": "Whether to show skipped tests in the test tree.",
-						"scope": "window"
-					},
-					"dart.useVsCodeTestRunner": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to use the built-in VS Code test runner. Otherwises uses the legacy custom test runner.",
 						"scope": "window"
 					}
 				}

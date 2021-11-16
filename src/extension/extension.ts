@@ -12,7 +12,7 @@ import { captureLogs, EmittingLogger, logToConsole, RingLog } from "../shared/lo
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
-import { TestModel, TreeNode } from "../shared/test/test_model";
+import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -51,7 +51,7 @@ import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
-import { cursorIsInTest, DasTestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation, LspTestCommands } from "./commands/test";
+import { isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation, TestCommands } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
@@ -106,7 +106,6 @@ import * as util from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeToolSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
-import { TestResultsProvider } from "./views/test_view";
 
 export const DART_MODE = { language: "dart", scheme: "file" };
 const HTML_MODE = { language: "html", scheme: "file" };
@@ -488,7 +487,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const testDiscoverer = lspAnalyzer ? new TestDiscoverer(logger, lspAnalyzer.fileTracker, testModel) : undefined;
 	if (testDiscoverer)
 		context.subscriptions.push(testDiscoverer);
-	const vsCodeTestController = config.useVsCodeTestRunner && vs.tests?.createTestController // Feature-detect for Theia
+	const vsCodeTestController = vs.tests?.createTestController !== undefined // Feature-detect for Theia
 		? new VsCodeTestController(logger, testModel, testDiscoverer)
 		: undefined;
 	if (vsCodeTestController)
@@ -583,10 +582,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
-	if (dasAnalyzer)
-		context.subscriptions.push(new DasTestCommands(logger, testModel, workspaceContext, vsCodeTestController, dasAnalyzer.fileTracker, flutterCapabilities));
-	if (lspAnalyzer)
-		context.subscriptions.push(new LspTestCommands(logger, testModel, workspaceContext, vsCodeTestController, lspAnalyzer.fileTracker, flutterCapabilities));
+	context.subscriptions.push(new TestCommands(logger, testModel, workspaceContext, vsCodeTestController, flutterCapabilities));
 
 	if (lspClient && lspAnalyzer) {
 		// TODO: LSP equivs of the others...
@@ -612,38 +608,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext, dartCapabilities);
 	context.subscriptions.push(dartPackagesProvider);
 	const packagesTreeView = vs.window.createTreeView("dartDependencyTree", { treeDataProvider: dartPackagesProvider });
-	context.subscriptions.push(
-		packagesTreeView,
-	);
-	let testTreeProvider: TestResultsProvider | undefined;
-	if (!vsCodeTestController) {
-		testTreeProvider = new TestResultsProvider(testModel, flutterCapabilities);
-		const testTreeView = vs.window.createTreeView<TreeNode>("dartTestTree", { treeDataProvider: testTreeProvider });
-		const tryReveal = async (node: TreeNode) => {
-			try {
-				await testTreeView.reveal(node);
-			} catch {
-				// Reveal can fail if something else triggers an update to the tree
-				// while it's asynchronously locating the node. These errors can just be discarded.
-			}
-		};
-		context.subscriptions.push(
-			testTreeProvider,
-			testTreeView,
-			testModel.onDidStartTests.listen(async (node) => {
-				if (config.openTestViewOnStart)
-					tryReveal(node);
-			}),
-			testModel.onFirstFailure.listen(async (node) => {
-				if (config.openTestViewOnFailure)
-					// HACK: Because the tree update is async, this code may fire before
-					// the tree has been re-sorted, so wait a short period before revealing
-					// to let the tree update complete.
-					setTimeout(() => tryReveal(node), 100);
-			}),
-		);
-	}
-
+	context.subscriptions.push(packagesTreeView);
 	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
 	if (config.flutterOutline) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
@@ -772,7 +737,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			fileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : (lspAnalyzer ? lspAnalyzer.fileTracker : undefined),
 			flutterCapabilities,
 			flutterOutlineTreeProvider,
-			get cursorIsInTest() { return cursorIsInTest; },
 			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
 			getLogHeader,
@@ -789,7 +753,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			testCoordinator,
 			testDiscoverer,
 			testModel,
-			testTreeProvider,
 			webClient,
 			workspaceContext,
 		} as InternalExtensionApi,
