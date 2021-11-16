@@ -111,7 +111,7 @@ main() {
 
 		const cl: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
 		assert.equal(cl.additionalTextEdits, undefined); // Tested in the unimported imports test.
-		assert.equal(cl.command, undefined); // Tested in the unimported imports in part-file test.
+		assert.equal(cl.command!.command, "editor.action.triggerParameterHints");
 		assert.equal(cl.commitCharacters, undefined); // TODO: ??
 		assert.equal(cl.detail, "(int i) → int"); // No auto import message here
 		assert.equal(cl.filterText, "methodWithArgsAndReturnValue");
@@ -224,7 +224,7 @@ main() {
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
 			assert.ok(completion.additionalTextEdits!.length);
-			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
+			assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n() → ProcessInfo");
 			if (extApi.isLsp) {
@@ -260,7 +260,7 @@ main() {
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 
 			assert.ok(completion.additionalTextEdits!.length);
-			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
+			assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			// This signature changed in a newer Dev version of Dart (2020-05-13).
 			assert.ok(
