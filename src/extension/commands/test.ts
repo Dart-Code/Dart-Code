@@ -8,28 +8,22 @@ import { Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
 import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
-import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
-import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { TestOutlineInfo } from "../../shared/utils/outline_das";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig, TestName } from "../../shared/utils/test";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
-import { DasFileTracker } from "../analysis/file_tracker_das";
-import { LspFileTracker } from "../analysis/file_tracker_lsp";
-import { config } from "../config";
 import { isDartDocument } from "../editors";
 import { VsCodeTestController } from "../test/vs_test_controller";
 import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isTestFile } from "../utils";
 
-const CURSOR_IS_IN_TEST = "dart-code:cursorIsInTest";
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
 // HACK: Used for testing since we can't read contexts?
-export let cursorIsInTest = false;
 export let isInTestFileThatHasImplementation = false;
 export let isInImplementationFileThatCanHaveTest = false;
 
 export type SuiteList = [SuiteNode, TestName[]];
 
-abstract class TestCommands implements vs.Disposable {
+export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
 	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly flutterCapabilities: FlutterCapabilities) {
@@ -42,20 +36,11 @@ abstract class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.startWithoutDebuggingSkippedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode, TestStatus.Skipped), false, false, true)),
 			vs.commands.registerCommand("dart.startDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode, TestStatus.Failed), true, false, false)),
 			vs.commands.registerCommand("dart.startWithoutDebuggingFailedTests", (treeNode: SuiteNode | GroupNode | TestNode) => this.runTestsForNode(treeNode.suiteData, this.getTestNames(treeNode, TestStatus.Failed), false, false, false)),
-			vs.commands.registerCommand("dart.runAllSkippedTestsWithoutDebugging", () => this.runAllSkippedTests()),
-			vs.commands.registerCommand("dart.runAllFailedTestsWithoutDebugging", () => this.runAllFailedTests()),
-			vs.commands.registerCommand("dart.runAllTestsWithoutDebugging", (suites?: SuiteNode[], testRun?: vs.TestRun) => this.runAllTestsWithoutDebugging(suites, testRun)),
+			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites?: SuiteNode[], testRun?: vs.TestRun) => this.runAllTestsWithoutDebugging(suites, testRun)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
-			vs.window.onDidChangeTextEditorSelection((e) => this.updateSelectionContexts(e)),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
 		);
-
-		if (!config.useVsCodeTestRunner)
-			this.disposables.push(
-				vs.commands.registerCommand("dart.runTestAtCursor", () => this.runTestAtCursor(false), this),
-				vs.commands.registerCommand("dart.debugTestAtCursor", () => this.runTestAtCursor(true), this),
-			);
 
 		// Run for current open editor.
 		this.updateEditorContexts(vs.window.activeTextEditor);
@@ -97,46 +82,6 @@ abstract class TestCommands implements vs.Disposable {
 				: undefined;
 			return this.runTests(projectWithTests[0], false, undefined, false, true, template, testRun, undefined);
 		}));
-	}
-
-	private async runAllSkippedTests(): Promise<void> {
-		await this.runAllTests(TestStatus.Skipped);
-	}
-
-	private async runAllFailedTests(): Promise<void> {
-		await this.runAllTests(TestStatus.Failed);
-	}
-
-	private async runAllTests(onlyOfType: TestStatus): Promise<void> {
-		const topLevelNodes = Object.values(this.testModel.suites).map((suite) => suite.node);
-
-		const suiteList = topLevelNodes
-			.filter((node) => node instanceof SuiteNode && node.hasStatus(onlyOfType))
-			.map((m) => [m, this.getTestNames(m, onlyOfType)] as SuiteList);
-		if (suiteList.length === 0)
-			return;
-
-		const percentProgressPerTest = 99 / suiteList.map((sl) => sl[1].length).reduce((a, b) => a + b);
-		await vs.window.withProgress(
-			{
-				cancellable: true,
-				location: vs.ProgressLocation.Notification,
-				title: `Running ${TestStatus[onlyOfType].toString().toLowerCase()} tests`,
-			},
-			async (progress, token) => {
-				progress.report({ increment: 1 });
-				for (const suite of suiteList) {
-					const node = suite[0];
-					const failedTestNames = suite[1];
-					if (token.isCancellationRequested)
-						break;
-					const suiteName = path.basename(node.suiteData.path);
-					progress.report({ message: suiteName });
-					await this.runTestsForNode(node.suiteData, failedTestNames, false, true, onlyOfType === TestStatus.Skipped, token);
-					progress.report({ message: suiteName, increment: failedTestNames.length * percentProgressPerTest });
-				}
-			},
-		);
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
@@ -245,20 +190,6 @@ abstract class TestCommands implements vs.Disposable {
 		);
 	}
 
-	private async runTestAtCursor(debug: boolean): Promise<void> {
-		const editor = vs.window.activeTextEditor;
-		const test = editor && editor.selection && this.testForCursor(editor);
-
-		if (test) {
-			const command = debug
-				? "_dart.startDebuggingTestFromOutline"
-				: "_dart.startWithoutDebuggingTestFromOutline";
-			vs.commands.executeCommand(command, test);
-		} else {
-			vs.window.showWarningMessage("There is no test at the current location.");
-		}
-	}
-
 	private async goToTestOrImplementationFile(resource?: vs.Uri): Promise<void> {
 		const doc = resource
 			? await vs.workspace.openTextDocument(resource)
@@ -308,12 +239,6 @@ abstract class TestCommands implements vs.Disposable {
 		}
 	}
 
-	private updateSelectionContexts(e: vs.TextEditorSelectionChangeEvent): void {
-		const isValidTestLocation = !!(e.textEditor && e.selections && e.selections.length === 1 && this.testForCursor(e.textEditor));
-		vs.commands.executeCommand("setContext", CURSOR_IS_IN_TEST, isValidTestLocation);
-		cursorIsInTest = isValidTestLocation;
-	}
-
 	private updateEditorContexts(e: vs.TextEditor | undefined): void {
 		isInTestFileThatHasImplementation = false;
 		isInImplementationFileThatCanHaveTest = false;
@@ -361,77 +286,8 @@ abstract class TestCommands implements vs.Disposable {
 		return pathSegments.join(path.sep);
 	}
 
-	protected abstract testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined;
-
 	public dispose(): any {
 		disposeAll(this.disposables);
 	}
 
-}
-
-export class DasTestCommands extends TestCommands {
-	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, vsCodeTestController: VsCodeTestController | undefined, private readonly fileTracker: DasFileTracker, flutterCapabilities: FlutterCapabilities) {
-		super(logger, testModel, wsContext, vsCodeTestController, flutterCapabilities);
-	}
-
-	protected testForCursor(editor: vs.TextEditor): TestOutlineInfo | undefined {
-		const document = editor.document;
-		const outline = this.fileTracker.getOutlineFor(document.uri);
-		if (!outline || !outline.children || !outline.children.length)
-			return;
-
-		// We should only allow running for projects we know can actually handle `pub run` (for ex. the
-		// SDK codebase cannot, and will therefore run all tests).
-		if (!this.fileTracker.supportsPubRunTest(document.uri))
-			return;
-
-		const visitor = new TestOutlineVisitor(this.logger);
-		visitor.visit(outline);
-		return visitor.tests.reverse().find((t) => {
-			let start = document.positionAt(t.offset);
-			let end = document.positionAt(t.offset + t.length);
-
-			// Widen the range to start/end of lines.
-			start = document.lineAt(start.line).rangeIncludingLineBreak.start;
-			end = document.lineAt(end.line).rangeIncludingLineBreak.end;
-
-			return new vs.Range(start, end).contains(editor.selection);
-		});
-	}
-}
-
-export class LspTestCommands extends TestCommands {
-	constructor(logger: Logger, testModel: TestModel, wsContext: WorkspaceContext, vsCodeTestController: VsCodeTestController | undefined, private readonly fileTracker: LspFileTracker, flutterCapabilities: FlutterCapabilities) {
-		super(logger, testModel, wsContext, vsCodeTestController, flutterCapabilities);
-	}
-
-	protected testForCursor(editor: vs.TextEditor): LspTestOutlineInfo | undefined {
-		const document = editor.document;
-		const outline = this.fileTracker.getOutlineFor(document.uri);
-		if (!outline || !outline.children || !outline.children.length)
-			return;
-
-		// We should only allow running for projects we know can actually handle `pub run` (for ex. the
-		// SDK codebase cannot, and will therefore run all tests).
-		if (!this.fileTracker.supportsPubRunTest(document.uri))
-			return;
-
-		const visitor = new LspTestOutlineVisitor(this.logger, fsPath(document.uri));
-		visitor.visit(outline);
-		return visitor.tests.reverse().find((t) => {
-			let start = t.range.start;
-			let end = t.range.end;
-
-			// Widen the range to start/end of lines.
-			start = document.lineAt(start.line).rangeIncludingLineBreak.start;
-			end = document.lineAt(end.line).rangeIncludingLineBreak.end;
-
-			const vsRange = new vs.Range(start.line,
-				start.character,
-				end.line,
-				end.character,
-			);
-			return vsRange.contains(editor.selection);
-		});
-	}
 }

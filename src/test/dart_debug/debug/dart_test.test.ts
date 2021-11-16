@@ -172,7 +172,7 @@ describe("dart test debugger", () => {
 		);
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
+		const actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
@@ -200,7 +200,7 @@ describe("dart test debugger", () => {
 		]);
 
 		const expectedResults = getExpectedResults();
-		const actualResults = (await makeTestTextTree(helloWorldTestShortFile)).join("\n");
+		const actualResults = makeTestTextTree(helloWorldTestShortFile).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
@@ -259,7 +259,7 @@ describe("dart test debugger", () => {
 		async function checkResults(description: string): Promise<void> {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
+			const actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -292,7 +292,7 @@ describe("dart test debugger", () => {
 		async function checkResults(description: string): Promise<void> {
 			logger.info(description);
 			const expectedResults = getExpectedResults();
-			const actualResults = (await makeTestTextTree(helloWorldTestDupeNameFile)).join("\n");
+			const actualResults = makeTestTextTree(helloWorldTestDupeNameFile).join("\n");
 
 			assert.ok(expectedResults);
 			assert.ok(actualResults);
@@ -327,67 +327,6 @@ describe("dart test debugger", () => {
 		}
 	}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
-	it("can rerun only skipped tests", async () => {
-		await openFile(helloWorldTestTreeFile);
-		const config = await startDebugger(dc, helloWorldTestTreeFile);
-		config.noDebug = true;
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		);
-
-		// Now run only skipped tests.
-		await vs.commands.executeCommand("dart.runAllSkippedTestsWithoutDebugging");
-
-		await openFile(helloWorldTestTreeFile);
-		// Expected results differ from what's in the file as the skipped tests will be run
-		// and also the parent groups/suite status will be recomputed so they will be not-stale
-		// in the new results (so we can't just filter to skipped, like we do in the failed test).
-		const expectedResults = `
-test/tree_test.dart [8/11 passed] Failed
-    failing group 1 [3/4 passed] Failed
-        skipped test 1 $foo [1/1 passed] Passed
-            skipped test 1 some string Passed
-    skipped group 2 [4/6 passed] Failed
-        skipped test 1 Passed
-        skipped group 2.1 [2/3 passed] Failed
-            passing test 1 Passed
-            failing test 1 Failed
-            skipped test 1 Passed
-		`.trim();
-
-		// Get the actual tree, filtered only to those that ran in the last run.
-		const actualResults = (await makeTestTextTree(helloWorldTestTreeFile, { onlyActive: true })).join("\n");
-		checkTreeNodeResults(actualResults, expectedResults);
-	});
-
-	it("can rerun only failed tests", async () => {
-		const testFiles = [helloWorldTestTreeFile, helloWorldTestBrokenFile];
-		for (const file of testFiles) {
-			await openFile(file);
-			const config = await startDebugger(dc, file);
-			config.noDebug = true;
-			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
-				dc.waitForEvent("terminated"),
-				dc.launch(config),
-			);
-		}
-
-		// Now run only failed tests.
-		await vs.commands.executeCommand("dart.runAllFailedTestsWithoutDebugging");
-
-		for (const file of testFiles) {
-			await openFile(file);
-			// Get the expected tree and filter it to only failed tests.
-			const expectedResults = getExpectedResults().split("\n").filter((l) => l.includes("Failed")).join("\n");
-			// Get the actual tree, filtered only to those that ran in the last run.
-			const actualResults = (await makeTestTextTree(file, { onlyActive: true })).join("\n");
-			checkTreeNodeResults(actualResults, expectedResults);
-		}
-	});
-
 	it("can hide skipped tests from tree", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(dc, helloWorldTestTreeFile);
@@ -400,7 +339,7 @@ test/tree_test.dart [8/11 passed] Failed
 
 		// First ensure the full results appear.
 		let expectedResults = getExpectedResults();
-		let actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
+		let actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
 		assert.ok(actualResults);
 		checkTreeNodeResults(actualResults, expectedResults);
 
@@ -424,7 +363,7 @@ test/tree_test.dart [4/6 passed] Failed
     passing group 3 [1/1 passed] Passed
         passing test 1 Passed
 		`.trim();
-		actualResults = (await makeTestTextTree(helloWorldTestTreeFile)).join("\n");
+		actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
 		assert.ok(actualResults);
 		checkTreeNodeResults(actualResults, expectedResults);
 	});

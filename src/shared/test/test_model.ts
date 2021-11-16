@@ -3,7 +3,7 @@ import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
 import { Position, Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
-import { flatMap, notUndefined, uniq } from "../utils";
+import { flatMap, uniq } from "../utils";
 import { fsPath, isWithinPath } from "../utils/fs";
 import { makeRegexForTests } from "../utils/test";
 
@@ -13,7 +13,7 @@ export abstract class TreeNode {
 	public _isStale = false;
 	public testSource = TestSource.Outline;
 	public isPotentiallyDeleted = false;
-	public ownDuration: number | undefined;
+	public duration: number | undefined;
 
 	public description: string | undefined;
 
@@ -92,14 +92,6 @@ export abstract class TreeNode {
 			.reduce((total, value) => total + value, 0);
 	}
 
-	get duration(): number | undefined {
-		return this.children
-			.map((t) => t.duration)
-			.filter(notUndefined)
-			.reduce((total, value) => total + value, 0)
-			+ (this.ownDuration ?? 0);
-	}
-
 	get isStale(): boolean {
 		return this._isStale;
 	}
@@ -175,17 +167,6 @@ export class TestNode extends TreeNode {
 }
 
 export class TestModel {
-	// Set this flag we know when a new run starts so we can show the tree; however
-	// we can't show it until we render a node (we can only call reveal on a node) so
-	// we need to delay this until the suite starts.
-	public isNewTestRun = true;
-	public nextFailureIsFirst = true;
-
-	private readonly onDidStartTestsEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
-	public readonly onDidStartTests: Event<TreeNode> = this.onDidStartTestsEmitter.event;
-	private readonly onFirstFailureEmitter: EventEmitter<TreeNode> = new EventEmitter<TreeNode>();
-	public readonly onFirstFailure: Event<TreeNode> = this.onFirstFailureEmitter.event;
-
 	private readonly onDidChangeDataEmitter: EventEmitter<TreeNode | undefined> = new EventEmitter<TreeNode | undefined>();
 	public readonly onDidChangeTreeData: Event<TreeNode | undefined> = this.onDidChangeDataEmitter.event;
 
@@ -201,9 +182,6 @@ export class TestModel {
 	}
 
 	public flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
-		this.isNewTestRun = true;
-		this.nextFailureIsFirst = true;
-
 		if (suitePath && path.isAbsolute(suitePath)) {
 			const suite = this.suites[fsPath(suitePath)];
 			if (suite) {
@@ -266,14 +244,6 @@ export class TestModel {
 			return [suite, true];
 		}
 		return [suite, false];
-	}
-
-	public clearAllResults(): void {
-		for (const suitePath of Object.keys(this.suites)) {
-			delete this.suites[suitePath];
-		}
-
-		this.updateNode();
 	}
 
 	public clearSuite(suitePath: string): void {
@@ -356,12 +326,6 @@ export class TestModel {
 		suite.node.appendStatus(TestStatus.Waiting);
 		this.updateNode(suite.node);
 		this.updateNode();
-		// If this is the first suite, we've started a run and can show the tree.
-		// We need to wait for the tree node to have been rendered though so setTimeout :(
-		if (this.isNewTestRun) {
-			this.isNewTestRun = false;
-			this.onDidStartTestsEmitter.fire(suite.node);
-		}
 
 		this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 
@@ -513,7 +477,7 @@ export class TestModel {
 			testNode.status = TestStatus.Unknown;
 		}
 		if (endTime && testNode.testStartTime) {
-			testNode.ownDuration = endTime - testNode.testStartTime;
+			testNode.duration = endTime - testNode.testStartTime;
 			testNode.description = ``;
 			// Don't clear this, as concurrent runs will overwrite each
 			// other and then we'll get no time at the end.
@@ -523,11 +487,6 @@ export class TestModel {
 		this.updateNode(testNode);
 		this.updateNode(testNode.parent);
 		this.rebuildSuiteNode(suite);
-
-		if (testNode.status === TestStatus.Failed && this.nextFailureIsFirst) {
-			this.nextFailureIsFirst = false;
-			this.onFirstFailureEmitter.fire(testNode);
-		}
 
 		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testDone(dartCodeDebugSessionID, testNode, result));

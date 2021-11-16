@@ -37,13 +37,6 @@ export const FLUTTER_DOWNLOAD_URL = "https://flutter.dev/setup/";
 
 export const IS_LSP_CONTEXT = "dart-code:isLsp";
 
-export const DART_TEST_SUITE_NODE_CONTEXT = "dart-code:testSuiteNode";
-export const DART_TEST_CONTAINER_NODE_WITH_SKIPS_CONTEXT = "dart-code:testContainerNodeWithSkips";
-export const DART_TEST_CONTAINER_NODE_WITH_FAILURES_CONTEXT = "dart-code:testContainerNodeWithFailures";
-export const DART_TEST_GROUP_NODE_CONTEXT = "dart-code:testGroupNode";
-export const DART_TEST_TEST_NODE_CONTEXT = "dart-code:testTestNode";
-export const DART_TEST_CAN_RUN_SKIPPED_CONTEXT = "dart-code:canRunSkipped";
-
 export const DART_DEP_PROJECT_NODE_CONTEXT = "dart-code:depProjectNode";
 export const DART_DEP_DEPENDENCIES_NODE_CONTEXT = "dart-code:depDependenciesNode";
 export const DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT = "dart-code:depDevDependenciesNode";
