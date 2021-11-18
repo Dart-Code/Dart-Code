@@ -141,8 +141,17 @@ export class VmServiceExtensions {
 		return await session.customRequest("callService", { method, params });
 	}
 
+	private syncContextStates(id: string, value: any) {
+		if (id === VmServiceExtension.InspectorSelectMode) {
+			/// Keep the context in sync so that the "Cancel Inspect Widget" command is enabled/disabled.
+			vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, !!value);
+		}
+	}
+
 	/// Handles updates that come from the VM (eg. were updated by another tool).
 	private handleRemoteValueUpdate(id: string, value: any) {
+		this.syncContextStates(id, value);
+
 		// Don't try to process service extension we don't know about.
 		if (this.currentExtensionValues[id] === undefined)
 			return;

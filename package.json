@@ -890,7 +890,7 @@
 				},
 				{
 					"command": "flutter.inspectWidget",
-					"when": "inDebugMode"
+					"when": "inDebugMode && !dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.cancelInspectWidget",
