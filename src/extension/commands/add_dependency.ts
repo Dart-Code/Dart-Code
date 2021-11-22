@@ -103,11 +103,37 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-		const selectedPackage = await this.promptForPackageInfo();
-		if (!selectedPackage)
+		const selectedOption = await this.promptForPackageInfo();
+		if (!selectedOption)
 			return;
 
-		this.addDependency(uri, selectedPackage, isDevDependency);
+		let packageInfo: PackageInfo | undefined;
+		if (typeof selectedOption === "string") {
+			// For convenience, we handle string URLs/paths too.
+			if (selectedOption.startsWith("http://") || selectedOption.startsWith("https://"))
+				packageInfo = await this.promptForGitPackageInfo(selectedOption);
+			else if (selectedOption.includes("/") || selectedOption.includes("\\"))
+				packageInfo = await this.promptForPathPackageInfo(selectedOption);
+			else
+				packageInfo = { packageName: selectedOption, marker: undefined };
+		} else {
+			switch (selectedOption.marker) {
+				case "PATH":
+					packageInfo = await this.promptForPathPackageInfo();
+					break;
+				case "GIT":
+					packageInfo = await this.promptForGitPackageInfo();
+					break;
+				default:
+					packageInfo = selectedOption as PubPackage;
+					break;
+			}
+		}
+
+		if (!packageInfo)
+			return;
+
+		return this.addDependency(uri, packageInfo, isDevDependency);
 	}
 
 	private async addDependency(uri: string | vs.Uri, selectedPackage: PackageInfo, isDevDependency: boolean) {
@@ -167,7 +193,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 
 	/// Prompts the user to select a package name, or the option to select a path or Git package (in
 	/// which case they must also provide package name etc).
-	private async promptForPackageInfo(): Promise<PackageInfo | undefined> {
+	private async promptForPackageInfo(): Promise<string | PickablePackage | undefined> {
 		const quickPick = vs.window.createQuickPick<PickablePackage>();
 		quickPick.placeholder = "package name, URL or path";
 		quickPick.title = "Enter a package name, URL or local path";
@@ -184,33 +210,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 
 		quickPick.dispose();
 
-		if (!selectedOption)
-			return;
-
-		let packageInfo: PackageInfo | undefined;
-		if (typeof selectedOption === "string") {
-			// For convenience, we handle string URLs/paths too.
-			if (selectedOption.startsWith("http://") || selectedOption.startsWith("https://"))
-				packageInfo = await this.promptForGitPackageInfo(selectedOption);
-			else if (selectedOption.includes("/") || selectedOption.includes("\\"))
-				packageInfo = await this.promptForPathPackageInfo(selectedOption);
-			else
-				packageInfo = { packageName: selectedOption, marker: undefined };
-		} else {
-			switch (selectedOption.marker) {
-				case "PATH":
-					packageInfo = await this.promptForPathPackageInfo();
-					break;
-				case "GIT":
-					packageInfo = await this.promptForGitPackageInfo();
-					break;
-				default:
-					packageInfo = selectedOption as PubPackage;
-					break;
-			}
-		}
-
-		return packageInfo;
+		return selectedOption;
 	}
 
 	private async promptForPathPackageInfo(packagePath?: string): Promise<PathPubPackage | undefined> {
@@ -244,37 +244,18 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 
 	private async promptForGitPackageInfo(repoUrl?: string): Promise<GitPubPackage | undefined> {
-		if (!repoUrl) {
-			repoUrl = await vs.window.showInputBox({
-				ignoreFocusOut: true,
-				placeHolder: "git repo url",
-				title: "Enter a Git repository url",
-			});
-		}
+		if (!repoUrl)
+			repoUrl = await this.promptForGitUrl();
 		if (!repoUrl)
 			return;
 
 		const urlSegments = repoUrl.split("/");
-		const packageName = await vs.window.showInputBox({
-			ignoreFocusOut: true,
-			placeHolder: "package name",
-			title: "Enter the Packages name",
-			value: urlSegments[urlSegments.length - 1],
-		});
+		const packageName = await this.promptForPackageName(urlSegments[urlSegments.length - 1]);
 		if (!packageName)
 			return;
 
-		const repoRef = await vs.window.showInputBox({
-			ignoreFocusOut: true,
-			placeHolder: "commit/branch",
-			title: "Enter the commit/branch to use (press <enter> for default)",
-		});
-
-		const repoPath = await vs.window.showInputBox({
-			ignoreFocusOut: true,
-			placeHolder: "path to package",
-			title: "Enter the path to the package in the repository (press <enter> for default)",
-		});
+		const repoRef = await this.promptForGitRef();
+		const repoPath = await this.promptForGitPath();
 
 		return {
 			marker: "GIT",
@@ -283,6 +264,39 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			ref: repoRef,
 			url: repoUrl,
 		};
+	}
+
+	private promptForGitUrl(): string | PromiseLike<string | undefined> | undefined {
+		return vs.window.showInputBox({
+			ignoreFocusOut: true,
+			placeHolder: "git repo url",
+			title: "Enter a Git repository url",
+		});
+	}
+
+	private promptForGitPath() {
+		return vs.window.showInputBox({
+			ignoreFocusOut: true,
+			placeHolder: "path to package",
+			title: "Enter the path to the package in the repository (press <enter> for default)",
+		});
+	}
+
+	private async promptForGitRef() {
+		return vs.window.showInputBox({
+			ignoreFocusOut: true,
+			placeHolder: "commit/branch",
+			title: "Enter the commit/branch to use (press <enter> for default)",
+		});
+	}
+
+	private async promptForPackageName(name: string) {
+		return await vs.window.showInputBox({
+			ignoreFocusOut: true,
+			placeHolder: "package name",
+			title: "Enter the Packages name",
+			value: name,
+		});
 	}
 
 	private getPackageEntries(prefix?: string): PickablePackage[] {
