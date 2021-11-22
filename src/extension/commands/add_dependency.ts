@@ -5,6 +5,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { PubApi } from "../../shared/pub/api";
 import { PackageCacheData } from "../../shared/pub/pub_add";
+import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import * as util from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
@@ -17,18 +18,6 @@ const knownFlutterSdkPackages = [
 	"flutter_driver",
 	"flutter_localizations",
 	"integration_test",
-];
-
-const dependencyVariants: vs.QuickPickItem[] = [
-	{
-		label: "local",
-	},
-	{
-		label: "git remote repository",
-	},
-	{
-		label: "pub server",
-	},
 ];
 
 export class AddDependencyCommand extends BaseSdkCommands {
@@ -114,26 +103,22 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-		const selectedPackage = await this.promptForPackage();
+		const selectedPackage = await this.promptForPackageInfo();
 		if (!selectedPackage)
 			return;
 
 		this.addDependency(uri, selectedPackage, isDevDependency);
 	}
 
-	private async addDependency(uri: string | vs.Uri, selectedPackage: string | LocalPubPackage | GitPubPackage, isDevDependency: boolean) {
+	private async addDependency(uri: string | vs.Uri, selectedPackage: PackageInfo, isDevDependency: boolean) {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-
-		const args: string[] = ["add"];
-		let pubPackage: string | undefined;
-		if (typeof selectedPackage === "string") {
-			pubPackage = selectedPackage;
-			args.push(pubPackage);
-		} else if ("url" in selectedPackage) {
-			pubPackage = selectedPackage.packageName;
-			args.push(pubPackage);
+		const args = ["add"];
+		let packageName: string;
+		if (selectedPackage.marker === "GIT") {
+			packageName = selectedPackage.packageName;
+			args.push(packageName);
 			args.push(`--git-url=${selectedPackage.url}`);
 			if (selectedPackage.ref) {
 				args.push(`--git-ref=${selectedPackage.ref}`);
@@ -141,21 +126,25 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			if (selectedPackage.path) {
 				args.push(`--git-path=${selectedPackage.path}`);
 			}
-		} else {
-			pubPackage = selectedPackage.packageName;
-			args.push(pubPackage);
+		} else if (selectedPackage.marker === "PATH") {
+			packageName = selectedPackage.packageName;
+			args.push(packageName);
 			args.push(`--path=${selectedPackage.path}`);
+		} else {
+			packageName = selectedPackage.packageName;
+			args.push(packageName);
 		}
 
 		if (isDevDependency)
 			args.push("--dev");
 
 		// Handle some known Flutter dependencies.
-		const isFlutterSdkPackage = knownFlutterSdkPackages.includes(pubPackage ?? "");
+		const isFlutterSdkPackage = knownFlutterSdkPackages.includes(packageName);
 		if (isFlutterSdkPackage) {
 			args.push("--sdk");
 			args.push("flutter");
 		}
+
 		if (this.sdks.flutter && (isFlutterSdkPackage || util.isInsideFlutterProject(uri))) {
 			return this.runFlutter(["pub", ...args], uri);
 		} else {
@@ -176,111 +165,127 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		}
 	}
 
-	private async promptForPackage(): Promise<string | LocalPubPackage | GitPubPackage | undefined> {
-		const quickPick = vs.window.createQuickPick<vs.QuickPickItem>();
-		quickPick.placeholder = "Select dependency variant";
-		quickPick.items = dependencyVariants;
+	/// Prompts the user to select a package name, or the option to select a path or Git package (in
+	/// which case they must also provide package name etc).
+	private async promptForPackageInfo(): Promise<PackageInfo | undefined> {
+		const quickPick = vs.window.createQuickPick<PickablePackage>();
+		quickPick.placeholder = "package name, URL or path";
+		quickPick.title = "Enter a package name, URL or local path";
+		quickPick.items = this.getPackageEntries();
+		quickPick.onDidChangeValue((prefix) => {
+			quickPick.items = this.getPackageEntries(prefix);
+		});
 
-		const selectedPackage = await new Promise<vs.QuickPickItem | undefined>((resolve) => {
-			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
+		const selectedOption = await new Promise<string | PickablePackage | undefined>((resolve) => {
+			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0] ? quickPick.selectedItems[0] : quickPick.value));
 			quickPick.onDidHide(() => resolve(undefined));
 			quickPick.show();
 		});
 
 		quickPick.dispose();
-		switch (selectedPackage) {
-			case dependencyVariants[0]:
-				return await this.getLocalDependencies();
-			case dependencyVariants[1]:
-				return await this.getFromGitRepository();
-			case dependencyVariants[2]:
-				return await this.getPubDependencies();
-		}
-	}
 
-	private async getLocalDependencies(): Promise<LocalPubPackage | undefined> {
-		const packagePath = await vs.window.showOpenDialog({
-			canSelectFiles: false,
-			canSelectFolders: true,
-			canSelectMany: false,
-			openLabel: "Select Package",
-		});
+		if (!selectedOption)
+			return;
 
-		let isValidPubPackage = false;
-		let pubspecPackageName: string;
-		const pubspecPackageNameRegex = /^name: (\w+)$/gm;
-		if (packagePath) {
-			fs.readdirSync(packagePath[0].path, { encoding: "utf-8" }).forEach((file) => {
-				if (file === "pubspec.yaml") {
-					isValidPubPackage = true;
-					pubspecPackageName = fs.readFileSync(`${packagePath[0].path}/${file}`, { encoding: "ascii" });
-					const regexpResult = pubspecPackageNameRegex.exec(pubspecPackageName);
-					if (!regexpResult) {
-						isValidPubPackage = false;
-					} else {
-						pubspecPackageName = regexpResult[1];
-					}
-					return;
-				}
-			});
-
-			if (!isValidPubPackage) {
-				vs.window.showErrorMessage(`"${packagePath[0].path.split(path.sep).slice(-1)}" is not a valid pub package`);
+		let packageInfo: PackageInfo | undefined;
+		if (typeof selectedOption === "string") {
+			// For convenience, we handle string URLs/paths too.
+			if (selectedOption.startsWith("http://") || selectedOption.startsWith("https://"))
+				packageInfo = await this.promptForGitPackageInfo(selectedOption);
+			else if (selectedOption.includes("/") || selectedOption.includes("\\"))
+				packageInfo = await this.promptForPathPackageInfo(selectedOption);
+			else
+				packageInfo = { packageName: selectedOption, marker: undefined };
+		} else {
+			switch (selectedOption.marker) {
+				case "PATH":
+					packageInfo = await this.promptForPathPackageInfo();
+					break;
+				case "GIT":
+					packageInfo = await this.promptForGitPackageInfo();
+					break;
+				default:
+					packageInfo = selectedOption as PubPackage;
+					break;
 			}
 		}
-		return isValidPubPackage ? { path: packagePath![0].path, packageName: pubspecPackageName! } : undefined;
+
+		return packageInfo;
 	}
 
-	private async getFromGitRepository(): Promise<GitPubPackage | undefined> {
-		const repoPackageName = await vs.window.showInputBox({
-			placeHolder: "Enter package name",
-		});
-		if (!repoPackageName) {
-			return;
-		}
+	private async promptForPathPackageInfo(packagePath?: string): Promise<PathPubPackage | undefined> {
+		if (!packagePath) {
+			const packagePaths = await vs.window.showOpenDialog({
+				canSelectFiles: false,
+				canSelectFolders: true,
+				canSelectMany: false,
+				openLabel: "Select package folder",
+			});
 
-		const repoURL = await vs.window.showInputBox({
-			placeHolder: "Enter git remote repository url",
-		});
-		if (!repoURL) {
+			if (!packagePaths || packagePaths.length !== 1)
+				return;
+
+			packagePath = fsPath(packagePaths[0]);
+		}
+		if (!packagePath)
+			return;
+
+		try {
+			const pubspecPackageNameRegex = /^name: (\w+)$/gm;
+			const pubspecContent = fs.readFileSync(path.join(packagePath, "pubspec.yaml"), "utf8");
+			const packageNameResult = pubspecPackageNameRegex.exec(pubspecContent);
+			if (packageNameResult)
+				return { path: packagePath, packageName: packageNameResult[1], marker: "PATH" };
+		} catch (e) {
+			this.logger.error(e);
+			vs.window.showErrorMessage("The selected folder does not appear to be a valid Pub package");
 			return;
 		}
+	}
+
+	private async promptForGitPackageInfo(repoUrl?: string): Promise<GitPubPackage | undefined> {
+		if (!repoUrl) {
+			repoUrl = await vs.window.showInputBox({
+				ignoreFocusOut: true,
+				placeHolder: "git repo url",
+				title: "Enter a Git repository url",
+			});
+		}
+		if (!repoUrl)
+			return;
+
+		const urlSegments = repoUrl.split("/");
+		const packageName = await vs.window.showInputBox({
+			ignoreFocusOut: true,
+			placeHolder: "package name",
+			title: "Enter the Packages name",
+			value: urlSegments[urlSegments.length - 1],
+		});
+		if (!packageName)
+			return;
 
 		const repoRef = await vs.window.showInputBox({
-			placeHolder: "Which reference of the git repository?",
+			ignoreFocusOut: true,
+			placeHolder: "commit/branch",
+			title: "Enter the commit/branch to use (press <enter> for default)",
 		});
 
 		const repoPath = await vs.window.showInputBox({
-			placeHolder: "Where is the package located in the repository?",
+			ignoreFocusOut: true,
+			placeHolder: "path to package",
+			title: "Enter the path to the package in the repository (press <enter> for default)",
 		});
+
 		return {
-			packageName: repoPackageName,
+			marker: "GIT",
+			packageName,
 			path: repoPath,
 			ref: repoRef,
-			url: repoURL,
+			url: repoUrl,
 		};
 	}
 
-	private async getPubDependencies(): Promise<string | undefined> {
-		const quickPick = vs.window.createQuickPick<PickablePackage>();
-		quickPick.placeholder = "Enter a package name";
-		quickPick.items = this.getMatchingPackages();
-		quickPick.onDidChangeValue((prefix) => {
-			quickPick.items = this.getMatchingPackages(prefix);
-		});
-
-		const selectedPackage = await new Promise<PickablePackage | undefined>((resolve) => {
-			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
-			quickPick.onDidHide(() => resolve(undefined));
-			quickPick.show();
-		});
-
-		quickPick.dispose();
-
-		return selectedPackage?.packageName;
-	}
-
-	private getMatchingPackages(prefix?: string): PickablePackage[] {
+	private getPackageEntries(prefix?: string): PickablePackage[] {
 		const max = 50;
 		const packageNames = this.cache?.packageNames ?? [];
 		let matches = new Set<string>();
@@ -300,22 +305,53 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			matches = new Set(packageNames.slice(0, Math.min(max, packageNames.length)));
 		}
 
-		return Array.from(matches).map((packageName) => ({
+		const pickablePackageNames = Array.from(matches).map((packageName) => ({
 			label: packageName,
 			packageName,
 		} as PickablePackage));
+
+		if (prefix) {
+			return pickablePackageNames;
+		} else {
+			return [
+				{
+					description: "add a package from a local path",
+					label: "Local Path Package",
+					marker: "PATH",
+
+				},
+				{
+					description: "add a package from a Git repository",
+					label: "Git Repository URL",
+					marker: "GIT",
+				},
+				...pickablePackageNames,
+			];
+		}
+
 	}
 }
 
-export type PickablePackage = vs.QuickPickItem & { packageName: string };
+export type PickablePackage = vs.QuickPickItem & (PubPackage | LocalPubPackageMarker | GitPubPackageMarker);
+export type PackageInfo = PubPackage | PathPubPackage | GitPubPackage;
 
-export interface GitPubPackage {
+
+interface PubPackage {
+	marker: undefined;
+	packageName: string;
+}
+
+interface LocalPubPackageMarker { marker: "PATH"; }
+interface GitPubPackageMarker { marker: "GIT"; }
+
+interface PathPubPackage extends LocalPubPackageMarker {
+	path: string;
+	packageName: string;
+}
+
+interface GitPubPackage extends GitPubPackageMarker {
 	url: string;
 	packageName: string;
 	ref?: string;
 	path?: string;
-}
-export interface LocalPubPackage {
-	path: string;
-	packageName: string;
 }
