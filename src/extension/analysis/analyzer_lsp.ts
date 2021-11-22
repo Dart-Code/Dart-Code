@@ -75,7 +75,13 @@ export class LspAnalyzer extends Analyzer {
 		/// for convenience, eg. when completing the "import '';" snippet people expect completion
 		/// to immediately reopen.
 		function shouldTriggerCompletionAgain(item: CompletionItem): boolean {
-			if (item.label === "import '';")
+			const label = typeof item.label === "string" ? item.label : item.label.label;
+
+			if (label === "import '';")
+				return true;
+
+			// When completing on named args, re-trigger for the value.
+			if (label.trimRight().endsWith(":"))
 				return true;
 
 			if (item.kind === CompletionItemKind.Folder) {
