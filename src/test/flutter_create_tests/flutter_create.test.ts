@@ -21,9 +21,9 @@ describe("flutter", () => {
 
 	it("created a sample project", async () => {
 		const sampleProjectFolder = fsPath(vs.workspace.workspaceFolders![1].uri);
-		const pubspecFile = path.join(sampleProjectFolder, "lib", "main.dart");
+		const mainFile = path.join(sampleProjectFolder, "lib", "main.dart");
 
-		await projectFileContainsExpectedString(pubspecFile, "icon: const Icon(Icons.volume_up)");
+		await projectFileContainsExpectedString(mainFile, "icon: const Icon(Icons.volume_up)");
 	});
 
 	it("created a module project", async () => {
