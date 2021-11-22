@@ -20,7 +20,7 @@ describe("pub add", () => {
 
 	it("can add a dependency using command", async () => {
 		assert.equal(pubspecContains("collection"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackage").resolves("collection");
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		await vs.commands.executeCommand("dart.addDependency");
 		await waitFor(() => pubspecContains("collection"));
 		assert.equal(pubspecContains("collection"), true);
@@ -28,7 +28,7 @@ describe("pub add", () => {
 
 	it("can add a dev-dependency using command", async () => {
 		assert.equal(pubspecContains("collection"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackage").resolves("collection");
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		await vs.commands.executeCommand("dart.addDevDependency");
 		await waitFor(() => pubspecContains("collection"));
 		assert.equal(pubspecContains("collection"), true);
@@ -36,7 +36,7 @@ describe("pub add", () => {
 
 	it("can add a Flutter SDK dependency using command", async () => {
 		assert.equal(pubspecContains("flutter_localizations"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackage").resolves("flutter_localizations");
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("flutter_localizations");
 		await vs.commands.executeCommand("dart.addDevDependency");
 		await waitFor(() => pubspecContains("flutter_localizations"));
 
