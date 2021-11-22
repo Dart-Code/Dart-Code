@@ -13,30 +13,64 @@ describe("pub add", () => {
 		defer(() => fs.writeFileSync(pubspecPath, contents));
 	});
 
-	function pubspecContains(packageName: string) {
+	function pubspecContainsPackage(packageName: string) {
 		const contents = fs.readFileSync(pubspecPath);
 		return contents.includes(`  ${packageName}:`);
 	}
 
+	function pubspecContainsText(text: string) {
+		const contents = fs.readFileSync(pubspecPath);
+		return contents.includes(text);
+	}
+
 	it("can add a dependency using command", async () => {
-		assert.equal(pubspecContains("collection"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackage").resolves("collection");
+		assert.equal(pubspecContainsPackage("collection"), false);
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
+
 		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContains("collection"));
-		assert.equal(pubspecContains("collection"), true);
+		await waitFor(() => pubspecContainsPackage("collection"));
+		assert.equal(pubspecContainsPackage("collection"), true);
 	});
 
 	it("can add a dev-dependency using command", async () => {
-		assert.equal(pubspecContains("collection"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackage").resolves("collection");
+		assert.equal(pubspecContainsPackage("collection"), false);
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
+
 		await vs.commands.executeCommand("dart.addDevDependency");
-		await waitFor(() => pubspecContains("collection"));
-		assert.equal(pubspecContains("collection"), true);
+		await waitFor(() => pubspecContainsPackage("collection"));
+		assert.equal(pubspecContainsPackage("collection"), true);
+	});
+
+	it("can add a dependency by URL by pasting", async () => {
+		assert.equal(pubspecContainsPackage("timing"), false);
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("https://github.com/dart-lang/timing");
+		sb.stub(extApi.addDependencyCommand, "promptForPackageName").resolves("timing");
+		sb.stub(extApi.addDependencyCommand, "promptForGitRef").resolves("");
+		sb.stub(extApi.addDependencyCommand, "promptForGitPath").resolves("");
+
+		await vs.commands.executeCommand("dart.addDependency");
+		await waitFor(() => pubspecContainsText("git: https://github.com/dart-lang/timing"));
+		assert.equal(pubspecContainsPackage("timing"), true);
+		assert.equal(pubspecContainsText("git: https://github.com/dart-lang/timing"), true);
+	});
+
+	it("can add a dependency by URL by selecting pasting", async () => {
+		assert.equal(pubspecContainsPackage("timing"), false);
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves({ marker: "GIT" });
+		sb.stub(extApi.addDependencyCommand, "promptForGitUrl").resolves("https://github.com/dart-lang/timing");
+		sb.stub(extApi.addDependencyCommand, "promptForPackageName").resolves("timing");
+		sb.stub(extApi.addDependencyCommand, "promptForGitRef").resolves("");
+		sb.stub(extApi.addDependencyCommand, "promptForGitPath").resolves("");
+
+		await vs.commands.executeCommand("dart.addDependency");
+		await waitFor(() => pubspecContainsText("git: https://github.com/dart-lang/timing"));
+		assert.equal(pubspecContainsPackage("timing"), true);
+		assert.equal(pubspecContainsText("git: https://github.com/dart-lang/timing"), true);
 	});
 
 	it("can add from a quick fix if not listed in pubspec.yaml", async () => {
 		const packageName = "built_value";
-		assert.equal(pubspecContains(packageName), false);
+		assert.equal(pubspecContainsPackage(packageName), false);
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
 
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`)) as Thenable<vs.CodeAction[]>);
@@ -46,7 +80,7 @@ describe("pub add", () => {
 
 	it("cannot add from a quick fix if already listed in pubspec.yaml", async () => {
 		const packageName = "convert";
-		assert.equal(pubspecContains(packageName), true);
+		assert.equal(pubspecContainsPackage(packageName), true);
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
 
 		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`)) as Thenable<vs.CodeAction[]>);
