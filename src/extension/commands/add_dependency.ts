@@ -19,6 +19,18 @@ const knownFlutterSdkPackages = [
 	"integration_test",
 ];
 
+const dependencyVariants: vs.QuickPickItem[] = [
+	{
+		label: "local",
+	},
+	{
+		label: "git remote repository",
+	},
+	{
+		label: "pub server",
+	},
+];
+
 export class AddDependencyCommand extends BaseSdkCommands {
 	private readonly extensionStoragePath: string | undefined;
 	private cache: PackageCacheData | undefined;
@@ -102,28 +114,48 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-		const selectedPackageName = await this.promptForPackage();
-		if (!selectedPackageName)
+		const selectedPackage = await this.promptForPackage();
+		if (!selectedPackage)
 			return;
 
-		this.addDependency(uri, selectedPackageName, isDevDependency);
+		this.addDependency(uri, selectedPackage, isDevDependency);
 	}
 
-	private async addDependency(uri: string | vs.Uri, packageName: string, isDevDependency: boolean) {
+	private async addDependency(uri: string | vs.Uri, selectedPackage: string | LocalPubPackage | GitPubPackage, isDevDependency: boolean) {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-		const args = ["add", packageName];
+
+		const args: string[] = ["add"];
+		let pubPackage: string | undefined;
+		if (typeof selectedPackage === "string") {
+			pubPackage = selectedPackage;
+			args.push(pubPackage);
+		} else if ("url" in selectedPackage) {
+			pubPackage = selectedPackage.packageName;
+			args.push(pubPackage);
+			args.push(`--git-url=${selectedPackage.url}`);
+			if (selectedPackage.ref) {
+				args.push(`--git-ref=${selectedPackage.ref}`);
+			}
+			if (selectedPackage.path) {
+				args.push(`--git-path=${selectedPackage.path}`);
+			}
+		} else {
+			pubPackage = selectedPackage.packageName;
+			args.push(pubPackage);
+			args.push(`--path=${selectedPackage.path}`);
+		}
+
 		if (isDevDependency)
 			args.push("--dev");
 
 		// Handle some known Flutter dependencies.
-		const isFlutterSdkPackage = knownFlutterSdkPackages.includes(packageName);
+		const isFlutterSdkPackage = knownFlutterSdkPackages.includes(pubPackage ?? "");
 		if (isFlutterSdkPackage) {
 			args.push("--sdk");
 			args.push("flutter");
 		}
-
 		if (this.sdks.flutter && (isFlutterSdkPackage || util.isInsideFlutterProject(uri))) {
 			return this.runFlutter(["pub", ...args], uri);
 		} else {
@@ -144,7 +176,92 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		}
 	}
 
-	private async promptForPackage(): Promise<string | undefined> {
+	private async promptForPackage(): Promise<string | LocalPubPackage | GitPubPackage | undefined> {
+		const quickPick = vs.window.createQuickPick<vs.QuickPickItem>();
+		quickPick.placeholder = "Select dependency variant";
+		quickPick.items = dependencyVariants;
+
+		const selectedPackage = await new Promise<vs.QuickPickItem | undefined>((resolve) => {
+			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
+			quickPick.onDidHide(() => resolve(undefined));
+			quickPick.show();
+		});
+
+		quickPick.dispose();
+		switch (selectedPackage) {
+			case dependencyVariants[0]:
+				return await this.getLocalDependencies();
+			case dependencyVariants[1]:
+				return await this.getFromGitRepository();
+			case dependencyVariants[2]:
+				return await this.getPubDependencies();
+		}
+	}
+
+	private async getLocalDependencies(): Promise<LocalPubPackage | undefined> {
+		const packagePath = await vs.window.showOpenDialog({
+			canSelectFiles: false,
+			canSelectFolders: true,
+			canSelectMany: false,
+			openLabel: "Select Package",
+		});
+
+		let isValidPubPackage = false;
+		let pubspecPackageName: string;
+		const pubspecPackageNameRegex = /^name: (\w+)$/gm;
+		if (packagePath) {
+			fs.readdirSync(packagePath[0].path, { encoding: "utf-8" }).forEach((file) => {
+				if (file === "pubspec.yaml") {
+					isValidPubPackage = true;
+					pubspecPackageName = fs.readFileSync(`${packagePath[0].path}/${file}`, { encoding: "ascii" });
+					const regexpResult = pubspecPackageNameRegex.exec(pubspecPackageName);
+					if (!regexpResult) {
+						isValidPubPackage = false;
+					} else {
+						pubspecPackageName = regexpResult[1];
+					}
+					return;
+				}
+			});
+
+			if (!isValidPubPackage) {
+				vs.window.showErrorMessage(`"${packagePath[0].path.split(path.sep).slice(-1)}" is not a valid pub package`);
+			}
+		}
+		return isValidPubPackage ? { path: packagePath![0].path, packageName: pubspecPackageName! } : undefined;
+	}
+
+	private async getFromGitRepository(): Promise<GitPubPackage | undefined> {
+		const repoPackageName = await vs.window.showInputBox({
+			placeHolder: "Enter package name",
+		});
+		if (!repoPackageName) {
+			return;
+		}
+
+		const repoURL = await vs.window.showInputBox({
+			placeHolder: "Enter git remote repository url",
+		});
+		if (!repoURL) {
+			return;
+		}
+
+		const repoRef = await vs.window.showInputBox({
+			placeHolder: "Which reference of the git repository?",
+		});
+
+		const repoPath = await vs.window.showInputBox({
+			placeHolder: "Where is the package located in the repository?",
+		});
+		return {
+			packageName: repoPackageName,
+			path: repoPath,
+			ref: repoRef,
+			url: repoURL,
+		};
+	}
+
+	private async getPubDependencies(): Promise<string | undefined> {
 		const quickPick = vs.window.createQuickPick<PickablePackage>();
 		quickPick.placeholder = "Enter a package name";
 		quickPick.items = this.getMatchingPackages();
@@ -191,3 +308,14 @@ export class AddDependencyCommand extends BaseSdkCommands {
 }
 
 export type PickablePackage = vs.QuickPickItem & { packageName: string };
+
+export interface GitPubPackage {
+	url: string;
+	packageName: string;
+	ref?: string;
+	path?: string;
+}
+export interface LocalPubPackage {
+	path: string;
+	packageName: string;
+}
