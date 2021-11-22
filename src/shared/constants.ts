@@ -74,7 +74,7 @@ export const notTodayAction = "Not Now";
 export const doNotAskAgainAction = "Never Ask";
 export const moreInfoAction = "More Info";
 
-export const flutterSurveyDataUrl = "https://flutter.dev/f/flutter-survey-metadata.json";
+export const flutterSurveyDataUrl = "https://docs.flutter.dev/f/flutter-survey-metadata.json";
 export const flutterSurveyAnalyticsText = "By clicking on this link you agree to share feature usage along with the survey responses.";
 export const takeSurveyAction = "Take Survey";
 export const skipThisSurveyAction = "Skip This Survey";
