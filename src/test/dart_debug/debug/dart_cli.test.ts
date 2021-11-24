@@ -47,7 +47,7 @@ describe("dart cli debugger", () => {
 		});
 
 		it("when vmAdditionalArgs is set", async () => {
-			await setConfigForTest("dart", "additionalArgs", ["--my-vm-flag"]);
+			await setConfigForTest("dart", "vmAdditionalArgs", ["--my-vm-flag"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldMainFile),
 			})!;
