@@ -9,7 +9,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, delay, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, delay, ensureArrayContainsArray, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldFolder, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -36,6 +36,31 @@ describe("dart test debugger", () => {
 		extApi.testDiscoverer.forceUpdate(file);
 		return editor;
 	}
+
+	describe("resolves the correct debug config", () => {
+
+		it("passing launch.json's toolArgs to the VM", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(helloWorldTestMainFile),
+				toolArgs: ["--fake-flag"],
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.program, fsPath(helloWorldTestMainFile));
+			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--fake-flag"]);
+		});
+
+		it("when vmAdditionalArgs is set", async () => {
+			await setConfigForTest("dart", "testAdditionalArgs", ["--my-test-flag"]);
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(helloWorldTestMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--my-test-flag"]);
+		});
+
+	});
 
 	it("runs a Dart test script to completion", async () => {
 		await openFile(helloWorldTestMainFile);

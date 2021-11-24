@@ -97,7 +97,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--target-platform", "android-arm"]);
 		});
 
-		it("with flutterRunAdditionalArgs is set", async () => {
+		it("when flutterRunAdditionalArgs is set", async () => {
 			await setConfigForTest("dart", "flutterRunAdditionalArgs", ["--no-sound-null-safety"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(flutterHelloWorldMainFile),

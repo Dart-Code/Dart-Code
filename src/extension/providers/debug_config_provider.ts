@@ -558,6 +558,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			case DebuggerType.Dart:
 				args = args.concat(await this.buildDartToolArgs(debugConfig, conf));
 				break;
+			case DebuggerType.PubTest:
+				args = args.concat(await this.buildDartTestToolArgs(debugConfig, conf));
+				break;
 			case DebuggerType.Flutter:
 				args = args.concat(await this.buildFlutterToolArgs(debugConfig, conf));
 				break;
@@ -577,6 +580,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (isDebug && debugConfig.enableAsserts !== false) // undefined = on
 			this.addArgsIfNotExist(args, "--enable-asserts");
+
+		return args;
+	}
+
+	protected async buildDartTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+		const args: string[] = [];
+
+		this.addArgsIfNotExist(args, ...conf.testAdditionalArgs);
 
 		return args;
 	}

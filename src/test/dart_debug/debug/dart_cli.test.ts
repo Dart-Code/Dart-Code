@@ -46,6 +46,15 @@ describe("dart cli debugger", () => {
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--fake-flag"]);
 		});
 
+		it("when vmAdditionalArgs is set", async () => {
+			await setConfigForTest("dart", "additionalArgs", ["--my-vm-flag"]);
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(helloWorldMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--my-vm-flag"]);
+		});
+
 	});
 
 	it("runs to completion", async () => {
