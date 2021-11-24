@@ -7,7 +7,7 @@ import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureVariable, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, closeAllOpenFiles, defer, delay, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
-describe.skip("web debugger", () => {
+describe("web debugger", () => {
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
 	before("get packages (1)", () => getPackages(webBrokenIndexFile));
 
@@ -18,20 +18,10 @@ describe.skip("web debugger", () => {
 		dc = createDebugClient(DebuggerType.Web);
 	});
 
-	async function startDebugger(script?: vs.Uri | string, cwd?: string): Promise<vs.DebugConfiguration> {
-		const config = await getLaunchConfiguration(script, {
-			cwd,
-		});
-		if (!config)
-			throw new Error(`Could not get launch configuration (got ${config})`);
-		await watchPromise("startDebugger->start", dc.start());
-		return config;
-	}
-
 	it("runs a web application and remains active until told to quit", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		await waitAllThrowIfTerminates(dc,
-			watchPromise("assertOutputContains(serving web on)", dc.assertOutputContains("stdout", "Serving `web` on http://127.0.0.1:")),
+			watchPromise("assertOutputContains(serving web on)", dc.assertOutputContains("console", "Serving `web` on http://127.0.0.1:")),
 			watchPromise("configurationSequence", dc.configurationSequence()),
 			watchPromise("launch", dc.launch(config)),
 		);
@@ -47,7 +37,7 @@ describe.skip("web debugger", () => {
 	});
 
 	it("expected debugger services are available in debug mode", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -66,7 +56,7 @@ describe.skip("web debugger", () => {
 	});
 
 	it("expected debugger services are available in noDebug mode", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -88,7 +78,7 @@ describe.skip("web debugger", () => {
 	// Skipped because this is super-flaky. If we quit to early, the processes are not
 	// cleaned up properly. This should be fixed when we move to the un-forked version.
 	it.skip("can quit during a build", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		// Kick off a build, but do not await it...
 		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		Promise.all([
@@ -122,7 +112,7 @@ describe.skip("web debugger", () => {
 			return;
 		}
 
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
@@ -137,7 +127,7 @@ describe.skip("web debugger", () => {
 	});
 
 	it("hot restarts successfully", async () => {
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -176,7 +166,7 @@ describe.skip("web debugger", () => {
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("launchDevTools->start->configurationSequence", dc.configurationSequence()),
 			watchPromise("launchDevTools->start->launch", dc.launch(config)),
@@ -206,7 +196,7 @@ describe.skip("web debugger", () => {
 		}
 
 		await openFile(webHelloWorldMainFile);
-		const config = await startDebugger(webHelloWorldIndexFile);
+		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		const expectedLocation = {
 			line: positionOf("^// BREAKPOINT1").line,
 			path: fsPath(webHelloWorldMainFile),
@@ -260,7 +250,7 @@ describe.skip("web debugger", () => {
 			}
 
 			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldIndexFile);
+			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -281,7 +271,7 @@ describe.skip("web debugger", () => {
 			}
 
 			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldIndexFile);
+			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -302,7 +292,7 @@ describe.skip("web debugger", () => {
 			}
 
 			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldIndexFile);
+			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
@@ -324,7 +314,7 @@ describe.skip("web debugger", () => {
 			}
 
 			await openFile(webHelloWorldMainFile);
-			const config = await startDebugger(webHelloWorldIndexFile);
+			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line,
@@ -347,7 +337,7 @@ describe.skip("web debugger", () => {
 		}
 
 		await openFile(webBrokenIndexFile);
-		const config = await startDebugger(webBrokenIndexFile);
+		const config = await startDebugger(dc, webBrokenIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
@@ -361,7 +351,7 @@ describe.skip("web debugger", () => {
 	// Skipped because unable to set break-on-exceptions without start-paused
 	it.skip("provides exception details when stopped on exception", async () => {
 		await openFile(webBrokenMainFile);
-		const config = await startDebugger(webBrokenIndexFile);
+		const config = await startDebugger(dc, webBrokenIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
@@ -383,7 +373,7 @@ describe.skip("web debugger", () => {
 		}
 
 		await openFile(webHelloWorldMainFile);
-		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(webHelloWorldIndexFile));
+		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(dc, webHelloWorldIndexFile));
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("logs_expected_text->waitForEvent:initialized", dc.waitForEvent("initialized"))
 				.then(() => watchPromise("logs_expected_text->setBreakpointsRequest", dc.setBreakpointsRequest({
@@ -405,7 +395,7 @@ describe.skip("web debugger", () => {
 		// This test really wants to check stderr, but since the widgets library catches the exception is
 		// just comes via stdout.
 		await openFile(webBrokenIndexFile);
-		const config = await startDebugger(webBrokenIndexFile);
+		const config = await startDebugger(dc, webBrokenIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
@@ -416,7 +406,7 @@ describe.skip("web debugger", () => {
 	// Skipped due to https://github.com/dart-lang/webdev/issues/379
 	it.skip("moves known files from call stacks to metadata", async () => {
 		await openFile(webBrokenIndexFile);
-		const config = await startDebugger(webBrokenIndexFile);
+		const config = await startDebugger(dc, webBrokenIndexFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
 			watchPromise(
