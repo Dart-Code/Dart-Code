@@ -9,7 +9,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, delay, ensureArrayContainsArray, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldFolder, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldFolder, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -102,6 +102,25 @@ describe("dart test debugger", () => {
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
 		const testDoneNotification = customEvents.find((e) => e.event === "dart.testNotification" && e.body.type === "testDone");
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+	});
+
+	it("can run using a custom tool", async () => {
+		const root = fsPath(helloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "dart_test");
+
+		const config = await startDebugger(dc, helloWorldTestMainFile, {
+			customTool: path.join(root, "scripts/custom_test.sh"),
+			// Replace "run --no-spawn-devtools test:test"
+			customToolReplacesArgs: 3,
+			noDebug: true,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, "-r json -j1 test/basic_test.dart");
 	});
 
 	it("receives the expected events from a Dart test script", async () => {
@@ -409,3 +428,4 @@ test/tree_test.dart [4/6 passed] Failed
 		);
 	}
 });
+

@@ -1,9 +1,10 @@
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
+import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, flutterBazelTestMainFile, getLaunchConfiguration, prepareHasRunFile } from "../../helpers";
+import { activate, ensureHasRunRecently, flutterBazelRoot, flutterBazelTestMainFile, getLaunchConfiguration, prepareHasRunFile } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach(function () {
@@ -29,7 +30,8 @@ describe("flutter test debugger", () => {
 	}
 
 	it("runs a Flutter test script to completion using custom script", async () => {
-		const hasRunFile = prepareHasRunFile("flutter_test");
+		const root = fsPath(flutterBazelRoot);
+		const hasRunFile = prepareHasRunFile(root, "flutter_test");
 
 		const config = await startDebugger(flutterBazelTestMainFile);
 		await waitAllThrowIfTerminates(dc,
@@ -38,6 +40,6 @@ describe("flutter test debugger", () => {
 			dc.launch(config),
 		);
 
-		ensureHasRunRecently(hasRunFile);
+		ensureHasRunRecently(root, hasRunFile);
 	});
 });

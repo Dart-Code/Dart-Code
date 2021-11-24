@@ -10,9 +10,9 @@ import { dartVMPath, debugLaunchProgressId, debugTerminatingProgressId, pleaseRe
 import { DartLaunchArgs, FileLocation } from "../shared/debug/interfaces";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
-import { safeSpawn } from "../shared/processes";
+import { ExecutionInfo, safeSpawn } from "../shared/processes";
 import { PackageMap } from "../shared/pub/package_map";
-import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath } from "../shared/utils";
+import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath, usingCustomScript } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, faint } from "../shared/utils/colors";
 import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
@@ -351,8 +351,10 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
-		const appArgs = this.buildAppArgs(args);
-		const dartPath = path.join(args.dartSdkPath, dartVMPath);
+		let dartPath = path.join(args.dartSdkPath, dartVMPath);
+		const execution = this.buildExecutionInfo(dartPath, args);
+		dartPath = execution.executable;
+		const appArgs = execution.args;
 
 		this.log(`Spawning ${dartPath} with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
@@ -366,8 +368,9 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	protected async spawnRemoteEditorProcess(args: DartLaunchArgs, terminalType: "integrated" | "external"): Promise<RemoteEditorTerminalProcess> {
-		const appArgs = this.buildAppArgs(args);
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
+		const execution = this.buildExecutionInfo(dartPath, args);
+		const appArgs = execution.args;
 
 		this.log(`Spawning ${dartPath} remotely with args ${JSON.stringify(appArgs)}`);
 		if (args.cwd)
@@ -403,8 +406,21 @@ export class DartDebugSession extends DebugSession {
 		return this.remoteEditorTerminalLaunched;
 	}
 
-	private buildAppArgs(args: DartLaunchArgs) {
-		let appArgs = [];
+	private buildExecutionInfo(binPath: string, args: DartLaunchArgs): ExecutionInfo {
+		const customTool = {
+			replacesArgs: args.customToolReplacesArgs,
+			script: args.customTool,
+		};
+		const execution = usingCustomScript(
+			binPath,
+			[],
+			customTool,
+		);
+		let appArgs = execution.args;
+
+		if (args.toolArgs)
+			appArgs = appArgs.concat(args.toolArgs);
+
 		if (this.shouldConnectDebugger) {
 			this.expectAdditionalPidToTerminate = true;
 			appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
@@ -417,15 +433,15 @@ export class DartDebugSession extends DebugSession {
 			appArgs.push("-DSILENT_OBSERVATORY=true");
 		}
 
-		if (args.toolArgs)
-			appArgs = appArgs.concat(args.toolArgs);
-
 		appArgs.push(this.sourceFileForArgs(args));
 
 		if (args.args)
 			appArgs = appArgs.concat(args.args);
 
-		return appArgs;
+		return {
+			args: appArgs,
+			executable: execution.executable,
+		};
 	}
 
 	protected convertObservatoryUriToVmServiceUri(uri: string) {

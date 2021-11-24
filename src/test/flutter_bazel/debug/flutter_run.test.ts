@@ -1,9 +1,10 @@
 import * as path from "path";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
+import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, flutterBazelHelloWorldMainFile, prepareHasRunFile, watchPromise } from "../../helpers";
+import { activate, ensureHasRunRecently, flutterBazelHelloWorldMainFile, flutterBazelRoot, prepareHasRunFile, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -26,7 +27,8 @@ describe(`flutter run debugger`, () => {
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 
 	it("runs using custom script", async () => {
-		const hasRunFile = prepareHasRunFile("flutter_run");
+		const root = fsPath(flutterBazelRoot);
+		const hasRunFile = prepareHasRunFile(root, "flutter_run");
 
 		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
@@ -40,6 +42,6 @@ describe(`flutter run debugger`, () => {
 			dc.terminateRequest(),
 		);
 
-		ensureHasRunRecently(hasRunFile);
+		ensureHasRunRecently(root, hasRunFile);
 	});
 });

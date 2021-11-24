@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as vs from "vscode";
 import { isWin } from "../../shared/constants";
-import { activate, prepareHasRunFile, waitForResult } from "../helpers";
+import { fsPath } from "../../shared/utils/fs";
+import { activate, flutterBazelRoot, prepareHasRunFile, waitForResult } from "../helpers";
 
 describe("flutter daemon", () => {
 	beforeEach(function () {
@@ -12,7 +13,7 @@ describe("flutter daemon", () => {
 	beforeEach("activate", () => activate());
 
 	it("runs using custom script", async () => {
-		const hasRunFile = prepareHasRunFile("daemon");
+		const hasRunFile = prepareHasRunFile(fsPath(flutterBazelRoot), "daemon");
 
 		// Restart the extension so the daemon is restarted and will create
 		// the hasRun file when it started (since we deleted it in prepareHasRunFile

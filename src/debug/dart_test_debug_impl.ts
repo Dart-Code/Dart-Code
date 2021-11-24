@@ -6,6 +6,7 @@ import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger, SpawnedProcess } from "../shared/interfaces";
 import { ErrorNotification, GroupNotification, PrintNotification, SuiteNotification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
+import { usingCustomScript } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
 import { DebugAdapterLogger } from "./logging";
 import { TestRunner } from "./test_runner";
@@ -60,11 +61,24 @@ export class DartTestDebugSession extends DartDebugSession {
 			appArgs.push(path.join(args.dartSdkPath, pubSnapshotPath));
 			appArgs = appArgs.concat(["run", "test"]);
 		}
-		appArgs = appArgs.concat(["-r", "json"]);
-		appArgs.push("-j1"); // Only run single-threaded in the runner.
+
+		const customTool = {
+			replacesArgs: args.customToolReplacesArgs,
+			script: args.customTool,
+		};
+		const execution = usingCustomScript(
+			dartPath,
+			appArgs,
+			customTool,
+		);
+		appArgs = execution.args;
 
 		if (args.toolArgs)
 			appArgs = appArgs.concat(args.toolArgs);
+
+		appArgs = appArgs.concat(["-r", "json"]);
+		appArgs.push("-j1"); // Only run single-threaded in the runner.
+
 
 		if (args.program)
 			appArgs.push(this.sourceFileForArgs(args));
@@ -73,7 +87,7 @@ export class DartTestDebugSession extends DartDebugSession {
 			appArgs = appArgs.concat(args.args);
 
 		const logger = new DebugAdapterLogger(this, LogCategory.DartTest);
-		return this.createRunner(dartPath, args.cwd, appArgs, args.env, args.dartTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(execution.executable, args.cwd, appArgs, args.env, args.dartTestLogFile, logger, args.maxLogLineLength);
 	}
 
 	protected createRunner(executable: string, projectFolder: string | undefined, args: string[], envOverrides: { [key: string]: string | undefined } | undefined, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {

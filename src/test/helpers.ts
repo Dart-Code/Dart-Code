@@ -1000,20 +1000,30 @@ export async function captureDebugSessionCustomEvents(startDebug: () => void): P
 	return events;
 }
 
-export function prepareHasRunFile(name: string) {
-	const hasRunFile = path.join(fsPath(flutterBazelRoot), `scripts/has_run/${name}`);
+export function prepareHasRunFile(root: string, name: string) {
+	const hasRunFile = path.join(root, `scripts/has_run/${name}`);
 	deleteFileIfExists(hasRunFile);
 	return hasRunFile;
 }
 
-export function ensureHasRunRecently(name: string, allowedModificationSeconds = 60) {
+export function ensureHasRunRecently(root: string, name: string, allowedModificationSeconds = 60) {
 	const hasRunFile = path.isAbsolute(name)
 		? name
-		: path.join(fsPath(flutterBazelRoot), `scripts/has_run/${name}`);
+		: path.join(root, `scripts/has_run/${name}`);
 	assert.ok(fs.existsSync(hasRunFile));
 	const lastModified = fs.statSync(hasRunFile).mtime;
 	const modifiedSecondsAgo = (Date.now() - lastModified.getTime()) / 1000;
 	assert.ok(modifiedSecondsAgo < allowedModificationSeconds, `File hasn't been modified for ${modifiedSecondsAgo} seconds`);
+}
+
+export function ensureHasRunWithArgsStarting(root: string, name: string, expectedArgs: string) {
+	ensureHasRunRecently(root, name);
+	const hasRunFile = path.isAbsolute(name)
+		? name
+		: path.join(root, `scripts/has_run/${name}`);
+	assert.ok(fs.existsSync(hasRunFile));
+	const contents = fs.readFileSync(hasRunFile).toString();
+	assert.ok(contents.trim().startsWith(expectedArgs.trim()), `Contents:\n${contents}\nExpected start:\n${expectedArgs}`);
 }
 
 export async function saveTrivialChangeToFile(uri: vs.Uri) {
