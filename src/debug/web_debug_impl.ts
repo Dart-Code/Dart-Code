@@ -23,11 +23,18 @@ export class WebDebugSession extends FlutterDebugSession {
 		// 	}
 		// }
 
-		if (args.args) {
+		if (args.toolArgs)
+			appArgs = appArgs.concat(args.toolArgs);
+
+		if (args.args)
 			appArgs = appArgs.concat(args.args);
-		}
+
+		const customTool = {
+			replacesArgs: args.customToolReplacesArgs,
+			script: args.customTool,
+		};
 
 		// TODO: Attach?
-		return new WebRun(isAttach ? RunMode.Attach : RunMode.Run, this.dartCapabilities, args.dartSdkPath, args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.webDaemonLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+		return new WebRun(isAttach ? RunMode.Attach : RunMode.Run, this.dartCapabilities, args.dartSdkPath, customTool, args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.webDaemonLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 }

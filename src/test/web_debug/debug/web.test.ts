@@ -4,8 +4,8 @@ import * as vs from "vscode";
 import { DebuggerType, VmService } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureVariable, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
+import { createDebugClient, ensureVariable, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { activate, closeAllOpenFiles, defer, delay, ensureHasRunWithArgsStarting, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 describe("web debugger", () => {
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
@@ -34,6 +34,29 @@ describe("web debugger", () => {
 			watchPromise("waitForEvent(terminated)", dc.waitForEvent("terminated")),
 			watchPromise("terminateRequest", dc.terminateRequest()),
 		);
+	});
+
+	it("can run using a custom tool", async () => {
+		const root = fsPath(webHelloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "web");
+
+		const config = await startDebugger(dc, webHelloWorldIndexFile, {
+			customTool: path.join(root, "scripts/custom_web.sh"),
+			// (dart) pub global run webdev daemon
+			customToolReplacesArgs: 5,
+			toolArgs: "--",
+		});
+		await waitAllThrowIfTerminates(dc,
+			watchPromise("assertOutputContains(serving web on)", dc.assertOutputContains("console", "Serving `web` on http://127.0.0.1:")),
+			watchPromise("configurationSequence", dc.configurationSequence()),
+			watchPromise("launch", dc.launch(config)),
+		);
+		await waitAllThrowIfTerminates(dc,
+			watchPromise("waitForEvent(terminated)", dc.waitForEvent("terminated")),
+			watchPromise("terminateRequest", dc.terminateRequest()),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, "--");
 	});
 
 	it("expected debugger services are available in debug mode", async () => {
