@@ -227,7 +227,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			warnIfPathCaseMismatch(logger, debugConfig.program, "the launch script", "check the 'program' field in your launch configuration file (.vscode/launch.json)");
 
 		this.analytics.logDebuggerStart(folder && folder.uri, DebuggerType[debugType], debugConfig.noDebug ? "Run" : "Debug");
-		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.PubTest) {
+		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.DartTest) {
 			const suitePaths = isTestFolder(debugConfig.program)
 				? Object.values(this.testModel.suites)
 					.map((suite) => suite.path)
@@ -331,7 +331,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			switch (debugType) {
 				case DebuggerType.Dart:
 					if (canPubRunTest)
-						debugType = DebuggerType.PubTest;
+						debugType = DebuggerType.DartTest;
 					break;
 				case DebuggerType.Flutter:
 					if (isIntegrationTest) {
@@ -508,7 +508,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
 		debugConfig.webDaemonLogFile = this.insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
-		debugConfig.pubTestLogFile = this.insertSessionName(debugConfig, debugConfig.pubTestLogFile || conf.pubTestLogFile);
+		debugConfig.dartTestLogFile = this.insertSessionName(debugConfig, debugConfig.dartTestLogFile || conf.dartTestLogFile);
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries
 			: !!config.debugSdkLibraries;
@@ -558,7 +558,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			case DebuggerType.Dart:
 				args = args.concat(await this.buildDartToolArgs(debugConfig, conf));
 				break;
-			case DebuggerType.PubTest:
+			case DebuggerType.DartTest:
 				args = args.concat(await this.buildDartTestToolArgs(debugConfig, conf));
 				break;
 			case DebuggerType.Flutter:

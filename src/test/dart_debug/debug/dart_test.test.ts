@@ -23,7 +23,7 @@ describe("dart test debugger", () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
-		dc = createDebugClient(DebuggerType.PubTest);
+		dc = createDebugClient(DebuggerType.DartTest);
 	});
 
 	beforeEach("clear test tree", () => clearTestTree());
@@ -210,7 +210,7 @@ describe("dart test debugger", () => {
 		const runTests = async () => {
 			// Create separate debug clients for each run, else we'll send multiple
 			// launchRequests to the same one.
-			const testDc = createDebugClient(DebuggerType.PubTest);
+			const testDc = createDebugClient(DebuggerType.DartTest);
 			const config = await startDebugger(testDc, helloWorldTestShortFile);
 			config.noDebug = true;
 			await waitAllThrowIfTerminates(testDc,

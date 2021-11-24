@@ -13,13 +13,13 @@ export function getExtensionLogPath() {
 export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server": LogCategory.Analyzer,
 	"Command Processes": LogCategory.CommandProcesses,
+	"Dart Test": LogCategory.DartTest,
 	"Debugger DAP Protocol": LogCategory.DAP,
 	"Debugger VM Service": LogCategory.VmService,
 	"DevTools": LogCategory.DevTools,
 	"Flutter Device Daemon": LogCategory.FlutterDaemon,
 	"Flutter Run": LogCategory.FlutterRun,
 	"Flutter Test": LogCategory.FlutterTest,
-	"Pub Run Test": LogCategory.PubTest,
 	"Web Daemon": LogCategory.WebDaemon,
 };
 

@@ -18,7 +18,7 @@ export function getDebugAdapterName(debugType: DebuggerType) {
 		case DebuggerType.Dart:
 			debuggerName = "dart";
 			break;
-		case DebuggerType.PubTest:
+		case DebuggerType.DartTest:
 			debuggerName = "dart_test";
 			break;
 		default:

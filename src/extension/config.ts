@@ -57,6 +57,7 @@ class Config {
 	get cliConsole(): "debugConsole" | "terminal" | "externalTerminal" { return this.getConfig<"debugConsole" | "terminal" | "externalTerminal">("cliConsole", "debugConsole"); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
 	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
+	get dartTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null))); }
 	get debugExtensionBackendProtocol(): "sse" | "ws" { return this.getConfig<"sse" | "ws">("debugExtensionBackendProtocol", "ws"); }
 	get debugExternalPackageLibraries(): boolean { return this.getConfig<boolean>("debugExternalPackageLibraries", false); }
 	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
@@ -120,7 +121,6 @@ class Config {
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
 	get useLsp(): boolean { return this.getConfig<boolean>("useLsp", true); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
-	get pubTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("pubTestLogFile", null))); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
 	get shareDevToolsWithFlutter(): boolean { return this.getConfig<boolean>("shareDevToolsWithFlutter", true); }
@@ -188,6 +188,7 @@ export class ResourceConfig {
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get completeFunctionCalls(): boolean { return this.getConfig<boolean>("completeFunctionCalls", true); }
 	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
+	get dartTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null))); }
 	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
 	get doNotFormat(): string[] { return this.getConfig<string[]>("doNotFormat", []); }
 	get enableCompletionCommitCharacters(): boolean { return this.getConfig<boolean>("enableCompletionCommitCharacters", false); }
@@ -209,7 +210,6 @@ export class ResourceConfig {
 	get lineLength(): number { return this.getConfig<number>("lineLength", 80); }
 	get promptToGetPackages(): boolean { return this.getConfig<boolean>("promptToGetPackages", true); }
 	get pubAdditionalArgs(): string[] { return this.getConfig<string[]>("pubAdditionalArgs", []); }
-	get pubTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("pubTestLogFile", null))); }
 	get runPubGetOnPubspecChanges(): boolean { return this.getConfig<boolean>("runPubGetOnPubspecChanges", true); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }

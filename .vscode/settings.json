@@ -18,7 +18,7 @@
 	//"dart.analyzerInstrumentationLogFile": "logs/analyzer.instrum.txt",
 	"dart.flutterRunLogFile": "logs/flutter_run.txt",
 	"dart.flutterTestLogFile": "logs/flutter_test.txt",
-	"dart.pubTestLogFile": "logs/pub_test.txt",
+	"dart.dartTestLogFile": "logs/dart_test.txt",
 	"dart.flutterDaemonLogFile": "logs/flutter_daemon.txt",
 	"dart.vmServiceLogFile": "logs/observatory.txt",
 	"dart.dapLogFile": "logs/dap.txt",

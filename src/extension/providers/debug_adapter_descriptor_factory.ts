@@ -18,9 +18,9 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const debuggerName = getDebugAdapterName(debuggerType);
 		this.logger.info(`Using ${debuggerName} debugger for ${DebuggerType[debuggerType]}`);
 
-		if (config.experimentalDartDapPath && (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.PubTest)) {
+		if (config.experimentalDartDapPath && (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.DartTest)) {
 			const args = [config.experimentalDartDapPath, "debug_adapter"];
-			if (debuggerType === DebuggerType.PubTest)
+			if (debuggerType === DebuggerType.DartTest)
 				args.push("--test");
 			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
 			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);

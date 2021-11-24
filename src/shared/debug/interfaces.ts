@@ -8,6 +8,7 @@ export interface DartLaunchArgs {
 	customToolReplacesArgs?: number,
 	cwd?: string;
 	dartSdkPath: string;
+	dartTestLogFile?: string;
 	debugExternalPackageLibraries: boolean;
 	debugSdkLibraries: boolean;
 	deleteServiceInfoFile?: boolean;
@@ -25,7 +26,6 @@ export interface DartLaunchArgs {
 	omitTargetFlag?: boolean; // Flutter Bazel
 	packages?: string;
 	program?: string;
-	pubTestLogFile?: string;
 	request: "launch" | "attach";
 	sendLogsToClient?: boolean;
 	showDartDeveloperLogs: boolean;

@@ -1,6 +1,6 @@
 export enum DebuggerType {
 	Dart,
-	PubTest,
+	DartTest,
 	Flutter,
 	FlutterTest,
 	Web,
@@ -56,7 +56,7 @@ export enum LogCategory {
 	DAP,
 	DevTools,
 	Analyzer,
-	PubTest,
+	DartTest,
 	FlutterDaemon,
 	FlutterRun,
 	FlutterTest,

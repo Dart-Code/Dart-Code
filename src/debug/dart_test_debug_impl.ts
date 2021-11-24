@@ -72,8 +72,8 @@ export class DartTestDebugSession extends DartDebugSession {
 		if (args.args)
 			appArgs = appArgs.concat(args.args);
 
-		const logger = new DebugAdapterLogger(this, LogCategory.PubTest);
-		return this.createRunner(dartPath, args.cwd, appArgs, args.env, args.pubTestLogFile, logger, args.maxLogLineLength);
+		const logger = new DebugAdapterLogger(this, LogCategory.DartTest);
+		return this.createRunner(dartPath, args.cwd, appArgs, args.env, args.dartTestLogFile, logger, args.maxLogLineLength);
 	}
 
 	protected createRunner(executable: string, projectFolder: string | undefined, args: string[], envOverrides: { [key: string]: string | undefined } | undefined, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {

@@ -42,7 +42,7 @@ export function createDebugClient(debugType: DebuggerType) {
 	defer(() => {
 		if (!dc.hasStarted)
 			return;
-		if (debugType === DebuggerType.PubTest) {
+		if (debugType === DebuggerType.DartTest) {
 			// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 			// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 			// a second request and that'll cause it to quit immediately.
