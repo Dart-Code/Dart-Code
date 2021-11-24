@@ -502,7 +502,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
 		debugConfig.args = debugConfig.args || [];
-		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf);
+		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
+		debugConfig.toolArgs = debugConfig.toolArgs || await this.buildToolArgs(debugType, debugConfig, conf);
 		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
 		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
@@ -576,7 +577,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const args: string[] = [];
 		const isDebug = debugConfig.noDebug !== true;
 
-		this.addArgsIfNotExist(args, ...conf.vmAdditionalArgs);
+		this.addArgsIfNotExist(args, ...conf.cliAdditionalArgs);
 
 		if (isDebug && debugConfig.enableAsserts !== false) // undefined = on
 			this.addArgsIfNotExist(args, "--enable-asserts");

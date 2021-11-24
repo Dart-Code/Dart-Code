@@ -34,6 +34,7 @@ export interface DartLaunchArgs {
 	type: "dart";
 	useInspectorNotificationsForWidgetErrors?: boolean;
 	toolArgs?: string[];
+	vmAdditionalArgs?: string[];
 	vmServiceInfoFile?: string;
 	vmServiceLogFile?: string;
 	vmServicePort?: number;

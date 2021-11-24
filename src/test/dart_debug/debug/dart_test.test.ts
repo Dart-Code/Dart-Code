@@ -51,7 +51,7 @@ describe("dart test debugger", () => {
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--fake-flag"]);
 		});
 
-		it("when vmAdditionalArgs is set", async () => {
+		it("when testAdditionalArgs is set", async () => {
 			await setConfigForTest("dart", "testAdditionalArgs", ["--my-test-flag"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldTestMainFile),

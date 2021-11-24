@@ -2105,6 +2105,15 @@
 						"description": "Whether to show DevTools buttons in the floating Debug toolbar.",
 						"scope": "window"
 					},
+					"dart.cliAdditionalArgs": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "Additional args to pass to the `dart` command when running CLI scripts. Using the `args`/`toolArgs` fields in `launch.json` is usually better than this setting as this setting will apply to _all_ projects.",
+						"scope": "resource",
+						"items": {
+							"type": "string"
+						}
+					},
 					"dart.testAdditionalArgs": {
 						"type": "array",
 						"default": [],
@@ -2117,7 +2126,7 @@
 					"dart.vmAdditionalArgs": {
 						"type": "array",
 						"default": [],
-						"description": "Additional args to pass to the Dart VM when running/debugging command line apps. Using the `args`/`toolArgs` fields in `launch.json` is usually better than this setting as this setting will apply to _all_ projects.",
+						"description": "Additional args to pass to the Dart VM when running/debugging command line apps or Dart test scripts.",
 						"scope": "resource",
 						"items": {
 							"type": "string"

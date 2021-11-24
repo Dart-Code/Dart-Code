@@ -50,6 +50,8 @@ export class DartTestDebugSession extends DartDebugSession {
 		}
 
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
+		if (args.vmAdditionalArgs)
+			appArgs = appArgs.concat(args.vmAdditionalArgs);
 		if (this.dartCapabilities.supportsDartRunTest) {
 			// Use "dart --vm-args run test:test"
 			appArgs.push("run");

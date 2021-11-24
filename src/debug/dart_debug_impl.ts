@@ -413,7 +413,7 @@ export class DartDebugSession extends DebugSession {
 		};
 		const execution = usingCustomScript(
 			binPath,
-			[],
+			args.vmAdditionalArgs ?? [],
 			customTool,
 		);
 		let appArgs = execution.args;
