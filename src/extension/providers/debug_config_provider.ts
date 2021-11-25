@@ -503,7 +503,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
-		debugConfig.toolArgs = debugConfig.toolArgs || await this.buildToolArgs(debugType, debugConfig, conf);
+		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf);
 		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
 		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
