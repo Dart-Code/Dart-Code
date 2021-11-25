@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { dartCodeExtensionIdentifier } from "../shared/constants";
+import { dartCodeExtensionIdentifier, isWin } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
@@ -27,6 +27,7 @@ export const fakeCancellationToken: vs.CancellationToken = {
 	isCancellationRequested: false,
 	onCancellationRequested: () => ({ dispose: () => undefined }),
 };
+export const customScriptExt = isWin ? "bat" : "sh";
 
 if (!ext) {
 	logger.error("Quitting with error because extension failed to load.");
@@ -1022,7 +1023,11 @@ export function ensureHasRunWithArgsStarting(root: string, name: string, expecte
 		? name
 		: path.join(root, `scripts/has_run/${name}`);
 	assert.ok(fs.existsSync(hasRunFile));
-	const contents = fs.readFileSync(hasRunFile).toString();
+	const contents = fs.readFileSync(hasRunFile).toString()
+		// On Windows we get all the quotes from the args, but they're not
+		// important for the test so strip them so we can use the same
+		// expectation across platforms.
+		.replace(/"/g, "");
 	assert.ok(contents.trim().startsWith(expectedArgs.trim()), `Contents:\n${contents}\nExpected start:\n${expectedArgs}`);
 }
 

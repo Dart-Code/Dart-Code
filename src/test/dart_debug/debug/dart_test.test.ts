@@ -9,7 +9,7 @@ import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldFolder, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldFolder, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -116,7 +116,7 @@ describe("dart test debugger", () => {
 		const hasRunFile = prepareHasRunFile(root, "dart_test");
 
 		const config = await startDebugger(dc, helloWorldTestMainFile, {
-			customTool: path.join(root, "scripts/custom_test.sh"),
+			customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
 			// Replace "run --no-spawn-devtools test:test"
 			customToolReplacesArgs: 3,
 			noDebug: true,

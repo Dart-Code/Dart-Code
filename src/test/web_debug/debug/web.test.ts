@@ -5,7 +5,7 @@ import { DebuggerType, VmService } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureVariable, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, defer, delay, ensureHasRunWithArgsStarting, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
+import { activate, closeAllOpenFiles, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 describe("web debugger", () => {
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
@@ -41,7 +41,7 @@ describe("web debugger", () => {
 		const hasRunFile = prepareHasRunFile(root, "web");
 
 		const config = await startDebugger(dc, webHelloWorldIndexFile, {
-			customTool: path.join(root, "scripts/custom_web.sh"),
+			customTool: path.join(root, `scripts/custom_web.${customScriptExt}`),
 			// (dart) pub global run webdev daemon
 			customToolReplacesArgs: 5,
 			toolArgs: "--",
