@@ -127,7 +127,7 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "-r json -j1 test/basic_test.dart");
+		ensureHasRunWithArgsStarting(root, hasRunFile, `-r json -j1 test${path.sep}basic_test.dart`);
 	});
 
 	it("receives the expected events from a Dart test script", async () => {
