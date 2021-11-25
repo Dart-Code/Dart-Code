@@ -2105,6 +2105,21 @@
 						"description": "Whether to show DevTools buttons in the floating Debug toolbar.",
 						"scope": "window"
 					},
+					"dart.suppressTestTimeouts": {
+						"enum": [
+							"never",
+							"debug",
+							"always"
+						],
+						"enumDescriptions": [
+							"Do not suppress test timeouts",
+							"Suppress test timeouts when Debugging",
+							"Suppress test timeouts both when Running and Debugging"
+						],
+						"default": "never",
+						"markdownDescription": "Whether to suppress test timeouts when running/debugging tests. This currently works by increasing the default timeout to 1d but will not affect tests that have explicit (non-factor) timeouts set with @timeout.",
+						"scope": "resource"
+					},
 					"dart.cliAdditionalArgs": {
 						"type": "array",
 						"default": [],

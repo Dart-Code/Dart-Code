@@ -38,7 +38,6 @@ describe("dart test debugger", () => {
 	}
 
 	describe("resolves the correct debug config", () => {
-
 		it("passing launch.json's toolArgs to the VM", async () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldTestMainFile),
@@ -60,6 +59,14 @@ describe("dart test debugger", () => {
 			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--my-test-flag"]);
 		});
 
+		it("when suppressTestTimeouts is set", async () => {
+			await setConfigForTest("dart", "suppressTestTimeouts", "always");
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(helloWorldTestMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--timeout"]);
+		});
 	});
 
 	it("runs a Dart test script to completion", async () => {

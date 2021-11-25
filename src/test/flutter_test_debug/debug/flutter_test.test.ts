@@ -34,13 +34,22 @@ describe("flutter test debugger", () => {
 			assert.deepStrictEqual(resolvedConfig.args, ["--foo"]);
 		});
 
-		it("with flutterTestAdditionalArgs is set", async () => {
+		it("when flutterTestAdditionalArgs is set", async () => {
 			await setConfigForTest("dart", "flutterTestAdditionalArgs", ["--no-sound-null-safety"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(flutterTestMainFile),
 			})!;
 
 			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--no-sound-null-safety"]);
+		});
+
+		it("when suppressTestTimeouts is set", async () => {
+			await setConfigForTest("dart", "suppressTestTimeouts", "always");
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				program: fsPath(flutterTestMainFile),
+			})!;
+
+			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--timeout"]);
 		});
 	});
 

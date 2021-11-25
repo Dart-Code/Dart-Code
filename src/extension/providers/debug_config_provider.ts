@@ -589,6 +589,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const args: string[] = [];
 
 		this.addArgsIfNotExist(args, ...conf.testAdditionalArgs);
+		if (conf.suppressTestTimeouts === "always" || (conf.suppressTestTimeouts === "debug" && !debugConfig.noDebug))
+			this.addArgsIfNotExist(args, "--timeout", "1d");
 
 		return args;
 	}
@@ -674,6 +676,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (debugConfig.deviceId)
 			this.addArgsIfNotExist(args, "-d", debugConfig.deviceId);
+
+		if (conf.suppressTestTimeouts === "always" || (conf.suppressTestTimeouts === "debug" && !debugConfig.noDebug))
+			this.addArgsIfNotExist(args, "--timeout", "1d");
 
 		return args;
 	}
