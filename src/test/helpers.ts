@@ -856,7 +856,9 @@ export function checkTreeNodeResults(actual: string, expected: string, descripti
 	// To simplify testing, expected always has forward slashes, but in reality should
 	// match the platform, so we should replace here. We must not replace on actual, as
 	// we need to verify that's correct for the platform.
-	assert.equal(actual, expected.replace(/[\/\\]/g, path.sep), description);
+	// Only replace them in the path parts, otherwise things like 0/1 Passed will
+	// be messed up.
+	assert.equal(actual, expected.replace(/(?<=\w+)([\/\\])(?=\w+\.dart)/g, path.sep), description);
 }
 
 export function delay(milliseconds: number): Promise<void> {
