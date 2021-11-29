@@ -37,6 +37,8 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 		// stop the client from working, so it needs to be hidden.
 		analyzerArgs.push(`-DSILENT_OBSERVATORY=true`);
 		analyzerArgs.push(`--disable-service-auth-codes`);
+		if (dartCapabilities.supportsNoServeDevTools)
+			analyzerArgs.push("--no-serve-devtools");
 		vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Please disable (unset the `dart.analyzerVmServicePort` setting) when no longer required.");
 	}
 
