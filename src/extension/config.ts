@@ -83,7 +83,6 @@ class Config {
 	get flutterCustomEmulators(): Array<{ id: string, name: string, executable: string, args?: string[] }> { return this.getConfig<Array<{ id: string, name: string, executable: string, args?: string[] }>>("flutterCustomEmulators", []); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
-	get hotReloadOnSave(): "never" | "always" | "manual" { return this.getConfig<"never" | "always" | "manual">("hotReloadOnSave", "never"); }
 	get flutterHotReloadOnSave(): "never" | "always" | "manual" {
 		const value = this.getConfig<"never" | "always" | "manual" | true | false>("flutterHotReloadOnSave", "manual");
 
@@ -106,6 +105,7 @@ class Config {
 	get flutterShowWebServerDevice(): "remote" | "always" { return this.getConfig<"remote" | "always">("flutterShowWebServerDevice", "remote"); }
 	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
 	get flutterWebRenderer(): "auto" | "html" | "canvaskit" { return this.getConfig<"auto" | "html" | "canvaskit">("flutterWebRenderer", "auto"); }
+	get hotReloadOnSave(): "never" | "always" | "manual" { return this.getConfig<"never" | "always" | "manual">("hotReloadOnSave", "never"); }
 	get hotReloadProgress(): "notification" | "statusBar" { return this.getConfig<"notification" | "statusBar">("hotReloadProgress", "notification"); }
 	get lspSnippetTextEdits(): boolean { return this.getConfig<boolean>("lspSnippetTextEdits", true); }
 	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }
@@ -119,8 +119,8 @@ class Config {
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
-	get useLsp(): boolean { return this.getConfig<boolean>("useLsp", true); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
+	get renameFilesWithClasses(): "never" | "prompt" | "always" { return this.getConfig<"never" | "prompt" | "always">("renameFilesWithClasses", "never"); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
 	get shareDevToolsWithFlutter(): boolean { return this.getConfig<boolean>("shareDevToolsWithFlutter", true); }
@@ -134,6 +134,7 @@ class Config {
 	get showTodos(): boolean { return this.getConfig<boolean>("showTodos", true); }
 	get triggerSignatureHelpAutomatically(): boolean { return this.getConfig<boolean>("triggerSignatureHelpAutomatically", false); }
 	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
+	get useLsp(): boolean { return this.getConfig<boolean>("useLsp", true); }
 	get vmServiceLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null))); }
 	get warnWhenEditingFilesInPubCache(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesInPubCache", true); }
 	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
