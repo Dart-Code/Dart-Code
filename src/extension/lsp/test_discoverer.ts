@@ -9,9 +9,9 @@ import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
-import { isTestFile } from "../utils";
+import { getExcludedFolders, isTestFile } from "../utils";
 
 export class TestDiscoverer implements IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
@@ -23,7 +23,7 @@ export class TestDiscoverer implements IAmDisposable {
 		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
 	}
 
-	public beginTestDiscovery() {
+	public async beginTestDiscovery() {
 		// Set up events for create/rename/delete.
 		this.disposables.push(
 			vs.workspace.onDidCreateFiles((e) => {
@@ -48,16 +48,15 @@ export class TestDiscoverer implements IAmDisposable {
 
 		// Process any existing things in the workspace.
 		try {
-			const workspaceFolders = getDartWorkspaceFolders();
-			const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-			topLevelFolders.forEach((folder) => this.discoverTests(folder));
+			const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+			await Promise.all(projectFolders.map((folder) => this.discoverTests(folder)));
 		} catch (e) {
 			this.logger.error(`Failed to discover tests: ${e}`);
 		}
 	}
 
 	private async discoverTests(fileOrDirectory: string, isDirectory?: boolean, level = 0) {
-		if (level > 5) return; // Max levels to discover tests.
+		if (level > 100) return; // Ensure we don't traverse too far or follow any cycles.
 
 		if (isTestFile(fileOrDirectory)) {
 			this.model.suiteDiscovered(undefined, fileOrDirectory);
