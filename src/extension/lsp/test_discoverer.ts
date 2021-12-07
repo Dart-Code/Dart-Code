@@ -19,43 +19,75 @@ export class TestDiscoverer implements IAmDisposable {
 	private readonly debounceTimers: { [key: string]: NodeJS.Timeout } = {};
 	private readonly debounceDuration = 1500;
 
+	private hasSetupFileHandlers = false;
+
+	private testDiscoveryPerformed: Promise<void> | undefined;
+
 	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
 	}
 
-	public async beginTestDiscovery() {
-		// Set up events for create/rename/delete.
-		this.disposables.push(
-			vs.workspace.onDidCreateFiles((e) => {
-				e.files.forEach((file) => {
-					const filePath = fsPath(file);
-					if (isTestFile(filePath))
-						this.model.suiteDiscovered(undefined, filePath);
-				});
-			}),
-			vs.workspace.onDidRenameFiles(async (e) => {
-				e.files.forEach(async (file) => {
-					this.model.clearSuiteOrDirectory(fsPath(file.oldUri));
-					this.discoverTests(fsPath(file.newUri));
-				});
-			}),
-			vs.workspace.onDidDeleteFiles(async (e) => {
-				e.files.forEach(async (file) => {
-					this.model.clearSuiteOrDirectory(fsPath(file));
-				});
-			}),
-		);
+	/// Performs suite discovery if it has not already finished. If discovery
+	/// is started (or already in progress), waits for it to complete.
+	public async ensureSuitesDiscovered() {
+		if (!this.testDiscoveryPerformed)
 
-		// Process any existing things in the workspace.
-		try {
-			const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
-			await Promise.all(projectFolders.map((folder) => this.discoverTests(folder)));
-		} catch (e) {
-			this.logger.error(`Failed to discover tests: ${e}`);
-		}
+			this.testDiscoveryPerformed = this.performSuiteDiscovery();
+
+		// Wait for discovery to complete, however it started.
+		await this.testDiscoveryPerformed;
 	}
 
-	private async discoverTests(fileOrDirectory: string, isDirectory?: boolean, level = 0) {
+	/// Immediately performs suite discovery. Use [ensureSuitesDiscovered] if you want
+	/// to just ensure discovery has run at least once.
+	///
+	/// Also sets up handlers so creating/renaming/deleting files updates the
+	/// discovered suite list correctly.
+	private async performSuiteDiscovery() {
+		// Set up events for create/rename/delete so we keep the suites updated
+		// once we have discovered them.
+		if (!this.hasSetupFileHandlers) {
+			this.hasSetupFileHandlers = true;
+			this.disposables.push(
+				vs.workspace.onDidCreateFiles((e) => {
+					e.files.forEach((file) => {
+						const filePath = fsPath(file);
+						if (isTestFile(filePath))
+							this.model.suiteDiscovered(undefined, filePath);
+					});
+				}),
+				vs.workspace.onDidRenameFiles(async (e) => {
+					e.files.forEach(async (file) => {
+						this.model.clearSuiteOrDirectory(fsPath(file.oldUri));
+						this.discoverTestSuites(fsPath(file.newUri));
+					});
+				}),
+				vs.workspace.onDidDeleteFiles(async (e) => {
+					e.files.forEach(async (file) => {
+						this.model.clearSuiteOrDirectory(fsPath(file));
+					});
+				}),
+			);
+		}
+
+		await vs.window.withProgress(
+			{
+				location: vs.ProgressLocation.Window,
+				title: "Discovering Tests…",
+			},
+			async () => {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				try {
+					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder)));
+				} catch (e) {
+					this.logger.error(`Failed to discover tests: ${e}`);
+				}
+			},
+		);
+	}
+
+	private async discoverTestSuites(fileOrDirectory: string, isDirectory?: boolean, level = 0) {
 		if (level > 100) return; // Ensure we don't traverse too far or follow any cycles.
 
 		if (isTestFile(fileOrDirectory)) {
@@ -64,10 +96,12 @@ export class TestDiscoverer implements IAmDisposable {
 			try {
 				const children = await vs.workspace.fs.readDirectory(vs.Uri.file(fileOrDirectory));
 
-				children
+				const childPromises = children
 					.map((item) => ({ name: item[0], type: item[1] }))
 					.filter((item) => !item.name.startsWith("."))
-					.forEach((item) => this.discoverTests(path.join(fileOrDirectory, item.name), item.type === vs.FileType.Directory, level + 1));
+					.map((item) => this.discoverTestSuites(path.join(fileOrDirectory, item.name), item.type === vs.FileType.Directory, level + 1));
+
+				await Promise.all(childPromises);
 			} catch (e: any) {
 				if (e.code !== "FileNotADirectory")
 					this.logger.error(`Failed to discover tests: ${e}`);

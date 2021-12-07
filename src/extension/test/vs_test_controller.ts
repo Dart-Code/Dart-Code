@@ -41,7 +41,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return;
 
 		if (!item) {
-			this.discoverer.beginTestDiscovery();
+			await this.discoverer.ensureSuitesDiscovered();
 			return;
 		}
 
@@ -65,6 +65,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
+		await this.discoverer?.ensureSuitesDiscovered();
+
 		const testsToRun = new Set<vs.TestItem>();
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
 		request.exclude?.forEach((item) => testsToRun.delete(item));
