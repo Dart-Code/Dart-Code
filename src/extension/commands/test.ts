@@ -69,18 +69,18 @@ export class TestCommands implements vs.Disposable {
 		}
 
 		const projectsWithTests = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
-			.map(getItemsToRunInProject)
-			.filter((tests) => tests.length);
+			.map((projectFolder) => ({ projectFolder, tests: getItemsToRunInProject(projectFolder) }))
+			.filter((project) => project.tests.length);
 		if (projectsWithTests.length === 0) {
 			vs.window.showErrorMessage("Unable to find any test folders");
 			return;
 		}
 
 		await Promise.all(projectsWithTests.map((projectWithTests) => {
-			const template = projectWithTests.length > 1
-				? { args: projectWithTests.slice(1) }
+			const template = projectWithTests.tests.length > 1
+				? { name: path.basename(projectWithTests.projectFolder), args: projectWithTests.tests.slice(1) }
 				: undefined;
-			return this.runTests(projectWithTests[0], false, undefined, false, true, template, testRun, undefined);
+			return this.runTests(projectWithTests.tests[0], false, undefined, false, true, template, testRun, undefined);
 		}));
 	}
 
@@ -108,7 +108,7 @@ export class TestCommands implements vs.Disposable {
 					shouldRunSkippedTests,
 					launchTemplate,
 				),
-				name: `${path.basename(programPath)} tests`,
+				name: launchTemplate?.name ?? `${path.basename(programPath)} tests`,
 			};
 
 			// Ensure we have a unique ID for this session so we can track when it completes.
