@@ -1336,7 +1336,7 @@
 				"editor.suggest.insertMode": "replace"
 			},
 			"files.watcherExclude": {
-				".dart_tool": true
+				"**/.dart_tool": true
 			}
 		},
 		"configuration": [
