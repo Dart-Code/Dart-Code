@@ -816,7 +816,7 @@
 				},
 				{
 					"command": "dart.openObservatory",
-					"when": "dart-code:anyProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.openAnalyzerDiagnostics",
@@ -858,55 +858,55 @@
 				},
 				{
 					"command": "flutter.toggleDebugPainting",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugPaint"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.debugPaint"
 				},
 				{
 					"command": "flutter.togglePerformanceOverlay",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.showPerformanceOverlay"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.showPerformanceOverlay"
 				},
 				{
 					"command": "flutter.overridePlatform",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.platformOverride"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.platformOverride"
 				},
 				{
 					"command": "flutter.toggleBrightness",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.brightnessOverride"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.brightnessOverride"
 				},
 				{
 					"command": "flutter.toggleRepaintRainbow",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.repaintRainbow"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.repaintRainbow"
 				},
 				{
 					"command": "flutter.toggleSlowAnimations",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.timeDilation"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.timeDilation"
 				},
 				{
 					"command": "flutter.toggleDebugModeBanner",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugAllowBanner"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.debugAllowBanner"
 				},
 				{
 					"command": "flutter.toggleCheckElevations",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugCheckElevationsEnabled"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.debugCheckElevationsEnabled"
 				},
 				{
 					"command": "flutter.togglePaintBaselines",
-					"when": "inDebugMode && dart-code:serviceExtension.ext.flutter.debugPaintBaselinesEnabled"
+					"when": "inDebugMode && debugType == dart && dart-code:serviceExtension.ext.flutter.debugPaintBaselinesEnabled"
 				},
 				{
 					"command": "flutter.inspectWidget",
-					"when": "inDebugMode && !dart-code:flutter.isInspectingWidget"
+					"when": "inDebugMode && debugType == dart && !dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.cancelInspectWidget",
-					"when": "inDebugMode && dart-code:flutter.isInspectingWidget"
+					"when": "inDebugMode && debugType == dart && dart-code:flutter.isInspectingWidget"
 				},
 				{
 					"command": "flutter.hotRestart",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && dart-code:service.hotRestart"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.hotRestart"
 				},
 				{
 					"command": "flutter.hotReload",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && dart-code:service.reloadSources"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources"
 				},
 				{
 					"command": "_dart.hotReload.touchBar",
@@ -914,11 +914,11 @@
 				},
 				{
 					"command": "flutter.openTimeline",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.hotReload",
-					"when": "inDebugMode"
+					"when": "inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.openDevTools",
@@ -930,27 +930,27 @@
 				},
 				{
 					"command": "dart.openDevToolsInspector",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsPerformance",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.openDevToolsMemory",
-					"when": "dart-code:anyProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.openDevToolsCpuProfiler",
-					"when": "dart-code:anyProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.openDevToolsNetwork",
-					"when": "dart-code:anyProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.openDevToolsLogging",
-					"when": "dart-code:anyProjectLoaded && inDebugMode"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",
@@ -1002,7 +1002,7 @@
 				},
 				{
 					"command": "flutter.screenshot",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "_flutter.screenshot.touchBar",
