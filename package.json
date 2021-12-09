@@ -544,7 +544,8 @@
 			{
 				"command": "dart.openDevToolsCpuProfiler",
 				"title": "Open DevTools CPU Profiler Page",
-				"category": "Dart"
+				"category": "Dart",
+				"icon": "media/commands/performance.svg"
 			},
 			{
 				"command": "dart.openDevToolsNetwork",
@@ -1024,6 +1025,11 @@
 					"command": "dart.openDevToolsPerformance",
 					"group": "navigation@90",
 					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:isInFlutterProfileModeDebugSession && config.dart.showDevToolsDebugToolBarButtons"
+				},
+				{
+					"command": "dart.openDevToolsCpuProfiler",
+					"group": "navigation@90",
+					"when": "!dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && config.dart.showDevToolsDebugToolBarButtons"
 				}
 			],
 			"touchBar": [
