@@ -1334,6 +1334,9 @@
 				"editor.insertSpaces": true,
 				"editor.detectIndentation": false,
 				"editor.suggest.insertMode": "replace"
+			},
+			"files.watcherExclude": {
+				".dart_tool": true
 			}
 		},
 		"configuration": [
