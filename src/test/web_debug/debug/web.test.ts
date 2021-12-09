@@ -196,7 +196,7 @@ describe("web debugger", () => {
 		);
 
 		logger.info("Executing dart.openDevTools");
-		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		const devTools = await vs.commands.executeCommand<{ url: string, dispose: () => void }>("dart.openDevTools");
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		assert.ok(devTools.url);

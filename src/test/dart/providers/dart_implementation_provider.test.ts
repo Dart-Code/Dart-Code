@@ -11,7 +11,7 @@ describe("dart_implementation_provider", () => {
 
 	async function getImplementationsAt(searchText: string): Promise<vs.Location[]> {
 		const position = positionOf(searchText);
-		const definitionResults = await (vs.commands.executeCommand("vscode.executeImplementationProvider", currentDoc().uri, position) as Thenable<vs.Location[]>);
+		const definitionResults = await vs.commands.executeCommand<vs.Location[]>("vscode.executeImplementationProvider", currentDoc().uri, position);
 
 		return definitionResults || [];
 	}

@@ -264,7 +264,7 @@ void printSomething() {
 			path: fsPath(helloWorldMainFile),
 		});
 
-		const devTools = await vs.commands.executeCommand("dart.openDevTools") as { url: string, dispose: () => void };
+		const devTools = await vs.commands.executeCommand<{ url: string, dispose: () => void }>("dart.openDevTools");
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		defer(devTools.dispose);

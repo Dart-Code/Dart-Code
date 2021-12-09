@@ -28,14 +28,14 @@ describe("fix_code_action_provider", () => {
 	});
 
 	it("returns expected items", async () => {
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Col||ors"));
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 		assert.ok(fixResults.find((r) => r.title.indexOf("Create local variable 'Colors'") !== -1));
 	});
 
 	it("does not contain duplicates", async () => {
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Col||ors")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Col||ors"));
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 		// Ensure no edit is the same as one that came before it.

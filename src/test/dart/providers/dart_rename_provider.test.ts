@@ -18,7 +18,7 @@ describe("rename_provider", () => {
 			var a = new Danny();
 			print(Danny.myField);
 		`);
-		const renameResult = await (vs.commands.executeCommand("vscode.executeDocumentRenameProvider", doc.uri, positionOf("D^anny"), "NewDanny") as Thenable<vs.WorkspaceEdit>);
+		const renameResult = await vs.commands.executeCommand<vs.WorkspaceEdit>("vscode.executeDocumentRenameProvider", doc.uri, positionOf("D^anny"), "NewDanny");
 		await vs.workspace.applyEdit(renameResult);
 		await ensureTestContent(`
 			class NewDanny {

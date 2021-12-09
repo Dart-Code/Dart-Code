@@ -524,7 +524,7 @@ export async function executeSortMembersCodeAction() {
 }
 
 export async function getCodeActions({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
-	const codeActions = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, range) as Thenable<vs.CodeAction[]>);
+	const codeActions = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, range);
 	const matchingActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!))
 		&& (!title || ca.title === title));
 	return matchingActions;
@@ -592,7 +592,7 @@ export function rangesOf(searchText: string): vs.Range[] {
 }
 
 export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>> {
-	const documentSymbolResult = await (vs.commands.executeCommand("vscode.executeDocumentSymbolProvider", currentDoc().uri) as Thenable<vs.DocumentSymbol[]>);
+	const documentSymbolResult = await vs.commands.executeCommand<vs.DocumentSymbol[]>("vscode.executeDocumentSymbolProvider", currentDoc().uri);
 	if (!documentSymbolResult)
 		return [];
 
@@ -605,12 +605,12 @@ export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { 
 }
 
 export async function getDefinitions(position: vs.Position): Promise<Array<vs.Location | vs.DefinitionLink>> {
-	const definitionResult = await (vs.commands.executeCommand("vscode.executeDefinitionProvider", currentDoc().uri, position) as Thenable<Array<vs.Location | vs.DefinitionLink>>);
+	const definitionResult = await vs.commands.executeCommand<Array<vs.Location | vs.DefinitionLink>>("vscode.executeDefinitionProvider", currentDoc().uri, position);
 	return definitionResult || [];
 }
 
 export async function getCodeLens(document: vs.TextDocument): Promise<vs.CodeLens[]> {
-	const fileCodeLens = await (vs.commands.executeCommand("vscode.executeCodeLensProvider", document.uri, 500) as Thenable<vs.CodeLens[]>);
+	const fileCodeLens = await vs.commands.executeCommand<vs.CodeLens[]>("vscode.executeCodeLensProvider", document.uri, 500);
 	return fileCodeLens || [];
 }
 
@@ -636,7 +636,7 @@ export function rangeFor(def: vs.Location | vs.DefinitionLink) {
 }
 
 export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInformation[]> {
-	const workspaceSymbolResult = await (vs.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", query) as Thenable<vs.SymbolInformation[]>);
+	const workspaceSymbolResult = await vs.commands.executeCommand<vs.SymbolInformation[]>("vscode.executeWorkspaceSymbolProvider", query);
 	return workspaceSymbolResult || [];
 }
 
@@ -772,7 +772,7 @@ export function snippetValue(text: string | vs.SnippetString | undefined) {
 
 export async function getCompletionsAt(searchText: string, triggerCharacter?: string, resolveCount = 1): Promise<vs.CompletionItem[]> {
 	const position = positionOf(searchText);
-	const results = await (vs.commands.executeCommand("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter, resolveCount) as Thenable<vs.CompletionList>);
+	const results = await vs.commands.executeCommand<vs.CompletionList>("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter, resolveCount);
 	return results.items;
 }
 

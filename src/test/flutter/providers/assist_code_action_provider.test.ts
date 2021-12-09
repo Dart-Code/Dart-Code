@@ -27,7 +27,7 @@ class Danny extends StatelessWidget {
     );
   }
 }`);
-		const actionResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Co||ntainer(")) as Thenable<vs.CodeAction[]>);
+		const actionResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Co||ntainer("));
 		assert.ok(actionResults);
 		assert.ok(actionResults.length);
 

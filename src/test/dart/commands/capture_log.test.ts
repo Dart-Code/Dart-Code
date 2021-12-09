@@ -18,7 +18,7 @@ describe("capture logs command", () => {
 			showQuickPick.resolves(undefined);
 
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
-		const loggingCommand = vs.commands.executeCommand("dart.startLogging") as Thenable<string>;
+		const loggingCommand = vs.commands.executeCommand<string | undefined>("dart.startLogging");
 
 		// Wait until the command has called for the filename and options (otherwise we'll send our log before
 		// the logger is set up because the above call is async).
@@ -29,14 +29,14 @@ describe("capture logs command", () => {
 			stopLogging: async () => {
 				await vs.commands.executeCommand("dart.stopLogging");
 				// Wait for the logging command to finish.
-				return loggingCommand;
+				return (await loggingCommand)!;
 			},
 		};
 	}
 
 	async function logWithCommand(command: string) {
 		// Start the logging but don't await it (it doesn't complete until we stop the logging!).
-		const loggingCommand = vs.commands.executeCommand(command) as Thenable<string>;
+		const loggingCommand = vs.commands.executeCommand<string>(command);
 
 		return {
 			loggingCommand,

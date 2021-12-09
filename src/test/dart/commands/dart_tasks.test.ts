@@ -17,7 +17,7 @@ describe("dart tasks", () => {
 				if (task.execution === taskExecution)
 					task.exitCode ? reject(new Error(`Task quit with code ${task.exitCode}`)) : resolve();
 			});
-			const taskExecution = await vs.commands.executeCommand("dart.task.dartdoc") as vs.TaskExecution;
+			const taskExecution = await vs.commands.executeCommand<vs.TaskExecution>("dart.task.dartdoc");
 		});
 		assert.ok(fs.existsSync(dartDocOutputPath));
 	});

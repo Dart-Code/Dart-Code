@@ -10,7 +10,7 @@ describe("dart_hover_provider", () => {
 
 	async function getHoversAt(searchText: string): Promise<Array<{ displayText: string, documentation?: string, range: vs.Range | undefined }>> {
 		const position = positionOf(searchText);
-		const hoverResult = await (vs.commands.executeCommand("vscode.executeHoverProvider", currentDoc().uri, position) as Thenable<vs.Hover[]>);
+		const hoverResult = await vs.commands.executeCommand<vs.Hover[]>("vscode.executeHoverProvider", currentDoc().uri, position);
 
 		// Our hovers are aways in the form:
 		// [{ language: "dart", value: data.displayString }, data.documentation || undefined],

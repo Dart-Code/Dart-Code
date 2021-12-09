@@ -207,14 +207,14 @@ async function handleFlutterCreateTrigger(wf: vs.WorkspaceFolder): Promise<void>
 }
 
 async function createDartProject(projectPath: string, templateName: string): Promise<boolean> {
-	const code = await vs.commands.executeCommand("_dart.create", projectPath, templateName) as number;
+	const code = await vs.commands.executeCommand<number>("_dart.create", projectPath, templateName);
 	return code === 0;
 }
 
 async function createFlutterProject(projectPath: string, triggerData: FlutterCreateTriggerData | undefined): Promise<boolean> {
 	const projectName = triggerData?.sample ? "sample" : undefined;
 	const args = { projectPath, projectName, triggerData } as FlutterCreateCommandArgs;
-	const code = await vs.commands.executeCommand("_flutter.create", args) as number;
+	const code = await vs.commands.executeCommand<number>("_flutter.create", args);
 	return code === 0;
 }
 

@@ -13,7 +13,7 @@ String name() {
 }
 		`);
 
-		const actions = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|"Danny"|`)) as Thenable<vs.CodeAction[]>);
+		const actions = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|"Danny"|`));
 		assert.ok(actions);
 		assert.ok(actions.length);
 

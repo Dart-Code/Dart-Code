@@ -7,7 +7,7 @@ describe("dart_signature_provider", () => {
 
 	async function getSignatureAt(searchText: string): Promise<vs.SignatureHelp> {
 		const position = positionOf(searchText);
-		return (vs.commands.executeCommand("vscode.executeSignatureHelpProvider", currentDoc().uri, position) as Thenable<vs.SignatureHelp>);
+		return vs.commands.executeCommand<vs.SignatureHelp>("vscode.executeSignatureHelpProvider", currentDoc().uri, position);
 	}
 
 	it("returns undefined for invalid area", async () => {

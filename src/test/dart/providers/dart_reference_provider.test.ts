@@ -8,9 +8,9 @@ describe("dart_reference_provider", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate everythingFile", () => activate(everythingFile));
 
-	async function getReferencesFor(searchText: string): Promise<vs.Location[] | undefined> {
+	async function getReferencesFor(searchText: string): Promise<vs.Location[]> {
 		const position = positionOf(searchText);
-		return (await vs.commands.executeCommand("vscode.executeReferenceProvider", currentDoc().uri, position)) as vs.Location[];
+		return await vs.commands.executeCommand<vs.Location[]>("vscode.executeReferenceProvider", currentDoc().uri, position);
 	}
 
 	it("returns expected location for definition of field reference", async () => {

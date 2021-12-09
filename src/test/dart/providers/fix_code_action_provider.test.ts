@@ -10,7 +10,7 @@ describe("fix_code_action_provider", () => {
 	it("modifies correct file when single edit is not in the original file", async function () {
 		await openFile(helloWorldCreateMethodClassBFile);
 		await waitForNextAnalysis(() => uncommentTestFile());
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("createNon||ExistentMethod")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("createNon||ExistentMethod"));
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
@@ -38,7 +38,7 @@ describe("fix_code_action_provider", () => {
 		defer(() => tryDelete(missingFile));
 		await openFile(emptyFile);
 		await setTestContent("import 'missing.dart'");
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|missing.dart|")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|missing.dart|"));
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
@@ -69,7 +69,7 @@ main() {
 	missing();
 }
 		`);
-		const fixResults = await (vs.commands.executeCommand("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|missing()|")) as Thenable<vs.CodeAction[]>);
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|missing()|"));
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 

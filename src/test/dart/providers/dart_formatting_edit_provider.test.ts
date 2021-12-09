@@ -13,7 +13,7 @@ describe("dart_formatting_edit_provider", () => {
 	const formattedContent = `main() {}${platformEol}`;
 
 	async function formatDocument(expectResult = true): Promise<void> {
-		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatDocumentProvider", currentDoc().uri, formattingOptions) as Thenable<vs.TextEdit[]>);
+		const formatResult = await vs.commands.executeCommand<vs.TextEdit[]>("vscode.executeFormatDocumentProvider", currentDoc().uri, formattingOptions);
 		if (expectResult) {
 			assert.ok(formatResult);
 			assert.ok(formatResult.length);
@@ -25,7 +25,7 @@ describe("dart_formatting_edit_provider", () => {
 
 	async function formatOnType(searchText: string, character: string): Promise<void> {
 		const position = positionOf(searchText);
-		const formatResult = await (vs.commands.executeCommand("vscode.executeFormatOnTypeProvider", currentDoc().uri, position, character, formattingOptions) as Thenable<vs.TextEdit[]>);
+		const formatResult = await vs.commands.executeCommand<vs.TextEdit[]>("vscode.executeFormatOnTypeProvider", currentDoc().uri, position, character, formattingOptions);
 		assert.ok(formatResult);
 		assert.ok(formatResult.length);
 		await currentEditor().edit((b) => formatResult.forEach((f) => b.replace(f.range, f.newText)));
