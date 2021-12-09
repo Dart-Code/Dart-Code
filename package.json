@@ -2364,6 +2364,16 @@
 								"type": "boolean",
 								"description": "Show memory usage for your Flutter app in the status bar during debug sessions (if not set, will automatically show for profile builds).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage."
 							},
+							"openDevTools": {
+								"description": "Which to automatically open a particular DevTools page when starting the debug session.",
+								"enum": [
+									"cpu-profiler",
+									"memory",
+									"performance",
+									"network",
+									"logging"
+								]
+							},
 							"flutterMode": {
 								"description": "The mode for launching the Flutter app:\n\ndebug: Turns on all assertions, includes all debug information, enables all debugger aids and optimizes for fast dev cycles\n\nrelease: Turns off all assertions, strips as much debug information as possible, turns of debugger aids and optimises for fast startup, fast execution and small package sizes.\n\nprofile: Same as release mode exept profiling aids and tracing are enabled.",
 								"enum": [
