@@ -114,7 +114,7 @@ export class EditCommands implements vs.Disposable {
 		}
 	}
 
-	private prefixLines(editor: vs.TextEditor, selections: vs.Selection[], prefix: string) {
+	private prefixLines(editor: vs.TextEditor, selections: readonly vs.Selection[], prefix: string) {
 		const document = editor.document;
 		// In case we have overlapping selections, keep track of lines we've done.
 		const doneLines = new Set<number>();
@@ -151,7 +151,7 @@ export class EditCommands implements vs.Disposable {
 		});
 	}
 
-	private removeLinePrefixes(editor: vs.TextEditor, selections: vs.Selection[], prefixes: string[]) {
+	private removeLinePrefixes(editor: vs.TextEditor, selections: readonly vs.Selection[], prefixes: string[]) {
 		const document = editor.document;
 		// In case we have overlapping selections, keep track of lines we've done.
 		const doneLines = new Set<number>();
