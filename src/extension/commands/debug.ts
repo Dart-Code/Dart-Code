@@ -138,7 +138,7 @@ export class DebugCommands implements IAmDisposable {
 		}));
 
 		// Misc custom debug commands.
-		this.disposables.push(vs.commands.registerCommand("_flutter.hotReload.touchBar", (args: any) => vs.commands.executeCommand("dart.hotReload", args)));
+		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.touchBar", (args: any) => vs.commands.executeCommand("dart.hotReload", args)));
 		this.disposables.push(vs.commands.registerCommand("flutter.hotReload", (args: any) => vs.commands.executeCommand("dart.hotReload", args)));
 		this.disposables.push(vs.commands.registerCommand("dart.hotReload", async (args?: any) => {
 			if (!debugSessions.length)
