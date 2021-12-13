@@ -136,6 +136,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		return this.addDependency(uri, packageInfo, isDevDependency);
 	}
 
+	/// Note: This is called by quick-fix as well as directly from the command palette.
 	private async addDependency(uri: string | vs.Uri, selectedPackage: PackageInfo, isDevDependency: boolean) {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
@@ -350,7 +351,7 @@ export type PickablePackage = vs.QuickPickItem & (PubPackage | LocalPubPackageMa
 export type PackageInfo = PubPackage | PathPubPackage | GitPubPackage;
 
 
-interface PubPackage {
+export interface PubPackage {
 	marker: undefined;
 	packageName: string;
 }

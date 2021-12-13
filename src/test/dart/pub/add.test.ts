@@ -54,7 +54,7 @@ describe("pub add", () => {
 		assert.equal(pubspecContainsText("git: https://github.com/dart-lang/timing"), true);
 	});
 
-	it("can add a dependency by URL by selecting pasting", async () => {
+	it("can add a dependency by URL by selecting the GIT option", async () => {
 		assert.equal(pubspecContainsPackage("timing"), false);
 		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves({ marker: "GIT" });
 		sb.stub(extApi.addDependencyCommand, "promptForGitUrl").resolves("https://github.com/dart-lang/timing");
@@ -74,8 +74,11 @@ describe("pub add", () => {
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
 
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
-		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies`) !== -1);
-		assert.equal(!!addDependency, true);
+		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies`) !== -1)!;
+
+		await vs.commands.executeCommand(addDependency.command!.command, ...addDependency.command!.arguments!);
+		await waitFor(() => pubspecContainsText(packageName));
+		assert.equal(pubspecContainsPackage(packageName), true);
 	});
 
 	it("cannot add from a quick fix if already listed in pubspec.yaml", async () => {

@@ -3,6 +3,7 @@ import * as path from "path";
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { PubPackage } from "../commands/add_dependency";
 import { locateBestProjectRoot } from "../project";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
@@ -95,7 +96,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 			action.command = {
 				arguments: [
 					document.uri,
-					packageName,
+					{ packageName } as PubPackage,
 					isDevDependency,
 				],
 				command: "_dart.addDependency",
