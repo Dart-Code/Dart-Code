@@ -7,6 +7,7 @@ import * as dartdoc from "../utils/dartdocs";
 export const extensionPath = extensions.getExtension(dartCodeExtensionIdentifier)!.extensionPath;
 export const extensionVersion = getExtensionVersion();
 export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
+export const isPreReleaseExtension = checkIsPreReleaseExtension();
 export const isDevExtension = checkIsDevExtension();
 export const hasFlutterExtension = checkHasFlutterExtension();
 export const docsIconPathFormat = Uri.file(path.join(extensionPath, "media/doc-icons/")).toString() + "$1%402x.png";
@@ -27,6 +28,12 @@ function getVsCodeVersionConstraint(): string {
 
 function checkIsDevExtension() {
 	return extensionVersion.endsWith("-dev");
+}
+
+function checkIsPreReleaseExtension() {
+	const segments = extensionVersion.split(".");
+	const minSegment = parseInt(segments[1]);
+	return minSegment % 2 === 1;
 }
 
 export function checkHasFlutterExtension() {

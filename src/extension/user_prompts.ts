@@ -6,7 +6,7 @@ import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
-import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
+import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
 import { envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
@@ -63,7 +63,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		// If we've not got a stored version, this is the first install, so just
 		// stash the current version and don't show anything.
 		context.lastSeenVersion = extensionVersion;
-	} else if (!isDevExtension && lastSeenVersionNotification !== extensionVersion) {
+	} else if (!isDevExtension && !isPreReleaseExtension && lastSeenVersionNotification !== extensionVersion) {
 		const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
 		// tslint:disable-next-line: no-floating-promises
 		promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
