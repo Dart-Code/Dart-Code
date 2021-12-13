@@ -292,7 +292,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		const name = device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
 			? this.knownEmulatorNames[device.emulatorId]
 			: device.name;
-		return `${icon}${name}`;
+		return `${icon ?? ""}${name}`;
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
