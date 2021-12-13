@@ -393,6 +393,7 @@ describe("flutter test debugger", () => {
 
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
 		config.noDebug = true;
+
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertPassingTest(`Counter App increments the counter`),
@@ -404,22 +405,30 @@ describe("flutter test debugger", () => {
 		if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
 			this.skip();
 
+		await openFile(flutterIntegrationTestFile);
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
-		await dc.hitBreakpoint(config, {
-			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(flutterIntegrationTestFile),
-		});
+
+		await waitAllThrowIfTerminates(dc,
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line,
+				path: fsPath(flutterIntegrationTestFile),
+			}),
+		);
 	});
 
 	it("stops at a breakpoint in app code in integration_test tests", async function () {
 		if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
 			this.skip();
 
+		await openFile(flutterHelloWorldCounterAppFile);
 		const config = await startDebugger(dc, flutterIntegrationTestFile);
-		await dc.hitBreakpoint(config, {
-			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: fsPath(flutterHelloWorldCounterAppFile),
-		});
+
+		await waitAllThrowIfTerminates(dc,
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line,
+				path: fsPath(flutterHelloWorldCounterAppFile),
+			}),
+		);
 	});
 });
 
