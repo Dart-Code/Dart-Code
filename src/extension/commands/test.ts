@@ -14,7 +14,7 @@ import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { isDartDocument } from "../editors";
 import { VsCodeTestController } from "../test/vs_test_controller";
-import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isTestFile } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isInsideFolderNamed, isTestFile } from "../utils";
 
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
 // HACK: Used for testing since we can't read contexts?
@@ -54,34 +54,56 @@ export class TestCommands implements vs.Disposable {
 	private async runAllTestsWithoutDebugging(suites?: SuiteNode[], testRun?: vs.TestRun): Promise<void> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
-		// as the first one that runs will be used for resolving package: URIs etc.
-		// So, fetch all project folders, then if we have suites, group them into those folders, and otherwise
-		// use their 'test' folders.
-		function getItemsToRunInProject(projectFolder: string) {
-			if (suites) {
-				return suites
-					.map((suite) => suite.suiteData.path)
-					.filter((suitePath) => isWithinPath(suitePath, projectFolder));
-			} else {
-				const testFolder = path.join(projectFolder, "test");
-				return fs.existsSync(testFolder) ? [testFolder] : [];
+		// as the first one that runs will be used for resolving package: URIs etc. We also can't mix and match
+		// integration tests with non-integration tests.
+		// So, fetch all project folders, then if we have suites in them, group them by that folders (and whether
+		// they're integration/non-integration), and otherwise use their 'test'/'integration_test' folders.
+
+		const projectsWithTests: Array<{ projectFolder: string, name: string, tests: string[] }> = [];
+
+		function addTestItemsForProject(projectFolder: string, integrationTests: boolean) {
+			if (!suites)
+				return;
+
+			const tests = suites
+				.map((suite) => suite.suiteData.path)
+				.filter((suitePath) => isWithinPath(suitePath, projectFolder))
+				.filter((suitePath) => isInsideFolderNamed(suitePath, "integration_test") === integrationTests);
+
+
+			if (tests.length) {
+				const projectName = path.basename(projectFolder);
+				const testType = integrationTests ? "Integration Tests" : "Tests";
+				const name = `${projectName} ${testType}`;
+
+				projectsWithTests.push({ projectFolder, name, tests });
 			}
 		}
 
-		const projectsWithTests = (await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true }))
-			.map((projectFolder) => ({ projectFolder, tests: getItemsToRunInProject(projectFolder) }))
-			.filter((project) => project.tests.length);
+		const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+		for (const projectFolder of projectFolders) {
+			addTestItemsForProject(projectFolder, false);
+			addTestItemsForProject(projectFolder, true);
+		}
+
 		if (projectsWithTests.length === 0) {
 			vs.window.showErrorMessage("Unable to find any test folders");
 			return;
 		}
 
-		await Promise.all(projectsWithTests.map((projectWithTests) => {
-			const template = projectWithTests.tests.length > 1
-				? { name: path.basename(projectWithTests.projectFolder), args: projectWithTests.tests.slice(1) }
-				: undefined;
-			return this.runTests(projectWithTests.tests[0], false, undefined, false, true, template, testRun, undefined);
-		}));
+		await Promise.all(projectsWithTests.map((projectWithTests) => this.runTests(
+			projectWithTests.tests[0],
+			false,
+			undefined,
+			false,
+			true,
+			{
+				args: projectWithTests.tests.slice(1),
+				name: projectWithTests.name,
+			},
+			testRun,
+			undefined,
+		)));
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {

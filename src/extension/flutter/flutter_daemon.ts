@@ -44,6 +44,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		if (showWebServer && flutterCapabilities.supportsShowWebServerDevice)
 			daemonArgs.push("--show-web-server-device");
 
+		if (process.env.DART_CODE_IS_TEST_RUN)
+			daemonArgs.push("--show-test-device");
+
 		const execution = usingCustomScript(
 			path.join(workspaceContext.sdks.flutter, flutterPath),
 			["daemon"].concat(daemonArgs),

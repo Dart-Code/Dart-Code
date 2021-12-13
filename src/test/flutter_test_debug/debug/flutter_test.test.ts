@@ -7,7 +7,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, deferUntilLast, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, deferUntilLast, delay, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -238,6 +238,54 @@ describe("flutter test debugger", () => {
 			flutterTestOtherFile,
 			flutterTestAnotherFile,
 			flutterTestBrokenFile,
+		];
+
+		for (const file of testFiles) {
+			await openFile(file);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTestTextTree(file).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			checkTreeNodeResults(actualResults, expectedResults);
+		}
+	});
+
+	it("runs all tests through Test: Run All Tests", async () => {
+		let startedSessions = 0;
+		let runningSessions = 0;
+
+		const startSub = vs.debug.onDidStartDebugSession((s) => {
+			console.log("Started!");
+			startedSessions++;
+			runningSessions++;
+		});
+		const endSub = vs.debug.onDidTerminateDebugSession((s) => {
+			console.log("Ended!");
+			runningSessions--;
+		});
+
+		try {
+			await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
+			// Allow some time for sessions to start so the startedSessions check doesn't
+			// fire immediately after only creating the first session.
+			await delay(1000);
+			await waitFor(
+				() => startedSessions >= 0 && runningSessions === 0,
+				300, // check every 300ms
+				60000, // wait up to 60 seconds
+			);
+		} finally {
+			startSub.dispose();
+			endSub.dispose();
+		}
+
+		const testFiles = [
+			flutterTestMainFile,
+			flutterTestOtherFile,
+			flutterTestAnotherFile,
+			flutterTestBrokenFile,
+			flutterIntegrationTestFile,
 		];
 
 		for (const file of testFiles) {

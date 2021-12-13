@@ -3,6 +3,17 @@ import 'package:flutter_hello_world/counter.dart' as app;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
+// This comment is extracted by the test and compared to a text representation
+// built from the tree provider in the test. It must be maintained to match
+// the results from the tests below.
+// == EXPECTED RESULTS ==
+// integration_test/app_test.dart [3/3 passed] Passed
+//     Counter App [2/2 passed] Passed
+//         starts at 0 Passed
+//         increments the counter Passed
+//     (tearDownAll) Passed
+// == /EXPECTED RESULTS ==
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
