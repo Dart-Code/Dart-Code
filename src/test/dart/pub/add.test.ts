@@ -32,6 +32,15 @@ describe("pub add", () => {
 		assert.equal(pubspecContainsPackage("collection"), true);
 	});
 
+	it("can add a dependency with trailing whitespace using command", async () => {
+		assert.equal(pubspecContainsPackage("collection"), false);
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection ");
+
+		await vs.commands.executeCommand("dart.addDependency");
+		await waitFor(() => pubspecContainsPackage("collection"));
+		assert.equal(pubspecContainsPackage("collection"), true);
+	});
+
 	it("can add a dev-dependency using command", async () => {
 		assert.equal(pubspecContainsPackage("collection"), false);
 		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");

@@ -103,12 +103,13 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-		const selectedOption = await this.promptForPackageInfo();
+		let selectedOption = await this.promptForPackageInfo();
 		if (!selectedOption)
 			return;
 
 		let packageInfo: PackageInfo | undefined;
 		if (typeof selectedOption === "string") {
+			selectedOption = selectedOption.trim();
 			// For convenience, we handle string URLs/paths too.
 			if (selectedOption.startsWith("http://") || selectedOption.startsWith("https://"))
 				packageInfo = await this.promptForGitPackageInfo(selectedOption);
@@ -306,6 +307,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		let matches = new Set<string>();
 		// This list can be quite large, so avoid using .filter() if we can bail out early.
 		if (prefix) {
+			prefix = prefix.trim();
 			for (let i = 0; i < packageNames.length && matches.size < max; i++) {
 				const packageName = packageNames[i];
 				if (packageName.startsWith(prefix))
