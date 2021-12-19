@@ -1964,7 +1964,7 @@ export class DartDebugSession extends DebugSession {
 		if (!instanceRef.valueAsStringIsTruncated)
 			text = this.valueAsString(instanceRef, false, suppressQuotesAroundStrings);
 		if (!text && isolate)
-			text = await this.callToString(isolate, instanceRef, true, instanceRef.kind !== "String");
+			text = await this.callToString(isolate, instanceRef, true, instanceRef.kind !== "String" || suppressQuotesAroundStrings);
 		// If it has a custom toString(), put that in parens after the type name.
 		if (instanceRef.kind === "PlainInstance" && instanceRef.class && instanceRef.class.name) {
 			if (text === `Instance of '${instanceRef.class.name}'` || text === instanceRef.class.name || !text)
