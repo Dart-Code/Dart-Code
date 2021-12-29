@@ -50,12 +50,12 @@ export async function showInputBoxWithSettings(
 }
 
 
-export async function showSimpleSettingsEditor(title: string, placeholder: string, items: PickableSetting[]): Promise<void> {
+export async function showSimpleSettingsEditor(title: string, placeholder: string, getItems: () => PickableSetting[]): Promise<void> {
 	while (true) {
 		const quickPick = vs.window.createQuickPick<PickableSetting>();
 		quickPick.title = title;
 		quickPick.placeholder = placeholder;
-		quickPick.items = items;
+		quickPick.items = getItems();
 
 		const selectedSetting = await new Promise<PickableSetting | undefined>((resolve) => {
 			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));

@@ -313,7 +313,7 @@ export class FlutterCommands extends BaseSdkCommands {
 				await showSimpleSettingsEditor(
 					"Settings for new Flutter projects",
 					"Select a setting to change (or 'Escape' to cancel)",
-					flutterCreateSettings,
+					() => getCurrentFlutterCreateSettings(),
 				);
 				continue;
 			} else if (response) {
@@ -372,39 +372,41 @@ export class FlutterCommands extends BaseSdkCommands {
 	}
 }
 
-const flutterCreateSettings: PickableSetting[] = [
-	{
-		currentValue: config.flutterCreateOrganization || "com.example",
-		description: config.flutterCreateOrganization || "com.example",
-		detail: "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier.",
-		label: "Organization",
-		setValue: (newValue) => config.setFlutterCreateOrganization(newValue),
-		settingKind: "STRING",
-	},
-	{
-		currentValue: config.flutterCreateAndroidLanguage || "kotlin",
-		description: config.flutterCreateAndroidLanguage || "kotlin",
-		detail: "The language to use for Android-specific code, either Java (legacy) or Kotlin (recommended).",
-		enumValues: ["kotlin", "java"],
-		label: "Android Language",
-		setValue: (newValue) => config.setFlutterCreateAndroidLanguage(newValue),
-		settingKind: "ENUM",
-	},
-	{
-		currentValue: config.flutterCreateIOSLanguage || "swift",
-		description: config.flutterCreateIOSLanguage || "swift",
-		detail: "The language to use for iOS-specific code, either ObjectiveC (legacy) or Swift (recommended).",
-		enumValues: ["swift", "objc"],
-		label: "iOS Language",
-		setValue: (newValue) => config.setFlutterCreateIOSLanguage(newValue),
-		settingKind: "ENUM",
-	},
-	{
-		currentValue: config.flutterCreateOffline ? "enabled" : "not enabled",
-		description: config.flutterCreateOffline ? "enabled" : "not enabled",
-		detail: "When \"flutter pub get\" is run by the create command, this indicates whether to run it in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
-		label: "Create Projects Offline",
-		setValue: (newValue) => config.setFlutterCreateOffline(newValue),
-		settingKind: "BOOL",
-	},
-];
+function getCurrentFlutterCreateSettings(): PickableSetting[] {
+	return [
+		{
+			currentValue: config.flutterCreateOrganization || "com.example",
+			description: config.flutterCreateOrganization || "com.example",
+			detail: "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier.",
+			label: "Organization",
+			setValue: (newValue) => config.setFlutterCreateOrganization(newValue),
+			settingKind: "STRING",
+		},
+		{
+			currentValue: config.flutterCreateAndroidLanguage || "kotlin",
+			description: config.flutterCreateAndroidLanguage || "kotlin",
+			detail: "The language to use for Android-specific code, either Java (legacy) or Kotlin (recommended).",
+			enumValues: ["kotlin", "java"],
+			label: "Android Language",
+			setValue: (newValue) => config.setFlutterCreateAndroidLanguage(newValue),
+			settingKind: "ENUM",
+		},
+		{
+			currentValue: config.flutterCreateIOSLanguage || "swift",
+			description: config.flutterCreateIOSLanguage || "swift",
+			detail: "The language to use for iOS-specific code, either ObjectiveC (legacy) or Swift (recommended).",
+			enumValues: ["swift", "objc"],
+			label: "iOS Language",
+			setValue: (newValue) => config.setFlutterCreateIOSLanguage(newValue),
+			settingKind: "ENUM",
+		},
+		{
+			currentValue: config.flutterCreateOffline ? "enabled" : "not enabled",
+			description: config.flutterCreateOffline ? "enabled" : "not enabled",
+			detail: "When \"flutter pub get\" is run by the create command, this indicates whether to run it in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
+			label: "Create Projects Offline",
+			setValue: (newValue) => config.setFlutterCreateOffline(newValue),
+			settingKind: "BOOL",
+		},
+	];
+}
