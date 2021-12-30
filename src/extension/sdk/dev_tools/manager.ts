@@ -95,12 +95,13 @@ export class DevToolsManager implements vs.Disposable {
 			// the version from the Dart SDK.
 			if (!this.workspaceContext.config.startDevToolsFromDaemon && !this.dartCapabilities.supportsDartDevTools) {
 				const installedVersion = await this.pubGlobal.installIfRequired({
-					autoUpdate: true,
 					moreInfoLink: undefined,
 					packageID: devtoolsPackageID,
 					packageName: devtoolsPackageName,
 					requiredVersion: "0.9.6",
 					silent,
+					skipOptionalUpdates: !config.updateDevTools,
+					updateSilently: true,
 				});
 				// If install failed, we can't start.
 				if (!installedVersion) {

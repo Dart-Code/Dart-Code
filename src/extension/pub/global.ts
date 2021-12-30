@@ -14,17 +14,21 @@ import { safeToolSpawn } from "../utils/processes";
 export class PubGlobal {
 	constructor(private readonly logger: Logger, private readonly dartCapabilities: DartCapabilities, private context: Context, private sdks: DartSdks, private pubApi: PubApi) { }
 
-	public async installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; autoUpdate?: boolean; silent?: boolean; }): Promise<string | undefined> {
+	public async installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; updateSilently?: boolean; skipOptionalUpdates?: boolean; silent?: boolean; }): Promise<string | undefined> {
 		const packageID = options.packageID;
 		const packageName = options.packageName ?? packageID;
 		const moreInfoLink = options.moreInfoLink ?? pubGlobalDocsUrl;
 		const requiredVersion = options.requiredVersion;
 		const silent = !!options.silent;
-		let autoUpdate = !!options.autoUpdate;
+		const skipOptionalUpdates = !!options.skipOptionalUpdates;
+		let autoUpdate = !!options.updateSilently;
 
 		let installedVersion = await this.getInstalledVersion(packageName, packageID);
 		const versionStatus = await this.checkVersionStatus(packageID, installedVersion, requiredVersion);
-		if (versionStatus === VersionStatus.Valid)
+
+		// If we have the latest version, or the update is not mandatory (UpdateRequired) and we were told to skip optional updates
+		// just bail and use the current version.
+		if (versionStatus === VersionStatus.Valid || (skipOptionalUpdates && versionStatus === VersionStatus.UpdateAvailable))
 			return installedVersion!;
 
 		if (silent)

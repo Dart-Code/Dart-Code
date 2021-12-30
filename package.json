@@ -1451,6 +1451,12 @@
 			{
 				"title": "DevTools",
 				"properties": {
+					"dart.updateDevTools": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to update DevTools if you are not using the latest version. This only applies to SDKs prior to Dart v2.15, since DevTools is included in the SDK since v2.15.",
+						"scope": "window"
+					},
 					"dart.devToolsBrowser": {
 						"enum": [
 							"chrome",
