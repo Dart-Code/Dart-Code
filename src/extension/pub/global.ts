@@ -21,7 +21,7 @@ export class PubGlobal {
 		const requiredVersion = options.requiredVersion;
 		const silent = !!options.silent;
 		const skipOptionalUpdates = !!options.skipOptionalUpdates;
-		let autoUpdate = !!options.updateSilently;
+		let updateSilently = !!options.updateSilently;
 
 		let installedVersion = await this.getInstalledVersion(packageName, packageID);
 		const versionStatus = await this.checkVersionStatus(packageID, installedVersion, requiredVersion);
@@ -32,7 +32,7 @@ export class PubGlobal {
 			return installedVersion!;
 
 		if (silent)
-			autoUpdate = true;
+			updateSilently = true;
 
 		const activateForMe = versionStatus === VersionStatus.NotInstalled ? `Activate ${packageName}` : `Update ${packageName}`;
 		const message = versionStatus === VersionStatus.NotInstalled
@@ -46,7 +46,7 @@ export class PubGlobal {
 		let action =
 			// If we need an update and we're allowed to auto-update, to the same as if the user
 			// clicked the activate button, otherwise prompt them.
-			autoUpdate && ((versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable) || silent)
+			updateSilently && ((versionStatus === VersionStatus.UpdateRequired || versionStatus === VersionStatus.UpdateAvailable) || silent)
 				? activateForMe
 				: await vs.window.showWarningMessage(message, activateForMe, moreInfoAction);
 
