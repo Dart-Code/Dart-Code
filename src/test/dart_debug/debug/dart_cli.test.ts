@@ -1254,6 +1254,7 @@ insp=<inspected variable>
 		const config = await startDebugger(dc, helloWorldMainFile, {
 			customTool: path.join(root, `scripts/custom_dart.${customScriptExt}`),
 			customToolReplacesArgs: 0,
+			enableAsserts: false,
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -1261,7 +1262,7 @@ insp=<inspected variable>
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-asserts --enable-vm-service=0 --pause_isolates_on_start=true");
+		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-vm-service=0 --pause_isolates_on_start=true");
 	});
 
 	it("can replace all args using custom tool", async () => {
@@ -1271,6 +1272,7 @@ insp=<inspected variable>
 		const config = await startDebugger(dc, helloWorldMainFile, {
 			customTool: path.join(root, `scripts/custom_dart.${customScriptExt}`),
 			customToolReplacesArgs: 999999,
+			enableAsserts: false,
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
