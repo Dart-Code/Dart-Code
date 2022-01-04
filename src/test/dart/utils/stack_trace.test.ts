@@ -57,7 +57,7 @@ function getValidStackFrames(prefix: string, uri: string, withLineCol: boolean):
 	return frames;
 }
 
-describe.only("stack trace parser", () => {
+describe("stack trace parser", () => {
 	it(`parses strings over ${maxStackFrameMessageLength} characters quickly`, () => {
 		// Strings over 1000 characters skip the stack parsing regex.
 		const largeString = "A".repeat(maxStackFrameMessageLength + 1);
