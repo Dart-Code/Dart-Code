@@ -527,7 +527,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
 			debugConfig.omitTargetFlag = this.wsContext.config.omitTargetFlag;
 			debugConfig.useInspectorNotificationsForWidgetErrors = config.showInspectorNotificationsForWidgetErrors;
-			if (!isAttach) {
+			if (!isAttach && !debugConfig.customTool) {
 				const customScript = isTest
 					? this.wsContext.config.flutterTestScript
 					: this.wsContext.config.flutterRunScript;

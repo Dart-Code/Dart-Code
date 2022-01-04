@@ -10,7 +10,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, defer, deferUntilLast, delay, ensureArrayContainsArray, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
+import { activate, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -545,6 +545,28 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
+	});
+
+	it("can run using a custom tool", async () => {
+		const root = fsPath(flutterHelloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "flutter");
+
+		const config = await startDebugger(dc, flutterHelloWorldMainFile, {
+			customTool: path.join(root, `scripts/custom_flutter.${customScriptExt}`),
+			customToolReplacesArgs: 0,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, "run --machine --start-paused");
 	});
 
 	const numReloads = 1;
