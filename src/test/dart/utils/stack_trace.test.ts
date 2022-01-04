@@ -30,7 +30,7 @@ const line = 123;
 const col = 45;
 
 function getValidStackFrames(prefix: string, uri: string, withLineCol: boolean): string[] {
-	return withLineCol
+	const frames = withLineCol
 		? [
 			// Dart/Flutter
 			`${prefix}(${uri}:${line}:${col})`,
@@ -45,9 +45,19 @@ function getValidStackFrames(prefix: string, uri: string, withLineCol: boolean):
 			// Flutter web
 			`${uri}        ${prefix}`,
 		];
+
+	// Assertion failure
+	if (!prefix) {
+		if (withLineCol)
+			frames.push(`'${uri}': Failed assertion: line ${line} pos ${col}: '!keyReservation.contains(key)': is not true.`);
+		else
+			frames.push(`'${uri}': Failed assertion: '!keyReservation.contains(key)': is not true.`);
+	}
+
+	return frames;
 }
 
-describe("stack trace parser", () => {
+describe.only("stack trace parser", () => {
 	it(`parses strings over ${maxStackFrameMessageLength} characters quickly`, () => {
 		// Strings over 1000 characters skip the stack parsing regex.
 		const largeString = "A".repeat(maxStackFrameMessageLength + 1);

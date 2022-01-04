@@ -1,6 +1,8 @@
 export const maxStackFrameMessageLength = 1000;
 const containsStackFramePattern = new RegExp(`(?:dart:|package:|\\.dart)`);
-const stackFramePattern = new RegExp(`\\(?(?:\\w+:)??((?:(?:dart:|package:)[\\w\\-]+\\/|file:\\/\\/(?:\\/?\\w:\\/)?)?[^\\s:]+\\.dart)(?:[: ](\\d+):(\\d+))?\\)*(.*)?$`, "m");
+const stackFramePattern = new RegExp(`\\(?(?:\\w+:)??((?:(?:dart:|package:)[\\w\\-]+\\/|file:\\/\\/(?:\\/?\\w:\\/)?)?[^\\s:'"]+\\.dart)(?:[: ](\\d+):(\\d+))?\\)*(.*)?$`, "m");
+const linePattern = new RegExp(`line (\\d+)`);
+const colPattern = new RegExp(`(?:col|pos) (\\d+)`);
 
 export function mayContainStackFrame(message: string) {
 	return containsStackFramePattern.test(message);
@@ -16,8 +18,21 @@ export function parseStackFrame(message: string): MessageWithUriData | undefined
 	if (match) {
 		const prefix = message.substr(0, match.index).trim();
 		const suffix = (match[4] || "").trim();
-		const col = match[3] !== undefined ? parseInt(match[3]) : undefined;
-		const line = match[2] !== undefined ? parseInt(match[2]) : undefined;
+		let col = match[3] !== undefined ? parseInt(match[3]) : undefined;
+		let line = match[2] !== undefined ? parseInt(match[2]) : undefined;
+
+		// Handle some common line/col in text that are not in the usual format we can extract, for ex.
+		//     Failed assertion: line ${line} pos ${col}
+		if (!line) {
+			const lineMatch = linePattern.exec(message);
+			if (lineMatch)
+				line = parseInt(lineMatch[1]);
+		}
+		if (!col) {
+			const colMatch = colPattern.exec(message);
+			if (colMatch)
+				col = parseInt(colMatch[1]);
+		}
 
 		// Only consider this a stack frame if this has either a prefix or suffix, otherwise
 		// it's likely just a printed filename or a line like "Launching lib/foo.dart on ...".
