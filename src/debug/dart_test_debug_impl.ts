@@ -31,7 +31,10 @@ export class DartTestDebugSession extends DartDebugSession {
 	}
 
 	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
-		let appArgs: string[] = [];
+		let allArgs: string[] = [];
+
+		if (args.vmAdditionalArgs)
+			allArgs = allArgs.concat(args.vmAdditionalArgs);
 
 		// To use the test framework in the supported debugging way we should
 		// send this flag; which will pause the tests at each suite start (this is
@@ -45,51 +48,49 @@ export class DartTestDebugSession extends DartDebugSession {
 		// Instead, we do it the VM way for now...
 		if (this.shouldConnectDebugger) {
 			this.expectAdditionalPidToTerminate = true;
-			appArgs.push("--enable-vm-service=0");
-			appArgs.push("--pause_isolates_on_start=true");
+			allArgs.push("--enable-vm-service=0");
+			allArgs.push("--pause_isolates_on_start=true");
 		}
 
-		const dartPath = path.join(args.dartSdkPath, dartVMPath);
-		if (args.vmAdditionalArgs)
-			appArgs = appArgs.concat(args.vmAdditionalArgs);
 		if (this.dartCapabilities.supportsDartRunTest) {
 			// Use "dart --vm-args run test:test"
-			appArgs.push("run");
+			allArgs.push("run");
 			if (this.dartCapabilities.supportsNoServeDevTools)
-				appArgs.push("--no-serve-devtools");
-			appArgs.push("test:test");
+				allArgs.push("--no-serve-devtools");
+			allArgs.push("test:test");
 		} else {
 			// Use "dart --vm-args [pub-snapshot] run test"
-			appArgs.push(path.join(args.dartSdkPath, pubSnapshotPath));
-			appArgs = appArgs.concat(["run", "test"]);
+			allArgs.push(path.join(args.dartSdkPath, pubSnapshotPath));
+			allArgs = allArgs.concat(["run", "test"]);
 		}
 
+		allArgs.push("-r");
+		allArgs.push("json");
+		allArgs.push("-j1"); // Only run single-threaded in the runner.
+
+		// Replace in any custom tool.
 		const customTool = {
 			replacesArgs: args.customToolReplacesArgs,
 			script: args.customTool,
 		};
 		const execution = usingCustomScript(
-			dartPath,
-			appArgs,
+			path.join(args.dartSdkPath, dartVMPath),
+			allArgs,
 			customTool,
 		);
-		appArgs = execution.args;
+		allArgs = execution.args;
 
 		if (args.toolArgs)
-			appArgs = appArgs.concat(args.toolArgs);
-
-		appArgs = appArgs.concat(["-r", "json"]);
-		appArgs.push("-j1"); // Only run single-threaded in the runner.
-
+			allArgs = allArgs.concat(args.toolArgs);
 
 		if (args.program)
-			appArgs.push(this.sourceFileForArgs(args));
+			allArgs.push(this.sourceFileForArgs(args));
 
 		if (args.args)
-			appArgs = appArgs.concat(args.args);
+			allArgs = allArgs.concat(args.args);
 
 		const logger = new DebugAdapterLogger(this, LogCategory.DartTest);
-		return this.createRunner(execution.executable, args.cwd, appArgs, args.env, args.dartTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(execution.executable, args.cwd, allArgs, args.env, args.dartTestLogFile, logger, args.maxLogLineLength);
 	}
 
 	protected createRunner(executable: string, projectFolder: string | undefined, args: string[], envOverrides: { [key: string]: string | undefined } | undefined, logFile: string | undefined, logger: Logger, maxLogLineLength: number) {

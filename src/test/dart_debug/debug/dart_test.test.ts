@@ -130,6 +130,25 @@ describe("dart test debugger", () => {
 		ensureHasRunWithArgsStarting(root, hasRunFile, `-r json -j1 test${path.sep}basic_test.dart`);
 	});
 
+	it("can replace all args using custom tool", async () => {
+		const root = fsPath(helloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "dart_test");
+
+		const config = await startDebugger(dc, helloWorldTestMainFile, {
+			customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
+			customToolReplacesArgs: 999999,
+			noDebug: true,
+			// These differ to the usual ones so we can detect they replaced them.
+			toolArgs: ["-j2", "-r", "json"],
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, `-j2 -r json test${path.sep}basic_test.dart`);
+	});
+
 	it("receives the expected events from a Dart test script", async () => {
 		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(dc, helloWorldTestMainFile);

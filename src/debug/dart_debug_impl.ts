@@ -407,39 +407,45 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private buildExecutionInfo(binPath: string, args: DartLaunchArgs): ExecutionInfo {
+		let allArgs: string[] = [];
+
+		if (args.vmAdditionalArgs)
+			allArgs = allArgs.concat(args.vmAdditionalArgs);
+
+		if (this.shouldConnectDebugger) {
+			this.expectAdditionalPidToTerminate = true;
+			allArgs.push(`--enable-vm-service=${args.vmServicePort}`);
+			allArgs.push("--pause_isolates_on_start=true");
+			if (this.dartCapabilities.supportsNoServeDevTools)
+				allArgs.push("--no-serve-devtools");
+		}
+		if (this.useWriteServiceInfo && this.vmServiceInfoFile) {
+			allArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
+			allArgs.push("-DSILENT_OBSERVATORY=true");
+		}
+
+		// Replace in any custom tool.
 		const customTool = {
 			replacesArgs: args.customToolReplacesArgs,
 			script: args.customTool,
 		};
 		const execution = usingCustomScript(
 			binPath,
-			args.vmAdditionalArgs ?? [],
+			allArgs,
 			customTool,
 		);
-		let appArgs = execution.args;
+		allArgs = execution.args;
 
 		if (args.toolArgs)
-			appArgs = appArgs.concat(args.toolArgs);
+			allArgs = allArgs.concat(args.toolArgs);
 
-		if (this.shouldConnectDebugger) {
-			this.expectAdditionalPidToTerminate = true;
-			appArgs.push(`--enable-vm-service=${args.vmServicePort}`);
-			appArgs.push("--pause_isolates_on_start=true");
-			if (this.dartCapabilities.supportsNoServeDevTools)
-				appArgs.push("--no-serve-devtools");
-		}
-		if (this.useWriteServiceInfo && this.vmServiceInfoFile) {
-			appArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
-			appArgs.push("-DSILENT_OBSERVATORY=true");
-		}
-
-		appArgs.push(this.sourceFileForArgs(args));
+		allArgs.push(this.sourceFileForArgs(args));
 
 		if (args.args)
-			appArgs = appArgs.concat(args.args);
+			allArgs = allArgs.concat(args.args);
 
 		return {
-			args: appArgs,
+			args: allArgs,
 			executable: execution.executable,
 		};
 	}

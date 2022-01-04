@@ -7,7 +7,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, deferUntilLast, delay, ensureArrayContainsArray, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -297,6 +297,42 @@ describe("flutter test debugger", () => {
 			assert.ok(actualResults);
 			checkTreeNodeResults(actualResults, expectedResults);
 		}
+	});
+
+	it("can run using a custom tool", async () => {
+		const root = fsPath(flutterHelloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "flutter_test");
+
+		const config = await startDebugger(dc, flutterTestMainFile, {
+			customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
+			customToolReplacesArgs: 0,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --start-paused");
+	});
+
+	it("can replace all args using custom tool", async () => {
+		const root = fsPath(flutterHelloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "flutter_test");
+
+		const config = await startDebugger(dc, flutterTestMainFile, {
+			customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
+			customToolReplacesArgs: 999999,
+			// These differ to the usual ones so we can detect they replaced them.
+			toolArgs: ["test", "--total-shards", "1", "--shard-index", "0", "--start-paused", "--machine", "-d", "flutter-tester"],
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, "test --total-shards 1 --shard-index 0 --start-paused --machine -d flutter-tester");
 	});
 
 	it("stops at a breakpoint", async () => {

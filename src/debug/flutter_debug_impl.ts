@@ -1,13 +1,14 @@
+import * as path from "path";
 import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
-import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
+import { debugLaunchProgressId, flutterPath, restartReasonManual } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory, VmServiceExtension } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
-import { errorString, isWebDevice } from "../shared/utils";
+import { errorString, isWebDevice, usingCustomScript } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
@@ -89,7 +90,8 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		const logger = new DebugAdapterLogger(this, this.logCategory);
 		this.expectAdditionalPidToTerminate = true;
-		this.runDaemon = this.spawnRunDaemon(isAttach, deviceId, args, logger);
+		const mode = isAttach ? RunMode.Attach : RunMode.Run;
+		this.runDaemon = this.spawnRunDaemon(mode, deviceId, args, logger);
 		this.runDaemon.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 
 		// Set up subscriptions.
@@ -176,53 +178,72 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
-		let appArgs = [];
+	protected spawnRunDaemon(mode: RunMode, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
+		let allArgs = [];
+
+		if (mode === RunMode.Attach)
+			allArgs.push("attach");
+		else
+			allArgs.push("run");
+		allArgs.push("--machine");
 
 		const isProfileMode = args.toolArgs?.includes("--profile");
 		const isReleaseMode = args.toolArgs?.includes("--release");
 		const isWeb = isWebDevice(deviceId);
 
-		if (isAttach) {
+		if (mode === RunMode.Attach) {
 			const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
 
 			if (vmServiceUri) {
-				appArgs.push("--debug-uri");
-				appArgs.push(vmServiceUri);
+				allArgs.push("--debug-uri");
+				allArgs.push(vmServiceUri);
 			}
 		}
 
-		if (!isAttach) {
+		if (mode === RunMode.Run) {
 			if (isReleaseMode || (isProfileMode && isWeb)) {
 				this.noDebug = true;
 				this.connectVmEvenForNoDebug = false;
 			}
 
 			if (this.shouldConnectDebugger)
-				appArgs.push("--start-paused");
+				allArgs.push("--start-paused");
 		}
 
-		if (args.toolArgs)
-			appArgs = appArgs.concat(args.toolArgs);
-
-		if (!isAttach || args.program) {
-			if (!args.omitTargetFlag)
-				appArgs.push("--target");
-			if (args.program!.startsWith("//")) {
-				appArgs.push(args.program!);
-			} else {
-				appArgs.push(this.sourceFileForArgs(args));
-			}
-		}
-
-		if (args.args)
-			appArgs = appArgs.concat(args.args);
-
+		// Replace in any custom tool.
 		const customTool = {
 			replacesArgs: args.customToolReplacesArgs,
 			script: args.customTool,
 		};
-		return new FlutterRun(isAttach ? RunMode.Attach : RunMode.Run, this.dartCapabilities, args.flutterSdkPath!, customTool, args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+		let execution = usingCustomScript(
+			path.join(args.flutterSdkPath!, flutterPath),
+			allArgs,
+			customTool,
+		);
+		allArgs = execution.args;
+
+		if (args.toolArgs)
+			allArgs = allArgs.concat(args.toolArgs);
+
+		if (mode === RunMode.Run || args.program) {
+			if (!args.omitTargetFlag)
+				allArgs.push("--target");
+			if (args.program!.startsWith("//")) {
+				allArgs.push(args.program!);
+			} else {
+				allArgs.push(this.sourceFileForArgs(args));
+			}
+		}
+
+		if (args.args)
+			allArgs = allArgs.concat(args.args);
+
+		execution = {
+			args: allArgs,
+			executable: execution.executable,
+		};
+
+		return new FlutterRun(mode, this.dartCapabilities, execution, args.cwd, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 
 	private async connectToVmServiceIfReady() {

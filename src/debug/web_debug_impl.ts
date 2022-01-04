@@ -1,6 +1,8 @@
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
+import { getPubExecutionInfo } from "../shared/processes";
+import { usingCustomScript } from "../shared/utils";
 import { FlutterDebugSession } from "./flutter_debug_impl";
 import { RunDaemonBase, RunMode } from "./run_daemon_base";
 import { WebRun } from "./web_run";
@@ -15,8 +17,8 @@ export class WebDebugSession extends FlutterDebugSession {
 		this.logCategory = LogCategory.WebDaemon;
 	}
 
-	protected spawnRunDaemon(isAttach: boolean, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
-		let appArgs: string[] = [];
+	protected spawnRunDaemon(mode: RunMode, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
+		let allArgs: string[] = ["global", "run", "webdev", "daemon"];
 
 		// 	if (this.shouldConnectDebugger) {
 		// 		appArgs.push("--start-paused");
@@ -24,17 +26,34 @@ export class WebDebugSession extends FlutterDebugSession {
 		// }
 
 		if (args.toolArgs)
-			appArgs = appArgs.concat(args.toolArgs);
+			allArgs = allArgs.concat(args.toolArgs);
 
-		if (args.args)
-			appArgs = appArgs.concat(args.args);
+		const pubExecution = getPubExecutionInfo(
+			this.dartCapabilities,
+			args.dartSdkPath,
+			allArgs,
+		);
 
 		const customTool = {
 			replacesArgs: args.customToolReplacesArgs,
 			script: args.customTool,
 		};
+		let execution = usingCustomScript(
+			pubExecution.executable,
+			pubExecution.args,
+			customTool,
+		);
+		allArgs = execution.args;
+
+		if (args.args)
+			allArgs = allArgs.concat(args.args);
+
+		execution = {
+			args: allArgs,
+			executable: execution.executable,
+		};
 
 		// TODO: Attach?
-		return new WebRun(isAttach ? RunMode.Attach : RunMode.Run, this.dartCapabilities, args.dartSdkPath, customTool, args.cwd, appArgs, { envOverrides: args.env, toolEnv: this.toolEnv }, args.webDaemonLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+		return new WebRun(mode, this.dartCapabilities, execution, args.cwd, { envOverrides: args.env, toolEnv: this.toolEnv }, args.webDaemonLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 }

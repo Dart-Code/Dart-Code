@@ -569,6 +569,30 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureHasRunWithArgsStarting(root, hasRunFile, "run --machine --start-paused");
 	});
 
+	it("can replace all args using custom tool", async () => {
+		const root = fsPath(flutterHelloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "flutter");
+
+		const config = await startDebugger(dc, flutterHelloWorldMainFile, {
+			customTool: path.join(root, `scripts/custom_flutter.${customScriptExt}`),
+			customToolReplacesArgs: 999999,
+			// These differ to the usual ones so we can detect they replaced them.
+			toolArgs: ["run", "--flavor", "fake-flavor", "--start-paused", "--machine"],
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, "run --flavor fake-flavor --start-paused --machine");
+	});
+
 	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
 		if (flutterTestDeviceIsWeb && extApi.flutterCapabilities.webHasReloadBug)

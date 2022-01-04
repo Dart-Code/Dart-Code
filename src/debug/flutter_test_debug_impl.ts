@@ -10,33 +10,36 @@ import { DebugAdapterLogger } from "./logging";
 export class FlutterTestDebugSession extends DartTestDebugSession {
 
 	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
-		let appArgs: string[] = [];
+		let allArgs: string[] = ["test", "--machine"];
 
 		if (this.shouldConnectDebugger)
-			appArgs.push("--start-paused");
+			allArgs.push("--start-paused");
+
+		// Replace in any custom tool.
+		const customTool = {
+			replacesArgs: args.customToolReplacesArgs,
+			script: args.customTool,
+		};
+		const execution = usingCustomScript(
+			path.join(args.flutterSdkPath!, flutterPath),
+			allArgs,
+			customTool,
+		);
+		allArgs = execution.args;
 
 		if (args.toolArgs)
-			appArgs = appArgs.concat(args.toolArgs);
+			allArgs = allArgs.concat(args.toolArgs);
 
 		// For `flutter test`, arguments cannot go after the script name or they will be interpreted
 		// as test scripts and fail, so insert them before [program]. If `flutter` is updated to work
 		// like `pub run test` and dart run test:test` in future, this should be moved below for consistency.
 		if (args.args)
-			appArgs = appArgs.concat(args.args);
+			allArgs = allArgs.concat(args.args);
 
 		if (args.program)
-			appArgs.push(this.sourceFileForArgs(args));
-
-		const execution = usingCustomScript(
-			path.join(args.flutterSdkPath!, flutterPath),
-			["test", "--machine"],
-			{
-				replacesArgs: args.customToolReplacesArgs,
-				script: args.customTool,
-			}
-		);
+			allArgs.push(this.sourceFileForArgs(args));
 
 		const logger = new DebugAdapterLogger(this, LogCategory.FlutterTest);
-		return this.createRunner(execution.executable, args.cwd, execution.args.concat(appArgs), args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
+		return this.createRunner(execution.executable, args.cwd, allArgs, args.env, args.flutterTestLogFile, logger, args.maxLogLineLength);
 	}
 }

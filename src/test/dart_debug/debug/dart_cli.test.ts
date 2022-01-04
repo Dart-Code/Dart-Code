@@ -1264,6 +1264,22 @@ insp=<inspected variable>
 		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-asserts --enable-vm-service=0 --pause_isolates_on_start=true");
 	});
 
+	it("can replace all args using custom tool", async () => {
+		const root = fsPath(helloWorldFolder);
+		const hasRunFile = prepareHasRunFile(root, "dart");
+
+		const config = await startDebugger(dc, helloWorldMainFile, {
+			customTool: path.join(root, `scripts/custom_dart.${customScriptExt}`),
+			customToolReplacesArgs: 999999,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		ensureHasRunWithArgsStarting(root, hasRunFile, "bin/main.dart");
+	});
+
 	describe("attaches", () => {
 		it("to a paused Dart script and can unpause to run it to completion", async () => {
 			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
