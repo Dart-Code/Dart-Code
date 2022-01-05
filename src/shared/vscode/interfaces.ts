@@ -43,6 +43,7 @@ export interface InternalExtensionApi {
 	isInTestFileThatHasImplementation: boolean;
 	isInImplementationFileThatCanHaveTest: boolean;
 	isLsp: boolean;
+	isPotentiallyUsingSdkDaps: boolean;
 	dartCapabilities: DartCapabilities;
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;

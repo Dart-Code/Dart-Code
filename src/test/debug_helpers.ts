@@ -299,3 +299,10 @@ export async function ensureServiceExtensionValue(id: VmServiceExtension, expect
 	const value = await extApi.debugCommands.vmServices.getCurrentServiceExtensionValue(dc.currentSession, id);
 	assert.equal(value, expected);
 }
+
+export function sdkPathForSdkDap(file: string) {
+	if (extApi.isPotentiallyUsingSdkDaps)
+		return path.join(extApi.workspaceContext.sdks.dart!, isWin ? file.replace(/\//g, "\\") : file);
+	// When not using the new DAPs, we don't translate SDK paths back to the local file paths.
+	return undefined;
+}

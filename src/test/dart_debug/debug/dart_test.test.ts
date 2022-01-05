@@ -119,6 +119,7 @@ describe("dart test debugger", () => {
 			customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
 			// Replace "run --no-spawn-devtools test:test"
 			customToolReplacesArgs: 3,
+			enableAsserts: false,
 			noDebug: true,
 		});
 		await waitAllThrowIfTerminates(dc,
@@ -127,7 +128,7 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, `-r json -j1 test${path.sep}basic_test.dart`);
+		ensureHasRunWithArgsStarting(root, hasRunFile, `-r json`);
 	});
 
 	it("can replace all args using custom tool", async () => {
@@ -137,16 +138,18 @@ describe("dart test debugger", () => {
 		const config = await startDebugger(dc, helloWorldTestMainFile, {
 			customTool: path.join(root, `scripts/custom_test.${customScriptExt}`),
 			customToolReplacesArgs: 999999,
+			enableAsserts: false,
 			noDebug: true,
 			// These differ to the usual ones so we can detect they replaced them.
 			toolArgs: ["-j2", "-r", "json"],
 		});
 		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, `-j2 -r json test${path.sep}basic_test.dart`);
+		ensureHasRunWithArgsStarting(root, hasRunFile, `-j2 -r json`);
 	});
 
 	it("receives the expected events from a Dart test script", async () => {

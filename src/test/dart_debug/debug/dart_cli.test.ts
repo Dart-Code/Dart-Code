@@ -10,9 +10,8 @@ import { faint } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, breakpointFor, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
-
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -367,15 +366,11 @@ void printSomething() {
 			path: fsPath(helloWorldMainFile),
 		});
 		await waitAllThrowIfTerminates(dc,
-			dc.assertStoppedLocation("step", {
-				// SDK source will have no filename, because we download it
-				path: undefined,
-			}).then((response) => {
+			dc.assertStoppedLocation("step", {}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
-				// We don't get a source path, because the source is downloaded from the VM
-				assert.equal(frame.source!.path, undefined);
+				assert.equal(frame.source!.path, sdkPathForSdkDap("lib/core/print.dart"));
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -394,15 +389,11 @@ void printSomething() {
 		await dc.customRequest("updateDebugOptions", { debugSdkLibraries: true });
 		await delay(100);
 		await waitAllThrowIfTerminates(dc,
-			dc.assertStoppedLocation("step", {
-				// SDK source will have no filename, because we download it
-				path: undefined,
-			}).then((response) => {
+			dc.assertStoppedLocation("step", {}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
-				// We don't get a source path, because the source is downloaded from the VM
-				assert.equal(frame.source!.path, undefined);
+				assert.equal(frame.source!.path, sdkPathForSdkDap("lib/core/print.dart"));
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -512,7 +503,7 @@ void printSomething() {
 	});
 
 	it("downloads SDK source code from the VM", async function () {
-		if (!extApi.dartCapabilities.includesSourceForSdkLibs) {
+		if (!extApi.dartCapabilities.includesSourceForSdkLibs || extApi.isPotentiallyUsingSdkDaps) {
 			this.skip();
 			return;
 		}
@@ -1262,7 +1253,7 @@ insp=<inspected variable>
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-vm-service=0 --pause_isolates_on_start=true");
+		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-vm-service=0 --pause_isolates_on_start");
 	});
 
 	it("can replace all args using custom tool", async () => {
@@ -1275,6 +1266,7 @@ insp=<inspected variable>
 			enableAsserts: false,
 		});
 		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
