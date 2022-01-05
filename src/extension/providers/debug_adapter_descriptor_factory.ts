@@ -1,6 +1,6 @@
 import * as path from "path";
 import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterServer, DebugSession } from "vscode";
-import { dartVMPath, debugAdapterPath } from "../../shared/constants";
+import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
@@ -18,13 +18,28 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const debuggerName = getDebugAdapterName(debuggerType);
 		this.logger.info(`Using ${debuggerName} debugger for ${DebuggerType[debuggerType]}`);
 
-		if (config.experimentalDartDapPath && (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.DartTest)) {
+		const isDartOrDartTest = debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.DartTest;
+		const isFlutterOrFlutterTest = debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterTest;
+		const isDartTestOrFlutterTest = debuggerType === DebuggerType.DartTest || debuggerType === DebuggerType.FlutterTest;
+
+		if (config.experimentalSdkDaps && (isDartOrDartTest || isFlutterOrFlutterTest)) {
+			const executable = isDartOrDartTest
+				? path.join(this.sdks.dart, dartVMPath)
+				: (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
+
+			const args = ["debug_adapter"];
+			if (isDartTestOrFlutterTest)
+				args.push("--test");
+
+			this.logger.info(`Running SDK DAP Dart VM: ${executable} ${args.join("    ")}`);
+			return new DebugAdapterExecutable(executable, args);
+		} else if (config.experimentalDartDapPath && isDartOrDartTest) {
 			const args = [config.experimentalDartDapPath, "debug_adapter"];
 			if (debuggerType === DebuggerType.DartTest)
 				args.push("--test");
 			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
 			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
-		} else if (config.experimentalFlutterDapPath && (debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterTest)) {
+		} else if (config.experimentalFlutterDapPath && isFlutterOrFlutterTest) {
 			const args = [config.experimentalFlutterDapPath, "debug_adapter"];
 			if (debuggerType === DebuggerType.FlutterTest)
 				args.push("--test");
