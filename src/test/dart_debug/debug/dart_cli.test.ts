@@ -1265,11 +1265,12 @@ insp=<inspected variable>
 			customToolReplacesArgs: 999999,
 			enableAsserts: false,
 		});
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		);
+
+		// Can't await these, are we removed the debug/pause flags so
+		// the debugger will never connect and we'll terminate quite quickly.
+		dc.configurationSequence();
+		dc.launch(config);
+		await dc.waitForEvent("terminated");
 
 		ensureHasRunWithArgsStarting(root, hasRunFile, "bin/main.dart");
 	});
