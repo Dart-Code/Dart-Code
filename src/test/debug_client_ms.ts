@@ -18,6 +18,7 @@ import assert = require('assert');
 import net = require('net');
 import { ProtocolClient } from 'vscode-debugadapter-testsupport/lib/protocolClient';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { currentTestName } from './helpers';
 
 export interface ILocation {
 	path?: string;
@@ -306,6 +307,7 @@ export class DebugClient extends ProtocolClient {
 	 */
 	public waitForEvent(eventType: string, timeout?: number): Promise<DebugProtocol.Event> {
 		let timeoutHandler: any;
+		const startingTestName = currentTestName;
 
 		return new Promise((resolve, reject) => {
 			this.once(eventType, event => {
@@ -314,7 +316,7 @@ export class DebugClient extends ProtocolClient {
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
 				timeoutHandler = setTimeout(() => {
-					reject(new Error(`no event '${eventType}' received after ${timeout || this.defaultTimeout} ms`));
+					reject(new Error(`no event '${eventType}' received after ${timeout || this.defaultTimeout} ms (${startingTestName})`));
 				}, timeout || this.defaultTimeout);
 			}
 		});

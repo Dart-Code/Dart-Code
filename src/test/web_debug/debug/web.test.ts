@@ -200,7 +200,7 @@ describe("web debugger", () => {
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		assert.ok(devTools.url);
-		defer(devTools.dispose);
+		defer("Dispose DevTools", devTools.dispose);
 
 		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);

@@ -51,7 +51,7 @@ describe("go to test/implementation file", () => {
 
 		// Also ensure the file doesn't already exist.
 		assert.ok(!fs.existsSync(testFilePath));
-		defer(() => tryDeleteFile(testFilePath));
+		defer("Delete test file for implementation", () => tryDeleteFile(testFilePath));
 
 		// Run the command as if we clicked it in the context menu.
 		await vs.commands.executeCommand("dart.goToTests", emptyFile);

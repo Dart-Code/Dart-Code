@@ -17,7 +17,7 @@ describe("flutter run debugger (attach)", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	beforeEach(() => {
-		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+		deferUntilLast("Kill flutter_tester", () => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
 	let dc: DartDebugClient;

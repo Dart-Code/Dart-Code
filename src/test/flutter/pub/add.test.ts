@@ -10,7 +10,7 @@ describe("pub add", () => {
 	beforeEach("activate", () => activate());
 	beforeEach("ensure pubspec resets", () => {
 		const contents = fs.readFileSync(pubspecPath);
-		defer(() => fs.writeFileSync(pubspecPath, contents));
+		defer("Reset pubspec", () => fs.writeFileSync(pubspecPath, contents));
 	});
 
 	function pubspecContains(packageName: string) {

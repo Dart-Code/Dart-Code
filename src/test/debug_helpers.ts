@@ -40,9 +40,11 @@ export function createDebugClient(debugType: DebuggerType) {
 
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
-	defer(() => {
-		if (!dc.hasStarted)
+	defer("Terminate and clean up debug client/adapter", async () => {
+		if (!dc.hasStarted) {
+			extApi.logger.info(`Skipping shutdown because it never started`);
 			return;
+		}
 		if (debugType === DebuggerType.DartTest) {
 			// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 			// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
@@ -56,7 +58,9 @@ export function createDebugClient(debugType: DebuggerType) {
 				60,
 			);
 		} else {
-			thisDc.stop();
+			extApi.logger.info(`Calling dc.stop()...`);
+			await thisDc.stop();
+			extApi.logger.info(`Done calling dc.stop()`);
 		}
 	});
 	return dc;
@@ -192,7 +196,7 @@ export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string
 	);
 	logProcess(logger, LogCategory.CI, process);
 	const dartProcess = new DartProcess(process);
-	defer(() => {
+	defer("Kill spawned Dart process", () => {
 		if (!dartProcess.hasExited)
 			dartProcess.process.kill();
 	});
@@ -216,7 +220,7 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 	);
 	logProcess(logger, LogCategory.CI, process);
 	const flutterProcess = new DartProcess(process);
-	defer(() => {
+	defer("Kill spawned Flutter process", () => {
 		// TODO: This may not be terminating correctly, as it may terminate the
 		// shell process and not the child processes.
 		if (!flutterProcess.hasExited)

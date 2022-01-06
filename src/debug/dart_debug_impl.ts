@@ -671,7 +671,7 @@ export class DartDebugSession extends DebugSession {
 					this.sendEvent(new TerminatedEvent());
 				} else {
 					// In some cases the VM service closes but we never get the exit/close events from the process
-					// so this is a fallback to termiante the session after a short period. Without this, we have
+					// so this is a fallback to terminate the session after a short period. Without this, we have
 					// issues like https://github.com/Dart-Code/Dart-Code/issues/1268 even though when testing from
 					// the terminal the app does terminate as expected.
 					// 2019-07-10: Increased delay because when we tell Flutter to stop the VM service quits quickly and

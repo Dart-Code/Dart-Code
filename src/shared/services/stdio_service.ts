@@ -16,6 +16,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private logStream?: fs.WriteStream;
 	private readonly requestErrorSubscriptions: Array<(notification: any) => void> = [];
 	private processExited = false;
+	private description: string | undefined;
 
 	constructor(
 		protected readonly logger: Logger,
@@ -28,6 +29,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides: { envOverrides?: { [key: string]: string | undefined }, toolEnv?: { [key: string]: string | undefined } }) {
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
+		this.description = binPath;
 		if (workingDirectory)
 			this.logTraffic(`..  in ${workingDirectory}`);
 		if (envOverrides.envOverrides || envOverrides.toolEnv)
@@ -73,7 +75,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
-		this.logTraffic(`Process terminated! ${code}, ${signal}`);
+		this.logTraffic(`Process ${this.description} terminated! ${code}, ${signal}`);
 		this.processExited = true;
 	}
 

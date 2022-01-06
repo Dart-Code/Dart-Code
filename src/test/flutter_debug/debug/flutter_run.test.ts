@@ -38,7 +38,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	beforeEach(() => {
-		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+		deferUntilLast("Kill flutter_tester", () => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
 	describe("resolves the correct debug config", () => {
@@ -535,7 +535,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const devTools = await watchPromise("executeCommand", vs.commands.executeCommand("dart.openDevTools")) as { url: string, dispose: () => void };
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
-		defer(devTools.dispose);
+		defer("Dispose DevTools", devTools.dispose);
 		assert.ok(devTools.url);
 
 		const serverResponse = await watchPromise("fetch", extApi.webClient.fetch(devTools.url));

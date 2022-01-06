@@ -20,8 +20,8 @@ describe("renames", () => {
 		const fixedFileUri = vs.Uri.file(path.join(projectPath, filename.toLowerCase()));
 
 		fs.writeFileSync(fsPath(originalFileUri), "");
-		defer(() => tryDelete(originalFileUri));
-		defer(() => tryDelete(fixedFileUri));
+		defer("Delete diagnostic test file 1", () => tryDelete(originalFileUri));
+		defer("Delete diagnostic test file 2", () => tryDelete(fixedFileUri));
 		enableLint(projectPath, "file_names");
 		await openFile(originalFileUri);
 

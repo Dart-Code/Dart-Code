@@ -13,7 +13,7 @@ describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
 
 	beforeEach(() => {
-		deferUntilLast(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+		deferUntilLast("Kill flutter_tester", () => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
 	let dc: DartDebugClient;

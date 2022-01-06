@@ -265,7 +265,7 @@ void printSomething() {
 		const devTools = await vs.commands.executeCommand<{ url: string, dispose: () => void }>("dart.openDevTools");
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
-		defer(devTools.dispose);
+		defer("Dispose DevTools", devTools.dispose);
 		assert.ok(devTools.url);
 
 		const serverResponse = await extApi.webClient.fetch(devTools.url);

@@ -63,7 +63,7 @@ describe("pub global", () => {
 		assert.equal(installPrompt.calledOnce, true);
 
 		// Ensure new status checks includes it.
-		defer(() => extApi.pubGlobal.uninstall(definitelyNotInstalledPackage2));
+		defer("Uninstall installed package", () => extApi.pubGlobal.uninstall(definitelyNotInstalledPackage2));
 		// Prompt to install it, and ensure it's successful.
 		installedVersion = await extApi.pubGlobal.getInstalledVersion(definitelyNotInstalledPackage2, definitelyNotInstalledPackage2);
 		const status = await extApi.pubGlobal.checkVersionStatus(definitelyNotInstalledPackage2, installedVersion);

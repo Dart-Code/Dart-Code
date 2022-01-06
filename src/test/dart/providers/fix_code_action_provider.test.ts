@@ -35,7 +35,7 @@ describe("fix_code_action_provider", () => {
 	});
 
 	it("can create", async function () {
-		defer(() => tryDelete(missingFile));
+		defer("Remove missing file", () => tryDelete(missingFile));
 		await openFile(emptyFile);
 		await setTestContent("import 'missing.dart'");
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("|missing.dart|"));
