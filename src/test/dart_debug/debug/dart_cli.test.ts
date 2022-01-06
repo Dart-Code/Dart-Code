@@ -270,6 +270,8 @@ void printSomething() {
 
 		const serverResponse = await extApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
+
+		await dc.terminateRequest();
 	});
 
 	it("stops at a breakpoint", async () => {
@@ -284,6 +286,8 @@ void printSomething() {
 		assert.equal(frames[0].name, "main");
 		assert.equal(frames[0].source!.path, fsPath(helloWorldMainFile));
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
+
+		await dc.terminateRequest();
 	});
 
 	it("does not stop at a breakpoint in noDebug mode", async () => {
@@ -311,6 +315,8 @@ void printSomething() {
 		assert.equal(frames[0].name, "do_print");
 		assert.equal(frames[0].source!.path, fsPath(helloWorldPartFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/part.dart");
+
+		await dc.terminateRequest();
 	});
 
 	it("stops at a breakpoint in a deferred file", async () => {
@@ -325,6 +331,8 @@ void printSomething() {
 		assert.equal(frames[0].name, "do_print");
 		assert.equal(frames[0].source!.path, fsPath(helloWorldDeferredScriptFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/deferred_script.dart");
+
+		await dc.terminateRequest();
 	});
 
 	// Known not to work; https://github.com/Dart-Code/Dart-Code/issues/821
@@ -352,6 +360,8 @@ void printSomething() {
 		assert.equal(frames[0].name, "read");
 		assert.equal(frames[0].source!.path, fsPath(uriFor(def)));
 		assert.equal(frames[0].source!.name, "package:http/http.dart");
+
+		await dc.terminateRequest();
 	});
 
 	it("steps into the SDK if debugSdkLibraries is true", async () => {
@@ -373,6 +383,8 @@ void printSomething() {
 			}),
 			dc.stepIn(),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("steps into the SDK if debugSdkLibraries is enabled during the run", async () => {
@@ -396,6 +408,8 @@ void printSomething() {
 			}),
 			dc.stepIn(),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("does not step into the SDK if debugSdkLibraries is false", async () => {
@@ -414,6 +428,8 @@ void printSomething() {
 			}),
 			dc.stepIn(),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("steps into an external library if debugExternalPackageLibraries is true", async () => {
@@ -439,6 +455,8 @@ void printSomething() {
 			}),
 			dc.stepIn(),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("does not step into an external library if debugExternalPackageLibraries is false", async () => {
@@ -465,6 +483,8 @@ void printSomething() {
 			}),
 			dc.stepIn(),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("steps into a local library even if debugExternalPackageLibraries is false", async () => {
@@ -498,6 +518,8 @@ void printSomething() {
 			}),
 			dc.stepIn(),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("downloads SDK source code from the VM", async function () {
@@ -534,6 +556,8 @@ void printSomething() {
 			}),
 			dc.stepIn(),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async () => {
@@ -547,6 +571,8 @@ void printSomething() {
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the SDK");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await dc.terminateRequest();
 	});
 
 	it("correctly marks debuggable SDK frames when debugSdkLibraries is true", async () => {
@@ -560,6 +586,8 @@ void printSomething() {
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, "from the SDK");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await dc.terminateRequest();
 	});
 
 	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async () => {
@@ -581,6 +609,8 @@ void printSomething() {
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from external packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await dc.terminateRequest();
 	});
 
 	it("correctly marks debuggable external library frames when debugExternalPackageLibraries is true", async () => {
@@ -602,6 +632,8 @@ void printSomething() {
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, "from external packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await dc.terminateRequest();
 	});
 
 	it("correctly marks debuggable local library frames even when debugExternalPackageLibraries is false", async () => {
@@ -622,6 +654,8 @@ void printSomething() {
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isLocalPackage), undefined, undefined);
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await dc.terminateRequest();
 	});
 
 	it("can fetch slices of stack frames", async () => {
@@ -670,6 +704,8 @@ void printSomething() {
 		// The top 60 frames should be from func60 down to func1.
 		for (let i = 0; i < 60; i++)
 			assert.equal(frameNames[i], `func${60 - i}`);
+
+		await dc.terminateRequest();
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
@@ -710,6 +746,8 @@ void printSomething() {
 			);
 
 			assert.equal(didStop, shouldStop);
+
+			await dc.terminateRequest();
 		};
 	}
 
@@ -815,6 +853,8 @@ void printSomething() {
 			key: { evaluateName: undefined, name: "key", value: "1.1" },
 			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
 		}, dc);
+
+		await dc.terminateRequest();
 	});
 
 	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async () => {
@@ -829,6 +869,8 @@ void printSomething() {
 		ensureVariable(variables, "a", "a", `1`);
 		// Ensure there were no others.
 		assert.equal(variables.length, 1);
+
+		await dc.terminateRequest();
 	});
 
 	it("includes fields and getters in variables when stopped at a breakpoint", async () => {
@@ -850,6 +892,8 @@ void printSomething() {
 		ensureVariable(classInstance, "danny.kind", "kind", `"Person"`);
 		ensureVariable(classInstance, "danny.name", "name", `"Danny"`);
 		ensureVariable(classInstance, undefined, "throws", { starts: "<Oops!" });
+
+		await dc.terminateRequest();
 	});
 
 	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async () => {
@@ -873,6 +917,8 @@ void printSomething() {
 		ensureNoVariable(classInstance, "kind");
 		ensureNoVariable(classInstance, "name");
 		ensureNoVariable(classInstance, "throws");
+
+		await dc.terminateRequest();
 	});
 
 	it("watch expressions provide same info as locals", async () => {
@@ -894,6 +940,8 @@ void printSomething() {
 			assert.equal(evaluateResult.result, variable.value);
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
 		}
+
+		await dc.terminateRequest();
 	});
 
 	it("evaluateName evaluates to the expected value", async () => {
@@ -927,6 +975,8 @@ void printSomething() {
 			}
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
 		}
+
+		await dc.terminateRequest();
 	});
 
 	describe("can evaluate at breakpoint", () => {
@@ -944,6 +994,8 @@ void printSomething() {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, `"test"`);
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await dc.terminateRequest();
 		});
 
 		it("complex expression expressions", async () => {
@@ -960,6 +1012,8 @@ void printSomething() {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await dc.terminateRequest();
 		});
 
 		it("an expression that returns a variable", async () => {
@@ -977,6 +1031,8 @@ void printSomething() {
 			assert.ok(evaluateResult);
 			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
 			assert.ok(evaluateResult.variablesReference);
+
+			await dc.terminateRequest();
 		});
 
 		it("complex expression expressions when in a top level function", async () => {
@@ -993,6 +1049,8 @@ void printSomething() {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await dc.terminateRequest();
 		});
 
 		it("can evaluate expressions with trailing semicolons", async () => {
@@ -1009,6 +1067,8 @@ void printSomething() {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await dc.terminateRequest();
 		});
 
 		it("returns a full error message for repl context", async () => {
@@ -1023,6 +1083,8 @@ void printSomething() {
 
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "repl").catch((e) => e);
 			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the class 'DateTime'"), -1);
+
+			await dc.terminateRequest();
 		});
 
 		it("returns a short error message for watch context", async () => {
@@ -1037,6 +1099,8 @@ void printSomething() {
 
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
 			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the class 'DateTime'." : "not available");
+
+			await dc.terminateRequest();
 		});
 	});
 
@@ -1056,6 +1120,8 @@ void printSomething() {
 			assert.ok(evaluateResult.body);
 			assert.equal(evaluateResult.body.result, `"test"`);
 			assert.equal(evaluateResult.body.variablesReference, 0);
+
+			await dc.terminateRequest();
 		});
 
 		it("complex expression expressions", async () => {
@@ -1073,6 +1139,8 @@ void printSomething() {
 			assert.ok(evaluateResult.body);
 			assert.equal(evaluateResult.body.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.body.variablesReference, 0);
+
+			await dc.terminateRequest();
 		});
 
 		it("an expression that returns a variable", async () => {
@@ -1091,6 +1159,8 @@ void printSomething() {
 			assert.ok(evaluateResult.body);
 			assert.ok(evaluateResult.body.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.body.result}' did not start with ${thisYear}`);
 			assert.ok(evaluateResult.body.variablesReference);
+
+			await dc.terminateRequest();
 		});
 
 		it("can evaluate expressions with trailing semicolons", async () => {
@@ -1108,6 +1178,8 @@ void printSomething() {
 			assert.ok(evaluateResult.body);
 			assert.equal(evaluateResult.body.result, (new Date()).getFullYear().toString());
 			assert.equal(evaluateResult.body.variablesReference, 0);
+
+			await dc.terminateRequest();
 		});
 
 		it("returns a full error message for repl context", async () => {
@@ -1122,6 +1194,8 @@ void printSomething() {
 
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "repl" }).catch((e) => e);
 			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the class 'DateTime'"), -1);
+
+			await dc.terminateRequest();
 		});
 
 		it("returns a short error message for watch context", async () => {
@@ -1136,6 +1210,8 @@ void printSomething() {
 
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
 			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the class 'DateTime'." : "not available");
+
+			await dc.terminateRequest();
 		});
 	});
 
@@ -1174,6 +1250,8 @@ insp=<inspected variable>
 			}),
 			dc.launch(config),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("does not stop on exception in noDebug mode", async () => {
@@ -1201,6 +1279,8 @@ insp=<inspected variable>
 
 		const variables = await dc.getTopFrameVariables("Exceptions");
 		ensureVariable(variables, "$_threadException.message", "message", `"Oops"`);
+
+		await dc.terminateRequest();
 	});
 
 	it("writes exception to stderr", async () => {
@@ -1234,6 +1314,8 @@ insp=<inspected variable>
 			),
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
 		);
+
+		await dc.terminateRequest();
 	});
 
 	it("can run using a custom tool", async () => {
@@ -1355,6 +1437,8 @@ insp=<inspected variable>
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(helloWorldMainFile),
 			});
+
+			await dc.terminateRequest();
 		});
 
 		it("and removes breakpoints and unpauses on detach", async () => {
