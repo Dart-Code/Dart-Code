@@ -1424,6 +1424,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		this.beforeEach(function () {
 			if (flutterTestDeviceIsWeb)
 				this.skip();
+			if (extApi.isPotentiallyUsingSdkDaps)
+				this.skip();
 		});
 
 		it("simple expressions", async () => {

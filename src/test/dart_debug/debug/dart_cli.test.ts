@@ -1105,6 +1105,10 @@ void printSomething() {
 	});
 
 	describe("can evaluate when not at a breakpoint", () => {
+		beforeEach(function () {
+			if (extApi.isPotentiallyUsingSdkDaps)
+				this.skip();
+		});
 		it("simple expressions", async () => {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
