@@ -6,6 +6,7 @@ import { dartVMPath, flutterPath, isWin, vmServiceListeningBannerPattern } from 
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
+import { faint } from "../shared/utils/colors";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
@@ -305,4 +306,11 @@ export function sdkPathForSdkDap(file: string) {
 		return path.join(extApi.workspaceContext.sdks.dart!, isWin ? file.replace(/\//g, "\\") : file);
 	// When not using the new DAPs, we don't translate SDK paths back to the local file paths.
 	return undefined;
+}
+
+export function faintTextForNonSdkDap(input: string) {
+	// Currently the SDK DAPs don't use colours.
+	if (extApi.isPotentiallyUsingSdkDaps)
+		return input;
+	return faint(input);
 }

@@ -6,11 +6,10 @@ import * as vs from "vscode";
 import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
-import { faint } from "../../../shared/utils/colors";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
 import { activate, breakpointFor, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
@@ -146,7 +145,7 @@ describe("dart cli debugger", () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
-			dc.assertOutputContains("console", `${faint("[log] ")}Logging from dart:developer!`),
+			dc.assertOutputContains("console", `${faintTextForNonSdkDap("[log] ")}Logging from dart:developer!`),
 			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
