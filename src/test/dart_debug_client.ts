@@ -136,7 +136,7 @@ export class DartDebugClient extends DebugClient {
 			},
 			launchArgs,
 		);
-		this.currentSession = {
+		const currentSession = this.currentSession = {
 			configuration,
 			customRequest: async (cmd, args) => (await this.customRequest(cmd, args)).body,
 			getDebugProtocolBreakpoint: () => { throw new Error("Not implemented for tests"); },
@@ -147,16 +147,16 @@ export class DartDebugClient extends DebugClient {
 		};
 
 		// Set up logging.
-		this.currentTracker = (await this.debugTrackerFactory.createDebugAdapterTracker(this.currentSession))!;
+		this.currentTracker = (await this.debugTrackerFactory.createDebugAdapterTracker(currentSession))!;
 		this.currentTracker.onWillStartSession!();
 		this.on("terminated", (e: DebugProtocol.TerminatedEvent) => {
 			if (this.currentTracker?.onWillStopSession)
 				this.currentTracker.onWillStopSession();
 		});
 
-		this.debugCommands.handleDebugSessionStart(this.currentSession);
-		this.waitForEvent("terminated")
-			.then(() => this.debugCommands.handleDebugSessionEnd(this.currentSession!))
+		this.debugCommands.handleDebugSessionStart(currentSession);
+		this.waitForEvent("terminated", "for handleDebugSessionEnd")
+			.then(() => this.debugCommands.handleDebugSessionEnd(currentSession))
 			.catch((e) => console.error(`Error while waiting for termination: ${e}`));
 
 		// We override the base method to swap for attachRequest when required, so that
@@ -172,7 +172,7 @@ export class DartDebugClient extends DebugClient {
 			logger.info("Attaching to process...");
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
 			logger.info("Waiting for stopped (step/entry) event...");
-			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped"));
+			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped", "waiting for stop event on attach to paused"));
 			// Allow either step (old DC DA) or entry (SDK DA).
 			if (event.body.reason !== "step")
 				assert.equal(event.body.reason, "entry");
@@ -186,7 +186,7 @@ export class DartDebugClient extends DebugClient {
 			await watchPromise(
 				"launch()->attach->terminate/resume",
 				Promise.race([
-					this.waitForEvent("terminated")
+					this.waitForEvent("terminated", "waiting for termination or resume completion")
 						.catch(() => {
 							// Swallow errors, we're only using this to avoid waiting on a resume response forever.
 							// It's possible it'll time out after some period because the test finished more quickly/slowly.

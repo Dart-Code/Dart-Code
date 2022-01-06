@@ -305,7 +305,7 @@ export class DebugClient extends ProtocolClient {
 	 * Returns a promise that will resolve if an event with a specific type was received within some specified time.
 	 * The promise will be rejected if a timeout occurs.
 	 */
-	public waitForEvent(eventType: string, timeout?: number): Promise<DebugProtocol.Event> {
+	public waitForEvent(eventType: string, description?: string, timeout?: number): Promise<DebugProtocol.Event> {
 		let timeoutHandler: any;
 		const startingTestName = currentTestName;
 
@@ -316,7 +316,7 @@ export class DebugClient extends ProtocolClient {
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
 				timeoutHandler = setTimeout(() => {
-					reject(new Error(`no event '${eventType}' received after ${timeout || this.defaultTimeout} ms (${startingTestName})`));
+					reject(new Error(`no event '${eventType}' received after ${timeout || this.defaultTimeout} ms (${startingTestName}: ${description})`));
 				}, timeout || this.defaultTimeout);
 			}
 		});
@@ -329,7 +329,7 @@ export class DebugClient extends ProtocolClient {
 	 */
 	public configurationSequence(): Promise<any> {
 
-		return this.waitForEvent('initialized').then(event => {
+		return this.waitForEvent('initialized', 'configurationSequence').then(event => {
 			return this.configurationDone();
 		});
 	}
@@ -362,7 +362,7 @@ export class DebugClient extends ProtocolClient {
 	 */
 	public assertStoppedLocation(reason: string, expected: { path?: string | RegExp, line?: number, column?: number }): Promise<DebugProtocol.StackTraceResponse> {
 
-		return this.waitForEvent('stopped').then(event => {
+		return this.waitForEvent('stopped', 'assertStoppedLocation').then(event => {
 			assert.equal(event.body.reason, reason);
 			return this.stackTraceRequest({
 				threadId: event.body.threadId
@@ -455,7 +455,7 @@ export class DebugClient extends ProtocolClient {
 		// the stop.
 		const setupBreakpointWait = launchArgs.request === "attach"
 			? async () => {
-				const event = await this.waitForEvent("stopped") as DebugProtocol.StoppedEvent;
+				const event = await this.waitForEvent("stopped", "hitBreakpoint") as DebugProtocol.StoppedEvent;
 				// Allow either step (old DC DA) or entry (SDK DA).
 				if (event.body.reason !== "step")
 					assert.equal(event.body.reason, "entry");
@@ -467,7 +467,7 @@ export class DebugClient extends ProtocolClient {
 
 		return Promise.all([
 
-			this.waitForEvent('initialized').then(event => {
+			this.waitForEvent('initialized', 'hitBreakpoint').then(event => {
 				return this.setBreakpointsRequest({
 					lines: [location.line],
 					breakpoints: [{ line: location.line, column: location.column }],
