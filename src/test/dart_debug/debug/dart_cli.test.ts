@@ -1219,7 +1219,11 @@ void printSomething() {
 		});
 	});
 
-	it("prints the output of inspected variables", async () => {
+	it("prints the output of inspected variables", async function () {
+		// SDK Dap doesn't handle this currently.
+		if (extApi.isPotentiallyUsingSdkDaps)
+			this.skip();
+
 		await openFile(helloWorldInspectFile);
 		const debugConfig = await startDebugger(dc, helloWorldInspectFile);
 		const expectedVariablesTree = `
