@@ -522,6 +522,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (!isFlutter && !isAttach && !isTest && debugConfig.console === undefined && config.cliConsole !== undefined)
 			debugConfig.console = config.cliConsole;
+		else if (isFlutter && (debugConfig.console === "terminal" || debugConfig.console === "externalTerminal"))
+			vs.window.showWarningMessage(`Flutter projects do not support "terminal" or "externalTerminal" for the "console" setting of a launch configuration. This setting will be ignored.`);
 
 		if (isFlutter && this.wsContext.sdks.flutter) {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
