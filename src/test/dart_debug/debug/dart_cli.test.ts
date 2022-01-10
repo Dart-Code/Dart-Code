@@ -1360,7 +1360,8 @@ insp=<inspected variable>
 		dc.launch(config);
 		await dc.waitForEvent("terminated");
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "bin/main.dart");
+		const expectedPath = extApi.isPotentiallyUsingSdkDaps ? fsPath(helloWorldMainFile) : "bin/main.dart";
+		ensureHasRunWithArgsStarting(root, hasRunFile, `${expectedPath}`);
 	});
 
 	describe("attaches", () => {
