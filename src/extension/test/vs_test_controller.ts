@@ -199,9 +199,14 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private idForNode(node: TreeNode) {
-		return node instanceof GroupNode || node instanceof TestNode
-			? `${node.suiteData.path}:${node.name}`
-			: node.suiteData.path;
+		if (node instanceof SuiteNode)
+			return `SUITE:${node.suiteData.path}`;
+		if (node instanceof GroupNode)
+			return `GROUP:${node.suiteData.path}:${node.name}`;
+		if (node instanceof TestNode)
+			return `TEST:${node.suiteData.path}:${node.name}`;
+		throw new Error(`Tried to create ID for unknown node type! ${node.label}`);
+
 	}
 
 	private cleanLabel(label: string) {
