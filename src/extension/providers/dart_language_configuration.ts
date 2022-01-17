@@ -72,6 +72,13 @@ export class DartLanguageConfiguration implements LanguageConfiguration {
 			beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
 		},
 	];
+	private readonly tripleQuoteRules: OnEnterRule[] = [
+		{
+			// Remove all indent after starting a multiline string.
+			action: { indentAction: IndentAction.None, removeText: 80 },
+			beforeText: /('''|""")$/,
+		},
+	];
 
 	public get onEnterRules() {
 		let rules: OnEnterRule[] = [];
@@ -83,6 +90,7 @@ export class DartLanguageConfiguration implements LanguageConfiguration {
 		else
 			rules = rules.concat(this.betweenDoubleSlashRules);
 		rules = rules.concat(this.slashStarRules);
+		rules = rules.concat(this.tripleQuoteRules);
 
 		return rules;
 	}
