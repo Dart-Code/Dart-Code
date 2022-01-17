@@ -1650,12 +1650,6 @@
 						"description": "Whether to show CodeLens actions in the editor for quick running / debugging tests.",
 						"scope": "window"
 					},
-					"dart.triggerSignatureHelpAutomatically": {
-						"type": "boolean",
-						"default": false,
-						"description": "Whether to automatically trigger signature help when pressing keys such as , and (.",
-						"scope": "window"
-					},
 					"dart.updateImportsOnRename": {
 						"type": "boolean",
 						"default": true,

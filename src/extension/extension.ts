@@ -548,7 +548,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 				context.subscriptions.push(vs.languages.registerSignatureHelpProvider(
 					DART_MODE,
 					new DartSignatureHelpProvider(dasClient),
-					...(config.triggerSignatureHelpAutomatically ? ["(", ","] : []),
 				));
 
 			const documentSymbolProvider = new DartDocumentSymbolProvider(logger, dasAnalyzer.fileTracker);
@@ -886,7 +885,6 @@ function getSettingsThatRequireRestart() {
 		+ config.updateImportsOnRename
 		+ config.previewBazelWorkspaceCustomScripts
 		+ config.flutterOutline
-		+ config.triggerSignatureHelpAutomatically
 		+ config.flutterAdbConnectOnChromeOs;
 }
 
