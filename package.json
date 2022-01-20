@@ -267,36 +267,6 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.startDebuggingTest",
-				"title": "Start Debugging",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.startWithoutDebuggingTest",
-				"title": "Run Without Debugging",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.startDebuggingSkippedTests",
-				"title": "Debug Skipped",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.startWithoutDebuggingSkippedTests",
-				"title": "Run Skipped",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.startDebuggingFailedTests",
-				"title": "Debug Failed",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.startWithoutDebuggingFailedTests",
-				"title": "Run Failed",
-				"category": "Dart"
-			},
-			{
 				"command": "dart.sortMembers",
 				"title": "Sort Members",
 				"category": "Dart"
@@ -757,30 +727,6 @@
 				},
 				{
 					"command": "dart.createLaunchConfiguration",
-					"when": "false"
-				},
-				{
-					"command": "dart.startDebuggingTest",
-					"when": "false"
-				},
-				{
-					"command": "dart.startWithoutDebuggingTest",
-					"when": "false"
-				},
-				{
-					"command": "dart.startDebuggingSkippedTests",
-					"when": "false"
-				},
-				{
-					"command": "dart.startWithoutDebuggingSkippedTests",
-					"when": "false"
-				},
-				{
-					"command": "dart.startDebuggingFailedTests",
-					"when": "false"
-				},
-				{
-					"command": "dart.startWithoutDebuggingFailedTests",
 					"when": "false"
 				},
 				{
