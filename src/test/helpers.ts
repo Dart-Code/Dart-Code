@@ -436,26 +436,26 @@ interface DeferredFunction {
 const deferredItems: DeferredFunction[] = [];
 const deferredToLastItems: DeferredFunction[] = [];
 afterEach("run deferred functions", async function () {
-	extApi.logger.info(`Running deferred functions!`);
+	logger.info(`Running deferred functions!`);
 	let firstError: any;
 	for (const deferredFunction of [...deferredItems.reverse(), ...deferredToLastItems.reverse()]) {
 		const description = deferredFunction.description;
 		const callback = deferredFunction.callback;
-		extApi.logger.info(`Running deferred function ${description}`);
+		logger.info(`Running deferred function ${description}`);
 		try {
 			await watchPromise(`afterEach->deferred->${description}`, callback(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
 			logger.error(`Error running deferred function ${description}: ${e}`);
 			firstError = firstError || e;
 		}
-		extApi.logger.info(`    done!`);
+		logger.info(`    done!`);
 	}
 	deferredItems.length = 0;
 	deferredToLastItems.length = 0;
 	// We delay throwing until the end so that other cleanup can run
 	if (firstError)
 		throw firstError;
-	extApi.logger.info(`Done running deferred functions!`);
+	logger.info(`Done running deferred functions!`);
 });
 export function defer(description: string, callback: (result?: "failed" | "passed") => Promise<any> | any): void {
 	deferredItems.push({ description: `${description} (${currentTestName})`, callback });
