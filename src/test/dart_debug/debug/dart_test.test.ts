@@ -6,10 +6,11 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
+import { waitFor } from "../../../shared/utils/promises";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldFolder, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -301,7 +302,7 @@ describe("dart test debugger", () => {
 			dc.launch(config),
 		);
 
-		const topLevelNodes = extApi.testController!.controller.items;
+		const topLevelNodes = extApi.testController.controller.items;
 		assert.ok(topLevelNodes);
 
 		const nodeLabels: string[] = [];
@@ -315,12 +316,55 @@ describe("dart test debugger", () => {
 				path.join("test", "broken_test.dart"),
 				path.join("test", "discovery_test.dart"),
 				path.join("test", "dupe_name_test.dart"),
-				path.join("test", "nested", "nested_test.dart"),
+				path.join("test", "folder", "folder_test.dart"),
+				path.join("test", "project_test.dart"),
 				path.join("test", "short_test.dart"),
 				path.join("test", "skip_test.dart"),
 				path.join("test", "tree_test.dart"),
 			],
 		);
+	});
+
+	it("can run nested projects through Test: Run All Tests", async () => {
+		let startedSessions = 0;
+		let runningSessions = 0;
+
+		const startSub = vs.debug.onDidStartDebugSession((s) => {
+			startedSessions++;
+			runningSessions++;
+		});
+		const endSub = vs.debug.onDidTerminateDebugSession((s) => {
+			runningSessions--;
+		});
+
+		try {
+			await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
+			// Allow some time for sessions to start so the startedSessions check doesn't
+			// fire immediately after only creating the first session.
+			await delay(1000);
+			await waitFor(
+				() => startedSessions >= 0 && runningSessions === 0,
+				300, // check every 300ms
+				60000, // wait up to 60 seconds
+			);
+		} finally {
+			startSub.dispose();
+			endSub.dispose();
+		}
+		const testFiles = [
+			helloWorldProjectTestFile,
+			helloWorldExampleSubFolderProjectTestFile,
+		];
+
+		for (const file of testFiles) {
+			await openFile(file);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTestTextTree(file).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			checkTreeNodeResults(actualResults, expectedResults);
+		}
 	});
 
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {

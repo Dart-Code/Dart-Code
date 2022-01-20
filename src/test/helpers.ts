@@ -81,6 +81,9 @@ export const helloWorldTestDiscoveryFile = vs.Uri.file(path.join(fsPath(helloWor
 export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dupe_name_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));
 export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "skip_test.dart"));
+export const helloWorldTestNestedFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "folder", "folder_test.dart"));
+export const helloWorldProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "project_test.dart"));
+export const helloWorldExampleSubFolderProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "test", "project_test.dart"));
 // Flutter
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
@@ -1184,8 +1187,8 @@ function getSourceLine(item: vs.TestItem): number {
 
 export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {
 	const collection = items instanceof vs.Uri
-		? extApi.testController!.controller.items
-		: items ?? extApi.testController!.controller.items;
+		? extApi.testController.controller.items
+		: items ?? extApi.testController.controller.items;
 	const parentResourceUri = items instanceof vs.Uri ? items : undefined;
 
 	const testItems: vs.TestItem[] = [];
@@ -1200,7 +1203,7 @@ export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefin
 	sortBy(testItems, getSourceLine);
 
 	for (const item of testItems) {
-		const lastResult = extApi.testController!.getLatestData(item);
+		const lastResult = extApi.testController.getLatestData(item);
 		const lastResultTestNode = lastResult as TestNode;
 
 		let nodeString = item.label;

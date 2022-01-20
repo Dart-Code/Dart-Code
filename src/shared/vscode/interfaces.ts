@@ -77,7 +77,7 @@ export interface InternalExtensionApi {
 	};
 	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
-	testController: { controller: TestController; getLatestData(test: TestItem): TreeNode | undefined } | undefined;
+	testController: { controller: TestController; getLatestData(test: TestItem): TreeNode | undefined };
 	testCoordinator: TestSessionCoordinator;
 	testDiscoverer: { forceUpdate(uri: Uri): void },
 	testModel: TestModel;

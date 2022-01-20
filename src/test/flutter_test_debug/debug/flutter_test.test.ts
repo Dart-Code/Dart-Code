@@ -256,12 +256,10 @@ describe("flutter test debugger", () => {
 		let runningSessions = 0;
 
 		const startSub = vs.debug.onDidStartDebugSession((s) => {
-			console.log("Started!");
 			startedSessions++;
 			runningSessions++;
 		});
 		const endSub = vs.debug.onDidTerminateDebugSession((s) => {
-			console.log("Ended!");
 			runningSessions--;
 		});
 

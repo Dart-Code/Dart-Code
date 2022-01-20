@@ -7,6 +7,7 @@ import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
+import { sortBy } from "../../shared/utils/array";
 import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo } from "../../shared/utils/outline_das";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig, TestName } from "../../shared/utils/test";
@@ -59,8 +60,17 @@ export class TestCommands implements vs.Disposable {
 		// So, fetch all project folders, then if we have suites in them, group them by that folders (and whether
 		// they're integration/non-integration), and otherwise use their 'test'/'integration_test' folders.
 
-		const projectsWithTests: Array<{ projectFolder: string, name: string, tests: string[] }> = [];
+		const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+		// Sort folders by length descending so that for any given suite, we know the first one that contains
+		// it is the closest parent, so we can avoid running the same test multiple times if it's in a nested
+		// project.
+		sortBy(projectFolders, (f) => -1 * f.length);
 
+		function closestProjectFolder(suitePath: string) {
+			return projectFolders.find((f) => isWithinPath(suitePath, f));
+		}
+
+		const projectsWithTests: Array<{ projectFolder: string, name: string, tests: string[] }> = [];
 		function addTestItemsForProject(projectFolder: string, integrationTests: boolean) {
 			if (!suites)
 				return;
@@ -68,7 +78,8 @@ export class TestCommands implements vs.Disposable {
 			const tests = suites
 				.map((suite) => suite.suiteData.path)
 				.filter((suitePath) => isWithinPath(suitePath, projectFolder))
-				.filter((suitePath) => isInsideFolderNamed(suitePath, "integration_test") === integrationTests);
+				.filter((suitePath) => isInsideFolderNamed(suitePath, "integration_test") === integrationTests)
+				.filter((suitePath) => closestProjectFolder(suitePath) === projectFolder);
 
 
 			if (tests.length) {
@@ -80,7 +91,6 @@ export class TestCommands implements vs.Disposable {
 			}
 		}
 
-		const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
 		for (const projectFolder of projectFolders) {
 			addTestItemsForProject(projectFolder, false);
 			addTestItemsForProject(projectFolder, true);
