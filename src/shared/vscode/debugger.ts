@@ -1,15 +1,15 @@
 import * as path from "path";
-import { TextDocument, workspace } from "vscode";
+import { Uri, workspace } from "vscode";
 import { escapeRegExp } from "../utils";
 import { fsPath, isWithinPathOrEqual } from "../utils/fs";
 
 const debugTypeTokenRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
 
-export function getTemplatedLaunchConfigs(document: TextDocument, fileType: string) {
-	const runConfigs: TemplatedLaunchConfig[] = workspace.getConfiguration("launch", document.uri).get<any[]>("configurations") || [];
+export function getTemplatedLaunchConfigs(documentUri: Uri, fileType: string, onlyGlobal = false) {
+	const runConfigs: TemplatedLaunchConfig[] = workspace.getConfiguration("launch", documentUri).get<any[]>("configurations") || [];
 	const wantedTemplateTypes = [`run-${fileType}`, `debug-${fileType}`];
-	const filePath = fsPath(document.uri);
-	const workspaceUri = workspace.getWorkspaceFolder(document.uri)?.uri;
+	const filePath = fsPath(documentUri);
+	const workspaceUri = workspace.getWorkspaceFolder(documentUri)?.uri;
 	const workspacePath = workspaceUri ? fsPath(workspaceUri) : undefined;
 
 	// Loop through each launch config and add the relevant templates. Configs may be
@@ -18,7 +18,17 @@ export function getTemplatedLaunchConfigs(document: TextDocument, fileType: stri
 	for (const templateType of wantedTemplateTypes) {
 		const relevantLaunchConfigs = runConfigs
 			.filter((c) => c.type === "dart" && isTemplateOfType(c, templateType))
-			.filter((c) => c.codeLens?.path && workspacePath ? isWithinPathOrEqual(filePath, path.join(workspacePath, c.codeLens?.path)) : !c.codeLens?.path);
+			.filter((c) => {
+				if (!c.codeLens?.path)
+					// Always include things with no path.
+					return true;
+				else if (onlyGlobal)
+					// Don't return anything that has a path if we only want global.
+					return false;
+				else
+					// Otherwise, check the path.
+					return workspacePath ? isWithinPathOrEqual(filePath, path.join(workspacePath, c.codeLens?.path)) : false;
+			});
 		for (const launchConfig of relevantLaunchConfigs) {
 			runFileTemplates.push({
 				...launchConfig,
