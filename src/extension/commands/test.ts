@@ -99,6 +99,7 @@ export class TestCommands implements vs.Disposable {
 			true,
 			{
 				args: projectWithTests.tests.slice(1),
+				cwd: projectWithTests.projectFolder,
 				name: projectWithTests.name,
 			},
 			testRun,
