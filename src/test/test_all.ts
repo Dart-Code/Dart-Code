@@ -80,13 +80,6 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 }
 
 async function runAllTests(): Promise<void> {
-	if (process.env.CI) {
-		console.log("\n\n");
-		console.log("A combined test summary will be available at:");
-		console.log(`  https://dartcode.org/test-results/?${process.env.GITHUB_REF}/${process.env.GITHUB_SHA}`);
-		console.log("\n\n");
-	}
-
 	testEnv.DART_CODE_IS_TEST_RUN = true;
 	testEnv.MOCHA_FORBID_ONLY = true;
 
