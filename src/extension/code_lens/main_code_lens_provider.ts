@@ -28,7 +28,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			return;
 
 		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";
-		const templates = getTemplatedLaunchConfigs(document, fileType);
+		const templates = getTemplatedLaunchConfigs(document.uri, fileType);
 		const templatesHaveRun = !!templates.find((t) => t.name === "Run");
 		const templatesHaveDebug = !!templates.find((t) => t.name === "Debug");
 		const templatesHaveProfile = !!templates.find((t) => t.name === "Profile");

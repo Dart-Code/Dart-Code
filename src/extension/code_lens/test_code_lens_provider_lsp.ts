@@ -37,7 +37,7 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		if (!isTestFile(fsPath(document.uri)))
 			return;
 
-		const templates = getTemplatedLaunchConfigs(document, "test");
+		const templates = getTemplatedLaunchConfigs(document.uri, "test");
 		const templatesHaveRun = !!templates.find((t) => t.name === "Run");
 		const templatesHaveDebug = !!templates.find((t) => t.name === "Debug");
 

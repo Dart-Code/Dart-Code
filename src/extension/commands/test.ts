@@ -11,6 +11,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo } from "../../shared/utils/outline_das";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig, TestName } from "../../shared/utils/test";
+import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { isDartDocument } from "../editors";
@@ -92,20 +93,21 @@ export class TestCommands implements vs.Disposable {
 			return;
 		}
 
-		await Promise.all(projectsWithTests.map((projectWithTests) => this.runTests(
-			projectWithTests.tests[0],
-			false,
-			undefined,
-			false,
-			true,
-			{
+		await Promise.all(projectsWithTests.map((projectWithTests) => this.runTests({
+			debug: false,
+			launchTemplate: {
 				args: projectWithTests.tests.slice(1),
 				cwd: projectWithTests.projectFolder,
 				name: projectWithTests.name,
 			},
+			programPath: projectWithTests.tests[0],
+			shouldRunSkippedTests: false,
+			suppressPromptOnErrors: true,
+			testNames: undefined,
 			testRun,
-			undefined,
-		)));
+			token: undefined,
+			useLaunchJsonCodeLensTemplate: true,
+		})));
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
@@ -113,10 +115,29 @@ export class TestCommands implements vs.Disposable {
 		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(suiteData.path));
 		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
 
-		return this.runTests(programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, undefined, testRun, token);
+		return this.runTests({
+			debug,
+			launchTemplate: undefined,
+			programPath,
+			shouldRunSkippedTests,
+			suppressPromptOnErrors,
+			testNames,
+			testRun,
+			token,
+			useLaunchJsonCodeLensTemplate: true,
+		});
 	}
 
-	private runTests(programPath: string, debug: boolean, testNames: TestName[] | undefined, shouldRunSkippedTests: boolean, suppressPromptOnErrors: boolean, launchTemplate: any | undefined, testRun: vs.TestRun | undefined, token: vs.CancellationToken | undefined): Promise<boolean> {
+	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonCodeLensTemplate }: TestLaunchInfo): Promise<boolean> {
+		if (useLaunchJsonCodeLensTemplate) {
+			// Get the default Run/Debug template for running/debugging tests and use that as a base.
+			const requiredName = debug ? "Debug" : "Run";
+			const templates = getTemplatedLaunchConfigs(vs.Uri.file(programPath), "test", true);
+			const template = templates.find((t) => t.name === requiredName);
+			if (template)
+				launchTemplate = Object.assign({}, template, launchTemplate);
+		}
+
 		const subs: vs.Disposable[] = [];
 		return new Promise<boolean>(async (resolve, reject) => {
 			let testsName = path.basename(programPath);
@@ -202,16 +223,16 @@ export class TestCommands implements vs.Disposable {
 		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
-		return this.runTests(
-			test.file,
-			!noDebug,
-			[{ name: test.fullName, isGroup: test.isGroup }],
-			shouldRunSkippedTests,
-			false,
+		return this.runTests({
+			debug: !noDebug,
 			launchTemplate,
-			undefined,
-			undefined,
-		);
+			programPath: test.file,
+			shouldRunSkippedTests,
+			suppressPromptOnErrors: false,
+			testNames: [{ name: test.fullName, isGroup: test.isGroup }],
+			testRun: undefined,
+			token: undefined,
+		});
 	}
 
 	private async goToTestOrImplementationFile(resource?: vs.Uri): Promise<void> {
@@ -313,5 +334,16 @@ export class TestCommands implements vs.Disposable {
 	public dispose(): any {
 		disposeAll(this.disposables);
 	}
+}
 
+interface TestLaunchInfo {
+	programPath: string;
+	debug: boolean;
+	testNames: TestName[] | undefined;
+	shouldRunSkippedTests: boolean;
+	suppressPromptOnErrors: boolean;
+	launchTemplate: any | undefined;
+	useLaunchJsonCodeLensTemplate?: boolean;
+	testRun: vs.TestRun | undefined;
+	token: vs.CancellationToken | undefined;
 }
