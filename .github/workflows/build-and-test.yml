@@ -126,6 +126,11 @@ jobs:
         run: pub get
         working-directory: src/test/test_projects/hello_world
 
+      - name: pub get (hello_world/example)
+        if: startsWith(matrix.bot, 'dart')
+        run: pub get
+        working-directory: src/test/test_projects/hello_world/example
+
       - name: flutter pub get (dart_nested_flutter/nested_flutter_example)
         if: matrix.bot == 'misc'
         run: flutter pub get
