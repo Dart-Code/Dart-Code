@@ -5,10 +5,10 @@ import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
 import { arrayStartsWith } from "../../shared/utils/array";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { BaseTaskProvider, DartTaskDefinition } from "../dart/dart_task_provider";
-import { isFlutterWorkspaceFolder } from "../utils";
+import * as util from "../utils";
 
 
 export class FlutterTaskProvider extends BaseTaskProvider {
@@ -21,20 +21,22 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 	}
 
 	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
-		const dartProjects = getDartWorkspaceFolders();
+		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true });
 
-		let promises: Array<Promise<vs.Task | undefined>> = [];
-		dartProjects.forEach((folder) => {
-			const isFlutter = isFlutterWorkspaceFolder(folder);
+		let promises: Array<Promise<vs.Task>> = [];
+		projectFolders.forEach((folder) => {
+			const folderUri = vs.Uri.file(folder);
+			const workspaceFolder = vs.workspace.getWorkspaceFolder(folderUri)!;
+			const isFlutter = util.isFlutterProjectFolder(folder);
 			if (isFlutter) {
-				promises = promises.concat(this.createSharedTasks(folder));
+				promises = promises.concat(this.createSharedTasks(workspaceFolder, folderUri));
 
-				promises.push(this.createTask(folder, "flutter", ["build", "apk"]));
-				promises.push(this.createTask(folder, "flutter", ["build", "ios"]));
-				promises.push(this.createTask(folder, "flutter", ["build", "macos"]));
-				promises.push(this.createTask(folder, "flutter", ["build", "web"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "apk"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "ios"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "macos"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "web"]));
 
-				promises.push(this.createTask(folder, "flutter", ["install"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["install"]));
 			}
 		});
 
@@ -43,8 +45,8 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 		return tasks;
 	}
 
-	protected createPubTask(folder: vs.WorkspaceFolder, args: string[]) {
-		return this.createTask(folder, "flutter", ["pub", ...args]);
+	protected createPubTask(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, args: string[]) {
+		return this.createTask(workspaceFolder, projectFolder, "flutter", ["pub", ...args]);
 	}
 
 	protected injectArgs(definition: DartTaskDefinition): void | Promise<void> {
