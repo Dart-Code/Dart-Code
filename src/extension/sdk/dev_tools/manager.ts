@@ -274,11 +274,13 @@ export class DevToolsManager implements vs.Disposable {
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
 		if (options.embed) {
-			const exposedUri = vs.Uri.parse(await envUtils.exposeUrl(fullUrl));
-			// TODO: What should we do if we don't have a page?
-			this.launchInEmbeddedWebView(exposedUri, session, options.page ?? devToolsPages[0]);
+			// TODO: Exposing URLs is currently bypassed because of VS Code encoding bugs
+			// that break DevTools when using new Page-URL-Strategy.
+			// const exposedUri = vs.Uri.parse(await envUtils.exposeUrl(fullUrl));
+			// // TODO: What should we do if we don't have a page?
+			this.launchInEmbeddedWebView(fullUrl, session, options.page ?? devToolsPages[0]);
 		} else {
-			await envUtils.openInBrowser(fullUrl.toString(), this.logger);
+			await envUtils.openInBrowser(fullUrl, this.logger);
 		}
 	}
 
@@ -289,10 +291,11 @@ export class DevToolsManager implements vs.Disposable {
 			.join("&");
 		const vmServiceUri = vs.Uri.parse(session.vmServiceUri);
 		const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
-		return vs.Uri.parse(`${url}?${paramsString}&uri=${encodeURIComponent(exposedUrl)}`);
+		// Don't encode exposedUrl here because VS Code (incorrectly) over-encodes it.
+		return `${url}?uri=${exposedUrl}&${paramsString}`;
 	}
 
-	private launchInEmbeddedWebView(uri: vs.Uri, session: DartDebugSessionInformation, page: DevToolsPage) {
+	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: DevToolsPage) {
 		const pageId = page.id;
 		if (!this.devToolsEmbeddedViews[pageId]) {
 			this.devToolsEmbeddedViews[pageId] = [];

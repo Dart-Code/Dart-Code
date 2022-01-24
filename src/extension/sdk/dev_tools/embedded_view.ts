@@ -43,7 +43,7 @@ export class DevToolsEmbeddedView {
 	private messageDisposable: vs.Disposable;
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
 
-	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: vs.Uri, readonly page: DevToolsPage) {
+	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: string, readonly page: DevToolsPage) {
 		const column = firstNonEditorColumn() || vs.ViewColumn.Beside;
 		this.panel = vs.window.createWebviewPanel("dartDevTools", page.title, column, {
 			enableScripts: true,
@@ -55,7 +55,7 @@ export class DevToolsEmbeddedView {
 		this.panel.webview.html = `
 			<html>
 			<head>
-			<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${devToolsUri.authority};">
+			<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${vs.Uri.parse(devToolsUri).authority};">
 			<script nonce="${scriptNonce}">${pageScript}</script>
 			<style nonce="${cssNonce}">#devToolsFrame { ${frameCss} }</style>
 			</head>
@@ -72,9 +72,9 @@ export class DevToolsEmbeddedView {
 		);
 	}
 
-	public load(session: DartDebugSessionInformation, uri: vs.Uri): void {
+	public load(session: DartDebugSessionInformation, uri: string): void {
 		this.session = session;
-		this.panel.webview.postMessage({ command: "setUrl", url: uri.toString() });
+		this.panel.webview.postMessage({ command: "setUrl", url: uri });
 		this.panel.reveal();
 	}
 
