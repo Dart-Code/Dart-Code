@@ -651,7 +651,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
 		// tslint:disable-next-line: no-floating-promises
-		showUserPrompts(logger, extContext, webClient, workspaceContext);
+		showUserPrompts(logger, extContext, webClient, analytics, workspaceContext);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);

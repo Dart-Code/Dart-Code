@@ -5,12 +5,12 @@ import * as vs from "vscode";
 import { vsCodeVersion } from "../capabilities/vscode";
 import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyAnalyticsText, flutterSurveyDataUrl, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
-import { FlutterSurveyData, Logger } from "../interfaces";
+import { Analytics, FlutterSurveyData, Logger } from "../interfaces";
 import { Context } from "./workspace";
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
 /// (not whether it was clicked/opened).
-export async function showFlutterSurveyNotificationIfAppropriate(context: Context, webClient: WebClient, openInBrowser: (url: string) => Promise<boolean>, now: number, logger: Logger): Promise<boolean> {
+export async function showFlutterSurveyNotificationIfAppropriate(context: Context, webClient: WebClient, analytics: Analytics, openInBrowser: (url: string) => Promise<boolean>, now: number, logger: Logger): Promise<boolean> {
 	let surveyData: FlutterSurveyData;
 	try {
 		const rawSurveyJson = await webClient.fetch(flutterSurveyDataUrl);
@@ -71,14 +71,17 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	context.setFlutterSurveyNotificationLastShown(surveyData.uniqueId, Date.now());
 
 	// Prompt to show and handle response.
+	analytics.logFlutterSurveyShown();
 	vs.window.showInformationMessage(prompt, takeSurveyAction, skipThisSurveyAction).then(async (choice) => {
 		if (choice === skipThisSurveyAction) {
 			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
+			analytics.logFlutterSurveyDismissed();
 		} else if (choice === takeSurveyAction) {
 			// Mark as do-not-show-again if they answer it, since it seems silly
 			// to show them again if they already completed it.
 			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
 			await openInBrowser(surveyUrl);
+			analytics.logFlutterSurveyClicked();
 		}
 	});
 

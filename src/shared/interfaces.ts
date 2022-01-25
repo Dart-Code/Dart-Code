@@ -219,3 +219,9 @@ export interface Position {
 	// Zero-based line number.
 	character: number;
 }
+
+export interface Analytics {
+	logFlutterSurveyShown(): void;
+	logFlutterSurveyClicked(): void;
+	logFlutterSurveyDismissed(): void;
+}

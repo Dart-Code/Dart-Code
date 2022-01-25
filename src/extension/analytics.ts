@@ -25,6 +25,7 @@ enum Category {
 	Extension,
 	Analyzer,
 	Debugger,
+	FlutterSurvey,
 }
 
 enum EventAction {
@@ -36,6 +37,9 @@ enum EventAction {
 	OpenObservatory,
 	OpenTimeline,
 	OpenDevTools,
+	Shown,
+	Clicked,
+	Dismissed,
 }
 
 enum TimingVariable {
@@ -118,6 +122,9 @@ export class Analytics {
 	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.logger.info(e)); }
 	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.logger.info(e)); }
 	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.logger.info(e)); }
+	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(e)); }
+	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(e)); }
+	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(e)); }
 
 	private event(category: Category, action: EventAction, resourceUri?: Uri, customData?: any): Promise<void> {
 		const data: any = {

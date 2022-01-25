@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DART_CREATE_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
+import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
@@ -14,7 +14,7 @@ import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
 import { promptToReloadExtension } from "./utils";
 
-export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, workspaceContext: WorkspaceContext): Promise<void> {
+export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext): Promise<void> {
 	function shouldSuppress(key: string): boolean {
 		const stateKey = `${userPromptContextPrefix}${key}`;
 		return context.get(stateKey) === true;
@@ -73,7 +73,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 	}
 
 	if (workspaceContext.hasAnyFlutterProjects) {
-		if (await showFlutterSurveyNotificationIfAppropriate(context, webClient, envUtils.openInBrowser, Date.now(), logger))
+		if (await showFlutterSurveyNotificationIfAppropriate(context, webClient, analytics, envUtils.openInBrowser, Date.now(), logger))
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
