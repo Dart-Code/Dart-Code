@@ -116,8 +116,13 @@ export class PubGlobal {
 			try {
 				const pubPackage = await this.pubApi.getPackage(packageID);
 				if (!pubVersionIsAtLeast(installedVersion, pubPackage.latest.version)) {
-					this.logger.info(`${packageID} version ${installedVersion} is not at least ${pubPackage.latest.version} so returning UpdateAvailable`);
-					return VersionStatus.UpdateAvailable;
+					if (pubPackage.latest.retracted) {
+						this.logger.info(`${packageID} version ${installedVersion} is is retracted, so even though it's newer than ${pubPackage.latest.version}, returning Valid to avoid potentially installing repeatedly`);
+						return VersionStatus.Valid;
+					} else {
+						this.logger.info(`${packageID} version ${installedVersion} is not at least ${pubPackage.latest.version} so returning UpdateAvailable`);
+						return VersionStatus.UpdateAvailable;
+					}
 				}
 			} catch (e) {
 				// If we fail to call the API to check for a new version, then we can run

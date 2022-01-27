@@ -34,6 +34,7 @@ interface PubPackageVersion {
 	// eslint-disable-next-line camelcase
 	archive_url: string;
 	version: string;
+	retracted?: boolean,
 	pubspec: {
 		version: string;
 		name: string;
