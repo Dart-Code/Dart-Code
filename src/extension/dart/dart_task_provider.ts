@@ -176,8 +176,11 @@ export class DartTaskProvider extends BaseTaskProvider {
 
 	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) {
 		super(logger, context, sdks);
-		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri) => this.runTask(uri, "dartdoc", [])));
+		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri) => this.runTask(uri, this.dartDocCommand, this.dartDocArguments)));
 	}
+
+	private get dartDocCommand() { return this.dartCapabilities.supportsDartDoc ? "dart" : "dartdoc"; }
+	private get dartDocArguments() { return this.dartCapabilities.supportsDartDoc ? ["doc", "."] : ["."]; }
 
 	get type() { return DartTaskProvider.type; }
 
@@ -191,7 +194,7 @@ export class DartTaskProvider extends BaseTaskProvider {
 			const isFlutter = isFlutterProjectFolder(folder);
 			if (!isFlutter)
 				promises = promises.concat(this.createSharedTasks(workspaceFolder, folderUri));
-			promises.push(this.createTask(workspaceFolder, folderUri, "dartdoc", []));
+			promises.push(this.createTask(workspaceFolder, folderUri, this.dartDocCommand, this.dartDocArguments));
 
 			// For testing...
 			// tasks.push(this.createTask(folder, "--version"));
