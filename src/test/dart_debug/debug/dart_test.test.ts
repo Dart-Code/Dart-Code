@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { DebuggerType } from "../../../shared/enums";
+import { DebuggerType, TestStatus } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
@@ -10,7 +10,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -365,6 +365,20 @@ describe("dart test debugger", () => {
 			assert.ok(actualResults);
 			checkTreeNodeResults(actualResults, expectedResults);
 		}
+	});
+
+	it("can run tests through test controller using default launch template", async () => {
+		await extApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const controller = extApi.testController;
+		const testNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestEnvironmentFile)}`)!;
+		const testRequest = new vs.TestRunRequest([testNode]);
+		await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken));
+
+		const lastResults = controller.getLatestData(testNode)!;
+		const status = lastResults.getHighestStatus(false);
+		assert.equal(status, TestStatus.Passed);
+
 	});
 
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {

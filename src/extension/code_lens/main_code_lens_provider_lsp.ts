@@ -44,7 +44,7 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 			results.push(this.createCodeLens(document, mainFunction, "Debug", true));
 		if (fileType === "file" && !templatesHaveProfile && isInsideFlutterProject(document.uri))
 			results.push(this.createCodeLens(document, mainFunction, "Profile", false, { "flutterMode": "profile", "openDevTools": "performance" }));
-		return results.concat(templates.map((t) => this.createCodeLens(document, mainFunction, t.name, t.template.startsWith("debug"), t)));
+		return results.concat(templates.map((t) => this.createCodeLens(document, mainFunction, t.name, !t.noDebug, t)));
 	}
 
 	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: { [key: string]: string }): CodeLens {

@@ -34,6 +34,31 @@ describe("main_code_lens", () => {
 		assert.equal(fsPath(debugAction!.command!.arguments![0]), fsPath(helloWorldMainFile));
 	});
 
+	it("uses default templates for run/debug actions for main function", async function () {
+		const editor = await openFile(helloWorldMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldMainFile));
+
+		const fileCodeLens = await getCodeLens(editor.document);
+		const mainFunctionPos = positionOf(`main^() async {`);
+
+		const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
+		assert.equal(codeLensForMainFunction.length, 2);
+
+		if (!codeLensForMainFunction[0].command) {
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			this.skip();
+			return;
+		}
+
+		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
+		assert.equal(runAction.command!.arguments![1].env.LAUNCH_ENV_VAR, "true");
+
+		const debugAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Debug")!;
+		assert.equal(debugAction.command!.arguments![1].env.LAUNCH_ENV_VAR, "true");
+	});
+
 	for (const debugType of [
 		{ type: "run", name: "Run" },
 		{ type: "debug", name: "Debug" },

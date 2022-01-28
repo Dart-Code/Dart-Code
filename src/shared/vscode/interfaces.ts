@@ -1,4 +1,4 @@
-import { CompletionItem, CompletionItemProvider, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TestController, TestItem, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CancellationToken, CompletionItem, CompletionItemProvider, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TestController, TestItem, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
@@ -77,9 +77,9 @@ export interface InternalExtensionApi {
 	};
 	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
-	testController: { controller: TestController; getLatestData(test: TestItem): TreeNode | undefined };
+	testController: { controller: TestController; runTests(debug: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>; getLatestData(test: TestItem): TreeNode | undefined };
 	testCoordinator: TestSessionCoordinator;
-	testDiscoverer: { forceUpdate(uri: Uri): void },
+	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void> },
 	testModel: TestModel;
 	webClient: WebClient;
 	workspaceContext: WorkspaceContext;

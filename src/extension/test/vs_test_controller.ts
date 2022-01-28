@@ -64,7 +64,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return this.nodeForItem.get(test);
 	}
 
-	private async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
+	public async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
 		await this.discoverer?.ensureSuitesDiscovered();
 
 		const testsToRun = new Set<vs.TestItem>();
