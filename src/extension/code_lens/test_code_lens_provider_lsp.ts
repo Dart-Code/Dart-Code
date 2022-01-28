@@ -52,7 +52,7 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 						results.push(this.createCodeLens(document, test, "Run", false));
 					if (!templatesHaveDebug)
 						results.push(this.createCodeLens(document, test, "Debug", true));
-					return results.concat(templates.map((t) => this.createCodeLens(document, test, t.name, t.template.startsWith("debug"), t)));
+					return results.concat(templates.map((t) => this.createCodeLens(document, test, t.name, !t.noDebug, t)));
 				}),
 			(x) => x,
 		);

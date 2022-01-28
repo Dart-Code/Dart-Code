@@ -2340,6 +2340,10 @@
 								],
 								"default": "default"
 							},
+							"templateFor": {
+								"type": "string",
+								"markdownDescription": "A path that indicates this is the default launch config for files within that path. Used for the default 'Run' and 'Debug' CodeLens configs, as well as running tests through the test runner. Setting to an empty string will apply to all files."
+							},
 							"codeLens": {
 								"description": "Shows this launch config in CodeLens links for main and/or test methods.",
 								"type": "object",

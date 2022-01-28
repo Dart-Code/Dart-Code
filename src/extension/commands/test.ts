@@ -11,7 +11,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo } from "../../shared/utils/outline_das";
 import { createTestFileAction, defaultTestFileContents, getLaunchConfig, TestName } from "../../shared/utils/test";
-import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
+import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { isDartDocument } from "../editors";
@@ -106,7 +106,7 @@ export class TestCommands implements vs.Disposable {
 			testNames: undefined,
 			testRun,
 			token: undefined,
-			useLaunchJsonCodeLensTemplate: true,
+			useLaunchJsonTestTemplate: true,
 		})));
 	}
 
@@ -124,16 +124,15 @@ export class TestCommands implements vs.Disposable {
 			testNames,
 			testRun,
 			token,
-			useLaunchJsonCodeLensTemplate: true,
+			useLaunchJsonTestTemplate: true,
 		});
 	}
 
-	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonCodeLensTemplate }: TestLaunchInfo): Promise<boolean> {
-		if (useLaunchJsonCodeLensTemplate) {
+	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestLaunchInfo): Promise<boolean> {
+		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.
 			const requiredName = debug ? "Debug" : "Run";
-			const templates = getTemplatedLaunchConfigs(vs.Uri.file(programPath), "test", true);
-			const template = templates.find((t) => t.name === requiredName);
+			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath));
 			if (template)
 				launchTemplate = Object.assign({}, template, launchTemplate);
 		}
@@ -343,7 +342,7 @@ interface TestLaunchInfo {
 	shouldRunSkippedTests: boolean;
 	suppressPromptOnErrors: boolean;
 	launchTemplate: any | undefined;
-	useLaunchJsonCodeLensTemplate?: boolean;
+	useLaunchJsonTestTemplate?: boolean;
 	testRun: vs.TestRun | undefined;
 	token: vs.CancellationToken | undefined;
 }

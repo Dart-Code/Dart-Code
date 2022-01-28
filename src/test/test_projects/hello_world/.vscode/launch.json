@@ -1,2 +1,18 @@
 {
+	"configurations": [
+		{
+			"name": "Dart",
+			"type": "dart",
+			"request": "launch",
+		},
+		{
+			"name": "Dart with Env Var",
+			"type": "dart",
+			"request": "launch",
+			"env": {
+				"LAUNCH_ENV_VAR": "true"
+			},
+			"templateFor": "",
+		}
+	]
 }
