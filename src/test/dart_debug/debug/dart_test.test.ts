@@ -316,6 +316,7 @@ describe("dart test debugger", () => {
 				path.join("test", "broken_test.dart"),
 				path.join("test", "discovery_test.dart"),
 				path.join("test", "dupe_name_test.dart"),
+				path.join("test", "environment_test.dart"),
 				path.join("test", "folder", "folder_test.dart"),
 				path.join("test", "project_test.dart"),
 				path.join("test", "short_test.dart"),
@@ -368,10 +369,13 @@ describe("dart test debugger", () => {
 	});
 
 	it("can run tests through test controller using default launch template", async () => {
+		const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
 		await extApi.testDiscoverer.ensureSuitesDiscovered();
 
 		const controller = extApi.testController;
-		const testNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestEnvironmentFile)}`)!;
+		const testNode = controller.controller.items.get(suiteID);
+		if (!testNode)
+			throw Error(`Unable to find ${suiteID}!`);
 		const testRequest = new vs.TestRunRequest([testNode]);
 		await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken));
 
