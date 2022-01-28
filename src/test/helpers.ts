@@ -341,6 +341,7 @@ export async function clearTestTree(): Promise<void> {
 		delete extApi.testModel.suites[key];
 	extApi.testModel.updateNode();
 	await delay(50); // Allow tree to be updated.
+	extApi.testDiscoverer.testDiscoveryPerformed = undefined;
 	logger.info(`Done clearing test tree!`);
 }
 

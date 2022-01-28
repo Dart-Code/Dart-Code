@@ -21,7 +21,7 @@ export class TestDiscoverer implements IAmDisposable {
 
 	private hasSetupFileHandlers = false;
 
-	private testDiscoveryPerformed: Promise<void> | undefined;
+	public testDiscoveryPerformed: Promise<void> | undefined;
 
 	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
@@ -31,7 +31,6 @@ export class TestDiscoverer implements IAmDisposable {
 	/// is started (or already in progress), waits for it to complete.
 	public async ensureSuitesDiscovered() {
 		if (!this.testDiscoveryPerformed)
-
 			this.testDiscoveryPerformed = this.performSuiteDiscovery();
 
 		// Wait for discovery to complete, however it started.
