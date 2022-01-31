@@ -1,5 +1,7 @@
 import * as path from "path";
 import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterServer, DebugSession } from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
@@ -8,7 +10,7 @@ import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
-	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context) { }
+	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
 		return this.descriptorForType(session.configuration.debuggerType);
@@ -22,7 +24,13 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const isFlutterOrFlutterTest = debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterTest;
 		const isDartTestOrFlutterTest = debuggerType === DebuggerType.DartTest || debuggerType === DebuggerType.FlutterTest;
 
-		if (config.experimentalSdkDaps && (isDartOrDartTest || isFlutterOrFlutterTest)) {
+		let isSdkDapSupported = false;
+		if (isDartOrDartTest)
+			isSdkDapSupported = this.dartCapabilities.supportsSdkDap;
+		else if (isFlutterOrFlutterTest)
+			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
+
+		if (config.experimentalSdkDaps && isSdkDapSupported) {
 			const executable = isDartOrDartTest
 				? path.join(this.sdks.dart, dartVMPath)
 				: (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);

@@ -30,6 +30,7 @@ export class DartCapabilities {
 	get supportsDartDevTools() { return versionIsAtLeast(this.version, "2.15.0"); }
 	get supportsDartRunTest() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get supportsNonFileSchemeWorkspaces() { return versionIsAtLeast(this.version, "2.13.0-28"); }
+	get supportsSdkDap() { return versionIsAtLeast(this.version, "2.16.0"); }
 	// TODO: Update these (along with Flutter) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
