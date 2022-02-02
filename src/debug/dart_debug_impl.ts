@@ -218,7 +218,7 @@ export class DartDebugSession extends DebugSession {
 				this.processExited = false;
 				this.processExit = new Promise((resolve) => process.on("exit", (code, signal) => resolve({ code, signal })));
 				process.stdout.setEncoding("utf8");
-				process.stdout.on("data", async (data) => {
+				process.stdout.on("data", async (data: Buffer | string) => {
 					let match: RegExpExecArray | null = null;
 					if (this.shouldConnectDebugger && this.parseVmServiceUriFromStdOut && !this.vmService) {
 						match = vmServiceListeningBannerPattern.exec(data.toString());
@@ -229,7 +229,7 @@ export class DartDebugSession extends DebugSession {
 						this.logStdout(data.toString());
 				});
 				process.stderr.setEncoding("utf8");
-				process.stderr.on("data", (data) => {
+				process.stderr.on("data", (data: Buffer | string) => {
 					this.logToUserBuffered(data.toString(), "stderr");
 				});
 				process.on("error", (error) => {
@@ -1290,7 +1290,7 @@ export class DartDebugSession extends DebugSession {
 						if (this.isSimpleKind(instance.kind)) {
 							variables.push(await this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}`, instance.kind, instanceRef, true));
 						} else if (instance.elements) {
-							const elementPromises = instance.elements.map(async (element, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + startNumeric}]`, `[${i + startNumeric}]`, element, i <= maxValuesToCallToString));
+							const elementPromises = instance.elements.map(async (element: VMInstanceRef | VMSentinel, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}[${i + startNumeric}]`, `[${i + startNumeric}]`, element, i <= maxValuesToCallToString));
 							// Add them in order.
 							const elementVariables = await Promise.all(elementPromises);
 							variables = variables.concat(elementVariables);
@@ -1702,7 +1702,7 @@ export class DartDebugSession extends DebugSession {
 		try {
 			switch (request) {
 				case "callService":
-					const result = await this.callService(args.method, args.params);
+					const result = await this.callService(args.method as string, args.params);
 					response.body = result?.result;
 					this.logDapResponse(response);
 					this.sendResponse(response);

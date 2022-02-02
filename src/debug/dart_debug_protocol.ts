@@ -167,7 +167,7 @@ export interface VMInstance extends VMObj {
 	// The fields of this Instance.
 	fields?: VMBoundField[];
 	// The elements of a List instance. Provided for instance kinds: List.
-	elements?: any[];
+	elements?: Array<VMInstanceRef | VMSentinel>;
 	// The elements of a Map instance. Provided for instance kinds: Map.
 	associations?: VMMapAssociation[];
 }

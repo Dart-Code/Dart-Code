@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import { Writable } from "stream";
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { getRandomInt } from "../shared/utils/fs";
@@ -43,7 +44,7 @@ export class DartDebugClient extends DebugClient {
 
 		// Set up handlers for any custom events our tests may rely on (can't find
 		// a way to just do them all 🤷‍♂️).
-		customEventsToForward.forEach((evt) => this.on(evt, (e) => this.handleCustomEvent(e)));
+		customEventsToForward.forEach((evt) => this.on(evt, (e: DebugSessionCustomEvent) => this.handleCustomEvent(e)));
 
 		// Log important events to make troubleshooting tests easier.
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
@@ -78,8 +79,8 @@ export class DartDebugClient extends DebugClient {
 		// it as it won't receive the events normally because this is not a Code-spawned
 		// debug session.
 		if (testCoordinator) {
-			this.on("dart.testNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID, e.event, e.body));
-			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID));
+			this.on("dart.testNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body));
+			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID as string | undefined));
 		}
 	}
 
@@ -122,7 +123,7 @@ export class DartDebugClient extends DebugClient {
 		});
 	}
 
-	public async launch(launchArgs: any): Promise<void> {
+	public async launch(launchArgs: DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments): Promise<void> {
 		// The new DAP doesn't default to breaking on any exceptions so to simplify tests
 		// set it based on whether we'd in debug mode or not.
 		const isDebugging = !(launchArgs.noDebug ?? false);
