@@ -279,10 +279,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("does not re-send theme on hot restart if set by someone else", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("does not re-send theme on hot restart if set by someone else", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000),
@@ -316,10 +313,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("can quit during a build", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("can quit during a build", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		const configSequence = dc.configurationSequence();
 		// Kick off a build, but do not await it...
@@ -340,10 +334,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		]);
 	});
 
-	it("receives the expected output", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("receives the expected output", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -367,10 +358,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
 
-	it("can hot reload with customRequest", async function () {
-		if (flutterTestDeviceIsWeb && !extApi.flutterCapabilities.webSupportsHotReload)
-			return this.skip();
-
+	it("can hot reload with customRequest", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
@@ -385,10 +373,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("can hot reload using command", async function () {
-		if (flutterTestDeviceIsWeb && !extApi.flutterCapabilities.webSupportsHotReload)
-			return this.skip();
-
+	it("can hot reload using command", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
@@ -403,10 +388,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("hot reloads on save", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("hot reloads on save", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
@@ -1467,8 +1449,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 	});
 
-	// Skipped due to https://github.com/flutter/flutter/issues/17007.
-	it.skip("stops on exception", async () => {
+	it("stops on exception", async function () {
+		// Currently fails on web as it doesn't pause on the exception.
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
 		await waitAllThrowIfTerminates(dc,
