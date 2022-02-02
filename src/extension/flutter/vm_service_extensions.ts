@@ -54,7 +54,7 @@ export class VmServiceExtensions {
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
 	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {
 		if (e.event === "dart.serviceExtensionAdded") {
-			this.handleServiceExtensionLoaded(session, e.body.extensionRPC, e.body.isolateId);
+			this.handleServiceExtensionLoaded(session, e.body.extensionRPC as VmServiceExtension, e.body.isolateId as string | null | undefined);
 
 			try {
 				if (e.body.extensionRPC === VmServiceExtension.InspectorSetPubRootDirectories) {
@@ -78,9 +78,9 @@ export class VmServiceExtensions {
 				this.logger.error(e);
 			}
 		} else if (e.event === "dart.serviceRegistered") {
-			this.handleServiceRegistered(e.body.service, e.body.method);
+			this.handleServiceRegistered(e.body.service as VmService, e.body.method as string);
 		} else if (e.event === "flutter.serviceExtensionStateChanged") {
-			this.handleRemoteValueUpdate(e.body.extension, e.body.value);
+			this.handleRemoteValueUpdate(e.body.extension as string, e.body.value);
 		}
 	}
 

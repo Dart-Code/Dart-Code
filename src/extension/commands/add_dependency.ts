@@ -28,8 +28,8 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly pubApi: PubApi) {
 		super(logger, context, workspace, dartCapabilities);
 
-		this.disposables.push(vs.commands.registerCommand("dart.addDependency", (uri) => this.promptAndAddDependency(uri, false)));
-		this.disposables.push(vs.commands.registerCommand("dart.addDevDependency", (uri) => this.promptAndAddDependency(uri, true)));
+		this.disposables.push(vs.commands.registerCommand("dart.addDependency", (uri: string | vs.Uri | undefined) => this.promptAndAddDependency(uri, false)));
+		this.disposables.push(vs.commands.registerCommand("dart.addDevDependency", (uri: string | vs.Uri | undefined) => this.promptAndAddDependency(uri, true)));
 		this.disposables.push(vs.commands.registerCommand("_dart.addDependency", this.addDependency, this));
 		this.disposables.push(vs.commands.registerCommand("_dart.removeDependency", this.removeDependency, this));
 

@@ -89,8 +89,8 @@ export class FlutterCommands extends BaseSdkCommands {
 			return;
 		}
 
-		const projectFolder = debugSession.configuration.cwd;
-		const deviceId = debugSession.configuration.deviceId ?? this.deviceManager?.currentDevice?.id;
+		const projectFolder = debugSession.configuration.cwd as string;
+		const deviceId = (debugSession.configuration.deviceId ?? this.deviceManager?.currentDevice?.id) as string | undefined;
 		const outputFilename = nextAvailableFilename(this.flutterScreenshotPath, "flutter_", ".png");
 		const args = ["screenshot"];
 		if (deviceId) {
@@ -379,7 +379,7 @@ function getCurrentFlutterCreateSettings(): PickableSetting[] {
 			description: config.flutterCreateOrganization || "com.example",
 			detail: "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier.",
 			label: "Organization",
-			setValue: (newValue) => config.setFlutterCreateOrganization(newValue),
+			setValue: (newValue: string | undefined) => config.setFlutterCreateOrganization(newValue),
 			settingKind: "STRING",
 		},
 		{
@@ -388,7 +388,7 @@ function getCurrentFlutterCreateSettings(): PickableSetting[] {
 			detail: "The language to use for Android-specific code, either Java (legacy) or Kotlin (recommended).",
 			enumValues: ["kotlin", "java"],
 			label: "Android Language",
-			setValue: (newValue) => config.setFlutterCreateAndroidLanguage(newValue),
+			setValue: (newValue: "kotlin" | "java" | undefined) => config.setFlutterCreateAndroidLanguage(newValue),
 			settingKind: "ENUM",
 		},
 		{
@@ -397,7 +397,7 @@ function getCurrentFlutterCreateSettings(): PickableSetting[] {
 			detail: "The language to use for iOS-specific code, either ObjectiveC (legacy) or Swift (recommended).",
 			enumValues: ["swift", "objc"],
 			label: "iOS Language",
-			setValue: (newValue) => config.setFlutterCreateIOSLanguage(newValue),
+			setValue: (newValue: "swift" | "objc" | undefined) => config.setFlutterCreateIOSLanguage(newValue),
 			settingKind: "ENUM",
 		},
 		{
@@ -405,7 +405,7 @@ function getCurrentFlutterCreateSettings(): PickableSetting[] {
 			description: config.flutterCreateOffline ? "enabled" : "not enabled",
 			detail: "When \"flutter pub get\" is run by the create command, this indicates whether to run it in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
 			label: "Create Projects Offline",
-			setValue: (newValue) => config.setFlutterCreateOffline(newValue),
+			setValue: (newValue: boolean | undefined) => config.setFlutterCreateOffline(newValue),
 			settingKind: "BOOL",
 		},
 	];

@@ -4,6 +4,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
+import { DartVsCodeLaunchArgs } from "../../../shared/debug/interfaces";
 import { DebuggerType } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
@@ -22,7 +23,7 @@ describe("dart cli debugger", () => {
 		dc = createDebugClient(DebuggerType.Dart);
 	});
 
-	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
+	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
 		const config = await getAttachConfiguration(Object.assign({ vmServiceUri }, extraConfiguration));
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
@@ -50,7 +51,7 @@ describe("dart cli debugger", () => {
 				program: fsPath(helloWorldMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--my-vm-flag"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--my-vm-flag"]);
 		});
 
 	});
@@ -932,7 +933,7 @@ void printSomething() {
 		const variables = await dc.getTopFrameVariables("Locals");
 
 		for (const variable of variables) {
-			const evaluateName = (variable as any).evaluateName;
+			const evaluateName = (variable as any).evaluateName as string | undefined;
 			if (!evaluateName)
 				continue;
 			const evaluateResult = await dc.evaluateForFrame(evaluateName);
@@ -959,7 +960,7 @@ void printSomething() {
 		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
 
 		for (const variable of allVariables) {
-			const evaluateName = (variable as any).evaluateName;
+			const evaluateName = (variable as any).evaluateName as string | undefined;
 			if (!evaluateName)
 				continue;
 			const evaluateResult = await dc.evaluateForFrame(evaluateName);

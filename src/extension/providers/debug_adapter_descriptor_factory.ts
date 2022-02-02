@@ -13,7 +13,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
-		return this.descriptorForType(session.configuration.debuggerType);
+		return this.descriptorForType(session.configuration.debuggerType as DebuggerType);
 	}
 
 	public descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor {

@@ -119,13 +119,13 @@ export class DartTestDebugSession extends DartDebugSession {
 			try {
 				await this.handleTestEvent(n);
 			} catch (e: any) {
-				this.log(e);
+				this.log(`${e}`);
 				this.logToUser(`${e}\n`);
 			}
 			try {
 				this.sendTestEventToEditor(n);
 			} catch (e: any) {
-				this.log(e);
+				this.log(`${e}`);
 				this.logToUser(`${e}\n`);
 			}
 		});
@@ -150,13 +150,13 @@ export class DartTestDebugSession extends DartDebugSession {
 		// Handle basic output
 		switch (notification.type) {
 			case "start":
-				const pid = notification.pid;
+				const pid = notification.pid as number | undefined;
 				if (pid) {
 					this.recordAdditionalPid(pid);
 				}
 				break;
 			case "debug":
-				const observatoryUri = notification.observatory;
+				const observatoryUri = notification.observatory as string | undefined;
 				if (observatoryUri) {
 					const match = vmServiceHttpLinkPattern.exec(observatoryUri);
 					if (match) {

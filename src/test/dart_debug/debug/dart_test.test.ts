@@ -1,6 +1,8 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { Outline as lspOutline } from "../../../shared/analysis/lsp/custom_protocol";
+import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType, TestStatus } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
@@ -57,7 +59,7 @@ describe("dart test debugger", () => {
 				program: fsPath(helloWorldTestMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--my-test-flag"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--my-test-flag"]);
 		});
 
 		it("when suppressTestTimeouts is set", async () => {
@@ -66,7 +68,7 @@ describe("dart test debugger", () => {
 				program: fsPath(helloWorldTestMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--timeout"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--timeout"]);
 		});
 	});
 
@@ -104,7 +106,7 @@ describe("dart test debugger", () => {
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {
-			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			assert.ok(didStart);
 		});
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
@@ -408,7 +410,7 @@ describe("dart test debugger", () => {
 		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
-		visitor.visit(outline as any); // TODO: Remove when we don't have two outlines
+		visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
 		for (const test of (visitor.tests as Array<LspTestOutlineInfo | DasTestOutlineInfo>).filter((t) => !t.isGroup)) {
 			// Run the test.
 			await runWithoutDebugging(
@@ -441,7 +443,7 @@ describe("dart test debugger", () => {
 		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
-		visitor.visit(outline as any); // TODO: Remove when we don't have two outlines
+		visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
 		const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
 		const editor = await vs.window.showTextDocument(doc);
 		for (const modifyFile of [false, true]) {

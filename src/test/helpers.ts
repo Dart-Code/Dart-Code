@@ -546,7 +546,7 @@ export async function getCodeActions({ kind, title }: { kind?: vs.CodeActionKind
 export async function executeCodeAction({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
 	const matchingActions = await getCodeActions({ kind, title }, range);
 	assert.equal(matchingActions.length, 1);
-	await waitForEditorChange(() => vs.commands.executeCommand(matchingActions[0].command!.command, ...matchingActions[0].command!.arguments!));
+	await waitForEditorChange(() => vs.commands.executeCommand(matchingActions[0].command!.command, ...matchingActions[0].command!.arguments!)); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 }
 
 export function positionOf(searchText: string, doc?: vs.TextDocument): vs.Position {
@@ -948,16 +948,16 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 	});
 }
 
-export async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs) | undefined | null> {
+export async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
 	const debugConfig: vs.DebugConfiguration = Object.assign({}, {
 		name: `Dart & Flutter (${currentTestName})`,
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as any;
+	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs;
 }
 
-export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
+export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	if (script instanceof vs.Uri)
 		script = fsPath(script);
 	const launchConfig = Object.assign({}, {
@@ -966,7 +966,7 @@ export async function getLaunchConfiguration(script?: vs.Uri | string, extraConf
 	return await getResolvedDebugConfiguration(launchConfig);
 }
 
-export async function getAttachConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration | undefined | null> {
+export async function getAttachConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	const attachConfig = Object.assign({}, {
 		request: "attach",
 	}, extraConfiguration);
@@ -1070,11 +1070,11 @@ export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
 // Watches a promise and reports every 10s while it's unresolved. This is to aid tracking
 // down hangs in test runs where multiple promises can be spawned together and generate
 // lots of log output, making it hard to keep track of which did not complete.
-export function watchPromise<T>(name: string, promise: Promise<T> | any): Promise<T> | any {
+export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<T> {
 	// For convenience, this method might get wrapped around things that are not
 	// promises.
-	if (!promise || !promise.then || !promise.catch)
-		return promise;
+	if (!promise || !("then" in promise) || !("catch" in promise))
+		return Promise.resolve(promise);
 	let didComplete = false;
 	// We'll log completion of the promise only if we'd logged that it was still in
 	// progress at some point.

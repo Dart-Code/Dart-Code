@@ -12,15 +12,16 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 
 	const logsName = process.env.LOGS_NAME;
 	const testRunName = `${testFolder.replace("/", "_")}${logSuffix ? `_${logSuffix}` : ""}_${logsName}`;
+	const logPath = path.join(cwd, ".dart_code_test_logs", `${testRunName}`);
 
 	testEnv.TEST_RUN_NAME = testRunName;
-	testEnv.DC_TEST_LOGS = path.join(cwd, ".dart_code_test_logs", `${testRunName}`);
+	testEnv.DC_TEST_LOGS = logPath;
 	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}.json`);
 	testEnv.TEST_XML_OUTPUT = path.join(path.join(cwd, ".test_results"), `${testRunName}.xml`);
 	testEnv.TEST_CSV_SUMMARY = path.join(path.join(cwd, ".test_results"), `${testRunName}_summary.csv`);
 
-	if (!fs.existsSync(testEnv.DC_TEST_LOGS))
-		fs.mkdirSync(testEnv.DC_TEST_LOGS);
+	if (!fs.existsSync(logPath))
+		fs.mkdirSync(logPath);
 
 	const codeVersion = process.env.BUILD_VERSION === "dev" ? "insiders" : process.env.BUILD_VERSION;
 

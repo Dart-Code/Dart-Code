@@ -37,9 +37,18 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 
 		logger.info(`Loading Bazel Flutter config from ${flutterConfigPath}`);
 		const flutterConfigJson = fs.readFileSync(flutterConfigPath, "utf8");
-		const flutterConfig = JSON.parse(flutterConfigJson);
+		const flutterConfig = JSON.parse(flutterConfigJson) as {
+			daemonScript: string | undefined;
+			doctorScript: string | undefined;
+			runScript: string | undefined;
+			sdkHome: string | undefined;
+			syncScript: string | undefined;
+			testScript: string | undefined;
+		};
 
-		function makeFullPath(relOrAbsolute: string): string {
+		function makeFullPath(relOrAbsolute: string | undefined): string | undefined {
+			if (!relOrAbsolute)
+				return relOrAbsolute;
 			if (path.isAbsolute(relOrAbsolute))
 				return relOrAbsolute;
 			return path.join(bazelWorkspaceRoot, relOrAbsolute);

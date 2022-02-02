@@ -230,7 +230,7 @@ export class LspAnalyzer extends Analyzer {
 							return await next(command, args);
 						} catch (e: any) {
 							if (e?.code === refactorFailedErrorCode) {
-								window.showErrorMessage(e.message);
+								window.showErrorMessage(e.message as string);
 								return;
 							} else {
 								throw e;

@@ -318,13 +318,13 @@ export class FlutterDebugSession extends DartDebugSession {
 			switch (request) {
 				case "hotReload":
 					if (this.currentRunningAppId)
-						await this.performReload(false, args);
+						await this.performReload(false, args as { reason: string, debounce?: boolean });
 					this.sendResponse(response);
 					break;
 
 				case "hotRestart":
 					if (this.currentRunningAppId)
-						await this.performReload(true, args);
+						await this.performReload(true, args as { reason: string, debounce?: boolean });
 					this.sendResponse(response);
 					break;
 

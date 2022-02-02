@@ -20,7 +20,7 @@ String name() {
 		const extractLocalAction = actions.find((r) => r.title.indexOf("Extract Local Variable") !== -1);
 		assert.ok(extractLocalAction, "Action was not found");
 
-		await (vs.commands.executeCommand(extractLocalAction.command!.command, ...extractLocalAction.command!.arguments || []));
+		await (vs.commands.executeCommand(extractLocalAction.command!.command, ...extractLocalAction.command!.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		// Incorrect indenting for non-LSP is due to https://github.com/Microsoft/vscode/issues/63129
 		// When that's fixed, this variable can be removed.

@@ -176,7 +176,7 @@ export class DartTaskProvider extends BaseTaskProvider {
 
 	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) {
 		super(logger, context, sdks);
-		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri) => this.runTask(uri, this.dartDocCommand, this.dartDocArguments)));
+		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri: vs.Uri) => this.runTask(uri, this.dartDocCommand, this.dartDocArguments)));
 	}
 
 	private get dartDocCommand() { return this.dartCapabilities.supportsDartDoc ? "dart" : "dartdoc"; }

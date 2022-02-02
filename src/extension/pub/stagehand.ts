@@ -44,8 +44,8 @@ export class Stagehand {
 
 			const stdout: string[] = [];
 			const stderr: string[] = [];
-			proc.stdout.on("data", (data) => stdout.push(data.toString()));
-			proc.stderr.on("data", (data) => stderr.push(data.toString()));
+			proc.stdout.on("data", (data: Buffer | string) => stdout.push(data.toString()));
+			proc.stderr.on("data", (data: Buffer | string) => stderr.push(data.toString()));
 			proc.on("close", (code) => {
 				if (!code) {
 					resolve(stdout.join(""));

@@ -25,7 +25,7 @@ describe("fix_code_action_provider", () => {
 			return;
 		}
 
-		await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments || []));
+		await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		const fileA = await openFile(helloWorldCreateMethodClassAFile);
 		const fileB = await openFile(helloWorldCreateMethodClassBFile);
@@ -53,7 +53,7 @@ describe("fix_code_action_provider", () => {
 			return;
 		}
 
-		await (vs.commands.executeCommand(createFileFix.command.command, ...createFileFix.command.arguments || []));
+		await (vs.commands.executeCommand(createFileFix.command.command, ...createFileFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		assert.ok(fs.existsSync(fsPath(missingFile)));
 	});

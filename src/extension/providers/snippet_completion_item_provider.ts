@@ -9,7 +9,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 
 	constructor(filename: string, shouldRender: (uri: Uri) => boolean) {
 		this.shouldRender = shouldRender;
-		const snippets = readJson(path.join(extensionPath, filename));
+		const snippets = readJson(path.join(extensionPath, filename)) as { [key: string]: { [key: string]: { prefix: string, description: string | undefined, body: string | string[] } } };
 		for (const snippetType of Object.keys(snippets)) {
 			for (const snippetName of Object.keys(snippets[snippetType])) {
 				const snippet = snippets[snippetType][snippetName];

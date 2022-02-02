@@ -17,8 +17,8 @@ export function getOutputChannel(name: string, insertDivider = false): vs.Output
 }
 
 export function runProcessInOutputChannel(process: SpawnedProcess, channel: vs.OutputChannel) {
-	process.stdout.on("data", (data) => channel.append(data.toString()));
-	process.stderr.on("data", (data) => channel.append(data.toString()));
+	process.stdout.on("data", (data: Buffer | string) => channel.append(data.toString()));
+	process.stderr.on("data", (data: Buffer | string) => channel.append(data.toString()));
 	process.on("close", (code) => channel.appendLine(`exit code ${code}`));
 }
 

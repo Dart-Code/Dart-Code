@@ -18,7 +18,7 @@ const debuggers: { [key: string]: any } = {
 	"web_test": WebTestDebugSession,
 };
 
-const dbg = debugType ? debuggers[debugType] : undefined;
+const dbg = debugType ? debuggers[debugType] as typeof DebugSession : undefined;
 if (dbg) {
 	DebugSession.run(dbg);
 } else {

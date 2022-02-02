@@ -1,7 +1,6 @@
 import { reporters, Runner } from "mocha";
 import { CoverageReporter } from "./mocha_coverage_reporter";
 import { LoggingReporter } from "./mocha_logging_reporter";
-import { SummaryReporter } from "./mocha_summary_reporter";
 
 export class MultiReporter extends reporters.Base {
 	constructor(runner: Runner, options: any) {
@@ -10,10 +9,6 @@ export class MultiReporter extends reporters.Base {
 		const reporterConstructors: any[] = [];
 		reporterConstructors.push(reporters.Spec);
 		reporterConstructors.push(LoggingReporter);
-		if (process.env.TEST_XML_OUTPUT)
-			reporterConstructors.push(reporters.XUnit);
-		if (process.env.TEST_CSV_SUMMARY)
-			reporterConstructors.push(SummaryReporter);
 		reporterConstructors.push(CoverageReporter);
 
 		// Create all reporters; they'll subscribe to the events on runner.

@@ -480,8 +480,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const testCoordinator = new TestSessionCoordinator(logger, testModel, lspAnalyzer?.fileTracker);
 	context.subscriptions.push(
 		testCoordinator,
-		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID, e.event, e.body)),
-		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID)),
+		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body)),
+		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID as string | undefined)),
 		vs.workspace.onDidChangeConfiguration((e) => testModel.handleConfigChange()),
 	);
 	const testDiscoverer = lspAnalyzer ? new TestDiscoverer(logger, lspAnalyzer.fileTracker, testModel) : undefined;
@@ -632,7 +632,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
-	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath) => {
+	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath: string) => {
 		if (!filePath) return;
 
 		vs.workspace.openTextDocument(filePath).then((document) => {

@@ -57,8 +57,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-server-debug-protocol", "ws"]);
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-server-debug-injected-client-protocol", "ws"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-server-debug-protocol", "ws"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-server-debug-injected-client-protocol", "ws"]);
 		});
 
 		it("when web renderer is set", async () => {
@@ -68,7 +68,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--web-renderer", "html"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-renderer", "html"]);
 		});
 
 		it("when flutterMode is set", async () => {
@@ -78,7 +78,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--release"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--release"]);
 		});
 
 		it("when flutterPlatform is set", async () => {
@@ -88,7 +88,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--target-platform", "android-arm"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--target-platform", "android-arm"]);
 		});
 
 		it("when flutterRunAdditionalArgs is set", async () => {
@@ -97,7 +97,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				program: fsPath(flutterHelloWorldMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--no-sound-null-safety"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--no-sound-null-safety"]);
 		});
 	});
 
@@ -493,7 +493,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			watchPromise("launch", dc.launch(config)),
 		);
 
-		const devTools = await watchPromise("executeCommand", vs.commands.executeCommand("dart.openDevTools")) as { url: string, dispose: () => void };
+		const devTools: { url: string, dispose: () => void } = await watchPromise("executeCommand", await vs.commands.executeCommand("dart.openDevTools"));
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		defer("Dispose DevTools", devTools.dispose);

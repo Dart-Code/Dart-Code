@@ -183,7 +183,7 @@ export class DebugCommands implements IAmDisposable {
 					program: fsPath(resource),
 				},
 			);
-			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
+			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
@@ -198,7 +198,7 @@ export class DebugCommands implements IAmDisposable {
 					program: fsPath(resource),
 				},
 			);
-			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig);
+			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration, this));
 		this.disposables.push(vs.commands.registerCommand("dart.rerunLastDebugSession", () => {
@@ -413,7 +413,7 @@ export class DebugCommands implements IAmDisposable {
 		if (s.type !== "dart")
 			return;
 
-		const session = new DartDebugSessionInformation(s, s.configuration.debuggerType);
+		const session = new DartDebugSessionInformation(s, s.configuration.debuggerType as DebuggerType);
 		// If we're the first fresh debug session, reset all settings to default.
 		// Subsequent launches will inherit the "current" values.
 		if (debugSessions.length === 0)
@@ -528,7 +528,7 @@ export class DebugCommands implements IAmDisposable {
 			this.debugMetrics.show();
 		} else if (e.event === "dart.navigate") {
 			if (e.body.file && e.body.line && e.body.column)
-				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file), e.body.line, e.body.column, e.body.inOtherEditorColumn);
+				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file as string), e.body.line, e.body.column, e.body.inOtherEditorColumn);
 		} else {
 			// Not handled, will fall through in the caller.
 			return false;
@@ -544,7 +544,7 @@ export class DebugCommands implements IAmDisposable {
 			const launched = !!e.body.launched;
 			if (!launched) {
 				try {
-					await envUtils.openInBrowser(e.body.url, this.logger);
+					await envUtils.openInBrowser(e.body.url as string, this.logger);
 				} catch (e: any) {
 					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
 				}
@@ -617,15 +617,15 @@ export class DebugCommands implements IAmDisposable {
 					// Build a new progress and store it in the session.
 					const completer = new PromiseCompleter<void>();
 					session.progress[e.body.progressID] = new ProgressMessage(progress, completer);
-					session.progress[e.body.progressID]?.report(e.body.message);
+					session.progress[e.body.progressID]?.report(e.body.message as string);
 					return completer.promise;
 				},
 			);
 		} else if (e.event === "dart.progressUpdate") {
-			session.progress[e.body.progressID]?.report(e.body.message);
+			session.progress[e.body.progressID]?.report(e.body.message as string);
 		} else if (e.event === "dart.progressEnd") {
 			if (e.body.message) {
-				session.progress[e.body.progressID]?.report(e.body.message);
+				session.progress[e.body.progressID]?.report(e.body.message as string);
 				await new Promise((resolve) => setTimeout(resolve, 400));
 			}
 			session.progress[e.body.progressID]?.complete();

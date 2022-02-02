@@ -23,8 +23,8 @@ export class AnalyzerStatusReporter {
 		// TODO: Should these go in disposables?
 		// If so, do we need to worry about server cleaning them up if it disposes first?
 		analyzer.registerForServerStatus((n) => this.handleServerStatus(n));
-		analyzer.registerForServerError((e) => this.handleServerError(e));
-		analyzer.registerForRequestError((e) => this.handleRequestError(e));
+		analyzer.registerForServerError((e: ServerErrorNotification) => this.handleServerError(e));
+		analyzer.registerForRequestError((e: RequestError) => this.handleRequestError(e));
 		analyzer.registerForServerTerminated(() => this.handleServerTerminated());
 
 		if (sendFakeErrorAtStartup) {

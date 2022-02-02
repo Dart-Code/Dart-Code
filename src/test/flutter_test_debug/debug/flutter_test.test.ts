@@ -86,7 +86,7 @@ describe("flutter test debugger", () => {
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {
-			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			assert.ok(didStart);
 		});
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
@@ -128,7 +128,7 @@ describe("flutter test debugger", () => {
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {
-			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			assert.ok(didStart);
 		});
 
@@ -166,7 +166,7 @@ describe("flutter test debugger", () => {
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {
-			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? []));
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			assert.ok(didStart);
 		});
 

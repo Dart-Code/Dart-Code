@@ -34,7 +34,7 @@ class Danny extends StatelessWidget {
 		const wrapAction = actionResults.find((r) => r.title.indexOf("Wrap with widget") !== -1);
 		assert.ok(wrapAction, "Action was not found");
 
-		await vs.commands.executeCommand(wrapAction.command!.command, ...(wrapAction.command!.arguments ?? []));
+		await vs.commands.executeCommand(wrapAction.command!.command, ...(wrapAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		await ensureTestContentWithSelection(`
 import 'package:flutter/widgets.dart';

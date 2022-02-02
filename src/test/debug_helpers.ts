@@ -3,6 +3,7 @@ import * as path from "path";
 import { DebugAdapterExecutable, DebugAdapterServer, DebugAdapterTrackerFactory, DebugConfiguration, Uri } from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
+import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
@@ -14,7 +15,7 @@ import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
 
-export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: { [key: string]: any }): Promise<DebugConfiguration> {
+export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: { [key: string]: any }): Promise<DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments> {
 	extraConfiguration = Object.assign(
 		{ deviceId: flutterTestDeviceId },
 		extraConfiguration,
@@ -24,7 +25,7 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 		throw new Error(`Could not get launch configuration (got ${config})`);
 
 	await watchPromise("startDebugger->start", dc.start());
-	return config;
+	return config as DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments;
 }
 
 export function createDebugClient(debugType: DebuggerType) {
@@ -209,11 +210,11 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 		throw new Error(`Could not get launch configuration (got ${config})`);
 	const process = extApi.safeToolSpawn(
 		config.cwd,
-		path.join(config.flutterSdkPath, flutterPath),
+		path.join(config.flutterSdkPath!, flutterPath),
 		[
 			"run",
 			"-d",
-			config.deviceId!,
+			config.deviceId as string,
 			"--start-paused",
 			"--disable-dds",
 		],
@@ -237,7 +238,7 @@ export class DartProcess {
 
 	constructor(public readonly process: SpawnedProcess) {
 		this.vmServiceUri = new Promise((resolve, reject) => {
-			process.stdout.on("data", (data) => {
+			process.stdout.on("data", (data: Buffer | string) => {
 				const match = vmServiceListeningBannerPattern.exec(data.toString());
 				if (match)
 					resolve(match[1]);

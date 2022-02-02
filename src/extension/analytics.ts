@@ -94,37 +94,37 @@ export class Analytics {
 	}
 
 	public logExtensionStartup(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Activated).catch((e) => this.logger.info(e));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(e));
+		this.event(Category.Extension, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`));
 	}
 	public logExtensionRestart(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(e));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(e));
+		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(`${e}`));
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`));
 	}
 	public logAnalyzerRestart() {
-		this.event(Category.Analyzer, EventAction.Restart).catch((e) => this.logger.info(e));
+		this.event(Category.Analyzer, EventAction.Restart).catch((e) => this.logger.info(`${e}`));
 	}
 	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
-	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(e)); }
-	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.logger.info(e)); }
-	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(e)); }
-	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.logger.info(e)); }
-	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.logger.info(e)); }
+	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(`${e}`)); }
+	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.logger.info(`${e}`)); }
+	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`)); }
+	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.logger.info(`${e}`)); }
+	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.logger.info(`${e}`)); }
 	public logDebuggerStart(resourceUri: Uri | undefined, debuggerType: string, runType: string) {
 		const customData = {
 			cd15: debuggerType,
 			cd16: runType,
 		};
-		this.event(Category.Debugger, EventAction.Activated, resourceUri, customData).catch((e) => this.logger.info(e));
+		this.event(Category.Debugger, EventAction.Activated, resourceUri, customData).catch((e) => this.logger.info(`${e}`));
 	}
-	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.logger.info(e)); }
-	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.logger.info(e)); }
-	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.logger.info(e)); }
-	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.logger.info(e)); }
-	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.logger.info(e)); }
-	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(e)); }
-	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(e)); }
-	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(e)); }
+	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.logger.info(`${e}`)); }
+	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.logger.info(`${e}`)); }
+	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.logger.info(`${e}`)); }
+	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.logger.info(`${e}`)); }
+	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.logger.info(`${e}`)); }
+	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(`${e}`)); }
+	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(`${e}`)); }
+	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(`${e}`)); }
 
 	private event(category: Category, action: EventAction, resourceUri?: Uri, customData?: any): Promise<void> {
 		const data: any = {
@@ -177,7 +177,7 @@ export class Analytics {
 		if (this.disableAnalyticsForSession || !machineId || !config.allowAnalytics || process.env.DART_CODE_IS_TEST_RUN)
 			return;
 
-		const data: any = {
+		const data = {
 			aip: 1,
 			an: "Dart Code",
 			av: extensionVersion,
@@ -231,7 +231,7 @@ export class Analytics {
 			try {
 				const req = https.request(options, (resp) => {
 					if (debug)
-						resp.on("data", (c) => {
+						resp.on("data", (c: Buffer | string) => {
 							try {
 								const gaDebugResp = JSON.parse(c.toString());
 								if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)

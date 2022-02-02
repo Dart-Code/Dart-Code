@@ -34,7 +34,7 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	protected async handleRequest(method: string, params: any): Promise<any> {
 		switch (method) {
 			case "app.exposeUrl":
-				return this.urlExposer(params.url);
+				return this.urlExposer(params.url as string);
 			default:
 				throw new Error(`Unknown request ${method}`);
 		}

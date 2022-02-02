@@ -31,7 +31,7 @@ export class FlutterOutlineCommands {
 		const fix = widget.fixes.find((f) => f.kind && f.kind.value.endsWith(refactorType));
 		if (fix) {
 			if (fix.command && fix.command.arguments)
-				vs.commands.executeCommand(fix.command.command, ...fix.command.arguments);
+				vs.commands.executeCommand(fix.command.command, ...fix.command.arguments); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			else if (fix.edit)
 				vs.workspace.applyEdit(fix.edit);
 			else
