@@ -1073,8 +1073,10 @@ export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
 export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<T> {
 	// For convenience, this method might get wrapped around things that are not
 	// promises.
-	if (!promise || !("then" in promise) || !("catch" in promise))
+	const promiseAny = promise as any;
+	if (!promise || !promiseAny.then || !promiseAny.catch)
 		return Promise.resolve(promise);
+	promise = promise as Promise<T>;
 	let didComplete = false;
 	// We'll log completion of the promise only if we'd logged that it was still in
 	// progress at some point.
