@@ -3,6 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { DebugProtocol } from "vscode-debugprotocol";
+import { DartVsCodeLaunchArgs } from "../../../shared/debug/interfaces";
 import { DebuggerType } from "../../../shared/enums";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../../debug_helpers";
@@ -25,7 +26,7 @@ describe("flutter run debugger (attach)", () => {
 		dc = createDebugClient(DebuggerType.Flutter);
 	});
 
-	async function attachDebugger(vmServiceUri?: string): Promise<vs.DebugConfiguration> {
+	async function attachDebugger(vmServiceUri?: string): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
 		const config = await getAttachConfiguration({
 			args: [
 				// Disable DDS when connecting, because we launch processes with `flutter run` which
