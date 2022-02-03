@@ -132,7 +132,7 @@ export interface CustomEmulator {
 	name: string;
 	executable: string;
 	args?: string[];
-	env: any;
+	env?: { [key: string]: string };
 }
 
 export interface EmulatorCreator {

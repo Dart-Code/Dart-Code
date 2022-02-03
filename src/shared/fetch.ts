@@ -78,7 +78,7 @@ export class WebClient {
 					reject({ message: `Failed to get ${path}: ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
 				} else {
 					const chunks: string[] = [];
-					resp.on("data", (b) => chunks.push(b.toString()));
+					resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
 					resp.on("end", () => {
 						const data = chunks.join("");
 						resolve(data);

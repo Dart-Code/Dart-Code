@@ -66,7 +66,7 @@ export class DevToolsEmbeddedView {
 		this.messageDisposable = this.panel.webview.onDidReceiveMessage(
 			async (message) => {
 				if (message.command === "launchUrl") {
-					await envUtils.openInBrowser(message.data.url);
+					await envUtils.openInBrowser(message.data.url as string);
 				}
 			},
 		);

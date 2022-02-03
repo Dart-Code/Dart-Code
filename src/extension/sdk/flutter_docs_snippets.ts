@@ -51,10 +51,10 @@ function getFlutterSnippetsFromWeb(): Promise<FlutterSampleSnippet[]> {
 				reject({ message: `Failed to get Flutter samples ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
 			} else {
 				const chunks: string[] = [];
-				resp.on("data", (b) => chunks.push(b.toString()));
+				resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
 				resp.on("end", () => {
 					const json = chunks.join("");
-					resolve(JSON.parse(json));
+					resolve(JSON.parse(json) as FlutterSampleSnippet[]);
 				});
 			}
 		});

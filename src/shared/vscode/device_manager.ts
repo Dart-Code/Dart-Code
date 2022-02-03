@@ -502,7 +502,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				progress.report({ message: `Launching ${emulator.name}...` });
 				const binPath = resolveTildePaths(emulator.executable);
 				const args = emulator.args || [];
-				const env = emulator.env ?? {};
+				const env = emulator.env;
 
 				const customEmulatorProc = safeSpawn(undefined, binPath, args, env);
 				this.logger.info(`(PROC ${customEmulatorProc.pid}) Spawned ${binPath} ${args.join(" ")}`, LogCategory.CommandProcesses);

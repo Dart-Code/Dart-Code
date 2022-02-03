@@ -6,7 +6,7 @@ import { OpenedFileInformation } from "../interfaces";
 export function getLaunchConfig(noDebug: boolean, path: string, testNames: TestName[] | undefined, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
-		toolArgs = toolArgs.concat(template?.toolArgs);
+		toolArgs = toolArgs.concat(template?.toolArgs as []);
 	if (testNames) {
 		toolArgs.push("--name");
 		toolArgs.push(makeRegexForTests(testNames));

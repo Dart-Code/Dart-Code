@@ -136,7 +136,7 @@ async function promptToShowReleaseNotes(versionDisplay: string, versionLink: str
 }
 
 function error(err: any) {
-	vs.window.showErrorMessage(err.message);
+	vs.window.showErrorMessage(`${err.message ?? err}`);
 }
 
 export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {

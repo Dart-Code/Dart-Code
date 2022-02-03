@@ -40,7 +40,7 @@ describe("flutter test debugger", () => {
 				program: fsPath(flutterTestMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--no-sound-null-safety"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--no-sound-null-safety"]);
 		});
 
 		it("when suppressTestTimeouts is set", async () => {
@@ -49,7 +49,7 @@ describe("flutter test debugger", () => {
 				program: fsPath(flutterTestMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig!.toolArgs!, ["--timeout"]);
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--timeout"]);
 		});
 	});
 

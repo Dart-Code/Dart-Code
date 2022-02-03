@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
+import { DartLaunchArgs } from "../../../shared/debug/interfaces";
 import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -21,7 +22,7 @@ describe("flutter test debugger", () => {
 
 	afterEach(killFlutterTester);
 
-	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration> {
+	async function startDebugger(script?: vs.Uri | string): Promise<vs.DebugConfiguration & DartLaunchArgs> {
 		const config = await getLaunchConfiguration(script);
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);

@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { vsCodeVersion } from "../capabilities/vscode";
 import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyAnalyticsText, flutterSurveyDataUrl, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
-import { Analytics, FlutterSurveyData, Logger } from "../interfaces";
+import { Analytics, FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
 import { Context } from "./workspace";
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
@@ -14,7 +14,7 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	let surveyData: FlutterSurveyData;
 	try {
 		const rawSurveyJson = await webClient.fetch(flutterSurveyDataUrl);
-		const rawSurveyData = JSON.parse(rawSurveyJson);
+		const rawSurveyData = JSON.parse(rawSurveyJson) as FlutterRawSurveyData;
 
 		surveyData = {
 			...rawSurveyData,

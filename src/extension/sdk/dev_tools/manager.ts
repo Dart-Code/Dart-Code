@@ -336,7 +336,7 @@ export class DevToolsManager implements vs.Disposable {
 				if (res) {
 					const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
 					const tempPath = path.join(os.tmpdir(), fileName);
-					fs.writeFileSync(tempPath, e.message || e);
+					fs.writeFileSync(tempPath, `${e.message ?? e}`);
 					workspace.openTextDocument(tempPath).then((document) => {
 						window.showTextDocument(document);
 					});

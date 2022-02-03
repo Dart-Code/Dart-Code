@@ -32,7 +32,7 @@ export function setupToolEnv(envOverrides?: any) {
 setupToolEnv();
 
 export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): SpawnedProcess {
-	const env = Object.assign({}, toolEnv, envOverrides);
+	const env = Object.assign({}, toolEnv, envOverrides) as { [key: string]: string | undefined } | undefined;
 	return safeSpawn(workingDirectory, binPath, args, env);
 }
 

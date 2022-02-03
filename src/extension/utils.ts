@@ -219,9 +219,9 @@ export function getLatestSdkVersion(): Promise<string> {
 			if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
 				reject({ message: `Failed to get Dart SDK Version ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
 			} else {
-				resp.on("data", (d) => {
+				resp.on("data", (d: Buffer | string) => {
 					try {
-						const latestVersion = JSON.parse(d.toString()).version;
+						const latestVersion = JSON.parse(d.toString()).version as string;
 						resolve(latestVersion);
 					} catch (e) {
 						reject({ message: `Failed to parse latest Dart SDK Version from JSON: ${d.toString()}` });

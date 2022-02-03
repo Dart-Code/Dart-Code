@@ -33,7 +33,7 @@ export class PackageCacheData {
 	}
 
 	static fromJson(json: string): PackageCacheData | undefined {
-		const data = JSON.parse(json, PackageCacheData.mapReviver);
+		const data = JSON.parse(json, PackageCacheData.mapReviver) as PackageCache;
 
 		if (data.version !== PackageCacheData.cacheVersion)
 			return undefined;
@@ -50,7 +50,7 @@ export class PackageCacheData {
 				lastUpdated: this.lastUpdated,
 				packages: this.packages,
 				version: PackageCacheData.cacheVersion,
-			},
+			} as PackageCache,
 			PackageCacheData.mapReplacer,
 			2,
 		);
@@ -67,7 +67,14 @@ export class PackageCacheData {
 
 	private static mapReviver(key: unknown, value: any): unknown {
 		return typeof value === "object" && value?.dataType === "Map"
-			? new Map(value.value)
+			? new Map(value.value) // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			: value;
 	}
+}
+
+
+interface PackageCache {
+	lastUpdated: number;
+	packages: Map<string, string | undefined>;
+	version: number;
 }

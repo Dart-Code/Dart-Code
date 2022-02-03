@@ -1241,7 +1241,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const variables = await dc.getTopFrameVariables("Locals");
 
 		for (const variable of variables) {
-			const evaluateName = (variable as any).evaluateName;
+			const evaluateName = (variable as any).evaluateName as string | undefined;
 			if (!evaluateName)
 				continue;
 			const evaluateResult = await dc.evaluateForFrame(evaluateName);
@@ -1271,7 +1271,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
 
 		for (const variable of allVariables) {
-			const evaluateName = (variable as any).evaluateName;
+			const evaluateName = (variable as any).evaluateName as string | undefined;
 			if (!evaluateName)
 				continue;
 			const evaluateResult = await dc.evaluateForFrame(evaluateName);
