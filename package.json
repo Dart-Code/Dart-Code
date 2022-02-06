@@ -1143,7 +1143,7 @@
 				},
 				{
 					"command": "flutter.openInXcode",
-					"when": "explorerResourceIsFolder && resourceFilename == ios && dart-code:anyFlutterProjectLoaded && dart-code:dartPlatformName == mac && dart-code:isRunningLocally",
+					"when": "explorerResourceIsFolder && resourceFilename == ios || resourceFilename == macos && dart-code:anyFlutterProjectLoaded && dart-code:dartPlatformName == mac && dart-code:isRunningLocally",
 					"group": "1.5_open_ext@1"
 				},
 				{
