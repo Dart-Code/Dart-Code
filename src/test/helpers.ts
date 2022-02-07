@@ -137,7 +137,7 @@ export function currentEditor(): vs.TextEditor {
 	if (!editor || editor.document.uri.scheme !== "file") {
 		const firstEditor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file");
 		if (firstEditor)
-			logger.warn(`Current active editor is not a file (${editor ? editor.document.uri : "none"}) so using first visible editor (${firstEditor.document.uri})`);
+			logger.info(`Current active editor is not a file (${editor ? editor.document.uri : "none"}) so using first visible editor (${firstEditor.document.uri})`);
 		editor = firstEditor;
 	}
 
