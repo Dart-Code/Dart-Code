@@ -67,6 +67,7 @@ class MyWidget extends StatelessWidget {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("\"\"\"");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+		showErrorMessage.resolves(undefined);
 
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -91,7 +92,9 @@ class MyWidget extends StatelessWidget {
   }
 }
 		`);
-		assert(showErrorMessage.calledOnce);
+		const textMatch = sinon.match("Class name must not contain '\"'.")
+			.or(sinon.match("Class name must not contain '\"'.\n\nYour refactor was not applied."));
+		assert(showErrorMessage.calledWith(textMatch));
 	});
 
 	it("does not apply changes when there are errors if the user does not approve", async function () {
