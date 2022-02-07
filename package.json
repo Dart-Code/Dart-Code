@@ -5,7 +5,7 @@
 	"version": "3.36.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.64.0"
 	},
 	"extensionKind": [
 		"workspace"
@@ -2586,7 +2586,7 @@
 		"report_screen": "nyc report"
 	},
 	"dependencies": {
-		"minimatch": "^3.0.4",
+		"minimatch": "^3.0.5",
 		"semver": "^7.3.5",
 		"vscode-debugadapter": "^1.51.0",
 		"vscode-debugprotocol": "^1.51.0",
@@ -2597,15 +2597,15 @@
 		"@types/glob": "^7.2.0",
 		"@types/minimatch": "^3.0.5",
 		"@types/mocha": "^9.1.0",
-		"@types/node": "^14.18.0",
+		"@types/node": "^14.18.10",
 		"@types/semver": "^7.3.9",
 		"@types/sinon": "5.0.5",
-		"@types/vscode": "^1.63.2",
+		"@types/vscode": "^1.64.0",
 		"@types/ws": "^7.4.7",
 		"@typescript-eslint/eslint-plugin": "^5.10.2",
 		"@typescript-eslint/eslint-plugin-tslint": "^5.10.2",
 		"@typescript-eslint/parser": "^5.10.2",
-		"@vscode/test-electron": "^2.1.1",
+		"@vscode/test-electron": "^2.1.2",
 		"eslint": "^8.8.0",
 		"glob": "^7.2.0",
 		"istanbul-instrumenter-loader": "^3.0.1",
