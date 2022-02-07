@@ -46,6 +46,7 @@ main() {
 		const showInputBox = sb.stub(vs.window, "showInputBox");
 		showInputBox.resolves("\"\"\"");
 		const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
+		showErrorMessage.resolves(undefined);
 
 		await setTestContent(`
 main() {
@@ -60,7 +61,9 @@ main() {
   print("Hello, world!");
 }
 		`);
-		assert(showErrorMessage.calledOnce);
+		const textMatch = sinon.match("Method name must not contain '\"'.")
+			.or(sinon.match("Method name must not contain '\"'.\n\nYour refactor was not applied."));
+		assert(showErrorMessage.calledWith(textMatch));
 	});
 
 	it("does not apply changes when there are warnings if the user does not approve", async function () {
