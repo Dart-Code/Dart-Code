@@ -455,37 +455,41 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (this.config.flutterShowEmulators === "local" && !isRunningLocally)
 			return [];
 
-		const emulators: PickableDevice[] = (await this.getEmulators())
-			.filter((e) => this.isSupported(supportedTypes, e))
-			.map((e) => ({
+		const pickableEmulators: PickableDevice[] = [];
+
+		const supportedEmulators = (await this.getEmulators()).filter((e) => this.isSupported(supportedTypes, e));
+
+		for (const e of supportedEmulators) {
+			const pickableEmulator = {
 				alwaysShow: false,
 				coldBoot: false,
 				description: showAsEmulators ? `${e.category || "mobile"} ${this.emulatorLabel(e.platformType)}` : e.platformType || undefined,
 				device: e,
 				label: showAsEmulators ? "$(play) " + `Start ${e.name}` : e.name,
-			}));
+			};
+			pickableEmulators.push(pickableEmulator);
 
-		// Add a cold boot option for each android based emulator
-		if (this.daemon.capabilities.supportsAvdColdBootLaunch) {
-			const androidEmulators = emulators.filter((e) => e.device.platformType && e.device.platformType === "android");
-			androidEmulators.forEach((e) => emulators.push({
-				alwaysShow: e.alwaysShow,
-				coldBoot: true,
-				description: `${e.description} (cold boot)`,
-				device: e.device,
-				label: e.label,
-			}));
+			// Add a cold boot option for each android based emulator
+			if (pickableEmulator.device.platformType && pickableEmulator.device.platformType === "android" && this.daemon.capabilities.supportsAvdColdBootLaunch) {
+				pickableEmulators.push({
+					alwaysShow: pickableEmulator.alwaysShow,
+					coldBoot: true,
+					description: `${pickableEmulator.description} (cold boot)`,
+					device: pickableEmulator.device,
+					label: pickableEmulator.label,
+				});
+			}
 		}
 
 		// Add an option to create a new emulator if the daemon supports it.
 		if (this.daemon.capabilities.canCreateEmulators && this.isSupported(supportedTypes, { platformType: "android" })) {
-			emulators.push({
+			pickableEmulators.push({
 				alwaysShow: true,
 				device: { type: "emulator-creator", platformType: "android", name: "Create Android emulator" } as EmulatorCreator,
 				label: "$(plus) " + "Create Android emulator",
 			});
 		}
-		return emulators;
+		return pickableEmulators;
 	}
 
 	private async launchEmulator(emulator: f.FlutterEmulator, coldBoot: boolean): Promise<boolean> {
