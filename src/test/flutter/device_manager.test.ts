@@ -5,7 +5,7 @@ import { runFlutterCreatePrompt, yesAction } from "../../shared/constants";
 import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
-import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
+import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
 import { logger, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../services/fake_stdio_service";
 import sinon = require("sinon");
@@ -194,7 +194,7 @@ describe("device_manager", () => {
 	it("shows unsupported platforms and prompts to run flutter create if selected", async () => {
 		await daemon.connect(desktop, false);
 		const devices = dm.getPickableDevices(["android"]);
-		const d = devices.find((e) => e.device.type === "platform-enabler" && e.device.platformType === "macos");
+		const d = devices.find((e) => "device" in e && e.device.type === "platform-enabler" && e.device.platformType === "macos") as PickableDevice | undefined;
 
 		if (!d)
 			throw new Error("macos platform enabler was missing");

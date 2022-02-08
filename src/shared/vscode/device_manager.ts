@@ -96,7 +96,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (!supportedTypes && this.daemon.capabilities.providesPlatformTypes) {
 			supportedTypes = await this.getSupportedPlatformsForWorkspace();
 		}
-		const quickPick = vs.window.createQuickPick<PickableDevice>();
+		const quickPick = vs.window.createQuickPick<PickableDevice | DeviceSeparator>();
 		quickPick.placeholder = "Select a device to use";
 		quickPick.busy = true;
 
@@ -124,7 +124,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		updatePickableDeviceList();
 
 		const selection = await new Promise<PickableDevice | undefined>((resolve) => {
-			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
+			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0] as PickableDevice /* Seperators can't be selected */));
 			quickPick.onDidHide(() => resolve(undefined));
 			quickPick.show();
 		});
@@ -207,23 +207,42 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.devices.find((d) => d.id === id);
 	}
 
-	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): PickableDevice[] {
+	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Array<PickableDevice | DeviceSeparator> {
 		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
 
-		let pickableItems: PickableDevice[] = sortedDevices.filter((d) => this.isSupported(supportedTypes, d))
-			.map((d) => ({
-				description: d.category || d.platform,
-				device: d,
-				label: this.labelForDevice(d),
-			}));
+		let pickableItems: Array<PickableDevice | DeviceSeparator> = [];
+
+		const supportedDevices = sortedDevices.filter((d) => this.isSupported(supportedTypes, d));
+
+		if (supportedDevices.length) {
+			pickableItems = pickableItems.concat([
+				{
+					kind: vs.QuickPickItemKind.Separator,
+					label: "Available Devices",
+				},
+				...supportedDevices.map((d) => ({
+					description: d.category || d.platform,
+					device: d,
+					label: this.labelForDevice(d),
+				})),
+			]);
+		}
 
 		// If we've got emulators, add them to the list.
-		if (emulatorDevices) {
+		if (emulatorDevices && emulatorDevices.length) {
 			// Fliter out any emulators we know are running.
 			const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
+			const emulatorDevicesNotRunning = emulatorDevices.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1);
 
-			pickableItems = pickableItems.concat(
-				emulatorDevices.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1));
+			if (emulatorDevicesNotRunning.length) {
+				pickableItems = pickableItems.concat([
+					{
+						kind: vs.QuickPickItemKind.Separator,
+						label: "Offline Emulators",
+					},
+					...emulatorDevicesNotRunning,
+				]);
+			}
 		}
 
 		// Add any unsupported platforms that we have devices/emulators for (eg. things that could be
@@ -530,4 +549,5 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 }
 
-type PickableDevice = vs.QuickPickItem & { device: f.Device | PlatformEnabler | Emulator | EmulatorCreator, coldBoot?: boolean };
+export type PickableDevice = vs.QuickPickItem & { device: f.Device | PlatformEnabler | Emulator | EmulatorCreator, coldBoot?: boolean };
+type DeviceSeparator = vs.QuickPickItem & { kind: vs.QuickPickItemKind.Separator };
