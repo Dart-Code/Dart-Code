@@ -223,7 +223,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				...supportedDevices.map((d) => ({
 					description: d.category || d.platform,
 					device: d,
-					label: this.labelForDevice(d),
+					label: this.labelForDevice(d, { withIcon: true }),
 				})),
 			]);
 		}
@@ -296,7 +296,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.shortCacheForSupportedPlatforms;
 	}
 
-	public labelForDevice(device: f.Device) {
+	public labelForDevice(device: f.Device, { withIcon = false }: { withIcon?: boolean } = {}) {
 		let icon;
 		switch (device.category) {
 			case "mobile":
@@ -311,7 +311,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		const name = device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
 			? this.knownEmulatorNames[device.emulatorId]
 			: device.name;
-		return `${icon ?? ""}${name}`;
+		return withIcon ? `${icon ?? ""}${name}` : name;
 	}
 
 	public deviceSortComparer(d1: f.Device, d2: f.Device): number {

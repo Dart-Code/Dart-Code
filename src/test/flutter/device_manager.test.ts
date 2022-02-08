@@ -42,7 +42,8 @@ describe("device_manager", () => {
 
 		await daemon.connect(desktop, true);
 		assert.deepStrictEqual(dm.currentDevice, desktop);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(device-desktop) " + desktop.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), desktop.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice, { withIcon: true }), "$(device-desktop) " + desktop.name);
 	});
 
 	it("generates the correct label for web devices", async () => {
@@ -50,7 +51,8 @@ describe("device_manager", () => {
 
 		await daemon.connect(webChrome, true);
 		assert.deepStrictEqual(dm.currentDevice, webChrome);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(browser) " + webChrome.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), webChrome.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice, { withIcon: true }), "$(browser) " + webChrome.name);
 	});
 
 	it("generates the correct label for Android emulator devices", async () => {
@@ -61,7 +63,8 @@ describe("device_manager", () => {
 		// then looking it up).
 		await daemon.connect(emulatedAndroidMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatedAndroidMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(device-mobile) " + androidEmulator.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), androidEmulator.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice, { withIcon: true }), "$(device-mobile) " + androidEmulator.name);
 	});
 
 	it("uses the standard device name for iOS simulator devices", async () => {
@@ -71,7 +74,8 @@ describe("device_manager", () => {
 		// instead of "iPhone X" etc.
 		await daemon.connect(emulatediOSMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, emulatediOSMobile);
-		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), "$(device-mobile) " + emulatediOSMobile.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice), emulatediOSMobile.name);
+		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice, { withIcon: true }), "$(device-mobile) " + emulatediOSMobile.name);
 	});
 
 	it("includes custom emulators", async () => {
