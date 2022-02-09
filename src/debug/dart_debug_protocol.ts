@@ -411,6 +411,11 @@ export class VmServiceConnection {
 	private eventListeners: { [key: string]: (message: VMEvent) => void } = {};
 
 	constructor(uri: string) {
+		const url = new URL(uri);
+		if (url.protocol.startsWith("http")) {
+			url.protocol = url.protocol === "https" ? "wss" : "ws";
+			uri = url.toString();
+		}
 		this.socket = new WebSocket(uri, { followRedirects: true });
 		this.socket.on("message", (data) => this.handleData(data.toString()));
 	}
