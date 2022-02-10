@@ -172,6 +172,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		return !message.startsWith("--- ")
 			&& !message.startsWith("+++ ")
 			&& !message.startsWith("Observatory listening on")
+			&& !message.startsWith("The Dart VM service is listening on")
 			&& !message.startsWith("Observatory server");
 	}
 

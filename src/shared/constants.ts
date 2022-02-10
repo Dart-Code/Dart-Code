@@ -131,7 +131,7 @@ export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-set
 export const openSettingsAction = "Open Settings File";
 export const reactivateDevToolsAction = "Reactivate DevTools";
 
-export const vmServiceListeningBannerPattern: RegExp = new RegExp("Observatory (?:listening on|.* is available at:) (http:.+)");
+export const vmServiceListeningBannerPattern: RegExp = new RegExp("(?:Observatory|The Dart VM service is) (?:listening on|.* is available at:) (http:.+)");
 export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
 export const runFlutterCreatePrompt = (platformType: string, platformNeedsGloballyEnabling: boolean) =>

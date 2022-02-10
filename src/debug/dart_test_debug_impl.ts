@@ -137,6 +137,8 @@ export class DartTestDebugSession extends DartDebugSession {
 		// Filter out these messages taht come to stdout that we don't want to send to the user.
 		if (message && message.startsWith("Observatory listening on"))
 			return;
+		if (message && message.startsWith("The Dart VM service is listening on"))
+			return;
 		if (message && message.startsWith("Press Control-C again"))
 			return;
 
