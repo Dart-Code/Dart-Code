@@ -55,14 +55,5 @@ module.exports = (env) => {
 		target: "node",
 	};
 
-	if (env && env.instrumentation) {
-		config.module.rules.push({
-			enforce: "post",
-			exclude: /node_modules/,
-			test: /\.ts$/,
-			loader: "istanbul-instrumenter-loader",
-		});
-	}
-
 	return config;
 };
