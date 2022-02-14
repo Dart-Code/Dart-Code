@@ -396,7 +396,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.cwd = fsPath(folder.uri);
 			this.logger.info(`Using workspace as cwd: ${debugConfig.cwd}`);
 
-			// If we have an entry point, see if we can make this more specific by finding a .packages file
+			// If we have an entry point, see if we can make this more specific by finding a project root.
 			if (debugConfig.program) {
 				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
 				if (bestProjectRoot && isWithinPath(bestProjectRoot, fsPath(folder.uri))) {

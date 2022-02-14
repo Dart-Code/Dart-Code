@@ -10,7 +10,7 @@ import { fsPath, isWithinPath } from "../../shared/utils/fs";
 export function isPubGetProbablyRequired(sdks: Sdks, logger: Logger, folderUri: Uri): boolean {
 	const folder = fsPath(folderUri);
 	const pubspecPath = path.join(folder, "pubspec.yaml");
-	const packagesPath = path.join(folder, ".packages");
+	const packageMapPath = path.join(folder, ".dart_tool", "package_config.json");
 	if (!folder || !fs.existsSync(pubspecPath))
 		return false;
 
@@ -19,14 +19,14 @@ export function isPubGetProbablyRequired(sdks: Sdks, logger: Logger, folderUri: 
 	if (!regex.test(fs.readFileSync(pubspecPath).toString()))
 		return false;
 
-	// If we don't have .packages, we probably need running.
-	if (!fs.existsSync(packagesPath))
+	// If we don't have package_config, we probably need running.
+	if (!fs.existsSync(packageMapPath))
 		return true;
 
 	const pubspecModified = fs.statSync(pubspecPath).mtime;
-	const packagesModified = fs.statSync(packagesPath).mtime;
+	const packageMapModified = fs.statSync(packageMapPath).mtime;
 
-	if (pubspecModified > packagesModified)
+	if (pubspecModified > packageMapModified)
 		return true;
 
 	// If we're a Flutter project and our SDK doesn't match the one used

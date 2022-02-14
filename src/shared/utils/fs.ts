@@ -78,8 +78,8 @@ export function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[
 	));
 }
 
-export function hasPackagesFile(folder: string): boolean {
-	return fs.existsSync(path.join(folder, ".packages"));
+export function hasPackageMapFile(folder: string): boolean {
+	return fs.existsSync(path.join(folder, ".dart_tool", "package_config.json")) || fs.existsSync(path.join(folder, ".packages"));
 }
 
 export function hasPubspec(folder: string): boolean {
