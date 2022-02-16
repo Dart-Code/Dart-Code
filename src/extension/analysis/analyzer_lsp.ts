@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
 import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window, workspace } from "vscode";
-import { ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { ConfigurationParams, ConfigurationRequest, ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
@@ -239,6 +239,21 @@ export class LspAnalyzer extends Analyzer {
 					}
 				}
 				return next(command, args);
+			},
+
+			workspace: {
+				configuration: async (params: ConfigurationParams, token: CancellationToken, next: ConfigurationRequest.HandlerSignature) => {
+					const results = await next(params, token);
+
+					// Replace any instance of enableSnippets with the value of enableServerSnippets.
+					if (Array.isArray(results)) {
+						for (const result of results) {
+							result.enableSnippets = config.enableServerSnippets;
+						}
+					}
+
+					return results;
+				},
 			},
 		};
 	}
