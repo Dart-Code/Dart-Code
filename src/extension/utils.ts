@@ -6,12 +6,11 @@ import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { WorkspaceConfig } from "../shared/interfaces";
-import { fsPath, getRandomInt, hasPubspec, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
+import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
 import { ringLog } from "./extension";
 import { locateBestProjectRoot } from "./project";
-import { referencesFlutterSdk } from "./sdk/utils";
 
 export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
@@ -34,10 +33,6 @@ export function isPathInsideFlutterProject(path: string): boolean {
 		return false;
 
 	return isFlutterProjectFolder(projectRoot);
-}
-
-export function isFlutterProjectFolder(folder?: string): boolean {
-	return referencesFlutterSdk(folder);
 }
 
 export function resolvePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {

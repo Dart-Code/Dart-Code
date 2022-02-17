@@ -3,6 +3,8 @@ import * as os from "os";
 import * as path from "path";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger } from "../interfaces";
+import { nullLogger } from "../logging";
+import { PackageMap } from "../pub/package_map";
 import { flatMapAsync } from "../utils";
 import { sortBy } from "./array";
 
@@ -96,6 +98,73 @@ export async function hasCreateTriggerFileAsync(folder: string): Promise<boolean
 
 export async function isFlutterRepoAsync(folder: string): Promise<boolean> {
 	return await fileExists(path.join(folder, "bin/flutter")) && await fileExists(path.join(folder, "bin/cache/dart-sdk"));
+}
+
+export function isFlutterProjectFolder(folder?: string): boolean {
+	return projectReferencesFlutterSdk(folder);
+}
+
+export function projectReferencesFlutterSdk(folder?: string): boolean {
+	if (folder && hasPubspec(folder)) {
+		return pubspecContentReferencesFlutterSdk(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
+	}
+	return false;
+}
+
+export function pubspecContentReferencesFlutterSdk(content: string): boolean {
+	const regex = new RegExp("sdk\\s*:\\s*[\"']?flutter[\"']?", "i");
+	return regex.test(content);
+}
+
+export function referencesBuildRunner(folder?: string): boolean {
+	if (folder && hasPubspec(folder)) {
+		const regex = new RegExp("build_runner\\s*:", "i");
+		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
+	}
+	return false;
+}
+
+export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): string | undefined {
+	if (!fs.existsSync(projectFolder))
+		return undefined;
+
+	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder).getPackagePath("flutter");
+
+	if (!packagePath)
+		return undefined;
+
+	// Set windows slashes to / while manipulating.
+	if (isWin) {
+		packagePath = packagePath.replace(/\\/g, "/");
+	}
+
+	// Make sure ends with a slash.
+	if (!packagePath.endsWith("/"))
+		packagePath = packagePath + "/";
+
+	// Trim suffix we don't need.
+	const pathSuffix = "/packages/flutter/lib/";
+	if (packagePath.endsWith(pathSuffix)) {
+		packagePath = packagePath.substr(0, packagePath.length - pathSuffix.length);
+	}
+
+	// Make sure ends with a slash.
+	if (!packagePath.endsWith("/"))
+		packagePath = packagePath + "/";
+
+	// Append bin if required.
+	if (!packagePath.endsWith("/bin/")) {
+		packagePath = packagePath + "bin/";
+	}
+
+	// Set windows paths back.
+	if (isWin) {
+		packagePath = packagePath.replace(/\//g, "\\");
+		if (packagePath.startsWith("\\"))
+			packagePath = packagePath.substring(1);
+	}
+
+	return packagePath;
 }
 
 async function fileExists(p: string): Promise<boolean> {

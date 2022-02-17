@@ -13,7 +13,7 @@ import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestModel } from "../../shared/test/test_model";
 import { filenameSafe, isWebDevice } from "../../shared/utils";
-import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPath } from "../../shared/utils/fs";
+import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -24,7 +24,7 @@ import { config, ResourceConfig } from "../config";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestNameFilter, isFlutterProjectFolder, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestNameFilter, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {

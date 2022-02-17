@@ -1,12 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
-import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, isWin, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
+import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
 import { Logger, Sdks, SdkSearchResults, WorkspaceConfig } from "../../shared/interfaces";
-import { nullLogger } from "../../shared/logging";
-import { PackageMap } from "../../shared/pub/package_map";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { fsPath, getSdkVersion, hasPubspec } from "../../shared/utils/fs";
+import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -184,7 +182,7 @@ export class SdkUtils {
 		// Scan through them all to figure out what type of projects we have.
 		for (const folder of possibleProjects) {
 			const hasPubspecFile = hasPubspec(folder);
-			const refsFlutter = hasPubspecFile && referencesFlutterSdk(folder);
+			const refsFlutter = hasPubspecFile && projectReferencesFlutterSdk(folder);
 			const refsWeb = false; // hasPubspecFile && referencesWeb(folder);
 			const hasFlutterCreateProjectTriggerFile =
 				fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
@@ -427,64 +425,6 @@ export class SdkUtils {
 	}
 }
 
-export function referencesFlutterSdk(folder?: string): boolean {
-	if (folder && hasPubspec(folder)) {
-		const regex = new RegExp("sdk\\s*:\\s*flutter", "i");
-		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
-	}
-	return false;
-}
-
-export function referencesBuildRunner(folder?: string): boolean {
-	if (folder && hasPubspec(folder)) {
-		const regex = new RegExp("build_runner\\s*:", "i");
-		return regex.test(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
-	}
-	return false;
-}
-
-function extractFlutterSdkPathFromPackagesFile(projectFolder: string): string | undefined {
-	if (!fs.existsSync(projectFolder))
-		return undefined;
-
-	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder).getPackagePath("flutter");
-
-	if (!packagePath)
-		return undefined;
-
-	// Set windows slashes to / while manipulating.
-	if (isWin) {
-		packagePath = packagePath.replace(/\\/g, "/");
-	}
-
-	// Make sure ends with a slash.
-	if (!packagePath.endsWith("/"))
-		packagePath = packagePath + "/";
-
-	// Trim suffix we don't need.
-	const pathSuffix = "/packages/flutter/lib/";
-	if (packagePath.endsWith(pathSuffix)) {
-		packagePath = packagePath.substr(0, packagePath.length - pathSuffix.length);
-	}
-
-	// Make sure ends with a slash.
-	if (!packagePath.endsWith("/"))
-		packagePath = packagePath + "/";
-
-	// Append bin if required.
-	if (!packagePath.endsWith("/bin/")) {
-		packagePath = packagePath + "bin/";
-	}
-
-	// Set windows paths back.
-	if (isWin) {
-		packagePath = packagePath.replace(/\//g, "\\");
-		if (packagePath.startsWith("\\"))
-			packagePath = packagePath.substring(1);
-	}
-
-	return packagePath;
-}
 
 async function findFuchsiaRoot(logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".jiri_root");

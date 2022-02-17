@@ -5,6 +5,7 @@ import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
 import { arrayStartsWith } from "../../shared/utils/array";
+import { isFlutterProjectFolder } from "../../shared/utils/fs";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { BaseTaskProvider, DartTaskDefinition } from "../dart/dart_task_provider";
@@ -27,7 +28,7 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 		projectFolders.forEach((folder) => {
 			const folderUri = vs.Uri.file(folder);
 			const workspaceFolder = vs.workspace.getWorkspaceFolder(folderUri)!;
-			const isFlutter = util.isFlutterProjectFolder(folder);
+			const isFlutter = isFlutterProjectFolder(folder);
 			if (isFlutter) {
 				promises = promises.concat(this.createSharedTasks(workspaceFolder, folderUri));
 

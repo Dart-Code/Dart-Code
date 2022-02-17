@@ -4,12 +4,10 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { getExecutableName } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { arrayStartsWith } from "../../shared/utils/array";
-import { fsPath } from "../../shared/utils/fs";
+import { fsPath, isFlutterProjectFolder, referencesBuildRunner } from "../../shared/utils/fs";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
-import { referencesBuildRunner } from "../sdk/utils";
 import * as util from "../utils";
-import { isFlutterProjectFolder } from "../utils";
 import { getToolEnv } from "../utils/processes";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 

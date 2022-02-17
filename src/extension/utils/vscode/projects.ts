@@ -3,10 +3,10 @@ import * as vs from "vscode";
 import { Uri } from "vscode";
 import { Logger } from "../../../shared/interfaces";
 import { notUndefined } from "../../../shared/utils";
-import { fsPath } from "../../../shared/utils/fs";
+import { fsPath, isFlutterProjectFolder } from "../../../shared/utils/fs";
 import { getAllProjectFolders } from "../../../shared/vscode/utils";
 import { locateBestProjectRoot } from "../../project";
-import { getExcludedFolders, homeRelativePath, isFlutterProjectFolder } from "../../utils";
+import { getExcludedFolders, homeRelativePath } from "../../utils";
 
 export async function getFolderToRunCommandIn(logger: Logger, placeHolder: string, selection?: vs.Uri, flutterOnly = false): Promise<string | undefined> {
 	// Attempt to find a project based on the supplied folder of active file.
