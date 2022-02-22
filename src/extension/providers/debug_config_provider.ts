@@ -15,7 +15,7 @@ import { TestModel } from "../../shared/test/test_model";
 import { filenameSafe, isWebDevice } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
-import { warnIfPathCaseMismatch } from "../../shared/vscode/utils";
+import { isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
@@ -640,7 +640,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsInjectedClient)
 					this.addArgsIfNotExist(args, "--web-server-debug-injected-client-protocol", config.debugExtensionBackendProtocol);
 			}
-			if (this.flutterCapabilities.supportsExposeUrl)
+			if (this.flutterCapabilities.supportsExposeUrl && !isRunningLocally)
 				this.addArgsIfNotExist(args, "--web-allow-expose-url");
 
 			if (isWeb) {
