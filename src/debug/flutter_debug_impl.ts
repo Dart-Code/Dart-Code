@@ -201,12 +201,24 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 
 		if (mode === RunMode.Run) {
-			if (isReleaseMode || (isProfileMode && isWeb)) {
+			// For release/profile, always be noDebug. If we don't do this, we
+			// will use start-paused which can affect timing unexpectedly.
+			// https://github.com/Dart-Code/Dart-Code/issues/3838
+			if (isReleaseMode || isProfileMode) {
 				this.noDebug = true;
+			}
+
+			// Additionally, for release mode
+			// (or profile on web for now - see https://github.com/Dart-Code/Dart-Code/issues/3338)
+			// disable connecting the debugger.
+			if (isReleaseMode || (isProfileMode && isWeb)) {
 				this.connectVmEvenForNoDebug = false;
 			}
 
-			if (this.shouldConnectDebugger)
+			// When running in Profile mode, we don't want isolates to start
+			// paused because it could affect timings negatively and give a false
+			// impression of performance.
+			if (this.shouldConnectDebugger && !isProfileMode)
 				allArgs.push("--start-paused");
 		}
 
