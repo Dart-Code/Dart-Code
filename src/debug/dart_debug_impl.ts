@@ -1391,7 +1391,7 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private errorAsDisplayValue(error: any) {
-		const message = errorString(errorString);
+		const message = errorString(error);
 		return `<${message.split("\n")[0].trim()}>`;
 	}
 
