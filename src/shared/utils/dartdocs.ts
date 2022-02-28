@@ -40,11 +40,10 @@ export function cleanDartdoc(doc: string | undefined, iconPathFormat: string): s
 	// Replace material icon HTML blocks with markdown to load the images from the correct place.
 	doc = doc.replace(materialIconRegex, (_fullMatch: string, variant: string, icon: string) => {
 		if (variant) {
-			// HACK: Classnames don't match the filenames.
-			if (variant === "round")
-				variant = "rounded";
+			variant = fixVariant(variant);
 			icon = `${icon}_${variant}`;
 		}
+		icon = fixIcon(icon);
 		const iconPath = iconPathFormat.replace("$1", `material/${icon}`);
 		return `![${icon}](${iconPath}|width=32,height=32)\n\n`;
 	});
@@ -77,3 +76,58 @@ export function stripMarkdown(doc: string): string {
 
 	return doc;
 }
+
+function fixVariant(variant: string): string {
+	// Class names don't always match the filenames.
+	return variant === "round" ? "rounded" : variant;
+}
+
+const identifierPrefixRewritePattern = new RegExp(`3d|\\d+`);
+
+const identifierPrefixRewrites: { [key: string]: string | undefined } = {
+	// See identifierPrefixRewrites in
+	// https://github.com/flutter/flutter/blob/master/dev/tools/update_icons.dart
+	"1": "one_",
+	"10": "ten_",
+	"11": "eleven_",
+	"12": "twelve_",
+	"123": "onetwothree",
+	"13": "thirteen_",
+	"14": "fourteen_",
+	"15": "fifteen_",
+	"16": "sixteen_",
+	"17": "seventeen_",
+	"18": "eighteen_",
+	"19": "nineteen_",
+	"2": "two_",
+	"20": "twenty_",
+	"21": "twenty_one_",
+	"22": "twenty_two_",
+	"23": "twenty_three_",
+	"24": "twenty_four_",
+	"2d": "twod",
+	"3": "three_",
+	"30": "thirty_",
+	"360": "threesixty",
+	"3d": "threed",
+	"4": "four_",
+	"5": "five_",
+	"6": "six_",
+	"60": "sixty_",
+	"7": "seven_",
+	"8": "eight_",
+	"9": "nine_",
+};
+
+function fixIcon(icon: string): string {
+	// Things starting with numbers are textual in their names too.
+	const prefixMatch = identifierPrefixRewritePattern.exec(icon);
+	if (prefixMatch) {
+		const prefix = prefixMatch[0]!;
+		const newPrefix = identifierPrefixRewrites[prefix];
+		if (newPrefix)
+			return `${newPrefix}${icon.slice(prefix.length)}`;
+	}
+	return icon;
+}
+

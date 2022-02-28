@@ -8,18 +8,18 @@ describe("cleanDartDoc", () => {
 		const input = `
 <i class="material-icons md-36">360</i> &#x2014; material icon named "360".
 
-<i class="material-icons-round md-36">class</i> &#x2014; material icon named "class rounded".
+<i class="material-icons-round md-36">class</i> &#x2014; material icon named "class round".
 
 <i class="material-icons-sharp md-36">class</i> &#x2014; material icon named "class sharp".
 		`;
 		const expected = `
-![360](${Uri.file(extensionPath)}/media/doc-icons/material/360%402x.png|width=32,height=32)
+![threesixty](${Uri.file(extensionPath)}/media/doc-icons/material/threesixty%402x.png|width=32,height=32)
 
 material icon named "360".
 
 ![class_rounded](${Uri.file(extensionPath)}/media/doc-icons/material/class_rounded%402x.png|width=32,height=32)
 
-material icon named "class rounded".
+material icon named "class round".
 
 ![class_sharp](${Uri.file(extensionPath)}/media/doc-icons/material/class_sharp%402x.png|width=32,height=32)
 
