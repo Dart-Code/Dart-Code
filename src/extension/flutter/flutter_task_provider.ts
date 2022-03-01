@@ -1,6 +1,7 @@
 
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
+import { isMac, isWin } from "../../shared/constants";
 import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { notUndefined } from "../../shared/utils";
@@ -32,10 +33,21 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 			if (isFlutter) {
 				promises = promises.concat(this.createSharedTasks(workspaceFolder, folderUri));
 
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "aar"]));
 				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "apk"]));
-				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "ios"]));
-				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "macos"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "appbundle"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "bundle"]));
+				if (isMac) {
+					promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "ios"]));
+					promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "ios-framework"]));
+					promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "ipa"]));
+					promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "macos"]));
+				}
 				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "web"]));
+				if (isWin) {
+					promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "windows"]));
+					promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["build", "winuwp"]));
+				}
 
 				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["install"]));
 			}
