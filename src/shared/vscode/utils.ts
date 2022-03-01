@@ -111,7 +111,8 @@ class EnvUtils {
 		return vsEnv.openExternal(Uri.parse(url));
 	}
 
-	public async exposeUrl(uri: vs.Uri, logger: Logger = nullLogger): Promise<string> {
+	public async exposeUrl(urlString: string, logger: Logger = nullLogger): Promise<string> {
+		const uri = vs.Uri.parse(urlString, true);
 		logger.info(`Exposing URL: ${uri.toString()}`);
 		const isWebSocket = uri.scheme === "ws" || uri.scheme === "wss";
 		const isSecure = uri.scheme === "wss" || uri.scheme === "https";
@@ -122,7 +123,7 @@ class EnvUtils {
 		if (isWebSocket)
 			fakeScheme = isSecure ? "https" : "http";
 
-		const url = new URL(uriToString(uri));
+		const url = new URL(urlString);
 
 		// Ensure the URL always has a port, as some cloud providers fail to expose URLs correctly
 		// that don't have explicit port numbers.
@@ -134,10 +135,10 @@ class EnvUtils {
 		const fakeAuthority = `${fakeHostname}:${fakePort}`;
 
 		const uriToMap = uri.with({ scheme: fakeScheme, authority: fakeAuthority });
-		logger.info(`Mapping URL: ${uriToMap.toString()}`);
+		logger.info(`Mapping URI: ${uriToMap.toString()}`);
 
 		const mappedUri = await vsEnv.asExternalUri(uriToMap);
-		logger.info(`Mapped URL: ${mappedUri.toString()}`);
+		logger.info(`Mapped URI: ${mappedUri.toString()}`);
 
 		// Now we need to map the scheme back to WS if that's what was originally asked for, however
 		// we need to take into account whether asExternalUri pushed is up to secure, so use
@@ -148,13 +149,17 @@ class EnvUtils {
 			// care if the *exposed* URI is secure.
 			newScheme = mappedUri.scheme === "https" ? "wss" : "ws";
 
-		const finalUri = uriToString(mappedUri.with({ scheme: newScheme }));
-		logger.info(`Final URI: ${finalUri}`);
+		const mappedUrl = new URL(uriToString(mappedUri));
+		logger.info(`Mapped URL: ${mappedUrl}`);
 
-		const finalUrl = new URL(finalUri).toString();
-		logger.info(`Final URL: ${finalUrl}`);
+		// Copy the important (mapped) parts back onto the original URL, preserving
+		// the path/querystring that was not messed with by VS Code's Uri class.
+		url.protocol = newScheme;
+		url.host = mappedUrl.host;
+		url.port = mappedUrl.port;
+		logger.info(`Final URL: ${url}`);
 
-		return finalUrl;
+		return url.toString();
 	}
 }
 

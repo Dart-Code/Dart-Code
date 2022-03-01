@@ -560,7 +560,7 @@ export class DebugCommands implements IAmDisposable {
 		} else if (e.event === "dart.exposeUrl") {
 			const originalUrl = e.body.url as string;
 			try {
-				const exposedUrl = await envUtils.exposeUrl(vs.Uri.parse(originalUrl, true), this.logger);
+				const exposedUrl = await envUtils.exposeUrl(originalUrl, this.logger);
 				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl });
 			} catch (e) {
 				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);

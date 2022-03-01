@@ -24,6 +24,14 @@ describe("exposeUrl", () => {
 			// VS Code URIs mess up $ and [ so they're fixed up by us.
 			await testMap("http://localhost/$test", "http://localhost/$test");
 			await testMap("http://[::1]/test", "http://[::1]/test");
+
+			// Nested URIs are also messed up on the querystring (which will be used when
+			// DevTools moves to proper URLs).
+			const encodedWsUri = encodeURIComponent("ws://localhost:1234/ABC=/ws");
+			await testMap(
+				`http://localhost:1234/ABCDE=/devtools/?uri=${encodedWsUri}&theme=$dark[0]`,
+				`http://localhost:1234/ABCDE=/devtools/?uri=${encodedWsUri}&theme=$dark[0]`,
+			);
 		});
 	});
 
@@ -74,6 +82,6 @@ describe("exposeUrl", () => {
 });
 
 async function testMap(url: string, expected: string): Promise<void> {
-	const mappedUri = await envUtils.exposeUrl(vs.Uri.parse(url));
+	const mappedUri = await envUtils.exposeUrl(url);
 	assert.equal(mappedUri, expected);
 }
