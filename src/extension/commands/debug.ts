@@ -33,6 +33,9 @@ let pendingCustomEvents: vs.DebugSessionCustomEvent[] = [];
 
 let hasPromptedAboutDebugSettings = false;
 
+export let isInFlutterDebugModeDebugSession = false;
+export let isInFlutterProfileModeDebugSession = false;
+
 export class LastDebugSession {
 	public static workspaceFolder?: vs.WorkspaceFolder;
 	public static debugConfig?: vs.DebugConfiguration;
@@ -432,12 +435,15 @@ export class DebugCommands implements IAmDisposable {
 			const isProfileMode = s.configuration.toolArgs?.includes("--profile");
 			const isReleaseMode = s.configuration.toolArgs?.includes("--release");
 
-			if (isReleaseMode)
+			if (isReleaseMode) {
 				vs.commands.executeCommand("setContext", isInFlutterReleaseModeDebugSessionContext, true);
-			else if (isProfileMode)
+			} else if (isProfileMode) {
+				isInFlutterProfileModeDebugSession = true;
 				vs.commands.executeCommand("setContext", isInFlutterProfileModeDebugSessionContext, true);
-			else
+			} else {
+				isInFlutterDebugModeDebugSession = true;
 				vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
+			}
 		}
 
 		// Process any queued events that came in before the session start
@@ -494,9 +500,12 @@ export class DebugCommands implements IAmDisposable {
 			this.vmServices.markAllServiceExtensionsUnloaded();
 			this.debugOptions.hide();
 			this.debugMetrics.hide();
+			isInFlutterDebugModeDebugSession = false;
+			isInFlutterProfileModeDebugSession = false;
 			for (const debugContext of [
 				isInFlutterDebugModeDebugSessionContext,
 				isInFlutterProfileModeDebugSessionContext,
+				isInFlutterReleaseModeDebugSessionContext,
 			])
 				vs.commands.executeCommand("setContext", debugContext, false);
 		}

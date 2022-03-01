@@ -144,17 +144,19 @@ export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
 export const validClassNameRegex = validMethodNameRegex;
 
 export const widgetInspectorPage: DevToolsPage = { id: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" };
+export const cpuProfilerPage: DevToolsPage = { id: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", title: "CPU Profiler" };
+export const performancePage: DevToolsPage = {
+	commandId: "dart.openDevToolsPerformance",
+	id: "performance",
+	routeId: (flutterVersion) => !flutterVersion || versionIsAtLeast(flutterVersion, "2.3.1" /* 2.3.0-16.0? */) ? "performance" : "legacy-performance",
+	title: "Performance",
+};
 export const devToolsPages: DevToolsPage[] = [
 	// First entry is the default page.
 	widgetInspectorPage,
-	{ id: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", title: "CPU Profiler" },
+	cpuProfilerPage,
 	{ id: "memory", commandId: "dart.openDevToolsMemory", title: "Memory" },
-	{
-		commandId: "dart.openDevToolsPerformance",
-		id: "performance",
-		routeId: (flutterVersion) => !flutterVersion || versionIsAtLeast(flutterVersion, "2.3.1" /* 2.3.0-16.0? */) ? "performance" : "legacy-performance",
-		title: "Performance",
-	},
+	performancePage,
 	{ id: "network", commandId: "dart.openDevToolsNetwork", title: "Network" },
 	{ id: "logging", commandId: "dart.openDevToolsLogging", title: "Logging" },
 ];

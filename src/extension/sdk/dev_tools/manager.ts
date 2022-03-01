@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { dartVMPath, devToolsPages, reactivateDevToolsAction, skipAction } from "../../../shared/constants";
+import { cpuProfilerPage, dartVMPath, devToolsPages, performancePage, reactivateDevToolsAction, skipAction, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -18,7 +18,7 @@ import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
 import { Analytics } from "../../analytics";
-import { DebugCommands, debugSessions } from "../../commands/debug";
+import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
 import { config } from "../../config";
 import { PubGlobal } from "../../pub/global";
 import { getToolEnv } from "../../utils/processes";
@@ -77,7 +77,6 @@ export class DevToolsManager implements vs.Disposable {
 	private routeIdForPage(page: DevToolsPage | undefined | null): string | undefined {
 		if (!page)
 			return undefined;
-
 
 		if (page.routeId)
 			return page.routeId(this.flutterCapabilities.version);
@@ -249,6 +248,14 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
+	private getDefaultPage(): DevToolsPage {
+		return isInFlutterDebugModeDebugSession
+			? widgetInspectorPage
+			: isInFlutterProfileModeDebugSession
+				? performancePage
+				: cpuProfilerPage;
+	}
+
 	private async launch(allowLaunchThroughService: boolean, session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions) {
 		const url = await this.devtoolsUrl;
 		if (!url) {
@@ -264,7 +271,7 @@ export class DevToolsManager implements vs.Disposable {
 		};
 
 		// Try to launch via service if allowed.
-		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page) }))
+		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page ?? this.getDefaultPage()) }))
 			return true;
 
 		// Otherwise, fall back to embedded or launching manually.
