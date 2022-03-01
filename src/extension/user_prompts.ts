@@ -222,9 +222,9 @@ function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, triggerData: 
 	const entryFile = path.join(fsPath(workspaceFolder.uri), "lib/main.dart");
 	openFile(entryFile);
 	if (triggerData?.sample)
-		vs.window.showInformationMessage(`${triggerData.sample} sample ready! Connect a device and press F5 to run.`);
+		vs.window.showInformationMessage(`${triggerData.sample} sample ready! Press F5 to start running.`);
 	else
-		vs.window.showInformationMessage("Your Flutter project is ready! Connect a device and press F5 to start running.");
+		vs.window.showInformationMessage("Your Flutter project is ready! Press F5 to start running.");
 }
 
 function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: DartProjectTemplate) {
