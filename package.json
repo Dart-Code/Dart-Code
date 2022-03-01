@@ -58,6 +58,8 @@
 		"onCommand:_dart.flutter.createSampleProject",
 		"onCommand:flutter.doctor",
 		"onCommand:flutter.upgrade",
+		"onTaskType:dart",
+		"onTaskType:flutter",
 		"onUri",
 		"onDebugDynamicConfigurations"
 	],
