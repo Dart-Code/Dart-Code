@@ -53,7 +53,9 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 
 	public async resolveTask(task: DartTask, token?: vs.CancellationToken): Promise<vs.Task> {
 		const scope: any = task.scope;
-		const cwd = task.definition.cwd ?? ("uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined);
+		const workspaceFolderPath = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
+		const definitionCwd = task.definition.cwd;
+		const cwd = workspaceFolderPath && definitionCwd ? path.join(workspaceFolderPath, definitionCwd) : task.definition.cwd ?? workspaceFolderPath;
 
 		const definition = task.definition;
 
@@ -110,15 +112,16 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 	private createTaskStub(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, command: string, args: string[]): vs.Task {
 		const workspaceFolderPath = fsPath(workspaceFolder.uri);
 		const projectPath = fsPath(projectFolder);
+		const relativePath = path.relative(workspaceFolderPath, projectPath);
 		const task = new vs.Task(
-			{ type: this.type, cwd: fsPath(projectFolder), command, args } as DartTaskDefinition,
+			{ type: this.type, cwd: relativePath, command, args } as DartTaskDefinition,
 			workspaceFolder,
 			[command, ...args].join(" "),
 			this.type,
 			undefined,
 			undefined
 		);
-		task.detail = path.relative(workspaceFolderPath, projectPath);
+		task.detail = relativePath;
 		return task;
 	}
 
