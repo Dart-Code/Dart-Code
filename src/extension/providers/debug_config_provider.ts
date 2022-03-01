@@ -728,6 +728,13 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 						type: "dart",
 						flutterMode: "profile",
 					});
+					results.push({
+						name: `${name} (release mode)`,
+						cwd,
+						request: "launch",
+						type: "dart",
+						flutterMode: "release",
+					});
 				} else {
 					results.push({
 						name,
@@ -779,6 +786,14 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 					request: "launch",
 					type: "dart",
 					flutterMode: "profile",
+				});
+				results.push({
+					name: `Flutter (release mode)`,
+					program: "lib/main.dart",
+					cwd,
+					request: "launch",
+					type: "dart",
+					flutterMode: "release",
 				});
 			}
 			if (!isFlutter && exists("web")) {

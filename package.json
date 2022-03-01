@@ -197,8 +197,13 @@
 				"category": "Debug"
 			},
 			{
-				"command": "flutter.profileApp",
-				"title": "Profile Flutter app",
+				"command": "flutter.runProfileMode",
+				"title": "Run App in Profile Mode",
+				"category": "Debug"
+			},
+			{
+				"command": "flutter.runReleaseMode",
+				"title": "Run App in Release Mode",
 				"category": "Debug"
 			},
 			{
@@ -740,7 +745,11 @@
 					"when": "dart-code:anyProjectLoaded && !inDebugMode"
 				},
 				{
-					"command": "flutter.profileApp",
+					"command": "flutter.runProfileMode",
+					"when": "dart-code:anyFlutterProjectLoaded && !inDebugMode"
+				},
+				{
+					"command": "flutter.runReleaseMode",
 					"when": "dart-code:anyFlutterProjectLoaded && !inDebugMode"
 				},
 				{
@@ -2483,6 +2492,17 @@
 							"request": "launch",
 							"program": "^\"lib/main.dart\"",
 							"flutterMode": "profile"
+						}
+					},
+					{
+						"label": "Flutter: Launch in Release Mode",
+						"description": "Launch a Flutter app in release mode",
+						"body": {
+							"name": "Flutter",
+							"type": "dart",
+							"request": "launch",
+							"program": "^\"lib/main.dart\"",
+							"flutterMode": "release"
 						}
 					},
 					{

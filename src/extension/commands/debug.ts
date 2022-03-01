@@ -232,7 +232,7 @@ export class DebugCommands implements IAmDisposable {
 				vmServiceUri: "${command:dart.promptForVmService}",
 			});
 		}));
-		this.disposables.push(vs.commands.registerCommand("flutter.profileApp", async () => {
+		this.disposables.push(vs.commands.registerCommand("flutter.runProfileMode", async () => {
 			await vs.debug.startDebugging(undefined, {
 				flutterMode: "profile",
 				name: "Flutter: Run in Profile Mode",
@@ -244,6 +244,14 @@ export class DebugCommands implements IAmDisposable {
 				this.context.hasNotifiedAboutProfileModeDefaultConfiguration = true;
 				vs.window.showInformationMessage("Profiling Flutter app with default configuration. To customize this, create a launch configuration (and include 'flutterMode': 'profile').");
 			}
+		}));
+		this.disposables.push(vs.commands.registerCommand("flutter.runReleaseMode", async () => {
+			await vs.debug.startDebugging(undefined, {
+				flutterMode: "release",
+				name: "Flutter: Run in Release Mode",
+				request: "launch",
+				type: "dart",
+			});
 		}));
 		this.disposables.push(vs.commands.registerCommand("flutter.attach", () => {
 			vs.debug.startDebugging(undefined, {
