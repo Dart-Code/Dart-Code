@@ -204,7 +204,9 @@ export class DartTaskProvider extends BaseTaskProvider {
 	}
 
 	protected createPubTask(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, args: string[]) {
-		if (this.dartCapabilities.supportsDartPub)
+		if (this.dartCapabilities.supportsDartRunForPub && args && args.length && args[0] === "run")
+			return this.createTask(workspaceFolder, projectFolder, "dart", [...args]);
+		else if (this.dartCapabilities.supportsDartPub)
 			return this.createTask(workspaceFolder, projectFolder, "dart", ["pub", ...args]);
 		else
 			return this.createTask(workspaceFolder, projectFolder, "pub", args);
