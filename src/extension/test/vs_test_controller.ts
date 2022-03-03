@@ -27,13 +27,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		if (discoverer)
 			controller.resolveHandler = (item: vs.TestItem | undefined) => this.resolveTestItem(item);
 
-		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) => {
-			this.runTests(false, request, token);
-		});
+		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) =>
+			this.runTests(false, request, token));
 
-		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) => {
-			this.runTests(true, request, token);
-		});
+		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) =>
+			this.runTests(true, request, token));
 	}
 
 	private async resolveTestItem(item: vs.TestItem | undefined): Promise<void> {
