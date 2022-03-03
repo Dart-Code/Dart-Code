@@ -63,7 +63,7 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 			lspToRange(test.range),
 			{
 				arguments: template ? [test, template] : [test],
-				command: debug ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline",
+				command: debug ? "_dart.startDebuggingTestFromCodeLens" : "_dart.startWithoutDebuggingTestFromCodeLens",
 				title: name,
 			}
 		);

@@ -30,8 +30,8 @@ export class TestCommands implements vs.Disposable {
 
 	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
-			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
+			vs.commands.registerCommand("_dart.startDebuggingTestFromCodeLens", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromCodeLens(false, test, launchTemplate)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromCodeLens", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromCodeLens(true, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suites, testRun, isRunningAll)),
@@ -224,7 +224,7 @@ export class TestCommands implements vs.Disposable {
 			.map((treeNode) => ({ name: treeNode.name!, isGroup: treeNode instanceof GroupNode }));
 	}
 
-	private async startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined): Promise<boolean> {
+	private async startTestFromCodeLens(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined): Promise<boolean> {
 		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 

@@ -63,7 +63,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 			toRange(document, test.offset, test.length),
 			{
 				arguments: template ? [test, template] : [test],
-				command: debug ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline",
+				command: debug ? "_dart.startDebuggingTestFromCodeLens" : "_dart.startWithoutDebuggingTestFromCodeLens",
 				title: name,
 			}
 		);

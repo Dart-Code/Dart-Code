@@ -25,12 +25,12 @@ describe("test_code_lens", () => {
 		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
-		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromCodeLens");
 		assert.equal(runAction.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
 		const debugAction = codeLensForTest.find((cl) => cl.command!.title === "Debug");
-		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromOutline");
+		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromCodeLens");
 		assert.equal(debugAction!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
 		assert.equal(debugAction!.command!.arguments![0].isGroup, false);
 	});
@@ -46,12 +46,12 @@ describe("test_code_lens", () => {
 		assert.equal(codeLensForGroup.length, 2);
 
 		const runAction = codeLensForGroup.find((cl) => cl.command!.title === "Run");
-		assert.equal(runAction!.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction!.command!.command, "_dart.startWithoutDebuggingTestFromCodeLens");
 		assert.equal(runAction!.command!.arguments![0].fullName, "String");
 		assert.equal(runAction!.command!.arguments![0].isGroup, true);
 
 		const debugAction = codeLensForGroup.find((cl) => cl.command!.title === "Debug");
-		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromOutline");
+		assert.equal(debugAction!.command!.command, "_dart.startDebuggingTestFromCodeLens");
 		assert.equal(debugAction!.command!.arguments![0].fullName, "String");
 		assert.equal(debugAction!.command!.arguments![0].isGroup, true);
 	});
@@ -93,7 +93,7 @@ describe("test_code_lens", () => {
 			}
 
 			const action = codeLensForTest.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
-			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
+			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromCodeLens" : "_dart.startWithoutDebuggingTestFromCodeLens");
 			assert.equal(action!.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
 			assert.equal(action!.command!.arguments![0].isGroup, false);
 			assert.deepStrictEqual(action!.command!.arguments![1].env, { MY_VAR: "FOO" });
@@ -120,7 +120,7 @@ describe("test_code_lens", () => {
 			}
 
 			const action = codeLensForGroup.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
-			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
+			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromCodeLens" : "_dart.startWithoutDebuggingTestFromCodeLens");
 			assert.equal(action!.command!.arguments![0].fullName, "String");
 			assert.equal(action!.command!.arguments![0].isGroup, true);
 			assert.deepStrictEqual(action!.command!.arguments![1].env, { MY_VAR: "FOO" });

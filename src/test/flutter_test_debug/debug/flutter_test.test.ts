@@ -81,7 +81,7 @@ describe("flutter test debugger", () => {
 		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
-		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromCodeLens");
 		assert.equal(runAction.command!.arguments![0].fullName, "Hello world test");
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
@@ -123,7 +123,7 @@ describe("flutter test debugger", () => {
 		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
-		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromCodeLens");
 		assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
@@ -161,7 +161,7 @@ describe("flutter test debugger", () => {
 		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
-		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromCodeLens");
 		assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 

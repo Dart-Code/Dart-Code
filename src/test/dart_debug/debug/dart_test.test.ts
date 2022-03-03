@@ -106,7 +106,7 @@ describe("dart test debugger", () => {
 		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
-		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromCodeLens");
 		assert.equal(runAction.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
