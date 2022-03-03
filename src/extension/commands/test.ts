@@ -131,8 +131,7 @@ export class TestCommands implements vs.Disposable {
 	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestLaunchInfo): Promise<boolean> {
 		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.
-			const requiredName = debug ? "Debug" : "Run";
-			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath));
+			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
 			if (template)
 				launchTemplate = Object.assign({}, template, launchTemplate);
 		}

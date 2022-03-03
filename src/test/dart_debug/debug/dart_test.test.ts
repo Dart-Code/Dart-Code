@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { Outline as lspOutline } from "../../../shared/analysis/lsp/custom_protocol";
 import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { isWin } from "../../../shared/constants";
-import { DebuggerType, TestStatus } from "../../../shared/enums";
+import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
@@ -379,12 +379,27 @@ describe("dart test debugger", () => {
 		if (!testNode)
 			throw Error(`Unable to find ${suiteID}!`);
 		const testRequest = new vs.TestRunRequest([testNode]);
-		await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken));
+		const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken));
+		const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
+		const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
 
-		const lastResults = controller.getLatestData(testNode)!;
-		const status = lastResults.getHighestStatus(false);
-		assert.equal(status, TestStatus.Passed);
+		assert.equal(printEvent?.body.message, "LAUNCH_ENV_VAR=default");
+	});
 
+	it("allows more-specific default launch template using noDebug flag", async () => {
+		const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
+		await extApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const controller = extApi.testController;
+		const testNode = controller.controller.items.get(suiteID);
+		if (!testNode)
+			throw Error(`Unable to find ${suiteID}!`);
+		const testRequest = new vs.TestRunRequest([testNode]);
+		const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(true, testRequest, fakeCancellationToken));
+		const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
+		const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
+
+		assert.equal(printEvent?.body.message, "LAUNCH_ENV_VAR=noDebugExplicitlyFalse");
 	});
 
 	it("does not overwrite unrelated test nodes due to overlapping IDs", async () => {

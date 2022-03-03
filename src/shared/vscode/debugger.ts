@@ -6,16 +6,28 @@ import { fsPath, isWithinPathOrEqual } from "../utils/fs";
 const debugTypeTokenRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
 
 /// Allows overriding the launch config used by Code Lens "Run"/"Debug" and runs through test runner.
-export function getLaunchConfigDefaultTemplate(documentUri: Uri): TemplatedLaunchConfig | undefined {
+///
+/// Tries to get the most specific config first (eg. using an explicit `noDebug` flag) and otherwise falls back to
+/// a generic (no `noDebug` specified) one, injecting the value of `debug` inverted as `noDebug`.
+export function getLaunchConfigDefaultTemplate(documentUri: Uri, debug: boolean): TemplatedLaunchConfig | undefined {
 	const runConfigs: TemplatedLaunchConfig[] = workspace.getConfiguration("launch", documentUri).get<any[]>("configurations") || [];
 	const filePath = fsPath(documentUri);
 	const workspaceUri = workspace.getWorkspaceFolder(documentUri)?.uri;
 	const workspacePath = workspaceUri ? fsPath(workspaceUri) : undefined;
 
-	return runConfigs.find((c) => c.type === "dart"
+	const validConfigs = runConfigs.filter((c) => c.type === "dart"
 		&& c.templateFor !== undefined && c.templateFor !== null
 		&& workspacePath ? isWithinPathOrEqual(filePath, path.join(workspacePath, c.templateFor)) : false
 	);
+
+	const requiredNoDebugValue = !debug;
+	const bestConfig =
+		// Try specific config first.
+		validConfigs.find((c) => c.noDebug === requiredNoDebugValue)
+		// Otherwise, look for one that doesn't specify noDebug.
+		?? validConfigs.find((c) => c.noDebug === undefined);
+
+	return bestConfig ? { ...bestConfig, noDebug: requiredNoDebugValue } : undefined;
 }
 
 export function getTemplatedLaunchConfigs(documentUri: Uri, fileType: string): TemplatedLaunchConfig[] {
@@ -43,11 +55,12 @@ export function getTemplatedLaunchConfigs(documentUri: Uri, fileType: string): T
 
 	// If we didn't find any, try the defaults.
 	if (!runFileTemplates.length) {
-		const defaultTemplate = getLaunchConfigDefaultTemplate(documentUri);
-		if (defaultTemplate) {
-			runFileTemplates.push({ ...defaultTemplate, name: "Run", noDebug: true });
-			runFileTemplates.push({ ...defaultTemplate, name: "Debug" });
-		}
+		const defaultRunTemplate = getLaunchConfigDefaultTemplate(documentUri, false);
+		const defaultDebugTemplate = getLaunchConfigDefaultTemplate(documentUri, true);
+		if (defaultRunTemplate)
+			runFileTemplates.push({ ...defaultRunTemplate, name: "Run" });
+		if (defaultDebugTemplate)
+			runFileTemplates.push({ ...defaultDebugTemplate, name: "Debug" });
 	}
 
 	return runFileTemplates;
