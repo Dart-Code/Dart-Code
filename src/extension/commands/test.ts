@@ -44,7 +44,7 @@ export class TestCommands implements vs.Disposable {
 		this.updateEditorContexts(vs.window.activeTextEditor);
 	}
 
-	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<void> {
+	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<boolean> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
 		// as the first one that runs will be used for resolving package: URIs etc. We also can't mix and match
@@ -97,7 +97,7 @@ export class TestCommands implements vs.Disposable {
 
 		if (projectsWithTests.length === 0) {
 			vs.window.showErrorMessage("Unable to find any test folders");
-			return;
+			return false;
 		}
 
 		const testRunRequest = new DartTestRunRequest(
@@ -118,10 +118,10 @@ export class TestCommands implements vs.Disposable {
 				useLaunchJsonTestTemplate: true,
 			})),
 		);
-		await this.runTests(testRunRequest);
+		return this.runTests(testRunRequest);
 	}
 
-	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
+	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun): Promise<boolean> {
 		const programPath = fsPath(suiteData.path);
 		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(suiteData.path));
 		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
@@ -140,10 +140,10 @@ export class TestCommands implements vs.Disposable {
 				useLaunchJsonTestTemplate: true,
 			},
 		);
-		await this.runTests(testRunRequest);
+		return this.runTests(testRunRequest);
 	}
 
-	private async runTests(request: DartTestRunRequest): Promise<void> {
+	private async runTests(request: DartTestRunRequest): Promise<boolean> {
 		const debug = request.profile.kind === vs.TestRunProfileKind.Debug;
 		const controller = this.vsCodeTestController;
 		function runTestBatch(debug: boolean, { programPath, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestBatch): Promise<void> {
@@ -211,6 +211,8 @@ export class TestCommands implements vs.Disposable {
 		}
 
 		await Promise.all(request.testBatches.map((batch) => runTestBatch(debug, batch)));
+
+		return true;
 	}
 
 	private getTestNamesForNodes(nodes: TreeNode[]): TestName[] | undefined {
@@ -222,7 +224,7 @@ export class TestCommands implements vs.Disposable {
 			.map((treeNode) => ({ name: treeNode.name!, isGroup: treeNode instanceof GroupNode }));
 	}
 
-	private async startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined): Promise<void> {
+	private async startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined): Promise<boolean> {
 		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
@@ -239,7 +241,7 @@ export class TestCommands implements vs.Disposable {
 				token: undefined,
 			},
 		);
-		await this.runTests(testRunRequest);
+		return this.runTests(testRunRequest);
 	}
 
 	private async goToTestOrImplementationFile(resource?: vs.Uri): Promise<void> {
@@ -348,7 +350,7 @@ export class DartTestRunRequest extends vs.TestRunRequest {
 	public readonly testBatches: TestBatch[];
 	constructor(controller: VsCodeTestController, debug: boolean, ...testBatches: TestBatch[]) {
 		super(undefined, undefined, debug ? controller.debugProfile : controller.runProfile);
-		this.profile = super.profile!;
+		this.profile = debug ? controller.debugProfile : controller.runProfile;
 		this.testBatches = testBatches;
 	}
 
