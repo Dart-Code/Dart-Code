@@ -6,7 +6,7 @@ import { noAction } from "../../shared/constants";
 import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
-import { disposeAll, escapeDartString, generateTestNameFromFileName } from "../../shared/utils";
+import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo } from "../../shared/utils/outline_das";
@@ -34,7 +34,7 @@ export class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites?: SuiteNode[], testRun?: vs.TestRun) => this.runAllTestsWithoutDebugging(suites, testRun)),
+			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suites, testRun, isRunningAll)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
@@ -44,7 +44,7 @@ export class TestCommands implements vs.Disposable {
 		this.updateEditorContexts(vs.window.activeTextEditor);
 	}
 
-	private async runAllTestsWithoutDebugging(suites?: SuiteNode[], testRun?: vs.TestRun): Promise<void> {
+	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<void> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
 		// as the first one that runs will be used for resolving package: URIs etc. We also can't mix and match
@@ -67,19 +67,26 @@ export class TestCommands implements vs.Disposable {
 			if (!suites)
 				return;
 
-			const tests = suites
+			let testPaths = suites
 				.map((suite) => suite.suiteData.path)
 				.filter((suitePath) => isWithinPath(suitePath, projectFolder))
 				.filter((suitePath) => isInsideFolderNamed(suitePath, "integration_test") === integrationTests)
 				.filter((suitePath) => closestProjectFolder(suitePath) === projectFolder);
 
 
-			if (tests.length) {
+			if (testPaths.length) {
 				const projectName = path.basename(projectFolder);
 				const testType = integrationTests ? "Integration Tests" : "Tests";
 				const name = `${projectName} ${testType}`;
 
-				projectsWithTests.push({ projectFolder, name, tests });
+				// To avoid making a huge list of suite names that may trigger
+				// "The command line is too long" on Windows, if we know we're running them
+				// _all_ we can simplify the list of test names to just the top-level folders
+				// that contain each.
+				if (isRunningAll)
+					testPaths = uniq(testPaths.map((suitePath) => path.relative(projectFolder, suitePath).split(path.sep)[0]));
+
+				projectsWithTests.push({ projectFolder, name, tests: testPaths });
 			}
 		}
 

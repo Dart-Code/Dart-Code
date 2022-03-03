@@ -66,6 +66,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		await this.discoverer?.ensureSuitesDiscovered();
 
 		const testsToRun = new Set<vs.TestItem>();
+		const isRunningAll = !request.include?.length && !request.exclude?.length;
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
 		request.exclude?.forEach((item) => testsToRun.delete(item));
 
@@ -82,7 +83,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
 			// suites), we can run the "fast path" in a single `dart test` invocation.
 			if (!debug && [...testsToRun].every((item) => this.nodeForItem.get(item) instanceof SuiteNode)) {
-				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", [...testsToRun].map((item) => this.nodeForItem.get(item)), run);
+				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", [...testsToRun].map((item) => this.nodeForItem.get(item)), run, isRunningAll);
 				return;
 			}
 
