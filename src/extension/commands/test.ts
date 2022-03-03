@@ -35,6 +35,7 @@ export class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suites, testRun, isRunningAll)),
+			vs.commands.registerCommand("_dart.runDartTestRun", (request: DartTestRunRequest) => this.runTests(request)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
@@ -103,6 +104,7 @@ export class TestCommands implements vs.Disposable {
 		const testRunRequest = new DartTestRunRequest(
 			this.vsCodeTestController,
 			false,
+			testRun,
 			...projectsWithTests.map((projectWithTests) => ({
 				launchTemplate: {
 					args: projectWithTests.tests.slice(1),
@@ -113,7 +115,6 @@ export class TestCommands implements vs.Disposable {
 				shouldRunSkippedTests: false,
 				suppressPromptOnErrors: true,
 				testNames: undefined,
-				testRun,
 				token: undefined,
 				useLaunchJsonTestTemplate: true,
 			})),
@@ -129,13 +130,13 @@ export class TestCommands implements vs.Disposable {
 		const testRunRequest = new DartTestRunRequest(
 			this.vsCodeTestController,
 			debug,
+			testRun,
 			{
 				launchTemplate: undefined,
 				programPath,
 				shouldRunSkippedTests,
 				suppressPromptOnErrors,
 				testNames,
-				testRun,
 				token,
 				useLaunchJsonTestTemplate: true,
 			},
@@ -146,7 +147,9 @@ export class TestCommands implements vs.Disposable {
 	private async runTests(request: DartTestRunRequest): Promise<boolean> {
 		const debug = request.profile.kind === vs.TestRunProfileKind.Debug;
 		const controller = this.vsCodeTestController;
-		function runTestBatch(debug: boolean, { programPath, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestBatch): Promise<void> {
+		const isCallerManagedTestRun = !!request.testRun;
+		const testRun = request.testRun ?? controller.createTestRun(request);
+		function runTestBatch(debug: boolean, { programPath, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, token, useLaunchJsonTestTemplate }: TestBatch): Promise<void> {
 			if (useLaunchJsonTestTemplate) {
 				// Get the default Run/Debug template for running/debugging tests and use that as a base.
 				const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
@@ -174,20 +177,7 @@ export class TestCommands implements vs.Disposable {
 
 				// Ensure we have a unique ID for this session so we can track when it completes.
 				const dartCodeDebugSessionID = ensureDebugLaunchUniqueId(launchConfiguration);
-
-				// If we were given a test to use by VS Code, use it.
-				if (testRun) {
-					controller.registerTestRun(dartCodeDebugSessionID, testRun, false);
-				} else {
-					// Otherwise, construct our own.
-					// TODO: dantup: This won't work, as we may get multiple sessions if we come through
-					// runAllTestsWithoutDebugging.We should construct a "test request" at a higher level.
-					// 	testRun = controller.createCustomTestRun(launchConfiguration);
-					// // Register this one, but ensure we end it with the debug session since it's not being done
-					// // by a profile runHandler.
-					// if (testRun)
-					// 	controller.registerTestRun(dartCodeDebugSessionID, testRun, true);
-				}
+				controller.registerTestRun(dartCodeDebugSessionID, testRun, !isCallerManagedTestRun);
 
 				if (token) {
 					subs.push(vs.debug.onDidStartDebugSession((e) => {
@@ -231,13 +221,13 @@ export class TestCommands implements vs.Disposable {
 		const testRunRequest = new DartTestRunRequest(
 			this.vsCodeTestController,
 			!noDebug,
+			undefined,
 			{
 				launchTemplate,
 				programPath: test.file,
 				shouldRunSkippedTests,
 				suppressPromptOnErrors: false,
 				testNames: [{ name: test.fullName, isGroup: test.isGroup }],
-				testRun: undefined,
 				token: undefined,
 			},
 		);
@@ -348,14 +338,13 @@ export class TestCommands implements vs.Disposable {
 export class DartTestRunRequest extends vs.TestRunRequest {
 	public readonly profile: vs.TestRunProfile;
 	public readonly testBatches: TestBatch[];
-	constructor(controller: VsCodeTestController, debug: boolean, ...testBatches: TestBatch[]) {
+	constructor(controller: VsCodeTestController, debug: boolean, public readonly testRun: vs.TestRun | undefined, ...testBatches: TestBatch[]) {
 		super(undefined, undefined, debug ? controller.debugProfile : controller.runProfile);
 		this.profile = debug ? controller.debugProfile : controller.runProfile;
 		this.testBatches = testBatches;
 	}
 
-	static is(request: vs.TestRunRequest): asserts request is DartTestRunRequest;
-	static is(request: vs.TestRunRequest): boolean {
+	static is(request: vs.TestRunRequest): request is DartTestRunRequest {
 		return "testBatches" in request;
 	}
 }
@@ -368,6 +357,5 @@ interface TestBatch {
 	suppressPromptOnErrors: boolean;
 	launchTemplate: any | undefined;
 	useLaunchJsonTestTemplate?: boolean;
-	testRun: vs.TestRun | undefined;
 	token: vs.CancellationToken | undefined;
 }

@@ -6,6 +6,7 @@ import { GroupNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { DartTestRunRequest } from "../commands/test";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 
@@ -50,6 +51,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			await this.discoverer.discoverTestsForSuite(node);
 	}
 
+	public createTestRun(request: vs.TestRunRequest, name?: string): vs.TestRun {
+		return this.controller.createTestRun(request, name, true);
+	}
+
 	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun, shouldEndWithSession: boolean): void {
 		this.testRuns[dartCodeDebugSessionID] = { run, shouldEndWithSession };
 	}
@@ -66,6 +71,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
 		await this.discoverer?.ensureSuitesDiscovered();
+
+		if (DartTestRunRequest.is(request)) {
+			// TODO: Simplify the code below to also use _dart.runDartTestRun.
+			return vs.commands.executeCommand("_dart.runDartTestRun", request);
+		}
 
 		const testsToRun = new Set<vs.TestItem>();
 		const isRunningAll = !request.include?.length && !request.exclude?.length;
