@@ -15,6 +15,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
 	private testRuns: { [key: string]: { run: vs.TestRun, shouldEndWithSession: boolean } | undefined } = {};
+	public readonly runProfile: vs.TestRunProfile;
+	public readonly debugProfile: vs.TestRunProfile;
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, private readonly discoverer: TestDiscoverer | undefined) {
 		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
@@ -27,10 +29,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		if (discoverer)
 			controller.resolveHandler = (item: vs.TestItem | undefined) => this.resolveTestItem(item);
 
-		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) =>
+		this.runProfile = controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) =>
 			this.runTests(false, request, token));
 
-		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) =>
+		this.debugProfile = controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) =>
 			this.runTests(true, request, token));
 	}
 
@@ -253,6 +255,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private getOrCreateTestRun(sessionID: string) {
 		let run = this.testRuns[sessionID]?.run;
 		if (!run) {
+			// console.warn(`Unable to find VS Code TestRun for ${sessionID} so creating a dummy run`);
 			run = this.controller.createTestRun(new vs.TestRunRequest(), undefined, true);
 			this.registerTestRun(sessionID, run, true);
 		}

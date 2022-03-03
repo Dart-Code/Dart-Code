@@ -581,7 +581,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
-	context.subscriptions.push(new TestCommands(logger, testModel, workspaceContext, vsCodeTestController, flutterCapabilities));
+	if (vsCodeTestController)
+		context.subscriptions.push(new TestCommands(logger, testModel, workspaceContext, vsCodeTestController, flutterCapabilities));
 
 	if (lspClient && lspAnalyzer) {
 		// TODO: LSP equivs of the others...

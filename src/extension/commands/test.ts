@@ -3,7 +3,6 @@ import * as path from "path";
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
-import { TestStatus } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
@@ -29,7 +28,7 @@ export type SuiteList = [SuiteNode, TestName[]];
 export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
 			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
@@ -101,21 +100,25 @@ export class TestCommands implements vs.Disposable {
 			return;
 		}
 
-		await Promise.all(projectsWithTests.map((projectWithTests) => this.runTests({
-			debug: false,
-			launchTemplate: {
-				args: projectWithTests.tests.slice(1),
-				cwd: projectWithTests.projectFolder,
-				name: projectWithTests.name,
-			},
-			programPath: projectWithTests.tests[0],
-			shouldRunSkippedTests: false,
-			suppressPromptOnErrors: true,
-			testNames: undefined,
-			testRun,
-			token: undefined,
-			useLaunchJsonTestTemplate: true,
-		})));
+		const testRunRequest = new DartTestRunRequest(
+			this.vsCodeTestController,
+			false,
+			...projectsWithTests.map((projectWithTests) => ({
+				launchTemplate: {
+					args: projectWithTests.tests.slice(1),
+					cwd: projectWithTests.projectFolder,
+					name: projectWithTests.name,
+				},
+				programPath: projectWithTests.tests[0],
+				shouldRunSkippedTests: false,
+				suppressPromptOnErrors: true,
+				testNames: undefined,
+				testRun,
+				token: undefined,
+				useLaunchJsonTestTemplate: true,
+			})),
+		);
+		await this.runTests(testRunRequest);
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
@@ -123,72 +126,91 @@ export class TestCommands implements vs.Disposable {
 		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(suiteData.path));
 		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
 
-		return this.runTests({
+		const testRunRequest = new DartTestRunRequest(
+			this.vsCodeTestController,
 			debug,
-			launchTemplate: undefined,
-			programPath,
-			shouldRunSkippedTests,
-			suppressPromptOnErrors,
-			testNames,
-			testRun,
-			token,
-			useLaunchJsonTestTemplate: true,
-		});
+			{
+				launchTemplate: undefined,
+				programPath,
+				shouldRunSkippedTests,
+				suppressPromptOnErrors,
+				testNames,
+				testRun,
+				token,
+				useLaunchJsonTestTemplate: true,
+			},
+		);
+		await this.runTests(testRunRequest);
 	}
 
-	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestLaunchInfo): Promise<boolean> {
-		if (useLaunchJsonTestTemplate) {
-			// Get the default Run/Debug template for running/debugging tests and use that as a base.
-			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
-			if (template)
-				launchTemplate = Object.assign({}, template, launchTemplate);
+	private async runTests(request: DartTestRunRequest): Promise<void> {
+		const debug = request.profile.kind === vs.TestRunProfileKind.Debug;
+		const controller = this.vsCodeTestController;
+		function runTestBatch(debug: boolean, { programPath, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestBatch): Promise<void> {
+			if (useLaunchJsonTestTemplate) {
+				// Get the default Run/Debug template for running/debugging tests and use that as a base.
+				const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
+				if (template)
+					launchTemplate = Object.assign({}, template, launchTemplate);
+			}
+
+			const subs: vs.Disposable[] = [];
+			return new Promise<void>(async (resolve, reject) => {
+				let testsName = path.basename(programPath);
+				// Handle when running whole test folder.
+				if (testsName === "test")
+					testsName = path.basename(path.dirname(programPath));
+				const launchConfiguration = {
+					suppressPromptOnErrors,
+					...getLaunchConfig(
+						!debug,
+						programPath,
+						testNames,
+						shouldRunSkippedTests,
+						launchTemplate,
+					),
+					name: (launchTemplate?.name ?? `${path.basename(programPath)} tests`) as string,
+				};
+
+				// Ensure we have a unique ID for this session so we can track when it completes.
+				const dartCodeDebugSessionID = ensureDebugLaunchUniqueId(launchConfiguration);
+
+				// If we were given a test to use by VS Code, use it.
+				if (testRun) {
+					controller.registerTestRun(dartCodeDebugSessionID, testRun, false);
+				} else {
+					// Otherwise, construct our own.
+					// TODO: dantup: This won't work, as we may get multiple sessions if we come through
+					// runAllTestsWithoutDebugging.We should construct a "test request" at a higher level.
+					// 	testRun = controller.createCustomTestRun(launchConfiguration);
+					// // Register this one, but ensure we end it with the debug session since it's not being done
+					// // by a profile runHandler.
+					// if (testRun)
+					// 	controller.registerTestRun(dartCodeDebugSessionID, testRun, true);
+				}
+
+				if (token) {
+					subs.push(vs.debug.onDidStartDebugSession((e) => {
+						if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
+							subs.push(token.onCancellationRequested(() => e.customRequest("disconnect")));
+					}));
+				}
+				subs.push(vs.debug.onDidTerminateDebugSession((e) => {
+					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
+						resolve();
+				}));
+				const didStart = await vs.debug.startDebugging(
+					vs.workspace.getWorkspaceFolder(vs.Uri.file(programPath)),
+					launchConfiguration
+				);
+				if (!didStart)
+					reject();
+			}).finally(() => {
+				disposeAll(subs);
+			});
 		}
 
-		const subs: vs.Disposable[] = [];
-		return new Promise<boolean>(async (resolve, reject) => {
-			let testsName = path.basename(programPath);
-			// Handle when running whole test folder.
-			if (testsName === "test")
-				testsName = path.basename(path.dirname(programPath));
-			const launchConfiguration = {
-				suppressPromptOnErrors,
-				...getLaunchConfig(
-					!debug,
-					programPath,
-					testNames,
-					shouldRunSkippedTests,
-					launchTemplate,
-				),
-				name: launchTemplate?.name ?? `${path.basename(programPath)} tests`,
-			};
-
-			// Ensure we have a unique ID for this session so we can track when it completes.
-			const dartCodeDebugSessionID = ensureDebugLaunchUniqueId(launchConfiguration);
-
-			// If we were given a test to use by VS Code, use it. Otherwise we'll lazily create one at the
-			// other end.
-			if (testRun)
-				this.vsCodeTestController?.registerTestRun(dartCodeDebugSessionID, testRun, false);
-
-			if (token) {
-				subs.push(vs.debug.onDidStartDebugSession((e) => {
-					if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
-						subs.push(token.onCancellationRequested(() => e.customRequest("disconnect")));
-				}));
-			}
-			subs.push(vs.debug.onDidTerminateDebugSession((e) => {
-				if (e.configuration.dartCodeDebugSessionID === dartCodeDebugSessionID)
-					resolve(true);
-			}));
-			const didStart = await vs.debug.startDebugging(
-				vs.workspace.getWorkspaceFolder(vs.Uri.file(programPath)),
-				launchConfiguration
-			);
-			if (!didStart)
-				reject();
-		}).finally(() => {
-			disposeAll(subs);
-		});
+		await Promise.all(request.testBatches.map((batch) => runTestBatch(debug, batch)));
 	}
 
 	private getTestNamesForNodes(nodes: TreeNode[]): TestName[] | undefined {
@@ -200,45 +222,24 @@ export class TestCommands implements vs.Disposable {
 			.map((treeNode) => ({ name: treeNode.name!, isGroup: treeNode instanceof GroupNode }));
 	}
 
-	private getTestNames(treeNode: TreeNode, onlyOfStatus?: TestStatus): TestName[] | undefined {
-		// If we're getting all tests, we can just use the test name/group name (or undefined for suite) directly.
-		if (onlyOfStatus === undefined) {
-			if ((treeNode instanceof TestNode || treeNode instanceof GroupNode) && treeNode.name !== undefined)
-				return [{ name: treeNode.name, isGroup: treeNode instanceof GroupNode }];
-
-			return undefined;
-		}
-
-		// Otherwise, collect all descendant tests that are of the specified type.
-		let names: TestName[] = [];
-		if (treeNode instanceof SuiteNode || treeNode instanceof GroupNode) {
-			for (const child of treeNode.children) {
-				const childNames = this.getTestNames(child, onlyOfStatus);
-				if (childNames)
-					names = names.concat(childNames);
-			}
-		} else if (treeNode instanceof TestNode && treeNode.name !== undefined) {
-			if (treeNode.status === onlyOfStatus)
-				names.push({ name: treeNode.name, isGroup: treeNode instanceof GroupNode });
-		}
-
-		return names;
-	}
-
-	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
+	private async startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined): Promise<void> {
 		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
-		return this.runTests({
-			debug: !noDebug,
-			launchTemplate,
-			programPath: test.file,
-			shouldRunSkippedTests,
-			suppressPromptOnErrors: false,
-			testNames: [{ name: test.fullName, isGroup: test.isGroup }],
-			testRun: undefined,
-			token: undefined,
-		});
+		const testRunRequest = new DartTestRunRequest(
+			this.vsCodeTestController,
+			!noDebug,
+			{
+				launchTemplate,
+				programPath: test.file,
+				shouldRunSkippedTests,
+				suppressPromptOnErrors: false,
+				testNames: [{ name: test.fullName, isGroup: test.isGroup }],
+				testRun: undefined,
+				token: undefined,
+			},
+		);
+		await this.runTests(testRunRequest);
 	}
 
 	private async goToTestOrImplementationFile(resource?: vs.Uri): Promise<void> {
@@ -342,9 +343,24 @@ export class TestCommands implements vs.Disposable {
 	}
 }
 
-interface TestLaunchInfo {
+export class DartTestRunRequest extends vs.TestRunRequest {
+	public readonly profile: vs.TestRunProfile;
+	public readonly testBatches: TestBatch[];
+	constructor(controller: VsCodeTestController, debug: boolean, ...testBatches: TestBatch[]) {
+		super(undefined, undefined, debug ? controller.debugProfile : controller.runProfile);
+		this.profile = super.profile!;
+		this.testBatches = testBatches;
+	}
+
+	static is(request: vs.TestRunRequest): asserts request is DartTestRunRequest;
+	static is(request: vs.TestRunRequest): boolean {
+		return "testBatches" in request;
+	}
+}
+
+
+interface TestBatch {
 	programPath: string;
-	debug: boolean;
 	testNames: TestName[] | undefined;
 	shouldRunSkippedTests: boolean;
 	suppressPromptOnErrors: boolean;
