@@ -53,10 +53,10 @@ describe("main_code_lens", () => {
 		}
 
 		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
-		assert.equal(runAction.command!.arguments![1].env.LAUNCH_ENV_VAR, "true");
+		assert.equal(runAction.command!.arguments![1].env.LAUNCH_ENV_VAR, "default");
 
 		const debugAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Debug")!;
-		assert.equal(debugAction.command!.arguments![1].env.LAUNCH_ENV_VAR, "true");
+		assert.equal(debugAction.command!.arguments![1].env.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
 	});
 
 	for (const debugType of [
