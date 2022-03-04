@@ -167,7 +167,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
 				let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
 					? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
-					: [];
+					: undefined;
 
 				// If the current device is not valid, prompt the user.
 				if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
@@ -177,12 +177,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				// the call to showDevicePicker.
 				supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
 					? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
-					: [];
+					: undefined;
 
 				// If we still don't have a valid device, show an error.
 				if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn)) {
 					if (deviceToLaunchOn) {
-						logger.warn(`Unable to launch because ${deviceToLaunchOn.id} is not valid for this project (${deviceToLaunchOn.platformType} is not allowed according to [${supportedPlatforms.join(", ")}])`);
+						logger.warn(`Unable to launch because ${deviceToLaunchOn.id} is not valid for this project (${deviceToLaunchOn.platformType} is not allowed according to [${supportedPlatforms?.join(", ")}])`);
 						window.showInformationMessage("Cannot launch without a valid device for this project");
 					} else {
 						logger.warn("Unable to launch due to no active device");

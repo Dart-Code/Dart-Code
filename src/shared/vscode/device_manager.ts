@@ -43,8 +43,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public isSupported(types: f.PlatformType[] | undefined, device: { platformType?: f.PlatformType | null | undefined } | undefined) {
-		// If we don't get any types to filter, assume everything is valid.
-		return device && (!types || !types.length || !device.platformType || types.indexOf(device.platformType) !== -1);
+		// types being `undefined` means we shouldn't filter, but being empty means we legit
+		// don't support any types.
+		return device && (!types || !types || !device.platformType || types.indexOf(device.platformType) !== -1);
 	}
 
 	public async deviceAdded(dev: f.Device): Promise<void> {
