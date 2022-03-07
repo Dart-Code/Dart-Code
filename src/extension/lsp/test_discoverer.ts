@@ -11,6 +11,7 @@ import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
+import { config } from "../config";
 import { getExcludedFolders, isTestFile } from "../utils";
 
 export class TestDiscoverer implements IAmDisposable {
@@ -77,7 +78,7 @@ export class TestDiscoverer implements IAmDisposable {
 			async () => {
 				await new Promise((resolve) => setTimeout(resolve, 1000));
 				try {
-					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder)));
 				} catch (e) {
 					this.logger.error(`Failed to discover tests: ${e}`);

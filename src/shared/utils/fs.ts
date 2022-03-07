@@ -191,12 +191,17 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
-export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean } = {}): Promise<string[]> {
+export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number }): Promise<string[]> {
 	const dartToolFolderName = `${path.sep}.dart_tool${path.sep}`;
 
-	const level2Folders = await flatMapAsync(roots, (f) => getChildFolders(logger, f));
-	const level3Folders = await flatMapAsync(level2Folders, (f) => getChildFolders(logger, f));
-	const allPossibleFolders = roots.concat(level2Folders).concat(level3Folders)
+	let allPossibleFolders = roots.slice();
+	// Start at 1, as we already added the roots.
+	for (let i = 1; i < options.searchDepth; i++) {
+		const nextLevelFolders = await flatMapAsync(allPossibleFolders, (f) => getChildFolders(logger, f));
+		allPossibleFolders = allPossibleFolders.concat(nextLevelFolders);
+	}
+
+	allPossibleFolders = allPossibleFolders
 		.filter((f) => !f.includes(dartToolFolderName) && excludedFolders.every((ef) => !isEqualOrWithinPath(f, ef)));
 
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({

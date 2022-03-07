@@ -4,6 +4,7 @@ import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { DebugCommands, debugSessions } from "../commands/debug";
+import { config } from "../config";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { getExcludedFolders } from "../utils";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -58,7 +59,7 @@ export class VmServiceExtensions {
 
 			try {
 				if (e.body.extensionRPC === VmServiceExtension.InspectorSetPubRootDirectories) {
-					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 
 					const params: { [key: string]: string } = {
 						// TODO: Is this OK???

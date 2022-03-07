@@ -186,7 +186,7 @@ export class DartTaskProvider extends BaseTaskProvider {
 	get type() { return DartTaskProvider.type; }
 
 	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
-		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true });
+		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 
 		let promises: Array<Promise<vs.Task>> = [];
 		projectFolders.forEach((folder) => {

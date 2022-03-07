@@ -32,7 +32,7 @@ export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 export async function getAllProjectFolders(
 	logger: Logger,
 	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
-	options: { sort?: boolean; requirePubspec?: boolean } = {},
+	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number },
 ) {
 	const workspaceFolders = getDartWorkspaceFolders();
 	const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));

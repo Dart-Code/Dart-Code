@@ -14,6 +14,7 @@ import { createTestFileAction, defaultTestFileContents, getLaunchConfig, TestNam
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
+import { config } from "../config";
 import { isDartDocument } from "../editors";
 import { VsCodeTestController } from "../test/vs_test_controller";
 import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isInsideFolderNamed, isTestFile } from "../utils";
@@ -52,7 +53,7 @@ export class TestCommands implements vs.Disposable {
 		// So, fetch all project folders, then if we have suites in them, group them by that folders (and whether
 		// they're integration/non-integration), and otherwise use their 'test'/'integration_test' folders.
 
-		const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true });
+		const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 		// Sort folders by length descending so that for any given suite, we know the first one that contains
 		// it is the closest parent, so we can avoid running the same test multiple times if it's in a nested
 		// project.

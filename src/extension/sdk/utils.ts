@@ -177,7 +177,7 @@ export class SdkUtils {
 		let hasAnyWebProject: boolean = false;
 		let hasAnyStandardDartProject: boolean = false;
 
-		const possibleProjects = await getAllProjectFolders(this.logger, getExcludedFolders);
+		const possibleProjects = await getAllProjectFolders(this.logger, getExcludedFolders, { searchDepth: config.projectSearchDepth });
 
 		// Scan through them all to figure out what type of projects we have.
 		for (const folder of possibleProjects) {

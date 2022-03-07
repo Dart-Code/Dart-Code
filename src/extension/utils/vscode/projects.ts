@@ -5,6 +5,7 @@ import { Logger } from "../../../shared/interfaces";
 import { notUndefined } from "../../../shared/utils";
 import { fsPath, isFlutterProjectFolder } from "../../../shared/utils/fs";
 import { getAllProjectFolders } from "../../../shared/vscode/utils";
+import { config } from "../../config";
 import { locateBestProjectRoot } from "../../project";
 import { getExcludedFolders, homeRelativePath } from "../../utils";
 
@@ -18,7 +19,7 @@ export async function getFolderToRunCommandIn(logger: Logger, placeHolder: strin
 		return folder;
 
 	// Otherwise look for what projects we have.
-	const selectableFolders = (await getAllProjectFolders(logger, getExcludedFolders, { requirePubspec: true, sort: true }))
+	const selectableFolders = (await getAllProjectFolders(logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth }))
 		.filter(flutterOnly ? isFlutterProjectFolder : () => true);
 
 	if (!selectableFolders || !selectableFolders.length) {

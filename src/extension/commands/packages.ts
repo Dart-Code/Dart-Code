@@ -195,7 +195,7 @@ export class PackageCommands extends BaseSdkCommands {
 			//   0 - then just use Uri
 			//   1 - then just do that one
 			//   more than 1 - prompt to do all
-			const folders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true });
+			const folders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 			const foldersRequiringPackageGet = uniq(folders)
 				.map(vs.Uri.file)
 				.filter((uri) => config.for(uri).promptToGetPackages)

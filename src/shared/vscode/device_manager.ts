@@ -19,7 +19,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" }) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always", projectSearchDepth: number }) {
 		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.name = "Flutter Device";
 		this.statusBarItem.tooltip = "Flutter";
@@ -278,7 +278,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		this.shortCacheForSupportedPlatforms = new Promise(async (resolve) => {
-			const projectFolders = await getAllProjectFolders(this.logger, undefined, { requirePubspec: true });
+			const projectFolders = await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
 			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
 			const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));

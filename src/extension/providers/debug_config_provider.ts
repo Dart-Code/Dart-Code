@@ -705,7 +705,7 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 		const results: DebugConfiguration[] = [];
 
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true }) : [];
+		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true, searchDepth: config.projectSearchDepth }) : [];
 
 		if (projectFolders.length) {
 			for (const projectFolder of projectFolders) {
@@ -763,7 +763,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 		const results: DebugConfiguration[] = [];
 
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true }) : [];
+		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true, searchDepth: config.projectSearchDepth }) : [];
 		for (const projectFolder of projectFolders) {
 			const isFlutter = isFlutterProjectFolder(projectFolder);
 			const name = path.basename(projectFolder);
