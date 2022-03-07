@@ -139,7 +139,7 @@ describe("device_manager", () => {
 
 		// connect a device without setting it as valid, but still expect
 		// it to be selected because without any explicitly marked valid platforms
-		// we assume everything is valid.
+		// we expect android/ios to still be valid.
 		await daemon.connect(physicalAndroidMobile, false);
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
 	});
@@ -224,7 +224,7 @@ describe("device_manager", () => {
 
 class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlutterDaemon {
 	public capabilities = DaemonCapabilities.empty;
-	public supportedPlatforms: f.PlatformType[] = [];
+	public supportedPlatforms: f.PlatformType[] | undefined;
 
 	public async enablePlatformGlobally(platformType: string): Promise<void> { }
 
@@ -233,8 +233,10 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	}
 
 	public async connect(d: f.Device, markTypeAsValid: boolean): Promise<void> {
-		if (markTypeAsValid && d.platformType)
+		if (markTypeAsValid && d.platformType) {
+			this.supportedPlatforms = this.supportedPlatforms ?? [];
 			this.supportedPlatforms.push(d.platformType);
+		}
 
 		await this.notify(this.deviceAddedSubscriptions, d);
 	}
@@ -270,7 +272,7 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		if (!projectRoot)
 			throw new Error("projectRoot must be specified!");
 
-		return { platforms: this.supportedPlatforms };
+		return { platforms: this.supportedPlatforms ?? ["android", "ios"] };
 	}
 
 	public async serveDevTools(): Promise<f.ServeDevToolsResponse> {
