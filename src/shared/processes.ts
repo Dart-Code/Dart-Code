@@ -1,22 +1,29 @@
 import * as child_process from "child_process";
 import * as path from "path";
 import { DartCapabilities } from "./capabilities/dart";
-import { dartVMPath, pubPath } from "./constants";
+import { dartVMPath, isWin, pubPath } from "./constants";
 import { LogCategory } from "./enums";
 import { Logger, SpawnedProcess } from "./interfaces";
 import { logProcess } from "./logging";
 import { nullToUndefined } from "./utils";
 
 export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: { [key: string]: string | undefined } | undefined): SpawnedProcess {
-	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
-	// executable with a space in its path and an argument also has a space, you have to then quote all of the
-	// arguments too!\
-	// https://github.com/nodejs/node/issues/7367
-	const quotedArgs = args.map((a) => `"${a.replace(/"/g, `\\"`)}"`);
+	const quotedArgs = args.map(quoteAndEscapeArg);
 	const customEnv = Object.assign({}, process.env, env);
 	return child_process.spawn(`"${binPath}"`, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true }) as SpawnedProcess;
 }
 
+function quoteAndEscapeArg(arg: string) {
+	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
+	// executable with a space in its path and an argument also has a space, you have to then quote _all_ of the
+	// arguments!
+	// https://github.com/nodejs/node/issues/7367
+	let escaped = arg.replace(/"/g, `\\"`);
+	// Additionally, on Windows escape redirection symbols with ^
+	if (isWin)
+		escaped = escaped.replace(/([<>])/g, "^$1");
+	return `"${escaped}"`;
+}
 
 export class RunProcessResult {
 	constructor(public readonly exitCode: number | undefined, public readonly stdout: string, public readonly stderr: string) { }
