@@ -27,7 +27,6 @@ out/tool/**
 package-lock.json
 src/**
 tool/**
-tool/**
 tsconfig.*.json
 tsconfig.json
 typings/**

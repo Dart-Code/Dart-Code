@@ -42,7 +42,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 						const textEdit = entries[0][1][0];
 						// HACK: This should be checking InsertTextFormat:
 						// https://github.com/microsoft/language-server-protocol/issues/724#issuecomment-800334721
-						const hasSnippet = /\$(0|\{0:([^}]*)\})/.test(textEdit.newText);
+						const hasSnippet = /\$(\d+|\{\d+:([^}]*)\})/.test(textEdit.newText);
 						// if ((textEdit as any).insertTextFormat === InsertTextFormat.Snippet) {
 						if (hasSnippet) {
 							action.edit = undefined;

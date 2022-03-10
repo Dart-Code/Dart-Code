@@ -1,3 +1,4 @@
+// Try to keep synced with Flutter extension!
 module.exports = {
 	"env": {
 		"es6": true,
