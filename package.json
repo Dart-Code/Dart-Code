@@ -1306,6 +1306,7 @@
 		"configuration": [
 			{
 				"title": "Analyzer",
+				"order": 1,
 				"properties": {
 					"dart.additionalAnalyzerFileExtensions": {
 						"type": "array",
@@ -1404,6 +1405,7 @@
 			},
 			{
 				"title": "DevTools",
+				"order": 1,
 				"properties": {
 					"dart.updateDevTools": {
 						"type": "boolean",
@@ -1485,6 +1487,7 @@
 			},
 			{
 				"title": "Editor",
+				"order": 1,
 				"properties": {
 					"dart.analysisServerFolding": {
 						"type": "boolean",
@@ -1626,6 +1629,7 @@
 			},
 			{
 				"title": "Flutter",
+				"order": 1,
 				"properties": {
 					"dart.flutterAdbConnectOnChromeOs": {
 						"type": "boolean",
@@ -1849,6 +1853,7 @@
 			},
 			{
 				"title": "Logging",
+				"order": 1,
 				"properties": {
 					"dart.analyzerInstrumentationLogFile": {
 						"type": [
@@ -1959,6 +1964,7 @@
 			},
 			{
 				"title": "Pub",
+				"order": 1,
 				"properties": {
 					"dart.promptToGetPackages": {
 						"type": "boolean",
@@ -1985,6 +1991,7 @@
 			},
 			{
 				"title": "Run and Debug",
+				"order": 1,
 				"properties": {
 					"dart.buildRunnerAdditionalArgs": {
 						"type": "array",
@@ -2118,6 +2125,7 @@
 			},
 			{
 				"title": "SDK",
+				"order": 1,
 				"properties": {
 					"dart.checkForSdkUpdates": {
 						"type": "boolean",
@@ -2171,6 +2179,7 @@
 			},
 			{
 				"title": "Testing",
+				"order": 1,
 				"properties": {
 					"dart.allowTestsOutsideTestFolder": {
 						"type": "boolean",
@@ -2202,7 +2211,7 @@
 			},
 			{
 				"title": "Other",
-				"order": 9,
+				"order": 2,
 				"properties": {
 					"dart.allowAnalytics": {
 						"type": "boolean",
@@ -2226,7 +2235,7 @@
 			},
 			{
 				"title": "Experimental",
-				"order": 10,
+				"order": 3,
 				"properties": {
 					"dart.enableServerSnippets": {
 						"type": "boolean",
