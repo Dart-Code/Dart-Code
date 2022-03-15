@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, showErrorsAction } from "../../shared/constants";
+import { debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isDartCodeTestRun, showErrorsAction } from "../../shared/constants";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
@@ -656,7 +656,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
 				if (devtoolsUrl)
 					this.addArgsIfNotExist(args, "--devtools-server-address", devtoolsUrl.toString());
-				else
+				else if (!isDartCodeTestRun) // Suppress warning on test runs as they're fast and can launch before the server starts
 					this.logger.warn("DevTools server unavailable, not sending --devtools-server-address!");
 			} catch (e) {
 				this.logger.error(`Failed to get DevTools server address ${e}`);

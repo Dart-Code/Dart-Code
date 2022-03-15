@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { cpuProfilerPage, dartVMPath, devToolsPages, performancePage, reactivateDevToolsAction, skipAction, widgetInspectorPage } from "../../../shared/constants";
+import { cpuProfilerPage, dartVMPath, devToolsPages, isDartCodeTestRun, performancePage, reactivateDevToolsAction, skipAction, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -189,7 +189,7 @@ export class DevToolsManager implements vs.Disposable {
 			}, async () => {
 				const canLaunchDevToolsThroughService = isRunningLocally
 					&& !options.embed
-					&& !process.env.DART_CODE_IS_TEST_RUN
+					&& !isDartCodeTestRun
 					&& config.devToolsBrowser === "chrome"
 					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
 

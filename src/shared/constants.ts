@@ -7,6 +7,7 @@ export const flutterExtensionIdentifier = "Dart-Code.flutter";
 export const debugAdapterPath = "out/dist/debug.js";
 
 export const isCI = !!process.env.CI;
+export const isDartCodeTestRun = !!process.env.DART_CODE_IS_TEST_RUN;
 export const isWin = process.platform.startsWith("win");
 export const isMac = process.platform === "darwin";
 export const isLinux = !isWin && !isMac;

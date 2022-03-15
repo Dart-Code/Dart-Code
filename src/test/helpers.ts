@@ -4,7 +4,7 @@ import { tmpdir } from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { dartCodeExtensionIdentifier, isWin } from "../shared/constants";
+import { dartCodeExtensionIdentifier, isDartCodeTestRun, isWin } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
@@ -419,8 +419,8 @@ beforeEach("create sinon sandbox", () => {
 	sb = sinon.createSandbox();
 });
 
-before("throw if DART_CODE_IS_TEST_RUN is not set", () => {
-	if (!process.env.DART_CODE_IS_TEST_RUN)
+before("throw if isDartCodeTestRun is false", () => {
+	if (!isDartCodeTestRun)
 		throw new Error("DART_CODE_IS_TEST_RUN env var should be set for test runs.");
 });
 
