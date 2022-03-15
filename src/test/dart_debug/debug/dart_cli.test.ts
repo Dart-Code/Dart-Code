@@ -717,8 +717,10 @@ void printSomething() {
 			let didStop = false;
 
 			dc.waitForEvent("stopped")
-				.then(() => didStop = true)
-				.catch(() => {
+				.then((e) => {
+					if (e.body?.reason === "breakpoint")
+						didStop = true;
+				}).catch(() => {
 					// Swallow errors, as we don't care if this times out, we're only using it
 					// to tell if we stopped by the time we hit the end of this test.
 				});
