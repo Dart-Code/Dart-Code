@@ -4,7 +4,7 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, flutterPath, restartReasonManual } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
-import { LogCategory, VmServiceExtension } from "../shared/enums";
+import { LogCategory } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
@@ -514,18 +514,6 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.sendEvent(new Event("flutter.serviceExtensionStateChanged", event.extensionData));
 		} else {
 			super.handleExtensionEvent(event);
-		}
-	}
-
-	public handleServiceExtensionAdded(event: VMEvent) {
-		super.handleServiceExtensionAdded(event);
-
-		if (!this.runDaemon || !this.currentRunningAppId)
-			return;
-
-		if (event.extensionRPC === VmServiceExtension.InspectorStructuredErrors && this.useFlutterStructuredErrors) {
-			this.runDaemon.callServiceExtension(this.currentRunningAppId, event.extensionRPC, { enabled: true })
-				.catch((e) => this.logger.error(e));
 		}
 	}
 }

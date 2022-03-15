@@ -190,9 +190,9 @@ export class Analytics {
 			cd17: this.workspaceContext.hasAnyFlutterProjects
 				? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
 				: null,
-			cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
-				? config.for(resourceUri).flutterStructuredErrors ? "On" : "Off"
-				: null,
+			// cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
+			// 	? config.for(resourceUri).flutterStructuredErrors ? "On" : "Off"
+			// 	: null,
 			cd19: env.remoteName || "None",
 			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			cd20: env.appName || "Unknown",

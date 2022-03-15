@@ -625,8 +625,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 						this.addArgsIfNotExist(args, "--observatory-port", debugConfig.vmServicePort.toString());
 					if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
 						this.addArgsIfNotExist(args, "--no-track-widget-creation");
-					if (conf.flutterStructuredErrors && this.flutterCapabilities.supportsDartDefine)
-						this.addArgsIfNotExist(args, "--dart-define=flutter.inspector.structuredErrors=true");
 			}
 
 			if (debugConfig.flutterPlatform && debugConfig.flutterPlatform !== "default")

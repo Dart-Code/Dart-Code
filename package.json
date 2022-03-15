@@ -1813,12 +1813,6 @@
 						"markdownDescription": "When to show the Flutter headless web-server device. This requires using the Dart Debug extension for Chrome and is usually only used for remote environments where Chrome is not available such as browser/cloud-based IDEs (requires restart).",
 						"scope": "window"
 					},
-					"dart.flutterStructuredErrors": {
-						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to use Flutter's [structured error support](https://medium.com/flutter/improving-flutters-error-messages-e098513cecf9) for improved error display.",
-						"scope": "resource"
-					},
 					"dart.flutterTestAdditionalArgs": {
 						"type": "array",
 						"default": [],

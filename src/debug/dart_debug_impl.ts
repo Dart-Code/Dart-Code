@@ -74,7 +74,6 @@ export class DartDebugSession extends DebugSession {
 	public debugExternalPackageLibraries = false;
 	public showDartDeveloperLogs = true;
 	protected subscribeToStdout = false;
-	public useFlutterStructuredErrors = false;
 	public useInspectorNotificationsForWidgetErrors = false;
 	public evaluateGettersInDebugViews = false;
 	protected evaluateToStringInDebugViews = false;
@@ -288,7 +287,6 @@ export class DartDebugSession extends DebugSession {
 		this.sendLogsToClient = !!args.sendLogsToClient;
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
 		this.toolEnv = args.toolEnv;
-		this.useFlutterStructuredErrors = args.toolArgs?.includes("--dart-define=flutter.inspector.structuredErrors=true") ?? false;
 		this.useInspectorNotificationsForWidgetErrors = !!args.useInspectorNotificationsForWidgetErrors;
 	}
 
