@@ -1309,14 +1309,16 @@ insp=<inspected variable>
 	it("moves known files from call stacks to metadata", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(dc, helloWorldBrokenFile);
-		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
+			// Disable breaking on exceptions so we don't have to resume.
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
+				.then(() => dc.configurationDoneRequest()),
+			dc.waitForEvent("terminated"),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
 				dc.assertOutputContains("stderr", "#0      main")
 					.then((event) => {
-						assert.equal(event.body.output.indexOf("broken.dart"), -1);
 						assert.equal(event.body.source!.name, path.join("bin", "broken.dart"));
 						assert.equal(event.body.source!.path, fsPath(helloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based

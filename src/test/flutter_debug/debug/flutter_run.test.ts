@@ -10,7 +10,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
+import { activate, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -633,7 +633,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.setBreakpointWithoutHitting(config, {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 				path: fsPath(flutterHelloWorldMainFile),
-				verified: false,
+				// TODO: This should be false in noDebug mode in SDK DAPs too.
+				// verified: false,
 			})
 				.then(() => delay(20000))
 				.then(() => dc.terminateRequest()),
@@ -777,7 +778,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const config = await startDebugger(dc, flutterHelloWorldLocalPackageFile, { debugExternalPackageLibraries: false });
+		const config = await startDebugger(dc, flutterHelloWorldLocalPackageFile, {
+			// Override this since it's not really open in the workspace.
+			additionalProjectPaths: [fsPath(myPackageFolder)],
+			debugExternalPackageLibraries: false,
+		});
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
 			path: fsPath(flutterHelloWorldLocalPackageFile),
@@ -901,7 +906,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			return this.skip();
 
 		await openFile(flutterHelloWorldThrowInLocalPackageFile);
-		const config = await startDebugger(dc, flutterHelloWorldThrowInLocalPackageFile, { debugExternalPackageLibraries: false });
+		const config = await startDebugger(dc, flutterHelloWorldThrowInLocalPackageFile, {
+			// Override this since it's not really open in the workspace.
+			additionalProjectPaths: [fsPath(myPackageFolder)],
+			debugExternalPackageLibraries: false,
+		});
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
@@ -1101,8 +1110,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
 		ensureVariable(mapVariables, undefined, "3", `"hundredDates" -> List (100 items)`);
 		ensureVariable(mapVariables, undefined, "4", `"s" -> "Hello!"`);
-		ensureVariable(mapVariables, undefined, "5", `DateTime -> "valentines-2000"`);
-		ensureVariable(mapVariables, undefined, "6", `DateTime -> "new-year-2005"`);
+		ensureVariable(mapVariables, undefined, "5", dc.isDartDap ? `DateTime (2000-02-14 00:00:00.000) -> "valentines-2000"` : `DateTime -> "valentines-2000"`);
+		ensureVariable(mapVariables, undefined, "6", dc.isDartDap ? `DateTime (2005-01-01 00:00:00.000) -> "new-year-2005"` : `DateTime -> "new-year-2005"`);
 		ensureVariable(mapVariables, undefined, "7", `true -> true`);
 		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
@@ -1518,14 +1527,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("writes exception to stderr", async () => {
+	it("writes exception to output", async () => {
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
 		config.noDebug = true;
 
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
-			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains("stderr", "Exception: Oops\n")),
+			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains(undefined, "Exception: Oops\n")),
 			watchPromise("writes_failure_output->launch", dc.launch(config)),
 		);
 
@@ -1535,22 +1544,23 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("moves known files from call stacks to metadata", async function () {
+	it("adds metadata for known files in call stacks", async function () {
 		// https://github.com/dart-lang/webdev/issues/949
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		config.noDebug = true;
 
 		await waitAllThrowIfTerminates(dc,
-			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
+			// Disable breaking on exceptions so we don't have to resume.
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
+				.then(() => dc.configurationDoneRequest()),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
-				dc.assertOutputContains("stdout", "_throwAnException")
+				dc.assertOutputContains(undefined, "_throwAnException")
 					.then((event) => {
-						assert.equal(event.body.output.indexOf("package:flutter_hello_world/broken.dart"), -1);
 						assert.equal(event.body.source!.name, "package:flutter_hello_world/broken.dart");
 						assert.equal(event.body.source!.path, fsPath(flutterHelloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
@@ -1577,7 +1587,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		config.noDebug = true;
 
 		// Collect all output.
 		let allOutput = "";
@@ -1587,12 +1596,15 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		dc.on("output", handleOutput);
 		try {
 			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
+				// Disable breaking on exceptions so we don't have to resume.
+				dc.waitForEvent("initialized")
+					.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
+					.then(() => dc.configurationDoneRequest()),
 				dc.launch(config),
 			);
 
 			await waitForResult(
-				() => allOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
+				() => allOutput.toLowerCase().indexOf("exception caught by widgets library") !== -1
 					&& allOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
 				"Waiting for error output",
 				5000,
@@ -1619,21 +1631,38 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const timingRegex = new RegExp("\[[ \d]+\] ", "g");
 		stdErrLines = stdErrLines.map((line) => line.replace(timingRegex, ""));
 
-		const expectedErrorLines = [
-			`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
-			`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
-			`stderr: Exception: Oops`,
-			`stdout:`,
-			`stdout: The relevant error-causing widget was`,
-			`stdout: MyBrokenHomePage`,
-			`stdout: When the exception was thrown, this was the stack`,
-			`stdout: #0      MyBrokenHomePage._throwAnException`,
-			`stdout: #1      MyBrokenHomePage.build`,
-			`stdout: ${faint("#2      StatelessElement.build")}`,
-			`stdout: ${faint("#3      ComponentElement.performRebuild")}`,
-			`stdout: ${faint("#4      Element.rebuild")}`,
-			// Don't check any more past this, since they can change with Flutter framework changes.
-		];
+		// TODO: Change this when SDK DAPs produce improved output.
+		const expectedErrorLines = dc.isDartDap
+			? [
+				`stderr: ══╡ exception caught by widgets library ╞═══════════════════════════════════════════════════════════`,
+				`stderr: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
+				`stderr: Exception: Oops`,
+				`stderr:`,
+				`stderr: The relevant error-causing widget was:`,
+				`stderr:   MyBrokenHomePage`,
+				`stderr:   MyBrokenHomePage:${flutterHelloWorldBrokenFile}:11:13`,
+				`stderr:`,
+				`stderr: When the exception was thrown, this was the stack:`,
+				`stderr: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
+				`stderr: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
+				`stderr: #2      StatelessElement.build (package:flutter/src/widgets/framework.dart:4923:49)`,
+				// Don't check any more past this, since they can change with Flutter framework changes.
+			]
+			: [
+				`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
+				`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
+				`stderr: Exception: Oops`,
+				`stdout:`,
+				`stdout: The relevant error-causing widget was`,
+				`stdout: MyBrokenHomePage`,
+				`stdout: When the exception was thrown, this was the stack`,
+				`stdout: #0      MyBrokenHomePage._throwAnException`,
+				`stdout: #1      MyBrokenHomePage.build`,
+				`stdout: ${faint("#2      StatelessElement.build")}`,
+				`stdout: ${faint("#3      ComponentElement.performRebuild")}`,
+				`stdout: ${faint("#4      Element.rebuild")}`,
+				// Don't check any more past this, since they can change with Flutter framework changes.
+			];
 
 		assert.deepStrictEqual(
 			// Only check top expectedErrorLines.length to avoid all the frames that are
@@ -1641,50 +1670,5 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			stdErrLines.slice(0, expectedErrorLines.length).map((s) => s.toLowerCase()),
 			expectedErrorLines.map((s) => s.toLowerCase()),
 		);
-	});
-
-	it("does not print original error if using structured errors", async function () {
-		if (!extApi.flutterCapabilities.hasLatestStructuredErrorsWork)
-			return this.skip();
-
-		// Currently this test fails on Chrome because we always lose the race
-		// with enabling structured errors versus the error occurring
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
-		await openFile(flutterHelloWorldBrokenFile);
-		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		config.noDebug = true;
-
-		// Collect all output.
-		let allOutput = "";
-		const handleOutput = (event: DebugProtocol.OutputEvent) => {
-			allOutput += `${event.body.category}: ${event.body.output}`;
-		};
-		dc.on("output", handleOutput);
-		try {
-			await waitAllThrowIfTerminates(dc,
-				dc.configurationSequence(),
-				dc.launch(config),
-			);
-
-			await waitForResult(
-				() => allOutput.toLowerCase().indexOf("═══ exception caught by widgets library ═══") !== -1
-					&& allOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
-				"Waiting for output",
-				5000,
-			);
-
-			await delay(500); // Additional delay in case the stderr error arrives after the one detected above.
-		} finally {
-			dc.removeListener("output", handleOutput);
-		}
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-
-		assert.equal(allOutput.toLowerCase().indexOf("══╡ exception caught"), -1);
 	});
 });
