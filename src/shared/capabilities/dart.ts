@@ -15,6 +15,8 @@ export class DartCapabilities {
 	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1") && !this.version.startsWith("2.10."); }
 	get hasLspInsertTextModeSupport() { return versionIsAtLeast(this.version, "2.13.0-0"); }
 	get supportsSnippetTextEdits() { return versionIsAtLeast(this.version, "2.13.0-150"); }
+	// TODO: Set this after we know a version that supports it.
+	get supportsRefactorValidate() { return false; }
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
 	get supportsDartCreate() { return versionIsAtLeast(this.version, "2.10.0"); }
 	get supportsDebugInternalLibraries() { return versionIsAtLeast(this.version, "2.9.0-a"); }

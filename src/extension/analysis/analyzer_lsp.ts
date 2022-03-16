@@ -32,7 +32,7 @@ export class LspAnalyzer extends Analyzer {
 	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
 	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
 
-	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
+	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
@@ -197,30 +197,46 @@ export class LspAnalyzer extends Analyzer {
 						const refactorFailedErrorCode = -32011;
 						const refactorKind = args[0];
 						const optionsIndex = 5;
-						// Intercept EXTRACT_METHOD and EXTRACT_WIDGET to prompt the user for a name, since
-						// LSP doesn't currently allow us to prompt during a code-action invocation.
-						let name: string | undefined;
-						switch (refactorKind) {
-							case "EXTRACT_METHOD":
-								name = await window.showInputBox({
-									prompt: "Enter a name for the method",
-									validateInput: (s) => validMethodNameRegex.test(s) ? undefined : "Enter a valid method name",
-									value: "newMethod",
-								});
-								if (!name)
-									return;
-								args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
-								break;
-							case "EXTRACT_WIDGET":
-								name = await window.showInputBox({
-									prompt: "Enter a name for the widget",
-									validateInput: (s) => validClassNameRegex.test(s) ? undefined : "Enter a valid widget name",
-									value: "NewWidget",
-								});
-								if (!name)
-									return;
-								args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
-								break;
+						// Intercept EXTRACT_METHOD and EXTRACT_WIDGET to prompt the user for a name, but first call the validation
+						// so we don't ask for a name if it will fail for a reason like a closure with an argument.
+						const willPrompt = refactorKind === "EXTRACT_METHOD" || refactorKind === "EXTRACT_WIDGET";
+						if (willPrompt) {
+							if (this.dartCapabilities.supportsRefactorValidate) {
+								try {
+									const validateResult = await next("refactor.validate", args);
+									if (validateResult.valid === false) {
+										window.showErrorMessage(validateResult.message as string);
+										return;
+									}
+								} catch (e) {
+									// If an error occurs, we'll just continue as if validation passed.
+									this.logger.error(e);
+								}
+							}
+
+							let name: string | undefined;
+							switch (refactorKind) {
+								case "EXTRACT_METHOD":
+									name = await window.showInputBox({
+										prompt: "Enter a name for the method",
+										validateInput: (s) => validMethodNameRegex.test(s) ? undefined : "Enter a valid method name",
+										value: "newMethod",
+									});
+									if (!name)
+										return;
+									args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
+									break;
+								case "EXTRACT_WIDGET":
+									name = await window.showInputBox({
+										prompt: "Enter a name for the widget",
+										validateInput: (s) => validClassNameRegex.test(s) ? undefined : "Enter a valid widget name",
+										value: "NewWidget",
+									});
+									if (!name)
+										return;
+									args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
+									break;
+							}
 						}
 
 						// The server may return errors for things like invalid names, so
