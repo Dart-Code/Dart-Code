@@ -1071,6 +1071,7 @@ export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
 // down hangs in test runs where multiple promises can be spawned together and generate
 // lots of log output, making it hard to keep track of which did not complete.
 export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<T> {
+	const activeTestName = currentTestName;
 	// For convenience, this method might get wrapped around things that are not
 	// promises.
 	const promiseAny = promise as any;
@@ -1090,7 +1091,7 @@ export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<
 	promise.catch(() => {
 		didComplete = true;
 		if (logCompletion)
-			logger.warn(`Promise ${name} rejected!`, LogCategory.CI);
+			logger.warn(`[${activeTestName}] Promise ${name} rejected!`, LogCategory.CI);
 	});
 
 	const initialCheck = 3000;
@@ -1102,7 +1103,7 @@ export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<
 		logCompletion = true;
 		logger.info(`Promise ${name} is still unresolved!`, LogCategory.CI);
 		if (timeMS > maxTime) {
-			logger.error(`Promise ${name} not resolved after ${maxTime}ms so no longer watching!`, LogCategory.CI);
+			logger.error(`[${activeTestName}] Promise ${name} not resolved after ${maxTime}ms so no longer watching!`, LogCategory.CI);
 			return;
 		}
 		setTimeout(() => checkResult(timeMS + subsequentCheck), subsequentCheck).unref();
