@@ -32,10 +32,9 @@ export class TestCommands implements vs.Disposable {
 		this.disposables.push(
 			vs.commands.registerCommand("_dart.startDebuggingTestFromCodeLens", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromCodeLens(false, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromCodeLens", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromCodeLens(true, test, launchTemplate)),
-			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suites, testRun, isRunningAll)),
-			vs.commands.registerCommand("_dart.runDartTestRun", (request: DartTestRunRequest) => this.runTests(request)),
+			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (testRunRequest: vs.TestRunRequest, testRun: vs.TestRun, suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean) => this.runTestsForNode(testRunRequest, testRun, suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (testRunRequest: vs.TestRunRequest, testRun: vs.TestRun, suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean) => this.runTestsForNode(testRunRequest, testRun, suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined)),
+			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (testRunRequest: vs.TestRunRequest, testRun: vs.TestRun, suites: SuiteNode[] | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(testRunRequest, testRun, suites, isRunningAll)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
@@ -45,7 +44,7 @@ export class TestCommands implements vs.Disposable {
 		this.updateEditorContexts(vs.window.activeTextEditor);
 	}
 
-	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<boolean> {
+	private async runAllTestsWithoutDebugging(testRunRequest: vs.TestRunRequest, testRun: vs.TestRun, suites: SuiteNode[] | undefined, isRunningAll: boolean): Promise<boolean> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
 		// as the first one that runs will be used for resolving package: URIs etc. We also can't mix and match
@@ -101,9 +100,8 @@ export class TestCommands implements vs.Disposable {
 			return false;
 		}
 
-		const testRunRequest = new DartTestRunRequest(
-			this.vsCodeTestController,
-			false,
+		const dartTestRunRequest = new DartTestRunRequest(
+			testRunRequest,
 			testRun,
 			...projectsWithTests.map((projectWithTests) => ({
 				launchTemplate: {
@@ -119,17 +117,16 @@ export class TestCommands implements vs.Disposable {
 				useLaunchJsonTestTemplate: true,
 			})),
 		);
-		return this.runTests(testRunRequest);
+		return this.runTests(dartTestRunRequest);
 	}
 
-	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun): Promise<boolean> {
+	private async runTestsForNode(testRunRequest: vs.TestRunRequest, testRun: vs.TestRun, suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken): Promise<boolean> {
 		const programPath = fsPath(suiteData.path);
 		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(suiteData.path));
 		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
 
-		const testRunRequest = new DartTestRunRequest(
-			this.vsCodeTestController,
-			debug,
+		const dartTestRunRequest = new DartTestRunRequest(
+			testRunRequest,
 			testRun,
 			{
 				launchTemplate: undefined,
@@ -141,14 +138,14 @@ export class TestCommands implements vs.Disposable {
 				useLaunchJsonTestTemplate: true,
 			},
 		);
-		return this.runTests(testRunRequest);
+		return this.runTests(dartTestRunRequest);
 	}
 
 	private async runTests(request: DartTestRunRequest): Promise<boolean> {
 		const debug = request.profile.kind === vs.TestRunProfileKind.Debug;
 		const controller = this.vsCodeTestController;
 		const isCallerManagedTestRun = !!request.testRun;
-		const testRun = request.testRun ?? controller.createTestRun(request);
+		const testRun = request.testRun ?? controller.createTestRun(request.originalRequest);
 		function runTestBatch(debug: boolean, { programPath, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, token, useLaunchJsonTestTemplate }: TestBatch): Promise<void> {
 			if (useLaunchJsonTestTemplate) {
 				// Get the default Run/Debug template for running/debugging tests and use that as a base.
@@ -217,6 +214,8 @@ export class TestCommands implements vs.Disposable {
 	private async startTestFromCodeLens(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined): Promise<boolean> {
 		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
+
+		// Build a testRunRequest for this
 
 		const testRunRequest = new DartTestRunRequest(
 			this.vsCodeTestController,
@@ -335,17 +334,14 @@ export class TestCommands implements vs.Disposable {
 	}
 }
 
-export class DartTestRunRequest extends vs.TestRunRequest {
+/// A wrapper around vs.TestRunRequest with additional information about the
+/// potentially-multiple batches of testst/sessions to run.
+export class DartTestRunRequest {
 	public readonly profile: vs.TestRunProfile;
 	public readonly testBatches: TestBatch[];
-	constructor(controller: VsCodeTestController, debug: boolean, public readonly testRun: vs.TestRun | undefined, ...testBatches: TestBatch[]) {
-		super(undefined, undefined, debug ? controller.debugProfile : controller.runProfile);
-		this.profile = debug ? controller.debugProfile : controller.runProfile;
+	constructor(public readonly originalRequest: vs.TestRunRequest, public readonly testRun: vs.TestRun | undefined, ...testBatches: TestBatch[]) {
+		this.profile = originalRequest.profile!;
 		this.testBatches = testBatches;
-	}
-
-	static is(request: vs.TestRunRequest): request is DartTestRunRequest {
-		return "testBatches" in request;
 	}
 }
 

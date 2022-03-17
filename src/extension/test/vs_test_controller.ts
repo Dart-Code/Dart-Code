@@ -6,7 +6,6 @@ import { GroupNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { DartTestRunRequest } from "../commands/test";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 
@@ -72,11 +71,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
 		await this.discoverer?.ensureSuitesDiscovered();
 
-		if (DartTestRunRequest.is(request)) {
-			// TODO: Simplify the code below to also use _dart.runDartTestRun.
-			return vs.commands.executeCommand("_dart.runDartTestRun", request);
-		}
-
 		const testsToRun = new Set<vs.TestItem>();
 		const isRunningAll = !request.include?.length && !request.exclude?.length;
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
@@ -95,7 +89,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
 			// suites), we can run the "fast path" in a single `dart test` invocation.
 			if (!debug && [...testsToRun].every((item) => this.nodeForItem.get(item) instanceof SuiteNode)) {
-				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", [...testsToRun].map((item) => this.nodeForItem.get(item)), run, isRunningAll);
+				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", request, run, [...testsToRun].map((item) => this.nodeForItem.get(item)), isRunningAll);
 				return;
 			}
 
@@ -118,7 +112,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				const command = debug
 					? "_dart.startDebuggingTestsFromVsTestController"
 					: "_dart.startWithoutDebuggingTestsFromVsTestController";
-				await vs.commands.executeCommand(command, suite, nodes, true, run);
+				await vs.commands.executeCommand(command, request, run, suite, nodes, true);
 			}
 		} finally {
 			run.end();
