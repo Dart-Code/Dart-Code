@@ -76,12 +76,11 @@ A full list of supported refactors is [available here](https://dartcode.org/docs
 This extension reports some analytics such as:
 
 - Extension load and analysis times
-- Whether you have disabled some settings (such as showing TODOs in Problems Window or Closing Labels)
-- Frequency of use of features like Hot Reload, Hot Restart and Open Observatory
-- Crashes in the Dart analysis server
-- Platform and Dart/Flutter SDK versions
+- Version numbers for the Dart/Flutter extensions and SDKs
+- The values of some settings (such as Flutter UI Guidelines and Format-on-Save)
+- Frequency of use of features like Hot Reload and Hot Restart
 
-Reporting can be disabled via the [`dart.allowAnalytics` setting](https://dartcode.org/docs/settings/#dartallowanalytics).
+Reporting can be disabled via VS Code's standard **Telemtry: Telemetry Level** setting.
 
 
 ## Release Notes

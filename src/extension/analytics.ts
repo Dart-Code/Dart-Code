@@ -174,7 +174,12 @@ export class Analytics {
 	}
 
 	private async send(customData: any, resourceUri?: Uri): Promise<void> {
-		if (this.disableAnalyticsForSession || !machineId || !config.allowAnalytics || isDartCodeTestRun)
+		if (this.disableAnalyticsForSession
+			|| !machineId
+			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
+			|| !env.isTelemetryEnabled
+			|| isDartCodeTestRun
+		)
 			return;
 
 		const data = {
