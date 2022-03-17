@@ -487,11 +487,6 @@
 				}
 			},
 			{
-				"command": "flutter.openTimeline",
-				"title": "Open Observatory Timeline",
-				"category": "Flutter"
-			},
-			{
 				"command": "dart.openDevTools",
 				"title": "Open DevTools",
 				"category": "Dart"
@@ -869,10 +864,6 @@
 				{
 					"command": "_dart.hotReload.touchBar",
 					"when": "false"
-				},
-				{
-					"command": "flutter.openTimeline",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.hotReload",

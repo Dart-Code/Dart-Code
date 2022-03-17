@@ -99,15 +99,6 @@ export class DebugCommands implements IAmDisposable {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
-		this.disposables.push(vs.commands.registerCommand("flutter.openTimeline", async () => {
-			const session = await this.getDebugSession();
-			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
-				await envUtils.openInBrowser(session.observatoryUri + "/#/timeline-dashboard");
-				analytics.logDebuggerOpenTimeline();
-			} else if (session) {
-				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
-			}
-		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
 		devToolsPages.forEach((page) => {
 			this.disposables.push(vs.commands.registerCommand(page.commandId, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
