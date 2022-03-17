@@ -4,19 +4,20 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
+import { DartTestCapabilities } from "../../shared/capabilities/dart_test";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isDartCodeTestRun, showErrorsAction } from "../../shared/constants";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRenderer } from "../../shared/flutter/utils";
-import { IFlutterDaemon, Logger } from "../../shared/interfaces";
+import { DartWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestModel } from "../../shared/test/test_model";
+import { getPackageTestCapabilities } from "../../shared/test/version";
 import { filenameSafe, isWebDevice } from "../../shared/utils";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
@@ -28,7 +29,7 @@ import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestNameFilter, isIns
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger, private readonly wsContext: WorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: DartWorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		ensureDebugLaunchUniqueId(debugConfig);
@@ -587,12 +588,25 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return args;
 	}
 
+	private cachedTestCapabilities: { [key: string]: DartTestCapabilities } = {};
+
 	protected async buildDartTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
 		const args: string[] = [];
 
 		this.addArgsIfNotExist(args, ...conf.testAdditionalArgs);
-		if (conf.suppressTestTimeouts === "always" || (conf.suppressTestTimeouts === "debug" && !debugConfig.noDebug))
-			this.addArgsIfNotExist(args, "--timeout", "1d");
+		if (conf.suppressTestTimeouts === "always" || (conf.suppressTestTimeouts === "debug" && !debugConfig.noDebug)) {
+			// Check whether package:test supports --ignore-timeouts
+			let useIgnoreTimeouts = false;
+			if (debugConfig.cwd) {
+				const testCapabilities = this.cachedTestCapabilities[debugConfig.cwd] ?? await getPackageTestCapabilities(this.logger, this.wsContext.sdks, debugConfig.cwd);
+				this.cachedTestCapabilities[debugConfig.cwd] = testCapabilities;
+				useIgnoreTimeouts = testCapabilities.supportsIgnoreTimeouts;
+			}
+			if (useIgnoreTimeouts)
+				this.addArgsIfNotExist(args, "--ignore-timeouts");
+			else
+				this.addArgsIfNotExist(args, "--timeout", "1d");
+		}
 
 		return args;
 	}

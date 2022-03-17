@@ -6,11 +6,10 @@ import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
 import { DebuggerType, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
-import { CustomScript, SpawnedProcess } from "../interfaces";
+import { CustomScript, DartWorkspaceContext, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { TestSessionCoordinator } from "../test/coordinator";
 import { TestModel, TreeNode } from "../test/test_model";
-import { WorkspaceContext } from "../workspace";
 import { FlutterDeviceManager } from "./device_manager";
 import { Context } from "./workspace";
 
@@ -82,7 +81,7 @@ export interface InternalExtensionApi {
 	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined },
 	testModel: TestModel;
 	webClient: WebClient;
-	workspaceContext: WorkspaceContext;
+	workspaceContext: DartWorkspaceContext;
 }
 
 export interface DelayedCompletionItem extends LazyCompletionItem {

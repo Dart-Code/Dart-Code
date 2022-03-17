@@ -6,12 +6,12 @@ import { findFileInAncestor, uriToFilePath } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
 
 export abstract class PackageMap {
-	public static findPackagesFile<T extends string | undefined>(entryPoint: T): string | (undefined extends T ? undefined : never) {
+	public static findPackagesFile(entryPoint: string): string | undefined {
 		if (typeof entryPoint !== "string")
-			return undefined as (undefined extends T ? undefined : never);
+			return undefined;
 
 		const file = findFileInAncestor([path.join(".dart_tool/package_config.json"), ".packages"], entryPoint);
-		return file as string | (undefined extends T ? undefined : never);
+		return file;
 	}
 
 	public static loadForProject(logger: Logger, projectFolder: string): PackageMap {

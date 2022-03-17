@@ -5,6 +5,7 @@ import { Outline as lspOutline } from "../../../shared/analysis/lsp/custom_proto
 import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
+import { getPackageTestCapabilities } from "../../../shared/test/version";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
@@ -68,7 +69,11 @@ describe("dart test debugger", () => {
 				program: fsPath(helloWorldTestMainFile),
 			})!;
 
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--timeout"]);
+			const testCapabilities = await getPackageTestCapabilities(extApi.logger, extApi.workspaceContext.sdks, resolvedConfig.cwd!);
+			if (testCapabilities.supportsIgnoreTimeouts)
+				ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--ignore-timeouts"]);
+			else
+				ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--timeout"]);
 		});
 	});
 
