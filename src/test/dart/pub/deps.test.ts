@@ -1,5 +1,4 @@
 import { strict as assert } from "assert";
-import { DartSdks } from "../../../shared/interfaces";
 import { PubDeps, PubDepsJson } from "../../../shared/pub/deps";
 import { activate, extApi } from "../../helpers";
 
@@ -7,7 +6,7 @@ describe("pub deps", () => {
 	beforeEach("activate", () => activate(null));
 
 	it("can compute shortest paths", async () => {
-		const deps = new PubDeps(extApi.logger, extApi.workspaceContext.sdks as DartSdks, extApi.dartCapabilities);
+		const deps = new PubDeps(extApi.logger, extApi.workspaceContext.sdks, extApi.dartCapabilities);
 
 		const fakeRoot: PubDepsJson = {
 			packages: [
@@ -37,7 +36,7 @@ describe("pub deps", () => {
 	});
 
 	it("does not fail on circular dependencies", async () => {
-		const deps = new PubDeps(extApi.logger, extApi.workspaceContext.sdks as DartSdks, extApi.dartCapabilities);
+		const deps = new PubDeps(extApi.logger, extApi.workspaceContext.sdks, extApi.dartCapabilities);
 
 		const fakeRoot: PubDepsJson = {
 			packages: [
