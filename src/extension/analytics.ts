@@ -269,7 +269,7 @@ export class Analytics {
 	}
 
 	private handleError(e: any) {
-		this.logger.error(`Failed to send analytics: ${e}`);
+		this.logger.info(`Failed to send analytics, disabling for session: ${e}`);
 		this.disableAnalyticsForSession = true;
 	}
 
