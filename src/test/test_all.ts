@@ -108,7 +108,10 @@ async function runAllTests(): Promise<void> {
 			await runTests("flutter_snap", "empty");
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_debug") {
-			await runTests("dart_debug", "hello_world");
+			await runTests("dart_debug", "hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "false" });
+		}
+		if (!process.env.BOT || process.env.BOT === "dart_debug_sdk_dap") {
+			await runTests("dart_debug", "hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "true" });
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_web_debug") {
 			await runTests("web_debug", "web");
