@@ -1,11 +1,12 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as semver from "semver";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { PackageMap } from "../pub/package_map";
-import { flatMapAsync } from "../utils";
+import { flatMapAsync, nullToUndefined } from "../utils";
 import { sortBy } from "./array";
 
 export function fsPath(uri: { fsPath: string } | string, { useRealCasing = false }: { useRealCasing?: boolean; } = {}) {
@@ -227,14 +228,18 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	if (!fs.existsSync(versionFile))
 		return undefined;
 	try {
-		return fs
-			.readFileSync(versionFile, "utf8")
-			.trim()
-			.split("\n")
-			.filter((l) => l)
-			.filter((l) => l.trim().substr(0, 1) !== "#")
-			.join("\n")
-			.trim();
+		return nullToUndefined(
+			semver.valid(
+				fs
+					.readFileSync(versionFile, "utf8")
+					.trim()
+					.split("\n")
+					.filter((l) => l)
+					.filter((l) => l.trim().substr(0, 1) !== "#")
+					.join("\n")
+					.trim()
+			)
+		);
 	} catch (e) {
 		logger.error(e);
 		return undefined;
