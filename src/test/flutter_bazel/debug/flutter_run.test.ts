@@ -4,7 +4,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, flutterBazelHelloWorldMainFile, flutterBazelRoot, prepareHasRunFile, watchPromise } from "../../helpers";
+import { activate, ensureHasRunRecently, extApi, flutterBazelHelloWorldMainFile, flutterBazelRoot, prepareHasRunFile, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -20,7 +20,10 @@ describe(`flutter run debugger`, () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterBazelHelloWorldMainFile));
 
 	let dc: DartDebugClient;
-	beforeEach("create debug client", () => {
+	beforeEach("create debug client", function () {
+		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
+			this.skip();
+
 		dc = createDebugClient(DebuggerType.Flutter);
 	});
 

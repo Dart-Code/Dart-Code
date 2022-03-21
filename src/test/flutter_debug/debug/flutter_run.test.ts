@@ -27,7 +27,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	let dc: DartDebugClient;
-	beforeEach("create debug client", () => {
+	beforeEach("create debug client", function () {
+		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
+			this.skip();
+
 		dc = createDebugClient(DebuggerType.Flutter);
 	});
 

@@ -5,7 +5,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, flutterBazelRoot, flutterBazelTestMainFile, getLaunchConfiguration, prepareHasRunFile } from "../../helpers";
+import { activate, ensureHasRunRecently, extApi, flutterBazelRoot, flutterBazelTestMainFile, getLaunchConfiguration, prepareHasRunFile } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach(function () {
@@ -16,7 +16,10 @@ describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterBazelTestMainFile));
 
 	let dc: DartDebugClient;
-	beforeEach("create debug client", () => {
+	beforeEach("create debug client", function () {
+		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
+			this.skip();
+
 		dc = createDebugClient(DebuggerType.FlutterTest);
 	});
 

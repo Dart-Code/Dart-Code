@@ -19,7 +19,10 @@ describe("dart cli debugger", () => {
 	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
 
 	let dc: DartDebugClient;
-	beforeEach("create debug client", () => {
+	beforeEach("create debug client", function () {
+		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
+			this.skip();
+
 		dc = createDebugClient(DebuggerType.Dart);
 	});
 
