@@ -106,6 +106,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
 		const argsHaveTestNameFilter = hasTestNameFilter(debugConfig.toolArgs, debugConfig.args);
 
+		// Handle detecting a Flutter app, but the extension has loaded in Dart-only mode.
+		if (isFlutter && !this.wsContext.hasAnyFlutterProjects) {
+			this.logger.warn("Tried to launch Flutter project in non-Flutter workspace");
+			window.showErrorMessage(`Unable to launch Flutter project in a Dart-only workspace. Please open a folder closer to your Flutter project root or increase the value of the "dart.projectSearchDepth" setting.`);
+			return undefined; // undefined means abort
+		}
+
 		// Handle test_driver tests that can be pointed at an existing running instrumented app.
 		if (debugType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
 			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1);
