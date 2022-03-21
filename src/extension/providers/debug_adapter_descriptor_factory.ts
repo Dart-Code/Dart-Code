@@ -30,7 +30,16 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		else if (isFlutterOrFlutterTest)
 			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
 
-		if (config.experimentalSdkDaps && isSdkDapSupported) {
+		const forceSdkDap = process.env.DART_CODE_FORCE_SDK_DAP === "true"
+			? true
+			: process.env.DART_CODE_FORCE_SDK_DAP === "false"
+				? false
+				: undefined;
+		const useSdkDap = forceSdkDap !== undefined
+			? forceSdkDap
+			: config.previewSdkDaps && isSdkDapSupported;
+
+		if (useSdkDap) {
 			const executable = isDartOrDartTest
 				? path.join(this.sdks.dart, dartVMPath)
 				: (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
@@ -41,14 +50,14 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 
 			this.logger.info(`Running SDK DAP Dart VM: ${executable} ${args.join("    ")}`);
 			return new DebugAdapterExecutable(executable, args);
-		} else if (config.experimentalDartDapPath && isDartOrDartTest) {
-			const args = [config.experimentalDartDapPath, "debug_adapter"];
+		} else if (config.customDartDapPath && isDartOrDartTest) {
+			const args = [config.customDartDapPath, "debug_adapter"];
 			if (debuggerType === DebuggerType.DartTest)
 				args.push("--test");
 			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
 			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
-		} else if (config.experimentalFlutterDapPath && isFlutterOrFlutterTest) {
-			const args = [config.experimentalFlutterDapPath, "debug_adapter"];
+		} else if (config.customFlutterDapPath && isFlutterOrFlutterTest) {
+			const args = [config.customFlutterDapPath, "debug_adapter"];
 			if (debuggerType === DebuggerType.FlutterTest)
 				args.push("--test");
 			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")}`);

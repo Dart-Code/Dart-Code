@@ -12,21 +12,26 @@ const testProjectsFolder = "src/test/test_projects";
 const testConfigs: TestConfig[] = [
 	{ testFolder: "dart", project: "hello_world", lsp: false },
 	{ testFolder: "dart", project: "hello_world", lsp: true },
-	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"] },
+	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"], sdkDaps: false },
+	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"], sdkDaps: true },
 	{ testFolder: "web_debug", project: "web", debugAdapters: ["web", "web_test"] },
 	{ testFolder: "dart_nested_flutter", project: "dart_nested_flutter" },
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: false },
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"] },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], chrome: true },
-	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", debugAdapters: ["flutter", "flutter_test"] },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: false },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: false, chrome: true },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: true },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: true, chrome: true },
+	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", debugAdapters: ["flutter", "flutter_test"], sdkDaps: false },
+	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", debugAdapters: ["flutter", "flutter_test"], sdkDaps: true },
 	{ testFolder: "multi_root", project: "projects.code-workspace" },
 	{ testFolder: "multi_project_folder", project: "" },
 	{ testFolder: "dart_create_tests", project: "dart_create_tests.code-workspace" },
 	{ testFolder: "not_activated/dart_create", project: "empty" },
 	{ testFolder: "flutter_create_tests", project: "flutter_create_tests.code-workspace" },
 	{ testFolder: "not_activated/flutter_create", project: "empty" },
-	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel", debugAdapters: ["flutter", "flutter_test"] },
+	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel", debugAdapters: ["flutter", "flutter_test"], sdkDaps: false },
+	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel", debugAdapters: ["flutter", "flutter_test"], sdkDaps: true },
 	{ testFolder: "flutter_snap", project: "empty" },
 	{ testFolder: "flutter_repository", project: "${env:FLUTTER_ROOT}" },
 ];
@@ -104,6 +109,8 @@ function getTestConfigName(test: TestConfig) {
 		name = `${name} LSP`;
 	if (test.chrome)
 		name = `${name} Chrome`;
+	if (test.sdkDaps)
+		name = `${name} SDK DAP`;
 	return `${name} Tests`;
 }
 
@@ -191,6 +198,7 @@ function getTestsConfig(test: TestConfig) {
 			"DART_CODE_USE_DEBUG_SERVERS": "true",
 			"DART_CODE_IS_TEST_RUN": "true",
 			"DART_CODE_FORCE_LSP": test.lsp === undefined ? undefined : `${test.lsp}`,
+			"DART_CODE_FORCE_SDK_DAP": test.sdkDaps === undefined ? undefined : `${test.sdkDaps}`,
 			"FLUTTER_TEST_DEVICE_ID": test.chrome ? "chrome" : undefined,
 		},
 		"preLaunchTask": "npm: watch",
@@ -205,6 +213,7 @@ interface TestConfig {
 	project: string;
 	debugAdapters?: string[];
 	lsp?: boolean;
+	sdkDaps?: boolean;
 	chrome?: boolean;
 }
 
