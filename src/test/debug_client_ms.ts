@@ -117,6 +117,12 @@ export class DebugClient extends ProtocolClient {
 					console.log(err);
 					reject(err);
 				});
+				this._adapterProcess.stdin!.on('error', (err) => {
+					if (!this._adapterProcess)
+						console.info(`Ignoring error writing to stdin because shutting down: ${err}`);
+					else
+						throw err;
+				});
 				this._adapterProcess.on('exit', (code: number, signal: string) => {
 					if (code) {
 						// done(new Error('debug adapter exit code: ' + code));
