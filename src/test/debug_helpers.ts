@@ -208,17 +208,15 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 	const config = await getLaunchConfiguration(script, { deviceId: "flutter-tester" });
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);
-	const process = extApi.safeToolSpawn(
-		config.cwd,
-		path.join(config.flutterSdkPath!, flutterPath),
-		[
-			"run",
-			"-d",
-			config.deviceId as string,
-			"--start-paused",
-			"--disable-dds",
-		],
-	);
+	const binPath = path.join(config.flutterSdkPath!, flutterPath);
+	const args = [
+		"run",
+		"-d",
+		config.deviceId as string,
+		"--start-paused",
+	];
+	const process = extApi.safeToolSpawn(config.cwd, binPath, args);
+	logger.info(`(PROC ${process.pid}) Spawned ${binPath} ${args.join(" ")} in ${config.cwd}`, LogCategory.CommandProcesses);
 	logProcess(logger, LogCategory.CI, process);
 	const flutterProcess = new DartProcess(process);
 	defer("Kill spawned Flutter process", () => {
