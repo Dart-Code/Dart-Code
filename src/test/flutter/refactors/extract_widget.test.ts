@@ -36,7 +36,7 @@ class MyWidget extends StatelessWidget {
 
 class MyNewWidget extends StatelessWidget {
   const MyNewWidget({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -166,7 +166,7 @@ class MyWidget extends StatelessWidget {
 
 class MyWidget extends StatelessWidget {
   const MyWidget({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override

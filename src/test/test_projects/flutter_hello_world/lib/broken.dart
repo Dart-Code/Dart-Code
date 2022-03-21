@@ -14,7 +14,7 @@ class MyBrokenApp extends StatelessWidget {
 }
 
 class MyBrokenHomePage extends StatelessWidget {
-  MyBrokenHomePage({Key key}) : super(key: key);
+  MyBrokenHomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

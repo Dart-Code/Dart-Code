@@ -24,7 +24,6 @@ void main() {
         // the case when we enabled connecting the VM.
         // https://github.com/Dart-Code/Dart-Code/issues/1673
 
-        tester.binding.addTime(const Duration(seconds: 10));
         await tester.runAsync(() => Future.delayed(const Duration(seconds: 3)));
         expect(find.text('Hello, world!'), findsOneWidget);
       },

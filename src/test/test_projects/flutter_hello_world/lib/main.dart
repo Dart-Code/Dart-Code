@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
-  MyHomePage({Key key}) : super(key: key);
+  MyHomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +39,7 @@ class MyHomePage extends StatelessWidget {
       1: "one",
       1.1: "one-point-one",
     };
-    if (m[true]) {
+    if (m[true] == true) {
       print("Hello, world!");
     }
     log("Logging from dart:developer!");
