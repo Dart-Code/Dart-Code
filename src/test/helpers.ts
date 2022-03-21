@@ -514,7 +514,7 @@ export async function uncommentTestFile(): Promise<void> {
 	await setTestContent(currentDoc().getText().replace(/\n\/\/ /mg, "\n"));
 }
 
-export function getExpectedResults(doc = vs.window.activeTextEditor!.document) {
+export function getExpectedResults(doc = currentDoc()) {
 	const start = positionOf("// == EXPECTED RESULTS ==^", doc);
 	const end = positionOf("^// == /EXPECTED RESULTS ==", doc);
 	const results = doc.getText(new vs.Range(start, end));
