@@ -21,7 +21,9 @@ describe(`flutter run debugger`, () => {
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
+		// When in Bazel, the Flutter version is set to MAX_VERSION which enables everything, so use
+		// the Dart SDK version instead as an approx indicator of whether the SDK supports the dap.
+		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
 			this.skip();
 
 		dc = createDebugClient(DebuggerType.Flutter);
