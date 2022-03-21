@@ -1647,7 +1647,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				`stderr: When the exception was thrown, this was the stack:`,
 				`stderr: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
 				`stderr: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
-				`stderr: #2      StatelessElement.build (package:flutter/src/widgets/framework.dart:4923:49)`,
 				// Don't check any more past this, since they can change with Flutter framework changes.
 			]
 			: [
