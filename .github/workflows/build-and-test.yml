@@ -102,13 +102,13 @@ jobs:
         run: flutter config --enable-web
 
       - run: |
-          pub global activate --no-executables devtools
-          pub global activate --no-executables webdev
-          pub global activate --no-executables stagehand
-          pub global activate --no-executables args 1.5.0
-          pub global activate --no-executables meta 1.1.6
-          pub global activate --no-executables pedantic 1.4.0
-          pub global activate --no-executables json_annotation 1.2.0
+          dart pub global activate --no-executables devtools
+          dart pub global activate --no-executables webdev
+          dart pub global activate --no-executables stagehand
+          dart pub global activate --no-executables args 1.5.0
+          dart pub global activate --no-executables meta 1.1.6
+          dart pub global activate --no-executables pedantic 1.4.0
+          dart pub global activate --no-executables json_annotation 1.2.0
         if: matrix.bot != 'flutter_snap'
         shell: pwsh
 
@@ -121,14 +121,14 @@ jobs:
       - name: npm build
         run: npm run build
 
-      - name: pub get (hello_world)
+      - name: dart pub get (hello_world)
         if: startsWith(matrix.bot, 'dart')
-        run: pub get
+        run: dart pub get
         working-directory: src/test/test_projects/hello_world
 
-      - name: pub get (hello_world/example)
+      - name: dart pub get (hello_world/example)
         if: startsWith(matrix.bot, 'dart')
-        run: pub get
+        run: dart pub get
         working-directory: src/test/test_projects/hello_world/example
 
       - name: flutter pub get (dart_nested_flutter/nested_flutter_example)
