@@ -537,14 +537,19 @@ export async function executeSortMembersCodeAction() {
 	return executeCodeAction({ kind: SourceSortMembersCodeActionKind }, startOfDocument);
 }
 
-export async function getCodeActions({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
+export async function getCodeActions({ kind, title, requireExactlyOne = false }: { kind?: vs.CodeActionKind, title?: string, requireExactlyOne?: boolean }, range: vs.Range) {
 	const codeActions = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, range);
 	const matchingActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!))
 		&& (!title || ca.title === title));
+
+	if (requireExactlyOne && matchingActions.length !== 1)
+		throw new Error(`Expected to find "${kind}/${title}", but found ${codeActions.map((ca) => `"${ca.kind}/${ca.title}"`).join(", ")}`);
+
 	return matchingActions;
 }
+
 export async function executeCodeAction({ kind, title }: { kind?: vs.CodeActionKind, title?: string }, range: vs.Range) {
-	const matchingActions = await getCodeActions({ kind, title }, range);
+	const matchingActions = await getCodeActions({ kind, title, requireExactlyOne: true }, range);
 	assert.equal(matchingActions.length, 1);
 	await waitForEditorChange(() => vs.commands.executeCommand(matchingActions[0].command!.command, ...matchingActions[0].command!.arguments!)); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 }
