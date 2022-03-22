@@ -6,13 +6,18 @@ import { notUndefined } from "../../../shared/utils";
 import { fsPath, isFlutterProjectFolder } from "../../../shared/utils/fs";
 import { getAllProjectFolders } from "../../../shared/vscode/utils";
 import { config } from "../../config";
+import { getActiveRealFileEditor } from "../../editors";
 import { locateBestProjectRoot } from "../../project";
 import { getExcludedFolders, homeRelativePath } from "../../utils";
 
 export async function getFolderToRunCommandIn(logger: Logger, placeHolder: string, selection?: vs.Uri, flutterOnly = false): Promise<string | undefined> {
 	// Attempt to find a project based on the supplied folder of active file.
 	let file = selection && fsPath(selection);
-	file = file || (vs.window.activeTextEditor && fsPath(vs.window.activeTextEditor.document.uri));
+	if (!file) {
+		const editor = getActiveRealFileEditor();
+		if (editor)
+			file = fsPath(editor.document.uri);
+	}
 	const folder = file && locateBestProjectRoot(file);
 
 	if (folder)

@@ -22,6 +22,7 @@ import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config, ResourceConfig } from "../config";
+import { getActiveRealFileEditor } from "../editors";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
@@ -62,8 +63,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		ensureDebugLaunchUniqueId(debugConfig);
 		const isAttachRequest = debugConfig.request === "attach";
 		const logger = this.logger;
-		const openFile = window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri.scheme === "file"
-			? fsPath(window.activeTextEditor.document.uri)
+		const editor = getActiveRealFileEditor();
+		const openFile = editor
+			? fsPath(editor.document.uri)
 			: undefined;
 
 		logger.info(`Starting debug session...`);

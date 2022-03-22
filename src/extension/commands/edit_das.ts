@@ -20,7 +20,11 @@ export class DasEditCommands implements vs.Disposable {
 	}
 
 	private getActiveDoc() {
-		return vs.window.activeTextEditor && vs.window.activeTextEditor.document;
+		return this.getActiveEditor()?.document;
+	}
+
+	private getActiveEditor() {
+		return editors.getActiveRealFileEditor();
 	}
 
 	private organizeImports(document: vs.TextDocument): Thenable<void> {
@@ -34,7 +38,7 @@ export class DasEditCommands implements vs.Disposable {
 	}
 
 	private async completeStatement(): Promise<void> {
-		const editor = vs.window.activeTextEditor;
+		const editor = this.getActiveEditor();
 		if (!editor || !editor.selection || !this.analyzer.capabilities.hasCompleteStatementFix)
 			return;
 		const document = editor.document;

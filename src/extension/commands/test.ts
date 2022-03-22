@@ -15,7 +15,7 @@ import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { isDartDocument } from "../editors";
+import { getActiveRealFileEditor, isDartDocument } from "../editors";
 import { VsCodeTestController } from "../test/vs_test_controller";
 import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isInsideFolderNamed, isTestFile } from "../utils";
 
@@ -244,7 +244,7 @@ export class TestCommands implements vs.Disposable {
 	private async goToTestOrImplementationFile(resource?: vs.Uri): Promise<void> {
 		const doc = resource
 			? await vs.workspace.openTextDocument(resource)
-			: vs.window.activeTextEditor?.document;
+			: getActiveRealFileEditor()?.document;
 		if (doc && isDartDocument(doc)) {
 			const filePath = fsPath(doc.uri);
 			const isTest = isTestFile(filePath);

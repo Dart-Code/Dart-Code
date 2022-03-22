@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { TextDocumentEdit, WorkspaceEdit } from "vscode-languageclient";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import * as editors from "../editors";
 
 export class LspEditCommands implements vs.Disposable {
 	private commands: vs.Disposable[] = [];
@@ -16,12 +17,16 @@ export class LspEditCommands implements vs.Disposable {
 		// );
 	}
 
+	private getActiveEditor() {
+		return editors.getActiveRealFileEditor();
+	}
+
 	private async runCodeAction(action: string) {
 		return vs.commands.executeCommand("editor.action.codeAction", { kind: action, apply: "ifSingle" });
 	}
 
 	private async completeStatement(): Promise<void> {
-		const editor = vs.window.activeTextEditor;
+		const editor = this.getActiveEditor();
 		if (!editor || !editor.selection)
 			return;
 

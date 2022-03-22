@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
 import { firstEditorColumn, showCode } from "../../shared/vscode/utils";
+import { getActiveRealFileEditor } from "../editors";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
 export class EditCommands implements vs.Disposable {
@@ -54,7 +55,7 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private async printSelectionToTerminal() {
-		const editor = vs.window.activeTextEditor;
+		const editor = getActiveRealFileEditor();
 		const selection = editor?.selection;
 		const text = editor?.document?.getText(selection);
 
@@ -64,7 +65,7 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private async toggleDartdocomment() {
-		const editor = vs.window.activeTextEditor;
+		const editor = getActiveRealFileEditor();
 		if (!editor || !editor.selections.length)
 			return;
 		const document = editor.document;
