@@ -91,7 +91,8 @@
 				"defaults": {
 					"dark": "tab.inactiveForeground",
 					"light": "tab.inactiveForeground",
-					"highContrast": "tab.inactiveForeground"
+					"highContrast": "tab.inactiveForeground",
+					"highContrastLight": "tab.inactiveForeground"
 				}
 			},
 			{
@@ -100,7 +101,8 @@
 				"defaults": {
 					"dark": "#A3A3A3",
 					"light": "#A3A3A3",
-					"highContrast": "#A3A3A3"
+					"highContrast": "#CCCCCC",
+					"highContrastLight": "#333333"
 				}
 			}
 		],
