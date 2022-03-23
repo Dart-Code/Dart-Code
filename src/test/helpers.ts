@@ -872,12 +872,13 @@ export async function ensureTestContentWithSelection(expected: string): Promise<
 }
 
 export function checkTreeNodeResults(actual: string, expected: string, description?: string) {
-	// To simplify testing, expected always has forward slashes, but in reality should
-	// match the platform, so we should replace here. We must not replace on actual, as
-	// we need to verify that's correct for the platform.
-	// Only replace them in the path parts, otherwise things like 0/1 Passed will
-	// be messed up.
-	assert.equal(actual, expected.replace(/(?<=\w+)([\/\\])(?=\w+\.dart)/g, path.sep), description);
+	// To simplify tests, `expected` always has forward slashes, but in reality should
+	// match the platform, so in `expected`, replace any forward slashes with path.sep but only
+	// if they come before `.dart` (since we don't want to mess with `0/1 Passed`).
+	const segments = expected.split(".dart");
+	segments[0] = segments[0].replace(/\//g, path.sep);
+	expected = segments.join(".dart");
+	assert.equal(actual, expected, description);
 }
 
 export function delay(milliseconds: number): Promise<void> {
