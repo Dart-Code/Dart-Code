@@ -92,6 +92,8 @@ export class LspAnalyzer extends Analyzer {
 			return false;
 		}
 
+		const signatureHelpValidPattern = new RegExp("\\(\\${?[01]");
+
 		/// Whether or not to trigger signature help on this item. This is used because if a user doesn't
 		/// type the ( manually (but it's inserted as part of the completion) then the parameter hints do
 		/// not show up.
@@ -106,7 +108,7 @@ export class LspAnalyzer extends Analyzer {
 				const label = typeof item.label === "string" ? item.label : item.label.label;
 				insertText = label;
 			}
-			if (insertText?.includes("(${0"))
+			if (insertText && signatureHelpValidPattern.test(insertText))
 				return true;
 
 			return false;

@@ -227,7 +227,7 @@ main() {
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
 			assert.ok(completion.additionalTextEdits!.length);
-			if (extApi.isLsp)
+			if (extApi.isLsp && !extApi.dartCapabilities.hasZeroParamNoTabStopFix)
 				assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
 			else
 				assert.equal(completion.command, undefined);
@@ -242,7 +242,9 @@ main() {
 					assert.equal(doc, "Methods for retrieving information about the current process.");
 			}
 			assert.equal(completion.filterText ?? completion.label, "ProcessInfo");
-			if (extApi.isLsp)
+			if (extApi.isLsp && extApi.dartCapabilities.hasZeroParamNoTabStopFix)
+				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo()");
+			else if (extApi.isLsp)
 				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo(${0:})");
 			else
 				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo()");
@@ -277,10 +279,15 @@ main() {
 				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap",
 			);
 			assert.equal(completion.filterText ?? completion.label, "HashMap");
-			if (extApi.isLsp)
-				assert.equal(snippetValue(completion.insertText) ?? completion.label, "HashMap(${0:})");
-			else
+			if (extApi.isLsp) {
+				const insertText = snippetValue(completion.insertText) ?? (completion.label as string);
+				if (insertText.includes("${"))
+					assert.equal(insertText, "HashMap(${0:})");
+				else
+					assert.equal(insertText, "HashMap($0)");
+			} else {
 				assert.equal((completion.insertText as vs.SnippetString).value, "HashMap($1)");
+			}
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
@@ -312,8 +319,8 @@ main() {
 			select(rangeOf("ProcessInf||"));
 
 			await acceptFirstSuggestion();
-			// TODO: Cursor positions are slightly different between LSP/not right now.
-			const parens = extApi.isLsp ? "(^)" : "()^";
+			// TODO: Cursor positions are bad in older versions of LSP.
+			const parens = extApi.isLsp && !extApi.dartCapabilities.hasZeroParamNoTabStopFix ? "(^)" : "()^";
 			await ensureTestContentWithCursorPos(`
 import 'dart:io';
 
@@ -335,8 +342,8 @@ main() {
 			select(rangeOf("ProcessInf||"));
 
 			await acceptFirstSuggestion();
-			// TODO: Cursor positions are slightly different between LSP/not right now.
-			const parens = extApi.isLsp ? "(^)" : "()^";
+			// TODO: Cursor positions are bad in older versions of LSP.
+			const parens = extApi.isLsp && !extApi.dartCapabilities.hasZeroParamNoTabStopFix ? "(^)" : "()^";
 			await ensureTestContentWithCursorPos(`
 part of 'part_wrapper.dart';
 
