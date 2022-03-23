@@ -195,11 +195,13 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number }): Promise<string[]> {
 	const dartToolFolderName = `${path.sep}.dart_tool${path.sep}`;
 
-	let allPossibleFolders = roots.slice();
+	let previousLevelFolders = roots.slice();
+	let allPossibleFolders = previousLevelFolders.slice();
 	// Start at 1, as we already added the roots.
 	for (let i = 1; i < options.searchDepth; i++) {
-		const nextLevelFolders = await flatMapAsync(allPossibleFolders, (f) => getChildFolders(logger, f));
+		const nextLevelFolders = await flatMapAsync(previousLevelFolders, (f) => getChildFolders(logger, f));
 		allPossibleFolders = allPossibleFolders.concat(nextLevelFolders);
+		previousLevelFolders = nextLevelFolders;
 	}
 
 	allPossibleFolders = allPossibleFolders
