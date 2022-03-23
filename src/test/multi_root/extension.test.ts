@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, flutterHelloWorldFolder, helloWorldFolder, helloWorldMainFile, setConfigForTest } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi, flutterHelloWorldFolder, helloWorldFolder, helloWorldMainFile } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -44,13 +44,13 @@ describe("extension", () => {
 	});
 	it("resolves the correct debug config for a nested project", async () => {
 		await activateWithoutAnalysis();
-		await setConfigForTest("dart", "promptToRunIfErrors", false);
 		const resolvedConfig = await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(
 			vs.workspace.workspaceFolders![1],
 			{
 				name: "Dart",
 				program: fsPath(helloWorldMainFile),
 				request: "launch",
+				suppressPromptOnErrors: true,
 				type: "dart",
 			},
 		);

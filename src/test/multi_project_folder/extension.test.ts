@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../shared/utils/fs";
-import { activate, extApi, helloWorldFolder, helloWorldMainFile, setConfigForTest } from "../helpers";
+import { activate, extApi, helloWorldFolder, helloWorldMainFile } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -18,13 +18,13 @@ describe("test environment", () => {
 describe("extension", () => {
 	it("resolves the correct debug config for a nested project", async () => {
 		await activate();
-		await setConfigForTest("dart", "promptToRunIfErrors", false);
 		const resolvedConfig = await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(
 			vs.workspace.workspaceFolders![0],
 			{
 				name: "Dart",
 				program: fsPath(helloWorldMainFile),
 				request: "launch",
+				suppressPromptOnErrors: true,
 				type: "dart",
 			},
 		);

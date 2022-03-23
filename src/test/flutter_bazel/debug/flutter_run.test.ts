@@ -35,7 +35,7 @@ describe(`flutter run debugger`, () => {
 		const root = fsPath(flutterBazelRoot);
 		const hasRunFile = prepareHasRunFile(root, "flutter_run");
 
-		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile);
+		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile, { suppressPromptOnErrors: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
