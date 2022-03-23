@@ -1368,7 +1368,7 @@ insp=<inspected variable>
 		dc.launch(config);
 		await dc.waitForEvent("terminated");
 
-		const expectedPath = extApi.isPotentiallyUsingSdkDaps ? fsPath(helloWorldMainFile) : "bin/main.dart";
+		const expectedPath = extApi.isPotentiallyUsingSdkDaps ? fsPath(helloWorldMainFile) : path.join("bin", "main.dart");
 		ensureHasRunWithArgsStarting(root, hasRunFile, `${expectedPath}`);
 	});
 
