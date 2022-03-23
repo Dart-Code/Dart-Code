@@ -76,7 +76,21 @@ main() {
 		const createFunctionFix = fixResults.find((r) => r.title.indexOf("Create function 'missing'") !== -1);
 		assert.ok(createFunctionFix, "Fix was not found");
 
-		await vs.workspace.applyEdit(createFunctionFix.edit!);
+		// Older servers have simple edit, but newer has snippets.
+		if (createFunctionFix.edit) {
+			await vs.workspace.applyEdit(createFunctionFix.edit);
+		} else if (createFunctionFix.command) {
+			await vs.commands.executeCommand(
+				createFunctionFix.command.command,
+				...createFunctionFix.command.arguments || [], // eslint-disable-line @typescript-eslint/no-unsafe-argument
+			);
+		} else {
+			// If there's no edit or command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
+			this.skip();
+			return;
+		}
 
 		await ensureTestContent(`
 main() {
