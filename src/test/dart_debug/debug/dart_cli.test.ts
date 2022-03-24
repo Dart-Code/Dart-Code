@@ -874,7 +874,6 @@ void printSomething() {
 
 		const variables = await dc.getTopFrameVariables("Locals");
 		const variableNames = variables.map((v) => v.name);
-		const sortedVariableNames = variables.map((v) => v.name);
 		assert.deepStrictEqual(
 			variableNames.slice(),
 			sortBy(variableNames.slice(), (name) => name),
