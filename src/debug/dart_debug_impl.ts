@@ -1216,6 +1216,7 @@ export class DartDebugSession extends DebugSession {
 				const frameVariables = await Promise.all(framePromises);
 				variables = variables.concat(frameVariables);
 			}
+			variables = sortBy(variables, (v) => v.name);
 			response.body = { variables };
 			this.logDapResponse(response);
 			this.sendResponse(response);

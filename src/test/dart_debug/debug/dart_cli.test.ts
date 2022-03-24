@@ -7,6 +7,7 @@ import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
 import { DartVsCodeLaunchArgs } from "../../../shared/debug/interfaces";
 import { DebuggerType } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";
+import { sortBy } from "../../../shared/utils/array";
 import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
@@ -859,6 +860,25 @@ void printSomething() {
 			key: { evaluateName: undefined, name: "key", value: "1.1" },
 			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
 		}, dc);
+
+		await dc.terminateRequest();
+	});
+
+	it("sorts local variables alphabetically", async () => {
+		await openFile(helloWorldMainFile);
+		const debugConfig = await startDebugger(dc, helloWorldMainFile);
+		await dc.hitBreakpoint(debugConfig, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		const variableNames = variables.map((v) => v.name);
+		const sortedVariableNames = variables.map((v) => v.name);
+		assert.deepStrictEqual(
+			variableNames.slice(),
+			sortBy(variableNames.slice(), (name) => name),
+		);
 
 		await dc.terminateRequest();
 	});
