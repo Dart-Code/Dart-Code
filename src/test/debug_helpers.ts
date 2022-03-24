@@ -304,16 +304,16 @@ export async function ensureServiceExtensionValue(id: VmServiceExtension, expect
 	assert.equal(value, expected);
 }
 
-export function sdkPathForSdkDap(file: string) {
-	if (extApi.isPotentiallyUsingSdkDaps)
+export function sdkPathForSdkDap(dc: DartDebugClient, file: string) {
+	if (dc.isDartDap)
 		return path.join(extApi.workspaceContext.sdks.dart, isWin ? file.replace(/\//g, "\\") : file);
 	// When not using the new DAPs, we don't translate SDK paths back to the local file paths.
 	return undefined;
 }
 
-export function faintTextForNonSdkDap(input: string) {
+export function faintTextForNonSdkDap(dc: DartDebugClient, input: string) {
 	// Currently the SDK DAPs don't use colours.
-	if (extApi.isPotentiallyUsingSdkDaps)
+	if (dc.isDartDap)
 		return input;
 	return faint(input);
 }

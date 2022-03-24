@@ -1397,7 +1397,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	describe("can evaluate when not at a breakpoint (global expression evaluation)", function () {
 		this.beforeEach(function () {
-			if (extApi.isPotentiallyUsingSdkDaps)
+			if (dc.isDartDap)
 				this.skip();
 		});
 

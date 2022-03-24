@@ -742,7 +742,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			getOutputChannel,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			isLsp: isUsingLsp,
-			isPotentiallyUsingSdkDaps: config.previewSdkDaps || config.customDartDapPath || config.customFlutterDapPath,
 			logger,
 			nextAnalysis: () => analyzer.onNextAnalysisComplete,
 			packagesTreeProvider: dartPackagesProvider,

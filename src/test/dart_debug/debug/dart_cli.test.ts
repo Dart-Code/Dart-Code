@@ -150,7 +150,7 @@ describe("dart cli debugger", () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
-			dc.assertOutputContains("console", `${faintTextForNonSdkDap("[log] ")}Logging from dart:developer!`),
+			dc.assertOutputContains("console", `${faintTextForNonSdkDap(dc, "[log] ")}Logging from dart:developer!`),
 			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -383,7 +383,7 @@ void printSomething() {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
-				assert.equal(frame.source!.path, sdkPathForSdkDap("lib/core/print.dart"));
+				assert.equal(frame.source!.path, sdkPathForSdkDap(dc, "lib/core/print.dart"));
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -408,7 +408,7 @@ void printSomething() {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
-				assert.equal(frame.source!.path, sdkPathForSdkDap("lib/core/print.dart"));
+				assert.equal(frame.source!.path, sdkPathForSdkDap(dc, "lib/core/print.dart"));
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -528,7 +528,7 @@ void printSomething() {
 	});
 
 	it("downloads SDK source code from the VM", async function () {
-		if (!extApi.dartCapabilities.includesSourceForSdkLibs || extApi.isPotentiallyUsingSdkDaps) {
+		if (!extApi.dartCapabilities.includesSourceForSdkLibs || dc.isDartDap) {
 			this.skip();
 			return;
 		}
@@ -1131,7 +1131,7 @@ void printSomething() {
 
 	describe("can evaluate when not at a breakpoint", () => {
 		beforeEach(function () {
-			if (extApi.isPotentiallyUsingSdkDaps)
+			if (dc.isDartDap)
 				this.skip();
 		});
 		it("simple expressions", async () => {
@@ -1246,7 +1246,7 @@ void printSomething() {
 
 	it("prints the output of inspected variables", async function () {
 		// SDK Dap doesn't handle this currently.
-		if (extApi.isPotentiallyUsingSdkDaps)
+		if (dc.isDartDap)
 			this.skip();
 
 		await openFile(helloWorldInspectFile);
@@ -1387,7 +1387,7 @@ insp=<inspected variable>
 		dc.launch(config);
 		await dc.waitForEvent("terminated");
 
-		const expectedPath = extApi.isPotentiallyUsingSdkDaps ? fsPath(helloWorldMainFile) : path.join("bin", "main.dart");
+		const expectedPath = dc.isDartDap ? fsPath(helloWorldMainFile) : path.join("bin", "main.dart");
 		ensureHasRunWithArgsStarting(root, hasRunFile, `${expectedPath}`);
 	});
 
