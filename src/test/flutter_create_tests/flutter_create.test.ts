@@ -65,14 +65,15 @@ async function projectFileContainsExpectedString(fileToCheck: string, expectedSt
 
 	// Wait for up to 10 seconds for the content to match, as the file may be updated after creation.
 	logger.info("Waiting for content match", LogCategory.CI);
+	const lowerExpectedString = expectedString.toLowerCase();
 	await waitForResult(() => {
-		const contents = fs.readFileSync(fileToCheck);
-		return contents.indexOf(expectedString) !== -1;
+		const contents = fs.readFileSync(fileToCheck).toString().toLowerCase();
+		return contents.indexOf(lowerExpectedString) !== -1;
 		// This timeout needs to be quite high because Flutter creates the project first, then later overwrites the code
 		// so we may see the original content for a little while.
 	}, undefined, 30000, false); // Don't throw on failure as we have a better assert below that can include the contents.
 
-	const contents = fs.readFileSync(fileToCheck);
-	if (contents.indexOf(expectedString) === -1)
+	const contents = fs.readFileSync(fileToCheck).toString().toLowerCase();
+	if (contents.indexOf(lowerExpectedString) === -1)
 		assert.fail(`Did not find "${expectedString}'" in the file (${fileToCheck}):\n\n${contents}`);
 }
