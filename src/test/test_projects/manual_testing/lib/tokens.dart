@@ -21,11 +21,11 @@ void main() async {
   FOO.set();
   FOO.foo = FOO.foo;
 
+  void Function() notNullableFunc = () {};
   void Function()? nullableFunc;
 
-  nullableFunc();
+  notNullableFunc();
   nullableFunc!();
-  nullableFunc?();
 
   var val = 'test' as dynamic;
   print('!$val世界!');
