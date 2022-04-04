@@ -80,7 +80,7 @@ This extension reports some analytics such as:
 - The values of some settings (such as Flutter UI Guidelines and Format-on-Save)
 - Frequency of use of features like Hot Reload and Hot Restart
 
-Reporting can be disabled via VS Code's standard **Telemtry: Telemetry Level** setting.
+Reporting can be disabled via VS Code's standard **Telemetry: Telemetry Level** setting.
 
 
 ## Release Notes
