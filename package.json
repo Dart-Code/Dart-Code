@@ -1920,6 +1920,12 @@
 						"description": "The maximum length of a line in the log file. Lines longer than this will be truncated and suffixed with an ellipsis.",
 						"scope": "window"
 					},
+					"dart.maxCompletionItems": {
+						"type": "number",
+						"default": 2000,
+						"description": "The maximum number of completion items to return from a code completion request. Updated results will be fetched as additional characters are typed. Lower numbers may improved performance. Only affects LSP for > Dart SDK 2.17.",
+						"scope": "window"
+					},
 					"dart.dartTestLogFile": {
 						"type": [
 							"null",
