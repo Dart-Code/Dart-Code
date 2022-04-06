@@ -41,7 +41,6 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 						});
 						reject();
 					} else {
-						channel.hide();
 						resolve();
 					}
 				}));
