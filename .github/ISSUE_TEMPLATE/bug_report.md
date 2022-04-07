@@ -21,7 +21,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Versions (please complete the following information):**
+**Please complete the following information:**
+ - Operating System and version:
  - VS Code version:
  - Dart extension version:
  - Dart/Flutter SDK version:
+ - Target device (if the issue relates to Flutter debugging):
