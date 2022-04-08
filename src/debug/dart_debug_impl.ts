@@ -107,6 +107,13 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	public constructor() {
+		// Don't allow unhandled promises to terminate the DA, instead send a log event
+		// to the client.
+		// TODO: Track down and fix anywhere that unhandled promises can occur!
+		process.on("unhandledRejection", (reason, promise) => {
+			this.logger.error(`UNHANDLED: ${reason}, ${promise}`);
+		});
+
 		super();
 
 		this.threadManager = new ThreadManager(this.logger, this);
