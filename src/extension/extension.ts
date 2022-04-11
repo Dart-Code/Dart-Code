@@ -603,7 +603,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	if (vs.window.registerTerminalLinkProvider) { // Temporary workaround for GitPod/Theia not having this.
 		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartPackageUriTerminalLinkProvider(logger, workspaceContext)));
-		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartFileUriTerminalLinkProvider(logger)));
+		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartFileUriTerminalLinkProvider()));
 	}
 
 	// Register our view providers.
