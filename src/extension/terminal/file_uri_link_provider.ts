@@ -9,6 +9,7 @@ export class DartFileUriTerminalLinkProvider implements vs.TerminalLinkProvider<
 	}
 
 	public async provideTerminalLinks(context: vs.TerminalLinkContext, token: vs.CancellationToken): Promise<DartFileUriTerminalLink[]> {
+		console.log(context.line);
 		const results: DartFileUriTerminalLink[] = [];
 		fileUriPattern.lastIndex = -1;
 		let result: RegExpExecArray | null;
@@ -27,17 +28,14 @@ export class DartFileUriTerminalLinkProvider implements vs.TerminalLinkProvider<
 			const line = result.groups.line ? parseInt(result.groups.line) : undefined;
 			const col = result.groups.col ? parseInt(result.groups.col) : undefined;
 			const startIndex = result.index;
-			// TODO: This should be "result[0].length" but including the line/col can cause
-			// the tooltip not to render correctly, so we only highlight the uri for now.
-			// https://github.com/microsoft/vscode/issues/108301
-			const length = result.groups.uri.length;
+			const length = result[0].length;
 
 			results.push({
 				col,
 				length,
 				line,
 				startIndex,
-				tooltip: "Open file in editor",
+				tooltip: "Open Dart file in editor",
 				uri,
 			});
 		}

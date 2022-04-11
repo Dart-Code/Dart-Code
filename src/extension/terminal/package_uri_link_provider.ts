@@ -74,10 +74,7 @@ export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvid
 			const line = result.groups.line ? parseInt(result.groups.line) : undefined;
 			const col = result.groups.col ? parseInt(result.groups.col) : undefined;
 			const startIndex = result.index;
-			// TODO: This should be "result[0].length" but including the line/col can cause
-			// the tooltip not to render correctly, so we only highlight the uri for now.
-			// https://github.com/microsoft/vscode/issues/108301
-			const length = result.groups.uri.length;
+			const length = result[0].length;
 
 			results.push({
 				col,

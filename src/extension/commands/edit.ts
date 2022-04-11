@@ -33,6 +33,9 @@ export class EditCommands implements vs.Disposable {
 			const line = doc.lineAt(lineNumber > 0 ? lineNumber - 1 : 0);
 			if (!columnNumber || columnNumber > line.range.end.character)
 				columnNumber = line.firstNonWhitespaceCharacterIndex;
+			else if (columnNumber > 0) {
+				columnNumber--;
+			}
 			const char = line.range.start.translate({ characterDelta: columnNumber });
 			showCode(editor, line.range, line.range, new vs.Range(char, char));
 		}
