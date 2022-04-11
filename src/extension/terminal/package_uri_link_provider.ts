@@ -8,7 +8,7 @@ import { getExcludedFolders } from "../utils";
 
 const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?:[: ](?<line>\\d+):(?<col>\\d+))?", "mg");
 
-export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTerminalLink> {
+export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvider<DartPackageUriTerminalLink> {
 	packageMaps: { [key: string]: PackageMap } | undefined;
 	packageMapDiscovery: Promise<void> | undefined;
 
@@ -49,11 +49,11 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 		return undefined;
 	}
 
-	public async provideTerminalLinks(context: vs.TerminalLinkContext, token: vs.CancellationToken): Promise<DartTerminalLink[]> {
+	public async provideTerminalLinks(context: vs.TerminalLinkContext, token: vs.CancellationToken): Promise<DartPackageUriTerminalLink[]> {
 		if (!this.packageMaps)
 			await this.discoverPackageMaps();
 
-		const results: DartTerminalLink[] = [];
+		const results: DartPackageUriTerminalLink[] = [];
 		packageUriPattern.lastIndex = -1;
 		let result: RegExpExecArray | null;
 		// tslint:disable-next-line: no-conditional-assignment
@@ -93,7 +93,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 		return results;
 	}
 
-	public handleTerminalLink(link: DartTerminalLink): vs.ProviderResult<void> {
+	public handleTerminalLink(link: DartPackageUriTerminalLink): vs.ProviderResult<void> {
 		const filePath = this.resolvePackageUri(link.uri);
 		if (!filePath) {
 			vs.window.showErrorMessage(`Unable to find root for package ${link.packageName}`);
@@ -104,7 +104,7 @@ export class DartTerminalLinkProvider implements vs.TerminalLinkProvider<DartTer
 	}
 }
 
-interface DartTerminalLink extends vs.TerminalLink {
+interface DartPackageUriTerminalLink extends vs.TerminalLink {
 	startIndex: number;
 	length: number;
 	tooltip: string;

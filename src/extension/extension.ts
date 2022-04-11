@@ -99,7 +99,8 @@ import { PubGlobal } from "./pub/global";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
-import { DartTerminalLinkProvider } from "./terminal/link_provider";
+import { DartFileUriTerminalLinkProvider } from "./terminal/file_uri_link_provider";
+import { DartPackageUriTerminalLinkProvider } from "./terminal/package_uri_link_provider";
 import { VsCodeTestController } from "./test/vs_test_controller";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
@@ -600,8 +601,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new LspEditCommands(lspAnalyzer));
 	}
 
-	if (vs.window.registerTerminalLinkProvider) // Temporary workaround for GitPod/Theia not having this.
-		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartTerminalLinkProvider(logger, workspaceContext)));
+	if (vs.window.registerTerminalLinkProvider) { // Temporary workaround for GitPod/Theia not having this.
+		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartPackageUriTerminalLinkProvider(logger, workspaceContext)));
+		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartFileUriTerminalLinkProvider(logger)));
+	}
 
 	// Register our view providers.
 	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext, dartCapabilities);
