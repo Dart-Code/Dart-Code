@@ -1,12 +1,12 @@
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
+import { DartPackageUriTerminalLink, findPackageUriLinks } from "../../shared/vscode/terminal_link_provider_utils";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { getExcludedFolders } from "../utils";
 
-const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?:[: ](?<line>\\d+):(?<col>\\d+))?", "mg");
 
 export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvider<DartPackageUriTerminalLink> {
 	packageMaps: { [key: string]: PackageMap } | undefined;
@@ -34,8 +34,8 @@ export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvid
 		return this.packageMapDiscovery;
 	}
 
-	private isKnownPackage(packageName: string) {
-		return this.packageMaps && !!Object.values(this.packageMaps).find((m) => m.packages[packageName]);
+	private isKnownPackage(packageName: string): boolean {
+		return !!(this.packageMaps && Object.values(this.packageMaps).find((m) => m.packages[packageName]));
 	}
 
 	private resolvePackageUri(uri: string): string | undefined {
@@ -53,41 +53,7 @@ export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvid
 		if (!this.packageMaps)
 			await this.discoverPackageMaps();
 
-		const results: DartPackageUriTerminalLink[] = [];
-		packageUriPattern.lastIndex = -1;
-		let result: RegExpExecArray | null;
-		// tslint:disable-next-line: no-conditional-assignment
-		while ((result = packageUriPattern.exec(context.line)) && result.groups) {
-			let uri: vs.Uri | undefined;
-			try {
-				uri = vs.Uri.parse(result.groups.uri, true);
-			} catch (e) {
-				this.logger.error(e);
-				continue;
-			}
-			if (!uri)
-				continue;
-
-			const packageName = uri.path.split("/")[0];
-			if (!this.isKnownPackage(packageName))
-				continue;
-			const line = result.groups.line ? parseInt(result.groups.line) : undefined;
-			const col = result.groups.col ? parseInt(result.groups.col) : undefined;
-			const startIndex = result.index;
-			const length = result[0].length;
-
-			results.push({
-				col,
-				length,
-				line,
-				packageName,
-				startIndex,
-				tooltip: "Open file in editor",
-				uri: result.groups.uri,
-			});
-		}
-
-		return results;
+		return findPackageUriLinks(context.line, (name) => this.isKnownPackage(name));
 	}
 
 	public handleTerminalLink(link: DartPackageUriTerminalLink): vs.ProviderResult<void> {
@@ -99,14 +65,4 @@ export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvid
 
 		vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
 	}
-}
-
-interface DartPackageUriTerminalLink extends vs.TerminalLink {
-	startIndex: number;
-	length: number;
-	tooltip: string;
-	packageName: string;
-	uri: string;
-	line: number | undefined;
-	col: number | undefined;
 }
