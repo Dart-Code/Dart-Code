@@ -51,11 +51,12 @@ export class PackageCommands extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
+		const additionalArgs = config.offline ? ["--offline"] : [];
 
 		if (util.isInsideFlutterProject(uri)) {
-			return this.runFlutter(["pub", "get"], uri);
+			return this.runFlutter(["pub", "get", ...additionalArgs], uri);
 		} else {
-			return this.runPub(["get"], uri);
+			return this.runPub(["get", ...additionalArgs], uri);
 		}
 	}
 

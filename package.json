@@ -1666,10 +1666,10 @@
 						"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: New Project' command.",
 						"scope": "window"
 					},
-					"dart.flutterCreateOffline": {
+					"dart.offline": {
 						"type": "boolean",
 						"default": false,
-						"description": "Whether to use offline mode when creating new projects with the 'Flutter: New Project' command.",
+						"description": "Whether to use the --offline switch for commands like 'pub get' and 'Flutter: New Project'.",
 						"scope": "window"
 					},
 					"dart.flutterCreateOrganization": {

@@ -141,7 +141,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 
 		const args = ["create"];
-		if (config.flutterCreateOffline) {
+		if (config.flutterCreateOffline || config.offline) {
 			args.push("--offline");
 		}
 		if (platform) {
