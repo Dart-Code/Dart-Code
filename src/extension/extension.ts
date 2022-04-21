@@ -506,7 +506,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Also the providers for the initial configs.
 	if (vs.DebugConfigurationProviderTriggerKind) { // Temporary workaround for GitPod/Theia not having this enum.
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new InitialLaunchJsonDebugConfigProvider(logger), vs.DebugConfigurationProviderTriggerKind.Initial));
-		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger), vs.DebugConfigurationProviderTriggerKind.Dynamic));
+		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger, deviceManager), vs.DebugConfigurationProviderTriggerKind.Dynamic));
 	}
 
 	if (config.flutterGutterIcons) {

@@ -778,7 +778,7 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 }
 
 export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger) { }
+	constructor(private readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined) { }
 
 	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
 		const results: DebugConfiguration[] = [];
@@ -790,9 +790,21 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			const name = path.basename(projectFolder);
 			// Compute cwd, using undefined instead of empty if rootFolder === projectFolder
 			const cwd = rootFolder ? path.relative(rootFolder, projectFolder) || undefined : undefined;
-			const exists = (p: string) => folder && fs.existsSync(path.join(projectFolder, p));
+			const exists = (p: string) => projectFolder && fs.existsSync(path.join(projectFolder, p));
 
-			if (isFlutter && exists("lib/main.dart")) {
+			if (isFlutter && exists("lib/main.dart") && this.deviceManager) {
+				const devices = await this.deviceManager.getValidDevicesForProject(projectFolder);
+				for (const device of devices) {
+					const deviceLabel = this.deviceManager?.labelForDevice(device);
+					results.push({
+						name: `Flutter (${deviceLabel})`,
+						program: "lib/main.dart",
+						cwd,
+						deviceId: device.id,
+						request: "launch",
+						type: "dart",
+					});
+				}
 				results.push({
 					name: `Flutter`,
 					program: "lib/main.dart",

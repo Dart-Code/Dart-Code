@@ -208,6 +208,15 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.devices.find((d) => d.id === id);
 	}
 
+	public async getValidDevicesForProject(projectFolder: string): Promise<f.Device[]> {
+		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
+		const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes
+			? (await this.daemon.getSupportedPlatforms(projectFolder)).platforms
+			: undefined;
+
+		return sortedDevices.filter((d) => this.isSupported(supportedPlatforms, d));
+	}
+
 	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Array<PickableDevice | DeviceSeparator> {
 		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
 
