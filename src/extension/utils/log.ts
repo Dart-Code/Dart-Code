@@ -12,6 +12,7 @@ export function getExtensionLogPath() {
 }
 export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server": LogCategory.Analyzer,
+	"Analysis Server Timings": LogCategory.AnalyzerTiming,
 	"Command Processes": LogCategory.CommandProcesses,
 	"Dart Test": LogCategory.DartTest,
 	"Debugger DAP Protocol": LogCategory.DAP,

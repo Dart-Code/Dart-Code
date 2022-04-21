@@ -117,6 +117,17 @@ export class LspAnalyzer extends Analyzer {
 		const snippetTextEdits = this.snippetTextEdits;
 		const ignoreActionProvider = new IgnoreLintCodeActionProvider(DART_MODE);
 
+		const startTimer = (message: string): ({ end: (message: string | undefined) => void }) => {
+			const startTime = process.hrtime();
+			return {
+				end: (endMessage?: string) => {
+					const timeTaken = process.hrtime(startTime);
+					const timeTakenMs = Math.round(timeTaken[0] * 1000 + timeTaken[1] / 1000000);
+					this.logger.info(`[ ${timeTakenMs} ms ] ${message} ${endMessage}`.trim(), LogCategory.AnalyzerTiming);
+				},
+			};
+		};
+
 		return {
 			handleWorkDoneProgress: (token: ProgressToken, params: WorkDoneProgressBegin | WorkDoneProgressReport | WorkDoneProgressEnd, next: HandleWorkDoneProgressSignature) => {
 				if (params.kind === "begin")
@@ -128,17 +139,26 @@ export class LspAnalyzer extends Analyzer {
 			},
 
 			provideCompletionItem: async (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
+				const range = document.getWordRangeAtPosition(position);
+				const prefix = range ? document.getText(range) : undefined;
+				const timer = startTimer(`Completion: ${prefix ?? ""}`);
 				const results = await next(document, position, context, token);
-				let items: CompletionItem[] | undefined;
-				if (!results)
-					return results;
+				let items: CompletionItem[];
+				let isIncomplete = false;
 
 				// Handle either a CompletionItem[] or CompletionList.
-				if ("isIncomplete" in results) {
+				if (!results) {
+					items = [];
+				} else if ("isIncomplete" in results) {
 					items = results.items;
+					isIncomplete = results.isIncomplete ?? false;
 				} else {
 					items = results as CompletionItem[];
 				}
+				timer.end(`${items.length} results ${isIncomplete ? "(incomplete)" : ""} ${token.isCancellationRequested ? "(cancelled)" : ""}`);
+
+				if (!items.length)
+					return;
 
 				const parameterHintsEnabled = !!workspace.getConfiguration("editor").get("parameterHints.enabled");
 				for (const item of items) {

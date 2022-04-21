@@ -55,6 +55,7 @@ export enum LogCategory {
 	DAP,
 	DevTools,
 	Analyzer,
+	AnalyzerTiming,
 	DartTest,
 	FlutterDaemon,
 	FlutterRun,

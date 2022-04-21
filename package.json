@@ -291,6 +291,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.startLoggingAnalysisServerTimings",
+				"title": "Capture Analysis Server Timings",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.startLoggingDebugging",
 				"title": "Capture Debugging Logs",
 				"category": "Dart"
@@ -631,6 +636,10 @@
 				},
 				{
 					"command": "dart.startLoggingAnalysisServer",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
+					"command": "dart.startLoggingAnalysisServerTimings",
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{

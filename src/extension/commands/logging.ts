@@ -20,6 +20,7 @@ export class LoggingCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.startLogging", this.startLoggingViaPicker, this),
 			vs.commands.registerCommand("dart.startLoggingDebugging", this.startLoggingDebugging, this),
 			vs.commands.registerCommand("dart.startLoggingAnalysisServer", this.startLoggingAnalysisServer, this),
+			vs.commands.registerCommand("dart.startLoggingAnalysisServerTimings", this.startLoggingAnalysisServerTimings, this),
 			vs.commands.registerCommand("dart.startLoggingExtensionOnly", this.startLoggingExtensionOnly, this),
 			vs.commands.registerCommand("dart.openExtensionLog", this.openExtensionLog, this),
 			vs.commands.registerCommand("dart.stopLogging", this.stopLogging, this),
@@ -50,6 +51,10 @@ export class LoggingCommands implements vs.Disposable {
 
 	private async startLoggingAnalysisServer(): Promise<string | undefined> {
 		return this.startLogging(analysisServerLogCategories);
+	}
+
+	private async startLoggingAnalysisServerTimings(): Promise<string | undefined> {
+		return this.startLogging([LogCategory.AnalyzerTiming]);
 	}
 
 	private async startLoggingExtensionOnly(): Promise<string | undefined> {
