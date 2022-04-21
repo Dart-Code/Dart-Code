@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { commands, ExtensionContext, window } from "vscode";
+import { commands, ExtensionContext, window, workspace } from "vscode";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
 import { Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
@@ -326,6 +326,14 @@ export class SdkUtils {
 		if (!hasAttemptedFlutterInitialization && flutterSdkPath && !dartSdkPath) {
 			await initializeFlutterSdk(this.logger, path.join(flutterSdkPath, flutterPath));
 			dartSdkPath = this.findDartSdk([path.join(flutterSdkPath, "bin/cache/dart-sdk")]).sdkPath;
+		}
+
+		// It's possible we've opened a folder without a pubspec/etc., so before assuming this is a non-Dart project, check
+		// for any Dart files in the top few folders.
+		if (!hasAnyFlutterProject && !hasAnyStandardDartProject) {
+			// Only look in the root and known folders to avoid a potentially slow full workspace search.
+			const hasAnyDartFile = !!(await workspace.findFiles("{*.dart,lib/*.dart,bin/*.dart,tool/*.dart,test/*.dart}", undefined, 1)).length;
+			hasAnyStandardDartProject = hasAnyDartFile;
 		}
 
 		// Sometimes the extension is activated when there's not a Dart/Flutter project open because the
