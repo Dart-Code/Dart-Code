@@ -501,7 +501,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		// Some properties depend ont he device, so infer that first if required.
+		// Some properties depend on the device, so infer that first if required.
 		if (isFlutter && !debugConfig.deviceId && device) {
 			debugConfig.deviceId = device.id;
 			debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;

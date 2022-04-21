@@ -43,8 +43,10 @@ export interface WritableWorkspaceConfig {
 
 	startDevToolsServerEagerly?: boolean;
 	startDevToolsFromDaemon?: boolean;
+	disableAnalytics?: boolean;
 	disableAutomaticPackageGet?: boolean;
 	disableSdkUpdateChecks?: boolean;
+	disableStartupPrompts?: boolean;
 	flutterDaemonScript?: CustomScript;
 	flutterDoctorScript?: CustomScript;
 	flutterRunScript?: CustomScript;

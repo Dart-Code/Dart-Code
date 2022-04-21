@@ -177,6 +177,7 @@ export class Analytics {
 		if (this.disableAnalyticsForSession
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
+			|| !this.workspaceContext.config.disableAnalytics
 			|| !env.isTelemetryEnabled
 			|| isDartCodeTestRun
 		)

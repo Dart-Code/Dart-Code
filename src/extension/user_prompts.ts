@@ -15,6 +15,9 @@ import { markProjectCreationEnded, markProjectCreationStarted } from "./commands
 import { promptToReloadExtension } from "./utils";
 
 export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext): Promise<void> {
+	if (workspaceContext.config.disableStartupPrompts)
+		return;
+
 	function shouldSuppress(key: string): boolean {
 		const stateKey = `${userPromptContextPrefix}${key}`;
 		return context.get(stateKey) === true;

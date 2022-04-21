@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window } from "vscode";
 import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
-import { Logger, Sdks, SdkSearchResults, WorkspaceConfig } from "../../shared/interfaces";
+import { Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
@@ -326,6 +326,16 @@ export class SdkUtils {
 		if (!hasAttemptedFlutterInitialization && flutterSdkPath && !dartSdkPath) {
 			await initializeFlutterSdk(this.logger, path.join(flutterSdkPath, flutterPath));
 			dartSdkPath = this.findDartSdk([path.join(flutterSdkPath, "bin/cache/dart-sdk")]).sdkPath;
+		}
+
+		// Sometimes the extension is activated when there's not a Dart/Flutter project open because the
+		// events are not fine-grain enough (for example `activationEvent:onDebugDynamicConfigurations`), so
+		// if this seems to be the case, turn off a few things that are likely not relevant for the user.
+		if (!hasAnyFlutterProject && !hasAnyStandardDartProject) {
+			const wc = workspaceConfig as WritableWorkspaceConfig;
+			wc.disableAnalytics = true;
+			wc.disableStartupPrompts = true;
+			wc.disableSdkUpdateChecks = true;
 		}
 
 		return new WorkspaceContext(
