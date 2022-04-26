@@ -11,6 +11,8 @@ describe("cleanDartDoc", () => {
 <i class="material-icons-round md-36">class</i> &#x2014; material icon named "class round".
 
 <i class="material-icons-sharp md-36">class</i> &#x2014; material icon named "class sharp".
+
+<i class="material-icons md-36">try</i> &#x2014; material icon named "try".
 		`;
 		const expected = `
 ![threesixty](${Uri.file(extensionPath)}/media/doc-icons/material/threesixty%402x.png|width=32,height=32)
@@ -24,6 +26,10 @@ material icon named "class round".
 ![class_sharp](${Uri.file(extensionPath)}/media/doc-icons/material/class_sharp%402x.png|width=32,height=32)
 
 material icon named "class sharp".
+
+![try_sms_star](${Uri.file(extensionPath)}/media/doc-icons/material/try_sms_star%402x.png|width=32,height=32)
+
+material icon named "try".
 		`;
 		assert.equal(cleanDartdoc(input), expected);
 	});

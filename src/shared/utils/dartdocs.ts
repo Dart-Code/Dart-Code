@@ -118,6 +118,16 @@ const identifierPrefixRewrites: { [key: string]: string | undefined } = {
 	"8": "eight_",
 	"9": "nine_",
 };
+const identifierExactRewrites: { [key: string]: string | undefined } = {
+	// See identifierExactRewrites in
+	// https://github.com/flutter/flutter/blob/master/dev/tools/update_icons.dart
+	"class": "class_",
+	"door_back": "door_back_door",
+	"door_front": "door_front_door",
+	"new": "new_",
+	"switch": "switch_",
+	"try": "try_sms_star",
+};
 
 function fixIcon(icon: string): string {
 	// Things starting with numbers are textual in their names too.
@@ -128,6 +138,12 @@ function fixIcon(icon: string): string {
 		if (newPrefix)
 			return `${newPrefix}${icon.slice(prefix.length)}`;
 	}
+
+	// Also try exact rewrites.
+	const newIdentifier = identifierExactRewrites[icon];
+	if (newIdentifier)
+		return newIdentifier;
+
 	return icon;
 }
 
