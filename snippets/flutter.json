@@ -1,6 +1,6 @@
 {
 	".source.dart": {
-		"Flutter stateless widget": {
+		"Flutter Stateless Widget": {
 			"prefix": "stless",
 			"description": "Insert a StatelessWidget",
 			"body": [
@@ -16,7 +16,7 @@
 				"}"
 			]
 		},
-		"Flutter stateful widget": {
+		"Flutter Stateful Widget": {
 			"prefix": "stful",
 			"description": "Insert a StatefulWidget",
 			"body": [
@@ -37,7 +37,7 @@
 				"}"
 			]
 		},
-		"Flutter widget with AnimationController": {
+		"Flutter Widget with AnimationController": {
 			"prefix": "stanim",
 			"description": "Insert a StatefulWidget with an AnimationController",
 			"body": [
