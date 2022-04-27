@@ -34,13 +34,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		dc = createDebugClient(DebuggerType.Flutter);
 	});
 
-	beforeEach("create debug client", function () {
-		// Many of these web tests currently fail due to
-		// https://github.com/dart-lang/webdev/issues/1553
-		if (flutterTestDeviceIsWeb)
-			this.skip();
-	});
-
 	beforeEach(() => {
 		deferUntilLast("Kill flutter_tester", () => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
