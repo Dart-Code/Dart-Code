@@ -1931,7 +1931,7 @@
 					},
 					"dart.maxCompletionItems": {
 						"type": "number",
-						"default": 2000,
+						"default": 10000,
 						"description": "The maximum number of completion items to return from a code completion request. Updated results will be fetched as additional characters are typed. Lower numbers may improved performance. Only affects LSP for > Dart SDK 2.17.",
 						"scope": "window"
 					},
