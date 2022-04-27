@@ -70,7 +70,7 @@ class Config {
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
 	get embedDevTools(): boolean { return this.getConfig<boolean>("embedDevTools", true); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
-	get enableServerSnippets(): boolean { return this.getConfig<boolean>("enableServerSnippets", false); }
+	get enableServerSnippets(): boolean { return this.getConfig<boolean>("enableServerSnippets", true); }
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): any { return this.getConfig<any>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }

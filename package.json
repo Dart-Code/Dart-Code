@@ -2235,8 +2235,8 @@
 				"properties": {
 					"dart.enableServerSnippets": {
 						"type": "boolean",
-						"default": false,
-						"markdownDescription": "Whether to enable using code snippets from the Dart Analysis Server and disable the snippets included in the extension. If the version of the Dart/Flutter SDK you're using does not support server snippets, this will result in no snippets being available.",
+						"default": true,
+						"markdownDescription": "Whether to use code snippets from the Dart Analysis Server instead of those included in the extension. Server snippets are context and language-version aware and should be preferred.",
 						"scope": "window"
 					},
 					"dart.normalizeFileCasing": {
