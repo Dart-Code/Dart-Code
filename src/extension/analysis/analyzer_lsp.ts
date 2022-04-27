@@ -288,7 +288,7 @@ export class LspAnalyzer extends Analyzer {
 					// Replace any instance of enableSnippets with the value of enableServerSnippets.
 					if (Array.isArray(results)) {
 						for (const result of results) {
-							result.enableSnippets = config.enableServerSnippets;
+							result.enableSnippets = config.enableServerSnippets && this.dartCapabilities.supportsServerSnippets;
 						}
 					}
 

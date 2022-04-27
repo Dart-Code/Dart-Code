@@ -1,5 +1,6 @@
 import * as path from "path";
 import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument, Uri } from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { extensionPath, readJson } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
 
@@ -7,7 +8,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	private completions = new CompletionList();
 	private shouldRender: (uri: Uri) => boolean;
 
-	constructor(filename: string, shouldRender: (uri: Uri) => boolean) {
+	constructor(private readonly dartCapabilities: DartCapabilities, filename: string, shouldRender: (uri: Uri) => boolean) {
 		this.shouldRender = shouldRender;
 		const snippets = readJson(path.join(extensionPath, filename)) as { [key: string]: { [key: string]: { prefix: string, description: string | undefined, body: string | string[] } } };
 		for (const snippetType of Object.keys(snippets)) {
@@ -34,7 +35,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		if (!config.enableSnippets)
 			return;
 
-		if (config.enableServerSnippets)
+		if (config.enableServerSnippets && this.dartCapabilities.supportsServerSnippets)
 			return;
 
 		const line = document.lineAt(position.line).text.slice(0, position.character);
