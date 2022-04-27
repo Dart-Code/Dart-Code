@@ -297,7 +297,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Fire up the analyzer process.
 	const analyzerStartTime = new Date();
 
-	analyzer = isUsingLsp ? new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext) : new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
+	analyzer = isUsingLsp
+		? new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext)
+		: new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
 	const lspAnalyzer = isUsingLsp ? (analyzer as LspAnalyzer) : undefined;
 	const dasAnalyzer = isUsingLsp ? undefined : (analyzer as DasAnalyzer);
 	const dasClient = dasAnalyzer ? dasAnalyzer.client : undefined;
@@ -308,6 +310,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	analyzer.onReady.then(() => {
 		const analyzerEndTime = new Date();
 		analytics.logAnalyzerStartupTime(analyzerEndTime.getTime() - analyzerStartTime.getTime());
+
+		const analyzerVmServicePort = analyzer.vmServicePort;
+		if (analyzerVmServicePort) {
+			vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
+		}
 	});
 
 	// Log analysis server first analysis completion time when it completes.

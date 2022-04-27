@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, openDevToolsAction, skipThisSurveyAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
+import { doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, openAction, skipThisSurveyAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { Analytics } from "../../shared/interfaces";
 import { waitFor } from "../../shared/utils/promises";
 import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
@@ -14,7 +14,7 @@ describe("DevTools notification", async () => {
 
 	it("is shown from a blank slate and updates context values", async () => {
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openDevToolsAction);
+		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openAction);
 
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openDevToolsCommand = executeCommand.withArgs("dart.openDevTools").resolves();
@@ -38,7 +38,7 @@ describe("DevTools notification", async () => {
 		context.devToolsNotificationLastShown = Date.now() - (noRepeatPromptThreshold + twoHoursInMs);
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openDevToolsAction);
+		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openAction);
 
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openDevToolsCommand = executeCommand.withArgs("dart.openDevTools").resolves();
@@ -62,7 +62,7 @@ describe("DevTools notification", async () => {
 		context.devToolsNotificationLastShown = Date.now() - fiveHoursInMs;
 
 		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
-		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openDevToolsAction);
+		const wantToTryPrompt = showInformationMessage.withArgs(wantToTryDevToolsPrompt, sinon.match.any).resolves(openAction);
 
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const openDevToolsCommand = executeCommand.withArgs("dart.openDevTools").resolves();

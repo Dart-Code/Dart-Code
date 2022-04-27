@@ -69,7 +69,7 @@ export const issueTrackerAction = "Issue Tracker";
 export const issueTrackerUri = "https://github.com/Dart-Code/Dart-Code/issues";
 
 export const wantToTryDevToolsPrompt = "Dart DevTools includes additional tools for debugging and profiling Flutter apps, including a Widget Inspector. Try it?";
-export const openDevToolsAction = "Open";
+export const openAction = "Open";
 export const alwaysOpenAction = "Always Open";
 export const notTodayAction = "Not Now";
 export const doNotAskAgainAction = "Never Ask";

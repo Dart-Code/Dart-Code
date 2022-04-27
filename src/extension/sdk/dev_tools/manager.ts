@@ -264,8 +264,6 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		const queryParams: { [key: string]: string | undefined } = {
-			hide: "debugger",
-			ide: "VSCode",
 			inspectorRef: options.inspectorRef,
 			theme: config.useDevToolsDarkTheme && !options.embed ? "dark" : undefined,
 		};
@@ -279,7 +277,7 @@ export class DevToolsManager implements vs.Disposable {
 			queryParams.page = this.routeIdForPage(options.page);
 		if (options.embed)
 			queryParams.embed = "true";
-		const fullUrl = await this.buildDevToolsUrl(queryParams, session, url);
+		const fullUrl = await this.buildDevToolsUrl(queryParams, session.vmServiceUri, url);
 		if (options.embed) {
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
 			this.launchInEmbeddedWebView(exposedUrl, session, options.page ?? devToolsPages[0]);
@@ -288,12 +286,14 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
-	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, session: DartDebugSessionInformation & { vmServiceUri: string }, url: string) {
+	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, vmServiceUri: string, url: string) {
+		queryParams.hide = "debugger";
+		queryParams.ide = "VSCode";
 		const paramsString = Object.keys(queryParams)
 			.filter((key) => queryParams[key] !== undefined)
 			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] ?? "")}`)
 			.join("&");
-		const exposedUrl = await envUtils.exposeUrl(session.vmServiceUri, this.logger);
+		const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
 		return `${url}?uri=${encodeURIComponent(exposedUrl)}&${paramsString}`;
 	}
 

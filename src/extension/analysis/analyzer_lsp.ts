@@ -28,14 +28,16 @@ export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
 	public readonly fileTracker: LspFileTracker;
 	public readonly snippetTextEdits: SnippetTextEditFeature;
+	public readonly vmServicePort: number | undefined;
 
 	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
 	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
+		this.vmServicePort = config.analyzerVmServicePort;
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
-		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
+		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware(), this.vmServicePort);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.disposables.push(this.client.start());
@@ -323,7 +325,7 @@ export class LspAnalyzer extends Analyzer {
 	}
 }
 
-function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: Middleware): LanguageClient {
+function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: Middleware, vmServicePort: number | undefined): LanguageClient {
 	const clientOptions: LanguageClientOptions = {
 		initializationOptions: {
 			closingLabels: config.closingLabels,
@@ -343,18 +345,18 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 	const client = new LanguageClient(
 		"dartAnalysisLSP",
 		"Dart Analysis Server",
-		() => spawnServer(logger, sdks, dartCapabilities),
+		() => spawnServer(logger, sdks, dartCapabilities, vmServicePort),
 		clientOptions,
 	);
 
 	return client;
 }
 
-function spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities): Promise<StreamInfo> {
+function spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, vmServicePort: number | undefined): Promise<StreamInfo> {
 	// TODO: Replace with constructing an Analyzer that passes LSP flag (but still reads config
 	// from paths etc) and provide it's process.
 	const vmPath = path.join(sdks.dart, dartVMPath);
-	const args = getAnalyzerArgs(logger, sdks, dartCapabilities, true);
+	const args = getAnalyzerArgs(logger, sdks, dartCapabilities, true, vmServicePort);
 
 	logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
 	const process = safeToolSpawn(undefined, vmPath, args);

@@ -12,7 +12,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { escapeShell } from "../utils";
-import { reportAnalyzerTerminatedWithError as reportAnalyzerTerminatedWithError } from "../utils/misc";
+import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { getToolEnv } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
 import { AnalyzerGen } from "./analyzer_gen";
@@ -46,10 +46,13 @@ export class AnalyzerCapabilities {
 export class DasAnalyzer extends Analyzer {
 	public readonly client: DasAnalyzerClient;
 	public readonly fileTracker: DasFileTracker;
+	public readonly vmServicePort: number | undefined;
 
 	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
-		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities);
+		this.vmServicePort = config.analyzerVmServicePort;
+
+		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities, this.vmServicePort);
 		this.fileTracker = new DasFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client);
 		this.disposables.push(this.fileTracker);
@@ -84,10 +87,10 @@ export class DasAnalyzerClient extends AnalyzerGen {
 	private currentAnalysisCompleter?: PromiseCompleter<void>;
 	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
-	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities) {
+	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, vmServicePort: number | undefined) {
 		super(logger, config.maxLogLineLength);
 
-		this.launchArgs = getAnalyzerArgs(logger, sdks, dartCapabilities, false);
+		this.launchArgs = getAnalyzerArgs(logger, sdks, dartCapabilities, false, vmServicePort);
 
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError((e) => this.requestDiagnosticsUpdate());

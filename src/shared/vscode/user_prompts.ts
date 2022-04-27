@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { vsCodeVersion } from "../capabilities/vscode";
-import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyAnalyticsText, flutterSurveyDataUrl, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openDevToolsAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyAnalyticsText, flutterSurveyDataUrl, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
 import { Analytics, FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
 import { Context } from "./workspace";
@@ -107,14 +107,14 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 
 	context.devToolsNotificationLastShown = Date.now();
 
-	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openDevToolsAction, alwaysOpenAction, notTodayAction, doNotAskAgainAction);
+	const choice = await vs.window.showInformationMessage(wantToTryDevToolsPrompt, openAction, alwaysOpenAction, notTodayAction, doNotAskAgainAction);
 	if (choice === doNotAskAgainAction) {
 		context.devToolsNotificationDoNotShow = true;
 		return { didOpen: false };
 	} else if (choice === alwaysOpenAction) {
 		vs.commands.executeCommand("dart.openDevTools");
 		return { didOpen: true, shouldAlwaysOpen: true };
-	} else if (choice === openDevToolsAction) {
+	} else if (choice === openAction) {
 		vs.commands.executeCommand("dart.openDevTools");
 		return { didOpen: true };
 	} else {
