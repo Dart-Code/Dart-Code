@@ -4,7 +4,7 @@ import { Analyzer } from "../shared/analyzer";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { vsCodeVersion } from "../shared/capabilities/vscode";
-import { dartPlatformName, flutterExtensionIdentifier, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
+import { dartPlatformName, flutterExtensionIdentifier, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isWin, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, openDevToolsAction, platformDisplayName, PUB_OUTDATED_SUPPORTED_CONTEXT } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -313,7 +313,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 		const analyzerVmServicePort = analyzer.vmServicePort;
 		if (analyzerVmServicePort) {
-			vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
+			vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.", openDevToolsAction)
+				.then((choice) => {
+					if (choice === openDevToolsAction) {
+						debugCommands.devTools.spawnForPort(analyzerVmServicePort);
+					}
+				});
 		}
 	});
 

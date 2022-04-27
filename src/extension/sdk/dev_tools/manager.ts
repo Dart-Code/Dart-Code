@@ -202,6 +202,24 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
+	/// Spawns DevTools to connect to a VM Service on localhost on a given port with no
+	/// authentication tokens.
+	///
+	/// Always opens an external (non-embedded) window, using the default browser. Intended for
+	/// use with debugging Dart-Code/Analysis Server and not user applications.
+	public async spawnForPort(port: number): Promise<void> {
+		const url = await this.spawnIfRequired();
+		if (!url)
+			return;
+
+		try {
+			const fullUrl = await this.buildDevToolsUrl({}, `http://127.0.0.1:${port}/`, url);
+			await envUtils.openInBrowser(fullUrl, this.logger);
+		} catch (e) {
+			this.showError(e);
+		}
+	}
+
 	private async promptForDevToolsPage(): Promise<{ page: DevToolsPage } | "EXTERNAL" | undefined> {
 		const choices: Array<vs.QuickPickItem & { page?: DevToolsPage; isExternal?: boolean }> = [
 			...devToolsPages.map((page) => ({
