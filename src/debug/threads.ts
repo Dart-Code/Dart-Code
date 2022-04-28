@@ -39,7 +39,7 @@ export class ThreadManager {
 				await Promise.all([
 					this.debugSession.vmService.setExceptionPauseMode(thread.ref.id, this.exceptionMode),
 					this.setLibrariesDebuggable(thread.ref),
-					this.resetBreakpoints(),
+					this.resendThreadBreakpoints(thread),
 				]);
 				thread.setInitialBreakpoints();
 			}
@@ -131,11 +131,11 @@ export class ThreadManager {
 		await Promise.all(validDebugLibraries.map(setLibrary)).catch((e) => this.logger.info(errorString(e)));
 	}
 
-	// Just resends existing breakpoints
-	public async resetBreakpoints(): Promise<void> {
+	// Just resends existing breakpoints for a single thread.
+	public async resendThreadBreakpoints(thread: ThreadInfo): Promise<void> {
 		const promises = [];
 		for (const uri of Object.keys(this.bps)) {
-			promises.push(this.setBreakpoints(uri, this.bps[uri]));
+			promises.push(thread.setBreakpoints(this.logger, uri, this.bps[uri]));
 		}
 		await Promise.all(promises);
 	}
