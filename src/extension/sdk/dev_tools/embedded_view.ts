@@ -43,8 +43,10 @@ export class DevToolsEmbeddedView {
 	private messageDisposable: vs.Disposable;
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
 
-	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: string, readonly page: DevToolsPage) {
-		const column = firstNonEditorColumn() || vs.ViewColumn.Beside;
+	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: string, readonly page: DevToolsPage, location: "beside" | "active" | undefined) {
+		const column = location === "active"
+			? vs.ViewColumn.Active
+			: (firstNonEditorColumn() ?? vs.ViewColumn.Beside);
 		this.panel = vs.window.createWebviewPanel("dartDevTools", page.title, column, {
 			enableScripts: true,
 			localResourceRoots: [],

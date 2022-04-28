@@ -255,7 +255,7 @@ void printSomething() {
 	it("can launch DevTools externally", async () => {
 
 		// TODO(dantup): Tests for embedded DevTools.
-		await setConfigForTest("dart", "embedDevTools", false);
+		await setConfigForTest("dart", "devToolsLocation", "external");
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
 

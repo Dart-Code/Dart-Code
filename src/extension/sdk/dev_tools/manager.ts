@@ -165,19 +165,21 @@ export class DevToolsManager implements vs.Disposable {
 		if (!url)
 			return;
 
-		if (options.embed === undefined)
-			options.embed = config.embedDevTools && vsCodeVersion.supportsEmbeddedDevTools;
+		if (options.location === undefined)
+			options.location = config.devToolsLocation;
+		if (!vsCodeVersion.supportsEmbeddedDevTools)
+			options.location = "external";
 		if (options.reuseWindows === undefined)
 			options.reuseWindows = config.devToolsReuseWindows;
 
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
-		if (options.embed && !options.page) {
+		if (options.location !== "external" && !options.page) {
 			const choice = options.page === null ? "EXTERNAL" : await this.promptForDevToolsPage();
 			if (!choice) // User cancelled
 				return;
 			else if (choice === "EXTERNAL")
-				options.embed = false;
+				options.location = "external";
 			else
 				options.page = choice.page;
 		}
@@ -188,7 +190,7 @@ export class DevToolsManager implements vs.Disposable {
 				title: "Opening DevTools...",
 			}, async () => {
 				const canLaunchDevToolsThroughService = isRunningLocally
-					&& !options.embed
+					&& options.location === "external"
 					&& !isDartCodeTestRun
 					&& config.devToolsBrowser === "chrome"
 					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
@@ -243,7 +245,7 @@ export class DevToolsManager implements vs.Disposable {
 			const reusablePanel = panels.find((p) => p.session.hasEnded);
 			if (reusablePanel) {
 				reusablePanel.session = session;
-				await this.launch(false, session, { embed: true, page });
+				await this.launch(false, session, { location: "beside", page });
 			}
 		}
 	}
@@ -265,7 +267,7 @@ export class DevToolsManager implements vs.Disposable {
 
 		const queryParams: { [key: string]: string | undefined } = {
 			inspectorRef: options.inspectorRef,
-			theme: config.useDevToolsDarkTheme && !options.embed ? "dark" : undefined,
+			theme: config.useDevToolsDarkTheme && options.location === "external" ? "dark" : undefined,
 		};
 
 		// Try to launch via service if allowed.
@@ -275,12 +277,12 @@ export class DevToolsManager implements vs.Disposable {
 		// Otherwise, fall back to embedded or launching manually.
 		if (options.page)
 			queryParams.page = this.routeIdForPage(options.page);
-		if (options.embed)
+		if (options.location !== "external")
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session.vmServiceUri, url);
-		if (options.embed) {
+		if (options.location !== "external") {
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
-			this.launchInEmbeddedWebView(exposedUrl, session, options.page ?? devToolsPages[0]);
+			this.launchInEmbeddedWebView(exposedUrl, session, options.page ?? devToolsPages[0], options.location);
 		} else {
 			await envUtils.openInBrowser(fullUrl, this.logger);
 		}
@@ -297,7 +299,7 @@ export class DevToolsManager implements vs.Disposable {
 		return `${url}?uri=${encodeURIComponent(exposedUrl)}&${paramsString}`;
 	}
 
-	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: DevToolsPage) {
+	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: DevToolsPage, location: "beside" | "active" | undefined) {
 		const pageId = page.id;
 		if (!this.devToolsEmbeddedViews[pageId]) {
 			this.devToolsEmbeddedViews[pageId] = [];
@@ -306,7 +308,7 @@ export class DevToolsManager implements vs.Disposable {
 		// are for a session that has been stopped.
 		let frame = this.devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || dtev.session.hasEnded);
 		if (!frame) {
-			frame = new DevToolsEmbeddedView(session, uri, page);
+			frame = new DevToolsEmbeddedView(session, uri, page, location);
 			frame.onDispose.listen(() => delete this.devToolsEmbeddedViews[pageId]);
 			this.devToolsEmbeddedViews[pageId]?.push(frame);
 		}
@@ -484,7 +486,8 @@ export interface ServerStartedNotification {
 }
 
 interface DevToolsOptions {
-	embed?: boolean;
+	embed?: never;
+	location?: "beside" | "active" | "external";
 	reuseWindows?: boolean;
 	notify?: boolean;
 	page?: DevToolsPage | null; // undefined = unspecified (use default), null = force external so user can pick any

@@ -1452,10 +1452,19 @@
 						"description": "The theme to use for Dart DevTools.",
 						"scope": "window"
 					},
-					"dart.embedDevTools": {
-						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to load [Dart DevTools](https://dart.dev/tools/dart-devtools) embedded inside VS Code.",
+					"dart.devToolsLocation": {
+						"enum": [
+							"beside",
+							"active",
+							"external"
+						],
+						"enumDescriptions": [
+							"Open DevTools in beside the active editor",
+							"Open DevTools over the top of the active editor",
+							"Open DevTools externally in its own browser window"
+						],
+						"default": "beside",
+						"markdownDescription": "Which editor/column to open [Dart DevTools](https://dart.dev/tools/dart-devtools) in.",
 						"scope": "window"
 					},
 					"dart.openDevTools": {

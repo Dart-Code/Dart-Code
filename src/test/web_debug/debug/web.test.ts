@@ -185,7 +185,7 @@ describe("web debugger", () => {
 	});
 
 	it("can launch DevTools externally", async () => {
-		await setConfigForTest("dart", "embedDevTools", false);
+		await setConfigForTest("dart", "devToolsLocation", "external");
 
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
