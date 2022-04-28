@@ -793,6 +793,13 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			const exists = (p: string) => projectFolder && fs.existsSync(path.join(projectFolder, p));
 
 			if (isFlutter && exists("lib/main.dart") && this.deviceManager) {
+				results.push({
+					name: `Flutter`,
+					program: "lib/main.dart",
+					cwd,
+					request: "launch",
+					type: "dart",
+				});
 				const devices = await this.deviceManager.getValidDevicesForProject(projectFolder);
 				for (const device of devices) {
 					const deviceLabel = this.deviceManager?.labelForDevice(device);
@@ -805,13 +812,6 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 						type: "dart",
 					});
 				}
-				results.push({
-					name: `Flutter`,
-					program: "lib/main.dart",
-					cwd,
-					request: "launch",
-					type: "dart",
-				});
 				results.push({
 					name: `Flutter (profile mode)`,
 					program: "lib/main.dart",
