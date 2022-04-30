@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as stream from "stream";
 import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window, workspace } from "vscode";
-import { ConfigurationParams, ConfigurationRequest, ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { ConfigurationParams, ConfigurationRequest, ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, RAL, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
-import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
+import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
@@ -345,7 +345,24 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 	const client = new LanguageClient(
 		"dartAnalysisLSP",
 		"Dart Analysis Server",
-		() => spawnServer(logger, sdks, dartCapabilities, vmServicePort),
+		async () => {
+			const streamInfo = await spawnServer(logger, sdks, dartCapabilities, vmServicePort);
+			const jsonEncoder = RAL().applicationJson.encoder;
+
+			return {
+				detached: streamInfo.detached,
+				reader: new StreamMessageReader(streamInfo.reader),
+				writer: new StreamMessageWriter(streamInfo.writer, {
+					contentTypeEncoder: {
+						encode: (msg, options) => {
+							(msg as any).clientRequestTime = Date.now();
+							return jsonEncoder.encode(msg, options);
+						},
+						name: "withTiming",
+					},
+				}),
+			};
+		},
 		clientOptions,
 	);
 
