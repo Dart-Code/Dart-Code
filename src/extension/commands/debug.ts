@@ -535,8 +535,12 @@ export class DebugCommands implements IAmDisposable {
 			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 			this.debugMetrics.show();
 		} else if (e.event === "dart.navigate") {
-			if (e.body.file && e.body.line && e.body.column)
-				vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file as string), e.body.line, e.body.column, e.body.inOtherEditorColumn);
+			if (e.body.file && e.body.line && e.body.column) {
+				// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
+				const navigate = !e.body.fromInspector || config.devToolsLocation !== "active";
+				if (navigate)
+					vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file as string), e.body.line, e.body.column, e.body.inOtherEditorColumn);
+			}
 		} else {
 			// Not handled, will fall through in the caller.
 			return false;

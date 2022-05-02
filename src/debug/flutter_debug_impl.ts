@@ -370,7 +370,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				const file = loc.file;
 				const line = loc.line;
 				const column = loc.column;
-				this.sendEvent(new Event("dart.navigate", { file, line, column, inOtherEditorColumn: true }));
+				this.sendEvent(new Event("dart.navigate", { file, line, column, inOtherEditorColumn: true, fromInspector: true }));
 			} else {
 				await super.handleInspectEvent(event);
 			}
