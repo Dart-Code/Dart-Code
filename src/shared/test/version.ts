@@ -6,7 +6,6 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { runProcess, safeSpawn } from "../processes";
 
 export async function getPackageTestCapabilities(logger: Logger, sdks: DartSdks, folder: string): Promise<DartTestCapabilities> {
-	console.log(`fetching!`);
 	const binPath = path.join(sdks.dart, dartVMPath);
 	const proc = await runProcess(logger, binPath, ["run", "test:test", "--version"], folder, {}, safeSpawn);
 	const capabilities = DartTestCapabilities.empty;
