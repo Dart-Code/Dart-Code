@@ -33,7 +33,7 @@ describe("command", () => {
 		attachLoggingWhenExtensionAvailable();
 
 		const projectName = "my_test_dart_proj";
-		const templateName = "console-full";
+		const templateName = "console";
 		const templateEntrypoint = "bin/__projectName__.dart";
 
 		const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
