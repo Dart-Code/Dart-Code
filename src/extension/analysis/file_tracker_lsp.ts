@@ -24,7 +24,7 @@ export class LspFileTracker implements IAmDisposable {
 
 	constructor(private readonly logger: Logger, private readonly analyzer: LanguageClient, private readonly wsContext: WorkspaceContext) {
 		// tslint:disable-next-line: no-floating-promises
-		analyzer.onReady().then(() => {
+		analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishOutlineNotification.type, (n) => {
 				const filePath = fsPath(Uri.parse(n.uri));
 				this.outlines[filePath] = n.outline;

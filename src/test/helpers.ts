@@ -209,7 +209,7 @@ function setupTestLogging(): boolean {
 			: [];
 		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000, excludeLogCategories, true);
 
-		deferUntilLast("Remove log file if test passed", async (testResult?: "passed" | "failed") => {
+		deferUntilLast("Remove log file if test passed", async (testResult?: "passed" | "failed" | "pending") => {
 			// Put a new buffered logger back to capture any logging output happening
 			// after we closed our log file to be included in the next.
 			logger = new BufferedLogger();
@@ -217,7 +217,7 @@ function setupTestLogging(): boolean {
 			// Wait a little before closing, to ensure we capture anything in-progress.
 			await delay(1000);
 			await testLogger.dispose();
-			// On CI, we delete logs for passing tests to save money on S3 :-)
+			// On CI, we delete logs for passing tests to save space.
 			if (process.env.CI && testResult === "passed") {
 				try {
 					fs.unlinkSync(logPath);
@@ -431,7 +431,7 @@ afterEach("wait for any debug sessions to end", async () => {
 });
 
 interface DeferredFunction {
-	callback: (result?: "failed" | "passed") => Promise<any> | any;
+	callback: (result?: "failed" | "passed" | "pending") => Promise<any> | any;
 	description: string;
 }
 
@@ -459,10 +459,10 @@ afterEach("run deferred functions", async function () {
 		throw firstError;
 	logger.info(`Done running deferred functions!`);
 });
-export function defer(description: string, callback: (result?: "failed" | "passed") => Promise<any> | any): void {
+export function defer(description: string, callback: (result?: "failed" | "passed" | "pending") => Promise<any> | any): void {
 	deferredItems.push({ description: `${description} (${currentTestName})`, callback });
 }
-export function deferUntilLast(description: string, callback: (result?: "failed" | "passed") => Promise<any> | any): void {
+export function deferUntilLast(description: string, callback: (result?: "failed" | "passed" | "pending") => Promise<any> | any): void {
 	deferredToLastItems.push({ description: `${description} (${currentTestName})`, callback });
 }
 

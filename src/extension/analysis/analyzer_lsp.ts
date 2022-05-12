@@ -40,12 +40,12 @@ export class LspAnalyzer extends Analyzer {
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware(), this.vmServicePort);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		this.client.registerFeature(this.snippetTextEdits.feature);
-		this.disposables.push(this.client.start());
+		this.disposables.push({ dispose: () => this.client.stop() });
 		this.disposables.push(this.fileTracker);
 		this.disposables.push(this.snippetTextEdits);
 
 		// tslint:disable-next-line: no-floating-promises
-		this.client.onReady().then(() => {
+		this.client.start().then(() => {
 			// Reminder: These onNotification calls only hold ONE handler!
 			// https://github.com/microsoft/vscode-languageserver-node/issues/174
 			// TODO: Remove this once Dart/Flutter stable LSP servers are using $/progress.

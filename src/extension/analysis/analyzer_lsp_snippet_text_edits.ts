@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { ClientCapabilities, StaticFeature } from "vscode-languageclient";
+import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
@@ -23,6 +23,9 @@ export class SnippetTextEditFeature implements IAmDisposable {
 				if (supportsSnippetTextEdits && snippetTextEditsEnabled) {
 					(capabilities.experimental as any).snippetTextEdit = true;
 				}
+			},
+			getState(): FeatureState {
+				return { kind: "static" };
 			},
 			initialize() { },
 		};

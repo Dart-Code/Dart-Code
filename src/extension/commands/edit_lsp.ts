@@ -39,7 +39,7 @@ export class LspEditCommands implements vs.Disposable {
 
 		if (edit) {
 			if (await this.validDocumentVersionsStillMatch(edit)) {
-				const codeEdit = this.analyzer.client.protocol2CodeConverter.asWorkspaceEdit(edit);
+				const codeEdit = await this.analyzer.client.protocol2CodeConverter.asWorkspaceEdit(edit);
 
 				if (!await vs.workspace.applyEdit(codeEdit)) {
 					vs.window.showErrorMessage("VS Code failed to apply edits");
