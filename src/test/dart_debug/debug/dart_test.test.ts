@@ -168,7 +168,7 @@ describe("dart test debugger", () => {
 		const config = await startDebugger(dc, helloWorldTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutput("stdout", `✓ String .split() splits the string on the delimiter`),
+			dc.assertOutputContains(dc.isDartDap ? "console" : "stdout", `✓ String .split() splits the string on the delimiter`),
 			dc.assertPassingTest("String .split() splits the string on the delimiter"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
