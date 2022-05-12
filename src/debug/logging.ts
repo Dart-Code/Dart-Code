@@ -1,5 +1,5 @@
-import { Event } from "vscode-debugadapter";
-import { DebugProtocol } from "vscode-debugprotocol";
+import { Event } from "@vscode/debugadapter";
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { Logger, LogMessage } from "../shared/interfaces";
 import { errorString } from "../shared/utils";

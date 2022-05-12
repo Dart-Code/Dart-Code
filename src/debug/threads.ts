@@ -1,5 +1,5 @@
-import { Thread, ThreadEvent } from "vscode-debugadapter";
-import { DebugProtocol } from "vscode-debugprotocol";
+import { Thread, ThreadEvent } from "@vscode/debugadapter";
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { errorString, PromiseCompleter } from "../shared/utils";

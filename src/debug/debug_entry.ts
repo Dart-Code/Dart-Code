@@ -1,4 +1,4 @@
-import { DebugSession } from "vscode-debugadapter";
+import { DebugSession } from "@vscode/debugadapter";
 import { DartDebugSession } from "./dart_debug_impl";
 import { DartTestDebugSession } from "./dart_test_debug_impl";
 import { FlutterDebugSession } from "./flutter_debug_impl";

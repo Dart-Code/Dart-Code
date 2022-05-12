@@ -1,7 +1,7 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
-import { DebugProtocol } from "vscode-debugprotocol";
 import { isLinux } from "../../../shared/constants";
 import { DebuggerType, VmService, VmServiceExtension } from "../../../shared/enums";
 import { versionIsAtLeast } from "../../../shared/utils";

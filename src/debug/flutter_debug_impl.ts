@@ -1,6 +1,6 @@
+import { ContinuedEvent, Event, OutputEvent } from "@vscode/debugadapter";
+import { DebugProtocol } from "@vscode/debugprotocol";
 import * as path from "path";
-import { ContinuedEvent, Event, OutputEvent } from "vscode-debugadapter";
-import { DebugProtocol } from "vscode-debugprotocol";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, flutterPath, restartReasonManual } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";

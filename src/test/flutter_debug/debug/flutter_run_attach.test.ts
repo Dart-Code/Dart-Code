@@ -1,8 +1,8 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { DebugProtocol } from "vscode-debugprotocol";
 import { DartVsCodeLaunchArgs } from "../../../shared/debug/interfaces";
 import { DebuggerType } from "../../../shared/enums";
 import { DartDebugClient } from "../../dart_debug_client";

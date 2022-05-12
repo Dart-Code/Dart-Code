@@ -1,7 +1,7 @@
+import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import * as path from "path";
 import { DebugAdapterExecutable, DebugAdapterServer, DebugAdapterTrackerFactory, DebugConfiguration, Uri } from "vscode";
-import { DebugProtocol } from "vscode-debugprotocol";
 import { dartVMPath, flutterPath, isWin, vmServiceListeningBannerPattern } from "../shared/constants";
 import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";

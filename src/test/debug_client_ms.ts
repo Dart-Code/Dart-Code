@@ -16,8 +16,8 @@ import constants = require('constants');
 import cp = require('child_process');
 import assert = require('assert');
 import net = require('net');
-import { ProtocolClient } from 'vscode-debugadapter-testsupport/lib/protocolClient';
-import { DebugProtocol } from 'vscode-debugprotocol';
+import { ProtocolClient } from '@vscode/debugadapter-testsupport/lib/protocolClient';
+import { DebugProtocol } from '@vscode/debugprotocol';
 import { currentTestName } from './helpers';
 
 export interface ILocation {
