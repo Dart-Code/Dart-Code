@@ -11,6 +11,8 @@ jobs:
 
   build_exclusions:
 
+    permissions:
+      contents: none
     runs-on: ubuntu-latest
     outputs:
       excludes: ${{ join(steps.*.outputs.excludes) }}
@@ -220,6 +222,8 @@ jobs:
 
   notify_failure:
 
+    permissions:
+      contents: none
     name: Notify Discord of Failure
     needs: build
     if: failure() && github.event_name == 'push'

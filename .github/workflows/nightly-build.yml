@@ -4,6 +4,9 @@ on:
   schedule:
      - cron: '0 7 * * 1-5'
 
+permissions:
+  contents: read
+
 jobs:
 
   build:
@@ -55,6 +58,8 @@ jobs:
 
   notify_failure:
 
+    permissions:
+      contents: none
     name: Notify Discord of Failure
     needs: build
     if: failure()
