@@ -9,6 +9,7 @@ import { WorkspaceContext } from "./workspace";
 export interface SdkSearchResults {
 	sdkPath: string | undefined;
 	candidatePaths: string[];
+	sdkInitScript: string | undefined;
 }
 
 export interface Sdks {

@@ -83,9 +83,6 @@ export const skipThisSurveyAction = "Skip This Survey";
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
 export const initializingFlutterMessage = "Initializing Flutter. This may take a few minutes.";
 
-export const snapBinaryPath = "/usr/bin/snap";
-export const snapFlutterBinaryPath = "/snap/bin/flutter";
-
 // Minutes.
 export const fiveMinutesInMs = 1000 * 60 * 5;
 export const tenMinutesInMs = 1000 * 60 * 10;

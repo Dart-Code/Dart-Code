@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window, workspace } from "vscode";
-import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, showLogAction, snapBinaryPath, snapFlutterBinaryPath } from "../../shared/constants";
+import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, showLogAction } from "../../shared/constants";
 import { Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
@@ -263,12 +263,13 @@ export class SdkUtils {
 			].concat(paths).filter(notUndefined);
 
 			let flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
+			const sdkInitScript = flutterSdkResult.sdkInitScript;
 
 			// Handle the case where the Flutter snap has not been initialised.
-			if (!flutterSdkResult.sdkPath && flutterSdkResult.candidatePaths.includes(snapBinaryPath)) {
+			if (!flutterSdkResult.sdkPath && sdkInitScript && flutterSdkResult.candidatePaths.includes(sdkInitScript)) {
 				// Trigger initialization.
-				this.logger.info(`No Flutter SDK found, but a 'flutter' binary did point at ${snapBinaryPath} so attempting to initialize...`);
-				await initializeFlutterSdk(this.logger, snapFlutterBinaryPath);
+				this.logger.info(`No Flutter SDK found, but ${sdkInitScript} looks like an init script so attempting to initialize...`);
+				await initializeFlutterSdk(this.logger, sdkInitScript);
 
 				// Then search again.
 				this.logger.info(`Snap initialization completed, searching for Flutter SDK again...`);
@@ -390,8 +391,6 @@ export class SdkUtils {
 		const isBinFolder = (f: string) => ["bin", "sbin"].indexOf(path.basename(f)) !== -1;
 		sdkPaths = flatMap(sdkPaths, (p) => isBinFolder(p) ? [p] : [p, path.join(p, "bin")]);
 
-		// Add on the executable name, as we need to do filtering based on the resolve path.
-
 		// TODO: Make the list unique, but preserve the order of the first occurrences. We currently
 		// have uniq() and unique(), so also consolidate them.
 
@@ -406,6 +405,11 @@ export class SdkUtils {
 		for (const p of sdkPaths)
 			this.logger.info(`        ${p}`);
 
+		// Keep track if we find something that looks like a package manager init script. These are
+		// symlinks like `flutter` that resolve to other binaries (like `snap` or `hermit`) and may need
+		// to be executed if we don't find a real SDK.
+		let sdkInitScript: string | undefined;
+
 		// Convert all the paths to their resolved locations.
 		sdkPaths = sdkPaths.map((p) => {
 			const fullPath = path.join(p, executableFilename);
@@ -416,11 +420,14 @@ export class SdkUtils {
 			if (realExecutableLocation.toLowerCase() !== fullPath.toLowerCase())
 				this.logger.info(`Following symlink: ${fullPath} ==> ${realExecutableLocation}`);
 
-			// If the symlink resolves to the Snap binary, it's not a real SDK
+			// If the symlink resolves to a package manager binary, it's not a real SDK
 			// and we should return as-is rather than walk up two levels, as we
 			// may want to use the presence of this to trigger initialisation.
-			if (realExecutableLocation === snapBinaryPath) {
-				return snapBinaryPath;
+			const targetBaseName = path.basename(realExecutableLocation);
+			if (targetBaseName !== executableFilename) {
+				this.logger.info(`Target ${targetBaseName} is not ${executableFilename}, assuming ${fullPath} is a package manager init script`);
+				sdkInitScript = fullPath;
+				return fullPath;
 			}
 
 			// Then we need to take the executable name and /bin back off
@@ -439,7 +446,11 @@ export class SdkUtils {
 
 		this.logger.info(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
 
-		return { sdkPath, candidatePaths: sdkPaths };
+		return {
+			candidatePaths: sdkPaths,
+			sdkInitScript,
+			sdkPath,
+		};
 	}
 }
 
