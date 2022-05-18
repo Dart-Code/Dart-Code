@@ -50,14 +50,17 @@ export function createDebugClient(debugType: DebuggerType) {
 			// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
 			// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
 			// a second request and that'll cause it to quit immediately.
-			return withTimeout(
+			await withTimeout(
 				Promise.all([
 					thisDc.terminateRequest().catch((e) => logger.error(e)),
-					delay(500).then(() => thisDc.stop()).catch((e) => logger.error(e)),
+					delay(200).then(() => thisDc.disconnectRequest()).catch((e) => logger.error(e)),
 				]),
 				"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
 				60,
 			);
+			extApi.logger.info(`Calling dc.stopAdapter()...`);
+			thisDc.stopAdapter();
+			extApi.logger.info(`Done calling dc.stopAdapter()`);
 		} else {
 			extApi.logger.info(`Calling dc.stop()...`);
 			await thisDc.stop();

@@ -147,7 +147,7 @@ export class DebugClient extends ProtocolClient {
 		});
 	}
 
-	private stopAdapter() {
+	public stopAdapter() {
 		if (this._adapterProcess) {
 			this._adapterProcess.kill();
 			this._adapterProcess = undefined;
