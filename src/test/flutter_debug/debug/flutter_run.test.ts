@@ -31,6 +31,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
 			this.skip();
 
+		if (extApi.debugSessions.length > 0) {
+			extApi.logger.warn(`Some debug sessions are already running before test started:`);
+			for (const debugSession of extApi.debugSessions) {
+				extApi.logger.warn(`  Session: ${debugSession.session.name}`);
+			}
+		}
+
 		dc = createDebugClient(DebuggerType.Flutter);
 	});
 

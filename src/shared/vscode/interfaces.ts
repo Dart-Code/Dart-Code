@@ -47,7 +47,7 @@ export interface InternalExtensionApi {
 	debugCommands: DebugCommandHandler;
 	debugLogger: any;
 	debugProvider: DebugConfigurationProvider;
-	debugSessions: Array<{ loadedServiceExtensions: VmServiceExtension[] }>;
+	debugSessions: Array<{ session: { name?: string }, loadedServiceExtensions: VmServiceExtension[] }>;
 	deviceManager: FlutterDeviceManager | undefined;
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;
