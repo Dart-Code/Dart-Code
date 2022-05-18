@@ -19,7 +19,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always", projectSearchDepth: number }) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number }) {
 		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.name = "Flutter Device";
 		this.statusBarItem.tooltip = "Flutter";
@@ -462,6 +462,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public async getPickableEmulators(showAsEmulators: boolean, supportedTypes?: f.PlatformType[]): Promise<PickableDevice[]> {
+		if (this.config.flutterShowEmulators === "never")
+			return [];
+
 		if (this.config.flutterShowEmulators === "local" && !isRunningLocally)
 			return [];
 

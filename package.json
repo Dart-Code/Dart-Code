@@ -922,7 +922,7 @@
 				},
 				{
 					"command": "flutter.launchEmulator",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:isRunningLocally || dart-code:anyFlutterProjectLoaded && config.dart.flutterShowEmulators == always"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:isRunningLocally && config.dart.flutterShowEmulators == local || dart-code:anyFlutterProjectLoaded && config.dart.flutterShowEmulators == always"
 				},
 				{
 					"when": "false",
@@ -1801,11 +1801,13 @@
 					"dart.flutterShowEmulators": {
 						"enum": [
 							"local",
-							"always"
+							"always",
+							"never"
 						],
 						"enumDescriptions": [
 							"Only show for local workspaces",
-							"Always show, even for remote sessions"
+							"Always show, even for remote sessions",
+							"Never show emulators"
 						],
 						"default": "local",
 						"markdownDescription": "When to show the Flutter emulators. These are usually hidden for remote workspaces because it is usually not possible to see or interact with emulators in a remote session. If you are using remoting/containers in a way that you can interact with launched emulator processes, you may wish to set this to 'always'.",
