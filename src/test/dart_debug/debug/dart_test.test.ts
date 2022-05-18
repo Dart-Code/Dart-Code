@@ -291,7 +291,12 @@ describe("dart test debugger", () => {
 		checkTreeNodeResults(actualResults, expectedResults);
 	});
 
-	it("warns if multiple tests run when one was expected", async () => {
+	it("warns if multiple tests run when one was expected", async function () {
+		// SDK DAP doesn't warn on this, but will be handled by package:test in future
+		// https://github.com/dart-lang/test/issues/1571
+		if (dc.isDartDap)
+			this.skip();
+
 		await openFile(helloWorldTestDupeNameFile);
 		const config = await getResolvedDebugConfiguration(testUtils.getLaunchConfig(true, fsPath(helloWorldTestDupeNameFile), [{ name: "group test", isGroup: false }], false));
 		await dc.start();
