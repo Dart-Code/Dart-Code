@@ -717,11 +717,22 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 		+ symbols.map((s) => `        ${s.name}/${vs.SymbolKind[s.kind]}/${s.containerName}`).join("\n"),
 	);
 	if (uriOrMatch instanceof vs.Uri)
-		assert.equal(fsPath(symbol.location.uri), fsPath(uriOrMatch));
+		assert.equal(
+			fsPath(symbol.location.uri),
+			fsPath(uriOrMatch),
+			`${fsPath(symbol.location.uri)} should equal ${fsPath(uriOrMatch)}`
+		);
 	else if (uriOrMatch.endsWith)
-		assert.ok(fsPath(symbol.location.uri).endsWith(uriOrMatch.endsWith));
+		assert.ok(
+			fsPath(symbol.location.uri).endsWith(uriOrMatch.endsWith),
+			`${fsPath(symbol.location.uri)} should end with ${uriOrMatch.endsWith})`,
+		);
 	else
-		assert.equal(symbol.location.uri, uriOrMatch);
+		assert.equal(
+			symbol.location.uri,
+			uriOrMatch,
+			`${symbol.location.uri} should equal ${uriOrMatch})`,
+		);
 	assert.ok(symbol.location);
 	if (extApi.isLsp)
 		assert.ok(symbol.location.range);
