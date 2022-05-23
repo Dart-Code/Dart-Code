@@ -170,21 +170,21 @@ jobs:
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
       - name: Store logs
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: test-logs-${{ matrix.os }}
           path: .dart_code_test_logs
 
       - name: Store test results
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: test-results-${{ matrix.os }}
           path: .test_results
 
       - name: Store coverage
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         if: success() && matrix.build-version == 'stable'
         with:
           name: coverage-${{ matrix.os }}
