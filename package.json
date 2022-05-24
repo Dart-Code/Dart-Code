@@ -1303,6 +1303,10 @@
 			},
 			"files.watcherExclude": {
 				"**/.dart_tool": true
+			},
+			"explorer.fileNesting.patterns": {
+				"pubspec.yaml": "pubspec.lock,.packages,.flutter-plugins,.flutter-plugins-dependencies,.metadata",
+				"*.dart": "${capture}.g.dart"
 			}
 		},
 		"configuration": [
