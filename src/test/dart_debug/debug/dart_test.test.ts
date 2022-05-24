@@ -26,11 +26,13 @@ describe("dart test debugger", () => {
 	});
 
 	let dc: DartDebugClient;
+	let consoleOutputCategory: string;
 	beforeEach("create debug client", function () {
 		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
 			this.skip();
 
 		dc = createDebugClient(DebuggerType.DartTest);
+		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
 	beforeEach("clear test tree", () => clearTestTree());
@@ -168,7 +170,7 @@ describe("dart test debugger", () => {
 		const config = await startDebugger(dc, helloWorldTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutputContains(dc.isDartDap ? "console" : "stdout", `✓ String .split() splits the string on the delimiter`),
+			dc.assertOutputContains(consoleOutputCategory, `✓ String .split() splits the string on the delimiter`),
 			dc.assertPassingTest("String .split() splits the string on the delimiter"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -447,7 +449,7 @@ describe("dart test debugger", () => {
 				// Ensure the output contained the test name as a sanity check
 				// that it ran. Because some tests have variables added to the
 				// end, just stop at the $ to avoid failing on them.
-				dc.assertOutputContains(dc.isDartDap ? "console" : "stdout", test.fullName.split("$")[0]),
+				dc.assertOutputContains(consoleOutputCategory, test.fullName.split("$")[0]),
 			);
 			await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 		}

@@ -27,6 +27,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	let dc: DartDebugClient;
+	let consoleOutputCategory: string;
 	beforeEach("create debug client", function () {
 		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
 			this.skip();
@@ -39,6 +40,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		}
 
 		dc = createDebugClient(DebuggerType.Flutter);
+		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
 	beforeEach(() => {
@@ -1071,7 +1073,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					source: { path: fsPath(flutterHelloWorldMainFile) },
 				}))
 				.then(() => dc.configurationDoneRequest()),
-			dc.assertOutputContains(dc.isDartDap ? "console" : "stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
+			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
 				.then(() => delay(2000))
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),

@@ -20,11 +20,13 @@ describe("dart cli debugger", () => {
 	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
 
 	let dc: DartDebugClient;
+	let consoleOutputCategory: string;
 	beforeEach("create debug client", function () {
 		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
 			this.skip();
 
 		dc = createDebugClient(DebuggerType.Dart);
+		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
 	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
@@ -781,7 +783,7 @@ void printSomething() {
 				source: { path: fsPath(helloWorldMainFile) },
 			})).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutputContains(dc.isDartDap ? "console" : "stdout", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
+			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 			dc.launch(config),
 		);
 	});

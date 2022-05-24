@@ -17,11 +17,13 @@ describe("flutter test debugger", () => {
 	});
 
 	let dc: DartDebugClient;
+	let consoleOutputCategory: string;
 	beforeEach("create debug client", function () {
 		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
 			this.skip();
 
 		dc = createDebugClient(DebuggerType.FlutterTest);
+		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
 	describe("resolves the correct debug config", () => {
@@ -184,7 +186,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(dc, flutterTestMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ Hello world test`),
+			dc.assertOutputContains(consoleOutputCategory, `✓ Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.assertPassingTest(`Hello world test`),
 			dc.launch(config),
@@ -196,7 +198,7 @@ describe("flutter test debugger", () => {
 		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ Hello world test`),
+			dc.assertOutputContains(consoleOutputCategory, `✓ Hello world test`),
 			dc.assertPassingTest(`Hello world test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -208,7 +210,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(dc, flutterTestOtherFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
+			dc.assertOutputContains(consoleOutputCategory, `✓ Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -220,7 +222,7 @@ describe("flutter test debugger", () => {
 		const config = await startDebugger(dc, undefined);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", `✓ Other tests group Other test\n`),
+			dc.assertOutputContains(consoleOutputCategory, `✓ Other tests group Other test\n`),
 			dc.assertPassingTest(`Other tests group Other test`),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
