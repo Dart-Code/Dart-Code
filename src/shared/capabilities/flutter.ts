@@ -25,6 +25,7 @@ export class FlutterCapabilities {
 	get supportsDevToolsServerAddress() { return versionIsAtLeast(this.version, "1.26.0-12"); }
 	get supportsRunningIntegrationTests() { return versionIsAtLeast(this.version, "2.2.0-10"); }
 	get supportsSdkDap() { return versionIsAtLeast(this.version, "2.13.0-0"); }
+	get requiresDdsDisabledForSdkDapTestRuns() { return true; }
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
