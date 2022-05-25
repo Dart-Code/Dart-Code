@@ -27,6 +27,7 @@ export class DartCapabilities {
 	get supportsPubUpgradeMajorVersions() { return versionIsAtLeast(this.version, "2.12.0"); }
 	get supportsPubOutdated() { return versionIsAtLeast(this.version, "2.8.0-a"); }
 	get supportsPubDepsJson() { return versionIsAtLeast(this.version, "2.14.0-0"); }
+	get supportsPubAddMultiple() { return versionIsAtLeast(this.version, "2.17.0"); }
 	get supportsDartPub() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get supportsDartRunForPub() { return versionIsAtLeast(this.version, "2.16.0-0"); }
 	get supportsDartDoc() { return versionIsAtLeast(this.version, "2.16.0"); }

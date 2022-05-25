@@ -116,7 +116,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			else if (selectedOption.includes("/") || selectedOption.includes("\\"))
 				packageInfo = await this.promptForPathPackageInfo(selectedOption);
 			else
-				packageInfo = { packageName: selectedOption, marker: undefined };
+				packageInfo = { packageNames: selectedOption, marker: undefined };
 		} else {
 			switch (selectedOption.marker) {
 				case "PATH":
@@ -159,8 +159,13 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			args.push(packageName);
 			args.push(`--path=${selectedPackage.path}`);
 		} else {
-			packageName = selectedPackage.packageName;
-			args.push(packageName);
+			const packageNames = selectedPackage.packageNames.split(",").map((p) => p.trim());
+			for (const packageName of packageNames) {
+				args.push(packageName);
+			}
+			// We assume when multiple are given, they're all of the same type.
+			// The completion list should filter when this is the case.
+			packageName = packageNames[0];
 		}
 
 		if (isDevDependency)
@@ -197,11 +202,15 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	/// which case they must also provide package name etc).
 	private async promptForPackageInfo(): Promise<string | PickablePackage | undefined> {
 		const quickPick = vs.window.createQuickPick<PickablePackage>();
-		quickPick.placeholder = "package name, URL or path";
-		quickPick.title = "Enter a package name, URL or local path";
+		quickPick.placeholder = this.dartCapabilities.supportsPubAddMultiple
+			? "package name (can be comma separated), URL or path"
+			: "package name, URL or path";
+		quickPick.title = this.dartCapabilities.supportsPubAddMultiple
+			? "Enter package name(s), URL or local path"
+			: "Enter a package name, URL or local path";
 		quickPick.items = this.getPackageEntries();
-		quickPick.onDidChangeValue((prefix) => {
-			quickPick.items = this.getPackageEntries(prefix);
+		quickPick.onDidChangeValue((userInput) => {
+			quickPick.items = this.getPackageEntries(userInput);
 		});
 
 		const selectedOption = await new Promise<string | PickablePackage | undefined>((resolve) => {
@@ -301,33 +310,49 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		});
 	}
 
-	private getPackageEntries(prefix?: string): PickablePackage[] {
+	private getPackageEntries(userInput?: string): PickablePackage[] {
+		let currentSearchString = userInput;
+		let completionItemPrefixes = "";
+		if (userInput && this.dartCapabilities.supportsPubAddMultiple) {
+			// If we support multiple, we need to split "foo, bar, ba" into "foo, bar, " and "ba". One is the search
+			// and the other is a prefix that needs adding to all package names in the completion list.
+			const startOfCurrentPackageName = Math.max(userInput.lastIndexOf(" "), userInput.lastIndexOf(","));
+			currentSearchString = userInput.substring(startOfCurrentPackageName + 1);
+			completionItemPrefixes = userInput.substring(0, startOfCurrentPackageName + 1);
+			if (currentSearchString === "" && completionItemPrefixes.endsWith(","))
+				completionItemPrefixes = `${completionItemPrefixes} `;
+		}
+
 		const max = 50;
 		const packageNames = this.cache?.packageNames ?? [];
 		let matches = new Set<string>();
 		// This list can be quite large, so avoid using .filter() if we can bail out early.
-		if (prefix) {
-			prefix = prefix.trim();
+		if (currentSearchString) {
+			currentSearchString = currentSearchString.trim();
 			for (let i = 0; i < packageNames.length && matches.size < max; i++) {
 				const packageName = packageNames[i];
-				if (packageName.startsWith(prefix))
+				if (packageName.startsWith(currentSearchString))
 					matches.add(packageName);
 			}
 			// Also add on any Flutter-SDK packages that match.
 			for (const packageName of knownFlutterSdkPackages) {
-				if (packageName.startsWith(prefix))
+				if (packageName.startsWith(currentSearchString))
 					matches.add(packageName);
 			}
 		} else {
 			matches = new Set(packageNames.slice(0, Math.min(max, packageNames.length)));
 		}
 
-		const pickablePackageNames = Array.from(matches).map((packageName) => ({
-			label: packageName,
-			packageName,
-		} as PickablePackage));
+		const pickablePackageNames = Array.from(matches).map((packageName) => {
+			const fullString = `${completionItemPrefixes}${packageName}`;
+			return {
+				label: fullString,
+				marker: undefined,
+				packageNames: fullString,
+			} as PickablePackage;
+		});
 
-		if (prefix) {
+		if (currentSearchString) {
 			return pickablePackageNames;
 		} else {
 			return [
@@ -355,7 +380,7 @@ export type PackageInfo = PubPackage | PathPubPackage | GitPubPackage;
 
 export interface PubPackage {
 	marker: undefined;
-	packageName: string;
+	packageNames: string;
 }
 
 interface LocalPubPackageMarker { marker: "PATH"; }

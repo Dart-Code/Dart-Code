@@ -96,7 +96,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 			action.command = {
 				arguments: [
 					document.uri,
-					{ packageName } as PubPackage,
+					{ packageNames: packageName } as PubPackage,
 					isDevDependency,
 				],
 				command: "_dart.addDependency",

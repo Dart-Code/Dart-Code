@@ -15,7 +15,7 @@ describe("pub add", () => {
 
 	function pubspecContainsPackage(packageName: string) {
 		const contents = fs.readFileSync(pubspecPath);
-		return contents.includes(`  ${packageName}:`);
+		return contents.includes(`\n  ${packageName}:`);
 	}
 
 	function pubspecContainsText(text: string) {
@@ -30,6 +30,18 @@ describe("pub add", () => {
 		await vs.commands.executeCommand("dart.addDependency");
 		await waitFor(() => pubspecContainsPackage("collection"));
 		assert.equal(pubspecContainsPackage("collection"), true);
+	});
+
+	it("can add multiple dependencies using command", async () => {
+		assert.equal(pubspecContainsPackage("path"), false);
+		assert.equal(pubspecContainsPackage("crypto"), false);
+		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("path, crypto");
+
+		await vs.commands.executeCommand("dart.addDependency");
+		await waitFor(() => pubspecContainsPackage("path"));
+		await waitFor(() => pubspecContainsPackage("crypto"));
+		assert.equal(pubspecContainsPackage("path"), true);
+		assert.equal(pubspecContainsPackage("crypto"), true);
 	});
 
 	it("can add a dependency with trailing whitespace using command", async () => {
