@@ -316,7 +316,7 @@ describe("flutter test debugger", () => {
 			dc.launch(config),
 		);
 
-		if (extApi.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
+		if (dc.isDartDap && extApi.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
 			ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --no-dds --start-paused");
 		else
 			ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --start-paused");
