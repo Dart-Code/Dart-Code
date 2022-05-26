@@ -316,7 +316,10 @@ describe("flutter test debugger", () => {
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --start-paused");
+		if (extApi.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
+			ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --no-dds --start-paused");
+		else
+			ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --start-paused");
 	});
 
 	it("can replace all args using custom tool", async () => {
