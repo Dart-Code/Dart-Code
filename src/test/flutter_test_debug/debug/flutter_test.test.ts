@@ -405,11 +405,13 @@ describe("flutter test debugger", () => {
 		);
 	});
 
-	it("can run test_driver tests", async () => {
+	it("can run test_driver tests", async function () {
+		if (dc.isDartDap && !extApi.flutterCapabilities.supportsEnvInSdkDAP)
+			this.skip();
+
 		// Start the instrumented app.
 		const appDc = createDebugClient(DebuggerType.Flutter);
 		const appConfig = await startDebugger(appDc, flutterTestDriverAppFile);
-		appConfig.noDebug = true;
 		await waitAllThrowIfTerminates(appDc,
 			appDc.configurationSequence(),
 			appDc.launch(appConfig),
