@@ -46,26 +46,31 @@ export function createDebugClient(debugType: DebuggerType) {
 			extApi.logger.info(`Skipping shutdown because it never started`);
 			return;
 		}
-		if (debugType === DebuggerType.DartTest) {
-			// The test runner doesn't quit on the first SIGINT, it prints a message that it's waiting for the
-			// test to finish and then runs cleanup. Since we don't care about this for these tests, we just send
-			// a second request and that'll cause it to quit immediately.
-			await withTimeout(
-				Promise.all([
-					thisDc.terminateRequest().catch((e) => logger.error(e)),
-					delay(200).then(() => thisDc.disconnectRequest()).catch((e) => logger.error(e)),
-				]),
-				"Timed out disconnecting - this is often normal because we have to try to quit twice for the test runner",
-				60,
-			);
-			extApi.logger.info(`Calling dc.stopAdapter()...`);
-			thisDc.stopAdapter();
-			extApi.logger.info(`Done calling dc.stopAdapter()`);
-		} else {
-			extApi.logger.info(`Calling dc.stop()...`);
-			await thisDc.stop();
-			extApi.logger.info(`Done calling dc.stop()`);
+		if (dc.hasTerminated) {
+			extApi.logger.info(`Skipping shutdown because debugger already terminated`);
+			return;
 		}
+
+		// Wait for a terminated event with a timeout.
+		const terminatedEvent = new Promise((resolve) => thisDc.on("terminated", resolve));
+
+		// When we do terminate, call stopAdapter.
+
+		// Attempt to terminate both gracefully and later forcefully (if not already done).
+		// Don't await these, as it's possible we get "termianted" event and these never complete
+		// depending on timing.
+		thisDc.terminateRequest()
+			.catch((e) => logger.error(e));
+		delay(1000)
+			.then(() => {
+				if (!dc.hasTerminated)
+					thisDc.disconnectRequest();
+			})
+			.catch((e) => logger.error(e));
+
+		// Now wait for the terminated event with a timeout, then stop the adapter.
+		await withTimeout(terminatedEvent, "Timed out terminating and cleaning up!", 60);
+		thisDc.stopAdapter();
 	});
 	return dc;
 }

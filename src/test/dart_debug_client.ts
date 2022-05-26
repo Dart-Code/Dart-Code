@@ -20,6 +20,7 @@ export class DartDebugClient extends DebugClient {
 	public currentSession?: DebugSession;
 	public currentTracker?: DebugAdapterTracker;
 	public hasStarted = false;
+	public hasTerminated = false;
 	public readonly isDartDap: boolean;
 
 	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactory: DebugAdapterTrackerFactory) {
@@ -51,6 +52,7 @@ export class DartDebugClient extends DebugClient {
 			logger.info(`[${event.body.category}] ${event.body.output}`);
 		});
 		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
+			this.hasTerminated = true;
 			logger.info(`[terminated]`);
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
