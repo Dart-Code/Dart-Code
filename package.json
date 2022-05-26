@@ -167,6 +167,15 @@
 				}
 			},
 			{
+				"command": "flutter.task.genl10n",
+				"title": "Generate Localizations",
+				"category": "Flutter",
+				"icon": {
+					"light": "./media/commands/documentation.svg",
+					"dark": "./media/commands/documentation-inverse.svg"
+				}
+			},
+			{
 				"command": "pub.upgrade",
 				"title": "Upgrade Packages",
 				"category": "Pub",
@@ -667,6 +676,10 @@
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{
+					"command": "flutter.task.genl10n",
+					"when": "dart-code:anyFlutterProjectLoaded"
+				},
+				{
 					"command": "pub.upgrade",
 					"when": "dart-code:anyProjectLoaded"
 				},
@@ -1057,6 +1070,11 @@
 					"when": "resourceFilename == dartdoc_options.yaml && dart-code:anyProjectLoaded",
 					"command": "dart.task.dartdoc",
 					"group": "navigation@1"
+				},
+				{
+					"when": "resourceExtname == .arb && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.task.genl10n",
+					"group": "navigation@1"
 				}
 			],
 			"editor/context": [
@@ -1095,6 +1113,10 @@
 				{
 					"when": "resourceFilename == dartdoc_options.yaml && dart-code:anyProjectLoaded",
 					"command": "dart.task.dartdoc"
+				},
+				{
+					"when": "resourceExtname == .arb && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.task.genl10n"
 				}
 			],
 			"explorer/context": [
@@ -1133,6 +1155,10 @@
 				{
 					"when": "resourceFilename == dartdoc_options.yaml && dart-code:anyProjectLoaded",
 					"command": "dart.task.dartdoc"
+				},
+				{
+					"when": "resourceExtname == .arb && dart-code:anyFlutterProjectLoaded",
+					"command": "flutter.task.genl10n"
 				},
 				{
 					"when": "resourceLangId == dart && dart-code:anyProjectLoaded",

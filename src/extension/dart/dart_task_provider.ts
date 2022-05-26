@@ -7,6 +7,7 @@ import { arrayStartsWith } from "../../shared/utils/array";
 import { fsPath, isFlutterProjectFolder, referencesBuildRunner } from "../../shared/utils/fs";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
+import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 import { getToolEnv } from "../utils/processes";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
@@ -132,7 +133,13 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		return this.resolveTask(task);
 	}
 
-	protected async runTask(uri: vs.Uri, command: string, args: string[]) {
+	protected async runProjectTask(uri: vs.Uri, command: string, args: string[]) {
+		const projectRoot = uri ? locateBestProjectRoot(fsPath(uri)) : undefined;
+		const projectRootUri = projectRoot ? vs.Uri.file(projectRoot) : undefined;
+		return this.runTask(projectRootUri, command, args);
+	}
+
+	protected async runTask(uri: vs.Uri | undefined, command: string, args: string[]) {
 		let projectFolder = uri;
 		let workspaceFolder = uri ? vs.workspace.getWorkspaceFolder(uri) : undefined;
 		if (!workspaceFolder) {
@@ -145,7 +152,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		if (!workspaceFolder)
 			return;
 
-		const task = await this.createTask(workspaceFolder, projectFolder, command, args);
+		const task = await this.createTask(workspaceFolder, projectFolder!, command, args);
 
 		return vs.tasks.executeTask(task);
 	}

@@ -20,6 +20,7 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 
 	constructor(logger: Logger, context: vs.ExtensionContext, sdks: DartSdks, private readonly flutterCapabilities: FlutterCapabilities) {
 		super(logger, context, sdks);
+		context.subscriptions.push(vs.commands.registerCommand("flutter.task.genl10n", (uri: vs.Uri) => this.runProjectTask(uri, "flutter", ["gen-l10n"])));
 	}
 
 	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
@@ -50,6 +51,7 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 				}
 
 				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["install"]));
+				promises.push(this.createTask(workspaceFolder, folderUri, "flutter", ["gen-l10n"]));
 			}
 		});
 
