@@ -1,13 +1,13 @@
 /* eslint-disable no-underscore-dangle */
 import * as path from "path";
 import * as vs from "vscode";
-import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, MarkdownString, Position, Range, SnippetString, TextDocument } from "vscode";
+import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, CompletionTriggerKind, Disposable, Position, Range, SnippetString, TextDocument } from "vscode";
 import * as as from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
-import { cleanDartdoc } from "../../shared/vscode/extension_utils";
+import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { DelayedCompletionItem, LazyCompletionItem } from "../../shared/vscode/interfaces";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { hasOverlappingEdits } from "../commands/edit_das";
@@ -512,7 +512,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		if (suggestion.isDeprecated)
 			completion.tags = [vs.CompletionItemTag.Deprecated];
 		completion.detail = detail;
-		completion._documentation = docs ? new MarkdownString(docs) : undefined;
+		completion._documentation = docs ? createMarkdownString(docs) : undefined;
 		completion.insertText = completionText;
 		completion.keepWhitespace = true;
 		completion.range = {

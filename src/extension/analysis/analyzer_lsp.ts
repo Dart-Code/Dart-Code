@@ -13,7 +13,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { cleanDartdoc } from "../../shared/vscode/extension_utils";
+import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { DART_MODE } from "../extension";
@@ -64,7 +64,7 @@ export class LspAnalyzer extends Analyzer {
 
 		function cleanDocString<T extends MarkedString | MarkdownString | string>(input: T): T {
 			if (input instanceof MarkdownString)
-				return new MarkdownString(cleanDartdoc(input.value)) as T;
+				return createMarkdownString(cleanDartdoc(input.value)) as T;
 			else if (typeof input === "string")
 				return cleanDartdoc(input) as T;
 			else if (isLanguageValuePair(input))
@@ -333,6 +333,9 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
+		},
+		markdown: {
+			supportHtml: true,
 		},
 		middleware,
 		outputChannelName: "LSP",

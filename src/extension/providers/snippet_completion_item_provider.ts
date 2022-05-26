@@ -1,7 +1,7 @@
 import * as path from "path";
-import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument, Uri } from "vscode";
+import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, Position, SnippetString, TextDocument, Uri } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { extensionPath, readJson } from "../../shared/vscode/extension_utils";
+import { createMarkdownString, extensionPath, readJson } from "../../shared/vscode/extension_utils";
 import { config } from "../config";
 
 export class SnippetCompletionItemProvider implements CompletionItemProvider {
@@ -22,7 +22,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 						: snippet.body,
 				);
 				completionItem.detail = snippet.description;
-				completionItem.documentation = new MarkdownString().appendCodeblock(completionItem.insertText.value);
+				completionItem.documentation = createMarkdownString("").appendCodeblock(completionItem.insertText.value);
 				completionItem.sortText = "zzzzzzzzzzzzzzzzzzzzzz";
 				this.completions.items.push(completionItem);
 			}

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { AnalysisGetSignatureResponse, ParameterInfo } from "../../shared/analysis_server_types";
 import { fsPath } from "../../shared/utils/fs";
-import { cleanDartdoc } from "../../shared/vscode/extension_utils";
+import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 
 export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
@@ -17,7 +17,7 @@ export class DartSignatureHelpProvider implements vs.SignatureHelpProvider {
 			if (token && token.isCancellationRequested)
 				return undefined;
 
-			const sig = new vs.SignatureInformation(this.getSignatureLabel(resp), new vs.MarkdownString(cleanDartdoc(resp.dartdoc)));
+			const sig = new vs.SignatureInformation(this.getSignatureLabel(resp), createMarkdownString(cleanDartdoc(resp.dartdoc)));
 			sig.parameters = resp.parameters.map((p) => new vs.ParameterInformation(this.getLabel(p)));
 
 			const sigs = new vs.SignatureHelp();

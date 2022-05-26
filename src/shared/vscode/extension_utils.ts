@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { extensions, Uri } from "vscode";
+import { extensions, MarkdownString, Uri } from "vscode";
 import { dartCodeExtensionIdentifier, flutterExtensionIdentifier } from "../constants";
 import * as dartdoc from "../utils/dartdocs";
 
@@ -42,4 +42,10 @@ export function checkHasFlutterExtension() {
 
 export function cleanDartdoc(doc: string | undefined) {
 	return dartdoc.cleanDartdoc(doc, docsIconPathFormat);
+}
+
+export function createMarkdownString(doc: string) {
+	const md = new MarkdownString(doc);
+	md.supportHtml = true;
+	return md;
 }
