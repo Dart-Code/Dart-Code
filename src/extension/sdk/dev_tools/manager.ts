@@ -427,7 +427,7 @@ export class DevToolsManager implements vs.Disposable {
 /// This is not used for internal workspaces (see startDevToolsFromDaemon).
 class DevToolsService extends StdIOService<UnknownNotification> {
 	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
-		super(new CategoryLogger(logger, LogCategory.General), config.maxLogLineLength);
+		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
 		const devToolsArgs = ["--machine", "--try-ports", "10", "--allow-embedding"];
 
