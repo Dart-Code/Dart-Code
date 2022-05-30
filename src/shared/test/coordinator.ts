@@ -220,6 +220,15 @@ export class TestSessionCoordinator implements IAmDisposable {
 		if (!test)
 			return;
 
+		// Flutter emits an error when tests fail which when reported to the VS Code API will result in not-so-useful text
+		// in the Test Error Peek window, so we suppress messages that match this pattern.
+		const pattern = new RegExp(`
+Test failed. See exception logs above.
+The test description was: .*
+`.trim());
+		if (pattern.test(evt.error.trim()))
+			return;
+
 		test.outputEvents.push(evt);
 		this.data.testErrorOutput(dartCodeDebugSessionID, suite.path, evt.testID, evt.isFailure, evt.error, evt.stackTrace);
 	}

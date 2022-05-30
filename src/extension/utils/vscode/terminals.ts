@@ -22,5 +22,5 @@ export function writeToPseudoTerminal(messages: string[]): [vs.Terminal, vs.Even
 
 export function formatForTerminal(output: string) {
 	// For terminal, if we send \n without a \r the rendering will be bad.
-	return output.replace(/\n/g, "\r\n");
+	return output.replace(/\n/g, "\r\n").replace(/\r\r\n/g, "\r\n");
 }

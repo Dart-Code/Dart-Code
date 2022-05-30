@@ -8,6 +8,7 @@ import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
+import { formatForTerminal } from "../utils/vscode/terminals";
 
 export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
@@ -301,12 +302,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public appendTestOutputLines(run: vs.TestRun, item: vs.TestItem, message: string) {
-		// Multi-line text doesn't show up correctly so split up
-		// https://github.com/microsoft/vscode/issues/136036
-		// run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
-		message.split("\n").forEach((line) => {
-			run.appendOutput(line, undefined, item);
-		});
+		if (message.trim() === "")
+			return;
+		run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
 	}
 
 	public testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void {
@@ -321,12 +319,14 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					run.passed(item, node.duration);
 					break;
 				default:
-					const errors = node.outputEvents.map((e) => this.formatError(e)).filter(notUndefined);
-					const errorString = errors.join("\n");
+					const outputEvents = node.outputEvents;
+					const lastOutputEvent = outputEvents.length > 0 ? outputEvents[outputEvents.length - 1] : undefined;
+					const errorString = lastOutputEvent ? this.formatNotification(lastOutputEvent) : "Unknown test failure";
+					const testMessage = new vs.TestMessage(errorString);
 					if (result === "failure")
-						run.failed(item, new vs.TestMessage(errorString), node.duration);
+						run.failed(item, testMessage, node.duration);
 					else
-						run.errored(item, new vs.TestMessage(errorString), node.duration);
+						run.errored(item, testMessage, node.duration);
 					break;
 			}
 		}
@@ -334,9 +334,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public suiteDone(sessionID: string, node: SuiteNode): void { }
 
-	private formatError(error: ErrorNotification | PrintNotification) {
+	private formatNotification(error: ErrorNotification | PrintNotification) {
 		if (!("error" in error))
-			return;
+			return error.message;
 
 		return [
 			error.error ?? "",
