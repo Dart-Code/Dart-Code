@@ -401,11 +401,11 @@ function getCurrentFlutterCreateSettings(): PickableSetting[] {
 			settingKind: "ENUM",
 		},
 		{
-			currentValue: config.flutterCreateOffline ? "enabled" : "not enabled",
-			description: config.flutterCreateOffline ? "enabled" : "not enabled",
-			detail: "When \"flutter pub get\" is run by the create command, this indicates whether to run it in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
-			label: "Create Projects Offline",
-			setValue: (newValue: boolean | undefined) => config.setFlutterCreateOffline(newValue),
+			currentValue: config.offline ? "enabled" : "not enabled",
+			description: config.offline ? "enabled" : "not enabled",
+			detail: "When commands like \"flutter pub get\" or \"flutter create\" are run, this indicates whether to run in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
+			label: "Offline Mode",
+			setValue: (newValue: boolean | undefined) => config.setOffline(newValue),
 			settingKind: "BOOL",
 		},
 	];
