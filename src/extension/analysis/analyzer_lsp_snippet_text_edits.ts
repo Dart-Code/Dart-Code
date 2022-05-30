@@ -45,8 +45,23 @@ export class SnippetTextEditFeature implements IAmDisposable {
 						const textEdit = entries[0][1][0];
 						// HACK: This should be checking InsertTextFormat:
 						// https://github.com/microsoft/language-server-protocol/issues/724#issuecomment-800334721
-						const hasSnippet = /\$(\d+|\{\d+:([^}]*)\})/.test(textEdit.newText);
+						const hasSnippet = /\$(\d+|\{\d+(?:[:|][^}]*)?\})/.test(textEdit.newText);
 						// if ((textEdit as any).insertTextFormat === InsertTextFormat.Snippet) {
+
+						// HACK: Work around the server producing 0th choice tabstops that are not valid until a
+						// server fix lands.
+						// https://github.com/Dart-Code/Dart-Code/issues/3996
+						if (hasSnippet
+							// Has a 0th choice snippet.
+							&& textEdit.newText.includes("${0|")
+							&& textEdit.newText.includes("|}")
+							// Does not have a 1st snippet.
+							&& !textEdit.newText.includes("${1")
+							&& !textEdit.newText.includes("$1")) {
+							// "Upgrade" choice from tabstop 0 to tabstop 1.
+							textEdit.newText = textEdit.newText.replace("${0|", "${1|");
+						}
+
 						if (hasSnippet) {
 							action.edit = undefined;
 							action.command = {
