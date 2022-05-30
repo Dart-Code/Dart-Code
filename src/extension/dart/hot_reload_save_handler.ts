@@ -17,10 +17,18 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
 	private lastSaveReason: TextDocumentSaveReason | undefined;
+	// And whether any saved file was dirty to support `..ifDirty` settings.
+	private isSavingDirtyFile = false;
 
 	constructor(private readonly debugCommands: DebugCommands, private readonly flutterCapabilities: FlutterCapabilities) {
 		// Non-FS-watcher version (onDidSave).
-		this.disposables.push(workspace.onWillSaveTextDocument((e) => this.lastSaveReason = e.reason));
+		this.disposables.push(workspace.onWillSaveTextDocument((e) => {
+			if (!this.isReloadableFile(e.document))
+				return;
+
+			this.lastSaveReason = e.reason;
+			this.isSavingDirtyFile = this.isSavingDirtyFile || e.document.isDirty;
+		}));
 		this.disposables.push(workspace.onDidSaveTextDocument((td) => {
 			// Bail if we're using fs-watcher instead. We still wire this
 			// handler up so we don't need to reload for this setting change.
@@ -52,12 +60,11 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 			this.lastSaveReason === TextDocumentSaveReason.AfterDelay;
 
 		// Never do anything for files inside .dart_tool folders.
-		if (fsPath(file.uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
+		if (!this.isReloadableFile(file))
 			return;
 
-		// Bail out if we're in an external file, or not Dart.
-		if (!isWithinWorkspace(fsPath(file.uri)) || !shouldHotReloadFor(file))
-			return;
+		const isDirty = this.isSavingDirtyFile;
+		this.isSavingDirtyFile = false;
 
 		// Don't do if we have errors for the saved file.
 		const errors = languages.getDiagnostics(file.uri);
@@ -65,15 +72,29 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		if (hasErrors)
 			return;
 
-		this.reloadDart(isAutoSave);
-		this.reloadFlutter(isAutoSave);
+		this.reloadDart({ isAutoSave, isDirty });
+		this.reloadFlutter({ isAutoSave, isDirty });
 	}
 
-	private reloadDart(isAutoSave: boolean) {
+	private isReloadableFile(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
+		// Never do anything for files inside .dart_tool folders.
+		if (fsPath(file.uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
+			return false;
+
+		// Bail out if we're in an external file, or not Dart.
+		if (!isWithinWorkspace(fsPath(file.uri)) || !shouldHotReloadFor(file))
+			return false;
+
+		return true;
+	}
+
+	private reloadDart({ isAutoSave, isDirty }: { isAutoSave: boolean, isDirty: boolean }) {
 		const configSetting = config.hotReloadOnSave;
-		if (configSetting === "never" || (isAutoSave && configSetting === "manual"))
+		if (configSetting === "never" || (isAutoSave && (configSetting === "manual" || configSetting === "manualIfDirty")))
 			return;
 
+		if (!isDirty && (configSetting === "manualIfDirty" || configSetting === "allIfDirty"))
+			return;
 
 		const commandToRun = "dart.hotReload";
 		const args = {
@@ -93,9 +114,12 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		}, 200);
 	}
 
-	private reloadFlutter(isAutoSave: boolean) {
+	private reloadFlutter({ isAutoSave, isDirty }: { isAutoSave: boolean, isDirty: boolean }) {
 		const configSetting = config.flutterHotReloadOnSave;
-		if (configSetting === "never" || (isAutoSave && configSetting === "manual"))
+		if (configSetting === "never" || (isAutoSave && (configSetting === "manual" || configSetting === "manualIfDirty")))
+			return;
+
+		if (!isDirty && (configSetting === "manualIfDirty" || configSetting === "allIfDirty"))
 			return;
 
 		const shouldHotReload = this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload);

@@ -1765,13 +1765,17 @@
 					"dart.flutterHotReloadOnSave": {
 						"enum": [
 							"never",
-							"always",
-							"manual"
+							"manual",
+							"manualIfDirty",
+							"all",
+							"allIfDirty"
 						],
 						"enumDescriptions": [
 							"Do not reload when saving",
+							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave)",
+							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave) only if the saved file had changes",
 							"Reload for all saves, manual or automatic",
-							"Only reload for manual saves (requires pressing Save explicitly if using autosave)"
+							"Reload for all saves, manual or automatic only if the saved file had changes"
 						],
 						"default": "manual",
 						"markdownDescription": "Whether to automatically send a Hot Reload request to Flutter apps during a debug session when saving files. Dart apps are controlled by the hotReloadOnSave setting.",
@@ -1780,13 +1784,17 @@
 					"dart.hotReloadOnSave": {
 						"enum": [
 							"never",
-							"always",
-							"manual"
+							"manual",
+							"manualIfDirty",
+							"all",
+							"allIfDirty"
 						],
 						"enumDescriptions": [
 							"Do not reload when saving",
+							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave)",
+							"Reload for explicit manual saves (requires pressing Save explicitly if using autosave) only if the saved file had changes",
 							"Reload for all saves, manual or automatic",
-							"Only reload for manual saves (requires pressing Save explicitly if using autosave)"
+							"Reload for all saves, manual or automatic only if the saved file had changes"
 						],
 						"default": "never",
 						"markdownDescription": "Whether to automatically send a Hot Reload request to Dart apps during a debug session when saving files. Flutter apps are controlled by the flutterHotReloadOnSave setting.",

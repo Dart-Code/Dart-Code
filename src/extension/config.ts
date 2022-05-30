@@ -84,14 +84,15 @@ class Config {
 	get flutterCustomEmulators(): Array<{ id: string, name: string, executable: string, args?: string[] }> { return this.getConfig<Array<{ id: string, name: string, executable: string, args?: string[] }>>("flutterCustomEmulators", []); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
-	get flutterHotReloadOnSave(): "never" | "always" | "manual" {
-		const value = this.getConfig<"never" | "always" | "manual" | true | false>("flutterHotReloadOnSave", "manual");
-
-		// Convert the legacy bool value to its new enum type, if required.
+	get flutterHotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
+		const value = this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" | "always" | true | false>("flutterHotReloadOnSave", "manual");
+		// Convert the legacy values to new values, if required.
 		if (value === true)
 			return "manual";
 		else if (value === false)
 			return "never";
+		else if (value === "always")
+			return "all";
 		else
 			return value;
 	}
@@ -106,7 +107,13 @@ class Config {
 	get flutterShowWebServerDevice(): "remote" | "always" { return this.getConfig<"remote" | "always">("flutterShowWebServerDevice", "remote"); }
 	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
 	get flutterWebRenderer(): "auto" | "html" | "canvaskit" { return this.getConfig<"auto" | "html" | "canvaskit">("flutterWebRenderer", "auto"); }
-	get hotReloadOnSave(): "never" | "always" | "manual" { return this.getConfig<"never" | "always" | "manual">("hotReloadOnSave", "never"); }
+	get hotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
+		const value = this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" | "always">("hotReloadOnSave", "never");
+		if (value === "always")
+			return "all";
+		else
+			return value;
+	}
 	get hotReloadProgress(): "notification" | "statusBar" { return this.getConfig<"notification" | "statusBar">("hotReloadProgress", "notification"); }
 	get lspSnippetTextEdits(): boolean { return this.getConfig<boolean>("lspSnippetTextEdits", true); }
 	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }
