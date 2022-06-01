@@ -945,9 +945,7 @@
 		{
 			"name": "Dart Debug SDK DAP Tests + DAs",
 			"configurations": [
-				"Dart Debug SDK DAP Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server"
+				"Dart Debug SDK DAP Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -1021,8 +1019,7 @@
 		{
 			"name": "Flutter Debug SDK DAP Tests + DAs",
 			"configurations": [
-				"Flutter Debug SDK DAP Tests",
-				"Flutter Debug Server"
+				"Flutter Debug SDK DAP Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -1032,8 +1029,7 @@
 		{
 			"name": "Flutter Debug Chrome SDK DAP Tests + DAs",
 			"configurations": [
-				"Flutter Debug Chrome SDK DAP Tests",
-				"Flutter Debug Server"
+				"Flutter Debug Chrome SDK DAP Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -1055,9 +1051,7 @@
 		{
 			"name": "Flutter Test Debug SDK DAP Tests + DAs",
 			"configurations": [
-				"Flutter Test Debug SDK DAP Tests",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server"
+				"Flutter Test Debug SDK DAP Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -1139,9 +1133,7 @@
 		{
 			"name": "Flutter Bazel SDK DAP Tests + DAs",
 			"configurations": [
-				"Flutter Bazel SDK DAP Tests",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server"
+				"Flutter Bazel SDK DAP Tests"
 			],
 			"presentation": {
 				"order": 3
