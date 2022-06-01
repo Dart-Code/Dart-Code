@@ -124,7 +124,7 @@ async function runAllTests(): Promise<void> {
 			await runTests("flutter_debug", "flutter_hello_world", "chrome", { FLUTTER_TEST_DEVICE_ID: "chrome", DART_CODE_FORCE_SDK_DAP: "false" });
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_debug_sdk_dap") {
-			await runTests("flutter_debug", "flutter_hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "true" });
+			await runTests("flutter_debug", "flutter_hello_world", "sdk_dap", { DART_CODE_FORCE_SDK_DAP: "true" });
 			await runTests("flutter_bazel", "bazel_workspace/flutter_hello_world_bazel", "sdk_dap", { DART_CODE_FORCE_SDK_DAP: "true" });
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_debug_chrome_sdk_dap") {
