@@ -47,6 +47,8 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 	if (analyzerPath === "language-server") {
 		if (!isLsp)
 			analyzerArgs.push("--protocol=analyzer");
+		else
+			analyzerArgs.push("--protocol=lsp");
 	} else {
 		if (isLsp)
 			analyzerArgs.push("--lsp");
