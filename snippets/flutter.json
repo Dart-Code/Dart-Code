@@ -5,7 +5,7 @@
 			"description": "Insert a StatelessWidget",
 			"body": [
 				"class $1 extends StatelessWidget {",
-				"  const $1({ Key? key }) : super(key: key);",
+				"  const $1({super.key});",
 				"",
 				"  @override",
 				"  Widget build(BuildContext context) {",
@@ -21,7 +21,7 @@
 			"description": "Insert a StatefulWidget",
 			"body": [
 				"class $1 extends StatefulWidget {",
-				"  const $1({ Key? key }) : super(key: key);",
+				"  const $1({super.key});",
 				"",
 				"  @override",
 				"  State<$1> createState() => _$1State();",
@@ -42,7 +42,7 @@
 			"description": "Insert a StatefulWidget with an AnimationController",
 			"body": [
 				"class $1 extends StatefulWidget {",
-				"  const $1({ Key? key }) : super(key: key);",
+				"  const $1({super.key});",
 				"",
 				"  @override",
 				"  State<$1> createState() => _$1State();",
