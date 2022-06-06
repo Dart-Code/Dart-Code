@@ -1,9 +1,6 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 import * as vs from "vscode";
 import { vsCodeVersion } from "../capabilities/vscode";
-import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyAnalyticsText, flutterSurveyDataUrl, isWin, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
 import { Analytics, FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
 import { Context } from "./workspace";
@@ -43,28 +40,8 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	if (lastShown && now - lastShown < longRepeatPromptThreshold)
 		return false;
 
-	// Work out the URL and prompt to show.
-	let clientID: string | undefined;
-	try {
-		const flutterSettingsFolder =
-			isWin ?
-				process.env.APPDATA || os.homedir()
-				: os.homedir();
-		const flutterSettingsPath = path.join(flutterSettingsFolder, ".flutter");
-		if (fs.existsSync(flutterSettingsPath)) {
-			const json = fs.readFileSync(flutterSettingsPath).toString();
-			const settings = JSON.parse(json);
-			if (settings.enabled !== false) {
-				clientID = settings.clientId;
-			}
-		}
-	} catch {
-		logger.warn("Unable to read Flutter settings for preparing survey link");
-	}
-
-	const prompt = clientID ? `${surveyData.title} ${flutterSurveyAnalyticsText}` : surveyData.title;
 	const firstQsSep = surveyData.url.indexOf("?") !== -1 ? "&" : "?";
-	const surveyUrl = `${surveyData.url}${firstQsSep}Source=VSCode${clientID ? `&ClientID=${encodeURIComponent(clientID)}` : ""}`;
+	const surveyUrl = `${surveyData.url}${firstQsSep}Source=VSCode`;
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for
 	// 40 hours.
@@ -72,7 +49,7 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 
 	// Prompt to show and handle response.
 	analytics.logFlutterSurveyShown();
-	vs.window.showInformationMessage(prompt, takeSurveyAction, skipThisSurveyAction).then(async (choice) => {
+	vs.window.showInformationMessage(surveyData.title, takeSurveyAction, skipThisSurveyAction).then(async (choice) => {
 		if (choice === skipThisSurveyAction) {
 			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
 			analytics.logFlutterSurveyDismissed();
