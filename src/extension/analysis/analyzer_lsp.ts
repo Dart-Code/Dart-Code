@@ -216,11 +216,16 @@ export class LspAnalyzer extends Analyzer {
 
 			executeCommand: async (command: string, args: any[], next: ExecuteCommandSignature) => {
 				if (command === "refactor.perform") {
-					const expectedCount = 6;
-					if (args && args.length === expectedCount) {
+					// Handle both the old way (6 args as a list) and the new way (a single arg that's a map).
+					const mapArgsIndex = 0;
+					const listArgsKindIndex = 0;
+					const listArgsOptionsIndex = 5;
+					const isValidListArgs = args.length === 6;
+					const isValidMapsArgs = args.length === 1 && args[mapArgsIndex]?.path !== undefined;
+					if (args && (isValidListArgs || isValidMapsArgs)) {
 						const refactorFailedErrorCode = -32011;
-						const refactorKind = args[0];
-						const optionsIndex = 5;
+						const mapArgs = args[mapArgsIndex];
+						const refactorKind = isValidListArgs ? args[listArgsKindIndex] : mapArgs.kind;
 						// Intercept EXTRACT_METHOD and EXTRACT_WIDGET to prompt the user for a name, but first call the validation
 						// so we don't ask for a name if it will fail for a reason like a closure with an argument.
 						const willPrompt = refactorKind === "EXTRACT_METHOD" || refactorKind === "EXTRACT_WIDGET";
@@ -248,7 +253,6 @@ export class LspAnalyzer extends Analyzer {
 									});
 									if (!name)
 										return;
-									args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
 									break;
 								case "EXTRACT_WIDGET":
 									name = await window.showInputBox({
@@ -258,8 +262,14 @@ export class LspAnalyzer extends Analyzer {
 									});
 									if (!name)
 										return;
-									args[optionsIndex] = Object.assign({}, args[optionsIndex], { name });
 									break;
+							}
+
+							if (name) {
+								if (isValidListArgs)
+									args[listArgsOptionsIndex] = Object.assign({}, args[listArgsOptionsIndex], { name });
+								else
+									args[0].options = Object.assign({}, args[0].options, { name });
 							}
 						}
 
