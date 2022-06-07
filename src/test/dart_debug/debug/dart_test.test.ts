@@ -13,7 +13,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -119,8 +119,9 @@ describe("dart test debugger", () => {
 			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			assert.ok(didStart);
 		});
+
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-		const testDoneNotification = customEvents.find((e) => e.event === "dart.testNotification" && e.body.type === "testDone");
+		const testDoneNotification = customEvents.find(isTestDoneNotification);
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	});
 

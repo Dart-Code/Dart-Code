@@ -41,7 +41,14 @@ export function makeRegexForTests(names: TestName[]) {
 		const prefix = "^";
 		// We can't anchor to the end for groups, as we want them to run all children.
 		const suffix = name.isGroup ? "" : "( \\(variant: .*\\))?$";
-		const escapedName = escapeRegExp(name.name);
+		let escapedName = escapeRegExp(name.name);
+
+		// Replace any literal newlines with \n because literals can cause
+		// issues in the shell.
+		// https://github.com/Dart-Code/Dart-Code/issues/4007
+		escapedName = escapedName
+			.replace("\n", "\\n")
+			.replace("\r", "\\r");
 
 		// If a test name contains interpolated expressions, passing the exact
 		// name won't match. So we just replace them out with wildcards. We'll need

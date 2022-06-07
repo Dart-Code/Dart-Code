@@ -11,6 +11,7 @@ import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestNode, TreeNode } from "../shared/test/test_model";
+import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
@@ -1209,6 +1210,13 @@ function getSourceLine(item: vs.TestItem): number {
 	// Return the lowest child line, or something really high to put us at the end (this
 	// shouldn't really happen, but the API allows for it).
 	return Math.min(99999999, ...lines);
+}
+
+export function isTestDoneNotification(e: vs.DebugSessionCustomEvent) {
+	if (e.event !== "dart.testNotification")
+		return false;
+	const notification = e.body as TestDoneNotification;
+	return notification.type === "testDone" && !notification.hidden;
 }
 
 export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {

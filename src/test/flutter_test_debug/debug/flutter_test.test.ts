@@ -7,7 +7,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -94,17 +94,44 @@ describe("flutter test debugger", () => {
 			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			assert.ok(didStart);
 		});
+
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-		const testDoneNotification = customEvents.find((e) => e.event === "dart.testNotification" && e.body.type === "testDone");
+		const testDoneNotification = customEvents.find(isTestDoneNotification);
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	});
 
-	function isTestDoneNotification(e: vs.DebugSessionCustomEvent) {
-		if (e.event !== "dart.testNotification")
-			return false;
-		const notification = e.body as TestDoneNotification;
-		return notification.type === "testDone" && !notification.hidden;
-	}
+	it("can run test with multiline name from codelens", async function () {
+		const editor = await openFile(flutterTestMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
+
+		const fileCodeLens = await getCodeLens(editor.document);
+		const testPos = positionOf(`test^Widgets('''multi`);
+
+		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+		assert.equal(codeLensForTest.length, 2);
+
+		if (!codeLensForTest[0].command) {
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			this.skip();
+			return;
+		}
+
+		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
+		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
+		assert.equal(runAction.command!.arguments![0].fullName, "multi\nline");
+		assert.equal(runAction.command!.arguments![0].isGroup, false);
+
+		const customEvents = await captureDebugSessionCustomEvents(async () => {
+			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+			assert.ok(didStart);
+		});
+
+		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
+		const testDoneNotification = customEvents.find(isTestDoneNotification);
+		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+	});
 
 	it("does not attempt to run skipped tests from codelens if not supported", async function () {
 		if (extApi.flutterCapabilities.supportsRunSkippedTests)
