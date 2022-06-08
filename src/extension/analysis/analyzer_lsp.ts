@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
 import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window, workspace } from "vscode";
-import { ConfigurationParams, ConfigurationRequest, ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, RAL, ResolveCompletionItemSignature, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import { ConfigurationParams, ConfigurationRequest, ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, RAL, ResolveCompletionItemSignature, RevealOutputChannelOn, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
 import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
@@ -349,6 +349,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		},
 		middleware,
 		outputChannelName: "LSP",
+		revealOutputChannelOn: RevealOutputChannelOn.Never,
 		uriConverters: {
 			code2Protocol: (uri) => Uri.file(fsPath(uri, { useRealCasing: !!config.normalizeFileCasing })).toString(),
 			protocol2Code: (file) => Uri.parse(file),
