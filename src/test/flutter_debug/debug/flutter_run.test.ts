@@ -50,6 +50,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		deferUntilLast("Kill flutter_tester", () => watchPromise("Killing flutter_tester processes", killFlutterTester()));
 	});
 
+	/// If we restart too fast, things fail :-/
+	const delayBeforeRestart = () => delay(1000);
+
 	describe("resolves the correct debug config", () => {
 		it("for a simple script", async () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
@@ -202,6 +205,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
 
+		await delayBeforeRestart();
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", "Restarted app"),
 			vs.commands.executeCommand("flutter.hotRestart") as Promise<void>,
@@ -455,9 +459,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		// If we restart too fast, things fail :-/
-		await delay(1000);
-
+		await delayBeforeRestart();
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", "Restarted app"),
 			dc.customRequest("hotRestart"),
@@ -476,9 +478,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		// If we restart too fast, things fail :-/
-		await delay(1000);
-
+		await delayBeforeRestart();
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", "Restarted app"),
 			vs.commands.executeCommand("flutter.hotRestart") as Promise<void>,
