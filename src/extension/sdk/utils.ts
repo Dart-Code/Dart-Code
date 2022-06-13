@@ -6,7 +6,7 @@ import { Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfi
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
-import { processBazelWorkspace, processFuchsiaWorkspace, processKnownGitRepositories } from "../../shared/utils/workspace";
+import { processBazelWorkspace, processDartSdkRepository, processFuchsiaWorkspace } from "../../shared/utils/workspace";
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -230,7 +230,7 @@ export class SdkUtils {
 			return undefined;
 		};
 
-		await processWorkspaceType(findGitRoot, processKnownGitRepositories);
+		await processWorkspaceType(findDartSdkRoot, processDartSdkRepository);
 		// TODO: Remove this lambda when the preview flag is removed.
 		await processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
 		const fuchsiaRoot = await processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
@@ -465,6 +465,14 @@ async function findBazelWorkspaceRoot(logger: Logger, folder: string): Promise<s
 
 async function findGitRoot(logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".git");
+}
+
+async function findDartSdkRoot(logger: Logger, folder: string): Promise<string | undefined> {
+	const gitRoot = await findGitRoot(logger, folder);
+	if (gitRoot && fs.existsSync(path.join(gitRoot, "README.dart-sdk")) && fs.existsSync(path.join(gitRoot, "DEPS")))
+		return gitRoot;
+	else
+		return undefined;
 }
 
 function findRootContaining(folder: string, childName: string, expectFile = false): string | undefined {

@@ -3,13 +3,10 @@ import * as path from "path";
 import { isWin, MAX_VERSION } from "../constants";
 import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
-export function processKnownGitRepositories(logger: Logger, config: WritableWorkspaceConfig, gitRoot: string) {
-	const isDartSdkRepo = fs.existsSync(path.join(gitRoot, "README.dart-sdk")) && fs.existsSync(path.join(gitRoot, "DEPS"));
-	if (isDartSdkRepo) {
-		config.disableAutomaticPackageGet = true;
-		// The Dart SDKs tests cannot run using pub, so also force them to use the VM.
-		config.useVmForTests = true;
-	}
+export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, dartSdkRoot: string) {
+	config.disableAutomaticPackageGet = true;
+	// The Dart SDKs tests cannot run using pub, so also force them to use the VM.
+	config.useVmForTests = true;
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
