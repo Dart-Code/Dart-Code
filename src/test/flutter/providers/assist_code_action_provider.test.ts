@@ -7,7 +7,7 @@ describe("assist_code_action_provider", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
-	it("inserts correct indenting for create_method", async function () {
+	it("sets selection correctly for code actions with snippets", async function () {
 		// Doesn't work for non-LSP due to https://github.com/microsoft/vscode/issues/63129.
 		if (!extApi.isLsp)
 			this.skip();
