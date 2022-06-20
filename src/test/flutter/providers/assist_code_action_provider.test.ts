@@ -51,7 +51,7 @@ class Danny extends StatelessWidget {
 }`);
 	});
 
-	it("does not over-encode escaped dollars in action actions", async function () {
+	it("does not over-encode escaped dollars in actions", async function () {
 		// https://github.com/Dart-Code/Dart-Code/issues/4002
 
 		await openFile(flutterEmptyFile);
