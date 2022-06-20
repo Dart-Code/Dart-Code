@@ -40,6 +40,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			for (const debugSession of extApi.debugSessions) {
 				extApi.logger.warn(`  Session: ${debugSession.session.name}`);
 			}
+			extApi.logger.warn(`Resetting to avoid them affecting future tests`);
+			extApi.debugSessions.length = 0;
 		}
 
 		dc = createDebugClient(DebuggerType.Flutter);
@@ -1019,12 +1021,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 			// If we don't have another expectation, then we need to keep running for some period
 			// after launch to ensure we didn't stop unexpectedly.
+			let waitAfterLaunch = 0;
 			if (expectation === resolvedPromise)
-				// This may be too low for web.
-				expectation = dc.waitForEvent("initialized").then(() => delay(20000));
+				waitAfterLaunch = 20000;
 
 			await waitAllThrowIfTerminates(dc,
-				dc.waitForEvent("terminated"),
 				dc.waitForEvent("initialized")
 					.then(() => dc.setBreakpointsRequest({
 						// positionOf is 0-based, but seems to want 1-based
@@ -1035,8 +1036,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 						source: { path: fsPath(flutterHelloWorldMainFile) },
 					}))
 					.then(() => dc.configurationDoneRequest()),
-				expectation.then(() => dc.terminateRequest()),
-				dc.launch(config),
+				expectation,
+				dc.launch(config)).then(() => delay(waitAfterLaunch),
+			);
+
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForEvent("terminated"),
+				dc.terminateRequest(),
 			);
 
 			assert.equal(didStop, shouldStop);
