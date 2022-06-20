@@ -380,6 +380,75 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		clientOptions,
 	);
 
+	// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
+	//       insertTextFormat from the protocol through to the middleware to handle snippets.
+	//       This can be removed when we have a better way to do this.
+	//       https://github.com/microsoft/vscode-languageserver-node/issues/1000
+	const p2c = (client as any)._p2c; // eslint-disable-line no-underscore-dangle
+	const originalAsWorkspaceEdit = p2c.asWorkspaceEdit as Function; // eslint-disable-line @typescript-eslint/ban-types
+	const originalAsCodeAction = p2c.asCodeAction as Function; // eslint-disable-line @typescript-eslint/ban-types
+
+	async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
+		const result = (await originalAsWorkspaceEdit(item, token)) as vs.WorkspaceEdit | undefined;
+		if (!result) return;
+
+		const snippetTypes = new Set<string>();
+		// Figure out which are Snippets.
+		for (const change of item?.documentChanges ?? []) {
+			if (ls.TextDocumentEdit.is(change)) {
+				const uri = change.textDocument.uri;
+				for (const edit of change.edits) {
+					if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
+						snippetTypes.add(`${uri}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
+					}
+				}
+			}
+		}
+		for (const uri of Object.keys(item?.changes ?? {})) {
+			for (const edit of item!.changes![uri]) {
+				if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
+					snippetTypes.add(`${uri}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
+				}
+			}
+		}
+
+		if (snippetTypes.size > 0) {
+			for (const changeset of result.entries()) {
+				const uri = changeset[0];
+				const changes = changeset[1];
+				for (const change of changes) {
+					if (snippetTypes.has(`${uri}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
+						(change as any).insertTextFormat = ls.InsertTextFormat.Snippet;
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+	async function asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
+		const result = (await originalAsCodeAction(item, token)) as vs.CodeAction | undefined;
+		if (item?.edit !== undefined) {
+			(result as any).edit = await asWorkspaceEdit(item.edit, token);
+		}
+		return result;
+	}
+
+	function asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>> {
+		return Promise.all(items.map(async (item) => {
+			if (ls.Command.is(item)) {
+				return p2c.asCommand(item);
+			} else {
+				return asCodeAction(item, token);
+			}
+		}));
+	}
+
+	p2c.asWorkspaceEdit = asWorkspaceEdit;
+	p2c.asCodeAction = asCodeAction;
+	p2c.asCodeActionResult = asCodeActionResult;
+
 	return client;
 }
 
