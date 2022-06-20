@@ -15,9 +15,9 @@ import { DartWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/inter
 import { TestModel } from "../../shared/test/test_model";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { filenameSafe, isWebDevice } from "../../shared/utils";
-import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
+import { forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
-import { isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
+import { getAllProjectFolders, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
@@ -725,8 +725,10 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
 		const results: DebugConfiguration[] = [];
 
+		const projectFolders = folder
+			? await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth, workspaceFolders: [folder] })
+			: [];
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true, searchDepth: config.projectSearchDepth }) : [];
 
 		if (projectFolders.length) {
 			for (const projectFolder of projectFolders) {
@@ -784,7 +786,9 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 		const results: DebugConfiguration[] = [];
 
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;
-		const projectFolders = rootFolder ? await findProjectFolders(this.logger, [rootFolder], getExcludedFolders(folder), { requirePubspec: true, searchDepth: config.projectSearchDepth }) : [];
+		const projectFolders = folder
+			? await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth, workspaceFolders: [folder] })
+			: [];
 		for (const projectFolder of projectFolders) {
 			const isFlutter = isFlutterProjectFolder(projectFolder);
 			const name = path.basename(projectFolder);

@@ -2,11 +2,12 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
+import { CancellationToken } from "vscode";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { PackageMap } from "../pub/package_map";
-import { flatMapAsync, nullToUndefined } from "../utils";
+import { nullToUndefined } from "../utils";
 import { sortBy } from "./array";
 
 export function fsPath(uri: { fsPath: string } | string, { useRealCasing = false }: { useRealCasing?: boolean; } = {}) {
@@ -192,14 +193,20 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
-export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number }): Promise<string[]> {
+export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number }, token: CancellationToken): Promise<string[]> {
 	const dartToolFolderName = `${path.sep}.dart_tool${path.sep}`;
 
 	let previousLevelFolders = roots.slice();
 	let allPossibleFolders = previousLevelFolders.slice();
 	// Start at 1, as we already added the roots.
 	for (let i = 1; i < options.searchDepth; i++) {
-		const nextLevelFolders = await flatMapAsync(previousLevelFolders, (f) => getChildFolders(logger, f));
+		let nextLevelFolders: string[] = [];
+		for (const folder of previousLevelFolders) {
+			if (token.isCancellationRequested)
+				break;
+			nextLevelFolders = nextLevelFolders.concat(await getChildFolders(logger, folder));
+		}
+
 		allPossibleFolders = allPossibleFolders.concat(nextLevelFolders);
 		previousLevelFolders = nextLevelFolders;
 	}

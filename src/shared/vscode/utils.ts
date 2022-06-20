@@ -1,19 +1,24 @@
 import * as fs from "fs";
+import * as path from "path";
 import { URL } from "url";
 import * as vs from "vscode";
 import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
 import * as lsp from "vscode-languageclient";
-import { dartCodeExtensionIdentifier } from "../constants";
+import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchProgressNotificationDelayInMs, projectSearchProgressText } from "../constants";
 import { EventEmitter } from "../events";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { flatMap, notUndefined } from "../utils";
+import { SimpleTimeBasedCache } from "../utils/cache";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath } from "../utils/fs";
 import { isKnownCloudIde } from "./utils_cloud";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
+
+const projectFolderCache = new SimpleTimeBasedCache<string[]>();
+let inProgressProjectFolderSearch: Promise<string[]> | undefined;
 
 // The extension kind is declared as Workspace, but VS Code will return UI in the
 // case that there is no remote extension host.
@@ -32,12 +37,61 @@ export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 export async function getAllProjectFolders(
 	logger: Logger,
 	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
-	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number },
+	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, workspaceFolders?: WorkspaceFolder[] },
 ) {
-	const workspaceFolders = getDartWorkspaceFolders();
+	const workspaceFolders = options.workspaceFolders ?? getDartWorkspaceFolders();
+
+	// If another search is in progress, use its Promise to avoid overlapping searches.
+	if (inProgressProjectFolderSearch) {
+		logger.info(`Returning cached Promise for in-progress project search`);
+		return inProgressProjectFolderSearch;
+	}
+
+	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}`;
+	const cachedFolders = projectFolderCache.get(cacheKey);
+	if (cachedFolders) {
+		logger.info(`Returning cached results for project search`);
+		return cachedFolders;
+	}
+
+	const startTimeMs = new Date().getTime();
+	const tokenSource = new vs.CancellationTokenSource();
+	let isComplete = false;
+
 	const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
 	const allExcludedFolders = getExcludedFolders ? flatMap(workspaceFolders, getExcludedFolders) : [];
-	return findProjectFolders(logger, topLevelFolders, allExcludedFolders, options);
+	const resultsPromise = findProjectFolders(logger, topLevelFolders, allExcludedFolders, options, tokenSource.token);
+	inProgressProjectFolderSearch = resultsPromise;
+
+	// After some time, if we still have not completed, show a progress notification that can be cancelled
+	// to stop the search, which automatically hides when `resultsPromise` resolves.
+	setTimeout(() => {
+		if (!isComplete) {
+			vs.window.withProgress({
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: projectSearchProgressText,
+			}, (progress, token) => {
+				token.onCancellationRequested(() => {
+					tokenSource.cancel();
+					logger.info(`Project search was cancelled after ${new Date().getTime() - startTimeMs}ms (was searching ${options.searchDepth} levels)`);
+				});
+				return resultsPromise;
+			});
+		}
+	}, projectSearchProgressNotificationDelayInMs);
+
+	const results = await resultsPromise;
+	isComplete = true;
+	logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
+
+	// Cache the results.
+	projectFolderCache.add(cacheKey, results, projectSearchCacheTimeInMs);
+
+	// Clear the promise if it's still ours.
+	if (inProgressProjectFolderSearch === resultsPromise)
+		inProgressProjectFolderSearch = undefined;
+	return results;
 }
 
 export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {

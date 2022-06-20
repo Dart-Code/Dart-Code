@@ -98,6 +98,11 @@ export const longRepeatPromptThreshold = fortyHoursInMs;
 
 export const pleaseReportBug = "Please raise a bug against the Dart extension for VS Code.";
 
+export const projectSearchProgressText = "Searching for projects...";
+// Search for 2s before showing progress notification.
+export const projectSearchProgressNotificationDelayInMs = 2000;
+export const projectSearchCacheTimeInMs = fiveMinutesInMs;
+
 // Chrome OS exposed ports: 8000, 8008, 8080, 8085, 8888, 9005, 3000, 4200, 5000
 export const CHROME_OS_DEVTOOLS_PORT = 8080;
 export const CHROME_OS_VM_SERVICE_PORT = 8085;
