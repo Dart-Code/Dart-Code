@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as stream from "stream";
-import { CancellationToken, CodeActionContext, CompletionContext, CompletionItem, CompletionItemKind, MarkdownString, MarkedString, Position, Range, TextDocument, Uri, window, workspace } from "vscode";
-import { ConfigurationParams, ConfigurationRequest, ExecuteCommandSignature, HandleWorkDoneProgressSignature, LanguageClientOptions, Location, Middleware, ProgressToken, ProvideCodeActionsSignature, ProvideCompletionItemsSignature, ProvideHoverSignature, RAL, ResolveCompletionItemSignature, RevealOutputChannelOn, TextDocumentPositionParams, WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceEdit } from "vscode-languageclient";
+import * as vs from "vscode";
+import * as ls from "vscode-languageclient";
 import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
@@ -56,14 +56,14 @@ export class LspAnalyzer extends Analyzer {
 		});
 	}
 
-	private buildMiddleware(): Middleware {
+	private buildMiddleware(): ls.Middleware {
 		// Why need this 🤷‍♂️?
 		function isLanguageValuePair(input: any): input is { language: string; value: string } {
 			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
 		}
 
-		function cleanDocString<T extends MarkedString | MarkdownString | string>(input: T): T {
-			if (input instanceof MarkdownString)
+		function cleanDocString<T extends vs.MarkedString | vs.MarkdownString | string>(input: T): T {
+			if (input instanceof vs.MarkdownString)
 				return createMarkdownString(cleanDartdoc(input.value)) as T;
 			else if (typeof input === "string")
 				return cleanDartdoc(input) as T;
@@ -76,7 +76,7 @@ export class LspAnalyzer extends Analyzer {
 		/// Whether or not to trigger completion again when completing on this item. This is used
 		/// for convenience, eg. when completing the "import '';" snippet people expect completion
 		/// to immediately reopen.
-		function shouldTriggerCompletionAgain(item: CompletionItem): boolean {
+		function shouldTriggerCompletionAgain(item: vs.CompletionItem): boolean {
 			const label = typeof item.label === "string" ? item.label : item.label.label;
 
 			if (label === "import '';")
@@ -86,7 +86,7 @@ export class LspAnalyzer extends Analyzer {
 			if (label.trimRight().endsWith(":"))
 				return true;
 
-			if (item.kind === CompletionItemKind.Folder) {
+			if (item.kind === vs.CompletionItemKind.Folder) {
 				const label = typeof item.label === "string" ? item.label : item.label.label;
 				return label.endsWith("/");
 			}
@@ -99,7 +99,7 @@ export class LspAnalyzer extends Analyzer {
 		/// Whether or not to trigger signature help on this item. This is used because if a user doesn't
 		/// type the ( manually (but it's inserted as part of the completion) then the parameter hints do
 		/// not show up.
-		function shouldTriggerSignatureHelp(item: CompletionItem): boolean {
+		function shouldTriggerSignatureHelp(item: vs.CompletionItem): boolean {
 			let insertText: string | undefined;
 			if (item.insertText) {
 				if (typeof item.insertText === "string")
@@ -131,7 +131,7 @@ export class LspAnalyzer extends Analyzer {
 		};
 
 		return {
-			handleWorkDoneProgress: (token: ProgressToken, params: WorkDoneProgressBegin | WorkDoneProgressReport | WorkDoneProgressEnd, next: HandleWorkDoneProgressSignature) => {
+			handleWorkDoneProgress: (token: ls.ProgressToken, params: ls.WorkDoneProgressBegin | ls.WorkDoneProgressReport | ls.WorkDoneProgressEnd, next: ls.HandleWorkDoneProgressSignature) => {
 				if (params.kind === "begin")
 					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: true, suppressProgress: true });
 				else if (params.kind === "end")
@@ -140,12 +140,12 @@ export class LspAnalyzer extends Analyzer {
 				next(token, params);
 			},
 
-			provideCompletionItem: async (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
+			provideCompletionItem: async (document: vs.TextDocument, position: vs.Position, context: vs.CompletionContext, token: vs.CancellationToken, next: ls.ProvideCompletionItemsSignature) => {
 				const range = document.getWordRangeAtPosition(position);
 				const prefix = range ? document.getText(range) : undefined;
 				const timer = startTimer(`Completion: ${prefix ?? ""}`);
 				const results = await next(document, position, context, token);
-				let items: CompletionItem[];
+				let items: vs.CompletionItem[];
 				let isIncomplete = false;
 
 				// Handle either a CompletionItem[] or CompletionList.
@@ -155,14 +155,14 @@ export class LspAnalyzer extends Analyzer {
 					items = results.items;
 					isIncomplete = results.isIncomplete ?? false;
 				} else {
-					items = results as CompletionItem[];
+					items = results as vs.CompletionItem[];
 				}
 				timer.end(`${items.length} results ${isIncomplete ? "(incomplete)" : ""} ${token.isCancellationRequested ? "(cancelled)" : ""}`);
 
 				if (!items.length)
 					return;
 
-				const parameterHintsEnabled = !!workspace.getConfiguration("editor").get("parameterHints.enabled");
+				const parameterHintsEnabled = !!vs.workspace.getConfiguration("editor").get("parameterHints.enabled");
 				for (const item of items) {
 					if (shouldTriggerCompletionAgain(item)) {
 						item.command = {
@@ -180,25 +180,25 @@ export class LspAnalyzer extends Analyzer {
 				return results;
 			},
 
-			resolveCompletionItem: (item: CompletionItem, token: CancellationToken, next: ResolveCompletionItemSignature) => {
+			resolveCompletionItem: (item: vs.CompletionItem, token: vs.CancellationToken, next: ls.ResolveCompletionItemSignature) => {
 				if (item.documentation)
 					item.documentation = cleanDocString(item.documentation);
 				return next(item, token);
 			},
 
-			provideHover: async (document: TextDocument, position: Position, token: CancellationToken, next: ProvideHoverSignature) => {
+			provideHover: async (document: vs.TextDocument, position: vs.Position, token: vs.CancellationToken, next: ls.ProvideHoverSignature) => {
 				const item = await next(document, position, token);
 				if (item?.contents)
 					item.contents = item.contents.map((s) => cleanDocString(s));
 				return item;
 			},
 
-			provideDocumentColors: (document: TextDocument, token: CancellationToken, next: ProvideDocumentColorsSignature) => {
+			provideDocumentColors: (document: vs.TextDocument, token: vs.CancellationToken, next: ProvideDocumentColorsSignature) => {
 				this.onDocumentColorsRequestedCompleter.resolve();
 				return next(document, token);
 			},
 
-			async provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken, next: ProvideCodeActionsSignature) {
+			async provideCodeActions(document: vs.TextDocument, range: vs.Range, context: vs.CodeActionContext, token: vs.CancellationToken, next: ls.ProvideCodeActionsSignature) {
 				const documentVersion = document.version;
 				let res = await next(document, range, context, token) || [];
 
@@ -214,7 +214,7 @@ export class LspAnalyzer extends Analyzer {
 				return res;
 			},
 
-			executeCommand: async (command: string, args: any[], next: ExecuteCommandSignature) => {
+			executeCommand: async (command: string, args: any[], next: ls.ExecuteCommandSignature) => {
 				if (command === "refactor.perform") {
 					// Handle both the old way (6 args as a list) and the new way (a single arg that's a map).
 					const mapArgsIndex = 0;
@@ -234,7 +234,7 @@ export class LspAnalyzer extends Analyzer {
 								try {
 									const validateResult = await next("refactor.validate", args);
 									if (validateResult.valid === false) {
-										window.showErrorMessage(validateResult.message as string);
+										vs.window.showErrorMessage(validateResult.message as string);
 										return;
 									}
 								} catch (e) {
@@ -246,7 +246,7 @@ export class LspAnalyzer extends Analyzer {
 							let name: string | undefined;
 							switch (refactorKind) {
 								case "EXTRACT_METHOD":
-									name = await window.showInputBox({
+									name = await vs.window.showInputBox({
 										prompt: "Enter a name for the method",
 										validateInput: (s) => validMethodNameRegex.test(s) ? undefined : "Enter a valid method name",
 										value: "newMethod",
@@ -255,7 +255,7 @@ export class LspAnalyzer extends Analyzer {
 										return;
 									break;
 								case "EXTRACT_WIDGET":
-									name = await window.showInputBox({
+									name = await vs.window.showInputBox({
 										prompt: "Enter a name for the widget",
 										validateInput: (s) => validClassNameRegex.test(s) ? undefined : "Enter a valid widget name",
 										value: "NewWidget",
@@ -280,7 +280,7 @@ export class LspAnalyzer extends Analyzer {
 							return await next(command, args);
 						} catch (e: any) {
 							if (e?.code === refactorFailedErrorCode) {
-								window.showErrorMessage(e.message as string);
+								vs.window.showErrorMessage(e.message as string);
 								return;
 							} else {
 								throw e;
@@ -292,7 +292,7 @@ export class LspAnalyzer extends Analyzer {
 			},
 
 			workspace: {
-				configuration: async (params: ConfigurationParams, token: CancellationToken, next: ConfigurationRequest.HandlerSignature) => {
+				configuration: async (params: ls.ConfigurationParams, token: vs.CancellationToken, next: ls.ConfigurationRequest.HandlerSignature) => {
 					const results = await next(params, token);
 
 					// Replace any instance of enableSnippets with the value of enableServerSnippets.
@@ -316,18 +316,18 @@ export class LspAnalyzer extends Analyzer {
 		try {
 			return await this.client.sendRequest(ReanalyzeRequest.type);
 		} catch (e) {
-			window.showErrorMessage("Reanalyze is not supported by this version of the Dart SDK's LSP server.");
+			vs.window.showErrorMessage("Reanalyze is not supported by this version of the Dart SDK's LSP server.");
 		}
 	}
 
-	public async getSuper(params: TextDocumentPositionParams): Promise<Location | null> {
+	public async getSuper(params: ls.TextDocumentPositionParams): Promise<ls.Location | null> {
 		return this.client.sendRequest(
 			SuperRequest.type,
 			params,
 		);
 	}
 
-	public async completeStatement(params: TextDocumentPositionParams): Promise<WorkspaceEdit | null> {
+	public async completeStatement(params: ls.TextDocumentPositionParams): Promise<ls.WorkspaceEdit | null> {
 		return this.client.sendRequest(
 			CompleteStatementRequest.type,
 			params,
@@ -335,8 +335,8 @@ export class LspAnalyzer extends Analyzer {
 	}
 }
 
-function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: Middleware, vmServicePort: number | undefined): LanguageClient {
-	const clientOptions: LanguageClientOptions = {
+function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware, vmServicePort: number | undefined): LanguageClient {
+	const clientOptions: ls.LanguageClientOptions = {
 		initializationOptions: {
 			closingLabels: config.closingLabels,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
@@ -349,10 +349,10 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		},
 		middleware,
 		outputChannelName: "LSP",
-		revealOutputChannelOn: RevealOutputChannelOn.Never,
+		revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
 		uriConverters: {
-			code2Protocol: (uri) => Uri.file(fsPath(uri, { useRealCasing: !!config.normalizeFileCasing })).toString(),
-			protocol2Code: (file) => Uri.parse(file),
+			code2Protocol: (uri) => vs.Uri.file(fsPath(uri, { useRealCasing: !!config.normalizeFileCasing })).toString(),
+			protocol2Code: (file) => vs.Uri.parse(file),
 		},
 	};
 
@@ -361,7 +361,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		"Dart Analysis Server",
 		async () => {
 			const streamInfo = await spawnServer(logger, sdks, dartCapabilities, vmServicePort);
-			const jsonEncoder = RAL().applicationJson.encoder;
+			const jsonEncoder = ls.RAL().applicationJson.encoder;
 
 			return {
 				detached: streamInfo.detached,
