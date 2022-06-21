@@ -24,7 +24,6 @@ const keyValue = "value";
 const toggleExtensionStateKeys: { [key: string]: string } = {
 	[VmServiceExtension.PlatformOverride]: keyValue,
 	[VmServiceExtension.DebugBanner]: keyEnabled,
-	[VmServiceExtension.CheckElevations]: keyEnabled,
 	[VmServiceExtension.DebugPaint]: keyEnabled,
 	[VmServiceExtension.PaintBaselines]: keyEnabled,
 	[VmServiceExtension.InspectorSelectMode]: keyEnabled,

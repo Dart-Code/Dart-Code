@@ -84,7 +84,6 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleBrightness", () => this.vmServices.toggle(VmServiceExtension.BrightnessOverride, "Brightness.dark", "Brightness.light")));
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleRepaintRainbow", () => this.vmServices.toggle(VmServiceExtension.RepaintRainbow)));
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.vmServices.toggle(VmServiceExtension.DebugBanner)));
-		this.disposables.push(vs.commands.registerCommand("flutter.toggleCheckElevations", () => this.vmServices.toggle(VmServiceExtension.CheckElevations)));
 		this.disposables.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.vmServices.toggle(VmServiceExtension.PaintBaselines)));
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.vmServices.toggle(VmServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
 		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true)));

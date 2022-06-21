@@ -22,7 +22,6 @@ export enum TestStatus {
 export enum VmServiceExtension {
 	PlatformOverride = "ext.flutter.platformOverride",
 	DebugBanner = "ext.flutter.debugAllowBanner",
-	CheckElevations = "ext.flutter.debugCheckElevationsEnabled",
 	DebugPaint = "ext.flutter.debugPaint",
 	Driver = "ext.flutter.driver",
 	PaintBaselines = "ext.flutter.debugPaintBaselinesEnabled",
