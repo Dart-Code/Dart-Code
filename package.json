@@ -1797,6 +1797,25 @@
 						"description": "Whether to automatically send a Hot Restart request during a debug session when saving files if Hot Reload is not available but Hot Restart is.",
 						"scope": "window"
 					},
+					"dart.flutterGenerateLocalizationsOnSave": {
+						"enum": [
+							"never",
+							"manual",
+							"manualIfDirty",
+							"all",
+							"allIfDirty"
+						],
+						"enumDescriptions": [
+							"Do not generate localizations when saving",
+							"Generate localizations for explicit manual saves (requires pressing Save explicitly if using autosave)",
+							"Generate localizations for explicit manual saves (requires pressing Save explicitly if using autosave) only if the saved file had changes",
+							"Generate localizations for all saves, manual or automatic",
+							"Generate localizations for all saves, manual or automatic only if the saved file had changes"
+						],
+						"default": "never",
+						"markdownDescription": "Whether to automatically run the Generate Localizations command for Flutter apps when saving .arb files.",
+						"scope": "window"
+					},
 					"dart.flutterOutline": {
 						"type": "boolean",
 						"default": true,

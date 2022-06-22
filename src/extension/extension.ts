@@ -67,6 +67,7 @@ import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { DasFlutterOutlineProvider, FlutterOutlineProvider, FlutterWidgetItem, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
+import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizations_on_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToSuperCommand } from "./lsp/go_to_super";
@@ -578,8 +579,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Handle config changes so we can reanalyze if necessary.
 	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
 
-	// Wire up handling of Hot Reload on Save.
+	// Wire up handling of On-Save handlers.
 	context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands, flutterCapabilities));
+	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
+		context.subscriptions.push(new GenerateLocalizationsOnSaveHandler());
+	}
 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));

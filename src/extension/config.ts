@@ -83,6 +83,7 @@ class Config {
 	get flutterCustomEmulators(): Array<{ id: string, name: string, executable: string, args?: string[] }> { return this.getConfig<Array<{ id: string, name: string, executable: string, args?: string[] }>>("flutterCustomEmulators", []); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
+	get flutterGenerateLocalizationsOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" { return this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty">("flutterGenerateLocalizationsOnSave", "never"); }
 	get flutterHotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
 		const value = this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" | "always" | true | false>("flutterHotReloadOnSave", "manual");
 		// Convert the legacy values to new values, if required.
