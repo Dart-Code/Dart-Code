@@ -228,3 +228,7 @@ export interface Analytics {
 	logFlutterSurveyClicked(): void;
 	logFlutterSurveyDismissed(): void;
 }
+
+export interface MyCancellationToken {
+	isCancellationRequested: boolean;
+}
