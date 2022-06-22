@@ -125,7 +125,11 @@ export class DebugCommands implements IAmDisposable {
 				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, page });
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
+			} else if (session.hasStarted) {
+				vs.window.showInformationMessage("DevTools is not available for an app running in this mode.");
 			} else {
+				// TODO: Remove the last part of this after the next Flutter release (after 3.0) when the appStarted event
+				//       is passed.
 				vs.window.showInformationMessage("This debug session is not ready yet or does not support DevTools.");
 			}
 		}));
@@ -668,6 +672,8 @@ export class DebugCommands implements IAmDisposable {
 			}
 			clearTimeout(timer);
 			this.suppressFlutterWidgetErrors = false;
+		} else if (e.event === "flutter.appStarted") {
+			session.hasStarted = true;
 		}
 	}
 
