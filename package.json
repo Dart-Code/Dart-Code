@@ -820,7 +820,7 @@
 				},
 				{
 					"command": "flutter.clean",
-					"when": "dart-code:flutterMobileProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "flutter.doctor"

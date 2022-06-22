@@ -113,10 +113,7 @@ const HTML_MODE = { language: "html", scheme: "file" };
 
 const PROJECT_LOADED = "dart-code:anyProjectLoaded";
 const DART_PROJECT_LOADED = "dart-code:anyStandardDartProjectLoaded";
-// TODO: Define what this means better. Some commands a general Flutter (eg. Hot
-// Reload) and some are more specific (eg. Attach).
 const FLUTTER_PROJECT_LOADED = "dart-code:anyFlutterProjectLoaded";
-const FLUTTER_MOBILE_PROJECT_LOADED = "dart-code:flutterMobileProjectLoaded";
 const WEB_PROJECT_LOADED = "dart-code:WebProjectLoaded";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 const DART_PLATFORM_NAME = "dart-code:dartPlatformName";
@@ -259,7 +256,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 
 	// Fire up Flutter daemon if required.
-	if (workspaceContext.hasAnyFlutterMobileProjects && sdks.flutter) {
+	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
 		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities);
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config);
 
@@ -919,6 +916,5 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContex
 	vs.commands.executeCommand("setContext", PROJECT_LOADED, enable);
 	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyStandardDartProjects);
 	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
-	vs.commands.executeCommand("setContext", FLUTTER_MOBILE_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterMobileProjects);
 	vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);
 }

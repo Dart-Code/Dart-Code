@@ -8,7 +8,7 @@ export class WorkspaceContext implements IAmDisposable {
 	constructor(
 		public readonly sdks: Sdks,
 		public readonly config: WorkspaceConfig,
-		public readonly hasAnyFlutterMobileProjects: boolean,
+		public readonly hasAnyFlutterProjects: boolean,
 		public readonly hasAnyWebProjects: boolean,
 		public readonly hasAnyStandardDartProjects: boolean,
 		public readonly hasProjectsInFuchsiaTree: boolean,
@@ -16,7 +16,6 @@ export class WorkspaceContext implements IAmDisposable {
 		this.workspaceTypeDescription = this.buildWorkspaceTypeDescription();
 	}
 
-	get hasAnyFlutterProjects() { return this.hasAnyFlutterMobileProjects; }
 	get shouldLoadFlutterExtension() { return this.hasAnyFlutterProjects; }
 
 	/// Used only for display (for ex stats), not behaviour.
@@ -26,7 +25,7 @@ export class WorkspaceContext implements IAmDisposable {
 		// Dart, Flutter and also Flutter, Dart.
 		if (this.hasAnyStandardDartProjects)
 			types.push("Dart");
-		if (this.hasAnyFlutterMobileProjects)
+		if (this.hasAnyFlutterProjects)
 			types.push("Flutter");
 		if (this.hasProjectsInFuchsiaTree)
 			types.push("Fuchsia");
