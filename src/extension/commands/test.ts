@@ -101,21 +101,26 @@ export class TestCommands implements vs.Disposable {
 			return;
 		}
 
-		await Promise.all(projectsWithTests.map((projectWithTests) => this.runTests({
-			debug: false,
-			launchTemplate: {
-				args: projectWithTests.tests.slice(1),
-				cwd: projectWithTests.projectFolder,
-				name: projectWithTests.name,
-			},
-			programPath: projectWithTests.tests[0],
-			shouldRunSkippedTests: false,
-			suppressPrompts: true,
-			testNames: undefined,
-			testRun,
-			token: undefined,
-			useLaunchJsonTestTemplate: true,
-		})));
+		await Promise.all(
+			projectsWithTests.map((projectWithTests) => this.runTests({
+				debug: false,
+				launchTemplate: {
+					args: projectWithTests.tests.slice(1),
+					cwd: projectWithTests.projectFolder,
+					name: projectWithTests.name,
+				},
+				programPath: projectWithTests.tests[0],
+				shouldRunSkippedTests: false,
+				suppressPrompts: true,
+				testNames: undefined,
+				testRun,
+				token: undefined,
+				useLaunchJsonTestTemplate: true,
+				// Swallow errors here because they come from rejections if a session fails to start.
+				// In batch runs, we don't want to fail the entire run with an error because one
+				// project failed (eg. web integration tests).
+			}).catch(() => true))
+		);
 	}
 
 	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
@@ -185,7 +190,7 @@ export class TestCommands implements vs.Disposable {
 				launchConfiguration
 			);
 			if (!didStart)
-				reject();
+				reject(new Error("Failed to start session. Is launch configuration valid?"));
 		}).finally(() => {
 			disposeAll(subs);
 		});
