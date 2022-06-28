@@ -6,7 +6,7 @@ import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
-import { logger, sb } from "../helpers";
+import { extApi, logger, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../services/fake_stdio_service";
 import sinon = require("sinon");
 
@@ -17,7 +17,7 @@ describe("device_manager", () => {
 	beforeEach(() => {
 		daemon = new FakeFlutterDaemon();
 		// TODO: Tests for custom emulators.
-		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: customEmulators, flutterSelectDeviceWhenConnected: true, flutterShowEmulators: "local", projectSearchDepth: 3 });
+		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: customEmulators, flutterSelectDeviceWhenConnected: true, flutterShowEmulators: "local", projectSearchDepth: 3 }, extApi.workspaceContext);
 	});
 
 	afterEach(() => {
