@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# This wrapper is used to allow us to run "flutter debug_adapter" when using this fake
+# SDK for Bazel tests.
+flutter "$@"
