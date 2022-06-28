@@ -197,7 +197,7 @@ export class DartTestDebugSession extends DartDebugSession {
 				this.logToUser(`${error.stackTrace}\n`, "stderr");
 				break;
 			case "done":
-				if (this.expectSingleTest && this.sourceFileForArgs) {
+				if (this.expectSingleTest) {
 					const testNames = Object.keys(this.testCounts);
 					const firstTestWithMultipleRuns = testNames.find((name) => this.testCounts[name] > 1);
 					// It's possible that we ran multiple tests because of a variant argument in Flutter, so only actually report
