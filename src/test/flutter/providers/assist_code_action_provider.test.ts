@@ -58,7 +58,9 @@ class Danny extends StatelessWidget {
 		await setTestContent(`
 import 'package:flutter/material.dart';
 
-final t = const Text('\$123');
+Widget build() {
+  return const Text('\\$123');
+}
 `);
 		const actionResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Te||xt("));
 		assert.ok(actionResults);
@@ -86,7 +88,9 @@ final t = const Text('\$123');
 		await ensureTestContent(`
 import 'package:flutter/material.dart';
 
-final t = Center(child: const Text('\$123'));
+Widget build() {
+  return Center(child: const Text('\\$123'));
+}
 `);
 	});
 });
