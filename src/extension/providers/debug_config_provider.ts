@@ -173,30 +173,33 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const requiresDevice = (debugType === DebuggerType.Flutter && !isAttachRequest)
 			|| (DebuggerType.FlutterTest && isIntegrationTest && this.flutterCapabilities.supportsRunningIntegrationTests);
 		if (requiresDevice) {
-			deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId as string | undefined) || this.deviceManager?.currentDevice;
 			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
 				let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
 					? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
 					: undefined;
 
-				// If the current device is not valid, prompt the user.
-				if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
-					deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms);
+				if (!debugConfig.suppressPrompts) {
+					// If the current device is not valid, prompt the user.
+					if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
+						deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms);
 
-				// Refresh the supported platforms, as the we may have enabled new platforms during
-				// the call to showDevicePicker.
-				supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
-					? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
-					: undefined;
+					// Refresh the supported platforms, as the we may have enabled new platforms during
+					// the call to showDevicePicker.
+					supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
+						? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+						: undefined;
+				}
 
 				// If we still don't have a valid device, show an error.
 				if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn)) {
-					if (deviceToLaunchOn) {
-						logger.warn(`Unable to launch because ${deviceToLaunchOn.id} is not valid for this project (${deviceToLaunchOn.platformType} is not allowed according to [${supportedPlatforms?.join(", ")}])`);
-						window.showInformationMessage("Cannot launch without a valid device for this project");
-					} else {
-						logger.warn("Unable to launch due to no active device");
-						window.showInformationMessage("Cannot launch without an active device");
+					if (!debugConfig.suppressPrompts) {
+						if (deviceToLaunchOn) {
+							logger.warn(`Unable to launch because ${deviceToLaunchOn.id} is not valid for this project (${deviceToLaunchOn.platformType} is not allowed according to [${supportedPlatforms?.join(", ")}])`);
+							window.showInformationMessage("Cannot launch without a valid device for this project");
+						} else {
+							logger.warn("Unable to launch due to no active device");
+							window.showInformationMessage("Cannot launch without an active device");
+						}
 					}
 					return undefined; // undefined means silent (don't open launch.json).
 				}
@@ -222,7 +225,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.cwd = forceWindowsDriveLetterToUppercase(debugConfig.cwd);
 
 		// If we're launching (not attaching) then check there are no errors before we launch.
-		if (!isAttachRequest && debugConfig.cwd && config.promptToRunIfErrors && !debugConfig.suppressPromptOnErrors) {
+		if (!isAttachRequest && debugConfig.cwd && config.promptToRunIfErrors && !debugConfig.suppressPrompts) {
 			if (await this.checkIfProjectHasErrors(debugConfig))
 				return undefined; // undefined means silent (don't open launch.json).
 		}

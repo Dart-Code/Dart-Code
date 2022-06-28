@@ -29,7 +29,7 @@ describe("flutter test debugger", () => {
 		const root = fsPath(flutterBazelRoot);
 		const hasRunFile = prepareHasRunFile(root, "flutter_test");
 
-		const config = await startDebugger(dc, flutterBazelTestMainFile, { suppressPromptOnErrors: true });
+		const config = await startDebugger(dc, flutterBazelTestMainFile, { suppressPrompts: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),

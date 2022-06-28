@@ -33,8 +33,8 @@ export class TestCommands implements vs.Disposable {
 		this.disposables.push(
 			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
-			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPromptOnErrors: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPromptOnErrors, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
+			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, this.getTestNamesForNodes(treeNodes), false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suites, testRun, isRunningAll)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
@@ -110,7 +110,7 @@ export class TestCommands implements vs.Disposable {
 			},
 			programPath: projectWithTests.tests[0],
 			shouldRunSkippedTests: false,
-			suppressPromptOnErrors: true,
+			suppressPrompts: true,
 			testNames: undefined,
 			testRun,
 			token: undefined,
@@ -118,7 +118,7 @@ export class TestCommands implements vs.Disposable {
 		})));
 	}
 
-	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPromptOnErrors: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
+	private async runTestsForNode(suiteData: SuiteData, testNames: TestName[] | undefined, debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
 		const programPath = fsPath(suiteData.path);
 		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(suiteData.path));
 		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
@@ -128,7 +128,7 @@ export class TestCommands implements vs.Disposable {
 			launchTemplate: undefined,
 			programPath,
 			shouldRunSkippedTests,
-			suppressPromptOnErrors,
+			suppressPrompts,
 			testNames,
 			testRun,
 			token,
@@ -136,7 +136,7 @@ export class TestCommands implements vs.Disposable {
 		});
 	}
 
-	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPromptOnErrors, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestLaunchInfo): Promise<boolean> {
+	private runTests({ programPath, debug, testNames, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestLaunchInfo): Promise<boolean> {
 		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.
 			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
@@ -151,7 +151,7 @@ export class TestCommands implements vs.Disposable {
 			if (testsName === "test")
 				testsName = path.basename(path.dirname(programPath));
 			const launchConfiguration = {
-				suppressPromptOnErrors,
+				suppressPrompts,
 				...getLaunchConfig(
 					!debug,
 					programPath,
@@ -234,7 +234,7 @@ export class TestCommands implements vs.Disposable {
 			launchTemplate,
 			programPath: test.file,
 			shouldRunSkippedTests,
-			suppressPromptOnErrors: false,
+			suppressPrompts: false,
 			testNames: [{ name: test.fullName, isGroup: test.isGroup }],
 			testRun: undefined,
 			token: undefined,
@@ -347,7 +347,7 @@ interface TestLaunchInfo {
 	debug: boolean;
 	testNames: TestName[] | undefined;
 	shouldRunSkippedTests: boolean;
-	suppressPromptOnErrors: boolean;
+	suppressPrompts: boolean;
 	launchTemplate: any | undefined;
 	useLaunchJsonTestTemplate?: boolean;
 	testRun: vs.TestRun | undefined;

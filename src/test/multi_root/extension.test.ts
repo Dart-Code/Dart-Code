@@ -50,7 +50,7 @@ describe("extension", () => {
 				name: "Dart",
 				program: fsPath(helloWorldMainFile),
 				request: "launch",
-				suppressPromptOnErrors: true,
+				suppressPrompts: true,
 				type: "dart",
 			},
 		);
