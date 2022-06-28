@@ -100,6 +100,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				testNodes.push(node);
 			});
 
+			const suppressPrompts = testsBySuite.size > 1;
 			for (const suite of testsBySuite.keys()) {
 				const nodes = testsBySuite.get(suite);
 				if (!nodes) continue;
@@ -107,7 +108,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				const command = debug
 					? "_dart.startDebuggingTestsFromVsTestController"
 					: "_dart.startWithoutDebuggingTestsFromVsTestController";
-				await vs.commands.executeCommand(command, suite, nodes, true, run);
+				await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, run);
 			}
 		} finally {
 			run.end();

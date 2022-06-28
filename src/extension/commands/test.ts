@@ -111,15 +111,12 @@ export class TestCommands implements vs.Disposable {
 				},
 				programPath: projectWithTests.tests[0],
 				shouldRunSkippedTests: false,
-				suppressPrompts: true,
+				suppressPrompts: suites?.length !== 1,
 				testNames: undefined,
 				testRun,
 				token: undefined,
 				useLaunchJsonTestTemplate: true,
-				// Swallow errors here because they come from rejections if a session fails to start.
-				// In batch runs, we don't want to fail the entire run with an error because one
-				// project failed (eg. web integration tests).
-			}).catch(() => true))
+			}))
 		);
 	}
 
@@ -189,8 +186,13 @@ export class TestCommands implements vs.Disposable {
 				vs.workspace.getWorkspaceFolder(vs.Uri.file(programPath)),
 				launchConfiguration
 			);
-			if (!didStart)
-				reject(new Error("Failed to start session. Is launch configuration valid?"));
+			if (!didStart) {
+				// Failures to start will trigger their own messages (from debug_config_provider) so we
+				// should not reject() here, as VS Code will show an additional (less helpful) error
+				// message.
+				resolve(false);
+
+			}
 		}).finally(() => {
 			disposeAll(subs);
 		});
