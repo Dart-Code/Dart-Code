@@ -100,6 +100,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		const quickPick = vs.window.createQuickPick<PickableDevice | DeviceSeparator>();
 		quickPick.placeholder = "Select a device to use";
 		quickPick.busy = true;
+		quickPick.ignoreFocusOut = true;
 
 		let quickPickIsValid = true;
 		let emulatorDevices: PickableDevice[];
