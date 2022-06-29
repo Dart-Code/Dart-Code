@@ -289,6 +289,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		this.shortCacheForSupportedPlatforms = new Promise(async (resolve) => {
+			// An internal workspace that we assume to be Flutter will not generate project folders, but the daemon will respond to an empty path.
 			const projectFolders = this.workspaceContext.config.forceFlutterWorkspace ? [""] : await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
 			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
