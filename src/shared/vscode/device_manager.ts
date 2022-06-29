@@ -9,6 +9,7 @@ import { logProcess } from "../logging";
 import { safeSpawn } from "../processes";
 import { unique } from "../utils/array";
 import { resolveTildePaths } from "../utils/fs";
+import { WorkspaceContext } from "../workspace";
 import { isRunningLocally } from "./utils";
 
 export class FlutterDeviceManager implements vs.Disposable {
@@ -19,7 +20,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number }) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number }, private readonly workspaceContext: WorkspaceContext) {
 		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.name = "Flutter Device";
 		this.statusBarItem.tooltip = "Flutter";
@@ -288,7 +289,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		this.shortCacheForSupportedPlatforms = new Promise(async (resolve) => {
-			const projectFolders = await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
+			// An internal workspace that we assume to be Flutter will not generate project folders, but the daemon will respond to an empty path.
+			const projectFolders = this.workspaceContext.config.forceFlutterWorkspace ? [""] : await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
 			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
 			const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));
