@@ -396,18 +396,19 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		// Figure out which are Snippets.
 		for (const change of item?.documentChanges ?? []) {
 			if (ls.TextDocumentEdit.is(change)) {
-				const uri = change.textDocument.uri;
+				const uri = vs.Uri.parse(change.textDocument.uri);
 				for (const edit of change.edits) {
 					if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
-						snippetTypes.add(`${uri}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
+						snippetTypes.add(`${fsPath(uri)}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
 					}
 				}
 			}
 		}
-		for (const uri of Object.keys(item?.changes ?? {})) {
-			for (const edit of item!.changes![uri]) {
+		for (const uriString of Object.keys(item?.changes ?? {})) {
+			const uri = vs.Uri.parse(uriString);
+			for (const edit of item!.changes![uriString]) {
 				if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
-					snippetTypes.add(`${uri}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
+					snippetTypes.add(`${fsPath(uri)}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
 				}
 			}
 		}
@@ -417,7 +418,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 				const uri = changeset[0];
 				const changes = changeset[1];
 				for (const change of changes) {
-					if (snippetTypes.has(`${uri}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
+					if (snippetTypes.has(`${fsPath(uri)}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
 						(change as any).insertTextFormat = ls.InsertTextFormat.Snippet;
 					}
 				}
