@@ -15,6 +15,7 @@ const testConfigs: TestConfig[] = [
 	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"], sdkDaps: false },
 	{ testFolder: "dart_debug", project: "hello_world", sdkDaps: true },
 	{ testFolder: "web_debug", project: "web", debugAdapters: ["web", "web_test"] },
+	{ testFolder: "dart_nested", project: "dart_nested" },
 	{ testFolder: "dart_nested_flutter", project: "dart_nested_flutter" },
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: false },
 	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },

@@ -133,6 +133,21 @@ jobs:
         run: dart pub get
         working-directory: src/test/test_projects/hello_world/example
 
+      - name: dart pub get (dart_nested)
+        if: matrix.bot == 'misc'
+        run: dart pub get
+        working-directory: src/test/test_projects/dart_nested
+
+      - name: dart pub get (dart_nested/nested1)
+        if: matrix.bot == 'misc'
+        run: dart pub get
+        working-directory: src/test/test_projects/dart_nested/nested1
+
+      - name: dart pub get (dart_nested/nested1/nested2)
+        if: matrix.bot == 'misc'
+        run: dart pub get
+        working-directory: src/test/test_projects/dart_nested/nested1/nested2
+
       - name: flutter pub get (dart_nested_flutter/nested_flutter_example)
         if: matrix.bot == 'misc'
         run: flutter pub get
