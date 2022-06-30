@@ -46,20 +46,13 @@ export function isPubGetProbablyRequired(sdks: Sdks, logger: Logger, folderUri: 
 	return false;
 }
 
-export function promptToRunPubGet(folders: Uri[]) {
+export async function promptToRunPubGet(folders: Uri[]) {
 	const label = "Get packages";
-	window.showInformationMessage("Some packages are missing or out of date, would you like to get them now?", label).then((clickedButton) => {
-		if (clickedButton === label)
-			getPackages(folders);
-	});
+	const clickedButton = await window.showInformationMessage("Some packages are missing or out of date, would you like to get them now?", label);
+	if (clickedButton === label)
+		await runPubGet(folders);
 }
 
-function getPackages(folders: Uri[]) {
-	let task = commands.executeCommand("dart.getPackages", folders[0]);
-	for (let i = 1; i < folders.length; i++) {
-		task = task.then((code) => {
-			if (code === 0) // Continue with next one only if success
-				return commands.executeCommand("dart.getPackages", folders[i]);
-		});
-	}
+export function runPubGet(folders: Uri[]) {
+	return commands.executeCommand("dart.getPackages", folders);
 }

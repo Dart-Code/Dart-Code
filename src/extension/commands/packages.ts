@@ -8,7 +8,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
-import { isPubGetProbablyRequired, promptToRunPubGet } from "../pub/pub";
+import { isPubGetProbablyRequired, promptToRunPubGet, runPubGet } from "../pub/pub";
 import * as util from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands, commandState } from "./sdk";
@@ -41,7 +41,14 @@ export class PackageCommands extends BaseSdkCommands {
 		this.setupPubspecWatcher();
 	}
 
-	private async getPackages(uri: string | vs.Uri | undefined) {
+	private async getPackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
+		if (Array.isArray(uri)) {
+			for (const item of uri) {
+				await this.getPackages(item);
+			}
+			return;
+		}
+
 		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to get packages for");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
@@ -172,11 +179,12 @@ export class PackageCommands extends BaseSdkCommands {
 			? 10000
 			: 1000;
 
+		const projectUri = vs.Uri.file(path.dirname(filePath));
 		runPubGetDelayTimer = setTimeout(() => {
 			runPubGetDelayTimer = undefined;
 			lastPubspecSaveReason = undefined;
 			// tslint:disable-next-line: no-floating-promises
-			this.fetchPackagesOrPrompt(uri);
+			this.fetchPackagesOrPrompt(projectUri);
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 
@@ -202,10 +210,10 @@ export class PackageCommands extends BaseSdkCommands {
 				.filter((uri) => config.for(uri).promptToGetPackages)
 				.filter((uri) => isPubGetProbablyRequired(this.sdks, this.logger, uri));
 			this.logger.info(`Found ${foldersRequiringPackageGet.length} folders requiring "pub get":${foldersRequiringPackageGet.map((uri) => `\n    ${fsPath(uri)}`).join("")}`);
-			if (!forcePrompt && foldersRequiringPackageGet.length === 0)
-				await vs.commands.executeCommand("dart.getPackages", uri);
+			if (!forcePrompt && foldersRequiringPackageGet.length === 0 && uri)
+				await this.runPubGetWithRelatives(folders, uri);
 			else if (!forcePrompt && foldersRequiringPackageGet.length === 1)
-				await vs.commands.executeCommand("dart.getPackages", foldersRequiringPackageGet[0]);
+				await this.runPubGetWithRelatives(folders, foldersRequiringPackageGet[0]);
 			else if (foldersRequiringPackageGet.length)
 				promptToRunPubGet(foldersRequiringPackageGet);
 		} finally {
@@ -213,4 +221,25 @@ export class PackageCommands extends BaseSdkCommands {
 		}
 	}
 
+	private async runPubGetWithRelatives(allProjectFolders: string[], triggeredProjectUri: vs.Uri) {
+		const triggeredProjectFolder = fsPath(triggeredProjectUri);
+
+		const walkDirection = config.runPubGetOnNestedProjects;
+
+		const fetchBoth = walkDirection === "both";
+		const fetchUp = walkDirection === "above" || fetchBoth;
+		const fetchDown = walkDirection === "below" || fetchBoth;
+		let projectsToFetch = [triggeredProjectFolder];
+		if (walkDirection) {
+			for (const projectFolder of allProjectFolders) {
+				if (fetchUp && triggeredProjectFolder.startsWith(projectFolder))
+					projectsToFetch.push(projectFolder);
+				if (fetchDown && projectFolder.startsWith(triggeredProjectFolder))
+					projectsToFetch.push(projectFolder);
+			}
+		}
+
+		projectsToFetch = uniq(projectsToFetch);
+		await runPubGet(projectsToFetch.map((path) => vs.Uri.file(path)));
+	}
 }

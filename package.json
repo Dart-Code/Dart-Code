@@ -2047,6 +2047,23 @@
 						"default": true,
 						"markdownDescription": "Whether to automatically run `pub get` whenever `pubspec.yaml` is saved.",
 						"scope": "resource"
+					},
+					"dart.runPubGetOnNestedProjects": {
+						"enum": [
+							"none",
+							"both",
+							"above",
+							"below"
+						],
+						"enumDescriptions": [
+							"Only run `pub get` for the project whose pubspec was changed",
+							"Run `pub get` also in parent or child projects of the one whose pubspec was changed",
+							"Run `pub get` also in parent projects of the one whose pubspec was changed",
+							"Run `pub get` also in child projects of the one whose pubspec was changed"
+						],
+						"default": "none",
+						"markdownDescription": "Whether to automatically run `pub get` on nested projects above or below the one where the pubspec was changed.",
+						"scope": "window"
 					}
 				}
 			},
