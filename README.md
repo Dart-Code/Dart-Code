@@ -1,5 +1,4 @@
 [![Discord Chat](https://img.shields.io/badge/chat-discord-blue.svg)](https://discord.gg/xSTPEqm)
-[![Gitter Chat](https://img.shields.io/badge/chat-gitter-blue.svg)](https://gitter.im/dart-code/Dart-Code)
 [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
 [![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md)
 
