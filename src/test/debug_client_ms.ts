@@ -366,10 +366,12 @@ export class DebugClient extends ProtocolClient {
 	 * and the event's reason and line number was asserted.
 	 * The promise will be rejected if a timeout occurs, the assertions fail, or if the 'stackTrace' request fails.
 	 */
-	public assertStoppedLocation(reason: string, expected: { path?: string | RegExp, line?: number, column?: number }): Promise<DebugProtocol.StackTraceResponse> {
+	public assertStoppedLocation(reason: string, expected: { path?: string | RegExp, line?: number, column?: number, text?: string }): Promise<DebugProtocol.StackTraceResponse> {
 
 		return this.waitForEvent('stopped', 'assertStoppedLocation').then(event => {
 			assert.equal(event.body.reason, reason);
+			if (expected.text)
+				assert.equal(event.body.text, expected.text);
 			return this.stackTraceRequest({
 				threadId: event.body.threadId
 			});
