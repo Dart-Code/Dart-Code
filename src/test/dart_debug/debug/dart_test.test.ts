@@ -124,21 +124,21 @@ describe("dart test debugger", () => {
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	}
 
-	it.only("can run tests from codelens", async () => {
+	it("can run tests from codelens", async () => {
 		const search = `test^(".split() splits`;
 		const testName = "String .split() splits the string on the delimiter";
 
 		await checkRunTestFromCodeLens(search, testName);
 	});
 
-	it.only("can run tests from codelens with greater than", async () => {
+	it("can run tests from codelens with greater than", async () => {
 		const search = `test^("without quotes List<String>`;
 		const testName = "greater than without quotes List<String>";
 
 		await checkRunTestFromCodeLens(search, testName);
 	});
 
-	it.only("can run tests from codelens with greater than after quote", async () => {
+	it("can run tests from codelens with greater than after quote", async () => {
 		const search = `test^('with quotes ">= foo`;
 		const testName = `greater than with quotes ">= foo"`;
 
