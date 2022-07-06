@@ -19,9 +19,11 @@ function quoteAndEscapeArg(arg: string) {
 	// arguments!
 	// https://github.com/nodejs/node/issues/7367
 	let escaped = arg.replace(/"/g, `\\"`);
-	// Additionally, on Windows escape redirection symbols with ^
+	// Additionally, on Windows escape redirection symbols with ^ if they come
+	// directly after quotes (?).
+	// https://ss64.com/nt/syntax-esc.html
 	if (isWin)
-		escaped = escaped.replace(/([<>])/g, "^$1");
+		escaped = escaped.replace(/"([<>])/g, "\"^$1");
 	return `"${escaped}"`;
 }
 

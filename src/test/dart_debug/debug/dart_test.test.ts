@@ -92,12 +92,12 @@ describe("dart test debugger", () => {
 		);
 	});
 
-	it("can run tests from codelens", async function () {
+	async function checkRunTestFromCodeLens(search: string, testName: string) {
 		const editor = await openFile(helloWorldTestMainFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		const testPos = positionOf(`test^(".split() splits`);
+		const testPos = positionOf(search);
 
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 		assert.equal(codeLensForTest.length, 2);
@@ -106,13 +106,12 @@ describe("dart test debugger", () => {
 			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-			this.skip();
 			return;
 		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-		assert.equal(runAction.command!.arguments![0].fullName, "String .split() splits the string on the delimiter");
+		assert.equal(runAction.command!.arguments![0].fullName, testName);
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {
@@ -123,6 +122,27 @@ describe("dart test debugger", () => {
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
 		const testDoneNotification = customEvents.find(isTestDoneNotification);
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+	}
+
+	it.only("can run tests from codelens", async () => {
+		const search = `test^(".split() splits`;
+		const testName = "String .split() splits the string on the delimiter";
+
+		await checkRunTestFromCodeLens(search, testName);
+	});
+
+	it.only("can run tests from codelens with greater than", async () => {
+		const search = `test^("without quotes List<String>`;
+		const testName = "greater than without quotes List<String>";
+
+		await checkRunTestFromCodeLens(search, testName);
+	});
+
+	it.only("can run tests from codelens with greater than after quote", async () => {
+		const search = `test^('with quotes ">= foo`;
+		const testName = `greater than with quotes ">= foo"`;
+
+		await checkRunTestFromCodeLens(search, testName);
 	});
 
 	it("can run using a custom tool", async () => {
