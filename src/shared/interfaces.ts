@@ -49,6 +49,7 @@ export interface WritableWorkspaceConfig {
 	disableSdkUpdateChecks?: boolean;
 	disableStartupPrompts?: boolean;
 	flutterDaemonScript?: CustomScript;
+	flutterDevToolsScript?: CustomScript;
 	flutterDoctorScript?: CustomScript;
 	flutterRunScript?: CustomScript;
 	flutterSdkHome?: string;
