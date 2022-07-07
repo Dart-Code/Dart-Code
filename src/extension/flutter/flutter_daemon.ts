@@ -1,3 +1,4 @@
+import * as child_process from "child_process";
 import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
@@ -5,7 +6,7 @@ import { DaemonCapabilities, FlutterCapabilities } from "../../shared/capabiliti
 import { flutterPath, isChromeOS } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
-import { FlutterWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/interfaces";
+import { FlutterWorkspaceContext, IFlutterDaemon, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
@@ -47,15 +48,20 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		if (process.env.DART_CODE_IS_TEST_RUN)
 			daemonArgs.push("--show-test-device");
 
-		const execution = usingCustomScript(
-			path.join(workspaceContext.sdks.flutter, flutterPath),
-			["daemon"].concat(daemonArgs),
-			workspaceContext.config?.flutterDaemonScript,
-		);
 
-		const flutterAdditionalArgs = config.for(vs.Uri.file(folder)).flutterAdditionalArgs;
-		const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(execution.args);
-		this.createProcess(folder, execution.executable, args, { toolEnv: getToolEnv() });
+		if (!!config.daemonPort) {
+			this.createNcProcess(config.daemonPort);
+		} else {
+			const execution = usingCustomScript(
+				path.join(workspaceContext.sdks.flutter, flutterPath),
+				["daemon"].concat(daemonArgs),
+				workspaceContext.config?.flutterDaemonScript,
+			);
+
+			const flutterAdditionalArgs = config.for(vs.Uri.file(folder)).flutterAdditionalArgs;
+			const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(execution.args);
+			this.createProcess(folder, execution.executable, args, { toolEnv: getToolEnv() });
+		}
 
 		if (isChromeOS && config.flutterAdbConnectOnChromeOs) {
 			logger.info("Running ADB Connect on Chrome OS");
@@ -63,6 +69,16 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			logProcess(logger, LogCategory.General, adbConnectProc);
 
 		}
+	}
+
+	protected createNcProcess(port: string) {
+		vs.window.showInformationMessage(`About to create nc process with port: ${port}`);
+		this.process = child_process.spawn("nc", ["localhost", port]) as SpawnedProcess;
+
+		this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
+		this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
+		this.process.on("exit", (code, signal) => this.handleExit(code, signal));
+		this.process.on("error", (error) => this.handleError(error));
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {

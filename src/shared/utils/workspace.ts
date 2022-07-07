@@ -17,6 +17,7 @@ export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspac
 export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string, parseFlutterJson: boolean) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
+	console.log("found bazel root");
 
 	if (parseFlutterJson)
 		tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
@@ -54,11 +55,11 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			return path.join(bazelWorkspaceRoot, relOrAbsolute);
 		}
 
-		function makeScript(relOrAbsolute: string | undefined, replacesArgs = 1): CustomScript | undefined {
+		function makeScript(relOrAbsolute: string | undefined, replacesArgs = 1, makeFull = true): CustomScript | undefined {
 			if (relOrAbsolute) {
 				return {
 					replacesArgs,
-					script: makeFullPath(relOrAbsolute),
+					script: makeFull ? makeFullPath(relOrAbsolute) : relOrAbsolute,
 				};
 			}
 		}
@@ -69,8 +70,8 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.omitTargetFlag = true;
 		config.startDevToolsServerEagerly = true;
 		config.flutterVersion = MAX_VERSION;
-		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDevToolsScript = makeScript(flutterConfig.devToolsScript);
+		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);

@@ -1,6 +1,7 @@
 import { ContinuedEvent, Event, OutputEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import * as path from "path";
+import { workspace } from "vscode";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, flutterPath, restartReasonManual } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
@@ -249,6 +250,11 @@ export class FlutterDebugSession extends DartDebugSession {
 
 		if (args.args)
 			allArgs = allArgs.concat(args.args);
+
+		const daemonPort = workspace.getConfiguration("dart").get("daemonPort", null);
+		if (!!daemonPort) {
+			allArgs = allArgs.concat(`--daemon-connection-port=${daemonPort}`);
+		}
 
 		execution = {
 			args: allArgs,

@@ -243,6 +243,7 @@ export class SdkUtils {
 
 		let flutterSdkPath;
 		if (workspaceConfig.forceFlutterWorkspace) {
+			window.showInformationMessage("forceFlutterWorkspace");
 			hasAnyFlutterProject = true;
 			hasAnyFlutterMobileProject = true;
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
@@ -347,6 +348,8 @@ export class SdkUtils {
 			wc.disableStartupPrompts = true;
 			wc.disableSdkUpdateChecks = true;
 		}
+		window.showInformationMessage(`flutterSdkPath: ${flutterSdkPath}`);
+		window.showInformationMessage(`hasAnyFlutterMobileProject: ${hasAnyFlutterMobileProject}`);
 
 		return new WorkspaceContext(
 			{
@@ -485,6 +488,7 @@ function findRootContaining(folder: string, childName: string, expectFile = fals
 			try {
 				const stat = fs.statSync(path.join(child, childName));
 				if (expectFile ? stat.isFile() : stat.isDirectory()) {
+					// window.showInformationMessage(`found root: ${child}`);
 					return child;
 				}
 			} catch { }
