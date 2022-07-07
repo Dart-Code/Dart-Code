@@ -2741,5 +2741,11 @@
 	"optionalDependencies": {
 		"bufferutil": "^4.0.6",
 		"utf-8-validate": "^5.0.9"
+	},
+	"__metadata": {
+		"id": "f57f68ea-9ee8-42b5-9a97-041d3e4278c4",
+		"publisherDisplayName": "Dart Code",
+		"publisherId": "a606ecbb-a8fb-4c35-b29a-5e8842d82af2",
+		"isPreReleaseVersion": false
 	}
 }
