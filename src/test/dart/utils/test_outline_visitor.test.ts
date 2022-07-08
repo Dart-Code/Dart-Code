@@ -22,7 +22,7 @@ describe("test_outline_visitor", () => {
 		const visitor = extApi.isLsp ? new LspTestOutlineVisitor(logger, fsPath(helloWorldTestMainFile)) : new TestOutlineVisitor(logger);
 		visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
 
-		assert.equal(visitor.tests.length, 7);
+		assert.equal(visitor.tests.length, 10);
 		assert.equal(visitor.tests[0].isGroup, true);
 		assert.equal(visitor.tests[0].fullName, "String");
 		assert.equal(visitor.tests[1].isGroup, false);
@@ -38,5 +38,12 @@ describe("test_outline_visitor", () => {
 		assert.equal(visitor.tests[5].fullName, "int .remainder() returns the remainder of division");
 		assert.equal(visitor.tests[6].isGroup, false);
 		assert.equal(visitor.tests[6].fullName, "int .toRadixString() returns a hex string");
+
+		assert.equal(visitor.tests[7].isGroup, true);
+		assert.equal(visitor.tests[7].fullName, "greater than");
+		assert.equal(visitor.tests[8].isGroup, false);
+		assert.equal(visitor.tests[8].fullName, "greater than without quotes List<String>");
+		assert.equal(visitor.tests[9].isGroup, false);
+		assert.equal(visitor.tests[9].fullName, `greater than with quotes ">= foo"`);
 	});
 });
