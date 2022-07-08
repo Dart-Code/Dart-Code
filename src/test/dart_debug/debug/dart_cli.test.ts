@@ -1308,7 +1308,7 @@ insp=<inspected variable>
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
 				path: fsPath(helloWorldBrokenFile),
-				text: "_Exception (Exception: Oops)",
+				text: extApi.dartCapabilities.sdkDapProvidesExceptionText ? "_Exception (Exception: Oops)" : undefined,
 			}),
 			dc.launch(config),
 		);
