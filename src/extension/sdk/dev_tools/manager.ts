@@ -13,7 +13,7 @@ import { CategoryLogger } from "../../../shared/logging";
 import { getPubExecutionInfo } from "../../../shared/processes";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
-import { disposeAll } from "../../../shared/utils";
+import { disposeAll, usingCustomScript } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
@@ -92,7 +92,7 @@ export class DevToolsManager implements vs.Disposable {
 			this.devToolsStatusBarItem.hide();
 			// Ensure the Pub version of DevTools is installed if we're not launching from the daemon or
 			// the version from the Dart SDK.
-			if (!this.workspaceContext.config.startDevToolsFromDaemon && !this.dartCapabilities.supportsDartDevTools) {
+			if (!this.dartCapabilities.supportsDartDevTools) {
 				const installedVersion = await this.pubGlobal.installIfRequired({
 					moreInfoLink: undefined,
 					packageID: devtoolsPackageID,
@@ -108,20 +108,7 @@ export class DevToolsManager implements vs.Disposable {
 				}
 			}
 
-			// Using daemon takes priority over SDK or pub.
-			if (this.workspaceContext.config.startDevToolsFromDaemon) {
-				if (!this.flutterDaemon) {
-					throw new Error("Flutter daemon is undefined");
-				}
-				const result = await this.flutterDaemon.serveDevTools();
-				this.devtoolsUrl = new Promise<string>((resolve, reject) => {
-					if (result.host && result.port) {
-						resolve(`http://${result.host}:${result.port}/`);
-					} else {
-						reject("Unable to serve DevTools");
-					}
-				});
-			} else if (silent) {
+			if (silent) {
 				this.devtoolsUrl = this.startServer();
 			} else {
 				this.devtoolsUrl = vs.window.withProgress({
@@ -432,8 +419,13 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		const devToolsArgs = ["--machine", "--try-ports", "10", "--allow-embedding"];
 
 		const executionInfo = dartCapabilities.supportsDartDevTools
-			? { executable: path.join(workspaceContext.sdks.dart, dartVMPath), args: ["devtools"] }
+			? usingCustomScript(
+				path.join(workspaceContext.sdks.dart, dartVMPath),
+				["devtools"],
+				workspaceContext.config?.flutterDevToolsScript,
+			)
 			: getPubExecutionInfo(dartCapabilities, workspaceContext.sdks.dart, ["global", "run", "devtools"]);
+
 		const binPath = executionInfo.executable;
 		const binArgs = [...executionInfo.args, ...devToolsArgs];
 

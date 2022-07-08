@@ -36,6 +36,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		const flutterConfigJson = fs.readFileSync(flutterConfigPath, "utf8");
 		const flutterConfig = JSON.parse(flutterConfigJson) as {
 			daemonScript: string | undefined;
+			devToolsScript: string | undefined;
 			doctorScript: string | undefined;
 			runScript: string | undefined;
 			sdkHome: string | undefined;
@@ -65,9 +66,9 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.skipFlutterInitialization = true;
 		config.omitTargetFlag = true;
 		config.startDevToolsServerEagerly = true;
-		config.startDevToolsFromDaemon = true;
 		config.flutterVersion = MAX_VERSION;
 		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
+		config.flutterDevToolsScript = makeScript(flutterConfig.devToolsScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);
