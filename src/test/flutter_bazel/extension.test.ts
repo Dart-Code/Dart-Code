@@ -44,6 +44,7 @@ describe("extension", () => {
 		assert.equal(workspaceContext.config?.skipFlutterInitialization, true);
 		assert.equal(workspaceContext.config?.omitTargetFlag, true);
 		assert.equal(workspaceContext.config?.startDevToolsServerEagerly, true);
+		assert.equal(workspaceContext.config?.defaultDartSdk, "/default/dart");
 		assert.deepStrictEqual(workspaceContext.config?.flutterDaemonScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_daemon.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterDevToolsScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_devtools.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterDoctorScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"), replacesArgs: 1 });

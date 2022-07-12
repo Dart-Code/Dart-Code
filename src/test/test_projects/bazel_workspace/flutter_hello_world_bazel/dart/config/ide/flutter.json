@@ -8,5 +8,6 @@
 	"sdkHome": "../my-flutter-sdk",
 	"requiredIJPluginID": "ij-plugin-id",
 	"requiredIJPluginMessage": "IJ plugin message",
-	"configWarningPrefix": "Configuration warning prefix"
+	"configWarningPrefix": "Configuration warning prefix",
+	"defaultDartSdk": "/default/dart"
 }
