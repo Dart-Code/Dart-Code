@@ -2325,7 +2325,7 @@
 					"dart.previewBazelWorkspaceCustomScripts": {
 						"type": "boolean",
 						"default": false,
-						"markdownDescription": "EXPERIMENTAL: Whether to look for custom script definitions at `dart/config/intellij-plugins/flutter.json` in Bazel workspaces. Currently supported for macOS and Linux only.",
+						"markdownDescription": "EXPERIMENTAL: Whether to look for custom script definitions at `dart/config/ide/flutter.json` in Bazel workspaces. Currently supported for macOS and Linux only.",
 						"scope": "window"
 					},
 					"dart.previewCommitCharacters": {

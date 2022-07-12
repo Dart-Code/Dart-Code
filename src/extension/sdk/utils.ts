@@ -304,6 +304,7 @@ export class SdkUtils {
 			fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", dartPlatformName, "dart-sdk"),
 			firstFlutterMobileProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
 			config.sdkPath,
+			workspaceConfig.defaultDartSdk,
 		].concat(paths)
 			// The above array only has the Flutter SDK	in the search path if we KNOW it's a flutter
 			// project, however this doesn't cover the activating-to-run-flutter.createProject so
