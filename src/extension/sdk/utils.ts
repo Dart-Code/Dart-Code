@@ -310,6 +310,7 @@ export class SdkUtils {
 			// we need to always look in the flutter SDK, but only AFTER the users PATH so that
 			// we don't prioritise it over any real Dart versions.
 			.concat([flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk")])
+			.concat([workspaceConfig.defaultDartSdk])
 			.filter(notUndefined);
 
 		// Since we just blocked on a lot of sync FS, yield.

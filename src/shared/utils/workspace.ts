@@ -28,7 +28,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		return;
 
 	try {
-		const flutterConfigPath = path.join(bazelWorkspaceRoot, "dart/config/intellij-plugins/flutter.json");
+		const flutterConfigPath = path.join(bazelWorkspaceRoot, "dart/config/ide/flutter.json");
 		if (!fs.existsSync(flutterConfigPath))
 			return;
 
@@ -39,9 +39,10 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			devToolsScript: string | undefined;
 			doctorScript: string | undefined;
 			runScript: string | undefined;
-			sdkHome: string | undefined;
+			sdkHome: string | undefined; // Note: This refers to Flutter SDK home, not Dart.
 			syncScript: string | undefined;
 			testScript: string | undefined;
+			defaultDartSdk: string | undefined;
 		};
 
 		function makeFullPath(relOrAbsolute: string | undefined): string | undefined {
@@ -74,6 +75,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);
 		config.flutterSyncScript = makeFullPath(flutterConfig.syncScript);
 		config.flutterTestScript = makeScript(flutterConfig.testScript);
+		config.defaultDartSdk = makeFullPath(flutterConfig.defaultDartSdk);
 	} catch (e) {
 		logger.error(e);
 	}

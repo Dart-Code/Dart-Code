@@ -62,6 +62,7 @@ export interface WritableWorkspaceConfig {
 	forceFlutterDebug?: boolean;
 	skipFlutterInitialization?: boolean;
 	omitTargetFlag?: boolean;
+	defaultDartSdk?: string;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
