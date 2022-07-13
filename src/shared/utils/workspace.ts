@@ -39,7 +39,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			devToolsScript: string | undefined;
 			doctorScript: string | undefined;
 			runScript: string | undefined;
-			sdkHome: string | undefined;
+			sdkHome: string | undefined; // Note: This refers to Flutter SDK home, not Dart.
 			syncScript: string | undefined;
 			testScript: string | undefined;
 			defaultDartSdk: string | undefined;
