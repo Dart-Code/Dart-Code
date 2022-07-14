@@ -56,8 +56,6 @@ describe("completion_item_provider", () => {
 		ensureCompletion(completions, vs.CompletionItemKind.Function, "doSomeStuff()", "doSomeStuff");
 		ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo", "foo"); // We don't know it's constant from DAS.
 		ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
-		// TODO: Remove Enum when the LSP change makes stable.
-		ensureCompletion(completions, [vs.CompletionItemKind.Enum, vs.CompletionItemKind.EnumMember], "Theme.Light", "Theme.Light");
 
 		// TODO: vs.CompletionItemKind.File/Folder?
 
@@ -371,7 +369,7 @@ foo(Theme theme) {
 			`);
 			const completions = await getCompletionsAt("theme =^");
 
-			const completion = ensureCompletion(completions, [vs.CompletionItemKind.Enum, vs.CompletionItemKind.EnumMember], "Theme.Dark", "Theme.Dark");
+			ensureCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Dark", "Theme.Dark");
 			// 1100 from boost
 			//    8 from includedSuggestionSet
 			// TODO: Find a reliable way to test ranking.
@@ -388,7 +386,7 @@ foo(Theme theme) {
 			const completions = await getCompletionsAt("theme =^");
 
 			ensureCompletion(completions, vs.CompletionItemKind.Enum, "Theme", "Theme");
-			ensureCompletion(completions, [vs.CompletionItemKind.Enum, vs.CompletionItemKind.EnumMember], "Theme.Dark", "Theme.Dark");
+			ensureCompletion(completions, vs.CompletionItemKind.EnumMember, "Theme.Dark", "Theme.Dark");
 		});
 
 		it("correctly filters (does not include enum constants at top level)", async () => {
