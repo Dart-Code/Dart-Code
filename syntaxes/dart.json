@@ -14,6 +14,9 @@
     "repository": {
         "block": {
             "patterns": [
+				{
+                    "include":     "#punctuation"
+                },
                 {
                     "match":       "^(#!.*)$",
                     "name":        "meta.preprocessor.script.dart"
