@@ -63,6 +63,9 @@
         {
             "include":     "#constants-and-special-vars"
         },
+		{
+			"include":     "#object-literal-key"
+		},
         {
             "include":     "#strings"
         }
@@ -278,6 +281,17 @@
                     }
                 }
             ]
+        },
+		"object-literal-key": {
+            "match":       "([_$]*[a-zA-Z][a-zA-Z0-9_$]*)\\s*(:)",
+            "captures": {
+                "1": {
+                    "name":    "meta.object-literal.key.dart"
+                },
+                "2": {
+                    "name":    "punctuation.separator.key-value.dart"
+                }
+            }
         },
 		"function-definition-or-return": {
             "match":       "([_$]*[a-z][a-zA-Z0-9_$]*)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?[!?]?(\\(|\\s+=>)",
