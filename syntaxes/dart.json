@@ -20,7 +20,7 @@
         {
             "begin":       "^\\w*\\b(library|import|part of|part|export)\\b",
             "end":         ";",
-            "name":        "meta.declaration.dart",
+            "name":        "meta.declaration.$1.dart",
             "beginCaptures": {
                 "0": {
                     "name":    "keyword.other.import.dart"
@@ -40,7 +40,7 @@
                 },
                 {
                     "match":       "\\b(as|show|hide)\\b",
-                    "name":        "keyword.other.import.dart"
+                    "name":        "keyword.other.import.$1.dart"
                 },
                 {
                     "match":       "\\b(if)\\b",
@@ -214,11 +214,11 @@
             "patterns": [
                 {
                     "match":       "(?<!\\$)\\b(true|false|null)\\b(?!\\$)",
-                    "name":        "constant.language.dart"
+                    "name":        "constant.language.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(this|super)\\b(?!\\$)",
-                    "name":        "variable.language.dart"
+                    "name":        "variable.language.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\\.?[0-9]*)|(\\.[0-9]+))((e|E)(\\+|-)?[0-9]+)?)\\b(?!\\$)",
@@ -371,15 +371,15 @@
                 },
                 {
                     "match":       "(?<!\\$)\\b(try|on|catch|finally|throw|rethrow)\\b(?!\\$)",
-                    "name":        "keyword.control.catch-exception.dart"
+                    "name":        "keyword.control.catch-exception.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(break|case|continue|default|do|else|for|if|in|return|switch|while)\\b(?!\\$)",
-                    "name":        "keyword.control.dart"
+                    "name":        "keyword.control.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(sync(\\*)?|async(\\*)?|await|yield(\\*)?)\\b(?!\\$)",
-                    "name":        "keyword.control.dart"
+                    "name":        "keyword.control.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\bassert\\b(?!\\$)",
@@ -391,7 +391,7 @@
                 },
                 {
                     "match":       "(?<!\\$)\\b(abstract|class|enum|extends|extension|external|factory|implements|get|mixin|native|operator|set|typedef|with|covariant)\\b(?!\\$)",
-                    "name":        "keyword.declaration.dart"
+                    "name":        "keyword.declaration.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(is\\!?)\\b(?!\\$)",
@@ -439,11 +439,11 @@
                 },
                 {
                     "match":       "(?<!\\$)\\b(static|final|const|required|late)\\b(?!\\$)",
-                    "name":        "storage.modifier.dart"
+                    "name":        "storage.modifier.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(?:void|var)\\b(?!\\$)",
-                    "name":        "storage.type.primitive.dart"
+                    "name":        "storage.type.primitive.$1.dart"
                 }
             ]
         },
