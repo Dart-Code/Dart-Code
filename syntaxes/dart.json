@@ -11,6 +11,9 @@
             "match":       "^(#!.*)$",
             "name":        "meta.preprocessor.script.dart"
         },
+		{
+			"include":     "#function-definition-or-return"
+		},
         {
             "begin":       "^\\w*\\b(library|import|part of|part|export)\\b",
             "end":         ";",
@@ -247,6 +250,45 @@
                     }
                 }
             ]
+        },
+		"function-definition-or-return": {
+            "match":       "([_$]*[a-z][a-zA-Z0-9_$]*)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?[!?]?(\\(|\\s+=>)",
+            "captures": {
+                "1": {
+                    "patterns": [
+                        {
+                            "match":       "return",
+                            "name":        "keyword.control.flow.return.dart"
+                        },
+                        {
+                            "match":       ".+",
+                            "name":        "storage.type.function.definition.dart"
+                        }
+                    ]
+                },
+                "2": {
+                    "name":    "entity.name.function.definition.dart"
+                },
+                "3": {
+                    "patterns": [
+                        {
+                            "include":     "#type-parameters"
+                        }
+                    ]
+                },
+                "4": {
+                    "patterns": [
+                        {
+                            "match":       "(\\()",
+                            "name":        "meta.brace.round.dart"
+                        },
+                        {
+                            "match":       "(=>)",
+                            "name":        "keyword.operator.closure.dart"
+                        }
+                    ]
+                }
+            }
         },
         "function-identifier": {
             "patterns": [
