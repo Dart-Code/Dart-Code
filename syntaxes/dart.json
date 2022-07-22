@@ -468,6 +468,10 @@
                 },
                 {
                     "match":       "(?<!\\$)\\b(?:void|var)\\b(?!\\$)",
+                    "name":        "storage.type.primitive.dart"
+                },
+                {
+                    "match":       "(?<!\\$)\\b(double|int|num|String|Never|Null|Object|bool)\\b(?!\\$)",
                     "name":        "storage.type.primitive.$1.dart"
                 }
             ]
