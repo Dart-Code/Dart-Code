@@ -562,6 +562,18 @@
         },
         "punctuation": {
             "patterns": [
+				{
+                    "match":       "(\\(|\\))",
+                    "name":        "meta.brace.round.dart"
+                },
+                {
+                    "match":       "(\\[|\\])",
+                    "name":        "meta.brace.square.dart"
+                },
+                {
+                    "match":       "(\\{|\\})",
+                    "name":        "punctuation.definition.block.dart"
+                },
                 {
                     "match":       ",",
                     "name":        "punctuation.comma.dart"
