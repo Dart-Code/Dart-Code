@@ -502,7 +502,7 @@
         "string-interpolation": {
             "patterns": [
                 {
-                    "match":       "\\$([a-zA-Z0-9_]+)",
+                    "match":       "(\\$[a-zA-Z0-9_]+)",
                     "captures": {
                         "1": {
                             "name":    "variable.parameter.dart"
