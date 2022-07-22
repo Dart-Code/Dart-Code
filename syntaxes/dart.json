@@ -62,9 +62,6 @@
                     "include":     "#comments"
                 },
                 {
-                    "include":     "#punctuation"
-                },
-                {
                     "include":     "#annotations"
                 },
                 {
@@ -345,7 +342,7 @@
                         "2": {
                             "patterns": [
                                 {
-                                    "include":     "#type-args"
+                                    "include":     "#type-parameters"
                                 }
                             ]
                         },
