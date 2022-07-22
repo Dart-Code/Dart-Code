@@ -377,7 +377,7 @@
                 }
             ]
         },
-        "string-interp": {
+        "string-interpolation": {
             "patterns": [
                 {
                     "match":       "\\$([a-zA-Z0-9_]+)",
@@ -419,7 +419,7 @@
                     "name":        "string.interpolated.triple.double.dart",
                     "patterns": [
                         {
-                            "include":     "#string-interp"
+                            "include":     "#string-interpolation"
                         }
                     ]
                 },
@@ -429,7 +429,7 @@
                     "name":        "string.interpolated.triple.single.dart",
                     "patterns": [
                         {
-                            "include":     "#string-interp"
+                            "include":     "#string-interpolation"
                         }
                     ]
                 },
@@ -453,7 +453,7 @@
                             "name":        "invalid.string.newline"
                         },
                         {
-                            "include":     "#string-interp"
+                            "include":     "#string-interpolation"
                         }
                     ]
                 },
@@ -478,7 +478,7 @@
                             "name":        "invalid.string.newline"
                         },
                         {
-                            "include":     "#string-interp"
+                            "include":     "#string-interpolation"
                         }
                     ]
                 },
