@@ -327,6 +327,10 @@
                     "match":       "(?<!\\$)\\b(is\\!?)\\b(?!\\$)",
                     "name":        "keyword.operator.dart"
                 },
+				{
+                    "match":       "(\\-|\\+|\\*|\\/|\\~\\/|%)",
+                    "name":        "keyword.operator.arithmetic.dart"
+                },
                 {
                     "match":       "\\?|:",
                     "name":        "keyword.operator.ternary.dart"
@@ -358,10 +362,6 @@
                 {
                     "match":       "(\\-\\-|\\+\\+)",
                     "name":        "keyword.operator.increment-decrement.dart"
-                },
-                {
-                    "match":       "(\\-|\\+|\\*|\\/|\\~\\/|%)",
-                    "name":        "keyword.operator.arithmetic.dart"
                 },
                 {
                     "match":       "(!|&&|\\|\\|)",
