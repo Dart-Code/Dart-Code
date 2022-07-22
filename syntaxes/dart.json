@@ -338,7 +338,19 @@
                                     "include":     "#type-args"
                                 }
                             ]
-                        }
+                        },
+						"3": {
+							"patterns": [
+								{
+									"match":       "(\\()",
+									"name":        "meta.brace.round.dart"
+								},
+								{
+									"match":       "(=>)",
+									"name":        "keyword.operator.closure.dart"
+								}
+							]
+						}
                     }
                 }
             ]
