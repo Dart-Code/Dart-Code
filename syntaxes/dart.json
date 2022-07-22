@@ -14,6 +14,9 @@
 		{
 			"include":     "#function-definition-or-return"
 		},
+		{
+			"include":     "#class-definition"
+		},
         {
             "begin":       "^\\w*\\b(library|import|part of|part|export)\\b",
             "end":         ";",
@@ -226,6 +229,31 @@
                 },
                 {
                     "include":     "#function-identifier"
+                }
+            ]
+        },
+		"class-definition": {
+            "patterns": [
+                {
+                    "match":       "(?<![a-zA-Z0-9_$])(class)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?|bool\\b|num\\b|int\\b|double\\b|dynamic\\b|(void)\\b)",
+                    "captures": {
+                        "1": {
+                            "name":    "keyword.declaration.class.dart"
+                        },
+                        "2": {
+                            "name":    "entity.name.type.class.dart"
+                        },
+                        "3": {
+                            "patterns": [
+                                {
+                                    "include":     "#type-parameters"
+                                }
+                            ]
+                        },
+                        "4": {
+                            "name":    "storage.type.primitive.dart"
+                        }
+                    }
                 }
             ]
         },
