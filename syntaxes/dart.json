@@ -103,14 +103,6 @@
                     }
                 },
                 {
-                    "match":       "(`.*?`)",
-                    "captures": {
-                        "0": {
-                            "name":    "variable.other.source.dart"
-                        }
-                    }
-                },
-                {
                     "match":       "(\\* ((    ).*))$",
                     "captures": {
                         "2": {
