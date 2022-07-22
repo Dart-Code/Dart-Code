@@ -510,20 +510,13 @@
                     }
                 },
                 {
-                    "begin":       "\\$\\{",
-                    "end":         "\\}",
-                    "name":        "string.interpolated.expression.dart",
+                    "begin":           "\\$\\{",
+                    "contentName":     "string.interpolated.expression.dart",
+                    "end":             "\\}",
+                    "name":            "punctuation.definition.interpolated-string.dart",
                     "patterns": [
                         {
-                            "include":     "#constants-and-special-vars",
-                            "name":        "variable.parameter.dart"
-                        },
-                        {
-                            "include":     "#strings"
-                        },
-                        {
-                            "match":       "[a-zA-Z0-9_]+",
-                            "name":        "variable.parameter.dart"
+                            "include":     "#block"
                         }
                     ]
                 },
