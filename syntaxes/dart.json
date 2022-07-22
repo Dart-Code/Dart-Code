@@ -384,7 +384,7 @@
                 },
                 {
                     "match":       "extends",
-                    "name":        "keyword.declaration.dart"
+                    "name":        "keyword.declaration.extends.dart"
                 }
             ]
         },
