@@ -377,6 +377,29 @@
                 }
             ]
         },
+		"type-parameters": {
+            "match":       "(<)([\\s_$a-zA-Z0-9,]*)(>)",
+            "captures": {
+                "1": {
+                    "name":    "punctuation.definition.typeparameters.begin.dart"
+                },
+                "2": {
+                    "patterns": [
+                        {
+                            "match":       "([_$]*[a-zA-Z][a-zA-Z0-9_$]*)",
+                            "name":        "entity.name.type.typeparameter.dart"
+                        },
+                        {
+                            "match":       ",",
+                            "name":        "punctuation.separator.dart"
+                        }
+                    ]
+                },
+                "3": {
+                    "name":    "punctuation.definition.typeparameters.end.dart"
+                }
+            }
+        },
         "string-interpolation": {
             "patterns": [
                 {
