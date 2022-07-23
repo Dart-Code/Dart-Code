@@ -14,7 +14,7 @@
     "repository": {
         "block": {
             "patterns": [
-				{
+                {
                     "include":     "#punctuation"
                 },
                 {
@@ -50,7 +50,7 @@
                         },
                         {
                             "match":       "\\b(as|show|hide)\\b",
-                            "name":        "keyword.other.import.$1.dart"
+                            "name":        "keyword.other.import.dart"
                         },
                         {
                             "match":       "\\b(if)\\b",
@@ -216,11 +216,11 @@
             "patterns": [
                 {
                     "match":       "(?<!\\$)\\b(true|false|null)\\b(?!\\$)",
-                    "name":        "constant.language.$1.dart"
+                    "name":        "constant.language.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(this|super)\\b(?!\\$)",
-                    "name":        "variable.language.$1.dart"
+                    "name":        "variable.language.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\\.?[0-9]*)|(\\.[0-9]+))((e|E)(\\+|-)?[0-9]+)?)\\b(?!\\$)",
@@ -230,7 +230,13 @@
                     "include":     "#class-identifier"
                 },
                 {
+                    "include":     "#function-definition-or-return"
+                },
+                {
                     "include":     "#function-identifier"
+                },
+                {
+                    "include":      "#object-dot-access"
                 }
             ]
         },
@@ -347,20 +353,22 @@
                             ]
                         },
                         "3": {
-                            "patterns": [
-                                {
-                                    "match":       "(\\()",
-                                    "name":        "meta.brace.round.dart"
-                                },
-                                {
-                                    "match":       "(=>)",
-                                    "name":        "keyword.operator.closure.dart"
-                                }
-                            ]
+                            "name":    "meta.brace.round.dart"
                         }
                     }
                 }
             ]
+        },
+        "object-dot-access": {
+            "match": "([_$]*[a-zA-Z][a-zA-Z0-9_$]*)\\s*(\\.)",
+            "captures": {
+                "1": {
+                    "name": "variable.other.object.dart"
+                },
+                "2": {
+                    "name": "punctuation.accessor.dart"
+                }
+            }
         },
         "type-args": {
             "begin":       "(<)",
@@ -396,7 +404,7 @@
                 },
                 {
                     "match":       "(?<!\\$)\\b(try|on|catch|finally|throw|rethrow)\\b(?!\\$)",
-                    "name":        "keyword.control.catch-exception.$1.dart"
+                    "name":        "keyword.control.catch-exception.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(break|case|continue|default|do|else|for|if|in|return|switch|while)\\b(?!\\$)",
