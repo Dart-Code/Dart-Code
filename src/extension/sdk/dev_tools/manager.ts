@@ -278,12 +278,21 @@ export class DevToolsManager implements vs.Disposable {
 	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, vmServiceUri: string, url: string) {
 		queryParams.hide = "debugger";
 		queryParams.ide = "VSCode";
+
+		// Handle new Path URL DevTools.
+		let path = "";
+		if (this.dartCapabilities.supportsDartDevToolsPathUrls) {
+			path = queryParams.page ?? "";
+			delete queryParams.page;
+		}
+
 		const paramsString = Object.keys(queryParams)
 			.filter((key) => queryParams[key] !== undefined)
 			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] ?? "")}`)
 			.join("&");
 		const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
-		return `${url}?uri=${encodeURIComponent(exposedUrl)}&${paramsString}`;
+		const urlPathSeperator = url.endsWith("/") ? "" : "/";
+		return `${url}${urlPathSeperator}${path}?uri=${encodeURIComponent(exposedUrl)}&${paramsString}`;
 	}
 
 	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: DevToolsPage, location: "beside" | "active" | undefined) {
