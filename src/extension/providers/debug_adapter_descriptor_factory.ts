@@ -10,7 +10,7 @@ import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
-	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterToolsScript?: CustomScript) { }
+	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterToolsScript?: CustomScript, private readonly cwd?: string) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
 		return this.descriptorForType(session.configuration.debuggerType as DebuggerType);
@@ -53,7 +53,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 				args.push("--no-dds");
 
 			this.logger.info(`Running SDK DAP Dart VM: ${executable} ${args.join("    ")}`);
-			return new DebugAdapterExecutable(executable, args, {cwd: "/google/src/cloud/helinx/head/google3"});
+			return new DebugAdapterExecutable(executable, args, this.cwd ? {cwd: this.cwd} : {});
 		} else if (config.customDartDapPath && isDartOrDartTest) {
 			const args = [config.customDartDapPath, "debug_adapter"];
 			if (isDartTest)
