@@ -1,0 +1,764 @@
+>/// Any line that starts with `var` or `void` should be coloured.
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+#                              ^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+#                                   ^^^^ source.dart comment.block.documentation.dart
+#                                       ^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+#                                             ^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>/// Every other line should be a comment.
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>
+>// ignore_for_file: unused_element
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.line.double-slash.dart
+>
+>/* test /* test */ */
+#^^ source.dart comment.block.dart
+#  ^^^^^^ source.dart comment.block.dart
+#        ^^ source.dart comment.block.dart comment.block.dart
+#          ^^^^^^ source.dart comment.block.dart comment.block.dart
+#                ^^ source.dart comment.block.dart comment.block.dart
+#                  ^ source.dart comment.block.dart
+#                   ^^ source.dart comment.block.dart
+>var a = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>/** test /** test */ */
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+#         ^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#            ^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#                  ^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#                    ^ source.dart comment.block.documentation.dart
+#                     ^^ source.dart comment.block.documentation.dart
+>var b = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>/** test /* test */ */
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+#         ^^ source.dart comment.block.documentation.dart comment.block.dart
+#           ^^^^^^ source.dart comment.block.documentation.dart comment.block.dart
+#                 ^^ source.dart comment.block.documentation.dart comment.block.dart
+#                   ^ source.dart comment.block.documentation.dart
+#                    ^^ source.dart comment.block.documentation.dart
+>var c = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>/* test /** test */ */
+#^^ source.dart comment.block.dart
+#  ^^^^^^ source.dart comment.block.dart
+#        ^^ source.dart comment.block.dart comment.block.dart
+#          ^^^^^^^ source.dart comment.block.dart comment.block.dart
+#                 ^^ source.dart comment.block.dart comment.block.dart
+#                   ^ source.dart comment.block.dart
+#                    ^^ source.dart comment.block.dart
+>var d = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>// test
+#^^^^^^^ source.dart comment.line.double-slash.dart
+>var e = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/**
+#^^^ source.dart comment.block.documentation.dart
+> * test
+#^^^^^^^^ source.dart comment.block.documentation.dart
+> *     test
+#^ source.dart comment.block.documentation.dart
+# ^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+> * test
+#^^^^^^^^ source.dart comment.block.documentation.dart
+> */
+#^ source.dart comment.block.documentation.dart
+# ^^ source.dart comment.block.documentation.dart
+>
+>/*
+#^^ source.dart comment.block.dart
+>/**
+#^^ source.dart comment.block.dart comment.block.dart
+#  ^^ source.dart comment.block.dart comment.block.dart
+> * test
+#^^^^^^^^ source.dart comment.block.dart comment.block.dart
+> *     test
+#^^^^^^^^^^^^ source.dart comment.block.dart comment.block.dart
+> * test
+#^^^^^^^^ source.dart comment.block.dart comment.block.dart
+> */
+#^ source.dart comment.block.dart comment.block.dart
+# ^^ source.dart comment.block.dart comment.block.dart
+>*/
+#^^ source.dart comment.block.dart
+>
+>// /**
+#^^^^^^ source.dart comment.line.double-slash.dart
+>//  * test
+#^^^^^^^^^^ source.dart comment.line.double-slash.dart
+>//  *     test
+#^^^^^^^^^^^^^^ source.dart comment.line.double-slash.dart
+>//  * test
+#^^^^^^^^^^ source.dart comment.line.double-slash.dart
+>//  */
+#^^^^^^ source.dart comment.line.double-slash.dart
+>
+>/// /*
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^ source.dart comment.block.documentation.dart
+>/// /**
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^ source.dart comment.block.documentation.dart
+>///  * test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^^ source.dart comment.block.documentation.dart
+>///  *     test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^ source.dart comment.block.documentation.dart
+#     ^^ source.dart comment.block.documentation.dart
+#       ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>///  * test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^^ source.dart comment.block.documentation.dart
+>///  */
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^ source.dart comment.block.documentation.dart
+>/// */
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^ source.dart comment.block.documentation.dart
+>
+>/**
+#^^^ source.dart comment.block.documentation.dart
+> *   /**
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+> *    * bbb
+#^^^^^^^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+> *    */
+#^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#      ^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+> */
+#^ source.dart comment.block.documentation.dart
+# ^^ source.dart comment.block.documentation.dart
+>
+>/// test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+>var f = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/// test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+>/// test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+>var g = 1; /// test
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+#          ^ source.dart
+#           ^^^ source.dart comment.block.documentation.dart
+#              ^^^^^^ source.dart comment.block.documentation.dart
+>var h = 1; /// test
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+#          ^ source.dart
+#           ^^^ source.dart comment.block.documentation.dart
+#              ^^^^^^ source.dart comment.block.documentation.dart
+>/// test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+>
+>
+>// test
+#^^^^^^^ source.dart comment.line.double-slash.dart
+>var i = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>// test
+#^^^^^^^ source.dart comment.line.double-slash.dart
+>// test
+#^^^^^^^ source.dart comment.line.double-slash.dart
+>var j = 1; // test
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+#          ^ source.dart
+#           ^^^^^^^ source.dart comment.line.double-slash.dart
+>var k = 1; // test
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+#          ^ source.dart
+#           ^^^^^^^ source.dart comment.line.double-slash.dart
+>// test
+#^^^^^^^ source.dart comment.line.double-slash.dart
+>
+>/* // */
+#^^ source.dart comment.block.dart
+#  ^^^^ source.dart comment.block.dart
+#      ^^ source.dart comment.block.dart
+>var l = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/* /// */
+#^^ source.dart comment.block.dart
+#  ^^^^^ source.dart comment.block.dart
+#       ^^ source.dart comment.block.dart
+>var m = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/*
+#^^ source.dart comment.block.dart
+> * // Test
+#^^^^^^^^^^^ source.dart comment.block.dart
+> */
+#^ source.dart comment.block.dart
+# ^^ source.dart comment.block.dart
+>var n = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/** // */
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^ source.dart comment.block.documentation.dart
+#       ^^ source.dart comment.block.documentation.dart
+>var o = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/** /// */
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^ source.dart comment.block.documentation.dart
+#        ^^ source.dart comment.block.documentation.dart
+>var p = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/**
+#^^^ source.dart comment.block.documentation.dart
+>  * // Test
+#^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>  */
+#^^ source.dart comment.block.documentation.dart
+#  ^^ source.dart comment.block.documentation.dart
+>var q = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>/// This is a long comment with some nested code.
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>///
+#^^^ source.dart comment.block.documentation.dart
+>/// ```dart
+#^^^ source.dart comment.block.documentation.dart
+#   ^ source.dart comment.block.documentation.dart
+#    ^^^^^^^ source.dart comment.block.documentation.dart
+>/// test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>/// ```
+#^^^ source.dart comment.block.documentation.dart
+#   ^ source.dart comment.block.documentation.dart variable.other.source.dart
+#    ^^^ source.dart comment.block.documentation.dart
+>var r = 1;
+#^^^ source.dart storage.type.primitive.dart
+#   ^^^ source.dart
+#      ^ source.dart keyword.operator.assignment.dart
+#       ^ source.dart
+#        ^ source.dart constant.numeric.dart
+#         ^ source.dart punctuation.terminator.dart
+>
+>void foo() {
+#^^^^ source.dart storage.type.primitive.dart
+#    ^ source.dart
+#     ^^^ source.dart entity.name.function.dart
+#        ^ source.dart
+#         ^^^^ source.dart
+>  /**
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+>    * Nested function.
+#^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>    */
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^ source.dart comment.block.documentation.dart
+>  bool bar() => true;
+#^^ source.dart
+#  ^^^^ source.dart support.class.dart
+#      ^ source.dart
+#       ^^^ source.dart entity.name.function.dart
+#          ^ source.dart
+#           ^^ source.dart
+#             ^^ source.dart keyword.operator.closure.dart
+#               ^ source.dart
+#                ^^^^ source.dart constant.language.dart
+#                    ^ source.dart punctuation.terminator.dart
+>}
+#^^ source.dart
+>
+>class ClassToAddIndenting {
+#^^^^^ source.dart keyword.declaration.dart
+#     ^ source.dart
+#      ^^^^^^^^^^^^^^^^^^^ source.dart support.class.dart
+#                         ^^^ source.dart
+>  /* test /* test */ */
+#^^ source.dart
+#  ^^ source.dart comment.block.dart
+#    ^^^^^^ source.dart comment.block.dart
+#          ^^ source.dart comment.block.dart comment.block.dart
+#            ^^^^^^ source.dart comment.block.dart comment.block.dart
+#                  ^^ source.dart comment.block.dart comment.block.dart
+#                    ^ source.dart comment.block.dart
+#                     ^^ source.dart comment.block.dart
+>  var a = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>  /** test /** test */ */
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart
+#           ^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#              ^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#                    ^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#                      ^ source.dart comment.block.documentation.dart
+#                       ^^ source.dart comment.block.documentation.dart
+>  var b = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>  /** test /* test */ */
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart
+#           ^^ source.dart comment.block.documentation.dart comment.block.dart
+#             ^^^^^^ source.dart comment.block.documentation.dart comment.block.dart
+#                   ^^ source.dart comment.block.documentation.dart comment.block.dart
+#                     ^ source.dart comment.block.documentation.dart
+#                      ^^ source.dart comment.block.documentation.dart
+>  var c = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>  /* test /** test */ */
+#^^ source.dart
+#  ^^ source.dart comment.block.dart
+#    ^^^^^^ source.dart comment.block.dart
+#          ^^ source.dart comment.block.dart comment.block.dart
+#            ^^^^^^^ source.dart comment.block.dart comment.block.dart
+#                   ^^ source.dart comment.block.dart comment.block.dart
+#                     ^ source.dart comment.block.dart
+#                      ^^ source.dart comment.block.dart
+>  var d = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>  // test
+#^^ source.dart
+#  ^^^^^^^ source.dart comment.line.double-slash.dart
+>  var e = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /**
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+>   * test
+#^^^^^^^^^^ source.dart comment.block.documentation.dart
+>   *     test
+#^^^ source.dart comment.block.documentation.dart
+#   ^^ source.dart comment.block.documentation.dart
+#     ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>   * test
+#^^^^^^^^^^ source.dart comment.block.documentation.dart
+>   */
+#^^^ source.dart comment.block.documentation.dart
+#   ^^ source.dart comment.block.documentation.dart
+>
+>  /*
+#^^ source.dart
+#  ^^ source.dart comment.block.dart
+>  /**
+#^^ source.dart comment.block.dart
+#  ^^ source.dart comment.block.dart comment.block.dart
+#    ^^ source.dart comment.block.dart comment.block.dart
+>   * test
+#^^^^^^^^^^ source.dart comment.block.dart comment.block.dart
+>   *     test
+#^^^^^^^^^^^^^^ source.dart comment.block.dart comment.block.dart
+>   * test
+#^^^^^^^^^^ source.dart comment.block.dart comment.block.dart
+>   */
+#^^^ source.dart comment.block.dart comment.block.dart
+#   ^^ source.dart comment.block.dart comment.block.dart
+>  */
+#^^ source.dart comment.block.dart
+#  ^^ source.dart comment.block.dart
+>
+>  // /**
+#^^ source.dart
+#  ^^^^^^ source.dart comment.line.double-slash.dart
+>  //  * test
+#^^ source.dart
+#  ^^^^^^^^^^ source.dart comment.line.double-slash.dart
+>  //  *     test
+#^^ source.dart
+#  ^^^^^^^^^^^^^^ source.dart comment.line.double-slash.dart
+>  //  * test
+#^^ source.dart
+#  ^^^^^^^^^^ source.dart comment.line.double-slash.dart
+>  //  */
+#^^ source.dart
+#  ^^^^^^ source.dart comment.line.double-slash.dart
+>
+>  /// /*
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^ source.dart comment.block.documentation.dart
+>  /// /**
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^ source.dart comment.block.documentation.dart
+>  ///  * test
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^^^^ source.dart comment.block.documentation.dart
+>  ///  *     test
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^ source.dart comment.block.documentation.dart
+#       ^^ source.dart comment.block.documentation.dart
+#         ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>  ///  * test
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^^^^ source.dart comment.block.documentation.dart
+>  ///  */
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^ source.dart comment.block.documentation.dart
+>  /// */
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^ source.dart comment.block.documentation.dart
+>
+>  /// test
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart
+>  var f = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /// test
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart
+>  /// test
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart
+>  var g = 1; /// test
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+#            ^ source.dart
+#             ^^^ source.dart comment.block.documentation.dart
+#                ^^^^^^ source.dart comment.block.documentation.dart
+>  var h = 1; /// test
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+#            ^ source.dart
+#             ^^^ source.dart comment.block.documentation.dart
+#                ^^^^^^ source.dart comment.block.documentation.dart
+>  /// test
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart
+>
+>
+>  // test
+#^^ source.dart
+#  ^^^^^^^ source.dart comment.line.double-slash.dart
+>  var i = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  // test
+#^^ source.dart
+#  ^^^^^^^ source.dart comment.line.double-slash.dart
+>  // test
+#^^ source.dart
+#  ^^^^^^^ source.dart comment.line.double-slash.dart
+>  var j = 1; // test
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+#            ^ source.dart
+#             ^^^^^^^ source.dart comment.line.double-slash.dart
+>  var k = 1; // test
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+#            ^ source.dart
+#             ^^^^^^^ source.dart comment.line.double-slash.dart
+>  // test
+#^^ source.dart
+#  ^^^^^^^ source.dart comment.line.double-slash.dart
+>
+>  /* // */
+#^^ source.dart
+#  ^^ source.dart comment.block.dart
+#    ^^^^ source.dart comment.block.dart
+#        ^^ source.dart comment.block.dart
+>  var l = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /* /// */
+#^^ source.dart
+#  ^^ source.dart comment.block.dart
+#    ^^^^^ source.dart comment.block.dart
+#         ^^ source.dart comment.block.dart
+>  var m = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /*
+#^^ source.dart
+#  ^^ source.dart comment.block.dart
+>  * // Test
+#^^^^^^^^^^^^ source.dart comment.block.dart
+>  */
+#^^ source.dart comment.block.dart
+#  ^^ source.dart comment.block.dart
+>  var n = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /** // */
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^ source.dart comment.block.documentation.dart
+#         ^^ source.dart comment.block.documentation.dart
+>  var o = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /** /// */
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^^ source.dart comment.block.documentation.dart
+#          ^^ source.dart comment.block.documentation.dart
+>  var p = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /**
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+>    * // Test
+#^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>    */
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^ source.dart comment.block.documentation.dart
+>  var q = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  /// This is a long comment with some nested code.
+#^^ source.dart
+#  ^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>  ///
+#^^^^^ source.dart comment.block.documentation.dart
+>  /// ```dart
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^ source.dart comment.block.documentation.dart
+#      ^^^^^^^ source.dart comment.block.documentation.dart
+>  /// test
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>  /// ```
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^ source.dart comment.block.documentation.dart variable.other.source.dart
+#      ^^^ source.dart comment.block.documentation.dart
+>  var r = 1;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^ source.dart
+#        ^ source.dart keyword.operator.assignment.dart
+#         ^ source.dart
+#          ^ source.dart constant.numeric.dart
+#           ^ source.dart punctuation.terminator.dart
+>
+>  void foo() {
+#^^ source.dart
+#  ^^^^ source.dart storage.type.primitive.dart
+#      ^ source.dart
+#       ^^^ source.dart entity.name.function.dart
+#          ^ source.dart
+#           ^^^^ source.dart
+>    /**
+#^^^^ source.dart
+#    ^^^ source.dart comment.block.documentation.dart
+>     * Nested function.
+#^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+>     */
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^ source.dart comment.block.documentation.dart
+>    void bar() {}
+#^^^^ source.dart
+#    ^^^^ source.dart storage.type.primitive.dart
+#        ^ source.dart
+#         ^^^ source.dart entity.name.function.dart
+#            ^ source.dart
+#             ^^^^^ source.dart
+>  }
+#^^^^ source.dart
+>}
+#^^ source.dart
+>
