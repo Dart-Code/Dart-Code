@@ -236,14 +236,14 @@
                     "include":     "#function-identifier"
                 },
                 {
-                    "include":      "#object-dot-access"
+                    "include":     "#object-dot-access"
                 }
             ]
         },
         "class-definition": {
             "patterns": [
                 {
-                    "match":       "(?<![a-zA-Z0-9_$])(class)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s+(?:(extends)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*))?",
+                    "match":       "(?<![a-zA-Z0-9_$])(class)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s+(?:(extends)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)\\s*(<[\\s_$a-zA-Z0-9,]+>))?",
                     "captures": {
                         "1": {
                             "name":    "keyword.declaration.class.dart"
@@ -263,6 +263,13 @@
                         },
                         "5": {
                             "name":    "entity.other.inherited-class.dart"
+                        },
+                        "6": {
+                            "patterns": [
+                                {
+                                    "include":     "#type-parameters"
+                                }
+                            ]
                         }
                     }
                 }
@@ -363,13 +370,13 @@
             ]
         },
         "object-dot-access": {
-            "match": "([_$]*[a-zA-Z][a-zA-Z0-9_$]*)\\s*(\\.)",
+            "match":       "([_$]*[a-zA-Z][a-zA-Z0-9_$]*)\\s*(\\.)",
             "captures": {
                 "1": {
-                    "name": "variable.other.object.dart"
+                    "name":    "variable.other.object.dart"
                 },
                 "2": {
-                    "name": "punctuation.accessor.dart"
+                    "name":    "punctuation.accessor.dart"
                 }
             }
         },
