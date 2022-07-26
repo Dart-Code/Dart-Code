@@ -56,15 +56,20 @@ export class DartDebugClient extends DebugClient {
 			logger.info(`[terminated]`);
 
 			if (this.stopAdapterAfterTerminatedEvent) {
-				setTimeout(
-					() => {
-						if (this.adapterProcess !== undefined) {
-							logger.info(`[terminated] Stopping adapter...`);
-							this.stopAdapter();
-						}
-					},
-					500,
-				);
+				// Grab a reference to the process, because in tests we may
+				// reuse this class so it will get a new process.
+				const thisAdapterProcess = this.adapterProcess;
+				if (thisAdapterProcess !== undefined) {
+					setTimeout(
+						() => {
+							if (thisAdapterProcess !== undefined && !thisAdapterProcess.killed) {
+								logger.info(`[terminated] Stopping adapter...`);
+								thisAdapterProcess.kill();
+							}
+						},
+						500,
+					);
+				}
 			}
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
