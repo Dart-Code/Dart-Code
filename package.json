@@ -2700,9 +2700,11 @@
 		"test": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument && npm run test-only && npm run report_lcov && npm run report_screen",
 		"instrument-dist": "cd out/dist && nyc instrument --compact false --in-place . . && cd ../..",
 		"instrument": "cd out/src && nyc instrument --compact false --in-place . . && cd ../..",
-		"test-only": "node ./out/src/test/test_all.js",
+		"test-only": "node ./out/src/test/test_all.js && npm run test-grammar",
 		"report_lcov": "nyc report -r lcovonly --report-dir coverage/$BOT",
-		"report_screen": "nyc report"
+		"report_screen": "nyc report",
+		"test-grammar": "vscode-tmgrammar-snap --expandDiff 'src/test/test_projects/grammar_testing/**/*.dart'",
+		"update-grammar-snapshots": "vscode-tmgrammar-snap --updateSnapshot 'src/test/test_projects/grammar_testing/**/*.dart'"
 	},
 	"dependencies": {
 		"@vscode/debugadapter": "^1.51.0",
@@ -2735,6 +2737,7 @@
 		"ts-loader": "^9.3.0",
 		"tslint": "^6.1.3",
 		"typescript": "^4.6.3",
+		"vscode-tmgrammar-test": "^0.1.1",
 		"webpack": "^5.72.1",
 		"webpack-cli": "^4.9.2"
 	},

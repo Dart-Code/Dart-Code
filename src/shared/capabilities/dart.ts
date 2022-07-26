@@ -32,6 +32,7 @@ export class DartCapabilities {
 	get supportsDartRunForPub() { return versionIsAtLeast(this.version, "2.16.0-0"); }
 	get supportsDartDoc() { return versionIsAtLeast(this.version, "2.16.0"); }
 	get supportsDartDevTools() { return versionIsAtLeast(this.version, "2.15.0"); }
+	get supportsDartDevToolsPathUrls() { return versionIsAtLeast(this.version, "2.18.0-0"); }
 	get supportsDartRunTest() { return versionIsAtLeast(this.version, "2.12.0-0"); }
 	get supportsNonFileSchemeWorkspaces() { return versionIsAtLeast(this.version, "2.13.0-28"); }
 	get supportsServerSnippets() { return versionIsAtLeast(this.version, "2.17.0-258"); }

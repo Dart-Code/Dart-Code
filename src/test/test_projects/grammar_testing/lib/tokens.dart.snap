@@ -1,0 +1,380 @@
+>class lowercase {}
+#^^^^^ source.dart keyword.declaration.dart
+#     ^^^^^^^^^^^^^^ source.dart
+>
+>class UPPERCASE {}
+#^^^^^ source.dart keyword.declaration.dart
+#     ^ source.dart
+#      ^^^^^^^^^ source.dart support.class.dart
+#               ^^^^ source.dart
+>
+>class MyClass {
+#^^^^^ source.dart keyword.declaration.dart
+#     ^ source.dart
+#      ^^^^^^^ source.dart support.class.dart
+#             ^^^ source.dart
+>  void method1() => print('Called method1!');
+#^^ source.dart
+#  ^^^^ source.dart storage.type.primitive.dart
+#      ^ source.dart
+#       ^^^^^^^ source.dart entity.name.function.dart
+#              ^ source.dart
+#               ^^ source.dart
+#                 ^^ source.dart keyword.operator.closure.dart
+#                   ^ source.dart
+#                    ^^^^^ source.dart entity.name.function.dart
+#                         ^ source.dart
+#                          ^ source.dart string.interpolated.single.dart
+#                           ^^^^^^^^^^^^^^^ source.dart string.interpolated.single.dart
+#                                          ^ source.dart string.interpolated.single.dart
+#                                           ^ source.dart
+#                                            ^ source.dart punctuation.terminator.dart
+>  void Method2() => print('Called method2!');
+#^^ source.dart
+#  ^^^^ source.dart storage.type.primitive.dart
+#      ^ source.dart
+#       ^^^^^^^ source.dart support.class.dart
+#              ^^^ source.dart
+#                 ^^ source.dart keyword.operator.closure.dart
+#                   ^ source.dart
+#                    ^^^^^ source.dart entity.name.function.dart
+#                         ^ source.dart
+#                          ^ source.dart string.interpolated.single.dart
+#                           ^^^^^^^^^^^^^^^ source.dart string.interpolated.single.dart
+#                                          ^ source.dart string.interpolated.single.dart
+#                                           ^ source.dart
+#                                            ^ source.dart punctuation.terminator.dart
+>  void get() => print('Called get()!');
+#^^ source.dart
+#  ^^^^ source.dart storage.type.primitive.dart
+#      ^ source.dart
+#       ^^^ source.dart keyword.declaration.dart
+#          ^^^ source.dart
+#             ^^ source.dart keyword.operator.closure.dart
+#               ^ source.dart
+#                ^^^^^ source.dart entity.name.function.dart
+#                     ^ source.dart
+#                      ^ source.dart string.interpolated.single.dart
+#                       ^^^^^^^^^^^^^ source.dart string.interpolated.single.dart
+#                                    ^ source.dart string.interpolated.single.dart
+#                                     ^ source.dart
+#                                      ^ source.dart punctuation.terminator.dart
+>  void set() => print('Called set()!');
+#^^ source.dart
+#  ^^^^ source.dart storage.type.primitive.dart
+#      ^ source.dart
+#       ^^^ source.dart keyword.declaration.dart
+#          ^^^ source.dart
+#             ^^ source.dart keyword.operator.closure.dart
+#               ^ source.dart
+#                ^^^^^ source.dart entity.name.function.dart
+#                     ^ source.dart
+#                      ^ source.dart string.interpolated.single.dart
+#                       ^^^^^^^^^^^^^ source.dart string.interpolated.single.dart
+#                                    ^ source.dart string.interpolated.single.dart
+#                                     ^ source.dart
+#                                      ^ source.dart punctuation.terminator.dart
+>
+>  String? _foo;
+#^^ source.dart
+#  ^^^^^^ source.dart support.class.dart
+#        ^ source.dart keyword.operator.ternary.dart
+#         ^^^^^ source.dart
+#              ^ source.dart punctuation.terminator.dart
+>  String? get foo => _foo;
+#^^ source.dart
+#  ^^^^^^ source.dart support.class.dart
+#        ^ source.dart keyword.operator.ternary.dart
+#         ^ source.dart
+#          ^^^ source.dart keyword.declaration.dart
+#             ^ source.dart
+#              ^^^ source.dart entity.name.function.dart
+#                 ^^^ source.dart
+#                    ^^^^^ source.dart
+#                         ^ source.dart punctuation.terminator.dart
+>  set foo(String? value) => _foo = value;
+#^^ source.dart
+#  ^^^ source.dart keyword.declaration.dart
+#     ^ source.dart
+#      ^^^ source.dart entity.name.function.dart
+#         ^ source.dart
+#          ^^^^^^ source.dart support.class.dart
+#                ^ source.dart keyword.operator.ternary.dart
+#                 ^^^^^^^^ source.dart
+#                         ^^ source.dart keyword.operator.closure.dart
+#                           ^^^^^^ source.dart
+#                                 ^ source.dart keyword.operator.assignment.dart
+#                                  ^^^^^^ source.dart
+#                                        ^ source.dart punctuation.terminator.dart
+>}
+#^^ source.dart
+>
+>void main() async {
+#^^^^ source.dart storage.type.primitive.dart
+#    ^ source.dart
+#     ^^^^ source.dart entity.name.function.dart
+#         ^ source.dart
+#          ^^ source.dart
+#            ^^^^^ source.dart keyword.control.dart
+#                 ^^^ source.dart
+>  var FOO = MyClass();
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^ source.dart
+#      ^^^ source.dart support.class.dart
+#         ^ source.dart
+#          ^ source.dart keyword.operator.assignment.dart
+#           ^ source.dart
+#            ^^^^^^^ source.dart support.class.dart
+#                   ^^ source.dart
+#                     ^ source.dart punctuation.terminator.dart
+>  FOO.method1();
+#^^ source.dart
+#  ^^^ source.dart support.class.dart
+#     ^ source.dart punctuation.dot.dart
+#      ^^^^^^^ source.dart entity.name.function.dart
+#             ^ source.dart
+#              ^ source.dart
+#               ^ source.dart punctuation.terminator.dart
+>  FOO.Method2();
+#^^ source.dart
+#  ^^^ source.dart support.class.dart
+#     ^ source.dart punctuation.dot.dart
+#      ^^^^^^^ source.dart support.class.dart
+#             ^^ source.dart
+#               ^ source.dart punctuation.terminator.dart
+>  FOO.get();
+#^^ source.dart
+#  ^^^ source.dart support.class.dart
+#     ^ source.dart punctuation.dot.dart
+#      ^^^ source.dart keyword.declaration.dart
+#         ^^ source.dart
+#           ^ source.dart punctuation.terminator.dart
+>  FOO.set();
+#^^ source.dart
+#  ^^^ source.dart support.class.dart
+#     ^ source.dart punctuation.dot.dart
+#      ^^^ source.dart keyword.declaration.dart
+#         ^^ source.dart
+#           ^ source.dart punctuation.terminator.dart
+>  FOO.foo = FOO.foo;
+#^^ source.dart
+#  ^^^ source.dart support.class.dart
+#     ^ source.dart punctuation.dot.dart
+#      ^^^^ source.dart
+#          ^ source.dart keyword.operator.assignment.dart
+#           ^ source.dart
+#            ^^^ source.dart support.class.dart
+#               ^ source.dart punctuation.dot.dart
+#                ^^^ source.dart
+#                   ^ source.dart punctuation.terminator.dart
+>
+>  void Function() notNullableFunc = () {};
+#^^ source.dart
+#  ^^^^ source.dart storage.type.primitive.dart
+#      ^ source.dart
+#       ^^^^^^^^ source.dart support.class.dart
+#               ^^^^^^^^^^^^^^^^^^^ source.dart
+#                                  ^ source.dart keyword.operator.assignment.dart
+#                                   ^^^^^^ source.dart
+#                                         ^ source.dart punctuation.terminator.dart
+>  void Function()? nullableFunc;
+#^^ source.dart
+#  ^^^^ source.dart storage.type.primitive.dart
+#      ^ source.dart
+#       ^^^^^^^^ source.dart support.class.dart
+#               ^^ source.dart
+#                 ^ source.dart keyword.operator.ternary.dart
+#                  ^^^^^^^^^^^^^ source.dart
+#                               ^ source.dart punctuation.terminator.dart
+>
+>  notNullableFunc();
+#^^ source.dart
+#  ^^^^^^^^^^^^^^^ source.dart entity.name.function.dart
+#                 ^ source.dart
+#                  ^ source.dart
+#                   ^ source.dart punctuation.terminator.dart
+>  nullableFunc!();
+#^^ source.dart
+#  ^^^^^^^^^^^^ source.dart entity.name.function.dart
+#              ^^ source.dart
+#                ^ source.dart
+#                 ^ source.dart punctuation.terminator.dart
+>
+>  var val = 'test' as dynamic;
+#^^ source.dart
+#  ^^^ source.dart storage.type.primitive.dart
+#     ^^^^^ source.dart
+#          ^ source.dart keyword.operator.assignment.dart
+#           ^ source.dart
+#            ^ source.dart string.interpolated.single.dart
+#             ^^^^ source.dart string.interpolated.single.dart
+#                 ^ source.dart string.interpolated.single.dart
+#                  ^ source.dart
+#                   ^^ source.dart keyword.cast.dart
+#                     ^ source.dart
+#                      ^^^^^^^ source.dart support.class.dart
+#                             ^ source.dart punctuation.terminator.dart
+>  print('!$val世界!');
+#^^ source.dart
+#  ^^^^^ source.dart entity.name.function.dart
+#       ^ source.dart
+#        ^ source.dart string.interpolated.single.dart
+#         ^ source.dart string.interpolated.single.dart
+#          ^ source.dart string.interpolated.single.dart
+#           ^^^ source.dart string.interpolated.single.dart variable.parameter.dart
+#              ^^^ source.dart string.interpolated.single.dart
+#                 ^ source.dart string.interpolated.single.dart
+#                  ^ source.dart
+#                   ^ source.dart punctuation.terminator.dart
+>
+>  final a = await null;
+#^^ source.dart
+#  ^^^^^ source.dart storage.modifier.dart
+#       ^^^ source.dart
+#          ^ source.dart keyword.operator.assignment.dart
+#           ^ source.dart
+#            ^^^^^ source.dart keyword.control.dart
+#                 ^ source.dart
+#                  ^^^^ source.dart constant.language.dart
+#                      ^ source.dart punctuation.terminator.dart
+>  if (a == null) {
+#^^ source.dart
+#  ^^ source.dart keyword.control.dart
+#    ^^^^ source.dart
+#        ^^ source.dart keyword.operator.comparison.dart
+#          ^ source.dart
+#           ^^^^ source.dart constant.language.dart
+#               ^^^^ source.dart
+>    print(false);
+#^^^^ source.dart
+#    ^^^^^ source.dart entity.name.function.dart
+#         ^ source.dart
+#          ^^^^^ source.dart constant.language.dart
+#               ^ source.dart
+#                ^ source.dart punctuation.terminator.dart
+>    for (var i in []) {
+#^^^^ source.dart
+#    ^^^ source.dart keyword.control.dart
+#       ^^ source.dart
+#         ^^^ source.dart storage.type.primitive.dart
+#            ^^^ source.dart
+#               ^^ source.dart keyword.control.dart
+#                 ^^^^^^^ source.dart
+>      if (i == 0) {
+#^^^^^^ source.dart
+#      ^^ source.dart keyword.control.dart
+#        ^^^^ source.dart
+#            ^^ source.dart keyword.operator.comparison.dart
+#              ^ source.dart
+#               ^ source.dart constant.numeric.dart
+#                ^^^^ source.dart
+>        continue;
+#^^^^^^^^ source.dart
+#        ^^^^^^^^ source.dart keyword.control.dart
+#                ^ source.dart punctuation.terminator.dart
+>      }
+#^^^^^^^^ source.dart
+>      break;
+#^^^^^^ source.dart
+#      ^^^^^ source.dart keyword.control.dart
+#           ^ source.dart punctuation.terminator.dart
+>    }
+#^^^^^^ source.dart
+>  } else {}
+#^^^^ source.dart
+#    ^^^^ source.dart keyword.control.dart
+#        ^^^^ source.dart
+>
+>  try {
+#^^ source.dart
+#  ^^^ source.dart keyword.control.catch-exception.dart
+#     ^^^ source.dart
+>    assert(true == true);
+#^^^^ source.dart
+#    ^^^^^^ source.dart keyword.control.dart
+#          ^ source.dart
+#           ^^^^ source.dart constant.language.dart
+#               ^ source.dart
+#                ^^ source.dart keyword.operator.comparison.dart
+#                  ^ source.dart
+#                   ^^^^ source.dart constant.language.dart
+#                       ^ source.dart
+#                        ^ source.dart punctuation.terminator.dart
+>  } on Exception {
+#^^^^ source.dart
+#    ^^ source.dart keyword.control.catch-exception.dart
+#      ^ source.dart
+#       ^^^^^^^^^ source.dart support.class.dart
+#                ^^^ source.dart
+>    throw Exception('test');
+#^^^^ source.dart
+#    ^^^^^ source.dart keyword.control.catch-exception.dart
+#         ^ source.dart
+#          ^^^^^^^^^ source.dart support.class.dart
+#                   ^ source.dart
+#                    ^ source.dart string.interpolated.single.dart
+#                     ^^^^ source.dart string.interpolated.single.dart
+#                         ^ source.dart string.interpolated.single.dart
+#                          ^ source.dart
+#                           ^ source.dart punctuation.terminator.dart
+>  } catch (e) {
+#^^^^ source.dart
+#    ^^^^^ source.dart keyword.control.catch-exception.dart
+#         ^^^^^^^ source.dart
+>    rethrow;
+#^^^^ source.dart
+#    ^^^^^^^ source.dart keyword.control.catch-exception.dart
+#           ^ source.dart punctuation.terminator.dart
+>  } finally {}
+#^^^^ source.dart
+#    ^^^^^^^ source.dart keyword.control.catch-exception.dart
+#           ^^^^ source.dart
+>
+>  switch (true) {
+#^^ source.dart
+#  ^^^^^^ source.dart keyword.control.dart
+#        ^^ source.dart
+#          ^^^^ source.dart constant.language.dart
+#              ^^^^ source.dart
+>    case false:
+#^^^^ source.dart
+#    ^^^^ source.dart keyword.control.dart
+#        ^ source.dart
+#         ^^^^^ source.dart constant.language.dart
+#              ^ source.dart keyword.operator.ternary.dart
+>      break;
+#^^^^^^ source.dart
+#      ^^^^^ source.dart keyword.control.dart
+#           ^ source.dart punctuation.terminator.dart
+>    default:
+#^^^^ source.dart
+#    ^^^^^^^ source.dart keyword.control.dart
+#           ^ source.dart keyword.operator.ternary.dart
+>  }
+#^^^^ source.dart
+>
+>  while (1 == 2) {
+#^^ source.dart
+#  ^^^^^ source.dart keyword.control.dart
+#       ^^ source.dart
+#         ^ source.dart constant.numeric.dart
+#          ^ source.dart
+#           ^^ source.dart keyword.operator.comparison.dart
+#             ^ source.dart
+#              ^ source.dart constant.numeric.dart
+#               ^^^^ source.dart
+>    do {} while (false);
+#^^^^ source.dart
+#    ^^ source.dart keyword.control.dart
+#      ^^^^ source.dart
+#          ^^^^^ source.dart keyword.control.dart
+#               ^^ source.dart
+#                 ^^^^^ source.dart constant.language.dart
+#                      ^ source.dart
+#                       ^ source.dart punctuation.terminator.dart
+>  }
+#^^^^ source.dart
+>}
+#^^ source.dart
+>
