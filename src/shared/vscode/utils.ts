@@ -4,6 +4,7 @@ import { URL } from "url";
 import * as vs from "vscode";
 import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
 import * as lsp from "vscode-languageclient";
+import * as YAML from "yaml";
 import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchProgressNotificationDelayInMs, projectSearchProgressText } from "../constants";
 import { EventEmitter } from "../events";
 import { Location, Logger } from "../interfaces";
@@ -34,6 +35,30 @@ export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	return workspace.workspaceFolders.filter(isDartWorkspaceFolder);
 }
 
+function getAnalysisOptionsExcludedFolders(
+	logger: Logger,
+	projectFolders: string[],
+): string[] {
+	const results: string[] = [];
+	for (const projectFolder of projectFolders) {
+		const analysisOptionsPath = path.join(projectFolder, "analysis_options.yaml");
+		try {
+			const analysisOptionsContent = fs.readFileSync(analysisOptionsPath);
+			const yaml = YAML.parse(analysisOptionsContent.toString());
+			const excluded = yaml?.analyzer?.exclude;
+			if (excluded && Array.isArray(excluded)) {
+				for (const exclude of excluded as string[]) {
+					results.push(path.join(projectFolder, exclude.split("/**")[0]));
+				}
+			}
+		} catch (e: any) {
+			if (e?.code !== "ENOENT") // Don't warn for missing files.
+				logger.error(`Failed to read ${analysisOptionsPath}: ${e}`);
+		}
+	}
+	return results;
+}
+
 export async function getAllProjectFolders(
 	logger: Logger,
 	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
@@ -54,7 +79,7 @@ export async function getAllProjectFolders(
 		return cachedFolders;
 	}
 
-	const startTimeMs = new Date().getTime();
+	let startTimeMs = new Date().getTime();
 	const tokenSource = new vs.CancellationTokenSource();
 	let isComplete = false;
 
@@ -81,9 +106,19 @@ export async function getAllProjectFolders(
 		}
 	}, projectSearchProgressNotificationDelayInMs);
 
-	const results = await resultsPromise;
+	let results = await resultsPromise;
 	isComplete = true;
 	logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
+	startTimeMs = new Date().getTime();
+
+	// Filter out any folders excluded by analysis_options.
+	try {
+		const excludedFolders = getAnalysisOptionsExcludedFolders(logger, results);
+		results = results.filter((p) => !excludedFolders.find((f) => p.startsWith(f)));
+		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
+	} catch (e) {
+		logger.error(`Failed to filter out analysis_options exclusions: ${e}`);
+	}
 
 	// Cache the results.
 	projectFolderCache.add(cacheKey, results, projectSearchCacheTimeInMs);

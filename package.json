@@ -2740,7 +2740,8 @@
 		"minimatch": "^5.0.1",
 		"semver": "^7.3.7",
 		"vscode-languageclient": "^8.0.0",
-		"ws": "^8.6.0"
+		"ws": "^8.6.0",
+		"yaml": "^2.1.1"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.2.0",

@@ -145,6 +145,7 @@ async function runAllTests(): Promise<void> {
 			await runTests("flutter_create_tests", "flutter_create_tests.code-workspace");
 			await runTests("dart_nested", "dart_nested");
 			await runTests("dart_nested_flutter", "dart_nested_flutter");
+			await runTests("dart_nested_flutter2", "dart_nested_flutter2");
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_repo") {
 			if (process.env.FLUTTER_REPO_PATH) {
