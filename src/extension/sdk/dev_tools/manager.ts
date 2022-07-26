@@ -125,7 +125,7 @@ export class DevToolsManager implements vs.Disposable {
 		this.devToolsStatusBarItem.command = "dart.openDevTools";
 		this.devToolsStatusBarItem.show();
 
-		return url;
+		return config.customDevToolsUri ?? url;
 	}
 
 	/// Spawns DevTools and returns the full URL to open without a debug session.
@@ -258,7 +258,7 @@ export class DevToolsManager implements vs.Disposable {
 		};
 
 		// Try to launch via service if allowed.
-		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page ?? this.getDefaultPage()) }))
+		if (!config.customDevToolsUri && allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page ?? this.getDefaultPage()) }))
 			return true;
 
 		// Otherwise, fall back to embedded or launching manually.
@@ -276,6 +276,8 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, vmServiceUri: string, url: string) {
+		url = config.customDevToolsUri ?? url;
+
 		queryParams.hide = "debugger";
 		queryParams.ide = "VSCode";
 

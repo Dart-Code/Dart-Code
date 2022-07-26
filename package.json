@@ -1515,6 +1515,15 @@
 						"default": true,
 						"markdownDescription": "Whether to show notifications for widget errors that offer Inspect Widget links. This requires that the `#dart.shareDevToolsWithFlutter#` setting is also enabled.",
 						"scope": "window"
+					},
+					"dart.customDevToolsUri": {
+						"type": [
+							"null",
+							"string"
+						],
+						"default": null,
+						"description": "A custom URI to use for launching DevTools. This setting is intended for use by Dart DevTools developers.",
+						"scope": "machine-overridable"
 					}
 				}
 			},
