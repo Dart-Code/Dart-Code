@@ -1359,7 +1359,7 @@
 					"dart.analyzerAdditionalArgs": {
 						"type": "array",
 						"default": [],
-						"description": "Additional arguments to pass to the Dart analysis server.",
+						"description": "Additional arguments to pass to the Dart Analysis Server.",
 						"scope": "window",
 						"items": {
 							"type": "string"
@@ -1380,7 +1380,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a custom Dart analysis server.",
+						"description": "The path to a custom Dart Analysis Server. This setting is intended for use by Dart Analysis Server developers.",
 						"scope": "machine-overridable"
 					},
 					"dart.analyzerSshHost": {
@@ -1389,7 +1389,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "An SSH host to run the analysis server.\nThis can be useful when modifying code on a remote machine using SSHFS.",
+						"description": "An SSH host to run the Analysis Server.\nThis can be useful when modifying code on a remote machine using SSHFS.",
 						"scope": "window"
 					},
 					"dart.analyzerVmServicePort": {
@@ -1398,13 +1398,13 @@
 							"number"
 						],
 						"default": null,
-						"description": "The port number to be used for the Dart analysis server VM service.",
+						"description": "The port number to be used for the Dart Analysis Server VM service. This setting is intended for use by Dart Analysis Server developers.",
 						"scope": "window"
 					},
 					"dart.notifyAnalyzerErrors": {
 						"type": "boolean",
 						"default": true,
-						"description": "Whether to show a notification the first few times an analysis server exception occurs.",
+						"description": "Whether to show a notification the first few times an Analysis Server exception occurs.",
 						"scope": "window"
 					},
 					"dart.onlyAnalyzeProjectsWithOpenFiles": {
@@ -1525,7 +1525,7 @@
 					"dart.analysisServerFolding": {
 						"type": "boolean",
 						"default": true,
-						"description": "Whether to use folding data from the Dart analysis server instead of the built-in VS Code indent-based folding.",
+						"description": "Whether to use folding data from the Dart Analysis Server instead of the built-in VS Code indent-based folding.",
 						"scope": "window"
 					},
 					"dart.autoImportCompletions": {
@@ -1917,7 +1917,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a log file for very detailed logging in the Dart analysis server that may be useful when trying to diagnose analysis server issues.",
+						"description": "The path to a log file for very detailed logging in the Dart Analysis Server that may be useful when trying to diagnose Analysis Server issues.",
 						"scope": "machine-overridable"
 					},
 					"dart.analyzerLogFile": {
@@ -1926,7 +1926,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a log file for communication between Dart Code and the analysis server.",
+						"description": "The path to a log file for communication between Dart Code and the Analysis Server.",
 						"scope": "machine-overridable"
 					},
 					"dart.dapLogFile": {
@@ -2109,6 +2109,12 @@
 						"description": "The protocol to use for the Dart Debug Extension backend service and injected client. Using WebSockets can improve performance but may fail when connecting through some proxy servers.",
 						"scope": "window"
 					},
+					"dart.debugSdkLibraries": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Whether to mark Dart SDK libraries (`dart:*`) as debuggable, enabling stepping into them while debugging.",
+						"scope": "window"
+					},
 					"dart.debugExternalPackageLibraries": {
 						"type": "boolean",
 						"default": false,
@@ -2199,6 +2205,25 @@
 						"items": {
 							"type": "string"
 						}
+					},
+
+					"dart.customDartDapPath": {
+						"type": [
+							"null",
+							"string"
+						],
+						"default": null,
+						"description": "The path to a custom Dart Debug Adapter. This setting is intended for use by Dart Debug Adapter developers.",
+						"scope": "machine-overridable"
+					},
+					"dart.customFlutterDapPath": {
+						"type": [
+							"null",
+							"string"
+						],
+						"default": null,
+						"description": "The path to a custom Flutter Debug Adapter. This setting is intended for use by Dart Debug Adapter developers.",
+						"scope": "machine-overridable"
 					}
 				}
 			},
@@ -2229,12 +2254,6 @@
 							"type": "string"
 						},
 						"scope": "machine-overridable"
-					},
-					"dart.debugSdkLibraries": {
-						"type": "boolean",
-						"default": false,
-						"markdownDescription": "Whether to mark Dart SDK libraries (`dart:*`) as debuggable, enabling stepping into them while debugging.",
-						"scope": "window"
 					},
 					"dart.flutterSdkPath": {
 						"type": [
