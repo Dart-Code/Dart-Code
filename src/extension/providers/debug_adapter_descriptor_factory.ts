@@ -4,13 +4,13 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
-import { DartSdks, Logger } from "../../shared/interfaces";
+import { CustomScript, DartSdks, Logger } from "../../shared/interfaces";
 import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
-	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterToolsScript?: CustomScript, private readonly cwd?: string) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
 		return this.descriptorForType(session.configuration.debuggerType as DebuggerType);
@@ -44,7 +44,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		if (useSdkDap) {
 			const executable = isDartOrDartTest
 				? path.join(this.sdks.dart, dartVMPath)
-				: (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
+				: this.flutterToolsScript?.script ?? (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
 
 			const args = ["debug_adapter"];
 			if (isDartTestOrFlutterTest)
@@ -53,7 +53,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 				args.push("--no-dds");
 
 			this.logger.info(`Running SDK DAP Dart VM: ${executable} ${args.join("    ")}`);
-			return new DebugAdapterExecutable(executable, args);
+			return new DebugAdapterExecutable(executable, args, this.cwd ? {cwd: this.cwd} : {});
 		} else if (config.customDartDapPath && isDartOrDartTest) {
 			const args = [config.customDartDapPath, "debug_adapter"];
 			if (isDartTest)

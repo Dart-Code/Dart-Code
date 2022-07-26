@@ -42,6 +42,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			sdkHome: string | undefined; // Note: This refers to Flutter SDK home, not Dart.
 			syncScript: string | undefined;
 			testScript: string | undefined;
+			toolsScript: string | undefined;
 			defaultDartSdk: string | undefined;
 		};
 
@@ -75,6 +76,10 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);
 		config.flutterSyncScript = makeFullPath(flutterConfig.syncScript);
 		config.flutterTestScript = makeScript(flutterConfig.testScript);
+
+		// TODO (helin24): This is a generic script that can be used with some of the Flutter commands, e.g. `debug_adapter`, `doctor`, and `daemon`.
+		// We should eventually change over the other scripts to use this one to reduce the number of scripts needed.
+		config.flutterToolsScript = makeScript(flutterConfig.toolsScript);
 		config.defaultDartSdk = makeFullPath(flutterConfig.defaultDartSdk);
 	} catch (e) {
 		logger.error(e);
