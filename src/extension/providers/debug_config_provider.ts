@@ -532,6 +532,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;
+		debugConfig.daemonPort = config.daemonPort;
 
 		if (!isFlutter && !isAttach && !isTest && debugConfig.console === undefined && config.cliConsole !== undefined)
 			debugConfig.console = config.cliConsole;
