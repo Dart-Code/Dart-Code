@@ -17,7 +17,6 @@ export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspac
 export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string, parseFlutterJson: boolean) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
-	console.log("found bazel root");
 
 	if (parseFlutterJson)
 		tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
