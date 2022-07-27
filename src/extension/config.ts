@@ -61,7 +61,7 @@ class Config {
 	get customDevToolsUri(): undefined | string { return this.getConfig<null | string>("customDevToolsUri", null); }
 	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
 	get dartTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null))); }
-	get daemonPort(): undefined | string { return this.getConfig<null | string>("daemonPort", null); }
+	get daemonPort(): undefined | number { return this.getConfig<null | number>("daemonPort", null); }
 	get debugExtensionBackendProtocol(): "sse" | "ws" { return this.getConfig<"sse" | "ws">("debugExtensionBackendProtocol", "ws"); }
 	get debugExternalPackageLibraries(): boolean { return this.getConfig<boolean>("debugExternalPackageLibraries", false); }
 	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
