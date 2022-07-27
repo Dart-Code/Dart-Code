@@ -243,7 +243,7 @@
         "class-definition": {
             "patterns": [
                 {
-                    "match":       "(?<![a-zA-Z0-9_$])(class)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s+(?:(extends)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)\\s*(<[\\s_$a-zA-Z0-9,]+>)?)?",
+                    "match":       "(?<![a-zA-Z0-9_$])(class)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s+(?:(extends)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)\\s*(<[\\s_$a-zA-Z0-9,\\?]+>)?)?",
                     "captures": {
                         "1": {
                             "name":    "keyword.declaration.class.dart"
@@ -495,7 +495,7 @@
             ]
         },
         "type-parameters": {
-            "match":       "(<)([\\s_$a-zA-Z0-9,]*)(>)",
+            "match":       "(<)([\\s_$a-zA-Z0-9,\\?]*)(>)",
             "captures": {
                 "1": {
                     "name":    "punctuation.definition.typeparameters.begin.dart"
@@ -509,6 +509,10 @@
                         {
                             "match":       ",",
                             "name":        "punctuation.separator.dart"
+                        },
+                        {
+                            "match":       "\\?",
+                            "name":        "punctuation.accessor.optional.dart"
                         }
                     ]
                 },
