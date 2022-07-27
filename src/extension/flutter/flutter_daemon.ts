@@ -80,7 +80,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
 		this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
 		this.process.on("exit", (code, signal) => this.handleExit(code, signal));
-		this.process.on("error", (error) => this.handleError(error));
+		this.process.on("error", (error) => {
+			vs.window.showErrorMessage(`Remote daemon startup had an error: ${error}. Check the instructions for using dart.daemonPort`);
+			this.handleError(error);
+		});
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
