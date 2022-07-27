@@ -69,8 +69,8 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.omitTargetFlag = true;
 		config.startDevToolsServerEagerly = true;
 		config.flutterVersion = MAX_VERSION;
-		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDevToolsScript = makeScript(flutterConfig.devToolsScript);
+		config.flutterDaemonScript = makeScript(flutterConfig.daemonScript);
 		config.flutterDoctorScript = makeScript(flutterConfig.doctorScript);
 		config.flutterRunScript = makeScript(flutterConfig.runScript);
 		config.flutterSdkHome = makeFullPath(flutterConfig.sdkHome);

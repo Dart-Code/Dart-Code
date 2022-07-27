@@ -532,6 +532,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;
+		debugConfig.daemonPort = config.daemonPort;
 
 		if (!isFlutter && !isAttach && !isTest && debugConfig.console === undefined && config.cliConsole !== undefined)
 			debugConfig.console = config.cliConsole;
@@ -671,6 +672,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				const renderer = getFutterWebRenderer(this.flutterCapabilities, config.flutterWebRenderer);
 				if (renderer)
 					this.addArgsIfNotExist(args, "--web-renderer", renderer);
+			}
+
+			if (this.wsContext.config.forceFlutterWorkspace && conf.daemonPort) {
+				this.addArgsIfNotExist(args, "--daemon-connection-port", conf.daemonPort.toString());
 			}
 		}
 

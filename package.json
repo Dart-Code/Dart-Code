@@ -2356,6 +2356,12 @@
 						"markdownDescription": "EXPERIMENTAL: Whether to look for custom script definitions at `dart/config/ide/flutter.json` in Bazel workspaces. Currently supported for macOS and Linux only.",
 						"scope": "window"
 					},
+					"dart.daemonPort": {
+						"type": "number",
+						"default": false,
+						"markdownDescription": "EXPERIMENTAL: The port where flutter daemon can be accessed if daemon is run remotely. This setting is intended for use by Google developers.",
+						"scope": "resource"
+					},
 					"dart.previewCommitCharacters": {
 						"type": "boolean",
 						"default": false,

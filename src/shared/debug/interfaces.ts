@@ -9,6 +9,7 @@ export interface DartLaunchArgs {
 	cwd?: string;
 	dartSdkPath: string;
 	dartTestLogFile?: string;
+	daemonPort?: number;
 	debugExternalPackageLibraries: boolean;
 	debugSdkLibraries: boolean;
 	deleteServiceInfoFile?: boolean;
