@@ -631,6 +631,10 @@
         "punctuation": {
             "patterns": [
                 {
+                    "match":       "(\\.\\.\\.)",
+                    "name":        "keyword.operator.spread.dart"
+                },
+                {
                     "match":       "(\\(|\\))",
                     "name":        "meta.brace.round.dart"
                 },
