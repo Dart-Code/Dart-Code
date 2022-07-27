@@ -673,6 +673,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (renderer)
 					this.addArgsIfNotExist(args, "--web-renderer", renderer);
 			}
+
+			if (debugConfig.customTool && debugConfig.daemonPort) {
+				this.addArgsIfNotExist(args, "--daemon-connection-port", debugConfig.daemonPort);
+			}
 		}
 
 		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {

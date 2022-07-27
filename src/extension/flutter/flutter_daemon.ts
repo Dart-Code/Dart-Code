@@ -72,7 +72,6 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	protected createNcProcess(port: string) {
-		vs.window.showInformationMessage(`About to create nc process with port: ${port}`);
 		this.process = child_process.spawn("nc", ["localhost", port]) as SpawnedProcess;
 
 		this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
