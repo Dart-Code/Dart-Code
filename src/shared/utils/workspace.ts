@@ -54,11 +54,11 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			return path.join(bazelWorkspaceRoot, relOrAbsolute);
 		}
 
-		function makeScript(relOrAbsolute: string | undefined, replacesArgs = 1, makeFull = true): CustomScript | undefined {
+		function makeScript(relOrAbsolute: string | undefined, replacesArgs = 1): CustomScript | undefined {
 			if (relOrAbsolute) {
 				return {
 					replacesArgs,
-					script: makeFull ? makeFullPath(relOrAbsolute) : relOrAbsolute,
+					script: makeFullPath(relOrAbsolute),
 				};
 			}
 		}

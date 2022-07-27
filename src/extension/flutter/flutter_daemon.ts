@@ -49,7 +49,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			daemonArgs.push("--show-test-device");
 
 
-		if (!!config.daemonPort) {
+		if (workspaceContext.config.forceFlutterWorkspace && config.daemonPort) {
 			this.createNcProcess(config.daemonPort);
 		} else {
 			const execution = usingCustomScript(
@@ -71,6 +71,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		}
 	}
 
+	// This is for the case where a user has started a flutter daemon process on their local machine where devices are available, and
+	// has forwarded this port to the remote machine where the Dart extension is running. Netcat is used to access the local devices,
+	// instead of starting another daemon process on the remote machine.
 	protected createNcProcess(port: number) {
 		this.process = child_process.spawn("nc", ["localhost", port.toString()]) as SpawnedProcess;
 
