@@ -250,10 +250,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (args.args)
 			allArgs = allArgs.concat(args.args);
 
-		if (!!args.daemonPort) {
-			allArgs = allArgs.concat(`--daemon-connection-port=${args.daemonPort}`);
-		}
-
 		execution = {
 			args: allArgs,
 			executable: execution.executable,

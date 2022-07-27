@@ -674,11 +674,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					this.addArgsIfNotExist(args, "--web-renderer", renderer);
 			}
 
-			if (this.wsContext.config.forceFlutterWorkspace && conf.config.has("daemonPort")) {
-				const port = conf.config.get<number|undefined>("daemonPort");
-				if (port) {
-					this.addArgsIfNotExist(args, "--daemon-connection-port", port.toString());
-				}
+			if (this.wsContext.config.forceFlutterWorkspace && conf.daemonPort) {
+				this.addArgsIfNotExist(args, "--daemon-connection-port", conf.daemonPort.toString());
 			}
 		}
 
