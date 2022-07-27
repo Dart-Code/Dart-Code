@@ -675,7 +675,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 
 			if (debugConfig.customTool && debugConfig.daemonPort) {
-				this.addArgsIfNotExist(args, "--daemon-connection-port", debugConfig.daemonPort);
+				this.addArgsIfNotExist(args, "--daemon-connection-port", debugConfig.daemonPort.toString());
 			}
 		}
 
