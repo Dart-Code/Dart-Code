@@ -72,6 +72,16 @@ export async function getAllProjectFolders(
 		return inProgressProjectFolderSearch;
 	}
 
+	// TODO(helin24): Use DDS for this translation.
+	const search = "/google3/";
+	if (workspaceFolders.every(((folder) => folder.uri.path.startsWith("/google") && folder.uri.path.includes(search)))) {
+		return workspaceFolders.map((folder) => {
+			const idx = folder.uri.path.indexOf(search);
+			const remainingPath = folder.uri.path.substring(idx + search.length);
+			return `google3:///${remainingPath}`;
+		});
+	}
+
 	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}`;
 	const cachedFolders = projectFolderCache.get(cacheKey);
 	if (cachedFolders) {
