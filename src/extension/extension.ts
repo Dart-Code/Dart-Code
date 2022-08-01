@@ -893,7 +893,6 @@ function getSettingsThatRequireRestart() {
 		+ config.showMainCodeLens
 		+ config.showTestCodeLens
 		+ config.updateImportsOnRename
-		+ config.previewBazelWorkspaceCustomScripts
 		+ config.flutterOutline
 		+ config.flutterAdbConnectOnChromeOs;
 }
