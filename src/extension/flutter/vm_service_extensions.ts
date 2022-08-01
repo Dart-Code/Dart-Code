@@ -52,13 +52,13 @@ export class VmServiceExtensions {
 	}
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
-	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {
+	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent, forceFlutterWorkspace?: boolean): Promise<void> {
 		if (e.event === "dart.serviceExtensionAdded") {
 			this.handleServiceExtensionLoaded(session, e.body.extensionRPC as VmServiceExtension, e.body.isolateId as string | null | undefined);
 
 			try {
 				if (e.body.extensionRPC === VmServiceExtension.InspectorSetPubRootDirectories) {
-					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !forceFlutterWorkspace, searchDepth: forceFlutterWorkspace ? 1 : config.projectSearchDepth, forceFlutterWorkspace });
 
 					const params: { [key: string]: string } = {
 						// TODO: Is this OK???
@@ -67,9 +67,7 @@ export class VmServiceExtensions {
 
 					let argNum = 0;
 					for (const projectFolder of projectFolders) {
-						params[`arg${argNum++}`] = projectFolder;
-						if (isWin)
-							params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
+						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder, forceFlutterWorkspace);
 					}
 
 					await this.callServiceExtension(e.session, VmServiceExtension.InspectorSetPubRootDirectories, params);
@@ -86,10 +84,20 @@ export class VmServiceExtensions {
 
 	// TODO: Remove this function (and the call to it) once the fix has rolled to Flutter beta.
 	// https://github.com/flutter/flutter-intellij/issues/2217
-	private formatPathForPubRootDirectories(path: string): string {
-		return isWin
-			? path && `file:///${path.replace(/\\/g, "/")}`
-			: path;
+	private formatPathForPubRootDirectories(path: string, forceFlutterWorkspace?: boolean): string {
+		if (isWin) {
+			return path && `file:///${path.replace(/\\/g, "/")}`;
+		}
+
+		// TODO(helin24): Use DDS for this translation.
+		const search = "/google3/";
+		if (forceFlutterWorkspace && path.startsWith("/google") && path.includes(search)) {
+			const idx = path.indexOf(search);
+			const remainingPath = path.substring(idx + search.length);
+			return `google3:///${remainingPath}`;
+		}
+
+		return path;
 	}
 
 	public async overridePlatform() {

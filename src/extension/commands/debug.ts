@@ -61,7 +61,7 @@ export class DebugCommands implements IAmDisposable {
 	public readonly devTools: DevToolsManager;
 	private suppressFlutterWidgetErrors = false;
 
-	constructor(private readonly logger: Logger, private context: Context, workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
+	constructor(private readonly logger: Logger, private context: Context, private workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
 		this.vmServices = new VmServiceExtensions(logger, this);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
 		this.disposables.push(this.devTools);
@@ -552,7 +552,7 @@ export class DebugCommands implements IAmDisposable {
 	}
 
 	private async handleCustomEventWithSession(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent) {
-		this.vmServices.handleDebugEvent(session, e)
+		this.vmServices.handleDebugEvent(session, e, this.workspaceContext.config.forceFlutterWorkspace)
 			.catch((e) => this.logger.error(e));
 
 		if (e.event === "dart.webLaunchUrl") {
