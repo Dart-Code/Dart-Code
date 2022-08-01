@@ -294,8 +294,15 @@ export class FlutterDebugSession extends DartDebugSession {
 	): Promise<void> {
 		this.sendEvent(new Event("dart.hotRestartRequest"));
 		this.sendEvent(new ContinuedEvent(0, true));
+		this.reloadPackageMap();
 		await this.performReload(true, { reason: restartReasonManual });
 		super.restartRequest(response, args);
+	}
+
+	private reloadPackageMap(): void {
+		// Reload the package map in case the user modified the packages.
+		// https://github.com/Dart-Code/Dart-Code/issues/4076.
+		this.packageMap?.reload();
 	}
 
 	private async performReload(hotRestart: boolean, args?: { reason: string, debounce?: boolean }): Promise<any> {
@@ -335,8 +342,10 @@ export class FlutterDebugSession extends DartDebugSession {
 					break;
 
 				case "hotRestart":
-					if (this.currentRunningAppId)
+					if (this.currentRunningAppId) {
+						this.reloadPackageMap();
 						await this.performReload(true, args as { reason: string, debounce?: boolean });
+					}
 					this.sendResponse(response);
 					break;
 

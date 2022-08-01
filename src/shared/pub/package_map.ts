@@ -41,6 +41,8 @@ export abstract class PackageMap {
 		}
 	}
 
+	public abstract reload(): void;
+
 	abstract get packages(): { [name: string]: string };
 
 	public getPackagePath(name: string): string | undefined {
@@ -79,19 +81,34 @@ class MissingPackageMap extends PackageMap {
 	public resolvePackageUri(uri: string): string | undefined {
 		return undefined;
 	}
+	public reload() { }
 }
 
 class DotPackagesPackageMap extends PackageMap {
 	private map: { [name: string]: string } = {};
+	private readonly file: string | undefined;
 	private readonly localPackageRoot: string | undefined;
 	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
 
 	constructor(file?: string) {
 		super();
 		if (!file) return;
+		this.file = file;
 		this.localPackageRoot = path.dirname(file);
 
-		const lines: string[] = fs.readFileSync(file, { encoding: "utf8" }).split("\n");
+		this.load();
+	}
+
+	public reload(): void {
+		this.load();
+	}
+
+	private load(): void {
+		if (!this.file || !this.localPackageRoot)
+			return;
+
+		this.map = {};
+		const lines: string[] = fs.readFileSync(this.file, { encoding: "utf8" }).split("\n");
 		for (let line of lines) {
 			line = line.trim();
 
@@ -110,19 +127,26 @@ class DotPackagesPackageMap extends PackageMap {
 			}
 		}
 	}
-
-
 }
 
 class PackageConfigJsonPackageMap extends PackageMap {
-	private readonly map: { [name: string]: string } = {};
-	private readonly config: PackageJsonConfig;
+	private map: { [name: string]: string } = {};
+	private config!: PackageJsonConfig;
 
 	constructor(private readonly logger: Logger, private readonly packageConfigPath: string) {
 		super();
+		this.load();
+	}
+
+	public reload() {
+		this.load();
+	}
+
+	private load() {
 		const json = fs.readFileSync(this.packageConfigPath, "utf8");
 		this.config = JSON.parse(json);
 
+		this.map = {};
 		for (const pkg of this.config.packages) {
 			try {
 				const packageConfigFolderPath = path.dirname(this.packageConfigPath);
@@ -130,7 +154,7 @@ class PackageConfigJsonPackageMap extends PackageMap {
 				const packageLibPath = this.getPathForUri(pkg.packageUri);
 				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath ?? "", packageLibPath ?? "");
 			} catch (e) {
-				logger.error(`Failed to resolve path for package ${pkg.name}: ${e}`);
+				this.logger.error(`Failed to resolve path for package ${pkg.name}: ${e}`);
 			}
 		}
 	}
