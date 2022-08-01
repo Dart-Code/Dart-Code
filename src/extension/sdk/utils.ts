@@ -232,7 +232,7 @@ export class SdkUtils {
 
 		await processWorkspaceType(findDartSdkRoot, processDartSdkRepository);
 		// TODO: Remove this lambda when the preview flag is removed.
-		await processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b, config.previewBazelWorkspaceCustomScripts));
+		await processWorkspaceType(findBazelWorkspaceRoot, (l, c, b) => processBazelWorkspace(l, c, b));
 		const fuchsiaRoot = await processWorkspaceType(findFuchsiaRoot, processFuchsiaWorkspace);
 
 		if (fuchsiaRoot) {

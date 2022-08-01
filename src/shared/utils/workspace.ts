@@ -14,12 +14,11 @@ export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspac
 	config.disableSdkUpdateChecks = true;
 }
 
-export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string, parseFlutterJson: boolean) {
+export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
 
-	if (parseFlutterJson)
-		tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
+	tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
 }
 
 export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
