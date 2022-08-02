@@ -3,6 +3,7 @@ import { isWin } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { WorkspaceContext } from "../../shared/workspace";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
@@ -47,18 +48,19 @@ export class VmServiceExtensions {
 	/// remove it from here.
 	private currentExtensionValues: { [key: string]: any } = {};
 
-	constructor(private readonly logger: Logger, private readonly debugCommands: DebugCommands) {
+	constructor(private readonly logger: Logger, private readonly debugCommands: DebugCommands, private readonly workspaceContext: WorkspaceContext) {
 		this.debugCommands.onWillHotRestart(() => this.markAllServiceExtensionsUnloaded());
 	}
 
 	/// Handles an event from the Debugger, such as extension services being loaded and values updated.
-	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent, forceFlutterWorkspace?: boolean): Promise<void> {
+	public async handleDebugEvent(session: DartDebugSessionInformation, e: vs.DebugSessionCustomEvent): Promise<void> {
 		if (e.event === "dart.serviceExtensionAdded") {
 			this.handleServiceExtensionLoaded(session, e.body.extensionRPC as VmServiceExtension, e.body.isolateId as string | null | undefined);
 
 			try {
 				if (e.body.extensionRPC === VmServiceExtension.InspectorSetPubRootDirectories) {
-					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !forceFlutterWorkspace, searchDepth: forceFlutterWorkspace ? 1 : config.projectSearchDepth, forceFlutterWorkspace });
+					// TODO(helin24): Check if all of the places that call `getAllProjectFolders` need similar settings; we could potentially simplify the arguments.
+					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !this.workspaceContext.config.forceFlutterWorkspace, searchDepth: config.projectSearchDepth, onlyWorkspaceRoots: this.workspaceContext.config.forceFlutterWorkspace });
 
 					const params: { [key: string]: string } = {
 						// TODO: Is this OK???
@@ -67,7 +69,7 @@ export class VmServiceExtensions {
 
 					let argNum = 0;
 					for (const projectFolder of projectFolders) {
-						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder, forceFlutterWorkspace);
+						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
 					}
 
 					await this.callServiceExtension(e.session, VmServiceExtension.InspectorSetPubRootDirectories, params);
@@ -82,16 +84,14 @@ export class VmServiceExtensions {
 		}
 	}
 
-	// TODO: Remove this function (and the call to it) once the fix has rolled to Flutter beta.
-	// https://github.com/flutter/flutter-intellij/issues/2217
-	private formatPathForPubRootDirectories(path: string, forceFlutterWorkspace?: boolean): string {
+	private formatPathForPubRootDirectories(path: string): string {
 		if (isWin) {
 			return path && `file:///${path.replace(/\\/g, "/")}`;
 		}
 
 		// TODO(helin24): Use DDS for this translation.
 		const search = "/google3/";
-		if (forceFlutterWorkspace && path.startsWith("/google") && path.includes(search)) {
+		if (this.workspaceContext.config.forceFlutterWorkspace && path.startsWith("/google") && path.includes(search)) {
 			const idx = path.indexOf(search);
 			const remainingPath = path.substring(idx + search.length);
 			return `google3:///${remainingPath}`;
