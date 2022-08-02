@@ -62,7 +62,7 @@ function getAnalysisOptionsExcludedFolders(
 export async function getAllProjectFolders(
 	logger: Logger,
 	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
-	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, workspaceFolders?: WorkspaceFolder[] },
+	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, workspaceFolders?: WorkspaceFolder[], onlyWorkspaceRoots?: boolean },
 ) {
 	const workspaceFolders = options.workspaceFolders ?? getDartWorkspaceFolders();
 
@@ -72,7 +72,7 @@ export async function getAllProjectFolders(
 		return inProgressProjectFolderSearch;
 	}
 
-	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}`;
+	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}_${options.onlyWorkspaceRoots ? "true" : "false"}`;
 	const cachedFolders = projectFolderCache.get(cacheKey);
 	if (cachedFolders) {
 		logger.info(`Returning cached results for project search`);

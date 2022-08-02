@@ -192,13 +192,14 @@ export function resolveTildePaths<T extends string | undefined>(p: T): string | 
 // - have a pubspec.yaml
 // - have a project create trigger file
 // - are the Flutter repo root
-export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number }, token: MyCancellationToken): Promise<string[]> {
+export async function findProjectFolders(logger: Logger, roots: string[], excludedFolders: string[], options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, onlyWorkspaceRoots?: boolean }, token: MyCancellationToken): Promise<string[]> {
 	const dartToolFolderName = `${path.sep}.dart_tool${path.sep}`;
 
 	let previousLevelFolders = roots.slice();
 	let allPossibleFolders = previousLevelFolders.slice();
 	// Start at 1, as we already added the roots.
-	for (let i = 1; i < options.searchDepth; i++) {
+	const searchDepth = options.onlyWorkspaceRoots ? 1 : options.searchDepth;
+	for (let i = 1; i < searchDepth; i++) {
 		let nextLevelFolders: string[] = [];
 		for (const folder of previousLevelFolders) {
 			if (token.isCancellationRequested)
@@ -216,7 +217,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
 		exists: options && options.requirePubspec
 			? await hasPubspecAsync(folder)
-			: await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
+			: options.onlyWorkspaceRoots || await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
 		folder,
 	}));
 	const projectFoldersChecks = await Promise.all(projectFolderPromises);

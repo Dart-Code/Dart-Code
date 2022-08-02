@@ -3,6 +3,7 @@ import { isWin } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { WorkspaceContext } from "../../shared/workspace";
 import { DebugCommands, debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
@@ -47,7 +48,7 @@ export class VmServiceExtensions {
 	/// remove it from here.
 	private currentExtensionValues: { [key: string]: any } = {};
 
-	constructor(private readonly logger: Logger, private readonly debugCommands: DebugCommands) {
+	constructor(private readonly logger: Logger, private readonly debugCommands: DebugCommands, private readonly workspaceContext: WorkspaceContext) {
 		this.debugCommands.onWillHotRestart(() => this.markAllServiceExtensionsUnloaded());
 	}
 
@@ -58,7 +59,8 @@ export class VmServiceExtensions {
 
 			try {
 				if (e.body.extensionRPC === VmServiceExtension.InspectorSetPubRootDirectories) {
-					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+					// TODO(helin24): Check if all of the places that call `getAllProjectFolders` need similar settings; we could potentially simplify the arguments.
+					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !this.workspaceContext.config.forceFlutterWorkspace, searchDepth: config.projectSearchDepth, onlyWorkspaceRoots: this.workspaceContext.config.forceFlutterWorkspace });
 
 					const params: { [key: string]: string } = {
 						// TODO: Is this OK???
@@ -67,9 +69,7 @@ export class VmServiceExtensions {
 
 					let argNum = 0;
 					for (const projectFolder of projectFolders) {
-						params[`arg${argNum++}`] = projectFolder;
-						if (isWin)
-							params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
+						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
 					}
 
 					await this.callServiceExtension(e.session, VmServiceExtension.InspectorSetPubRootDirectories, params);
@@ -84,12 +84,20 @@ export class VmServiceExtensions {
 		}
 	}
 
-	// TODO: Remove this function (and the call to it) once the fix has rolled to Flutter beta.
-	// https://github.com/flutter/flutter-intellij/issues/2217
 	private formatPathForPubRootDirectories(path: string): string {
-		return isWin
-			? path && `file:///${path.replace(/\\/g, "/")}`
-			: path;
+		if (isWin) {
+			return path && `file:///${path.replace(/\\/g, "/")}`;
+		}
+
+		// TODO(helin24): Use DDS for this translation.
+		const search = "/google3/";
+		if (this.workspaceContext.config.forceFlutterWorkspace && path.startsWith("/google") && path.includes(search)) {
+			const idx = path.indexOf(search);
+			const remainingPath = path.substring(idx + search.length);
+			return `google3:///${remainingPath}`;
+		}
+
+		return path;
 	}
 
 	public async overridePlatform() {
