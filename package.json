@@ -2350,12 +2350,6 @@
 						"description": "Whether to normalize file casings before sending them to the LSP server. This may fix issues with file_names lints not disappearing after renaming a file if the VS Code API continues to use the original casing.",
 						"scope": "window"
 					},
-					"dart.previewBazelWorkspaceCustomScripts": {
-						"type": "boolean",
-						"default": false,
-						"markdownDescription": "EXPERIMENTAL: Whether to look for custom script definitions at `dart/config/ide/flutter.json` in Bazel workspaces. Currently supported for macOS and Linux only.",
-						"scope": "window"
-					},
 					"dart.daemonPort": {
 						"type": "number",
 						"default": false,
