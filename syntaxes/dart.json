@@ -495,7 +495,7 @@
             ]
         },
         "type-parameters": {
-            "match":       "(<)([\\s_$a-zA-Z0-9,\\?]*)(>)",
+            "match":       "(<)([<>\\s_$a-zA-Z0-9,\\?]*)(>)",
             "captures": {
                 "1": {
                     "name":    "punctuation.definition.typeparameters.begin.dart"
@@ -513,6 +513,9 @@
                         {
                             "match":       "\\?",
                             "name":        "punctuation.accessor.optional.dart"
+                        },
+                        {
+                            "include":     "#type-parameters"
                         }
                     ]
                 },
