@@ -47,8 +47,20 @@ function getAnalysisOptionsExcludedFolders(
 			const yaml = YAML.parse(analysisOptionsContent.toString());
 			const excluded = yaml?.analyzer?.exclude;
 			if (excluded && Array.isArray(excluded)) {
-				for (const exclude of excluded as string[]) {
-					results.push(path.join(projectFolder, exclude.split("/**")[0]));
+				for (let exclude of excluded as string[]) {
+					// Only exclude an entire folder if the /** is at the end. If it's
+					// something like foo/**/*.generated.* then it does not exclude
+					// everything in foo.
+					if (exclude.endsWith("/**"))
+						exclude = exclude.substring(0, exclude.length - 3);
+
+					// Handle relative paths.
+					if (!exclude.startsWith("/"))
+						exclude = path.join(projectFolder, exclude);
+
+					// Now, if no wildcards remain in the path, we can use it as an exclusion.
+					if (!exclude.includes("*"))
+						results.push(exclude);
 				}
 			}
 		} catch (e: any) {
