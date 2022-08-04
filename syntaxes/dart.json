@@ -312,7 +312,7 @@
             }
         },
         "function-definition-or-return": {
-            "match":       "([_$]*[a-z][a-zA-Z0-9_$]*)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?[!?]?(\\(|\\s+=>)",
+            "match":       "([_$]*[a-z][a-zA-Z0-9_$]*)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s*[!?]?\\s*(\\(|\\s+=>)",
             "captures": {
                 "1": {
                     "patterns": [
@@ -357,7 +357,7 @@
         "function-identifier": {
             "patterns": [
                 {
-                    "match":       "([_$]*[a-z][a-zA-Z0-9_$]*)(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?[!?]?(\\(|\\s+=>)",
+                    "match":       "([_$]*[a-z][a-zA-Z0-9_$]*)\\s*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s*[!?]?\\s*(\\(|\\s+=>)",
                     "captures": {
                         "1": {
                             "name":    "entity.name.function.dart"
