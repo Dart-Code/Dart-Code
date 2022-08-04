@@ -28,6 +28,9 @@
                     "include":     "#class-definition"
                 },
                 {
+                    "include":     "#get-set-pattern"
+                },
+                {
                     "begin":       "^\\w*\\b(library|import|part of|part|export)\\b",
                     "end":         ";",
                     "name":        "meta.declaration.$1.dart",
@@ -433,7 +436,7 @@
                     "name":        "keyword.control.new.dart"
                 },
                 {
-                    "match":       "(?<!\\$)\\b(abstract|class|enum|extends|extension|external|factory|implements|get|mixin|native|operator|set|typedef|with|covariant)\\b(?!\\$)",
+                    "match":       "(?<!\\$)\\b(abstract|class|enum|extends|extension|external|factory|implements|mixin|native|operator|typedef|with|covariant)\\b(?!\\$)",
                     "name":        "keyword.declaration.$1.dart"
                 },
                 {
@@ -550,6 +553,29 @@
                     "name":        "constant.character.escape.dart"
                 }
             ]
+        },
+        "get-set-pattern": {
+            "match":       "(get|set)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*({|=>)",
+            "captures": {
+                "1": {
+                    "name":    "keyword.declaration.$1.dart"
+                },
+                "2": {
+                    "name":    "entity.name.function.definition.dart"
+                },
+                "3": {
+                    "patterns": [
+                        {
+                            "match":       "(\\{)",
+                            "name":        "punctuation.definition.block.dart"
+                        },
+                        {
+                            "match":       "(=>)",
+                            "name":        "keyword.operator.closure.dart"
+                        }
+                    ]
+                }
+            }
         },
         "strings": {
             "patterns": [
