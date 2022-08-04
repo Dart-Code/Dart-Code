@@ -4,13 +4,14 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
-import { CustomScript, DartSdks, Logger } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
 import { Context } from "../../shared/vscode/workspace";
+import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
-	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterToolsScript?: CustomScript, private readonly cwd?: string) { }
+	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly workspaceContext: WorkspaceContext) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
 		return this.descriptorForType(session.configuration.debuggerType as DebuggerType);
@@ -39,12 +40,12 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 				: undefined;
 		const useSdkDap = forceSdkDap !== undefined
 			? forceSdkDap
-			: config.previewSdkDaps && isSdkDapSupported;
+			: (config.previewSdkDaps || this.workspaceContext.config.forceFlutterWorkspace) && isSdkDapSupported;
 
 		if (useSdkDap) {
 			const executable = isDartOrDartTest
 				? path.join(this.sdks.dart, dartVMPath)
-				: this.flutterToolsScript?.script ?? (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
+				: this.workspaceContext.config.flutterToolsScript?.script ?? (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
 
 			const args = ["debug_adapter"];
 			if (isDartTestOrFlutterTest)
@@ -53,7 +54,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 				args.push("--no-dds");
 
 			this.logger.info(`Running SDK DAP Dart VM: ${executable} ${args.join("    ")}`);
-			return new DebugAdapterExecutable(executable, args, this.cwd ? {cwd: this.cwd} : {});
+			return new DebugAdapterExecutable(executable, args, this.workspaceContext.config.flutterSdkHome ? {cwd: this.workspaceContext.config.flutterSdkHome} : {});
 		} else if (config.customDartDapPath && isDartOrDartTest) {
 			const args = [config.customDartDapPath, "debug_adapter"];
 			if (isDartTest)
