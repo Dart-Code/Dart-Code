@@ -195,11 +195,17 @@ export const dartRecommendedConfig = {
 	// completion list is not visible.
 	"editor.tabCompletion": "onlySnippets",
 
-	// By default, VS Code will popualte code completion with words found in the
+	// By default, VS Code will populate code completion with words found in the
 	// current file when a language service does not provide its own completions.
 	// This results in code completion suggesting words when editing comments and
 	// strings. This setting will prevent that.
 	"editor.wordBasedSuggestions": false,
+
+	// By default, VS Code will only switch to the Debug Console when you start
+	// debugging the first time in a session. This setting tells VS Code to always
+	// switch to the Debug Console when starting a session, so you can see the
+	// programs output.
+	"debug.internalConsoleOptions": "openOnSessionStart",
 };
 
 export const defaultLaunchJson = JSON.stringify(
