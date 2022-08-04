@@ -28,7 +28,7 @@
                     "include":     "#class-definition"
                 },
                 {
-                    "include":     "#get-set-pattern"
+                    "include":     "#get-pattern"
                 },
                 {
                     "begin":       "^\\w*\\b(library|import|part of|part|export)\\b",
@@ -317,6 +317,10 @@
                 "1": {
                     "patterns": [
                         {
+                            "match":       "set",
+                            "name":        "keyword.declaration.set.dart"
+                        },
+                        {
                             "match":       "return",
                             "name":        "keyword.control.flow.return.dart"
                         },
@@ -554,11 +558,11 @@
                 }
             ]
         },
-        "get-set-pattern": {
-            "match":       "\\b(get|set)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(?:\\s+(async)\\s*(\\*)?)?\\s*({|=>|;)",
+        "get-pattern": {
+            "match":       "\\b(get)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(?:\\s+(async)\\s*(\\*)?)?\\s*({|=>|;)",
             "captures": {
                 "1": {
-                    "name":    "keyword.declaration.$1.dart"
+                    "name":    "keyword.declaration.get.dart"
                 },
                 "2": {
                     "name":    "entity.name.function.definition.dart"
