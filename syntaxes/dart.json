@@ -555,7 +555,7 @@
             ]
         },
         "get-set-pattern": {
-            "match":       "\\b(get|set)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*({|=>|;)",
+            "match":       "\\b(get|set)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(?:\\s+(async)\\s*(\\*)?)?\\s*({|=>|;)",
             "captures": {
                 "1": {
                     "name":    "keyword.declaration.$1.dart"
@@ -564,6 +564,12 @@
                     "name":    "entity.name.function.definition.dart"
                 },
                 "3": {
+                    "name":    "keyword.control.async.dart"
+                },
+                "4": {
+                    "name":    "keyword.generator.asterisk.dart"
+                },
+                "5": {
                     "patterns": [
                         {
                             "match":       "(\\{)",
