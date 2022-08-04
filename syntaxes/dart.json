@@ -555,7 +555,7 @@
             ]
         },
         "get-set-pattern": {
-            "match":       "(get|set)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*({|=>)",
+            "match":       "\\b(get|set)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*({|=>)",
             "captures": {
                 "1": {
                     "name":    "keyword.declaration.$1.dart"
