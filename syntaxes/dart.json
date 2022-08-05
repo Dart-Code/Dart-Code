@@ -310,7 +310,7 @@
                     "name":    "keyword.declaration.extension.dart"
                 },
                 "2": {
-                    "name":    "entity.name.type.extension.dart"
+                    "name":    "entity.name.extension.dart"
                 },
                 "3": {
                     "patterns": [
