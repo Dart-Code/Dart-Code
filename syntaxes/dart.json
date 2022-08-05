@@ -320,10 +320,10 @@
                     ]
                 },
                 "4": {
-                    "name": "keyword.declaration.on.dart"
+                    "name":    "keyword.declaration.on.dart"
                 },
                 "5": {
-                    "name": "entity.name.type.class.dart"
+                    "name":    "entity.name.type.class.dart"
                 }
             }
         },
@@ -536,6 +536,10 @@
                 },
                 "2": {
                     "patterns": [
+                        {
+                            "match":       "\\b(extends)\\b",
+                            "name":        "keyword.declaration.extends.dart"
+                        },
                         {
                             "match":       "([_$]*[a-zA-Z][a-zA-Z0-9_$]*)",
                             "name":        "entity.name.type.typeparameter.dart"
