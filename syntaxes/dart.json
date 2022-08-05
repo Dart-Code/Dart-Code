@@ -472,7 +472,7 @@
                 },
                 {
                     "match":       "(?<!\\$)\\b(is\\!?)\\b(?!\\$)",
-                    "name":        "keyword.operator.dart"
+                    "name":        "keyword.operator.is.dart"
                 },
                 {
                     "match":       "(\\-|\\+|\\*|\\/|\\~\\/|%)",
