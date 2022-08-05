@@ -28,6 +28,9 @@
                     "include":     "#class-definition"
                 },
                 {
+                    "include":     "#extension-definition"
+                },
+                {
                     "include":     "#get-pattern"
                 },
                 {
@@ -299,6 +302,30 @@
                     }
                 }
             ]
+        },
+        "extension-definition": {
+            "match":       "\\b(extension)\\s+(?:([_$]*[A-Z][a-zA-Z0-9_$]*)\\s*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s+)?(on)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)",
+            "captures": {
+                "1": {
+                    "name":    "keyword.declaration.extension.dart"
+                },
+                "2": {
+                    "name":    "entity.name.type.extension.dart"
+                },
+                "3": {
+                    "patterns": [
+                        {
+                            "include":     "#type-parameters"
+                        }
+                    ]
+                },
+                "4": {
+                    "name": "keyword.declaration.on.dart"
+                },
+                "5": {
+                    "name": "entity.name.type.class.dart"
+                }
+            }
         },
         "object-literal-key": {
             "match":       "([_$]*[a-zA-Z][a-zA-Z0-9_$]*)\\s*(:)",
