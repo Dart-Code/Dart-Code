@@ -304,7 +304,7 @@
             ]
         },
         "extension-definition": {
-            "match":       "\\b(extension)\\s+(?:([_$]*[A-Z][a-zA-Z0-9_$]*)\\s*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s+)?(on)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)",
+            "match":       "\\b(extension)\\s+(?:([_$]*[A-Z][a-zA-Z0-9_$]*)?(\\s*<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s+)?(on)\\s+([_$]*[A-Z][a-zA-Z0-9_$]*)",
             "captures": {
                 "1": {
                     "name":    "keyword.declaration.extension.dart"
