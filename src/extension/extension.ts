@@ -265,7 +265,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		if (workspaceContext.config.forceFlutterWorkspace && workspaceContext.config.restartMacDaemonMessage) {
 			runIfNoDevices = () => {
 				const instruction = workspaceContext.config.restartMacDaemonMessage;
-				promptToReloadExtension(`${instruction} (VSCode settings currently expects port: ${config.daemonPort}.)`, `Reopen this workspace`);
+				promptToReloadExtension(`${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
 			};
 		}
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, runIfNoDevices);
