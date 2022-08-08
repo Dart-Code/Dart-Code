@@ -64,6 +64,7 @@ export interface WritableWorkspaceConfig {
 	skipFlutterInitialization?: boolean;
 	omitTargetFlag?: boolean;
 	defaultDartSdk?: string;
+	restartMacDaemonMessage?: string;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
