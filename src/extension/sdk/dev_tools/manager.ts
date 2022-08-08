@@ -108,12 +108,16 @@ export class DevToolsManager implements vs.Disposable {
 				}
 			}
 
-			if (silent) {
+			// Ignore silent flag if we're using a custom DevTools, because it could
+			// take much longer to start and won't be obvious why launching isn't working.
+			const isCustomDevTools = !!config.customDevTools?.script;
+			const startingTitle = isCustomDevTools ? "Starting Custom Dart DevTools…" : "Starting Dart DevTools…";
+			if (silent && !isCustomDevTools) {
 				this.devtoolsUrl = this.startServer();
 			} else {
 				this.devtoolsUrl = vs.window.withProgress({
 					location: vs.ProgressLocation.Notification,
-					title: "Starting Dart DevTools...",
+					title: startingTitle,
 				}, async () => this.startServer());
 			}
 		}
@@ -429,7 +433,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		const devToolsArgs = ["--machine", "--try-ports", "10", "--allow-embedding"];
 		const customDevTools = config.customDevTools;
 
-		const executionInfo = customDevTools && customDevTools.script ?
+		const executionInfo = customDevTools?.script ?
 			{
 				args: [customDevTools.script],
 				cwd: customDevTools.cwd,
