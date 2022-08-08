@@ -1,4 +1,5 @@
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
+import { CustomDevToolsConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
 import { createFolderForFile, resolvePaths } from "./utils";
 import { setupToolEnv } from "./utils/processes";
@@ -58,7 +59,7 @@ class Config {
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
 	get customDartDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customDartDapPath", null)); }
 	get customFlutterDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customFlutterDapPath", null)); }
-	get customDevToolsUri(): undefined | string { return this.getConfig<null | string>("customDevToolsUri", null); }
+	get customDevTools(): undefined | CustomDevToolsConfig { return this.getConfig<null | CustomDevToolsConfig>("customDevTools", null); }
 	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
 	get dartTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null))); }
 	get daemonPort(): undefined | number { return this.getConfig<null | number>("daemonPort", null); }

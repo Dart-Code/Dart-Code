@@ -66,4 +66,6 @@ export function getPubExecutionInfo(dartCapabilities: DartCapabilities, dartSdkP
 export interface ExecutionInfo {
 	executable: string;
 	args: string[];
+	cwd?: string;
+	env?: { [key: string]: string };
 }

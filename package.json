@@ -1516,13 +1516,28 @@
 						"markdownDescription": "Whether to show notifications for widget errors that offer Inspect Widget links. This requires that the `#dart.shareDevToolsWithFlutter#` setting is also enabled.",
 						"scope": "window"
 					},
-					"dart.customDevToolsUri": {
-						"type": [
-							"null",
-							"string"
-						],
-						"default": null,
-						"description": "A custom URI to use for launching DevTools. This setting is intended for use by Dart DevTools developers.",
+					"dart.customDevTools": {
+						"type": "object",
+						"properties": {
+							"script": {
+								"type": "string",
+								"default": "/path/to/devtools/tool/build_e2e.dart",
+								"description": "The script or command that runs the DevTools server. This will be supplied to the `dart` executable (for example `dart devtools` or `dart /foo/devtools.dart`)."
+							},
+							"cwd": {
+								"type": "string",
+								"default": "/path/to/devtools",
+								"description": "The working directory to spawn the command in."
+							},
+							"env": {
+								"type": "object",
+								"default": {
+									"LOCAL_DART_SDK": "/path/to/dart-sdk"
+								},
+								"description": "Any environment variables to set when spawning the command."
+							}
+						},
+						"description": "Custom settings for launching DevTools. This setting is intended for use by Dart DevTools developers.",
 						"scope": "machine-overridable"
 					}
 				}

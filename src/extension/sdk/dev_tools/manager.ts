@@ -125,7 +125,7 @@ export class DevToolsManager implements vs.Disposable {
 		this.devToolsStatusBarItem.command = "dart.openDevTools";
 		this.devToolsStatusBarItem.show();
 
-		return config.customDevToolsUri ?? url;
+		return url;
 	}
 
 	/// Spawns DevTools and returns the full URL to open without a debug session.
@@ -258,7 +258,7 @@ export class DevToolsManager implements vs.Disposable {
 		};
 
 		// Try to launch via service if allowed.
-		if (!config.customDevToolsUri && allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page ?? this.getDefaultPage()) }))
+		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page ?? this.getDefaultPage()) }))
 			return true;
 
 		// Otherwise, fall back to embedded or launching manually.
@@ -276,8 +276,6 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, vmServiceUri: string, url: string) {
-		url = config.customDevToolsUri ?? url;
-
 		queryParams.hide = "debugger";
 		queryParams.ide = "VSCode";
 
@@ -427,18 +425,30 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
+		const dartVm = path.join(workspaceContext.sdks.dart, dartVMPath);
 		const devToolsArgs = ["--machine", "--try-ports", "10", "--allow-embedding"];
+		const customDevTools = config.customDevTools;
 
-		const executionInfo = dartCapabilities.supportsDartDevTools
-			? usingCustomScript(
-				path.join(workspaceContext.sdks.dart, dartVMPath),
-				["devtools"],
-				workspaceContext.config?.flutterDevToolsScript,
-			)
-			: getPubExecutionInfo(dartCapabilities, workspaceContext.sdks.dart, ["global", "run", "devtools"]);
+		const executionInfo = customDevTools && customDevTools.script ?
+			{
+				args: [customDevTools.script],
+				cwd: customDevTools.cwd,
+				env: customDevTools.env,
+				executable: dartVm,
+
+			}
+			: dartCapabilities.supportsDartDevTools
+				? usingCustomScript(
+					dartVm,
+					["devtools"],
+					workspaceContext.config?.flutterDevToolsScript,
+				)
+				: getPubExecutionInfo(dartCapabilities, workspaceContext.sdks.dart, ["global", "run", "devtools"]);
 
 		const binPath = executionInfo.executable;
 		const binArgs = [...executionInfo.args, ...devToolsArgs];
+		const binCwd = executionInfo.cwd;
+		const binEnv = executionInfo.env;
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
 		portToBind = config.devToolsPort  // Always config first
@@ -451,7 +461,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
 
-		this.createProcess(undefined, binPath, binArgs, { toolEnv: getToolEnv() });
+		this.createProcess(binCwd, binPath, binArgs, { toolEnv: getToolEnv(), envOverrides: binEnv });
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

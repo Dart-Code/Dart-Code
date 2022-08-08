@@ -235,3 +235,9 @@ export interface Analytics {
 export interface MyCancellationToken {
 	isCancellationRequested: boolean;
 }
+
+export interface CustomDevToolsConfig {
+	script?: string;
+	cwd?: string;
+	env?: { [key: string]: string };
+}
