@@ -105,6 +105,7 @@ import { DartPackageUriTerminalLinkProvider } from "./terminal/package_uri_link_
 import { VsCodeTestController } from "./test/vs_test_controller";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
+import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeToolSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
@@ -259,7 +260,15 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
 		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities);
-		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext);
+
+		let runIfNoDevices;
+		if (workspaceContext.config.forceFlutterWorkspace && workspaceContext.config.restartMacDaemonMessage) {
+			runIfNoDevices = () => {
+				const instruction = workspaceContext.config.restartMacDaemonMessage;
+				promptToReloadExtension(`${instruction} (VSCode settings currently expects port: ${config.daemonPort}.)`, `Reopen this workspace`);
+			};
+		}
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, runIfNoDevices);
 
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);

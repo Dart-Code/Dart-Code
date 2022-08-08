@@ -20,7 +20,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number, daemonPort: number | undefined }, private readonly workspaceContext: WorkspaceContext) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number, daemonPort: number | undefined }, private readonly workspaceContext: WorkspaceContext, runIfNoDevices?: () => void) {
 		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.name = "Flutter Device";
 		this.statusBarItem.tooltip = "Flutter";
@@ -37,11 +37,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 		daemon.registerForDeviceAdded(this.deviceAdded.bind(this));
 		daemon.registerForDeviceRemoved(this.deviceRemoved.bind(this));
-		if (workspaceContext.config.forceFlutterWorkspace && workspaceContext.config.restartMacDaemonMessage) {
+		if (runIfNoDevices) {
 			setTimeout(() => {
 				if (this.devices.length === 0) {
-					const instruction = workspaceContext.config.restartMacDaemonMessage;
-					vs.window.showWarningMessage(`${instruction} (VSCode settings currently expect port: ${config.daemonPort}.)`);
+					runIfNoDevices();
 				}
 			}, 10000);
 		}

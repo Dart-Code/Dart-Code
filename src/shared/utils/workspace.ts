@@ -44,7 +44,6 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			toolsScript: string | undefined;
 			defaultDartSdk: string | undefined;
 			restartMacDaemonMessage: string | undefined;
-			restartMacDaemonNoPortMessage: string | undefined;
 		};
 
 		function makeFullPath(relOrAbsolute: string | undefined): string | undefined {
@@ -84,7 +83,6 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.defaultDartSdk = makeFullPath(flutterConfig.defaultDartSdk);
 
 		config.restartMacDaemonMessage = flutterConfig.restartMacDaemonMessage;
-		config.restartMacDaemonNoPortMessage = flutterConfig.restartMacDaemonNoPortMessage;
 	} catch (e) {
 		logger.error(e);
 	}
