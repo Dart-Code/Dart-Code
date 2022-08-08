@@ -88,9 +88,10 @@ export class DasFileTracker implements IAmDisposable {
 			await this.analyzer.analysisSetSubscriptions({
 				subscriptions: {
 					CLOSING_LABELS: this.analyzer.capabilities.supportsClosingLabels ? openFiles : undefined,
-					FOLDING: this.wsContext.config.useLsp ? undefined : openFiles,
-					NAVIGATION: this.wsContext.config.useLsp ? undefined : openFiles,
-					OCCURRENCES: this.wsContext.config.useLsp ? undefined : openFiles,
+					// TODO(dantup): Why are we checking this here? This class is DAS-specific?
+					FOLDING: this.wsContext.config.useLegacyProtocol ? openFiles : undefined,
+					NAVIGATION: this.wsContext.config.useLegacyProtocol ? openFiles : undefined,
+					OCCURRENCES: this.wsContext.config.useLegacyProtocol ? openFiles : undefined,
 					OUTLINE: openFiles,
 				},
 			});

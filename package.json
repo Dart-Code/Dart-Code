@@ -1419,10 +1419,10 @@
 						"description": "Whether to show TODOs in the Problems list.",
 						"scope": "window"
 					},
-					"dart.useLsp": {
+					"dart.useLegacyAnalyzerProtocol": {
 						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to run the analyzer in [LSP mode](https://microsoft.github.io/language-server-protocol/). Some features are not supported if this setting is disabled and in a future release LSP will be the only supported option.",
+						"default": false,
+						"markdownDescription": "Whether to use the Dart Analyzer's original protocol instead of LSP. Some features are not supported when using the legacy protocol and support for it will eventually be removed. Please file issues on GitHub in the Dart-Code repo if you find yourself needing to enable this setting.",
 						"scope": "window"
 					}
 				}
