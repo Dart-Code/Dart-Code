@@ -189,7 +189,7 @@ export class Analytics {
 			av: extensionVersion,
 			cd1: isDevExtension,
 			cd10: config.showTodos ? "On" : "Off",
-			cd11: this.workspaceContext.config.useLsp ? "LSP" : "DAS",
+			cd11: this.workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP",
 			cd12: this.formatter,
 			cd13: this.flutterSdkVersion,
 			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
