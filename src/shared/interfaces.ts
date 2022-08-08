@@ -65,7 +65,6 @@ export interface WritableWorkspaceConfig {
 	omitTargetFlag?: boolean;
 	defaultDartSdk?: string;
 	restartMacDaemonMessage?: string;
-	restartMacDaemonNoPortMessage?: string;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
