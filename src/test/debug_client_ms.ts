@@ -429,7 +429,7 @@ export class DebugClient extends ProtocolClient {
 			});
 			if (!this._socket) {	// no timeouts if debugging the tests
 				timeoutHandler = setTimeout(() => {
-					reject(new Error(`not enough output data received after ${timeout} ms`));
+					reject(new Error(`not enough output data received after ${timeout || this.defaultTimeout} ms`));
 				}, timeout || this.defaultTimeout);
 			}
 		});
