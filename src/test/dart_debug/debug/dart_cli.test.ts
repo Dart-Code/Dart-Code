@@ -1140,6 +1140,7 @@ void printSomething() {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1159,6 +1160,7 @@ void printSomething() {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1178,6 +1180,7 @@ void printSomething() {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1198,6 +1201,7 @@ void printSomething() {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1217,6 +1221,7 @@ void printSomething() {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1233,6 +1238,7 @@ void printSomething() {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);

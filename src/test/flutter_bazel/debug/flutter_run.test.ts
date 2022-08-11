@@ -37,6 +37,7 @@ describe(`flutter run debugger`, () => {
 
 		const config = await startDebugger(dc, flutterBazelHelloWorldMainFile, { suppressPrompts: true });
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.configurationSequence(),
 			dc.launch(config),

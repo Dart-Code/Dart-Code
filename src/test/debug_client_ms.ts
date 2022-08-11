@@ -109,7 +109,9 @@ export class DebugClient extends ProtocolClient {
 				const sanitize = (s: string) => s.toString().replace(/\r?\n$/mg, '');
 				this._adapterProcess.stderr!.on('data', (data: string) => {
 					if (this._enableStderr) {
-						console.log(sanitize(data));
+						data = sanitize(data).trim();
+						if (data)
+							console.log(data);
 					}
 				});
 

@@ -74,6 +74,7 @@ describe("flutter run debugger (attach)", () => {
 		const config = await attachDebugger(vmServiceUri);
 
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
 			watchPromise("attaches_and_waits->launch", dc.launch(config)),
 		);
@@ -94,6 +95,7 @@ describe("flutter run debugger (attach)", () => {
 		const config = await attachDebugger(vmServiceUri);
 
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
 			watchPromise("attaches_and_waits->launch", dc.launch(config)),
 		);

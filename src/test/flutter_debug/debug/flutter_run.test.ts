@@ -125,6 +125,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -149,6 +150,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("expected debugger services/extensions are available in debug mode", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -173,6 +175,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -198,6 +201,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("expected debugger services/extensions are available after a hot restart", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -232,6 +236,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("can override platform", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -255,6 +260,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("can toggle theme", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -277,10 +283,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("re-sends theme on hot restart if set by us", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000),
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
+
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
 
 		// Set the brightness to Dark through our toggle. This leaves us in control so we should
 		// we-transmit it.
@@ -305,10 +313,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("does not re-send theme on hot restart if set by someone else", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000),
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
+
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
 
 		// First toggle the brightness ourselves, so we have a local override value.
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
@@ -343,7 +353,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// tslint:disable-next-line: no-floating-promises
 		dc.launch(config);
 
-		// Wait 5 seconds after configuration sequence ceompletes to ensure the build is in progress...
+		// Wait 5 seconds after configuration sequence completes to ensure the build is in progress...
 		await configSequence;
 		await delay(5000);
 
@@ -384,6 +394,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("can hot reload with customRequest", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
 		);
@@ -399,6 +410,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("can hot reload using command", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
 		);
@@ -414,13 +426,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("hot reloads on save", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
 
-		// If we go too fast, things fail..
-		await delay(500);
-
+		await delayBeforeRestart();
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForHotReload(),
 			saveTrivialChangeToFile(flutterHelloWorldMainFile),
@@ -436,13 +447,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await setConfigForTest("dart", "previewHotReloadOnSaveWatcher", true);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
 
-		// If we go too fast, things fail..
-		await delay(500);
-
+		await delayBeforeRestart();
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForHotReload(),
 			makeTrivialChangeToFileDirectly(flutterHelloWorldMainFile),
@@ -454,9 +464,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("can hot restart using customRequest", async () => {
+	it.only("can hot restart using customRequest", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -467,6 +478,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.customRequest("hotRestart"),
 		);
 
+		await delayBeforeRestart();
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
@@ -476,6 +488,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("can hot restart using command", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -507,6 +520,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			dc.debuggerReady(),
 			watchPromise("assertOutputContains", dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`)),
 			watchPromise("configurationSequence", dc.configurationSequence()),
 			watchPromise("launch", dc.launch(config)),
@@ -537,6 +551,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -561,6 +576,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
@@ -1423,6 +1439,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1443,6 +1460,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1463,6 +1481,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				dc.configurationSequence(),
 				dc.launch(config),
 			);
@@ -1518,9 +1537,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			});
 
 		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence()
+			dc.debuggerReady()
 				.then(() => delay(20000))
 				.then(() => dc.terminateRequest()),
+			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);

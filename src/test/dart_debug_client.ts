@@ -299,7 +299,12 @@ export class DartDebugClient extends DebugClient {
 		).finally(() => cleanup());
 	}
 
-	public waitForCustomEvent<T>(type: string, filter: (notification: T) => boolean): Promise<T> {
+	public async debuggerReady(): Promise<void> {
+		await this.waitForCustomEvent("dart.debuggerUris");
+		await delay(500);
+	}
+
+	public waitForCustomEvent<T>(type: string, filter?: (notification: T) => boolean): Promise<T> {
 		return new Promise((resolve, reject) => {
 			setTimeout(
 				() => {
@@ -310,7 +315,7 @@ export class DartDebugClient extends DebugClient {
 			const handler = (event: DebugProtocol.Event) => {
 				try {
 					const notification = event.body as T;
-					if (filter(notification)) {
+					if (!filter || filter(notification)) {
 						this.removeListener(type, handler);
 						resolve(notification);
 					}
