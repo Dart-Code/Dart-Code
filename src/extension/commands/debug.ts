@@ -460,8 +460,8 @@ export class DebugCommands implements IAmDisposable {
 
 		const session = debugSessions.find((ds) => ds.session.id === e.session.id);
 		if (!session) {
-			this.logger.warn(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
-			this.logger.warn(`Event will be queued and processed when the session start event fires`);
+			this.logger.info(`Did not find session ${e.session.id} to handle ${e.event}. There were ${debugSessions.length} sessions:\n${debugSessions.map((ds) => `  ${ds.session.id}`).join("\n")}`);
+			this.logger.info(`Event will be queued and processed when the session start event fires`);
 			pendingCustomEvents.push(e);
 			return;
 		}
