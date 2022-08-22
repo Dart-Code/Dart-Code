@@ -261,6 +261,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
 		let runIfNoDevices;
 		let hasRunNoDevicesMessage = false;
+		let portFromLocalExtension;
 		if (workspaceContext.config.forceFlutterWorkspace && workspaceContext.config.restartMacDaemonMessage) {
 			runIfNoDevices = () => {
 				if (!hasRunNoDevicesMessage) {
@@ -271,7 +272,20 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			};
 		}
 
-		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices);
+		if (workspaceContext.config.forceFlutterWorkspace) {
+			const resultFromLocalExtension = await vs.commands.executeCommand<string>("dartlocaldevice.startDaemon", workspaceContext.config.flutterToolsScript?.script, "expose_devices", workspaceContext.config.flutterSdkHome);
+			if (resultFromLocalExtension !== null) {
+				const resultMessage = resultFromLocalExtension.toString();
+				const results = resultMessage.match(/Device daemon is available on remote port: (\d+)/i);
+				if (results !== null && results?.length > 1) {
+					portFromLocalExtension = parseInt(results[1]);
+				} else if (resultMessage !== null) {
+					vs.window.showErrorMessage(resultMessage);
+				}
+			}
+		}
+
+		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices, portFromLocalExtension);
 
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, runIfNoDevices);
 

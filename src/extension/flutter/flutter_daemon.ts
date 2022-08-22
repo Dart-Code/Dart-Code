@@ -26,7 +26,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonStartedCompleter = new PromiseCompleter<void>();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void) {
+	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
 
 		const folder = workspaceContext.sdks.flutter;
@@ -48,8 +48,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		if (process.env.DART_CODE_IS_TEST_RUN)
 			daemonArgs.push("--show-test-device");
 
-
-		if (workspaceContext.config.forceFlutterWorkspace && config.daemonPort) {
+		if (portFromLocalExtension) {
+			this.createNcProcess(portFromLocalExtension);
+		} else if (workspaceContext.config.forceFlutterWorkspace && config.daemonPort) {
 			this.createNcProcess(config.daemonPort);
 		} else {
 			const execution = usingCustomScript(
