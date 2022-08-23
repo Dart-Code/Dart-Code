@@ -248,7 +248,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public shutdown(): Thenable<void> {
-		return this.sendRequest("daemon.shutdown");
+		return this.hasStarted ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
 	}
 
 	// Subscription methods.
