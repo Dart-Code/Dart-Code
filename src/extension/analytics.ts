@@ -1,7 +1,7 @@
 import * as https from "https";
 import * as querystring from "querystring";
 import { env, Uri, version as codeVersion, workspace } from "vscode";
-import { dartCodeExtensionIdentifier, isChromeOS } from "../shared/constants";
+import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
