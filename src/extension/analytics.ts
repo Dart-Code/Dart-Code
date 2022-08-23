@@ -1,7 +1,7 @@
 import * as https from "https";
 import * as querystring from "querystring";
 import { env, Uri, version as codeVersion, workspace } from "vscode";
-import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
+import { dartCodeExtensionIdentifier, isChromeOS } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
@@ -51,7 +51,6 @@ enum TimingVariable {
 export class Analytics {
 	public sdkVersion?: string;
 	public flutterSdkVersion?: string;
-	public analysisServerVersion?: string;
 	private readonly formatter: string;
 	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -110,10 +109,12 @@ export class Analytics {
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`)); }
 	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.logger.info(`${e}`)); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerStart(resourceUri: Uri | undefined, debuggerType: string, runType: string) {
+	public logDebuggerStart(resourceUri: Uri | undefined, debuggerType: string, runType: string, sdkDap: boolean) {
 		const customData = {
 			cd15: debuggerType,
 			cd16: runType,
+			cd18: sdkDap ? "SDK" : "Legacy",
+			cd6: this.getDebuggerPreference(),
 		};
 		this.event(Category.Debugger, EventAction.Activated, resourceUri, customData).catch((e) => this.logger.info(`${e}`));
 	}
@@ -203,14 +204,11 @@ export class Analytics {
 			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			cd20: env.appName || "Unknown",
 			cd3: this.sdkVersion,
-			cd4: this.analysisServerVersion,
+			// cd4: this.analysisServerVersion,
 			cd5: codeVersion,
-			cd6: resourceUri ? this.getDebuggerPreference() : null,
 			cd7: this.workspaceContext.workspaceTypeDescription,
 			cd8: config.closingLabels ? "On" : "Off",
 			cd9: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : null,
-			// TODO: Auto-save
-			// TODO: Hot-restart-on-save
 			cid: machineId,
 			tid: "UA-2201586-19",
 			ul: env.language,

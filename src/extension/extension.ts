@@ -515,7 +515,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
-	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext);
+	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
 	// Also the providers for the initial configs.
 	if (vs.DebugConfigurationProviderTriggerKind) { // Temporary workaround for GitPod/Theia not having this enum.

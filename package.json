@@ -2396,9 +2396,12 @@
 						"scope": "window"
 					},
 					"dart.previewSdkDaps": {
-						"type": "boolean",
-						"default": false,
-						"markdownDescription": "PREVIEW: Whether to use the new debug adapters shipped in the Dart and Flutter SDKs. This setting will only apply if your SDK is new enough to include an appropriate version of the DAP server.",
+						"type": [
+							"null",
+							"boolean"
+						],
+						"default": null,
+						"markdownDescription": "PREVIEW: Whether to use the new debug adapters shipped in the Dart and Flutter SDKs. This setting will only apply if your SDK is new enough to include an appropriate version of the DAP server. Setting the value to `true` will opt-in to the new DAPs. Setting to `false` will opt-out. Leaving as `null` will allow the extension to decide when to enable the SDK DAPs as part of a progressive rollout.",
 						"scope": "window"
 					}
 				}

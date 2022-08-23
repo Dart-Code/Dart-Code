@@ -58,8 +58,6 @@ export class DasAnalyzer extends Analyzer {
 		this.disposables.push(this.fileTracker);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
-			// TODO: Lsp equiv.
-			analytics.analysisServerVersion = sc.version;
 			this.onReadyCompleter.resolve();
 			connectedEvent.dispose();
 		});

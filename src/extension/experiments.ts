@@ -8,14 +8,16 @@ const clearAllExperiments = false;
 
 export interface KnownExperiments {
 	// example: Experiment,
+	sdkDaps: SdkDapExperiment,
 }
 export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
 	return {
-		// example: new ExampleExperiement(logger, workspaceContext, context),
+		// example: new ExampleExperiment(logger, workspaceContext, context),
+		sdkDaps: new SdkDapExperiment(logger, workspaceContext, context),
 	};
 }
 
-// class ExampleExperiement extends Experiment {
+// class ExampleExperiment extends Experiment {
 // 	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
 // 		super(logger, workspaceContext, context, "example", 10);
 // 	}
@@ -26,7 +28,7 @@ class Experiment {
 	constructor(protected readonly logger: Logger, protected readonly workspaceContext: WorkspaceContext, private readonly context: Context, private readonly id: string, private readonly currentPercent: number) {
 		// If this is the first time we've seen this experiment, generate a random number
 		// from 1-100.
-		const contextKey = `experiement-${id}`;
+		const contextKey = `experiment-${id}`;
 		const contextHasActivatedKey = `${contextKey}-hasActivated`;
 		if (clearAllExperiments) {
 			context.update(contextKey, undefined);
@@ -37,9 +39,9 @@ class Experiment {
 		if (!this.randomNumber) {
 			this.randomNumber = getRandomInt(1, 100);
 			context.update(contextKey, this.randomNumber);
-			logger.info(`Generated random number ${this.randomNumber} for new experiement '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
+			logger.info(`Generated random number ${this.randomNumber} for new experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
 		} else {
-			logger.info(`Experiment random number is ${this.randomNumber} for experiement '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
+			logger.info(`Experiment random number is ${this.randomNumber} for experiment '${id}'. Experiment is enabled for <= ${this.currentPercent}`);
 		}
 
 		if (this.applies) {
@@ -63,5 +65,11 @@ class Experiment {
 	/// Activates the experiment. If returns false, resets the hasActivated flag so it
 	/// is not considered to have run.
 	protected async activate(isFirstActivation: boolean): Promise<undefined | false> { return; }
+}
+
+class SdkDapExperiment extends Experiment {
+	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
+		super(logger, workspaceContext, context, "sdkDaps", 10);
+	}
 }
 
