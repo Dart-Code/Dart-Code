@@ -26,7 +26,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonStartedCompleter = new PromiseCompleter<void>();
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities) {
+	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
 
 		const folder = workspaceContext.sdks.flutter;
@@ -88,10 +88,14 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
 		if (code && !this.hasShownTerminationError && !this.isShuttingDown) {
-			this.hasShownTerminationError = true;
-			const message = this.hasStarted ? "has terminated" : "failed to start";
-			// tslint:disable-next-line: no-floating-promises
-			promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
+			if (this.runIfNoDevices) {
+				this.runIfNoDevices();
+			} else {
+				this.hasShownTerminationError = true;
+				const message = this.hasStarted ? "has terminated" : "failed to start";
+				// tslint:disable-next-line: no-floating-promises
+				promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
+			}
 		}
 		super.handleExit(code, signal);
 	}
@@ -248,7 +252,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public shutdown(): Thenable<void> {
-		return this.sendRequest("daemon.shutdown");
+		return this.hasStarted ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
 	}
 
 	// Subscription methods.

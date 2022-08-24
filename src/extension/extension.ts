@@ -259,15 +259,20 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
-		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities);
-
 		let runIfNoDevices;
+		let hasRunNoDevicesMessage = false;
 		if (workspaceContext.config.forceFlutterWorkspace && workspaceContext.config.restartMacDaemonMessage) {
 			runIfNoDevices = () => {
-				const instruction = workspaceContext.config.restartMacDaemonMessage;
-				promptToReloadExtension(`${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
+				if (!hasRunNoDevicesMessage) {
+					const instruction = workspaceContext.config.restartMacDaemonMessage;
+					promptToReloadExtension(`${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
+					hasRunNoDevicesMessage = true;
+				}
 			};
 		}
+
+		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices);
+
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, runIfNoDevices);
 
 		context.subscriptions.push(deviceManager);
