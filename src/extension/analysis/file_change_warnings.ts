@@ -17,7 +17,7 @@ export class FileChangeWarnings implements vs.Disposable {
 	}
 
 	public onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
-		if (!util.isAnalyzable(e.document))
+		if (!util.isDartFile(fsPath(e.document.uri)))
 			return;
 
 		if (e.contentChanges.length === 0) // This event fires for metadata changes (dirty?) so don't need to notify AS then.
