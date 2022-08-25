@@ -2068,9 +2068,18 @@
 						}
 					},
 					"dart.runPubGetOnPubspecChanges": {
-						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to automatically run `pub get` whenever `pubspec.yaml` is saved.",
+						"enum": [
+							"always",
+							"prompt",
+							"never"
+						],
+						"enumDescriptions": [
+							"Always run when pubspec is changed",
+							"Prompt to run when pubspec is changed",
+							"Never run when pubspec is changed"
+						],
+						"default": "always",
+						"markdownDescription": "Whether to run `pub get` whenever `pubspec.yaml` is saved.",
 						"scope": "resource"
 					},
 					"dart.runPubGetOnNestedProjects": {

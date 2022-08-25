@@ -228,7 +228,14 @@ export class ResourceConfig {
 	get lineLength(): number { return this.getConfig<number>("lineLength", 80); }
 	get promptToGetPackages(): boolean { return this.getConfig<boolean>("promptToGetPackages", true); }
 	get pubAdditionalArgs(): string[] { return this.getConfig<string[]>("pubAdditionalArgs", []); }
-	get runPubGetOnPubspecChanges(): boolean { return this.getConfig<boolean>("runPubGetOnPubspecChanges", true); }
+	get runPubGetOnPubspecChanges(): "always" | "prompt" | "never" {
+		let value = this.getConfig<"always" | "prompt" | "never" | boolean>("runPubGetOnPubspecChanges", "always");
+		if (value === true)
+			value = "always";
+		if (value === false)
+			value = "never";
+		return value;
+	}
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
 	get showDartDeveloperLogs(): boolean { return this.getConfig<boolean>("showDartDeveloperLogs", true); }

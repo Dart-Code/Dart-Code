@@ -150,7 +150,7 @@ export class PackageCommands extends BaseSdkCommands {
 		const conf = config.for(uri);
 
 		// Don't do anything if we're disabled.
-		if (!conf.runPubGetOnPubspecChanges) {
+		if (conf.runPubGetOnPubspecChanges === "never") {
 			this.logger.info(`Automatically running "pub get" is disabled`);
 			return;
 		}
@@ -184,7 +184,7 @@ export class PackageCommands extends BaseSdkCommands {
 			runPubGetDelayTimer = undefined;
 			lastPubspecSaveReason = undefined;
 			// tslint:disable-next-line: no-floating-promises
-			this.fetchPackagesOrPrompt(projectUri);
+			this.fetchPackagesOrPrompt(projectUri, { alwaysPrompt: conf.runPubGetOnPubspecChanges === "prompt" });
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 
