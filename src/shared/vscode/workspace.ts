@@ -20,8 +20,8 @@ export class Context {
 	set devToolsNotificationLastShown(value: number | undefined) { this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }
 	set devToolsNotificationDoNotShow(value: boolean | undefined) { this.context.globalState.update("devToolsNotificationDoNotShowAgain", value); }
-	get breakpointOutsideWorkspaceDoNotShow(): boolean | undefined { return !!this.context.globalState.get("breakpointOutsideWorkspaceDoNotShowAgain"); }
-	set breakpointOutsideWorkspaceDoNotShow(value: boolean | undefined) { this.context.globalState.update("breakpointOutsideWorkspaceDoNotShowAgain", value); }
+	get breakpointInNonDebuggableFileDoNotShowAgain(): boolean | undefined { return !!this.context.globalState.get("breakpointInNonDebuggableFileDoNotShowAgain"); }
+	set breakpointInNonDebuggableFileDoNotShowAgain(value: boolean | undefined) { this.context.globalState.update("breakpointInNonDebuggableFileDoNotShowAgain", value); }
 	public getFlutterSurveyNotificationLastShown(id: string): number | undefined { return this.context.globalState.get(`flutterSurvey${id}NotificationLastShown`) as number; }
 	public setFlutterSurveyNotificationLastShown(id: string, value: number | undefined) { this.context.globalState.update(`flutterSurvey${id}NotificationLastShown`, value); }
 	public getFlutterSurveyNotificationDoNotShow(id: string): boolean | undefined { return !!this.context.globalState.get(`flutterSurvey${id}NotificationDoNotShowAgain`); }

@@ -6,7 +6,7 @@ import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNot
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
 import { disposeAll, PromiseCompleter } from "../../shared/utils";
-import { fsPath, isFlutterProjectFolder } from "../../shared/utils/fs";
+import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -383,11 +383,7 @@ export class DebugCommands implements IAmDisposable {
 	}
 
 	public promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(e: vs.Breakpoint): void {
-		// If the user has enabled any of these, assume they understand the setting.
-		if (config.debugSdkLibraries || config.debugExternalPackageLibraries)
-			return;
-
-		if (hasPromptedAboutDebugSettings || this.context.breakpointOutsideWorkspaceDoNotShow || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
+		if (hasPromptedAboutDebugSettings || this.context.breakpointInNonDebuggableFileDoNotShowAgain || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
 			return;
 
 		// Don't consider non-Dart files.
@@ -398,14 +394,21 @@ export class DebugCommands implements IAmDisposable {
 		if (vs.workspace.getWorkspaceFolder(e.location.uri))
 			return;
 
+		const isSdkBreakpoint = isWithinPath(fsPath(e.location.uri), this.workspaceContext.sdks.dart);
+
+		if (isSdkBreakpoint && config.debugSdkLibraries)
+			return;
+		if (!isSdkBreakpoint && config.debugExternalPackageLibraries)
+			return;
+
 		hasPromptedAboutDebugSettings = true;
 		const message = `You have a breakpoint outside of your workspace but debug settings are set to 'my code'. Would you like to change settings? You can also change this from the status bar while debugging.`;
 
-		const debugJustMyCodeAction = "Debug just my code";
-		const debugEverything = "Debug my code + packages + SDK";
+		const debugJustMyCodeAction = "Debug my code";
+		const debugEverything = "Debug all code";
 		vs.window.showWarningMessage(message, debugJustMyCodeAction, debugEverything, doNotAskAgainAction).then((choice) => {
 			if (choice === doNotAskAgainAction)
-				this.context.breakpointOutsideWorkspaceDoNotShow = true;
+				this.context.breakpointInNonDebuggableFileDoNotShowAgain = true;
 			if (choice !== debugEverything)
 				return;
 
