@@ -190,9 +190,10 @@ export class DartDebugClient extends DebugClient {
 		// generally assume we will automatically resume.
 		if (launchArgs.request === "attach" && (this.isDartDap || launchArgs.deviceId !== "flutter-tester")) {
 			logger.info("Attaching to process...");
+			const stoppedEvent = watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped", "waiting for stop event on attach to paused"));
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
 			logger.info("Waiting for stopped (step/entry) event...");
-			const event = await watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped", "waiting for stop event on attach to paused"));
+			const event = await stoppedEvent;
 			// Allow either step (old DC DA) or entry (SDK DA).
 			if (event.body.reason !== "step")
 				assert.equal(event.body.reason, "entry");
