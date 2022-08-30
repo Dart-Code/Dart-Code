@@ -32,7 +32,8 @@ describe("workspace_symbol_provider", () => {
 		ensureWorkspaceSymbol(symbols, "IOClient", vs.SymbolKind.Class, undefined, { endsWith: `${path.sep}src${path.sep}io_client.dart` });
 	});
 
-	it("includes items from git dependencies", async () => {
+	it.skip("includes items from git dependencies", async () => {
+		// Skipped due to https://github.com/Dart-Code/Dart-Code/issues/4129.
 		const symbols = await getWorkspaceSymbols("ProtobufEnum");
 
 		ensureWorkspaceSymbol(symbols, "ProtobufEnum", vs.SymbolKind.Class, undefined, { endsWith: `${path.sep}src${path.sep}protobuf${path.sep}protobuf_enum.dart` });
