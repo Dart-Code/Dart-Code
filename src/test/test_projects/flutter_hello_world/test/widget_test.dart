@@ -8,7 +8,7 @@ import '../lib/main.dart' as hello_world;
 // == EXPECTED RESULTS ==
 // test/widget_test.dart [2/3 passed] Passed
 //     Hello world test Passed
-//     multi line Passed
+//     multi line test Passed
 //     Skipped test Skipped
 // == /EXPECTED RESULTS ==
 
@@ -19,7 +19,8 @@ void main() {
     expect(find.text('Hello, world!'), findsOneWidget);
   });
   testWidgets('''multi
-line''', (WidgetTester tester) async {
+line
+test''', (WidgetTester tester) async {
     expect(1, 1);
   });
   testWidgets('Skipped test', (WidgetTester tester) async {

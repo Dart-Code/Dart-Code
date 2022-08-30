@@ -120,7 +120,7 @@ describe("flutter test debugger", () => {
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-		assert.equal(runAction.command!.arguments![0].fullName, "multi\nline");
+		assert.equal(runAction.command!.arguments![0].fullName, "multi\nline\ntest");
 		assert.equal(runAction.command!.arguments![0].isGroup, false);
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {

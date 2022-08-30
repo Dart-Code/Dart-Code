@@ -47,8 +47,8 @@ export function makeRegexForTests(names: TestName[]) {
 		// issues in the shell.
 		// https://github.com/Dart-Code/Dart-Code/issues/4007
 		escapedName = escapedName
-			.replace("\n", "\\n")
-			.replace("\r", "\\r");
+			.replace(/\n/g, "\\n")
+			.replace(/\r/g, "\\r");
 
 		// If a test name contains interpolated expressions, passing the exact
 		// name won't match. So we just replace them out with wildcards. We'll need
