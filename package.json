@@ -870,11 +870,11 @@
 				},
 				{
 					"command": "flutter.hotRestart",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.hotRestart"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "flutter.hotReload",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "_dart.hotReload.touchBar",
@@ -1814,12 +1814,6 @@
 						],
 						"default": "never",
 						"markdownDescription": "Whether to automatically send a Hot Reload request to Dart apps during a debug session when saving files. Flutter apps are controlled by the flutterHotReloadOnSave setting.",
-						"scope": "window"
-					},
-					"dart.flutterHotRestartOnSave": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to automatically send a Hot Restart request during a debug session when saving files if Hot Reload is not available but Hot Restart is.",
 						"scope": "window"
 					},
 					"dart.flutterGenerateLocalizationsOnSave": {

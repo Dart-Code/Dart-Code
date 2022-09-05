@@ -2,7 +2,6 @@ import * as path from "path";
 import { commands, DiagnosticSeverity, languages, TextDocumentSaveReason, Uri, workspace } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { restartReasonSave } from "../../shared/constants";
-import { VmService } from "../../shared/enums";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -122,18 +121,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		if (!isDirty && (configSetting === "manualIfDirty" || configSetting === "allIfDirty"))
 			return;
 
-		const shouldHotReload = this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload);
-
-		const shouldHotRestart =
-			!this.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload)
-			&& this.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart)
-			&& config.flutterHotRestartOnSave;
-
-		// Don't do if there are no debug sessions that support it.
-		if (!shouldHotReload && !shouldHotRestart)
-			return;
-
-		const commandToRun = shouldHotReload ? "dart.hotReload" : "flutter.hotRestart";
+		const commandToRun = "dart.hotReload";
 		const args = {
 			debounce: this.flutterCapabilities.supportsRestartDebounce,
 			onlyFlutter: true,
