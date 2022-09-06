@@ -54,7 +54,7 @@
 			"prefix": "for",
 			"description": "Insert a for loop.",
 			"body": [
-				"for (var i = 0; i < ${1:count}; i++) {",
+				"for (final i = 0; i < ${1:count}; i++) {",
 				"  $0",
 				"}"
 			]
@@ -63,7 +63,7 @@
 			"prefix": "fori",
 			"description": "Insert a for-in loop.",
 			"body": [
-				"for (var ${1:item} in ${2:items}) {",
+				"for (final ${1:item} in ${2:items}) {",
 				"  $0",
 				"}"
 			]
