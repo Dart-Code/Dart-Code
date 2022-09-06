@@ -1,3 +1,4 @@
+import { isWin } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { getRandomInt } from "../shared/utils/fs";
 import { Context } from "../shared/vscode/workspace";
@@ -57,6 +58,8 @@ class Experiment {
 						context.update(contextHasActivatedKey, undefined);
 					}
 				});
+		} else {
+			logger.info(`Experiment '${id}' does not apply and will not be activated`);
 		}
 	}
 
@@ -71,5 +74,7 @@ class SdkDapExperiment extends Experiment {
 	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
 		super(logger, workspaceContext, context, "sdkDaps", 10);
 	}
+
+	get applies(): boolean { return super.applies && !isWin; }
 }
 
