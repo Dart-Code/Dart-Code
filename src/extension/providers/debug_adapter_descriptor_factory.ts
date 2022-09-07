@@ -33,6 +33,11 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			isSdkDapSupported = this.dartCapabilities.supportsSdkDap;
 		else if (isFlutterOrFlutterTest)
 			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
+		let canDefaultToSdkDap = false;
+		if (isDartOrDartTest)
+			canDefaultToSdkDap = this.dartCapabilities.canDefaultSdkDaps;
+		else if (isFlutterOrFlutterTest)
+			canDefaultToSdkDap = this.flutterCapabilities.canDefaultSdkDaps;
 
 		const forceSdkDap = process.env.DART_CODE_FORCE_SDK_DAP === "true"
 			? true
@@ -57,7 +62,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			} else {
 				useSdkDap = this.experiments.sdkDaps.applies;
 				sdkDapReason = "sdkDaps experiment";
-				if (useSdkDap && !this.dartCapabilities.canDefaultSdkDaps) {
+				if (useSdkDap && !canDefaultToSdkDap) {
 					useSdkDap = false;
 					sdkDapReason = "sdkDaps experiment overriden by canDefaultSdkDaps";
 				}
