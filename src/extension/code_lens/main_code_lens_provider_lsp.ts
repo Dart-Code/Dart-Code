@@ -49,7 +49,7 @@ export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable 
 
 	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: { [key: string]: string }): CodeLens {
 		return new CodeLens(
-			lspToRange(mainFunction.range),
+			lspToRange(mainFunction.codeRange),
 			{
 				arguments: template ? [document.uri, template] : [document.uri],
 				command: debug ? "dart.startDebugging" : "dart.startWithoutDebugging",
