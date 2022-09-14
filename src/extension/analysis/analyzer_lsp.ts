@@ -17,6 +17,7 @@ import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extensio
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { DART_MODE } from "../extension";
+import { InteractiveRefactors } from "../lsp/interactive_refactors";
 import { IgnoreLintCodeActionProvider } from "../providers/ignore_lint_code_action_provider";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
@@ -27,8 +28,9 @@ import { LspFileTracker } from "./file_tracker_lsp";
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
 	public readonly fileTracker: LspFileTracker;
-	public readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly vmServicePort: number | undefined;
+	private readonly snippetTextEdits: SnippetTextEditFeature;
+	private readonly refactors: InteractiveRefactors;
 
 	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
 	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
@@ -37,12 +39,14 @@ export class LspAnalyzer extends Analyzer {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.vmServicePort = config.analyzerVmServicePort;
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
+		this.refactors = new InteractiveRefactors(logger);
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware(), this.vmServicePort);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.disposables.push({ dispose: () => this.client.stop() });
 		this.disposables.push(this.fileTracker);
 		this.disposables.push(this.snippetTextEdits);
+		this.disposables.push(this.refactors);
 
 		// tslint:disable-next-line: no-floating-promises
 		this.client.start().then(() => {
@@ -116,6 +120,7 @@ export class LspAnalyzer extends Analyzer {
 			return false;
 		}
 
+		const refactors = this.refactors;
 		const snippetTextEdits = this.snippetTextEdits;
 		const ignoreActionProvider = new IgnoreLintCodeActionProvider(DART_MODE);
 
@@ -203,6 +208,8 @@ export class LspAnalyzer extends Analyzer {
 				let res = await next(document, range, context, token) || [];
 
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
+				if (config.experimentalNewRefactors)
+					refactors.rewriteCommands(res);
 
 				const hasExistingIgnoreActions = res.find((r) => r.title.startsWith("Ignore "));
 				if (!hasExistingIgnoreActions) {
