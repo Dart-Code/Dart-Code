@@ -78,6 +78,7 @@ class Config {
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): any { return this.getConfig<any>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
+	get experimentalNewRefactors(): boolean { return this.getConfig<boolean>("experimentalNewRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
 	get flutterAdbConnectOnChromeOs(): boolean { return this.getConfig<boolean>("flutterAdbConnectOnChromeOs", false); }
 	get flutterCreateAndroidLanguage(): "java" | "kotlin" { return this.getConfig<"java" | "kotlin">("flutterCreateAndroidLanguage", "kotlin"); }
