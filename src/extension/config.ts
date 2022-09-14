@@ -27,10 +27,11 @@ class Config {
 		const c = this.config.inspect<T>(key);
 
 		if (c && c.workspaceValue)
-			return nullToUndefined(c.workspaceValue);
+			return c.workspaceValue;
 
-		if (c && c.workspaceFolderValue)
-			return nullToUndefined(c.workspaceFolderValue);
+		if (c && c.workspaceFolderValue) {
+			return c.workspaceFolderValue;
+		}
 
 		return undefined as NullAsUndefined<T>;
 	}
