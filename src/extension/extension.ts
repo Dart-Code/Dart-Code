@@ -273,7 +273,12 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}
 
 		if (workspaceContext.config.forceFlutterWorkspace) {
-			const resultFromLocalExtension = await vs.commands.executeCommand<string>("dartlocaldevice.startDaemon", workspaceContext.config.flutterToolsScript?.script, "expose_devices", workspaceContext.config.flutterSdkHome);
+			let resultFromLocalExtension = null;
+			try {
+				resultFromLocalExtension = await vs.commands.executeCommand<string>("dartlocaldevice.startDaemon", workspaceContext.config.flutterToolsScript?.script, "expose_devices", workspaceContext.config.flutterSdkHome);
+			} catch (e) {
+				// Command may not be available.
+			}
 			if (resultFromLocalExtension !== null) {
 				const resultMessage = resultFromLocalExtension.toString();
 				const results = resultMessage.match(/Device daemon is available on remote port: (\d+)/i);
