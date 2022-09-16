@@ -22,7 +22,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 			fillClientCapabilities(capabilities: ClientCapabilities) {
 				capabilities.experimental = capabilities.experimental ?? {};
 				if (supportsSnippetTextEdits && snippetTextEditsEnabled) {
-					(capabilities.experimental as any).snippetTextEdit = true;
+					capabilities.experimental.snippetTextEdit = true;
 				}
 			},
 			getState(): FeatureState {
