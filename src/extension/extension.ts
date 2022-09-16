@@ -275,9 +275,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		if (workspaceContext.config.forceFlutterWorkspace) {
 			let resultFromLocalExtension = null;
 			try {
-				resultFromLocalExtension = await vs.commands.executeCommand<string>("dartlocaldevice.startDaemon", workspaceContext.config.flutterToolsScript?.script, "expose_devices", workspaceContext.config.flutterSdkHome);
+				resultFromLocalExtension = await vs.commands.executeCommand<string>("dartlocaldevice.startDaemon", {script: workspaceContext.config.flutterToolsScript?.script, command: "expose_devices", workingDirectory: workspaceContext.config.flutterSdkHome});
 			} catch (e) {
-				// Command may not be available.
+				// Command won't be available if dartlocaldevice isn't installed.
+				logger.error(e);
 			}
 			if (resultFromLocalExtension !== null) {
 				const resultMessage = resultFromLocalExtension.toString();
