@@ -5,11 +5,12 @@ import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSes
 import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
+import { withTimeout } from "../shared/utils";
 import { getRandomInt } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
-import { delay, logger, watchPromise, withTimeout } from "./helpers";
+import { delay, logger, watchPromise } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl"];
 

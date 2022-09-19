@@ -240,3 +240,20 @@ export function disposeAll(disposables: IAmDisposable[]) {
 		}
 	}
 }
+
+export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds: number = 360): Promise<T> {
+	return new Promise<T>((resolve, reject) => {
+		// Set a timeout to reject the promise after the timeout period.
+		const timeoutTimer = setTimeout(() => {
+			const msg = typeof message === "string" ? message : message();
+			reject(new Error(`${msg} within ${seconds}s`));
+		}, seconds * 1000);
+
+		// When the main promise completes, cancel the timeout and return its result.
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
+		promise.then((result) => {
+			clearTimeout(timeoutTimer);
+			resolve(result);
+		});
+	});
+}
