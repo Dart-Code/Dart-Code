@@ -7,10 +7,11 @@ import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
+import { withTimeout } from "../shared/utils";
 import { faint } from "../shared/utils/colors";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise, withTimeout } from "./helpers";
+import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";

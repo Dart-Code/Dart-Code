@@ -13,7 +13,7 @@ import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
-import { disposeAll, uniq } from "../shared/utils";
+import { disposeAll, uniq, withTimeout } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
@@ -261,6 +261,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
 		let runIfNoDevices;
 		let hasRunNoDevicesMessage = false;
+		let portFromLocalExtension;
 		if (workspaceContext.config.forceFlutterWorkspace && workspaceContext.config.restartMacDaemonMessage) {
 			runIfNoDevices = () => {
 				if (!hasRunNoDevicesMessage) {
@@ -271,7 +272,30 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			};
 		}
 
-		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices);
+		if (workspaceContext.config.forceFlutterWorkspace) {
+			let resultFromLocalExtension = null;
+
+			const command = vs.commands.executeCommand<string>("dartlocaldevice.startDaemon", {script: workspaceContext.config.flutterToolsScript?.script, command: "expose_devices", workingDirectory: workspaceContext.config.flutterSdkHome});
+
+			try {
+				resultFromLocalExtension = await withTimeout(command, `The local extension to expose devices timed out. ${workspaceContext.config.localDeviceCommandAdviceMessage ?? ""}`, 10);
+			} catch (e) {
+				// Command won't be available if dartlocaldevice isn't installed.
+				logger.error(e);
+			}
+			if (resultFromLocalExtension !== null) {
+				const resultMessage = resultFromLocalExtension.toString();
+				const results = resultMessage.match(/Device daemon is available on remote port: (\d+)/i);
+				if (results !== null && results?.length > 1) {
+					portFromLocalExtension = parseInt(results[1]);
+				} else if (resultMessage !== null) {
+					const displayError = `The local extension to expose devices failed: ${resultMessage}. ${workspaceContext.config.localDeviceCommandAdviceMessage ?? ""}`;
+					vs.window.showErrorMessage(displayError);
+				}
+			}
+		}
+
+		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices, portFromLocalExtension);
 
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, runIfNoDevices);
 

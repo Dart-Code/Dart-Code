@@ -12,7 +12,7 @@ import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestNode, TreeNode } from "../shared/test/test_model";
 import { TestDoneNotification } from "../shared/test_protocol";
-import { BufferedLogger, filenameSafe, flatMap } from "../shared/utils";
+import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
@@ -952,23 +952,6 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>, t
 	await action();
 	logger.info(`Waiting for analysis to complete`);
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
-}
-
-export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds: number = 360): Promise<T> {
-	return new Promise<T>((resolve, reject) => {
-		// Set a timeout to reject the promise after the timeout period.
-		const timeoutTimer = setTimeout(() => {
-			const msg = typeof message === "string" ? message : message();
-			reject(new Error(`${msg} within ${seconds}s`));
-		}, seconds * 1000);
-
-		// When the main promise completes, cancel the timeout and return its result.
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
-		promise.then((result) => {
-			clearTimeout(timeoutTimer);
-			resolve(result);
-		});
-	});
 }
 
 export async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
