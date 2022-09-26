@@ -29,6 +29,7 @@ export interface DartLaunchArgs {
 	program?: string;
 	request: "launch" | "attach";
 	sendLogsToClient?: boolean;
+	sendCustomProgressEvents?: boolean;
 	showDartDeveloperLogs: boolean;
 	showMemoryUsage?: boolean;
 	toolEnv?: { [key: string]: string | undefined };

@@ -617,7 +617,8 @@ export class DebugCommands implements IAmDisposable {
 				delete session.progress[debugTerminatingProgressId];
 			}
 
-			const isHotEvent = e.body.progressId.endsWith("-hot.reload") || e.body.progressId.endsWith("-hot.restart");
+			const progressId = e.body.progressId as string | undefined;
+			const isHotEvent = progressId?.includes("reload") || progressId?.includes("restart");
 			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
 
 			vs.window.withProgress(
@@ -627,7 +628,7 @@ export class DebugCommands implements IAmDisposable {
 				// https://github.com/Dart-Code/Dart-Code/issues/2597
 				// If this is changed back, ensure the waiting-for-debug-extension notification
 				// is still displayed with additional description.
-				{ location: progressLocation },
+				{ location: progressLocation, title: e.body.title },
 				(progress) => {
 					// Complete any existing one with this ID.
 					session.progress[e.body.progressId]?.complete();
@@ -635,7 +636,8 @@ export class DebugCommands implements IAmDisposable {
 					// Build a new progress and store it in the session.
 					const completer = new PromiseCompleter<void>();
 					session.progress[e.body.progressId] = new ProgressMessage(progress, completer);
-					session.progress[e.body.progressId]?.report(e.body.message as string);
+					if (e.body.message)
+						session.progress[e.body.progressId]?.report(e.body.message as string);
 					return completer.promise;
 				},
 			);
