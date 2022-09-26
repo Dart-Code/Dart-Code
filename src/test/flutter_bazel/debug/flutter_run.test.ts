@@ -1,10 +1,11 @@
+import { strict as assert } from "assert";
 import * as path from "path";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, extApi, flutterBazelHelloWorldMainFile, flutterBazelRoot, prepareHasRunFile, watchPromise } from "../../helpers";
+import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { activate, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, flutterBazelRoot, getResolvedDebugConfiguration, prepareHasRunFile, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -30,6 +31,20 @@ describe(`flutter run debugger`, () => {
 	});
 
 	afterEach(() => watchPromise("Killing flutter_tester processes", killFlutterTester()));
+
+	describe("resolves the correct debug config", () => {
+		it("for a simple script", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: flutterTestDeviceId,
+				program: "//foo/bar",
+				suppressPrompts: true, // Don't prompt if there are errors because we can't resolve package:flutter.
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.program, "//foo/bar");
+			assert.equal(resolvedConfig.cwd, fsPath(flutterBazelHelloWorldFolder));
+		});
+	});
 
 	it("runs using custom script", async () => {
 		const root = fsPath(flutterBazelRoot);

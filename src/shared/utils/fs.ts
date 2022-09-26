@@ -54,6 +54,31 @@ export function isEqualOrWithinPath(file: string, folder: string) {
 	return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
+export function findCommonAncestorFolder(folderPaths: string[]): string | undefined {
+	if (!folderPaths.length)
+		return undefined;
+
+	const commonAncestorSegments = folderPaths[0].split(path.sep);
+	for (const folderPath of folderPaths.slice(1)) {
+		const pathSegments = folderPath.split(path.sep);
+		for (let i = 0; i < Math.min(commonAncestorSegments.length, pathSegments.length); i++) {
+			if (commonAncestorSegments[i] !== pathSegments[i]) {
+				commonAncestorSegments.splice(i);
+				break;
+			}
+		}
+		if (commonAncestorSegments.length > pathSegments.length) {
+			commonAncestorSegments.splice(pathSegments.length);
+		}
+	}
+
+	// If we got up to the root, consider that not a match.
+	if (commonAncestorSegments.length <= 1)
+		return undefined;
+
+	return commonAncestorSegments.join(path.sep);
+}
+
 export async function getChildFolders(logger: Logger, parent: string, options?: { allowBin?: boolean; allowCache?: boolean }): Promise<string[]> {
 	if (!fs.existsSync(parent))
 		return [];
