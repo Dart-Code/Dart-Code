@@ -36,9 +36,10 @@ if (!ext) {
 }
 
 const testFolder = path.join(ext.extensionPath, "src/test");
+export const testProjectsFolder = path.join(testFolder, "test_projects");
 
 // Dart
-export const helloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/hello_world"));
+export const helloWorldFolder = vs.Uri.file(path.join(testProjectsFolder, "hello_world"));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldInspectionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/inspect.dart"));
 export const helloWorldLongRunningFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/long_running.dart"));
@@ -69,7 +70,7 @@ export const helloWorldPartWrapperFile = vs.Uri.file(path.join(fsPath(helloWorld
 export const helloWorldPartFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/part.dart"));
 export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
 // Package
-export const myPackageFolder = vs.Uri.file(path.join(testFolder, "test_projects/my_package"));
+export const myPackageFolder = vs.Uri.file(path.join(testProjectsFolder, "my_package"));
 export const myPackageThingFile = vs.Uri.file(path.join(fsPath(myPackageFolder), "lib/my_thing.dart"));
 // Dart tests
 export const helloWorldTestFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test"));
@@ -87,12 +88,12 @@ export const helloWorldTestNestedFile = vs.Uri.file(path.join(fsPath(helloWorldT
 export const helloWorldProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "project_test.dart"));
 export const helloWorldExampleSubFolderProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "test", "project_test.dart"));
 // Nested
-export const dartNestedFolder = vs.Uri.file(path.join(testFolder, "test_projects/dart_nested"));
+export const dartNestedFolder = vs.Uri.file(path.join(testProjectsFolder, "dart_nested"));
 export const dartNested1Folder = vs.Uri.file(path.join(fsPath(dartNestedFolder), "nested1"));
 export const dartNested1PubspecFile = vs.Uri.file(path.join(fsPath(dartNested1Folder), "pubspec.yaml"));
 export const dartNested2Folder = vs.Uri.file(path.join(fsPath(dartNested1Folder), "nested2"));
 // Flutter
-export const flutterHelloWorldFolder = vs.Uri.file(path.join(testFolder, "test_projects/flutter_hello_world"));
+export const flutterHelloWorldFolder = vs.Uri.file(path.join(testProjectsFolder, "flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
 export const flutterHelloWorldPubspec = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "pubspec.yaml"));
@@ -107,7 +108,7 @@ export const flutterHelloWorldThrowInExternalPackageFile = vs.Uri.file(path.join
 export const flutterHelloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/throw_in_local_package.dart"));
 export const flutterHelloWorldStack60File = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/stack60.dart"));
 // Flutter Bazel
-export const flutterBazelRoot = vs.Uri.file(path.join(testFolder, "test_projects/bazel_workspace"));
+export const flutterBazelRoot = vs.Uri.file(path.join(testProjectsFolder, "bazel_workspace"));
 export const flutterBazelHelloWorldFolder = vs.Uri.file(path.join(fsPath(flutterBazelRoot), "flutter_hello_world_bazel"));
 export const flutterBazelHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterBazelHelloWorldFolder), "lib/main.dart"));
 export const flutterBazelTestMainFile = vs.Uri.file(path.join(fsPath(flutterBazelHelloWorldFolder), "test/widget_test.dart"));
@@ -120,7 +121,7 @@ export const flutterTestDriverAppFile = vs.Uri.file(path.join(fsPath(flutterHell
 export const flutterTestDriverTestFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test_driver/app_test.dart"));
 export const flutterIntegrationTestFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "integration_test/app_test.dart"));
 // Web
-export const webProjectContainerFolder = vs.Uri.file(path.join(testFolder, "test_projects/web"));
+export const webProjectContainerFolder = vs.Uri.file(path.join(testProjectsFolder, "web"));
 export const webHelloWorldFolder = vs.Uri.file(path.join(fsPath(webProjectContainerFolder), "hello_world"));
 export const webHelloWorldMainFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "web/main.dart"));
 export const webHelloWorldIndexFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "web/index.html"));

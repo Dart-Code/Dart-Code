@@ -275,7 +275,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		if (workspaceContext.config.forceFlutterWorkspace) {
 			let resultFromLocalExtension = null;
 
-			const command = vs.commands.executeCommand<string>("flutter-local-device-exposer.startDaemon", {script: workspaceContext.config.flutterToolsScript?.script, command: "expose_devices", workingDirectory: workspaceContext.config.flutterSdkHome});
+			const command = vs.commands.executeCommand<string>("flutter-local-device-exposer.startDaemon", { script: workspaceContext.config.flutterToolsScript?.script, command: "expose_devices", workingDirectory: workspaceContext.config.flutterSdkHome });
 
 			try {
 				resultFromLocalExtension = await withTimeout(command, `The local extension to expose devices timed out. ${workspaceContext.config.localDeviceCommandAdviceMessage ?? ""}`, 10);
