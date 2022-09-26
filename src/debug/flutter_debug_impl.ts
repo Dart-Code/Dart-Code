@@ -140,7 +140,7 @@ export class FlutterDebugSession extends DartDebugSession {
 	}
 
 	private sendProgressEvent(e: AppProgress) {
-		const progressID = `flutter-${e.appId}-${e.progressId}`;
+		const progressId = `flutter-${e.appId}-${e.progressId}`;
 		if (e.finished) {
 			let finalMessage: string | undefined;
 			if (!finalMessage) {
@@ -149,9 +149,9 @@ export class FlutterDebugSession extends DartDebugSession {
 				else if (e.progressId === "hot.restart")
 					finalMessage = "Hot Restart complete!";
 			}
-			this.endProgress(progressID, finalMessage);
+			this.endProgress(progressId, finalMessage);
 		} else {
-			this.startProgress(progressID, e.message);
+			this.startProgress(progressId, e.message);
 		}
 	}
 

@@ -483,8 +483,8 @@ export class DebugCommands implements IAmDisposable {
 		debugSessions.splice(sessionIndex, 1);
 
 		// Close any in-progress progress notifications.
-		for (const progressID of Object.keys(session.progress))
-			session.progress[progressID]?.complete();
+		for (const progressId of Object.keys(session.progress))
+			session.progress[progressId]?.complete();
 
 		const debugSessionEnd = new Date();
 		this.analytics.logDebugSessionDuration(DebuggerType[session.debuggerType], debugSessionEnd.getTime() - session.sessionStart.getTime());
@@ -612,12 +612,12 @@ export class DebugCommands implements IAmDisposable {
 			// When a debug session is restarted by VS Code (eg. not handled by the DA), the session-end event
 			// will not fire so we need to clean up the "Terminating debug session" message manually. Doing it here
 			// means it will vanish at the same time as the new one appears, so there are no gaps in progress indicators.
-			if (e.body.progressID === debugLaunchProgressId) {
+			if (e.body.progressId === debugLaunchProgressId) {
 				session.progress[debugTerminatingProgressId]?.complete();
 				delete session.progress[debugTerminatingProgressId];
 			}
 
-			const isHotEvent = e.body.progressID.endsWith("-hot.reload") || e.body.progressID.endsWith("-hot.restart");
+			const isHotEvent = e.body.progressId.endsWith("-hot.reload") || e.body.progressId.endsWith("-hot.restart");
 			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
 
 			vs.window.withProgress(
@@ -630,23 +630,23 @@ export class DebugCommands implements IAmDisposable {
 				{ location: progressLocation },
 				(progress) => {
 					// Complete any existing one with this ID.
-					session.progress[e.body.progressID]?.complete();
+					session.progress[e.body.progressId]?.complete();
 
 					// Build a new progress and store it in the session.
 					const completer = new PromiseCompleter<void>();
-					session.progress[e.body.progressID] = new ProgressMessage(progress, completer);
-					session.progress[e.body.progressID]?.report(e.body.message as string);
+					session.progress[e.body.progressId] = new ProgressMessage(progress, completer);
+					session.progress[e.body.progressId]?.report(e.body.message as string);
 					return completer.promise;
 				},
 			);
 		} else if (e.event === "dart.progressUpdate") {
-			session.progress[e.body.progressID]?.report(e.body.message as string);
+			session.progress[e.body.progressId]?.report(e.body.message as string);
 		} else if (e.event === "dart.progressEnd") {
 			if (e.body.message) {
-				session.progress[e.body.progressID]?.report(e.body.message as string);
+				session.progress[e.body.progressId]?.report(e.body.message as string);
 				await new Promise((resolve) => setTimeout(resolve, 400));
 			}
-			session.progress[e.body.progressID]?.complete();
+			session.progress[e.body.progressId]?.complete();
 		} else if (e.event === "dart.flutter.widgetErrorInspectData") {
 			if (this.suppressFlutterWidgetErrors || !config.showInspectorNotificationsForWidgetErrors)
 				return;

@@ -1674,7 +1674,7 @@ export class DartDebugSession extends DebugSession {
 		return completer.promise;
 	}
 
-	protected startProgress(progressID: string, message: string | undefined) {
+	protected startProgress(progressId: string, message: string | undefined) {
 		message = message || "Working";
 		message = message.endsWith("…") || message.endsWith("...") ? message : `${message}…`;
 		// TODO: It's not clear if passing an empty string for title is reasonable, but it works better in VS Code.
@@ -1682,25 +1682,25 @@ export class DartDebugSession extends DebugSession {
 
 		// TODO: Revert these changes if VS Code removes the delay.
 		// https://github.com/microsoft/vscode/issues/101405
-		// this.sendEvent(new ProgressStartEvent(progressID, "", e.message));
-		this.sendEvent(new Event("dart.progressStart", { progressID, message }));
+		// this.sendEvent(new ProgressStartEvent(progressId, "", e.message));
+		this.sendEvent(new Event("dart.progressStart", { progressId, message }));
 	}
 
-	protected updateProgress(progressID: string, message: string | undefined) {
+	protected updateProgress(progressId: string, message: string | undefined) {
 		if (!message)
 			return;
 		message = message.endsWith("…") || message.endsWith("...") ? message : `${message}…`;
 		// TODO: Revert these changes if VS Code removes the delay.
 		// https://github.com/microsoft/vscode/issues/101405
-		// this.sendEvent(new ProgressUpdateEvent(progressID, message));
-		this.sendEvent(new Event("dart.progressUpdate", { progressID, message }));
+		// this.sendEvent(new ProgressUpdateEvent(progressId, message));
+		this.sendEvent(new Event("dart.progressUpdate", { progressId, message }));
 	}
 
-	protected endProgress(progressID: string, message?: string | undefined) {
+	protected endProgress(progressId: string, message?: string | undefined) {
 		// TODO: Revert these changes if VS Code removes the delay.
 		// https://github.com/microsoft/vscode/issues/101405
-		// this.sendEvent(new ProgressEndEvent(progressID, e.message));
-		this.sendEvent(new Event("dart.progressEnd", { progressID, message }));
+		// this.sendEvent(new ProgressEndEvent(progressId, e.message));
+		this.sendEvent(new Event("dart.progressEnd", { progressId, message }));
 	}
 
 	protected async customRequest(request: string, response: DebugProtocol.Response, args: any): Promise<void> {
