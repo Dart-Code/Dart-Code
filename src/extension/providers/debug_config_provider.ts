@@ -532,7 +532,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
-		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf);
+		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf, deviceManager?.daemonPortOverride);
 		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
 		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
@@ -583,7 +583,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	/// All arguments built here should be things that user the recognises based on the app they are trying to launch
 	/// or settings they have configured. It should not include things that are specifically required by the debugger
 	/// (for example, enabling the VM Service or starting paused). Those items should be handled inside the Debug Adapter.
-	protected async buildToolArgs(debugType: DebuggerType, debugConfig: DartLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+	protected async buildToolArgs(debugType: DebuggerType, debugConfig: DartLaunchArgs, conf: ResourceConfig, portFromLocalExtension?: number): Promise<string[]> {
 		let args: string[] = [];
 		args = args.concat(debugConfig.toolArgs ?? []);
 
@@ -690,8 +690,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					this.addArgsIfNotExist(args, "--web-renderer", renderer);
 			}
 
-			if (this.wsContext.config.forceFlutterWorkspace && conf.daemonPort) {
-				this.addArgsIfNotExist(args, "--daemon-connection-port", conf.daemonPort.toString());
+			const daemonPort = this.deviceManager?.daemonPortOverride ?? conf.daemonPort;
+			if (this.wsContext.config.forceFlutterWorkspace && daemonPort) {
+				this.addArgsIfNotExist(args, "--daemon-connection-port", daemonPort.toString());
 			}
 		}
 

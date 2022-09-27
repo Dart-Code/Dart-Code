@@ -297,7 +297,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices, portFromLocalExtension);
 
-		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, runIfNoDevices);
+		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, runIfNoDevices, portFromLocalExtension);
 
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);

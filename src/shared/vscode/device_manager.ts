@@ -20,7 +20,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number }, private readonly workspaceContext: WorkspaceContext, runIfNoDevices?: () => void) {
+	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number }, private readonly workspaceContext: WorkspaceContext, runIfNoDevices?: () => void, readonly daemonPortOverride?: number) {
 		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.name = "Flutter Device";
 		this.statusBarItem.tooltip = "Flutter";
