@@ -183,6 +183,7 @@ module.exports = {
 		],
 		"@typescript-eslint/no-empty-function": "off",
 		"@typescript-eslint/no-empty-interface": "off",
+		"@typescript-eslint/no-namespace": "off",
 		"@typescript-eslint/no-explicit-any": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-floating-promises": "off",
