@@ -1,7 +1,6 @@
 import { CodeAction, CodeActionKind, Command, commands, Uri, window } from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
 
 const commandName = "_dart.interactiveRefactor";
 
@@ -69,34 +68,6 @@ export class InteractiveRefactors implements IAmDisposable {
 	}
 
 	private async handleRefactor(command: string, parameters: Parameter[], originalArguments: Arguments) {
-		// {
-		// 	"command": {
-		// 		"arguments": [
-		// 			{
-		// 				"filePath": "/Users/danny/Desktop/dart_sample/bin/main.dart",
-		// 				"selectionOffset": 104,
-		// 				"selectionLength": 0,
-		// 				"arguments": [
-		// 					"/Users/danny/Desktop/dart_sample/bin/foo.dart"
-		// 				]
-		// 			}
-		// 		],
-		// 		"command": "move_top_level_to_file",
-		// 		"title": "Move 'Foo' to file"
-		// 	},
-		// 	"data": {
-		// 		"parameters": [
-		// 			{
-		// 				"defaultValue": "/Users/danny/Desktop/dart_sample/bin/foo.dart",
-		// 				"label": "Move to:",
-		// 				"type": "filePath"
-		// 			}
-		// 		]
-		// 	},
-		// 	"kind": "refactor",
-		// 	"title": "Move 'Foo' to file"
-		// }
-
 		// Enumerate through each parameter and prompt the user.
 		const paramValues = originalArguments.arguments.slice();
 		for (let i = 0; i < parameters.length; i++) {
@@ -114,26 +85,23 @@ export class InteractiveRefactors implements IAmDisposable {
 		return commands.executeCommand(command, { ...originalArguments, arguments: paramValues });
 	}
 
-	private async promptUser(parameter: Parameter): Promise<string | undefined> {
-		switch (parameter.type) {
-			case "filePath":
-				return this.promptUserFilePath(parameter);
-			default:
-				this.logger.warn(`Unknown parameter type ${parameter.type}. Using default value (${parameter.defaultValue})`);
-				return parameter.defaultValue;
+	private async promptUser(parameter: Parameter): Promise<unknown | undefined> {
+		if (SaveUriParameter.is(parameter)) {
+			return (await this.promptUserSaveUri(parameter))?.toString();
+		} else {
+			this.logger.warn(`Unknown parameter kind ${parameter.kind}. Using default value (${parameter.defaultValue})`);
+			return parameter.defaultValue;
 		}
 	}
 
-	private async promptUserFilePath(parameter: Parameter): Promise<string | undefined> {
+	private async promptUserSaveUri(parameter: SaveUriParameter): Promise<Uri | undefined> {
 		const uri = await window.showSaveDialog({
-			defaultUri: Uri.file(parameter.defaultValue),
-			// TODO(dantup): Should we have an option for this?
-			filters: { "Dart Files": ["dart"] },
-			// TODO(dantup): Should we take this from the server?
-			saveLabel: "Move",
-			title: parameter.label,
+			defaultUri: parameter.defaultValue ? Uri.parse(parameter.defaultValue) : undefined,
+			filters: parameter.filters,
+			saveLabel: parameter.actionLabel,
+			title: parameter.parameterTitle,
 		});
-		return uri ? fsPath(uri) : undefined;
+		return uri;
 	}
 
 	public dispose(): any {
@@ -142,21 +110,26 @@ export class InteractiveRefactors implements IAmDisposable {
 }
 
 interface Arguments {
-	arguments: string[];
+	arguments: unknown[];
 }
 
 interface Parameter {
-	// Ensure these match the Dart definition (and are only modified in compatible ways
-	// once the feature is not behind a flag).
-	// See 'CommandParameter' in
-	// https://github.com/dart-lang/sdk/blob/main/pkg/analysis_server/tool/lsp_spec/generate_all.dart
-	defaultValue: string;
-	label: string;
-	type: ParameterType;
+	kind: string;
+	parameterLabel: string;
+	defaultValue?: unknown;
 }
 
-// Ensure these match the Dart definition (and are only modified in compatible ways
-// once the feature is not behind a flag).
-// See 'CommandParameterType' in
-// https://github.com/dart-lang/sdk/blob/main/pkg/analysis_server/tool/lsp_spec/generate_all.dart
-type ParameterType = "boolean" | "string" | "filePath" | unknown;
+interface SaveUriParameter extends Parameter {
+	defaultValue?: string | null | undefined;
+	parameterTitle: string;
+	actionLabel: string;
+	kind: "saveUri";
+	filters?: { [key: string]: string[] };
+}
+
+namespace SaveUriParameter {
+	export function is(parameter: Parameter): parameter is SaveUriParameter {
+		return parameter.kind === "saveUri";
+	}
+}
+
