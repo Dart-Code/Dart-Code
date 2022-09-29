@@ -29,15 +29,17 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const isFlutterTest = debuggerType === DebuggerType.FlutterTest;
 
 		let isSdkDapSupported = false;
-		if (isDartOrDartTest)
-			isSdkDapSupported = this.dartCapabilities.supportsSdkDap;
-		else if (isFlutterOrFlutterTest)
-			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
 		let canDefaultToSdkDap = false;
-		if (isDartOrDartTest)
+		let isPreReleaseSdk = false;
+		if (isDartOrDartTest) {
+			isSdkDapSupported = this.dartCapabilities.supportsSdkDap;
 			canDefaultToSdkDap = this.dartCapabilities.canDefaultSdkDaps;
-		else if (isFlutterOrFlutterTest)
+			isPreReleaseSdk = this.dartCapabilities.version.includes("-");
+		} else if (isFlutterOrFlutterTest) {
+			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
 			canDefaultToSdkDap = this.flutterCapabilities.canDefaultSdkDaps;
+			isPreReleaseSdk = this.flutterCapabilities.version.includes("-");
+		}
 
 		const forceSdkDap = process.env.DART_CODE_FORCE_SDK_DAP === "true"
 			? true
@@ -59,6 +61,9 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			} else if (config.previewSdkDaps !== undefined) {
 				useSdkDap = config.previewSdkDaps;
 				sdkDapReason = "config.previewSdkDaps";
+			} else if (canDefaultToSdkDap && isPreReleaseSdk) {
+				useSdkDap = true;
+				sdkDapReason = "canDefaultToSdkDap and using pre-release SDK";
 			} else {
 				useSdkDap = this.experiments.sdkDaps.applies;
 				sdkDapReason = "sdkDaps experiment";

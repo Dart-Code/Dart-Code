@@ -9,10 +9,7 @@ export class FlutterCapabilities {
 		this.version = flutterVersion;
 	}
 
-	// Disabled due to https://github.com/flutter/flutter/issues/111045.
-	// Needs re-enabling for Flutter versions that are using a version of DDS that
-	// contains https://github.com/dart-lang/sdk/commit/94a64a01f630e4a96b6b3cf3ec3c9a6b3f5f3445
-	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "9.9.9"); }
+	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "3.4.0-33"); }
 	get supportsCreateSkeleton() { return versionIsAtLeast(this.version, "2.5.0"); }
 	get supportsCreatingSamples() { return versionIsAtLeast(this.version, "1.0.0"); }
 	get hasLatestStructuredErrorsWork() { return versionIsAtLeast(this.version, "1.21.0-5.0"); }
