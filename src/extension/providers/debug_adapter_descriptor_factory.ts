@@ -8,17 +8,18 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
+import { Analytics } from "../analytics";
 import { config } from "../config";
 import { KnownExperiments } from "../experiments";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
-	constructor(private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly workspaceContext: WorkspaceContext, private readonly experiments: KnownExperiments) { }
+	constructor(private readonly analytics: Analytics, private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly workspaceContext: WorkspaceContext, private readonly experiments: KnownExperiments) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
-		return this.descriptorForType(session.configuration.debuggerType as DebuggerType);
+		return this.descriptorForType(session.configuration.debuggerType as DebuggerType, !!session.configuration.noDebug);
 	}
 
-	public descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor {
+	public descriptorForType(debuggerType: DebuggerType, noDebug?: boolean): DebugAdapterDescriptor {
 		const debuggerName = getDebugAdapterName(debuggerType);
 		this.logger.info(`Using ${debuggerName} debugger for ${DebuggerType[debuggerType]}`);
 
@@ -74,6 +75,13 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			}
 		}
 		this.logger.info(`SDK DAP setting is ${useSdkDap}, set by ${sdkDapReason}`);
+
+
+		this.analytics.logDebuggerStart(
+			DebuggerType[debuggerType],
+			noDebug ? "Run" : "Debug",
+			config.previewSdkDaps ?? this.dartCapabilities.canDefaultSdkDaps,
+		);
 
 		if (useSdkDap) {
 			const executable = isDartOrDartTest

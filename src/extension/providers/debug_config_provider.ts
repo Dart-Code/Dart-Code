@@ -251,12 +251,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!didWarnAboutCwd && debugConfig.program && path.isAbsolute(debugConfig.program))
 			warnIfPathCaseMismatch(logger, debugConfig.program, "the launch script", "check the 'program' field in your launch configuration file (.vscode/launch.json)");
 
-		this.analytics.logDebuggerStart(
-			folder && folder.uri,
-			DebuggerType[debugType],
-			debugConfig.noDebug ? "Run" : "Debug",
-			config.previewSdkDaps ?? this.dartCapabilities.canDefaultSdkDaps,
-		);
 		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.DartTest) {
 			const suitePaths = isTestFolder(debugConfig.program)
 				? Object.values(this.testModel.suites)

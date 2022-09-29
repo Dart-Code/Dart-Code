@@ -109,14 +109,14 @@ export class Analytics {
 	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`)); }
 	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.logger.info(`${e}`)); }
 	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerStart(resourceUri: Uri | undefined, debuggerType: string, runType: string, sdkDap: boolean) {
+	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
 		const customData = {
 			cd15: debuggerType,
 			cd16: runType,
 			cd18: sdkDap ? "SDK" : "Legacy",
 			cd6: this.getDebuggerPreference(),
 		};
-		this.event(Category.Debugger, EventAction.Activated, resourceUri, customData).catch((e) => this.logger.info(`${e}`));
+		this.event(Category.Debugger, EventAction.Activated, customData).catch((e) => this.logger.info(`${e}`));
 	}
 	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.logger.info(`${e}`)); }
 	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.logger.info(`${e}`)); }
@@ -127,7 +127,7 @@ export class Analytics {
 	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(`${e}`)); }
 	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(`${e}`)); }
 
-	private event(category: Category, action: EventAction, resourceUri?: Uri, customData?: any): Promise<void> {
+	private event(category: Category, action: EventAction, customData?: any): Promise<void> {
 		const data: any = {
 			ea: EventAction[action],
 			ec: Category[category],
@@ -145,7 +145,7 @@ export class Analytics {
 		if (category === Category.Extension && action === EventAction.Deactivated)
 			data.sc = "end";
 
-		return this.send(data, resourceUri);
+		return this.send(data);
 	}
 
 	private time(category: Category, timingVariable: TimingVariable, timeInMS: number, label?: string) {
@@ -174,7 +174,7 @@ export class Analytics {
 		return this.send(data);
 	}
 
-	private async send(customData: any, resourceUri?: Uri): Promise<void> {
+	private async send(customData: any): Promise<void> {
 		if (this.disableAnalyticsForSession
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
