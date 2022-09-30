@@ -45,6 +45,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 			defaultDartSdk: string | undefined;
 			restartMacDaemonMessage: string | undefined;
 			localDeviceCommandAdviceMessage: string | undefined;
+			localMacWarningMessage: string | undefined;
 		};
 
 		function makeFullPath(relOrAbsolute: string | undefined): string | undefined {
@@ -85,6 +86,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 
 		config.restartMacDaemonMessage = flutterConfig.restartMacDaemonMessage;
 		config.localDeviceCommandAdviceMessage = flutterConfig.localDeviceCommandAdviceMessage;
+		config.localMacWarningMessage = flutterConfig.localMacWarningMessage;
 	} catch (e) {
 		logger.error(e);
 	}

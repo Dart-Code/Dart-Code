@@ -1,3 +1,4 @@
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analyzer } from "../shared/analyzer";
@@ -272,7 +273,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			};
 		}
 
-		if (workspaceContext.config.forceFlutterWorkspace) {
+		if (workspaceContext.config.forceFlutterWorkspace && !isRunningLocally) {
 			let resultFromLocalExtension = null;
 
 			const command = vs.commands.executeCommand<string>("flutter-local-device-exposer.startDaemon", { script: workspaceContext.config.flutterToolsScript?.script, command: "expose_devices", workingDirectory: workspaceContext.config.flutterSdkHome });
@@ -306,6 +307,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
+	}
+
+	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && os.platform() === "darwin" && workspaceContext.config.localMacWarningMessage) {
+		vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage);
 	}
 
 	const pubApi = new PubApi(webClient);
