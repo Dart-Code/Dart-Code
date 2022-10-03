@@ -88,7 +88,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				defaultCwd = fsPath(folder.uri);
 				logger.info(`Setting folder/defaultCwd based on open file: ${defaultCwd}`);
 			}
-		} else if (!folder && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length >= 1) {
+		}
+		if (!defaultCwd && !folder && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length >= 1) {
 			if (vs.workspace.workspaceFolders.length === 1) {
 				folder = vs.workspace.workspaceFolders[0];
 				defaultCwd = fsPath(folder.uri);
