@@ -1,4 +1,5 @@
 import { versionIsAtLeast } from "../../shared/utils";
+import { isWin } from "../constants";
 
 export class DartCapabilities {
 	public static get empty() { return new DartCapabilities("0.0.0"); }
@@ -10,7 +11,15 @@ export class DartCapabilities {
 	}
 
 	get canDefaultLsp() { return versionIsAtLeast(this.version, "2.12.0-0"); }
-	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "2.18.0-0"); }
+	get canDefaultSdkDaps() {
+		// For Windows, we need a higher version.
+		// https://github.com/Dart-Code/Dart-Code/issues/4149
+		// https://github.com/dart-lang/sdk/commit/1b9adcb502c5e4ec1bc5ce8e8b0387db25216833
+		if (isWin)
+			return versionIsAtLeast(this.version, "2.19.0-196");
+		else
+			return versionIsAtLeast(this.version, "2.18.0-0");
+	}
 	// This is also missing in v2.10, but assume it will be back in v2.11.
 	// https://github.com/dart-lang/sdk/issues/43207
 	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1") && !this.version.startsWith("2.10."); }

@@ -1,4 +1,3 @@
-import { isWin } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { getRandomInt } from "../shared/utils/fs";
 import { Context } from "../shared/vscode/workspace";
@@ -75,6 +74,6 @@ class SdkDapExperiment extends Experiment {
 		super(logger, workspaceContext, context, "sdkDaps", 10);
 	}
 
-	get applies(): boolean { return super.applies && !isWin; }
+	get applies(): boolean { return super.applies; }
 }
 
