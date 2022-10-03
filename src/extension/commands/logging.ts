@@ -1,11 +1,10 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_IS_CAPTURING_LOGS_CONTEXT } from "../../shared/constants";
+import { captureLogsMaxLineLength, DART_IS_CAPTURING_LOGS_CONTEXT } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { captureLogs, EmittingLogger } from "../../shared/logging";
 import { PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
-import { config } from "../config";
 import { createFolderForFile } from "../utils";
 import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
@@ -68,7 +67,7 @@ export class LoggingCommands implements vs.Disposable {
 
 		const allLoggedCategories = [LogCategory.General].concat(categoriesToLog);
 
-		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), config.maxLogLineLength, allLoggedCategories);
+		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), captureLogsMaxLineLength, allLoggedCategories);
 		isLogging = true;
 		this.disposables.push(logger);
 		vs.commands.executeCommand("setContext", DART_IS_CAPTURING_LOGS_CONTEXT, true);

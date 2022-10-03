@@ -55,6 +55,7 @@ export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
 
 export const stopLoggingAction = "Stop Logging";
 export const showLogAction = "Show Log";
+export const captureLogsMaxLineLength = 999999999;
 
 export const restartReasonManual = "manual";
 export const restartReasonSave = "save";
