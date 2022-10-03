@@ -66,6 +66,7 @@ export interface WritableWorkspaceConfig {
 	defaultDartSdk?: string;
 	restartMacDaemonMessage?: string;
 	localDeviceCommandAdviceMessage?: string;
+	localMacWarningMessage?: string;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
