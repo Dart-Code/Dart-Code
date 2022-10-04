@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "bazel_workspace/flutter_hello_world_bazel"
+		},
+		{
+			"path": "bazel_workspace/flutter_hello_world_bazel_2"
+		}
+	],
+	"settings": {
+		"files.insertFinalNewline": true,
+		"dart.maxLogLineLength": 20000,
+	}
+}

@@ -81,29 +81,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return null; // null means open launch.json.
 		}
 
-		let defaultCwd = folder ? fsPath(folder.uri) : undefined;
-		if (openFile && !defaultCwd) {
-			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
-			if (folder) {
-				defaultCwd = fsPath(folder.uri);
-				logger.info(`Setting folder/defaultCwd based on open file: ${defaultCwd}`);
-			}
-		} else if (!folder && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length >= 1) {
-			if (vs.workspace.workspaceFolders.length === 1) {
-				folder = vs.workspace.workspaceFolders[0];
-				defaultCwd = fsPath(folder.uri);
-				logger.info(`Setting folder/defaultCwd based single open folder: ${defaultCwd}`);
-			} else {
-				const workspaceFolderPaths = vs.workspace.workspaceFolders.map((wf) => fsPath(wf.uri));
-				defaultCwd = findCommonAncestorFolder(workspaceFolderPaths);
-			}
-			if (defaultCwd)
-				logger.info(`Setting defaultCwd based on common ancestor of open folders: ${defaultCwd}`);
-			else
-				logger.info(`Unable to infer defaultCwd from open workspace (no common ancestor)`);
-		}
-
-		this.configureProgramAndCwd(debugConfig, defaultCwd, openFile);
+		this.configureProgramAndCwd(debugConfig, folder, openFile);
 
 		// If we still don't have an entry point, the user will have to provide it.
 		if (!isAttachRequest && !debugConfig.program) {
@@ -387,8 +365,31 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugType;
 	}
 
-	protected configureProgramAndCwd(debugConfig: DartVsCodeLaunchArgs, defaultCwd: string | undefined, openFile: string | undefined) {
+	protected configureProgramAndCwd(debugConfig: DartVsCodeLaunchArgs, folder: WorkspaceFolder | undefined, openFile: string | undefined) {
+		const logger = this.logger;
 		const isAttachRequest = debugConfig.request === "attach";
+
+		let defaultCwd = folder ? fsPath(folder.uri) : undefined;
+		if (openFile && !defaultCwd) {
+			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
+			if (folder) {
+				defaultCwd = fsPath(folder.uri);
+				logger.info(`Setting folder/defaultCwd based on open file: ${defaultCwd}`);
+			}
+		} else if (!folder && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length >= 1) {
+			if (vs.workspace.workspaceFolders.length === 1) {
+				folder = vs.workspace.workspaceFolders[0];
+				defaultCwd = fsPath(folder.uri);
+				logger.info(`Setting folder/defaultCwd based single open folder: ${defaultCwd}`);
+			} else {
+				const workspaceFolderPaths = vs.workspace.workspaceFolders.map((wf) => fsPath(wf.uri));
+				defaultCwd = findCommonAncestorFolder(workspaceFolderPaths);
+			}
+			if (defaultCwd)
+				logger.info(`Setting defaultCwd based on common ancestor of open folders: ${defaultCwd}`);
+			else
+				logger.info(`Unable to infer defaultCwd from open workspace (no common ancestor)`);
+		}
 
 		// Convert to an absolute paths (if possible).
 		if (debugConfig.cwd && !path.isAbsolute(debugConfig.cwd) && defaultCwd) {
