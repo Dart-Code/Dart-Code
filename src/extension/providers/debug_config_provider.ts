@@ -369,26 +369,48 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const logger = this.logger;
 		const isAttachRequest = debugConfig.request === "attach";
 
-		let defaultCwd = folder ? fsPath(folder.uri) : undefined;
-		if (openFile && !defaultCwd) {
-			folder = workspace.getWorkspaceFolder(Uri.file(openFile));
-			if (folder) {
+		// Try to infer a default working directory:
+		//
+		//   1. Provided by the user
+		//   2. Inferred from the likely entry point (`program ?? openFile`)
+		//   3. From the active workspace folder for this launch configuration (only if no explicit entry point)
+		//   4. A common ancestor from the workspace folders
+		//
+		// The default may be overwritten further down if we locate a project root
+		// while walking up the tree from the `program`.
+
+		let defaultCwd = debugConfig.cwd;
+		if (!defaultCwd) {
+			const likelyEntryPoint = debugConfig.program ?? openFile;
+			if (likelyEntryPoint) {
+				// If we have an explicit program, always use that to try and get a cwd.
+				folder = workspace.getWorkspaceFolder(Uri.file(likelyEntryPoint));
+				if (folder) {
+					defaultCwd = fsPath(folder.uri);
+					logger.info(`Setting cwd based on likely entry point: ${defaultCwd}`);
+				}
+			} else if (folder) {
+				// Otherwise, if we had no entry point but did have an active workspace folder, use that.
 				defaultCwd = fsPath(folder.uri);
-				logger.info(`Setting folder/defaultCwd based on open file: ${defaultCwd}`);
+				logger.info(`Setting cwd based on active workspace folder: ${defaultCwd}`);
 			}
-		} else if (!folder && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length >= 1) {
-			if (vs.workspace.workspaceFolders.length === 1) {
-				folder = vs.workspace.workspaceFolders[0];
-				defaultCwd = fsPath(folder.uri);
-				logger.info(`Setting folder/defaultCwd based single open folder: ${defaultCwd}`);
-			} else {
-				const workspaceFolderPaths = vs.workspace.workspaceFolders.map((wf) => fsPath(wf.uri));
-				defaultCwd = findCommonAncestorFolder(workspaceFolderPaths);
+
+			// If none of those searches found a good cwd, try to infer one from our active workspace
+			// folders.
+			if (!defaultCwd && vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length >= 1) {
+				if (vs.workspace.workspaceFolders.length === 1) {
+					folder = vs.workspace.workspaceFolders[0];
+					defaultCwd = fsPath(folder.uri);
+					logger.info(`Setting folder/defaultCwd based single open folder: ${defaultCwd}`);
+				} else {
+					const workspaceFolderPaths = vs.workspace.workspaceFolders.map((wf) => fsPath(wf.uri));
+					defaultCwd = findCommonAncestorFolder(workspaceFolderPaths);
+				}
+				if (defaultCwd)
+					logger.info(`Setting defaultCwd based on common ancestor of open folders: ${defaultCwd}`);
+				else
+					logger.info(`Unable to infer defaultCwd from open workspace (no common ancestor)`);
 			}
-			if (defaultCwd)
-				logger.info(`Setting defaultCwd based on common ancestor of open folders: ${defaultCwd}`);
-			else
-				logger.info(`Unable to infer defaultCwd from open workspace (no common ancestor)`);
 		}
 
 		// Convert to an absolute paths (if possible).

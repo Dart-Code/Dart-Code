@@ -5,7 +5,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, flutterBazelRoot, getResolvedDebugConfiguration, prepareHasRunFile, watchPromise } from "../../helpers";
+import { activate, ensureHasRunRecently, extApi, flutterBazelHelloWorldMainFile, flutterBazelRoot, getResolvedDebugConfiguration, prepareHasRunFile, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -42,16 +42,9 @@ describe(`flutter run debugger`, () => {
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, "//foo/bar");
-			// TODO(dantup): This is no longer our expectation, but it is what we get.
-			// When fixed, remove this condition and expect flutterBazelRoot, which is the
-			// common ancestor from our open workspace folders.
-			if (true) {
-				assert.equal(resolvedConfig.cwd, fsPath(flutterBazelHelloWorldFolder));
-			} else {
-				// Expect the bazel root, not the project folder, because this is the common ancestor of
-				// the two workspace folders we have open.
-				assert.equal(resolvedConfig.cwd, fsPath(flutterBazelRoot));
-			}
+			// Expect the bazel root, not the project folder, because this is the common ancestor of
+			// the two workspace folders we have open.
+			assert.equal(resolvedConfig.cwd, fsPath(flutterBazelRoot));
 		});
 	});
 

@@ -39,6 +39,26 @@ describe("dart cli debugger", () => {
 
 	describe("resolves the correct debug config", () => {
 
+		it("using users explicit cwd with an explicit program", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				cwd: "/foo",
+				program: fsPath(helloWorldMainFile),
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.cwd, "/foo");
+			assert.equal(resolvedConfig.program, fsPath(helloWorldMainFile));
+		});
+
+		it("using open file", async () => {
+			await openFile(helloWorldMainFile);
+			const resolvedConfig = await getResolvedDebugConfiguration({})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
+			assert.equal(resolvedConfig.program, fsPath(helloWorldMainFile));
+		});
+
 		it("passing launch.json's toolArgs to the VM", async () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldMainFile),
