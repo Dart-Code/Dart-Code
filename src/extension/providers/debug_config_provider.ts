@@ -413,7 +413,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		// Convert to an absolute paths (if possible).
+		// Convert any relative paths to absolute paths (if possible).
 		if (defaultCwd && !path.isAbsolute(defaultCwd) && folder) {
 			debugConfig.cwd = path.join(fsPath(folder.uri), defaultCwd);
 			this.logger.info(`Converted defaultCwd to absolute path: ${defaultCwd}`);
