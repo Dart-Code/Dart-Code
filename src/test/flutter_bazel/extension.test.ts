@@ -7,12 +7,16 @@ import { fsPath } from "../../shared/utils/fs";
 import { activateWithoutAnalysis, ext, extApi, flutterBazelRoot, logger } from "../helpers";
 
 describe("test environment", () => {
-	it("has opened the correct folder", () => {
+	it("has opened the correct folders", () => {
 		const wfs = vs.workspace.workspaceFolders || [];
-		assert.equal(wfs.length, 1);
+		assert.equal(wfs.length, 2);
 		assert.ok(
 			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_hello_world_bazel"),
 			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_hello_world_bazel`,
+		);
+		assert.ok(
+			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_hello_world_bazel_2"),
+			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_hello_world_bazel_2`,
 		);
 	});
 });

@@ -22,7 +22,7 @@ describe("flutter doctor", () => {
 
 		const output = buffer.join("").trim();
 		assert.equal(output.startsWith("--\n\n[flutter] custom_doctor --suppress-analytics -v"), true);
-		assert.notEqual(output.indexOf("[✓] Flutter (Channel"), -1);
+		assert.notEqual(output.indexOf("] Flutter (Channel"), -1);
 		assert.equal(output.endsWith("exit code 0"), true);
 
 		ensureHasRunRecently(root, hasRunFile);

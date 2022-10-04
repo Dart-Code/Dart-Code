@@ -32,8 +32,8 @@ const testConfigs: TestConfig[] = [
 	{ testFolder: "not_activated/dart_create", project: "empty" },
 	{ testFolder: "flutter_create_tests", project: "flutter_create_tests.code-workspace" },
 	{ testFolder: "not_activated/flutter_create", project: "empty" },
-	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel", debugAdapters: ["flutter", "flutter_test"], sdkDaps: false },
-	{ testFolder: "flutter_bazel", project: "bazel_workspace/flutter_hello_world_bazel", sdkDaps: true },
+	{ testFolder: "flutter_bazel", project: "bazel.code-workspace", debugAdapters: ["flutter", "flutter_test"], sdkDaps: false },
+	{ testFolder: "flutter_bazel", project: "bazel.code-workspace", sdkDaps: true },
 	{ testFolder: "flutter_snap", project: "empty" },
 	{ testFolder: "flutter_repository", project: "${env:FLUTTER_ROOT}" },
 ];

@@ -839,7 +839,7 @@
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"${workspaceFolder}/src/test/test_projects/bazel_workspace/flutter_hello_world_bazel",
+				"${workspaceFolder}/src/test/test_projects/bazel.code-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/src/test/flutter_bazel",
 				"--user-data-dir=${workspaceFolder}/.dcud"
@@ -868,7 +868,7 @@
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"${workspaceFolder}/src/test/test_projects/bazel_workspace/flutter_hello_world_bazel",
+				"${workspaceFolder}/src/test/test_projects/bazel.code-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/src/test/flutter_bazel",
 				"--user-data-dir=${workspaceFolder}/.dcud"
