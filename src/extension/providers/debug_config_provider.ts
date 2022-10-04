@@ -414,12 +414,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// Convert to an absolute paths (if possible).
-		if (debugConfig.cwd && !path.isAbsolute(debugConfig.cwd) && defaultCwd) {
-			debugConfig.cwd = path.join(defaultCwd, debugConfig.cwd);
+		if (defaultCwd && !path.isAbsolute(defaultCwd) && folder) {
+			debugConfig.cwd = path.join(fsPath(folder.uri), defaultCwd);
+			this.logger.info(`Converted defaultCwd to absolute path: ${defaultCwd}`);
+		}
+		if (debugConfig.cwd && !path.isAbsolute(debugConfig.cwd) && folder) {
+			debugConfig.cwd = path.join(fsPath(folder.uri), debugConfig.cwd);
 			this.logger.info(`Converted cwd to absolute path: ${debugConfig.cwd}`);
 		}
-		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || defaultCwd)) {
-			debugConfig.program = path.join(debugConfig.cwd || defaultCwd!, debugConfig.program);
+		if (debugConfig.program && !path.isAbsolute(debugConfig.program) && (debugConfig.cwd || folder)) {
+			debugConfig.program = path.join(debugConfig.cwd || fsPath(folder!.uri), debugConfig.program);
 			this.logger.info(`Converted program to absolute path: ${debugConfig.program}`);
 		}
 
