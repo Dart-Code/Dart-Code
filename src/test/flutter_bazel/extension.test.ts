@@ -15,8 +15,8 @@ describe("test environment", () => {
 			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_hello_world_bazel`,
 		);
 		assert.ok(
-			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_hello_world_bazel_2"),
-			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_hello_world_bazel_2`,
+			fsPath(wfs[1].uri).endsWith(path.sep + "flutter_hello_world_bazel_2"),
+			`${fsPath(wfs[1].uri)} doesn't end with ${path.sep}flutter_hello_world_bazel_2`,
 		);
 	});
 });
