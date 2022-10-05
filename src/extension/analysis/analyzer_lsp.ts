@@ -30,7 +30,7 @@ export class LspAnalyzer extends Analyzer {
 	public readonly fileTracker: LspFileTracker;
 	public readonly vmServicePort: number | undefined;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
-	public readonly refactors: InteractiveRefactors;
+	public readonly refactors: InteractiveRefactors | undefined;
 
 	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
 	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
@@ -39,14 +39,17 @@ export class LspAnalyzer extends Analyzer {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.vmServicePort = config.analyzerVmServicePort;
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
-		this.refactors = new InteractiveRefactors(logger);
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware(), this.vmServicePort);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
+		if (config.experimentalNewRefactors) {
+			this.refactors = new InteractiveRefactors(logger);
+			this.client.registerFeature(this.refactors.feature);
+			this.disposables.push(this.refactors);
+		}
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.disposables.push({ dispose: () => this.client.stop() });
 		this.disposables.push(this.fileTracker);
 		this.disposables.push(this.snippetTextEdits);
-		this.disposables.push(this.refactors);
 
 		// tslint:disable-next-line: no-floating-promises
 		this.client.start().then(() => {
@@ -208,8 +211,7 @@ export class LspAnalyzer extends Analyzer {
 				let res = await next(document, range, context, token) || [];
 
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
-				if (config.experimentalNewRefactors)
-					refactors.rewriteCommands(res);
+				refactors?.rewriteCommands(res);
 
 				const hasExistingIgnoreActions = res.find((r) => r.title.startsWith("Ignore "));
 				if (!hasExistingIgnoreActions) {

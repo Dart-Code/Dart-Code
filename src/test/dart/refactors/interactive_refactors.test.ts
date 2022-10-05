@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { InteractiveRefactors } from "../../../shared/vscode/interactive_refactors";
+import { InteractiveRefactors, SupportedParameterKind } from "../../../shared/vscode/interactive_refactors";
 import { activate, emptyFile, extApi, helloWorldMainFile, sb } from "../../helpers";
 
 describe("interactive refactors", () => {
@@ -108,7 +108,7 @@ describe("interactive refactors", () => {
 
 	it("handles 'saveUri' parameters", async () => {
 		const refactors = extApi.interactiveRefactors!;
-		const kind = "saveUri";
+		const kind = SupportedParameterKind.saveUri;
 
 		// Use emptyFile as the default.
 		const defaultValue = emptyFile;

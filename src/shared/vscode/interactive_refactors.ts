@@ -1,4 +1,5 @@
 import { CodeAction, CodeActionKind, Command, commands, Uri, window } from "vscode";
+import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
 
@@ -10,6 +11,23 @@ export class InteractiveRefactors implements IAmDisposable {
 
 	constructor(private readonly logger: Logger) {
 		this.disposables.push(commands.registerCommand(InteractiveRefactors.commandName, this.handleRefactor, this));
+	}
+
+	public get feature(): StaticFeature {
+		return {
+			dispose() { },
+			fillClientCapabilities(capabilities: ClientCapabilities) {
+				capabilities.experimental = capabilities.experimental ?? {};
+				capabilities.experimental.dartCodeAction = capabilities.experimental.dartCodeAction ?? {};
+				capabilities.experimental.dartCodeAction.commandParameterSupport = {
+					"supportedKinds": Object.values(SupportedParameterKind),
+				};
+			},
+			getState(): FeatureState {
+				return { kind: "static" };
+			},
+			initialize() { },
+		};
 	}
 
 	/// Rewrites any commands in `actions` that are interactive refactors to go through
@@ -119,6 +137,10 @@ interface Arguments {
 	arguments: unknown[];
 }
 
+export enum SupportedParameterKind {
+	saveUri = "saveUri",
+}
+
 interface Parameter {
 	kind: string;
 	parameterLabel: string;
@@ -129,13 +151,13 @@ interface SaveUriParameter extends Parameter {
 	defaultValue?: string | null | undefined;
 	parameterTitle: string;
 	actionLabel: string;
-	kind: "saveUri";
+	kind: SupportedParameterKind.saveUri;
 	filters?: { [key: string]: string[] };
 }
 
 namespace SaveUriParameter {
 	export function is(parameter: Parameter): parameter is SaveUriParameter {
-		return parameter.kind === "saveUri";
+		return parameter.kind === SupportedParameterKind.saveUri;
 	}
 }
 
