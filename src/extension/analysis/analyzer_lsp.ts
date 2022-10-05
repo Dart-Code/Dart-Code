@@ -14,10 +14,10 @@ import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
+import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { DART_MODE } from "../extension";
-import { InteractiveRefactors } from "../lsp/interactive_refactors";
 import { IgnoreLintCodeActionProvider } from "../providers/ignore_lint_code_action_provider";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
@@ -30,7 +30,7 @@ export class LspAnalyzer extends Analyzer {
 	public readonly fileTracker: LspFileTracker;
 	public readonly vmServicePort: number | undefined;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
-	private readonly refactors: InteractiveRefactors;
+	public readonly refactors: InteractiveRefactors;
 
 	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
 	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;

@@ -1,14 +1,15 @@
 import { CodeAction, CodeActionKind, Command, commands, Uri, window } from "vscode";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { disposeAll } from "../../shared/utils";
+import { IAmDisposable, Logger } from "../interfaces";
+import { disposeAll } from "../utils";
 
-const commandName = "_dart.interactiveRefactor";
 
 export class InteractiveRefactors implements IAmDisposable {
+	static readonly commandName = "_dart.interactiveRefactor";
+
 	private disposables: IAmDisposable[] = [];
 
 	constructor(private readonly logger: Logger) {
-		this.disposables.push(commands.registerCommand(commandName, this.handleRefactor, this));
+		this.disposables.push(commands.registerCommand(InteractiveRefactors.commandName, this.handleRefactor, this));
 	}
 
 	/// Rewrites any commands in `actions` that are interactive refactors to go through
@@ -37,7 +38,7 @@ export class InteractiveRefactors implements IAmDisposable {
 			// TODO(dantup): Is the presence of a "parameters" field (and being a refactor)
 			//  enough, or should we have something more specific to be certain this is
 			//  what we want ?
-			command.command = commandName;
+			command.command = InteractiveRefactors.commandName;
 			command.arguments = [originalCommandName, parameters, argObject];
 		}
 	}
@@ -60,7 +61,7 @@ export class InteractiveRefactors implements IAmDisposable {
 	///
 	/// For new refactors, command arguments are always a single object in the list
 	/// which has named values (like 'file' and 'offset') as well as a well-known
-	/// 'arguments' list which is updated by the interaactive parameters.
+	/// 'arguments' list which is updated by the interactive parameters.
 	private getCommandArgumentObject(args: any[] | undefined): Arguments | undefined {
 		if (Array.isArray(args) && args.length === 1 && Array.isArray(args[0].arguments)) {
 			return args[0];
@@ -85,6 +86,11 @@ export class InteractiveRefactors implements IAmDisposable {
 		return commands.executeCommand(command, { ...originalArguments, arguments: paramValues });
 	}
 
+	/// Prompts the user for a value for `parameter`.
+	///
+	/// If the user cancels, returns `undefined`.
+	///
+	/// If the type of `parameter` is not supported, its default value.
 	private async promptUser(parameter: Parameter): Promise<unknown | undefined> {
 		if (SaveUriParameter.is(parameter)) {
 			return (await this.promptUserSaveUri(parameter))?.toString();

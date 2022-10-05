@@ -11,6 +11,7 @@ import { EmittingLogger } from "../logging";
 import { TestSessionCoordinator } from "../test/coordinator";
 import { TestModel, TreeNode } from "../test/test_model";
 import { FlutterDeviceManager } from "./device_manager";
+import { InteractiveRefactors } from "./interactive_refactors";
 import { Context } from "./workspace";
 
 export interface DebugCommandHandler {
@@ -39,6 +40,7 @@ export interface InternalExtensionApi {
 	completionItemProvider: CompletionItemProvider;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
+	interactiveRefactors: InteractiveRefactors | undefined;
 	isInTestFileThatHasImplementation: boolean;
 	isInImplementationFileThatCanHaveTest: boolean;
 	isLsp: boolean;
