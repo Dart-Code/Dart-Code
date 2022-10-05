@@ -287,7 +287,7 @@
                     "match":       "(?<!class\\s+|[a-zA-Z0-9_$]|\\.)([_$]*[A-Z][a-zA-Z0-9_$]*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?|bool\\b|num\\b|int\\b|double\\b|dynamic\\b|(void)\\b)",
                     "captures": {
                         "1": {
-                            "name":    "variable.other.class.$1.dart"
+                            "name":    "entity.name.type.$1.dart"
                         },
                         "2": {
                             "patterns": [
