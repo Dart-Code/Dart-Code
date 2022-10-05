@@ -56,6 +56,8 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
 				"--user-data-dir",
 				path.join(cwd, ".dcud", testFolder),
+				"--crash-reporter-directory",
+				path.join(cwd, ".crash_dumps", testFolder),
 				// Disable the Git extensions as these may be causing test failures on GitHub Actions:
 				// https://github.com/Dart-Code/Dart-Code/runs/2297610200?check_suite_focus=true#step:23:121
 				"--disable-extension",

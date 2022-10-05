@@ -59,6 +59,7 @@ jobs:
       # it less clear what the failure is.
       - run: |
           mkdir -p .dart_code_test_logs
+          mkdir -p .crash_dumps
           mkdir -p .test_results
           mkdir -p coverage
         shell: pwsh
@@ -209,6 +210,13 @@ jobs:
         with:
           name: coverage-${{ matrix.os }}
           path: coverage
+
+      - name: Store crash dumps
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: crash-dumps-${{ matrix.os }}
+          path: .crash_dumps
 
   upload_coverage:
 
