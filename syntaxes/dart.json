@@ -22,7 +22,7 @@
                     "name":        "meta.preprocessor.script.dart"
                 },
                 {
-                    "include":     "#function-definition"
+                    "include":     "#function-definition-or-return"
                 },
                 {
                     "include":     "#class-definition"
@@ -236,7 +236,7 @@
                     "include":     "#class-identifier"
                 },
                 {
-                    "include":     "#function-definition"
+                    "include":     "#function-definition-or-return"
                 },
                 {
                     "include":     "#function-identifier"
@@ -345,7 +345,7 @@
                 }
             }
         },
-        "function-definition": {
+        "function-definition-or-return": {
             "match":       "(?>!(?:await|return)\\s+)([_$]*[a-z][a-zA-Z0-9_$]*)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s*[!?]?\\s*(\\(|\\s+=>)",
             "captures": {
                 "1": {
@@ -353,6 +353,10 @@
                         {
                             "match":       "set",
                             "name":        "keyword.declaration.set.dart"
+                        },
+                        {
+                            "match":       "return",
+                            "name":        "keyword.control.flow.return.dart"
                         },
                         {
                             "match":       ".+",
@@ -446,6 +450,10 @@
         "keywords": {
             "patterns": [
                 {
+                    "match":       "(([+*/%-]|\\~)=)",
+                    "name":        "keyword.operator.assignment.arithmetic.dart"
+                },
+                {
                     "match":       "(?<!\\$)\\bas\\b(?!\\$)",
                     "name":        "keyword.cast.dart"
                 },
@@ -500,10 +508,6 @@
                 {
                     "match":       "(==|!=|<=?|>=?)",
                     "name":        "keyword.operator.comparison.dart"
-                },
-                {
-                    "match":       "(([+*/%-]|\\~)=)",
-                    "name":        "keyword.operator.assignment.arithmetic.dart"
                 },
                 {
                     "match":       "(=)",
