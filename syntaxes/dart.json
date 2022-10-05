@@ -544,6 +544,14 @@
                 "2": {
                     "patterns": [
                         {
+                            "match": "<",
+                            "name": "punctuation.definition.typeparameters.begin.dart"
+                        },
+                        {
+                            "match": ">",
+                            "name": "punctuation.definition.typeparameters.end.dart"
+                        },
+                        {
                             "match":       "\\b(extends)\\b",
                             "name":        "keyword.declaration.extends.dart"
                         },
