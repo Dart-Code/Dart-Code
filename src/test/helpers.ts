@@ -864,7 +864,11 @@ export function ensureNoSnippet(items: vs.CompletionItem[], label: string): void
 }
 
 export async function ensureTestContent(expected: string, allowNewMismatches = false): Promise<void> {
-	const doc = currentDoc();
+	return ensureFileContent(currentDoc().uri, expected, allowNewMismatches);
+}
+
+export async function ensureFileContent(uri: vs.Uri, expected: string, allowNewMismatches = false): Promise<void> {
+	const doc = await vs.workspace.openTextDocument(uri);
 	function normalise(text: string) {
 		text = text.replace(/\r/g, "").trim();
 		if (allowNewMismatches)

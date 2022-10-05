@@ -10,5 +10,6 @@
 		"nested_flutter_example",
 	],
 	"dart.showIgnoreQuickFixes": true,
-	"dart.showDartDeveloperLogs": true
+	"dart.showDartDeveloperLogs": true,
+	"dart.experimentalNewRefactors": true,
 }
