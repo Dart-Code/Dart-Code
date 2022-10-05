@@ -794,6 +794,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			getLogHeader,
 			getOutputChannel,
 			initialAnalysis: analyzer.onInitialAnalysis,
+			interactiveRefactors: lspAnalyzer?.refactors,
 			isLsp: isUsingLsp,
 			logger,
 			nextAnalysis: () => analyzer.onNextAnalysisComplete,
