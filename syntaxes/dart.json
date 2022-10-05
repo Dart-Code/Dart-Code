@@ -22,7 +22,7 @@
                     "name":        "meta.preprocessor.script.dart"
                 },
                 {
-                    "include":     "#function-definition-or-return"
+                    "include":     "#function-definition"
                 },
                 {
                     "include":     "#class-definition"
@@ -236,7 +236,7 @@
                     "include":     "#class-identifier"
                 },
                 {
-                    "include":     "#function-definition-or-return"
+                    "include":     "#function-definition"
                 },
                 {
                     "include":     "#function-identifier"
@@ -345,18 +345,14 @@
                 }
             }
         },
-        "function-definition-or-return": {
-            "match":       "([_$]*[a-z][a-zA-Z0-9_$]*)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s*[!?]?\\s*(\\(|\\s+=>)",
+        "function-definition": {
+            "match":       "(?>!(?:await|return)\\s+)([_$]*[a-z][a-zA-Z0-9_$]*)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)\\s*(<(?:[a-zA-Z0-9_$<>?]|,\\s*|\\s+extends\\s+)+>)?\\s*[!?]?\\s*(\\(|\\s+=>)",
             "captures": {
                 "1": {
                     "patterns": [
                         {
                             "match":       "set",
                             "name":        "keyword.declaration.set.dart"
-                        },
-                        {
-                            "match":       "return",
-                            "name":        "keyword.control.flow.return.dart"
                         },
                         {
                             "match":       ".+",
