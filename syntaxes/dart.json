@@ -335,7 +335,7 @@
             }
         },
         "object-literal-key": {
-            "match":       "(?:^|,)\\s*([_$]*[a-zA-Z][a-zA-Z0-9_$]*)\\s*(:)",
+            "match":       "(?<=:^|\\(|,)\\s*([_$]*[a-zA-Z][a-zA-Z0-9_$]*)\\s*(:)",
             "captures": {
                 "1": {
                     "name":    "meta.object-literal.key.dart"
