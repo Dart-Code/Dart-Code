@@ -1,3 +1,4 @@
+import { isDartCodeTestRun } from "../../shared/constants";
 import { Logger, SpawnedProcess } from "../../shared/interfaces";
 import { runProcess, RunProcessResult, safeSpawn } from "../../shared/processes";
 
@@ -19,7 +20,7 @@ export function setupToolEnv(envOverrides?: any) {
 
 	toolEnv.FLUTTER_HOST = "VSCode";
 	toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";
-	if (process.env.DART_CODE_IS_TEST_RUN) {
+	if (isDartCodeTestRun) {
 		toolEnv.PUB_ENVIRONMENT += ".test.bot";
 		globalFlutterArgs.push("--suppress-analytics");
 	}

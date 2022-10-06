@@ -730,7 +730,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		if (isLogging && !args.includes("--verbose"))
+		if ((isLogging || isDartCodeTestRun) && !args.includes("--verbose"))
 			this.addArgsIfNotExist(args, "-v");
 
 		return args;

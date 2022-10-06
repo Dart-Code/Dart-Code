@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { flutterPath, isChromeOS } from "../../shared/constants";
+import { flutterPath, isChromeOS, isDartCodeTestRun } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
 import { FlutterWorkspaceContext, IFlutterDaemon, Logger, SpawnedProcess } from "../../shared/interfaces";
@@ -45,7 +45,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		if (showWebServer && flutterCapabilities.supportsShowWebServerDevice)
 			daemonArgs.push("--show-web-server-device");
 
-		if (process.env.DART_CODE_IS_TEST_RUN)
+		if (isDartCodeTestRun)
 			daemonArgs.push("--show-test-device");
 
 		if (portFromLocalExtension) {
