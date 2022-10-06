@@ -42,7 +42,7 @@ export class LspAnalyzer extends Analyzer {
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware(), this.vmServicePort);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		if (config.experimentalNewRefactors) {
-			this.refactors = new InteractiveRefactors(logger);
+			this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 			this.client.registerFeature(this.refactors.feature);
 			this.disposables.push(this.refactors);
 		}

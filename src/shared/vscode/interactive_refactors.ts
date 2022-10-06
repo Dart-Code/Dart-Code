@@ -1,5 +1,6 @@
 import { CodeAction, CodeActionKind, Command, commands, Uri, window } from "vscode";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
+import { DartCapabilities } from "../capabilities/dart";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
 
@@ -9,19 +10,24 @@ export class InteractiveRefactors implements IAmDisposable {
 
 	private disposables: IAmDisposable[] = [];
 
-	constructor(private readonly logger: Logger) {
+	constructor(private readonly logger: Logger, private readonly dartCapabilities: DartCapabilities) {
 		this.disposables.push(commands.registerCommand(InteractiveRefactors.commandName, this.handleRefactor, this));
 	}
 
 	public get feature(): StaticFeature {
+		const dartCapabilities = this.dartCapabilities;
 		return {
 			dispose() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
 				capabilities.experimental = capabilities.experimental ?? {};
 				capabilities.experimental.dartCodeAction = capabilities.experimental.dartCodeAction ?? {};
-				capabilities.experimental.dartCodeAction.commandParameterSupport = {
-					"supportedKinds": Object.values(SupportedParameterKind),
-				};
+				// Originally server expected a `bool` for `commandParameterSupport` so we can only send
+				// this object to new versions.
+				if (dartCapabilities.supportsCommandParameterSupportedKinds) {
+					capabilities.experimental.dartCodeAction.commandParameterSupport = {
+						"supportedKinds": Object.values(SupportedParameterKind),
+					};
+				}
 			},
 			getState(): FeatureState {
 				return { kind: "static" };
