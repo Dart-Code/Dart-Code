@@ -10,7 +10,7 @@ import { FlutterWorkspaceContext, IFlutterDaemon, Logger, SpawnedProcess } from 
 import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
-import { PromiseCompleter, usingCustomScript } from "../../shared/utils";
+import { PromiseCompleter, usingCustomScript, withTimeout } from "../../shared/utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
@@ -50,6 +50,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 		if (portFromLocalExtension) {
 			this.createNcProcess(portFromLocalExtension);
+			this.startPing();
 		} else if (workspaceContext.config.forceFlutterWorkspace && config.daemonPort) {
 			this.createNcProcess(config.daemonPort);
 		} else {
@@ -70,6 +71,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			logProcess(logger, LogCategory.General, adbConnectProc);
 
 		}
+	}
+
+	public startPing() {
+		const intervalId = setInterval(async () =>  {
+			try {
+				const result = await withTimeout(this.daemonVersion(), "The daemon connection was lost", 1);
+			} catch (e) {
+				clearInterval(intervalId);
+				this.logger.error(e);
+				promptToReloadExtension(`The daemon connection was lost. Reload the extension to restart the daemon.`);
+			}
+		}, 2000);
 	}
 
 	// This is for the case where a user has started a flutter daemon process on their local machine where devices are available, and
@@ -227,6 +240,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private daemonShowMessageSubscriptions: Array<(notification: f.ShowMessage) => void> = [];
 
 	// Request methods.
+
+	public daemonVersion(): Thenable<string> {
+		return this.sendRequest("daemon.version");
+	}
 
 	public deviceEnable(): Thenable<UnknownResponse> {
 		return this.sendRequest("device.enable");
