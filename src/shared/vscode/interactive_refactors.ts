@@ -59,9 +59,6 @@ export class InteractiveRefactors implements IAmDisposable {
 			if (!parameters)
 				continue;
 
-			// TODO(dantup): Is the presence of a "parameters" field (and being a refactor)
-			//  enough, or should we have something more specific to be certain this is
-			//  what we want ?
 			command.command = InteractiveRefactors.commandName;
 			command.arguments = [originalCommandName, parameters, argObject];
 		}
@@ -96,7 +93,6 @@ export class InteractiveRefactors implements IAmDisposable {
 		// Enumerate through each parameter and prompt the user.
 		const paramValues = originalArguments.arguments.slice();
 		for (let i = 0; i < parameters.length; i++) {
-			// TODO(dantup): How are parameters we
 			const newValue = await this.promptUser(parameters[i]);
 
 			// If no value, user cancelled so we should abort.
