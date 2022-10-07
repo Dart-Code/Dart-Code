@@ -24,6 +24,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private isShuttingDown = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonStartedCompleter = new PromiseCompleter<void>();
+	private pingIntervalId?: NodeJS.Timer;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
@@ -74,12 +75,13 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public startPing() {
-		const intervalId = setInterval(async () =>  {
+		this.pingIntervalId = setInterval(async () =>  {
 			try {
 				const result = await withTimeout(this.daemonVersion(), "The daemon connection was lost", 1);
 			} catch (e) {
-				clearInterval(intervalId);
+				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
+				this.hasShownTerminationError = true;
 				promptToReloadExtension(`The daemon connection was lost. Reload the extension to restart the daemon.`);
 			}
 		}, 2000);
@@ -116,6 +118,11 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public dispose() {
 		this.isShuttingDown = true;
+
+		if (this.pingIntervalId) {
+			clearInterval(this.pingIntervalId);
+		}
+
 		super.dispose();
 	}
 
@@ -270,7 +277,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public shutdown(): Thenable<void> {
-		return this.hasStarted ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
+		return this.hasStarted && !this.hasShownTerminationError ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
 	}
 
 	// Subscription methods.
