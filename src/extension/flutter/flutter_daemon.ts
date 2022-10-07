@@ -77,14 +77,14 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	public startPing() {
 		this.pingIntervalId = setInterval(async () =>  {
 			try {
-				const result = await withTimeout(this.daemonVersion(), "The daemon connection was lost", 1);
+				const result = await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
 			} catch (e) {
 				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
 				this.hasShownTerminationError = true;
 				promptToReloadExtension(`The daemon connection was lost. Reload the extension to restart the daemon.`);
 			}
-		}, 2000);
+		}, 60 * 1000);
 	}
 
 	// This is for the case where a user has started a flutter daemon process on their local machine where devices are available, and
