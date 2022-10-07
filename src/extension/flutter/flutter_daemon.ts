@@ -10,7 +10,7 @@ import { FlutterWorkspaceContext, IFlutterDaemon, Logger, SpawnedProcess } from 
 import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
-import { PromiseCompleter, usingCustomScript } from "../../shared/utils";
+import { PromiseCompleter, usingCustomScript, withTimeout } from "../../shared/utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { FLUTTER_SUPPORTS_ATTACH } from "../extension";
@@ -24,6 +24,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private isShuttingDown = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonStartedCompleter = new PromiseCompleter<void>();
+	private pingIntervalId?: NodeJS.Timer;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
 	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
@@ -50,8 +51,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 		if (portFromLocalExtension) {
 			this.createNcProcess(portFromLocalExtension);
+			this.startPing();
 		} else if (workspaceContext.config.forceFlutterWorkspace && config.daemonPort) {
 			this.createNcProcess(config.daemonPort);
+			this.startPing(workspaceContext.config.restartMacDaemonMessage);
 		} else {
 			const execution = usingCustomScript(
 				path.join(workspaceContext.sdks.flutter, flutterPath),
@@ -70,6 +73,20 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			logProcess(logger, LogCategory.General, adbConnectProc);
 
 		}
+	}
+
+	public startPing(customMessage?: string) {
+		const message = customMessage ?? "The daemon connection was lost. Reload the extension to restart the daemon.";
+		this.pingIntervalId = setInterval(async () =>  {
+			try {
+				const result = await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
+			} catch (e) {
+				clearInterval(this.pingIntervalId);
+				this.logger.error(e);
+				this.hasShownTerminationError = true;
+				promptToReloadExtension(message);
+			}
+		}, 60 * 1000);
 	}
 
 	// This is for the case where a user has started a flutter daemon process on their local machine where devices are available, and
@@ -103,6 +120,11 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public dispose() {
 		this.isShuttingDown = true;
+
+		if (this.pingIntervalId) {
+			clearInterval(this.pingIntervalId);
+		}
+
 		super.dispose();
 	}
 
@@ -228,6 +250,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	// Request methods.
 
+	public daemonVersion(): Thenable<string> {
+		return this.sendRequest("daemon.version");
+	}
+
 	public deviceEnable(): Thenable<UnknownResponse> {
 		return this.sendRequest("device.enable");
 	}
@@ -253,7 +279,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public shutdown(): Thenable<void> {
-		return this.hasStarted ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
+		return this.hasStarted && !this.hasShownTerminationError ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
 	}
 
 	// Subscription methods.
