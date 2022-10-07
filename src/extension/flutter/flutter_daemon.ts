@@ -54,6 +54,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.startPing();
 		} else if (workspaceContext.config.forceFlutterWorkspace && config.daemonPort) {
 			this.createNcProcess(config.daemonPort);
+			this.startPing(workspaceContext.config.restartMacDaemonMessage);
 		} else {
 			const execution = usingCustomScript(
 				path.join(workspaceContext.sdks.flutter, flutterPath),
@@ -74,7 +75,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		}
 	}
 
-	public startPing() {
+	public startPing(customMessage?: string) {
+		const message = customMessage ?? "The daemon connection was lost. Reload the extension to restart the daemon.";
 		this.pingIntervalId = setInterval(async () =>  {
 			try {
 				const result = await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
@@ -82,7 +84,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
 				this.hasShownTerminationError = true;
-				promptToReloadExtension(`The daemon connection was lost. Reload the extension to restart the daemon.`);
+				promptToReloadExtension(message);
 			}
 		}, 60 * 1000);
 	}
