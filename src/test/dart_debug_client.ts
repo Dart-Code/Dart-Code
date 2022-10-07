@@ -2,6 +2,7 @@ import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import { Writable } from "stream";
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSessionCustomEvent, window } from "vscode";
+import { tenMinutesInMs } from "../shared/constants";
 import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
@@ -176,7 +177,7 @@ export class DartDebugClient extends DebugClient {
 		});
 
 		this.debugCommands.handleDebugSessionStart(currentSession);
-		this.waitForEvent("terminated", "for handleDebugSessionEnd")
+		this.waitForEvent("terminated", "for handleDebugSessionEnd", tenMinutesInMs)
 			.then(() => this.debugCommands.handleDebugSessionEnd(currentSession))
 			.catch((e) => console.error(`Error while waiting for termination: ${e}`));
 
