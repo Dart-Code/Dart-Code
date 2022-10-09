@@ -1056,7 +1056,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					.then(() => dc.configurationDoneRequest()),
 				expectation,
 				dc.launch(config)).then(() => delay(waitAfterLaunch),
-				);
+			);
 
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
