@@ -115,6 +115,10 @@ export interface VMSourceLocation extends VMResponse {
 	tokenPos: number;
 	// The last token of the location if this is a range.
 	endTokenPos?: number;
+	// The line number for [tokenPos].
+	line?: number;
+	// The column number for [tokenPos].
+	column?: number;
 }
 
 export interface VMUnresolvedSourceLocation extends VMResponse {

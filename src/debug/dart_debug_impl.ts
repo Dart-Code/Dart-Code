@@ -1145,15 +1145,20 @@ export class DartDebugSession extends DebugSession {
 		stackFrame.canRestart = !isTopFrame && frame.index < firstAsyncMarkerIndex;
 
 		// Resolve the line and column information.
-		try {
-			const script = await thread.getScript(location.script);
-			const fileLocation = this.resolveFileLocation(script, location.tokenPos);
-			if (fileLocation) {
-				stackFrame.line = fileLocation.line;
-				stackFrame.column = fileLocation.column;
+		if (location.line && location.column) {
+			stackFrame.line = location.line;
+			stackFrame.column = location.column;
+		} else {
+			try {
+				const script = await thread.getScript(location.script);
+				const fileLocation = this.resolveFileLocation(script, location.tokenPos);
+				if (fileLocation) {
+					stackFrame.line = fileLocation.line;
+					stackFrame.column = fileLocation.column;
+				}
+			} catch (e) {
+				this.logger.error(e);
 			}
-		} catch (e) {
-			this.logger.error(e);
 		}
 
 		return stackFrame;
