@@ -529,7 +529,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const devTools: { url: string, dispose: () => void } = await watchPromise("executeCommand", await vs.commands.executeCommand("dart.openDevTools"));
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
-		defer("Dispose DevTools", devTools.dispose);
+		// Clean up DevTools if it wasn't being eagerly spawned.
+		if (!extApi.workspaceContext.config.startDevToolsServerEagerly)
+			defer("Dispose DevTools", devTools.dispose);
 		assert.ok(devTools.url);
 
 		const serverResponse = await watchPromise("fetch", extApi.webClient.fetch(devTools.url));
@@ -1054,7 +1056,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					.then(() => dc.configurationDoneRequest()),
 				expectation,
 				dc.launch(config)).then(() => delay(waitAfterLaunch),
-			);
+				);
 
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),

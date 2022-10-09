@@ -720,7 +720,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {
 			this.logger.info("Getting DevTools server address to pass to Flutter...");
 			try {
-				const devtoolsUrl = await this.debugCommands.devTools?.devtoolsUrl;
+				const devtoolsUrl = await this.debugCommands.devTools.devtoolsUrl;
 				if (devtoolsUrl)
 					this.addArgsIfNotExist(args, "--devtools-server-address", devtoolsUrl.toString());
 				else if (!isDartCodeTestRun) // Suppress warning on test runs as they're fast and can launch before the server starts
