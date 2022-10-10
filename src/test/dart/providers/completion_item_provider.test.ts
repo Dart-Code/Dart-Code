@@ -172,9 +172,9 @@ ${extraUnwantedIndent}  String get fullName => |${expectedBody}|; //
 	`);
 	});
 
-	describe("with SuggestionSet support", () => {
-		beforeEach("ensure SuggestionSets are supported", async function () {
-			if (!extApi.isLsp && extApi.analyzerCapabilities && !extApi.analyzerCapabilities.supportsAvailableSuggestions)
+	describe("with not-imported completions", () => {
+		beforeEach("ensure supported", function () {
+			if (!extApi.isLsp)
 				this.skip();
 		});
 

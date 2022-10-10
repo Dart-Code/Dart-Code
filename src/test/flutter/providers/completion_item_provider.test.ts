@@ -17,9 +17,9 @@ describe("completion_item_provider", () => {
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text.rich(…)", "Text.rich");
 	});
 
-	describe("with SuggestionSet support", () => {
-		beforeEach("ensure SuggestionSets are supported", function () {
-			if (extApi.analyzerCapabilities && !extApi.analyzerCapabilities.supportsAvailableSuggestions)
+	describe("with not-imported completions", () => {
+		beforeEach("ensure supported", function () {
+			if (!extApi.isLsp)
 				this.skip();
 		});
 
@@ -54,7 +54,9 @@ main() {
 import 'package:flutter/material.dart';
 
 main() {
-	var a = TextOverflo
+  Text(
+    overflow: TextOverflo
+  );
 }
 		`);
 			const completions = await getCompletionsAt("TextOverflo^");
