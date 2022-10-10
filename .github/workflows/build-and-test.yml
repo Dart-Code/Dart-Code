@@ -179,6 +179,10 @@ jobs:
         run: flutter packages get
         working-directory: src/test/test_projects/bazel_workspace/flutter_hello_world_bazel
 
+      - name: ps -x (before)
+        if: matrix.os != 'windows-latest'
+        run: ps -x
+
       - name: npm test
         run: npm test
         env:
@@ -189,6 +193,10 @@ jobs:
           BUILD_VERSION: ${{ matrix.build-version }}
           LOGS_NAME: ${{ matrix.build-version }}_${{ matrix.build-version }}
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
+
+      - name: ps -x (after)
+        if: matrix.os != 'windows-latest'
+        run: ps -x
 
       - name: Store logs
         uses: actions/upload-artifact@v3
