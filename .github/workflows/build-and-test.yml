@@ -58,8 +58,8 @@ jobs:
       # get additional failures reported on the artifact uploads that make
       # it less clear what the failure is.
       - run: |
-          mkdir -p .dart_code_test_logs
           mkdir -p .crash_dumps
+          mkdir -p .dart_code_test_logs
           mkdir -p .test_results
           mkdir -p coverage
         shell: pwsh

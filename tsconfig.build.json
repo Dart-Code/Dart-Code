@@ -1,6 +1,7 @@
 {
 	"extends": "./tsconfig.json",
 	"exclude": [
+		".crash_dumps",
 		".dart_code_test_data_dir",
 		".dcud",
 		".dart_code_test_logs",
