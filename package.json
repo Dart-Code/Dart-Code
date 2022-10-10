@@ -2753,7 +2753,7 @@
 		"test-only": "node ./out/src/test/test_all.js && npm run test-grammar",
 		"report_lcov": "nyc report -r lcovonly --report-dir coverage/$BOT",
 		"report_screen": "nyc report",
-		"test-grammar": "vscode-tmgrammar-snap --expandDiff 'src/test/test_projects/grammar_testing/**/*.dart'",
+		"test-grammar": "vscode-tmgrammar-snap --expandDiff src/test/test_projects/grammar_testing/**/*.dart",
 		"update-grammar-snapshots": "vscode-tmgrammar-snap --updateSnapshot 'src/test/test_projects/grammar_testing/**/*.dart'"
 	},
 	"dependencies": {
