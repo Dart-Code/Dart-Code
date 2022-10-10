@@ -30,7 +30,7 @@ export class LspAnalyzer extends Analyzer {
 	public readonly fileTracker: LspFileTracker;
 	public readonly vmServicePort: number | undefined;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
-	public readonly refactors: InteractiveRefactors | undefined;
+	public readonly refactors: InteractiveRefactors;
 
 	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
 	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
@@ -39,9 +39,9 @@ export class LspAnalyzer extends Analyzer {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 		this.vmServicePort = config.analyzerVmServicePort;
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
+		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware(), this.vmServicePort);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
-		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.client.registerFeature(this.refactors.feature);
 		this.disposables.push({ dispose: () => this.client.stop() });
@@ -209,7 +209,7 @@ export class LspAnalyzer extends Analyzer {
 				let res = await next(document, range, context, token) || [];
 
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
-				refactors?.rewriteCommands(res);
+				refactors.rewriteCommands(res);
 
 				const hasExistingIgnoreActions = res.find((r) => r.title.startsWith("Ignore "));
 				if (!hasExistingIgnoreActions) {
