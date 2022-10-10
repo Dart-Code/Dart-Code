@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
+import * as os from "os";
 import { tmpdir } from "os";
 import * as path from "path";
 import * as sinon from "sinon";
@@ -263,6 +264,13 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	extApi.cancelAllAnalysisRequests();
 
 	logger.info(`Ready to start test`);
+	const cpuLoad = os.loadavg();
+	const totalMem = os.totalmem();
+	const freeMem = os.freemem();
+	logger.info(`  cpuLoad: ${cpuLoad}`);
+	logger.info(`  totalMem: ${totalMem}`);
+	logger.info(`  freeMem: ${freeMem}`);
+	logger.info(`  ${Math.round((freeMem / totalMem) * 100)}% memory is available`);
 }
 
 export async function getPackages(uri?: vs.Uri) {
