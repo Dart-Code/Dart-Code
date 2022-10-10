@@ -131,7 +131,6 @@ class Config {
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
-	get previewNotImportedCompletions(): boolean { return this.getConfig<boolean>("previewNotImportedCompletions", false); }
 	get previewSdkDaps(): undefined | boolean { return this.getConfig<null | boolean>("previewSdkDaps", null); }
 	get projectSearchDepth(): number { return this.getConfig<number>("projectSearchDepth", 3); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }

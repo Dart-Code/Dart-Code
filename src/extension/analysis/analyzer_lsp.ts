@@ -342,7 +342,6 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			flutterOutline: wsContext.hasAnyFlutterProjects,
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
-			previewNotImportedCompletions: config.previewNotImportedCompletions,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
 		},
 		markdown: {
