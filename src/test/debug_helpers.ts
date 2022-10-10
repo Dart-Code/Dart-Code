@@ -63,6 +63,13 @@ export function createDebugClient(debugType: DebuggerType) {
 		}
 		if (dc.hasTerminated) {
 			extApi.logger.info(`Skipping shutdown because debugger already terminated`);
+
+			// Older versions of DDS/DAP didn't corectlycorrectly shut down the debug adapter
+			// so we need to do it ourselves.
+			if (!extApi.dartCapabilities.hasDapShutdownFix) {
+				thisDc.stopAdapter();
+			}
+
 			return;
 		}
 
