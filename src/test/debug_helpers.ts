@@ -284,7 +284,8 @@ export async function killFlutterTester(): Promise<void> {
 	// not need to).
 	if (!extApi)
 		return;
-	return new Promise((resolve) => {
+
+	await new Promise<void>((resolve) => {
 		const proc = isWin
 			? extApi.safeToolSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
 			: extApi.safeToolSpawn(undefined, "pkill", ["flutter_tester"]);
@@ -296,6 +297,21 @@ export async function killFlutterTester(): Promise<void> {
 			resolve();
 		});
 	});
+
+	if (!isWin) {
+		await new Promise<void>((resolve) => {
+			const proc2 = extApi.safeToolSpawn(undefined, "ps", ["-x"]);
+
+			proc2.stdout.setEncoding("utf8");
+			proc2.stdout.on("data", (data: Buffer | string) => logger.info(data.toString()));
+			proc2.stderr.setEncoding("utf8");
+			proc2.stderr.on("data", (data: Buffer | string) => logger.info(data.toString()));
+			proc2.on("error", (error) => logger.info(error?.message));
+			proc2.on("data", (data: Buffer | string) => logger.info(data.toString()));
+
+			proc2.on("exit", () => resolve());
+		});
+	}
 }
 
 export function isSdkFrame(frame: DebugProtocol.StackFrame) {
