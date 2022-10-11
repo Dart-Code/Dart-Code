@@ -71,8 +71,9 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a field", async () => {
 		const hover = await getHoverAt("num? my^TestNumField");
 		assert.equal(hover.displayText, "num? myTestNumField");
+		const separator = extApi.dartCapabilities.hasHoverNewlineFix4120 ? "\n\n" : "\n";
 		if (hover.documentation?.includes("Type:"))
-			assert.equal(hover.documentation, "Type: `num?`\n" + getExpectedDoc("package:hello_world/everything.dart", "This is my num field."));
+			assert.equal(hover.documentation, `Type: \`num?\`${separator}` + getExpectedDoc("package:hello_world/everything.dart", "This is my num field."));
 		else
 			assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my num field."));
 		assert.deepStrictEqual(hover.range, rangeOf("num? |myTestNumField|"));
@@ -149,8 +150,9 @@ describe("dart_hover_provider", () => {
 		const hover = await getHoverAt("methodTakingString(String ^a");
 		assert.equal(hover.displayText, "String a");
 		// Method args can't have their own docs so return the methods dartdoc.
+		const separator = extApi.dartCapabilities.hasHoverNewlineFix4120 ? "\n\n" : "\n";
 		if (hover.documentation?.includes("Type:"))
-			assert.equal(hover.documentation, "Type: `String`\nThis is my method taking a string.");
+			assert.equal(hover.documentation, `Type: \`String\`${separator}This is my method taking a string.`);
 		else
 			assert.equal(hover.documentation, "This is my method taking a string.");
 		assert.deepStrictEqual(hover.range, rangeOf("methodTakingString(String |a|)"));
