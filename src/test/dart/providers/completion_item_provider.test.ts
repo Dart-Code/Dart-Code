@@ -261,7 +261,7 @@ main() {
   HashMa
 }
 		`);
-			const completions = await getCompletionsAt("Hash^Ma", { resolveCount: 5000 });
+			const completions = await getCompletionsAt("Hash^Ma", { resolveCount: 5000, requireComplete: true });
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 
@@ -274,7 +274,9 @@ main() {
 			// This signature changed in a newer Dev version of Dart (2020-05-13).
 			assert.ok(
 				completion.detail === "Auto import from 'dart:collection'\n\n({bool equals(K key1, K key2), int hashCode(K key), bool isValidKey(potentialKey)}) → HashMap"
-				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap",
+				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap"
+				// 2022-10-11
+				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap<K, V>",
 			);
 			assert.equal(completion.filterText ?? completion.label, "HashMap");
 			if (extApi.isLsp) {
