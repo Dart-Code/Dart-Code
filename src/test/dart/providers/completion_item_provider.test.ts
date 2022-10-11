@@ -184,7 +184,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^", undefined, 5000);
+			const completions = await getCompletionsAt("ProcessInf^", { resolveCount: 5000 });
 
 			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 		});
@@ -195,7 +195,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("Process^Inf", undefined, 5000);
+			const completions = await getCompletionsAt("Process^Inf", { resolveCount: 5000 });
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 
@@ -220,7 +220,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessIn^f", undefined, extApi.isLsp ? 5000 : 50000); // non-LSP doesn't filter so we need to resolve more :(
+			const completions = await getCompletionsAt("ProcessIn^f", { resolveCount: extApi.isLsp ? 5000 : 50000 }); // non-LSP doesn't filter so we need to resolve more :(
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
@@ -261,7 +261,7 @@ main() {
   HashMa
 }
 		`);
-			const completions = await getCompletionsAt("Hash^Ma", undefined, 5000);
+			const completions = await getCompletionsAt("Hash^Ma", { resolveCount: 5000 });
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 
@@ -301,7 +301,7 @@ main() {
   final a = ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^", undefined, 5000);
+			const completions = await getCompletionsAt("ProcessInf^", { resolveCount: 5000 });
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
 

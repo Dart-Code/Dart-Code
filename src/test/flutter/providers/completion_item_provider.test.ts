@@ -29,7 +29,7 @@ main() {
 	EdgeInsetsDirecti
 }
 		`);
-			const completions = await getCompletionsAt("EdgeInsetsDirecti^");
+			const completions = await getCompletionsAt("EdgeInsetsDirecti^", { requireComplete: true });
 			const edgeInsetsCompletions = completions.filter((c) => c.label === "EdgeInsetsDirectional");
 			// We should get at least 5 because it's in rendering, painting, widgets, material, cupertino.
 			assert.equal(edgeInsetsCompletions.length >= 5, true);

@@ -815,14 +815,31 @@ export function snippetValue(text: string | vs.SnippetString | undefined) {
 	return !text || typeof text === "string" ? text : text.value;
 }
 
-export async function getCompletionsAt(searchText: string, triggerCharacter?: string, resolveCount = 1): Promise<vs.CompletionItem[]> {
+export async function getCompletionsAt(
+	searchText: string,
+	{ triggerCharacter, resolveCount = 1, requireComplete = false }: { triggerCharacter?: string, resolveCount?: number, requireComplete?: boolean } = {},
+): Promise<vs.CompletionItem[]> {
 	const position = positionOf(searchText);
-	const results = await vs.commands.executeCommand<vs.CompletionList>("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter, resolveCount);
+	let results: vs.CompletionList | undefined;
+	// If we require complete, keep going until isIncomplete=false *and* there are some results (because VS code drops isIncomplete for empty results).
+	let remainingTries = 10;
+	while (!results || (requireComplete && (results.isIncomplete || results.items.length === 0))) {
+		if (results) {
+			// When we're calling a subsequent time, add a delay.
+			await delay(100);
+		}
+		results = await vs.commands.executeCommand<vs.CompletionList>("vscode.executeCompletionItemProvider", currentDoc().uri, position, triggerCharacter, resolveCount);
+		if (--remainingTries <= 0)
+			break;
+	}
 	return results.items;
 }
 
-export async function getSnippetCompletionsAt(searchText: string, triggerCharacter?: string): Promise<vs.CompletionItem[]> {
-	const completions = await getCompletionsAt(searchText, triggerCharacter);
+export async function getSnippetCompletionsAt(
+	searchText: string,
+	{ triggerCharacter, resolveCount = 1, requireComplete = false }: { triggerCharacter?: string, resolveCount?: number, requireComplete?: boolean } = {},
+): Promise<vs.CompletionItem[]> {
+	const completions = await getCompletionsAt(searchText, { triggerCharacter, resolveCount, requireComplete });
 	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
 }
 
