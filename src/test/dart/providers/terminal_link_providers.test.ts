@@ -8,7 +8,9 @@ import { activate } from "../../helpers";
 describe("DartFileUriTerminalLinkProvider", () => {
 	beforeEach("activate", () => activate());
 
-	it("detects macOS/Linux links without drive letters", async () => {
+	it("detects macOS/Linux links without drive letters", async function () {
+		if (isWin)
+			this.skip();
 		await expectLink("file:///foo/bar.dart", "/foo/bar.dart");
 		await expectLink("file:///foo/bar.dart:5:8", "/foo/bar.dart", 5, 8);
 		await expectLink("file:///foo/bar.dart 5:8", "/foo/bar.dart", 5, 8);
