@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, everythingFile, getPackages, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, everythingFile, extApi, getPackages, positionOf, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
@@ -100,18 +100,28 @@ describe("dart_hover_provider", () => {
 		assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|()"));
 	});
 
-	it("returns expected information for a named constructor", async () => {
-		// Note: Server seeems to return two different ranges for
-		// MyTestClass and named.
-		let hover = await getHoverAt("My^TestClass.myTestNamed()");
-		assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
-		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
-		assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|.myTestNamed()"));
-		// Check second part... ideally this would be rolled into above.
-		hover = await getHoverAt("MyTestClass.myTestN^amed()");
-		assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
-		assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
-		assert.deepStrictEqual(hover.range, rangeOf("MyTestClass.|myTestNamed|()"));
+	it("returns expected information for a named constructor", async function () {
+		if (extApi.dartCapabilities.hasHoverNamedConstructorIssue)
+			this.skip();
+		if (extApi.dartCapabilities.hasHoverNamedConstructorFix) {
+			for (const hover of [await getHoverAt("My^TestClass.myTestNamed()"), await getHoverAt("MyTestClass.myTestN^amed()")]) {
+				assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
+				assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
+				assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass.myTestNamed|()"));
+			}
+		} else {
+			// Dart 2.18 and earlier returned two different ranges for
+			// MyTestClass and named.
+			let hover = await getHoverAt("My^TestClass.myTestNamed()");
+			assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
+			assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
+			assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|.myTestNamed()"));
+			// Check second part... ideally this would be rolled into above.
+			hover = await getHoverAt("MyTestClass.myTestN^amed()");
+			assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
+			assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
+			assert.deepStrictEqual(hover.range, rangeOf("MyTestClass.|myTestNamed|()"));
+		}
 	});
 
 	it("returns expected information for a void returning method", async () => {

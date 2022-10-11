@@ -33,6 +33,8 @@ export class DartCapabilities {
 	get hasDdsTimingFix() { return versionIsAtLeast(this.version, "2.13.0-117"); }
 	get hasZeroParamNoTabStopFix() { return versionIsAtLeast(this.version, "2.17.0-117"); }
 	get hasDapShutdownFix() { return versionIsAtLeast(this.version, "2.19.0-0"); }
+	get hasHoverNamedConstructorIssue() { return versionIsAtLeast(this.version, "2.19.0-0") && !versionIsAtLeast(this.version, "2.19.0-300"); }
+	get hasHoverNamedConstructorFix() { return versionIsAtLeast(this.version, "2.19.0-300"); }
 	get supportsLanguageServerCommand() { return versionIsAtLeast(this.version, "2.14.4"); }
 	get supportsNoServeDevTools() { return versionIsAtLeast(this.version, "2.14.0-172.0"); }
 	get supportsPubUpgradeMajorVersions() { return versionIsAtLeast(this.version, "2.12.0"); }
