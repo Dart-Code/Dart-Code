@@ -105,6 +105,7 @@ export class DebugClient extends ProtocolClient {
 					resolve();
 				});
 			} else {
+				console.log(`spawn: "${this._runtime!}" ["${this._executable!}", ${(this._args || []).map((a) => `"${a}"`).join(", ")}]`);
 				this._adapterProcess = cp.spawn(this._runtime!, [this._executable!, ...(this._args || [])], this._spawnOptions);
 				const sanitize = (s: string) => s.toString().replace(/\r?\n$/mg, '');
 				this._adapterProcess.stderr!.on('data', (data: string) => {
