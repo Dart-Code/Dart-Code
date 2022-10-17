@@ -1641,6 +1641,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		dc.on("output", handleOutput);
 		try {
 			await waitAllThrowIfTerminates(dc,
+				dc.debuggerReady(),
 				// Disable breaking on exceptions so we don't have to resume.
 				dc.waitForEvent("initialized")
 					.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
@@ -1652,7 +1653,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				() => allOutput.toLowerCase().indexOf("exception caught by widgets library") !== -1
 					&& allOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
 				"Waiting for error output",
-				5000,
+				20000,
 			);
 		} finally {
 			dc.removeListener("output", handleOutput);
