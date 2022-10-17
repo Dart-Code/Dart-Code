@@ -102,11 +102,7 @@ export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array
 	let didCompleteSuccessfully = false;
 	return Promise.race([
 		new Promise<void>(async (resolve, reject) => {
-			await dc.waitForEvent("terminated", "waitAllThrowIfTerminates")
-				.catch(() => {
-					// Swallow errors, as we don't care if this times out, we're only using it
-					// to tell if we stopped by the time we hit the end of this test.
-				});
+			await dc.waitForEvent("terminated", "waitAllThrowIfTerminates", 180000);
 			// Wait a small amount to allow other awaited tasks to complete.
 			setTimeout(() => {
 				if (didCompleteSuccessfully) {
