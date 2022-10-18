@@ -56,7 +56,6 @@ describe("extension", () => {
 		assert.deepStrictEqual(workspaceContext.config?.flutterTestScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterToolsScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_tools.sh"), replacesArgs: 1 });
 		assert.equal(workspaceContext.config?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
-		assert.equal(workspaceContext.config?.flutterSyncScript, path.join(fsPath(flutterBazelRoot), "scripts/custom_sync.sh"));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});
 	// This test requires another clone of the SDK to verify the path (symlinks

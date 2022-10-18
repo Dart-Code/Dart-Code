@@ -53,7 +53,6 @@ export interface WritableWorkspaceConfig {
 	flutterDoctorScript?: CustomScript;
 	flutterRunScript?: CustomScript;
 	flutterSdkHome?: string;
-	flutterSyncScript?: string;
 	flutterTestScript?: CustomScript;
 	flutterToolsScript?: CustomScript;
 	flutterVersion?: string;
