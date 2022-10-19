@@ -77,13 +77,30 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		this.logger.info(`SDK DAP setting is ${useSdkDap}, set by ${sdkDapReason}`);
 
 
-		this.analytics.logDebuggerStart(
-			DebuggerType[debuggerType],
-			noDebug ? "Run" : "Debug",
-			config.previewSdkDaps ?? this.dartCapabilities.canDefaultSdkDaps,
-		);
+		const analytics = this.analytics;
+		function logDebuggerStart(sdkDap: boolean) {
+			analytics.logDebuggerStart(
+				DebuggerType[debuggerType],
+				noDebug ? "Run" : "Debug",
+				sdkDap,
+			);
+		}
 
-		if (useSdkDap) {
+		if (config.customDartDapPath && isDartOrDartTest) {
+			const args = [config.customDartDapPath, "debug_adapter"];
+			if (isDartTest)
+				args.push("--test");
+			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
+			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
+		} else if (config.customFlutterDapPath && isFlutterOrFlutterTest) {
+			const args = [config.customFlutterDapPath, "debug_adapter"];
+			if (isFlutterTest)
+				args.push("--test");
+			if (isFlutterTest && this.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
+				args.push("--no-dds");
+			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")}`);
+			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
+		} else if (useSdkDap) {
 			const executable = isDartOrDartTest
 				? path.join(this.sdks.dart, dartVMPath)
 				: this.workspaceContext.config.flutterToolsScript?.script ?? (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
@@ -98,21 +115,8 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 				? { cwd: this.workspaceContext.config.flutterSdkHome }
 				: {};
 			this.logger.info(`Running SDK DAP Dart VM in ${options.cwd}: ${executable} ${args.join("    ")}`);
+			logDebuggerStart(true);
 			return new DebugAdapterExecutable(executable, args, options);
-		} else if (config.customDartDapPath && isDartOrDartTest) {
-			const args = [config.customDartDapPath, "debug_adapter"];
-			if (isDartTest)
-				args.push("--test");
-			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
-			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
-		} else if (config.customFlutterDapPath && isFlutterOrFlutterTest) {
-			const args = [config.customFlutterDapPath, "debug_adapter"];
-			if (isFlutterTest)
-				args.push("--test");
-			if (isFlutterTest && this.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
-				args.push("--no-dds");
-			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")}`);
-			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
 		}
 
 		if (process.env.DART_CODE_USE_DEBUG_SERVERS) {
@@ -123,6 +127,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 
 		const args = [this.extensionContext.asAbsolutePath(debugAdapterPath), debuggerName];
 		this.logger.info(`Running debugger via node with ${args.join("    ")}`);
+		logDebuggerStart(false);
 		return new DebugAdapterExecutable("node", args);
 	}
 }
