@@ -108,7 +108,7 @@ export const projectSearchCacheTimeInMs = fiveMinutesInMs;
 export const CHROME_OS_DEVTOOLS_PORT = 8080;
 export const CHROME_OS_VM_SERVICE_PORT = 8085;
 
-export const DART_CREATE_PROJECT_TRIGGER_FILE = "dart.sh.create";
+export const DART_CREATE_PROJECT_TRIGGER_FILE = "dart.create";
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
 
 export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";

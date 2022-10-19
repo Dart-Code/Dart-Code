@@ -51,6 +51,7 @@
 		"workspaceContains:*/*.dart",
 		"workspaceContains:*/*/*.dart",
 		"workspaceContains:dart.sh.create",
+		"workspaceContains:dart.create",
 		"workspaceContains:flutter.sh.create",
 		"workspaceContains:flutter.create",
 		"onCommand:flutter.createProject",
