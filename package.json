@@ -607,7 +607,7 @@
 				"command": "dart.showTypeHierarchy",
 				"key": "f4",
 				"mac": "f4",
-				"when": "editorLangId == dart"
+				"when": "editorLangId == dart && !dart-code:isLsp"
 			},
 			{
 				"command": "dart.hotReload",
@@ -785,7 +785,7 @@
 				},
 				{
 					"command": "dart.showTypeHierarchy",
-					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart && !dart-code:isLsp"
 				},
 				{
 					"command": "dart.openObservatory",
