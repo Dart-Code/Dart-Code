@@ -572,6 +572,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "_flutter.outline.refactor.flutter.wrap.expanded",
+				"title": "Wrap with Expanded",
+				"category": "Flutter"
+			},
+			{
 				"command": "_flutter.outline.refactor.flutter.wrap.padding",
 				"title": "Wrap with Padding",
 				"category": "Flutter"
@@ -935,6 +940,10 @@
 				},
 				{
 					"when": "false",
+					"command": "_flutter.outline.refactor.flutter.wrap.expanded"
+				},
+				{
+					"when": "false",
 					"command": "_flutter.outline.refactor.flutter.wrap.padding"
 				},
 				{
@@ -1189,6 +1198,10 @@
 					"command": "_flutter.outline.refactor.flutter.wrap.center"
 				},
 				{
+					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.expanded",
+					"command": "_flutter.outline.refactor.flutter.wrap.expanded"
+				},
+				{
 					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.padding",
 					"command": "_flutter.outline.refactor.flutter.wrap.padding"
 				},
@@ -1226,6 +1239,10 @@
 				{
 					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.wrap.center",
 					"command": "_flutter.outline.refactor.flutter.wrap.center"
+				},
+				{
+					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.wrap.expanded",
+					"command": "_flutter.outline.refactor.flutter.wrap.expanded"
 				},
 				{
 					"when": "view == dartFlutterOutline && viewItem == dart-code:isSelectedWidget && dart-code:widgetSupports:refactor.flutter.wrap.padding",

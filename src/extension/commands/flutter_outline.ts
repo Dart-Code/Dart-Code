@@ -5,6 +5,7 @@ import { FlutterWidgetItem } from "../flutter/flutter_outline_view";
 
 export const flutterOutlineCommands = [
 	"refactor.flutter.wrap.center",
+	"refactor.flutter.wrap.expanded",
 	"refactor.flutter.wrap.padding",
 	"refactor.flutter.wrap.column",
 	"refactor.flutter.move.up",
