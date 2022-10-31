@@ -153,6 +153,7 @@ export class VmServiceExtensions {
 		if (id === VmServiceExtension.InspectorSelectMode) {
 			/// Keep the context in sync so that the "Cancel Inspect Widget" command is enabled/disabled.
 			vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, !!value);
+			this.debugCommands.isInspectingWidget = !!value;
 		}
 	}
 

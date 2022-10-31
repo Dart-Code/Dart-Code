@@ -60,6 +60,9 @@ export class DebugCommands implements IAmDisposable {
 	public readonly devTools: DevToolsManager;
 	private suppressFlutterWidgetErrors = false;
 
+	public isInspectingWidget = false;
+	private autoCancelNextInspectWidgetMode = false;
+
 	constructor(private readonly logger: Logger, private context: Context, private workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
 		this.vmServices = new VmServiceExtensions(logger, this, workspaceContext);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
@@ -85,8 +88,18 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleDebugModeBanner", () => this.vmServices.toggle(VmServiceExtension.DebugBanner)));
 		this.disposables.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.vmServices.toggle(VmServiceExtension.PaintBaselines)));
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.vmServices.toggle(VmServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
-		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true)));
-		this.disposables.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false)));
+		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget", () => {
+			this.autoCancelNextInspectWidgetMode = false;
+			this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
+		}));
+		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget.autoCancel", () => {
+			this.autoCancelNextInspectWidgetMode = true;
+			this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
+		}));
+		this.disposables.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => {
+			this.autoCancelNextInspectWidgetMode = false;
+			this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false);
+		}));
 
 		this.disposables.push(vs.commands.registerCommand("dart.openObservatory", async () => {
 			const session = await this.getDebugSession();
@@ -539,6 +552,10 @@ export class DebugCommands implements IAmDisposable {
 				const navigate = !e.body.fromInspector || config.devToolsLocation !== "active";
 				if (navigate)
 					vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file as string), e.body.line, e.body.column, e.body.inOtherEditorColumn);
+				if (this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
+					// Add a short delay because this will remove the visible selection.
+					setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
+				}
 			}
 		} else {
 			// Not handled, will fall through in the caller.

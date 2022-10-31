@@ -452,6 +452,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.inspectWidget.autoCancel",
+				"title": "Inspect Widget (Auto-Cancel after Selection)",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.cancelInspectWidget",
 				"title": "Cancel Widget Inspection",
 				"category": "Flutter"
@@ -863,6 +868,10 @@
 				},
 				{
 					"command": "flutter.inspectWidget",
+					"when": "inDebugMode && debugType == dart && !dart-code:flutter.isInspectingWidget"
+				},
+				{
+					"command": "flutter.inspectWidget.autoCancel",
 					"when": "inDebugMode && debugType == dart && !dart-code:flutter.isInspectingWidget"
 				},
 				{
