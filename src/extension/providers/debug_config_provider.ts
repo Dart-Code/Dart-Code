@@ -382,7 +382,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		let defaultCwd = debugConfig.cwd;
 		if (!defaultCwd) {
 			const likelyEntryPoint = debugConfig.program ?? openFile;
-			if (likelyEntryPoint) {
+			if (likelyEntryPoint && path.isAbsolute(likelyEntryPoint)) {
 				// If we have an explicit program, always use that to try and get a cwd.
 				folder = workspace.getWorkspaceFolder(Uri.file(likelyEntryPoint));
 				if (folder) {

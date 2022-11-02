@@ -5,7 +5,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, extApi, flutterBazelHelloWorldMainFile, flutterBazelRoot, getResolvedDebugConfiguration, prepareHasRunFile, watchPromise } from "../../helpers";
+import { activate, ensureHasRunRecently, extApi, flutterBazelHelloWorldFolder, flutterBazelHelloWorldMainFile, flutterBazelRoot, getResolvedDebugConfiguration, prepareHasRunFile, watchPromise } from "../../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -45,6 +45,18 @@ describe(`flutter run debugger`, () => {
 			// Expect the bazel root, not the project folder, because this is the common ancestor of
 			// the two workspace folders we have open.
 			assert.equal(resolvedConfig.cwd, fsPath(flutterBazelRoot));
+		});
+
+		it("for a relative program in a workspaceFolder", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: flutterTestDeviceId,
+				program: "lib/main.dart",
+				suppressPrompts: true, // Don't prompt if there are errors because we can't resolve package:flutter.
+			})!;
+
+			assert.ok(resolvedConfig);
+			assert.equal(resolvedConfig.program, fsPath(flutterBazelHelloWorldMainFile));
+			assert.equal(resolvedConfig.cwd, fsPath(flutterBazelHelloWorldFolder));
 		});
 	});
 
