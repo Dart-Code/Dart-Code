@@ -586,6 +586,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					: this.wsContext.config.flutterRunScript;
 				debugConfig.customTool = customScript?.script;
 				debugConfig.customToolReplacesArgs = customScript?.replacesArgs;
+			} else if (isAttach && !debugConfig.customTool) {
+				const customScript = this.wsContext.config.flutterToolsScript;
+				debugConfig.customTool = customScript?.script;
+				debugConfig.customToolReplacesArgs = customScript?.replacesArgs;
 			}
 			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
@@ -710,7 +714,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (renderer)
 					this.addArgsIfNotExist(args, "--web-renderer", renderer);
 			}
+		}
 
+		if (!isAttach || this.wsContext.config.forceFlutterWorkspace) {
 			const daemonPort = this.deviceManager?.daemonPortOverride ?? conf.daemonPort;
 			if (this.wsContext.config.forceFlutterWorkspace && daemonPort) {
 				this.addArgsIfNotExist(args, "--daemon-connection-port", daemonPort.toString());

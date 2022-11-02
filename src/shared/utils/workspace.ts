@@ -79,7 +79,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 
 		// TODO (helin24): This is a generic script that can be used with some of the Flutter commands, e.g. `debug_adapter`, `doctor`, and `daemon`.
 		// We should eventually change over the other scripts to use this one to reduce the number of scripts needed.
-		config.flutterToolsScript = makeScript(flutterConfig.toolsScript);
+		config.flutterToolsScript = makeScript(flutterConfig.toolsScript, 0);
 		config.defaultDartSdk = makeFullPath(flutterConfig.defaultDartSdk);
 
 		config.restartMacDaemonMessage = flutterConfig.restartMacDaemonMessage;
