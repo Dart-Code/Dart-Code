@@ -3,6 +3,7 @@ import { vsCodeVersion } from "../capabilities/vscode";
 import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
 import { Analytics, FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
+import { isRunningLocally } from "./utils";
 import { Context } from "./workspace";
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
@@ -69,6 +70,11 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 
 export async function showDevToolsNotificationIfAppropriate(context: Context): Promise<{ didOpen: boolean, shouldAlwaysOpen?: boolean }> {
 	if (!vsCodeVersion.supportsDevTools)
+		return { didOpen: false };
+
+	// Don't show in remote workspaces because currently DevTools fails to load if SSE doesn't work (which
+	// is the case for some cloud IDE proxies).
+	if (!isRunningLocally)
 		return { didOpen: false };
 
 	const lastShown = context.devToolsNotificationLastShown;
