@@ -60,7 +60,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 		dev = { ...dev, type: "device" };
 		this.devices.push(dev);
 		// undefined is treated as true for backwards compatibility.
-		const canAutoSelectDevice = dev.ephemeral !== false;
+		let canAutoSelectDevice = dev.ephemeral !== false;
+
+		// In a remote workspace, allow selecting web-server over a non-ephemeral device so
+		// that we don't seem to default to Linux on a remote we probably can't see.
+		if (!isRunningLocally && this.currentDevice?.ephemeral === false && dev.id === "web-server")
+			canAutoSelectDevice = true;
+
 		const maySelectThisDevice = () => !this.currentDevice
 			|| (this.config.flutterSelectDeviceWhenConnected && canAutoSelectDevice)
 			// HACK: If the Chrome device becomes available and the selected device is
