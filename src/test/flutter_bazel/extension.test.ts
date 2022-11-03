@@ -54,7 +54,7 @@ describe("extension", () => {
 		assert.deepStrictEqual(workspaceContext.config?.flutterDoctorScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_doctor.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterRunScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_run.sh"), replacesArgs: 1 });
 		assert.deepStrictEqual(workspaceContext.config?.flutterTestScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_test.sh"), replacesArgs: 1 });
-		assert.deepStrictEqual(workspaceContext.config?.flutterToolsScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_tools.sh"), replacesArgs: 1 });
+		assert.deepStrictEqual(workspaceContext.config?.flutterToolsScript, { script: path.join(fsPath(flutterBazelRoot), "scripts/custom_tools.sh"), replacesArgs: 0 });
 		assert.equal(workspaceContext.config?.flutterSdkHome, path.join(fsPath(flutterBazelRoot), "my-flutter-sdk"));
 		logger.info("        " + JSON.stringify(workspaceContext, undefined, 8).trim().slice(1, -1).trim());
 	});

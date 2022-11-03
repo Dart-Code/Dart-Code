@@ -580,8 +580,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;
 			debugConfig.omitTargetFlag = this.wsContext.config.omitTargetFlag;
 			debugConfig.useInspectorNotificationsForWidgetErrors = config.showInspectorNotificationsForWidgetErrors;
-			if (!isAttach && !debugConfig.customTool) {
-				const customScript = isTest
+			if (!debugConfig.customTool) {
+				const customScript = isAttach ? this.wsContext.config.flutterToolsScript : isTest
 					? this.wsContext.config.flutterTestScript
 					: this.wsContext.config.flutterRunScript;
 				debugConfig.customTool = customScript?.script;
@@ -710,11 +710,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (renderer)
 					this.addArgsIfNotExist(args, "--web-renderer", renderer);
 			}
+		}
 
-			const daemonPort = this.deviceManager?.daemonPortOverride ?? conf.daemonPort;
-			if (this.wsContext.config.forceFlutterWorkspace && daemonPort) {
-				this.addArgsIfNotExist(args, "--daemon-connection-port", daemonPort.toString());
-			}
+		const daemonPort = this.deviceManager?.daemonPortOverride ?? conf.daemonPort;
+		if (this.wsContext.config.forceFlutterWorkspace && daemonPort) {
+			this.addArgsIfNotExist(args, "--daemon-connection-port", daemonPort.toString());
 		}
 
 		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {
