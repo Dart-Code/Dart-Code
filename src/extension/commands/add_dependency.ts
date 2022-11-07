@@ -1,9 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
+import { TextDecoder, TextEncoder } from "util";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
-import { PubApi } from "../../shared/pub/api";
+import { PackageNameCompletionData, PubApi } from "../../shared/pub/api";
 import { PackageCacheData } from "../../shared/pub/pub_add";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
@@ -21,7 +22,7 @@ const knownFlutterSdkPackages = [
 ];
 
 export class AddDependencyCommand extends BaseSdkCommands {
-	private readonly extensionStoragePath: string | undefined;
+	private readonly extensionStorageUri: vs.Uri;
 	private cache: PackageCacheData | undefined;
 	private nextPackageNameFetchTimeout: NodeJS.Timeout | undefined;
 
@@ -33,7 +34,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("_dart.addDependency", this.addDependency, this));
 		this.disposables.push(vs.commands.registerCommand("_dart.removeDependency", this.removeDependency, this));
 
-		this.extensionStoragePath = context.extensionStoragePath;
+		this.extensionStorageUri = context.extensionStorageUri;
 		// Kick off async work to fetch then queue a new check.
 		this.loadAndFetch().catch((e) => this.logger.error(e));
 	}
@@ -47,31 +48,30 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 
 	private async loadPackageCache(): Promise<void> {
-		if (!this.extensionStoragePath)
-			return;
-
-		const cacheFile = path.join(this.extensionStoragePath, cacheFilename);
-		if (!fs.existsSync(cacheFile))
-			return;
 		try {
-			const contents = await fs.promises.readFile(cacheFile);
+			const bytes = await vs.workspace.fs.readFile(this.packageNameCacheUri);
+			const contents = new TextDecoder().decode(bytes);
 			this.cache = PackageCacheData.fromJson(contents.toString());
+			this.logger.info(`Loaded ${this.cache?.packageNames.length} from ${this.packageNameCacheUri}`);
 		} catch (e) {
 			this.logger.error(`Failed to read package cache file: ${e}`);
 		}
 	}
 
-	private async savePackageCache(): Promise<void> {
-		if (!this.extensionStoragePath)
-			return;
+	private get packageNameCacheUri(): vs.Uri {
+		return vs.Uri.joinPath(this.extensionStorageUri, cacheFilename);
+	}
 
-		const cacheFile = path.join(this.extensionStoragePath, cacheFilename);
+	private async savePackageCache(): Promise<void> {
 		try {
 			const json = this.cache?.toJson();
-			if (json)
-				await fs.promises.writeFile(cacheFile, json);
+			if (json) {
+				const bytes = new TextEncoder().encode(json);
+				await vs.workspace.fs.writeFile(this.packageNameCacheUri, bytes);
+			}
+			this.logger.info(`Saved ${this.cache?.packageNames.length} in ${this.packageNameCacheUri}`);
 		} catch (e) {
-			this.logger.error(`Failed to read package cache file: ${e}`);
+			this.logger.error(`Failed to save package cache file: ${e}`);
 		}
 	}
 
@@ -82,13 +82,22 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 
 	private async fetchPackageNames(): Promise<void> {
-		this.logger.info(`Caching Pub package names from pub.dev...`);
+		this.logger.info(`Caching Pub package names from ${this.pubApi.pubUrlBase}...`);
+		let results: PackageNameCompletionData | undefined;
 		try {
-			const results = await this.pubApi.getPackageNames();
-			this.cache = PackageCacheData.fromPackageNames(results.packages);
-			await this.savePackageCache();
+			results = await this.pubApi.getPackageNames();
 		} catch (e) {
-			this.logger.error(`Failed to fetch package cache: $e`);
+			this.logger.error(`Failed to fetch Pub package names: ${e}`);
+		}
+		if (results && results.packages) {
+			try {
+				this.cache = PackageCacheData.fromPackageNames(results.packages);
+				await this.savePackageCache();
+			} catch (e) {
+				this.logger.error(`Failed to cache Pub package names: ${e}`);
+			}
+		} else {
+			this.logger.error(`Pub package name results were invalid`);
 		}
 		this.queueNextPackageNameFetch(PackageCacheData.maxCacheAgeMs);
 	}

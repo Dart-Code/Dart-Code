@@ -1,9 +1,10 @@
 import { WebClient } from "../fetch";
 
 export class PubApi {
-	private readonly pubHost: string;
+	public readonly pubUrlBase: string;
+
 	constructor(private readonly webClient: WebClient) {
-		this.pubHost = process.env.PUB_HOSTED_URL || "https://pub.dev";
+		this.pubUrlBase = process.env.PUB_HOSTED_URL || "https://pub.dev";
 	}
 
 	public async getPackage(packageID: string): Promise<PubPackage> {
@@ -19,7 +20,7 @@ export class PubApi {
 			Accept: "application/vnd.pub.v2+json",
 			"Accept-Encoding": "gzip",
 		};
-		const response = await this.webClient.fetch(`${this.pubHost}/api/${url}`, headers);
+		const response = await this.webClient.fetch(`${this.pubUrlBase}/api/${url}`, headers);
 		return JSON.parse(response) as T;
 	}
 }
@@ -44,6 +45,6 @@ interface PubPackageVersion {
 	};
 }
 
-interface PackageNameCompletionData {
+export interface PackageNameCompletionData {
 	packages: string[];
 }
