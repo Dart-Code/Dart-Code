@@ -9,9 +9,7 @@
 				"",
 				"  @override",
 				"  Widget build(BuildContext context) {",
-				"    return Container(",
-				"      $2",
-				"    );",
+				"    return ${0:const Placeholder()};",
 				"  }",
 				"}"
 			]
@@ -30,9 +28,7 @@
 				"class _$1State extends State<$1> {",
 				"  @override",
 				"  Widget build(BuildContext context) {",
-				"    return Container(",
-				"      $2",
-				"    );",
+				"    return ${0:const Placeholder()};",
 				"  }",
 				"}"
 			]
@@ -66,9 +62,7 @@
 				"",
 				"  @override",
 				"  Widget build(BuildContext context) {",
-				"    return Container(",
-				"      $2",
-				"    );",
+				"    return ${0:const Placeholder()};",
 				"  }",
 				"}"
 			]
