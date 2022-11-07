@@ -1,5 +1,5 @@
 import * as path from "path";
-import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterServer, DebugSession } from "vscode";
+import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterExecutableOptions, DebugAdapterServer, DebugSession } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../../shared/constants";
@@ -11,6 +11,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { KnownExperiments } from "../experiments";
+import { getToolEnv } from "../utils/processes";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
 	constructor(private readonly analytics: Analytics, private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly workspaceContext: WorkspaceContext, private readonly experiments: KnownExperiments) { }
@@ -86,20 +87,26 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			);
 		}
 
+		const executableOptions: DebugAdapterExecutableOptions = {
+			env: getToolEnv(),
+		};
+
 		if (config.customDartDapPath && isDartOrDartTest) {
 			const args = [config.customDartDapPath, "debug_adapter"];
 			if (isDartTest)
 				args.push("--test");
-			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")}`);
-			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
+
+			this.logger.info(`Running custom Dart debugger using Dart VM with args ${args.join("    ")} and options ${JSON.stringify(executableOptions)}`);
+			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args, executableOptions);
 		} else if (config.customFlutterDapPath && isFlutterOrFlutterTest) {
 			const args = [config.customFlutterDapPath, "debug_adapter"];
 			if (isFlutterTest)
 				args.push("--test");
 			if (isFlutterTest && this.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
 				args.push("--no-dds");
-			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")}`);
-			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args);
+
+			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")} and options ${JSON.stringify(executableOptions)}`);
+			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args, executableOptions);
 		} else if (useSdkDap) {
 			const executable = isDartOrDartTest
 				? path.join(this.sdks.dart, dartVMPath)
@@ -111,12 +118,12 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			if (isFlutterTest && this.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
 				args.push("--no-dds");
 
-			const options = this.workspaceContext.config.flutterSdkHome
-				? { cwd: this.workspaceContext.config.flutterSdkHome }
-				: {};
-			this.logger.info(`Running SDK DAP Dart VM in ${options.cwd}: ${executable} ${args.join("    ")}`);
+			if (this.workspaceContext.config.flutterSdkHome)
+				executableOptions.cwd = this.workspaceContext.config.flutterSdkHome;
+
+			this.logger.info(`Running SDK DAP Dart VM in ${executableOptions.cwd}: ${executable} ${args.join("    ")} and options ${JSON.stringify(executableOptions)}`);
 			logDebuggerStart(true);
-			return new DebugAdapterExecutable(executable, args, options);
+			return new DebugAdapterExecutable(executable, args, executableOptions);
 		}
 
 		if (process.env.DART_CODE_USE_DEBUG_SERVERS) {
