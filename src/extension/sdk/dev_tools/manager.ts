@@ -16,6 +16,7 @@ import { StdIOService } from "../../../shared/services/stdio_service";
 import { disposeAll, usingCustomScript } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
+import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
 import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
 import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
@@ -37,7 +38,7 @@ let portToBind: number | undefined;
 /// Handles launching DevTools in the browser and managing the underlying service.
 export class DevToolsManager implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
-	private readonly devToolsStatusBarItem = vs.window.createStatusBarItem("dartStatusDevTools", vs.StatusBarAlignment.Right, 100);
+	private readonly statusBarItem = vs.languages.createLanguageStatusItem("dart.devTools", ANALYSIS_FILTERS);
 	private devToolsActivationPromise: Promise<void> | undefined;
 	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
 	public get devToolsActivation() { return this.devToolsActivationPromise; }
@@ -48,10 +49,21 @@ export class DevToolsManager implements vs.Disposable {
 	public devtoolsUrl: Thenable<string> | undefined;
 
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
-		this.devToolsStatusBarItem.name = "Dart/Flutter DevTools";
-		this.disposables.push(this.devToolsStatusBarItem);
+		this.statusBarItem.text = "Dart DevTools";
+		this.statusBarItem.name = "Dart/Flutter DevTools";
+		this.setNotStartedStatusBar();
+		this.disposables.push(this.statusBarItem);
 
 		this.handleEagerActivationAndStartup(workspaceContext);
+	}
+
+	private setNotStartedStatusBar() {
+		this.statusBarItem.detail = "Not Started";
+		this.statusBarItem.command = {
+			command: "dart.openDevTools",
+			title: "start & launch",
+			tooltip: "Start and Launch DevTools",
+		};
 	}
 
 	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
@@ -89,7 +101,7 @@ export class DevToolsManager implements vs.Disposable {
 		await this.devToolsActivationPromise;
 
 		if (!this.devtoolsUrl) {
-			this.devToolsStatusBarItem.hide();
+			this.setNotStartedStatusBar();
 			// Ensure the Pub version of DevTools is installed if we're not launching from the daemon or
 			// the version from the Dart SDK.
 			if (!this.dartCapabilities.supportsDartDevTools) {
@@ -124,10 +136,13 @@ export class DevToolsManager implements vs.Disposable {
 
 		const url = await this.devtoolsUrl;
 
-		this.devToolsStatusBarItem.text = "Dart DevTools";
-		this.devToolsStatusBarItem.tooltip = `DevTools is running at ${url}`;
-		this.devToolsStatusBarItem.command = "dart.openDevTools";
-		this.devToolsStatusBarItem.show();
+		this.statusBarItem.text = "Dart DevTools";
+		this.statusBarItem.detail = "Started";
+		this.statusBarItem.command = {
+			command: "dart.openDevTools",
+			title: "launch",
+			tooltip: `DevTools is running at ${url}`,
+		};
 
 		return url;
 	}
@@ -390,7 +405,7 @@ export class DevToolsManager implements vs.Disposable {
 
 			service.process?.on("close", async (code) => {
 				this.devtoolsUrl = undefined;
-				this.devToolsStatusBarItem.hide();
+				this.setNotStartedStatusBar();
 				if (code && code !== 0) {
 					// Reset the port to 0 on error in case it was from us trying to reuse the previous port.
 					portToBind = 0;

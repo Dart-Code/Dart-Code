@@ -1,61 +1,62 @@
 import * as vs from "vscode";
 import { MAX_VERSION } from "../../shared/constants";
 import { disposeAll } from "../../shared/utils";
+import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { isAnalyzable } from "../utils";
 
 export class StatusBarVersionTracker implements vs.Disposable {
-	private subscriptions: vs.Disposable[] = [];
+	private disposables: vs.Disposable[] = [];
 
 	constructor(workspaceContext: WorkspaceContext, isLsp: boolean) {
+		const isFlutter = workspaceContext.hasAnyFlutterProjects;
 		const dartIsFromFlutter = workspaceContext.sdks.dartSdkIsFromFlutter;
 
-		// Which switcher we show is based on whether we're in a Flutter project or not.
-		const switchSdkCommand = workspaceContext.hasAnyFlutterProjects
-			? (config.flutterSdkPaths && config.flutterSdkPaths.length > 0 ? "dart.changeFlutterSdk" : undefined)
-			: (config.sdkPaths && config.sdkPaths.length > 0 ? "dart.changeSdk" : undefined);
+		const canChangeFlutterSdk = config.flutterSdkPaths && config.flutterSdkPaths.length > 0;
+		const canChangeDartSdk = !isFlutter && config.sdkPaths && config.sdkPaths.length > 0;
 
-		// Render an approprite label for what we're calling this SDK.
-		const label = workspaceContext.hasAnyFlutterProjects
-			? "Flutter"
-			: (dartIsFromFlutter ? "Dart from Flutter" : "Dart");
+		const flutterVersion = this.versionOrLatest(workspaceContext.sdks.flutterVersion);
+		let dartVersion = this.versionOrLatest(workspaceContext.sdks.dartVersion);
 
-		let versionLabel = (workspaceContext.hasAnyFlutterProjects || dartIsFromFlutter)
-			? workspaceContext.sdks.flutterVersion
-			: workspaceContext.sdks.dartVersion;
+		if (dartIsFromFlutter)
+			dartVersion = `${dartVersion} (Flutter)`;
 
-		if (versionLabel === MAX_VERSION)
-			versionLabel = "latest";
-
-		if (versionLabel) {
+		if (dartVersion) {
 			this.addStatusBarItem(
-				`${label}: ` + (versionLabel.length > 20 ? versionLabel.substr(0, 17) + "…" : versionLabel),
-				`${label} SDK (${isLsp ? "LSP" : "DAS"}): ${versionLabel}`,
-				switchSdkCommand,
+				"dart.sdkVersion",
+				"Dart",
+				dartVersion,
+				canChangeDartSdk ? "dart.changeSdk" : undefined,
+			);
+		}
+		if (isFlutter && flutterVersion) {
+			this.addStatusBarItem(
+				"dart.flutterSdkVersion",
+				"Flutter",
+				flutterVersion,
+				canChangeFlutterSdk ? "dart.changeFlutterSdk" : undefined,
 			);
 		}
 	}
 
-	private addStatusBarItem(text: string, tooltip: string, command: string | undefined) {
-		const statusBarItem = vs.window.createStatusBarItem("dartStatusSdkVersion", vs.StatusBarAlignment.Right, 2);
-		statusBarItem.name = "Dart/Flutter SDK Version";
-		statusBarItem.text = text;
-		statusBarItem.tooltip = tooltip;
-		statusBarItem.command = command;
-		this.subscriptions.push(statusBarItem);
-		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => {
-			// Show the Dart-specific label if the document is analyzable but it isn't HTML.
-			if (e && e.document && isAnalyzable(e.document) && e.document.languageId !== "html")
-				statusBarItem.show();
-			else
-				statusBarItem.hide();
-		}));
-		if (vs.window.activeTextEditor && vs.window.activeTextEditor.document && isAnalyzable(vs.window.activeTextEditor.document))
-			statusBarItem.show();
+	private versionOrLatest(version: string | undefined): string | undefined {
+		return version === MAX_VERSION ? "latest" : version;
+	}
+
+	private addStatusBarItem(id: string, text: string, detail: string, command: string | undefined) {
+		const statusBarItem = vs.languages.createLanguageStatusItem(id, ANALYSIS_FILTERS);
+		statusBarItem.text = `${text} SDK`;
+		statusBarItem.name = statusBarItem.text;
+		statusBarItem.detail = detail;
+		if (command)
+			statusBarItem.command = {
+				command,
+				title: "change",
+			};
+		this.disposables.push(statusBarItem);
 	}
 
 	public dispose() {
-		disposeAll(this.subscriptions);
+		disposeAll(this.disposables);
 	}
 }

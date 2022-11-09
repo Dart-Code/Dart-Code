@@ -13,11 +13,11 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { ANALYSIS_FILTERS, DART_MODE } from "../../shared/vscode/constants";
 import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { DART_MODE } from "../extension";
 import { IgnoreLintCodeActionProvider } from "../providers/ignore_lint_code_action_provider";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
@@ -31,12 +31,16 @@ export class LspAnalyzer extends Analyzer {
 	public readonly vmServicePort: number | undefined;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
+	private readonly statusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
 	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
 	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
+
+		this.setupStatusItem();
+
 		this.vmServicePort = config.analyzerVmServicePort;
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
 		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
@@ -48,9 +52,11 @@ export class LspAnalyzer extends Analyzer {
 		this.disposables.push(this.fileTracker);
 		this.disposables.push(this.snippetTextEdits);
 		this.disposables.push(this.refactors);
+		this.disposables.push(this.statusItem);
 
 		// tslint:disable-next-line: no-floating-promises
 		this.client.start().then(() => {
+			this.statusItem.detail = "Started";
 			// Reminder: These onNotification calls only hold ONE handler!
 			// https://github.com/microsoft/vscode-languageserver-node/issues/174
 			// TODO: Remove this once Dart/Flutter stable LSP servers are using $/progress.
@@ -59,6 +65,18 @@ export class LspAnalyzer extends Analyzer {
 			});
 			this.onReadyCompleter.resolve();
 		});
+	}
+
+	private setupStatusItem() {
+		const statusItem = this.statusItem;
+		statusItem.text = "Dart Language Server";
+		statusItem.detail = "Starting…";
+
+		statusItem.command = {
+			command: "dart.restartAnalysisServer",
+			title: "restart",
+			tooltip: "Restarts the Dart Language Server",
+		};
 	}
 
 	private buildMiddleware(): ls.Middleware {
@@ -138,10 +156,14 @@ export class LspAnalyzer extends Analyzer {
 
 		return {
 			handleWorkDoneProgress: (token: ls.ProgressToken, params: ls.WorkDoneProgressBegin | ls.WorkDoneProgressReport | ls.WorkDoneProgressEnd, next: ls.HandleWorkDoneProgressSignature) => {
-				if (params.kind === "begin")
+				// TODO: Handle nested/overlapped progresses.
+				if (params.kind === "begin") {
+					this.statusItem.busy = true;
 					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: true, suppressProgress: true });
-				else if (params.kind === "end")
+				} else if (params.kind === "end") {
+					this.statusItem.busy = false;
 					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
+				}
 
 				next(token, params);
 			},

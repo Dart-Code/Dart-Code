@@ -15,6 +15,7 @@ import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq, withTimeout } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
+import { DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -109,9 +110,6 @@ import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { safeToolSpawn } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
-
-export const DART_MODE = { language: "dart", scheme: "file" };
-const HTML_MODE = { language: "html", scheme: "file" };
 
 const PROJECT_LOADED = "dart-code:anyProjectLoaded";
 const DART_PROJECT_LOADED = "dart-code:anyStandardDartProjectLoaded";

@@ -8,6 +8,7 @@ import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
+import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -48,24 +49,43 @@ export class DasAnalyzer extends Analyzer {
 	public readonly fileTracker: DasFileTracker;
 	public readonly vmServicePort: number | undefined;
 
+	private readonly statusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
+
 	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
-		this.vmServicePort = config.analyzerVmServicePort;
 
+		this.setupStatusItem();
+
+		this.vmServicePort = config.analyzerVmServicePort;
 		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities, this.vmServicePort);
 		this.fileTracker = new DasFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client);
 		this.disposables.push(this.fileTracker);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
+			this.statusItem.detail = "Started";
 			this.onReadyCompleter.resolve();
 			connectedEvent.dispose();
 		});
 
 		this.client.registerForServerStatus((params) => {
-			if (params.analysis)
+			if (params.analysis) {
+				this.statusItem.busy = params.analysis.isAnalyzing;
 				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: params.analysis.isAnalyzing });
+			}
 		});
+	}
+
+	private setupStatusItem() {
+		const statusItem = this.statusItem;
+		statusItem.text = "Dart Analysis Server";
+		statusItem.detail = "Starting…";
+
+		statusItem.command = {
+			command: "dart.restartAnalysisServer",
+			title: "restart",
+			tooltip: "Restarts the Dart Analysis Server",
+		};
 	}
 
 	public getDiagnosticServerPort(): Promise<{ port: number; }> {
