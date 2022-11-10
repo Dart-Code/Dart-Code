@@ -145,6 +145,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.toggleLineComment",
+				"title": "Toggle Line Comment Kind",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.toggleDartdocComment",
 				"title": "Toggle Dartdoc Comment",
 				"category": "Dart"
@@ -711,6 +716,10 @@
 				{
 					"command": "_dart.removeDependencyFromTreeNode",
 					"when": "false"
+				},
+				{
+					"command": "dart.toggleLineComment",
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.toggleDartdocComment",

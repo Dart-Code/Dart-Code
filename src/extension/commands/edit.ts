@@ -13,7 +13,8 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.showCode", showCode, this),
 			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings, this),
 			vs.commands.registerCommand("dart.printSelectionToTerminal", this.printSelectionToTerminal, this),
-			vs.commands.registerCommand("dart.toggleDartdocComment", this.toggleDartdocomment, this),
+			vs.commands.registerCommand("dart.toggleLineComment", this.toggleLineComment, this),
+			vs.commands.registerCommand("dart.toggleDartdocComment", this.toggleDartdocComment, this),
 		);
 	}
 
@@ -67,7 +68,11 @@ export class EditCommands implements vs.Disposable {
 		}
 	}
 
-	private async toggleDartdocomment() {
+	private toggleDartdocComment() {
+		return this.toggleLineComment(true);
+	}
+
+	private async toggleLineComment(onlyDartdoc = false) {
 		const editor = getActiveRealFileEditor();
 		if (!editor || !editor.selections.length)
 			return;
@@ -102,19 +107,36 @@ export class EditCommands implements vs.Disposable {
 			}
 		}
 
-		switch (commonPrefix) {
-			case "NONE":
-				// If no prefix, insert triples.
-				this.prefixLines(editor, selections, "/// ");
-				break;
-			case "DOUBLE":
-				// If already double, just add the additional one slash.
-				this.prefixLines(editor, selections, "/");
-				break;
-			case "TRIPLE":
-				// If already triple, remove slashes.
-				this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
-				break;
+		if (onlyDartdoc) {
+			switch (commonPrefix) {
+				case "NONE":
+					// If no prefix, insert triples.
+					this.prefixLines(editor, selections, "/// ");
+					break;
+				case "DOUBLE":
+					// If already double, just add the additional one slash.
+					this.prefixLines(editor, selections, "/");
+					break;
+				case "TRIPLE":
+					// If already triple, remove slashes.
+					this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
+					break;
+			}
+		} else {
+			switch (commonPrefix) {
+				case "NONE":
+					// If no prefix, insert doubles.
+					this.prefixLines(editor, selections, "// ");
+					break;
+				case "DOUBLE":
+					// If already double, add an additional slash to make triple.
+					this.prefixLines(editor, selections, "/");
+					break;
+				case "TRIPLE":
+					// If already triple, remove slashes.
+					this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
+					break;
+			}
 		}
 	}
 
