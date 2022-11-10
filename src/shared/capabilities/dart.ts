@@ -53,6 +53,7 @@ export class DartCapabilities {
 	get supportsCommandParameterSupportedKinds() { return versionIsAtLeast(this.version, "2.19.0-283"); }
 	get supportsServerSnippets() { return versionIsAtLeast(this.version, "2.17.0-258"); }
 	get supportsSdkDap() { return versionIsAtLeast(this.version, "2.17.0-0"); }
+	get supportsShowTodoArray() { return versionIsAtLeast(this.version, "2.16.0-0"); }
 	get sdkDapProvidesExceptionText() { return versionIsAtLeast(this.version, "2.18.0-265"); }
 	// TODO: Update these (along with Flutter) when supported.
 	get webSupportsEvaluation() { return false; }

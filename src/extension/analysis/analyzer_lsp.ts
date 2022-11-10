@@ -324,10 +324,15 @@ export class LspAnalyzer extends Analyzer {
 				configuration: async (params: ls.ConfigurationParams, token: vs.CancellationToken, next: ls.ConfigurationRequest.HandlerSignature) => {
 					const results = await next(params, token);
 
-					// Replace any instance of enableSnippets with the value of enableServerSnippets.
 					if (Array.isArray(results)) {
 						for (const result of results) {
+							// Replace any instance of enableSnippets with the value of enableServerSnippets.
 							result.enableSnippets = config.enableServerSnippets && this.dartCapabilities.supportsServerSnippets;
+
+							// Flatten showTodos to a boolean if array not supported.
+							if (Array.isArray(result.showTodos) && !this.dartCapabilities.supportsShowTodoArray) {
+								result.showTodos = result.showTodos.length !== 0;
+							}
 						}
 					}
 
