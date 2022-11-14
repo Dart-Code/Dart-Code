@@ -69,7 +69,7 @@ export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri):
 }
 
 export async function promptToRunPubGet(folders: Uri[]) {
-	const label = "Get packages";
+	const label = "Run 'pub get'";
 	const clickedButton = await window.showInformationMessage("Some packages are missing or out of date, would you like to get them now?", label);
 	if (clickedButton === label)
 		await runPubGet(folders);
@@ -81,8 +81,8 @@ export function runPubGet(folders: Uri[]) {
 
 
 export async function promptToRunPubUpgrade(folders: Uri[]) {
-	const label = "Upgrade packages";
-	const clickedButton = await window.showInformationMessage("Your SDK has been updated since you last fetched packages, would you like to fetch upgraded packages?", label);
+	const label = "Run 'pub upgrade'";
+	const clickedButton = await window.showInformationMessage("Your SDK has been updated since you last fetched packages, would you like to fetch updated packages?", label);
 	if (clickedButton === label)
 		await runPubUpgrade(folders);
 }
