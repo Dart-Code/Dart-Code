@@ -708,13 +708,13 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	setCommandVisiblity(true, workspaceContext);
 	vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, dartPlatformName);
 
-	// Prompt for pub get if required
+	// Prompt for pub get/upgrade if required
 	function checkForPackages() {
 		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
 		if (workspaceContext.config.disableAutomaticPackageGet)
 			return;
 		// tslint:disable-next-line: no-floating-promises
-		packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true });
+		packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true, upgradeOnSdkChange: true });
 	}
 	checkForPackages();
 

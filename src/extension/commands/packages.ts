@@ -5,10 +5,10 @@ import { iUnderstandAction } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { getPubPackageStatus, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
-import { isPubGetProbablyRequired, promptToRunPubGet, runPubGet } from "../pub/pub";
 import * as util from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands, commandState } from "./sdk";
@@ -83,7 +83,14 @@ export class PackageCommands extends BaseSdkCommands {
 			return this.runPub(["outdated"], uri, true);
 	}
 
-	private async upgradePackages(uri: string | vs.Uri | undefined) {
+	private async upgradePackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
+		if (Array.isArray(uri)) {
+			for (const item of uri) {
+				await this.getPackages(item);
+			}
+			return;
+		}
+
 		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages in");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
@@ -188,7 +195,7 @@ export class PackageCommands extends BaseSdkCommands {
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 
-	public async fetchPackagesOrPrompt(uri: vs.Uri | undefined, options?: { alwaysPrompt?: boolean }): Promise<void> {
+	public async fetchPackagesOrPrompt(uri: vs.Uri | undefined, options?: { alwaysPrompt?: boolean, upgradeOnSdkChange?: boolean }): Promise<void> {
 		if (isFetchingPackages) {
 			this.logger.info(`Already running pub get, skipping!`);
 			return;
@@ -204,18 +211,25 @@ export class PackageCommands extends BaseSdkCommands {
 			//   0 - then just use Uri
 			//   1 - then just do that one
 			//   more than 1 - prompt to do all
-			const folders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
-			const foldersRequiringPackageGet = uniq(folders)
+			const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+			const pubStatuses = uniq(projectFolders)
 				.map(vs.Uri.file)
 				.filter((uri) => config.for(uri).promptToGetPackages)
-				.filter((uri) => isPubGetProbablyRequired(this.sdks, this.logger, uri));
-			this.logger.info(`Found ${foldersRequiringPackageGet.length} folders requiring "pub get":${foldersRequiringPackageGet.map((uri) => `\n    ${fsPath(uri)}`).join("")}`);
-			if (!forcePrompt && foldersRequiringPackageGet.length === 0 && uri)
-				await this.runPubGetWithRelatives(folders, uri);
-			else if (!forcePrompt && foldersRequiringPackageGet.length === 1)
-				await this.runPubGetWithRelatives(folders, foldersRequiringPackageGet[0]);
-			else if (foldersRequiringPackageGet.length)
-				promptToRunPubGet(foldersRequiringPackageGet);
+				.map((uri) => ({ uri, status: getPubPackageStatus(this.sdks, this.logger, uri) }))
+				.filter((result) => result.status !== undefined);
+			this.logger.info(`Found ${pubStatuses.length} folders requiring "pub get" or "pub upgrade":${pubStatuses.map((result) => `\n    ${fsPath(result.uri)} (get: ${result.status?.probablyRequiresGet}, upgrade: ${result.status?.probablyRequiresUpgrade})`).join("")}`);
+
+			const someProjectsRequirePubUpgrade = pubStatuses.some((result) => result.status?.probablyRequiresUpgrade);
+			const projectsRequiringPub = pubStatuses.map((result) => result.uri);
+
+			if (options?.upgradeOnSdkChange && someProjectsRequirePubUpgrade)
+				await promptToRunPubUpgrade(projectsRequiringPub);
+			if (!forcePrompt && projectsRequiringPub.length === 0 && uri)
+				await this.runPubGetWithRelatives(projectFolders, uri);
+			else if (!forcePrompt && projectsRequiringPub.length === 1)
+				await this.runPubGetWithRelatives(projectFolders, projectsRequiringPub[0]);
+			else if (projectsRequiringPub.length)
+				await promptToRunPubGet(projectsRequiringPub);
 		} finally {
 			isFetchingPackages = false;
 		}

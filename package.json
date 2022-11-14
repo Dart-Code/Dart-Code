@@ -2075,7 +2075,7 @@
 					"dart.promptToGetPackages": {
 						"type": "boolean",
 						"default": true,
-						"description": "Whether to prompt to get packages when opening a project with out of date packages.",
+						"description": "Whether to prompt to get/upgrade packages when opening a project with missing/out of date packages.",
 						"scope": "resource"
 					},
 					"dart.pubAdditionalArgs": {

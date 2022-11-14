@@ -280,6 +280,20 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	}
 }
 
+export function getPubGeneratorVersion(logger: Logger, packageMapPath: string): string | undefined {
+	if (!fs.existsSync(packageMapPath))
+		return undefined;
+	try {
+		const content = fs.readFileSync(packageMapPath, "utf8");
+		const data = JSON.parse(content);
+		const version = data.generatorVersion as string | undefined | null;
+		return nullToUndefined(semver.valid(version));
+	} catch (e) {
+		logger.error(e);
+		return undefined;
+	}
+}
+
 export function tryDeleteFile(filePath: string) {
 	if (fs.existsSync(filePath)) {
 		try {
