@@ -118,3 +118,17 @@ export function extractTestNameFromOutline(elementName: string): string | undefi
 
 	return elementName;
 }
+
+/// Rewrites file:/// URIs that use the format `file.dart:1:2` so that VS Code will
+/// handle them correctly when Ctrl+Clicked.
+///
+/// https://github.com/Dart-Code/Dart-Code/issues/4089
+/// https://github.com/microsoft/vscode/issues/150702
+/// https://github.com/microsoft/vscode/issues/157500
+export function rewriteUrisForTestOutput(message: string): string {
+	const uriColonRegex = new RegExp("((?:file:\\/\\/|package:).*?\\.dart):(\\d+):(\\d+)", "g");
+	const uriSpaceLine = new RegExp("((?:file:\\/\\/|package:).*?\\.dart) line (\\d+)", "g");
+	return message
+		.replace(uriColonRegex, "$1#$2,$3")
+		.replace(uriSpaceLine, "$1#$2");
+}
