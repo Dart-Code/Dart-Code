@@ -281,13 +281,18 @@ export class FlutterDeviceManager implements vs.Disposable {
 				.map((d) => d.platformType)
 				.filter(notNullOrUndefined)
 		);
-		pickableItems = pickableItems.concat(
-			potentialPlatformTypes
-				.map((p) => ({
+		if (potentialPlatformTypes.length) {
+			pickableItems = pickableItems.concat([
+				{
+					kind: vs.QuickPickItemKind.Separator,
+					label: "Other Available Platforms",
+				},
+				...potentialPlatformTypes.map((p) => ({
 					device: { type: "platform-enabler", platformType: p },
 					label: `Enable ${p} for this project`,
-				})),
-		);
+				}) as PickableDevice),
+			]);
+		}
 
 		return pickableItems;
 	}
