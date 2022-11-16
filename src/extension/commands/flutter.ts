@@ -172,6 +172,8 @@ export class FlutterCommands extends BaseSdkCommands {
 		if (triggerData?.template) {
 			args.push("--template");
 			args.push(triggerData.template);
+			if (triggerData?.empty && this.flutterCapabilities.supportsCreateEmpty)
+				args.push("--empty");
 			args.push("--overwrite");
 		}
 		args.push(".");
@@ -197,9 +199,15 @@ export class FlutterCommands extends BaseSdkCommands {
 	private getFlutterTemplates(): Array<vs.QuickPickItem & { template: FlutterProjectTemplate }> {
 		const templates = [
 			{
-				detail: "Generate a Flutter application.",
+				detail: "Generate a Flutter application with descriptive comments and tests.",
 				label: "Application",
 				template: { id: "app" },
+			},
+			{
+				condition: this.flutterCapabilities.supportsCreateEmpty,
+				detail: "Generate a Flutter application without descriptive comments or tests.",
+				label: "Application (empty)",
+				template: { id: "app", empty: true },
 			},
 			{
 				detail: "Generate a project to add a Flutter module to an existing Android or iOS application.",
@@ -216,15 +224,13 @@ export class FlutterCommands extends BaseSdkCommands {
 				label: "Plugin",
 				template: { id: "plugin" },
 			},
-		];
-
-		if (this.flutterCapabilities.supportsCreateSkeleton) {
-			templates.push({
+			{
+				condition: this.flutterCapabilities.supportsCreateSkeleton,
 				detail: "Generate a List View / Detail View Flutter application that follows community best practices.",
 				label: "Skeleton",
 				template: { id: "skeleton" },
-			});
-		}
+			},
+		].filter((t) => t.condition !== false);
 
 		return templates;
 	}
@@ -248,10 +254,10 @@ export class FlutterCommands extends BaseSdkCommands {
 		if (!selectedTemplate)
 			return;
 
-		return this.createFlutterProjectForTemplate(selectedTemplate.template.id);
+		return this.createFlutterProjectForTemplate(selectedTemplate.template);
 	}
 
-	private async createFlutterProjectForTemplate(template: string): Promise<vs.Uri | undefined> {
+	private async createFlutterProjectForTemplate(template: FlutterProjectTemplate): Promise<vs.Uri | undefined> {
 		if (!this.sdks || !this.sdks.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
@@ -284,7 +290,9 @@ export class FlutterCommands extends BaseSdkCommands {
 		// Create the empty folder so we can open it.
 		fs.mkdirSync(projectFolderPath);
 
-		const triggerData: FlutterCreateTriggerData | undefined = template ? { template } : undefined;
+		const triggerData: FlutterCreateTriggerData | undefined = template
+			? { template: template.id, empty: template.empty }
+			: undefined;
 		writeFlutterTriggerFile(projectFolderPath, triggerData);
 
 		// If we're using a custom SDK, we need to apply it to the new project too.

@@ -11,6 +11,7 @@ export class FlutterCapabilities {
 
 	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "3.4.0-33"); }
 	get supportsCreateSkeleton() { return versionIsAtLeast(this.version, "2.5.0"); }
+	get supportsCreateEmpty() { return versionIsAtLeast(this.version, "3.6.0-3"); }
 	get supportsCreatingSamples() { return versionIsAtLeast(this.version, "1.0.0"); }
 	get hasLatestStructuredErrorsWork() { return versionIsAtLeast(this.version, "1.21.0-5.0"); }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }

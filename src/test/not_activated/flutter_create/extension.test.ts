@@ -50,6 +50,10 @@ describe("command", () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "skeleton");
 	});
 
+	it("Flutter: New Project can be invoked and creates empty application trigger file", async () => {
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "application", true);
+	});
+
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
 		type SnippetOption = vs.QuickPickItem & { snippet: FlutterSampleSnippet };
@@ -76,12 +80,12 @@ describe("command", () => {
 	});
 });
 
-async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string): Promise<void> {
+async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string, empty?: boolean): Promise<void> {
 	attachLoggingWhenExtensionAvailable();
 
 	// Return the expected project type from the prompt.
 	const showQuickPick = sb.stub(vs.window, "showQuickPick");
-	showQuickPick.resolves({ template: { id: expectedTemplate } });
+	showQuickPick.resolves({ template: { id: expectedTemplate, empty } });
 
 	// Choose a random temp folder for the project output.
 	const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
@@ -110,5 +114,6 @@ async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: s
 	const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
 	const json = jsonString ? JSON.parse(jsonString) as FlutterCreateTriggerData : undefined;
 
-	assert.equal(json?.template === expectedTemplate, true);
+	assert.equal(json?.template, expectedTemplate);
+	assert.equal(json?.empty, empty);
 }

@@ -84,11 +84,13 @@ export interface DartProjectTemplate {
 
 export interface FlutterProjectTemplate {
 	readonly id: string;
+	readonly empty?: boolean;
 }
 
 export interface FlutterCreateTriggerData {
 	readonly sample?: string;
 	readonly template?: string;
+	readonly empty?: boolean;
 }
 
 export interface Logger {
