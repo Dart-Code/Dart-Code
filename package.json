@@ -621,7 +621,7 @@
 			},
 			{
 				"command": "dart.hotReload",
-				"when": "inDebugMode && debugType == dart",
+				"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession",
 				"key": "ctrl+f5"
 			},
 			{
@@ -893,7 +893,7 @@
 				},
 				{
 					"command": "flutter.hotReload",
-					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && dart-code:service.reloadSources"
 				},
 				{
 					"command": "_dart.hotReload.touchBar",
@@ -901,7 +901,7 @@
 				},
 				{
 					"command": "dart.hotReload",
-					"when": "inDebugMode && debugType == dart"
+					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession"
 				},
 				{
 					"command": "dart.openDevTools",
@@ -996,7 +996,7 @@
 				{
 					"command": "dart.hotReload",
 					"group": "navigation@59",
-					"when": "inDebugMode && debugType == dart"
+					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession"
 				},
 				{
 					"command": "dart.openDevToolsInspector",
@@ -1017,7 +1017,7 @@
 			"touchBar": [
 				{
 					"command": "_dart.hotReload.touchBar",
-					"when": "inDebugMode && debugType == dart",
+					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession",
 					"group": "9_debug@5"
 				},
 				{

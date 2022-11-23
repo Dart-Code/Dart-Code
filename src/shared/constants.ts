@@ -116,6 +116,7 @@ export const REFACTOR_ANYWAY = "Refactor Anyway";
 
 export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
 export const HAS_LAST_TEST_DEBUG_CONFIG = "dart-code:hasLastTestDebugConfig";
+export const isInDartDebugSessionContext = "dart-code:isInDartDebugSession";
 export const isInFlutterDebugModeDebugSessionContext = "dart-code:isInFlutterDebugModeDebugSession";
 export const isInFlutterProfileModeDebugSessionContext = "dart-code:isInFlutterProfileModeDebugSession";
 export const isInFlutterReleaseModeDebugSessionContext = "dart-code:isInFlutterReleaseModeDebugSession";

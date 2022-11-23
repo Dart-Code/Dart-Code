@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
+import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
 import { disposeAll, PromiseCompleter } from "../../shared/utils";
@@ -32,6 +32,7 @@ let pendingCustomEvents: vs.DebugSessionCustomEvent[] = [];
 
 let hasPromptedAboutDebugSettings = false;
 
+export let isInDartDebugSession = false;
 export let isInFlutterDebugModeDebugSession = false;
 export let isInFlutterProfileModeDebugSession = false;
 
@@ -447,6 +448,9 @@ export class DebugCommands implements IAmDisposable {
 				isInFlutterDebugModeDebugSession = true;
 				vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
 			}
+		} else if (s.configuration.debuggerType === DebuggerType.Dart) {
+			isInDartDebugSession = true;
+			vs.commands.executeCommand("setContext", isInDartDebugSessionContext, true);
 		}
 
 		// Process any queued events that came in before the session start
@@ -506,6 +510,7 @@ export class DebugCommands implements IAmDisposable {
 			isInFlutterDebugModeDebugSession = false;
 			isInFlutterProfileModeDebugSession = false;
 			for (const debugContext of [
+				isInDartDebugSessionContext,
 				isInFlutterDebugModeDebugSessionContext,
 				isInFlutterProfileModeDebugSessionContext,
 				isInFlutterReleaseModeDebugSessionContext,
