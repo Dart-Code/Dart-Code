@@ -75,7 +75,7 @@ export async function showSimpleSettingsEditor(title: string, placeholder: strin
 
 export async function editSetting(setting: PickableSetting) {
 	const title = setting.label;
-	const placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
+	let placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;
 	const value = setting.currentValue;
 	switch (setting.settingKind) {
@@ -84,23 +84,52 @@ export async function editSetting(setting: PickableSetting) {
 			if (stringResult !== undefined)
 				await setting.setValue(stringResult);
 			break;
-		case "ENUM":
+		case "ENUM": {
 			const quickPick = vs.window.createQuickPick();
 			quickPick.placeholder = placeholder;
 			quickPick.title = title;
 			quickPick.items = setting.enumValues!.map((v) => ({ label: v } as vs.QuickPickItem));
 			quickPick.activeItems = quickPick.items.filter((item) => item.label === setting.currentValue);
 
-			const enumResult = await new Promise<string | undefined>((resolve) => {
-				quickPick.onDidAccept(() => resolve(quickPick.activeItems.length ? quickPick.activeItems[0].label : undefined));
-				quickPick.onDidHide(() => resolve(undefined));
+			const accepted = await new Promise<boolean>((resolve) => {
+				quickPick.onDidAccept(() => resolve(true));
+				quickPick.onDidHide(() => resolve(false));
 				quickPick.show();
 			});
+			const enumResult = accepted && quickPick.activeItems.length ? quickPick.activeItems[0].label : undefined;
 			quickPick.dispose();
 
 			if (enumResult !== undefined)
 				await setting.setValue(enumResult);
 			break;
+		}
+		case "MULTI_ENUM": {
+			placeholder = `Select options for ${setting.label} (or 'Escape' to cancel)`;
+			const quickPick = vs.window.createQuickPick();
+			quickPick.canSelectMany = true;
+			quickPick.placeholder = placeholder;
+			quickPick.title = title;
+			const items: vs.QuickPickItem[] = [];
+			for (const group of setting.enumValues) {
+				items.push({ label: group.group, kind: vs.QuickPickItemKind.Separator } as vs.QuickPickItem);
+				for (const value of group.values) {
+					items.push({ label: value } as vs.QuickPickItem);
+				}
+			}
+			quickPick.items = items;
+			quickPick.selectedItems = quickPick.items.filter((item) => setting.currentValue.find((current) => current === item.label));
+
+			const accepted = await new Promise<boolean>((resolve) => {
+				quickPick.onDidAccept(() => resolve(true));
+				quickPick.onDidHide(() => resolve(false));
+				quickPick.show();
+			});
+			quickPick.dispose();
+
+			if (accepted)
+				await setting.setValue(quickPick.selectedItems.map((item) => item.label));
+			break;
+		}
 		case "BOOL":
 			const boolResult = await vs.window.showQuickPick(
 				[
@@ -116,9 +145,14 @@ export async function editSetting(setting: PickableSetting) {
 }
 
 type UserInputOrSettings = { value: string } | "SETTINGS";
-export type PickableSetting = vs.QuickPickItem & {
+export type PickableSetting = vs.QuickPickItem & ({
 	settingKind: "STRING" | "ENUM" | "BOOL",
 	currentValue: any,
 	setValue: (newValue: any) => Promise<void>,
 	enumValues?: string[],
-};
+} | {
+	settingKind: "MULTI_ENUM",
+	currentValue: any[],
+	setValue: (newValue: any[]) => Promise<void>,
+	enumValues: Array<{ group?: string, values: string[] }>,
+});

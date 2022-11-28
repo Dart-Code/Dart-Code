@@ -1756,6 +1756,15 @@
 						"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: New Project' command.",
 						"scope": "window"
 					},
+					"dart.flutterCreatePlatforms": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": null,
+						"description": "The platforms to enable for new projects created using the 'Flutter: New Project' command. If unset, all platforms will be enabled.",
+						"scope": "window"
+					},
 					"dart.offline": {
 						"type": "boolean",
 						"default": false,

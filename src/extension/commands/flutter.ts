@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../shared/capabilities/vscode";
-import { defaultLaunchJson } from "../../shared/constants";
+import { defaultLaunchJson, flutterCreateAvailablePlatforms, flutterCreateTemplatesSupportingPlatforms } from "../../shared/constants";
 import { DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, FlutterProjectTemplate, Logger } from "../../shared/interfaces";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
@@ -140,13 +140,24 @@ export class FlutterCommands extends BaseSdkCommands {
 				return;
 		}
 
+		const template = triggerData?.template;
+		const templateSupportsPlatform = !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === template ?? "app");
+		const defaultPlatforms = config.flutterCreatePlatforms;
+
 		const args = ["create"];
 		if (config.flutterCreateOffline || config.offline) {
 			args.push("--offline");
 		}
-		if (platform) {
-			args.push("--platforms");
-			args.push(platform);
+		if (templateSupportsPlatform) {
+			if (platform) {
+				args.push("--platforms");
+				args.push(platform);
+			} else if (defaultPlatforms) {
+				for (const platform of defaultPlatforms) {
+					args.push("--platforms");
+					args.push(platform);
+				}
+			}
 		}
 		if (projectName) {
 			args.push("--project-name");
@@ -169,9 +180,9 @@ export class FlutterCommands extends BaseSdkCommands {
 			args.push(triggerData.sample);
 			args.push("--overwrite");
 		}
-		if (triggerData?.template) {
+		if (template) {
 			args.push("--template");
-			args.push(triggerData.template);
+			args.push(template);
 			if (triggerData?.empty && this.flutterCapabilities.supportsCreateEmpty)
 				args.push("--empty");
 			args.push("--overwrite");
@@ -415,6 +426,26 @@ function getCurrentFlutterCreateSettings(): PickableSetting[] {
 			label: "Offline Mode",
 			setValue: (newValue: boolean | undefined) => config.setOffline(newValue),
 			settingKind: "BOOL",
+		},
+		{
+			currentValue: config.flutterCreatePlatforms ?? flutterCreateAvailablePlatforms,
+			description: config.flutterCreatePlatforms ? config.flutterCreatePlatforms.join(", ") : "all",
+			detail: "The platforms that should be enabled for new Flutter applications.",
+			enumValues: [{
+				values: flutterCreateAvailablePlatforms,
+			},
+			/* {
+				group: "Defaults",
+				values: ["Set as default..."],
+			} */ ],
+			label: "Platforms",
+			setValue: async (newValues: any[]) => {
+				const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
+					? undefined // all
+					: newValues;
+				await config.setFlutterCreatePlatforms(valueToSave);
+			},
+			settingKind: "MULTI_ENUM",
 		},
 	];
 }
