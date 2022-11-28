@@ -75,7 +75,7 @@ export async function showSimpleSettingsEditor(title: string, placeholder: strin
 
 export async function editSetting(setting: PickableSetting) {
 	const title = setting.label;
-	const placeHolder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
+	const placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;
 	const value = setting.currentValue;
 	switch (setting.settingKind) {
@@ -85,12 +85,21 @@ export async function editSetting(setting: PickableSetting) {
 				await setting.setValue(stringResult);
 			break;
 		case "ENUM":
-			const enumResult = await vs.window.showQuickPick(
-				setting.enumValues!.map((v) => ({ label: v } as vs.QuickPickItem)),
-				{ placeHolder, title },
-			);
+			const quickPick = vs.window.createQuickPick();
+			quickPick.placeholder = placeholder;
+			quickPick.title = title;
+			quickPick.items = setting.enumValues!.map((v) => ({ label: v } as vs.QuickPickItem));
+			quickPick.activeItems = quickPick.items.filter((item) => item.label === setting.currentValue);
+
+			const enumResult = await new Promise<string | undefined>((resolve) => {
+				quickPick.onDidAccept(() => resolve(quickPick.activeItems.length ? quickPick.activeItems[0].label : undefined));
+				quickPick.onDidHide(() => resolve(undefined));
+				quickPick.show();
+			});
+			quickPick.dispose();
+
 			if (enumResult !== undefined)
-				await setting.setValue(enumResult.label);
+				await setting.setValue(enumResult);
 			break;
 		case "BOOL":
 			const boolResult = await vs.window.showQuickPick(
@@ -98,7 +107,7 @@ export async function editSetting(setting: PickableSetting) {
 					{ label: "enable" } as vs.QuickPickItem,
 					{ label: "disable" } as vs.QuickPickItem,
 				],
-				{ placeHolder, title },
+				{ placeHolder: placeholder, title },
 			);
 			if (boolResult !== undefined)
 				await setting.setValue(boolResult.label === "enable");
