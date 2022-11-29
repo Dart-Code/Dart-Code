@@ -36,6 +36,14 @@ function checkIsPreReleaseExtension() {
 	return minSegment % 2 === 1;
 }
 
+export function getExtensionVersionForReleaseNotes() {
+	if (!isPreReleaseExtension)
+		return extensionVersion;
+
+	const segments = extensionVersion.split(".");
+	return `${segments[0]}.${parseInt(segments[1], 10) - 1}.0`;
+}
+
 export function checkHasFlutterExtension() {
 	return extensions.getExtension(flutterExtensionIdentifier) !== undefined;
 }

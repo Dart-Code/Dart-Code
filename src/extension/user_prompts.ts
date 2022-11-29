@@ -6,7 +6,7 @@ import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
-import { checkHasFlutterExtension, extensionVersion, hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
+import { checkHasFlutterExtension, extensionVersion, getExtensionVersionForReleaseNotes, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
 import { envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
@@ -61,16 +61,17 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		}
 	}
 
+	const extensionVersionForReleaseNotes = getExtensionVersionForReleaseNotes();
 	const lastSeenVersionNotification = context.lastSeenVersion;
 	if (!lastSeenVersionNotification) {
 		// If we've not got a stored version, this is the first install, so just
 		// stash the current version and don't show anything.
-		context.lastSeenVersion = extensionVersion;
-	} else if (!isDevExtension && !isPreReleaseExtension && lastSeenVersionNotification !== extensionVersion) {
-		const versionLink = extensionVersion.split(".").slice(0, 2).join(".").replace(".", "-");
+		context.lastSeenVersion = extensionVersionForReleaseNotes;
+	} else if (!isDevExtension && lastSeenVersionNotification !== extensionVersionForReleaseNotes) {
+		const versionLink = extensionVersionForReleaseNotes.split(".").slice(0, 2).join(".").replace(".", "-");
 		// tslint:disable-next-line: no-floating-promises
 		promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
-			context.lastSeenVersion = extensionVersion,
+			context.lastSeenVersion = extensionVersionForReleaseNotes,
 		);
 		return;
 	}
