@@ -11,6 +11,8 @@ import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 import { formatForTerminal } from "../utils/vscode/terminals";
 
+const runnableTestTag = new vs.TestTag("DartRunnableTest");
+
 export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	public readonly controller: vs.TestController;
@@ -30,10 +32,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			controller.resolveHandler = (item: vs.TestItem | undefined) => this.resolveTestItem(item);
 
 		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) =>
-			this.runTests(false, request, token));
+			this.runTests(false, request, token), false, runnableTestTag);
 
 		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) =>
-			this.runTests(true, request, token));
+			this.runTests(true, request, token), true, runnableTestTag);
 	}
 
 	private async resolveTestItem(item: vs.TestItem | undefined): Promise<void> {
@@ -244,6 +246,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private updateFields(item: vs.TestItem, node: TreeNode) {
+		if (this.isRunnableTest(node))
+			item.tags = [runnableTestTag];
+		else
+			item.tags = [];
 		item.description = node.description;
 		if ((node instanceof GroupNode || node instanceof TestNode) && node.range) {
 			item.range = new vs.Range(
@@ -251,6 +257,15 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				new vs.Position(node.range.end.line, node.range.end.character),
 			);
 		}
+	}
+
+	private isRunnableTest(node: TreeNode): boolean {
+		const label = node.label;
+		if (!label)
+			return false;
+		if (label.startsWith("(setUp") || label.startsWith("(tearDown"))
+			return label.endsWith(")");
+		return true;
 	}
 
 	private getOrCreateTestRun(sessionID: string) {
