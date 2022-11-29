@@ -1611,6 +1611,22 @@
 						"markdownDescription": "Whether to insert parentheses and placeholders for positional and required arguments during code completions when using LSP. This feature is automatically disabled if commit characters are enabled.",
 						"scope": "resource"
 					},
+					"dart.documentation": {
+						"type": "string",
+						"default": "full",
+						"enum": [
+							"full",
+							"summary",
+							"none"
+						],
+						"enumDescriptions": [
+							"Show full documentation",
+							"Show short documentatin summary",
+							"Do not show documentation"
+						],
+						"markdownDescription": "What level of documentation to show in Hovers and Code Completion details. This setting is only supported for Dart SDKs after v2.18.",
+						"scope": "window"
+					},
 					"dart.doNotFormat": {
 						"type": "array",
 						"default": [],
