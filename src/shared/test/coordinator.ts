@@ -237,14 +237,24 @@ The test description was: .*
 		if (!line || !character)
 			return;
 
+		// VS Code is zero-based, but package:test is 1-based.
+		const zeroBasedLine = line - 1;
+		const zeroBasedCharacter = character - 1;
+
 		// In test notifications, we only get the start line/column but we need to give VS Code the full range for "Run Test at Cursor" to work.
 		// The outline data was captured when the suite started, so we can assume it's reasonable accurate, so try to look up the node
 		// there and use its range. Otherwise, just make a range that goes from the start position to the next line (assuming the rest
 		// of the line is the test name, and we can at least support running it there).
-		const testsOnLine = line ? this.suiteOutlineVisitors[suite.path]?.testsByLine[line - 1] : undefined;
-		const test = testsOnLine ? testsOnLine.find((t) => t.range.start.character === character - 1) : undefined;
+		const testsOnLine = line ? this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine] : undefined;
+		const test = testsOnLine ? testsOnLine.find((t) => t.range.start.character === zeroBasedCharacter) : undefined;
 
-		const range = line && character ? test?.range ?? { start: { line, character }, end: { line: line + 1, character } } : undefined;
+		const range = line && character
+			? test?.range ?? {
+				end: { line: zeroBasedLine + 1, character: zeroBasedCharacter },
+				start: { line: zeroBasedLine, character: zeroBasedCharacter },
+			} as Range
+			: undefined;
+
 		return range;
 	}
 
