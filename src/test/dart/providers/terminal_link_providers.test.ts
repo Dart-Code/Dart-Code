@@ -14,6 +14,7 @@ describe("DartFileUriTerminalLinkProvider", () => {
 		await expectLink("file:///foo/bar.dart", "/foo/bar.dart");
 		await expectLink("file:///foo/bar.dart:5:8", "/foo/bar.dart", 5, 8);
 		await expectLink("file:///foo/bar.dart 5:8", "/foo/bar.dart", 5, 8);
+		await expectLink("file:///foo/bar.dart line 5", "/foo/bar.dart", 5);
 		await expectLink("aaa file:///foo/bar.dart:5:8 bbb", "/foo/bar.dart", 5, 8);
 	});
 
@@ -23,6 +24,7 @@ describe("DartFileUriTerminalLinkProvider", () => {
 		await expectLink("file:///C:/foo/bar.dart", "C:\\foo\\bar.dart");
 		await expectLink("file:///C:/foo/bar.dart:5:8", "C:\\foo\\bar.dart", 5, 8);
 		await expectLink("file:///C:/foo/bar.dart 5:8", "C:\\foo\\bar.dart", 5, 8);
+		await expectLink("file:///C:/foo/bar.dart line 5", "C:\\foo\\bar.dart", 5);
 		await expectLink("aaa file:///C:/foo/bar.dart:5:8 bbb", "C:\\foo\\bar.dart", 5, 8);
 	});
 
@@ -32,6 +34,7 @@ describe("DartFileUriTerminalLinkProvider", () => {
 		await expectLink("file:///c:/foo/bar.dart", "C:\\foo\\bar.dart");
 		await expectLink("file:///c:/foo/bar.dart:5:8", "C:\\foo\\bar.dart", 5, 8);
 		await expectLink("file:///c:/foo/bar.dart 5:8", "C:\\foo\\bar.dart", 5, 8);
+		await expectLink("file:///c:/foo/bar.dart line 5", "C:\\foo\\bar.dart", 5);
 		await expectLink("aaa file:///c:/foo/bar.dart:5:8 bbb", "C:\\foo\\bar.dart", 5, 8);
 	});
 

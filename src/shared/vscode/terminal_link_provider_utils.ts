@@ -1,14 +1,14 @@
 import * as vs from "vscode";
 
-const fileUriPattern = new RegExp("(?<uri>file:\\/{3}\\S+[\\/]\\S+\\.dart)(?:[: ](?<line>\\d+):(?<col>\\d+))?", "mg");
-const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?:[: ](?<line>\\d+):(?<col>\\d+))?", "mg");
+const fileUriPattern = new RegExp("(?<uri>file:\\/{3}\\S+[\\/]\\S+\\.dart)(?:(?:[: ]| line )(?<line>\\d+)(?::(?<col>\\d+))?)?", "mg");
+const packageUriPattern = new RegExp("(?<uri>package:\\S+[\\/]\\S+\\.dart)(?:(?:[: ]| line )(?<line>\\d+)(?::(?<col>\\d+))?)?", "mg");
 
-export async function findPackageUriLinks(line: string, isKnownPackage: (packageName: string) => boolean): Promise<DartPackageUriTerminalLink[]> {
-	const results: DartPackageUriTerminalLink[] = [];
+export async function findPackageUriLinks(content: string, isKnownPackage: (packageName: string) => boolean): Promise<DartPackageUriLink[]> {
+	const results: DartPackageUriLink[] = [];
 	packageUriPattern.lastIndex = -1;
 	let result: RegExpExecArray | null;
 	// tslint:disable-next-line: no-conditional-assignment
-	while ((result = packageUriPattern.exec(line)) && result.groups) {
+	while ((result = packageUriPattern.exec(content)) && result.groups) {
 		let uri: vs.Uri | undefined;
 		try {
 			uri = vs.Uri.parse(result.groups.uri, true);
@@ -40,8 +40,8 @@ export async function findPackageUriLinks(line: string, isKnownPackage: (package
 	return results;
 }
 
-export async function findFileUriLinks(line: string): Promise<DartFileUriTerminalLink[]> {
-	const results: DartFileUriTerminalLink[] = [];
+export async function findFileUriLinks(line: string): Promise<DartFileUriLink[]> {
+	const results: DartFileUriLink[] = [];
 	fileUriPattern.lastIndex = -1;
 	let result: RegExpExecArray | null;
 	// tslint:disable-next-line: no-conditional-assignment
@@ -73,8 +73,16 @@ export async function findFileUriLinks(line: string): Promise<DartFileUriTermina
 	return results;
 }
 
+export function formatLineColFragment(link: { line: number | undefined, col: number | undefined }) {
+	if (link.line !== undefined && link.col !== undefined)
+		return `${link.line},${link.col}`;
+	else if (!link.line !== undefined)
+		return `${link.line}`;
+	else
+		return "";
+}
 
-export interface DartFileUriTerminalLink extends vs.TerminalLink {
+export interface DartFileUriLink {
 	startIndex: number;
 	length: number;
 	tooltip: string;
@@ -84,7 +92,7 @@ export interface DartFileUriTerminalLink extends vs.TerminalLink {
 }
 
 
-export interface DartPackageUriTerminalLink extends vs.TerminalLink {
+export interface DartPackageUriLink {
 	startIndex: number;
 	length: number;
 	tooltip: string;

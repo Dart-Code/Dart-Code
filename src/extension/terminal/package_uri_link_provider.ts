@@ -1,14 +1,15 @@
 import * as vs from "vscode";
 import { Logger } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
-import { DartPackageUriTerminalLink, findPackageUriLinks } from "../../shared/vscode/terminal_link_provider_utils";
+import { notUndefined } from "../../shared/utils";
+import { DartPackageUriLink, findPackageUriLinks, formatLineColFragment } from "../../shared/vscode/terminal_link_provider_utils";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { getExcludedFolders } from "../utils";
 
 
-export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvider<DartPackageUriTerminalLink> {
+export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartPackageUriLink>, vs.DocumentLinkProvider<vs.DocumentLink> {
 	packageMaps: { [key: string]: PackageMap } | undefined;
 	packageMapDiscovery: Promise<void> | undefined;
 
@@ -49,14 +50,18 @@ export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvid
 		return undefined;
 	}
 
-	public async provideTerminalLinks(context: vs.TerminalLinkContext, token: vs.CancellationToken): Promise<DartPackageUriTerminalLink[]> {
+	public provideTerminalLinks(context: vs.TerminalLinkContext, token: vs.CancellationToken): Promise<DartPackageUriLink[]> {
+		return this.getLinks(context.line);
+	}
+
+	private async getLinks(content: string) {
 		if (!this.packageMaps)
 			await this.discoverPackageMaps();
 
-		return findPackageUriLinks(context.line, (name) => this.isKnownPackage(name));
+		return findPackageUriLinks(content, (name) => this.isKnownPackage(name));
 	}
 
-	public handleTerminalLink(link: DartPackageUriTerminalLink): vs.ProviderResult<void> {
+	public handleTerminalLink(link: DartPackageUriLink): vs.ProviderResult<void> {
 		const filePath = this.resolvePackageUri(link.uri);
 		if (!filePath) {
 			vs.window.showErrorMessage(`Unable to find root for package ${link.packageName}`);
@@ -65,4 +70,17 @@ export class DartPackageUriTerminalLinkProvider implements vs.TerminalLinkProvid
 
 		vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
 	}
+
+	public async provideDocumentLinks(document: vs.TextDocument, token: vs.CancellationToken): Promise<vs.DocumentLink[]> {
+		const links = await this.getLinks(document.getText());
+
+		return links.map((link) => {
+			const range = new vs.Range(document.positionAt(link.startIndex), document.positionAt(link.startIndex + link.length));
+			const filePath = this.resolvePackageUri(link.uri);
+			if (!filePath)
+				return undefined;
+			return new vs.DocumentLink(range, vs.Uri.file(filePath).with({ fragment: formatLineColFragment(link) }));
+		}).filter(notUndefined);
+	}
+
 }

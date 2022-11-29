@@ -101,8 +101,8 @@ import { PubGlobal } from "./pub/global";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
-import { DartFileUriTerminalLinkProvider } from "./terminal/file_uri_link_provider";
-import { DartPackageUriTerminalLinkProvider } from "./terminal/package_uri_link_provider";
+import { DartFileUriLinkProvider } from "./terminal/file_uri_link_provider";
+import { DartPackageUriLinkProvider } from "./terminal/package_uri_link_provider";
 import { VsCodeTestController } from "./test/vs_test_controller";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
@@ -649,9 +649,16 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new LspEditCommands(lspAnalyzer));
 	}
 
-	if (vs.window.registerTerminalLinkProvider) { // Temporary workaround for GitPod/Theia not having this.
-		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartPackageUriTerminalLinkProvider(logger, workspaceContext)));
-		context.subscriptions.push(vs.window.registerTerminalLinkProvider(new DartFileUriTerminalLinkProvider()));
+	const packageLinkProvider = new DartPackageUriLinkProvider(logger, workspaceContext);
+	const fileLinkProvider = new DartFileUriLinkProvider();
+	if (vs.window.registerTerminalLinkProvider) { // Workaround for GitPod/Theia not having this.
+		context.subscriptions.push(vs.window.registerTerminalLinkProvider(packageLinkProvider));
+		context.subscriptions.push(vs.window.registerTerminalLinkProvider(fileLinkProvider));
+	}
+
+	if (vs.languages.registerDocumentLinkProvider) {
+		vs.languages.registerDocumentLinkProvider({ scheme: "vscode-test-data" }, packageLinkProvider);
+		vs.languages.registerDocumentLinkProvider({ scheme: "vscode-test-data" }, fileLinkProvider);
 	}
 
 	// Register our view providers.

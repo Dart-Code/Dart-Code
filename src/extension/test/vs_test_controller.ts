@@ -6,7 +6,6 @@ import { GroupNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { rewriteUrisForTestOutput } from "../../shared/utils/test";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 import { formatForTerminal } from "../utils/vscode/terminals";
@@ -321,7 +320,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public appendTestOutputLines(run: vs.TestRun, item: vs.TestItem, message: string) {
 		if (message.trim() === "")
 			return;
-		run.appendOutput(`${formatForTerminal(rewriteUrisForTestOutput(message))}\r\n`, undefined, item);
+		run.appendOutput(`${formatForTerminal(message)}\r\n`, undefined, item);
 	}
 
 	public testDone(sessionID: string, node: TestNode, result: "skipped" | "success" | "failure" | "error" | undefined): void {
