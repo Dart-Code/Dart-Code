@@ -591,6 +591,21 @@ export class DebugCommands implements IAmDisposable {
 				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
 				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
 			}
+		} else if (e.event === "flutter.forwardedEvent") {
+			const event = e.body.event;
+			const params = e.body.params;
+			switch (event) {
+				case "app.webLaunchUrl":
+					const url = params.url as string;
+					const launched = !!params.launched;
+					if (!launched) {
+						try {
+							await envUtils.openInBrowser(url, this.logger);
+						} catch (e: any) {
+							this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${url}`);
+						}
+					}
+			}
 		} else if (e.event === "flutter.forwardedRequest") {
 			const id = e.body.id;
 			const method = e.body.method;
