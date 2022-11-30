@@ -86,7 +86,7 @@ export class PackageCommands extends BaseSdkCommands {
 	private async upgradePackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
 		if (Array.isArray(uri)) {
 			for (const item of uri) {
-				await this.getPackages(item);
+				await this.upgradePackages(item);
 			}
 			return;
 		}
@@ -224,7 +224,7 @@ export class PackageCommands extends BaseSdkCommands {
 
 			if (options?.upgradeOnSdkChange && someProjectsRequirePubUpgrade)
 				await promptToRunPubUpgrade(projectsRequiringPub);
-			if (!forcePrompt && projectsRequiringPub.length === 0 && uri)
+			else if (!forcePrompt && projectsRequiringPub.length === 0 && uri)
 				await this.runPubGetWithRelatives(projectFolders, uri);
 			else if (!forcePrompt && projectsRequiringPub.length === 1)
 				await this.runPubGetWithRelatives(projectFolders, projectsRequiringPub[0]);
