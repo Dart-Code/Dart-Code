@@ -1663,7 +1663,7 @@
 					"dart.lineLength": {
 						"type": "integer",
 						"default": 80,
-						"description": "The maximum length of a line of code. This is used by the document formatter.",
+						"markdownDescription": "The maximum length of a line of code. This is used by the document formatter. If you change this value, you may wish to update `editor.rulers` (which draws vertical lines in the editor) in the `[\"dart\"]` section if your settings to match.",
 						"scope": "resource"
 					},
 					"dart.lspSnippetTextEdits": {
