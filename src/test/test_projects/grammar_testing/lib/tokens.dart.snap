@@ -48,8 +48,9 @@
 #^^ source.dart
 #  ^^^^ source.dart storage.type.primitive.dart
 #      ^ source.dart
-#       ^^^ source.dart keyword.declaration.dart
-#          ^^^ source.dart
+#       ^^^ source.dart entity.name.function.dart
+#          ^ source.dart
+#           ^^ source.dart
 #             ^^ source.dart keyword.operator.closure.dart
 #               ^ source.dart
 #                ^^^^^ source.dart entity.name.function.dart
@@ -63,8 +64,9 @@
 #^^ source.dart
 #  ^^^^ source.dart storage.type.primitive.dart
 #      ^ source.dart
-#       ^^^ source.dart keyword.declaration.dart
-#          ^^^ source.dart
+#       ^^^ source.dart entity.name.function.dart
+#          ^ source.dart
+#           ^^ source.dart
 #             ^^ source.dart keyword.operator.closure.dart
 #               ^ source.dart
 #                ^^^^^ source.dart entity.name.function.dart
@@ -147,15 +149,17 @@
 #^^ source.dart
 #  ^^^ source.dart support.class.dart
 #     ^ source.dart punctuation.dot.dart
-#      ^^^ source.dart keyword.declaration.dart
-#         ^^ source.dart
+#      ^^^ source.dart entity.name.function.dart
+#         ^ source.dart
+#          ^ source.dart
 #           ^ source.dart punctuation.terminator.dart
 >  FOO.set();
 #^^ source.dart
 #  ^^^ source.dart support.class.dart
 #     ^ source.dart punctuation.dot.dart
-#      ^^^ source.dart keyword.declaration.dart
-#         ^^ source.dart
+#      ^^^ source.dart entity.name.function.dart
+#         ^ source.dart
+#          ^ source.dart
 #           ^ source.dart punctuation.terminator.dart
 >  FOO.foo = FOO.foo;
 #^^ source.dart
