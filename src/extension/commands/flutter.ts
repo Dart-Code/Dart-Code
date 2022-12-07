@@ -141,7 +141,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 
 		const template = triggerData?.template;
-		const templateSupportsPlatform = !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === template ?? "app");
+		const templateSupportsPlatform = template === undefined || !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === template ?? "app");
 		const defaultPlatforms = config.flutterCreatePlatforms;
 
 		const args = ["create"];
