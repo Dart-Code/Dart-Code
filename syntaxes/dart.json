@@ -526,8 +526,8 @@
                     "name":        "storage.modifier.$1.dart"
                 },
                 {
-                    "match":       "(?<!\\$)\\b(?:void|var)\\b(?!\\$)",
-                    "name":        "storage.type.primitive.dart"
+                    "match":       "(?<!\\$)\\b(void|var)\\b(?!\\$)",
+                    "name":        "storage.type.primitive.$1.dart"
                 },
                 {
                     "match":       "(?<!\\$)\\b(double|int|num|Never|Null|Object|bool)\\b(?!\\$)",
