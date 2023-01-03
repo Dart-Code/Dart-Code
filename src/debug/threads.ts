@@ -3,8 +3,8 @@ import { DebugProtocol } from "@vscode/debugprotocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { errorString, PromiseCompleter } from "../shared/utils";
-import { DartDebugSession, InstanceWithEvaluateName, VmExceptionMode } from "./dart_debug_impl";
-import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
+import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
+import { DebuggerResult, VMBreakpoint, VMEvent, VmExceptionMode, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
 
 export class ThreadManager {
 	public nextThreadId: number = 0;
@@ -37,12 +37,23 @@ export class ThreadManager {
 
 			if (this.debugSession.vmService) {
 				await Promise.all([
-					this.debugSession.vmService.setExceptionPauseMode(thread.ref.id, this.exceptionMode),
+					this.setThreadExceptionPauseMode(thread.ref, this.exceptionMode),
 					this.setLibrariesDebuggable(thread.ref),
 					this.resendThreadBreakpoints(thread),
 				]);
 				thread.setInitialBreakpoints();
 			}
+		}
+	}
+
+	private async setThreadExceptionPauseMode(isolateRef: VMIsolateRef, mode: VmExceptionMode): Promise<void> {
+		if (!this.debugSession?.vmService)
+			return;
+
+		if (this.debugSession.vmServiceCapabilities.supportsSetIsolatePauseMode) {
+			await this.debugSession.vmService.setIsolatePauseMode(isolateRef.id, { exceptionPauseMode: mode });
+		} else {
+			await this.debugSession.vmService.setExceptionPauseMode(isolateRef.id, mode);
 		}
 	}
 
@@ -88,7 +99,7 @@ export class ThreadManager {
 			if (!thread.runnable || !this.debugSession.vmService)
 				return;
 
-			await this.debugSession.vmService.setExceptionPauseMode(thread.ref.id, mode);
+			await this.setThreadExceptionPauseMode(thread.ref, mode);
 		}));
 	}
 

@@ -17,7 +17,7 @@ import { sortBy } from "../shared/utils/array";
 import { applyColor, faint } from "../shared/utils/colors";
 import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
 import { mayContainStackFrame, parseStackFrame } from "../shared/utils/stack_trace";
-import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef, VMWriteEvent } from "./dart_debug_protocol";
+import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VmExceptionMode, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef, VMWriteEvent } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { formatPathForVm } from "./utils";
@@ -78,7 +78,7 @@ export class DartDebugSession extends DebugSession {
 	public evaluateGettersInDebugViews = false;
 	protected evaluateToStringInDebugViews = false;
 	protected readonly dartCapabilities = DartCapabilities.empty;
-	protected readonly vmServiceCapabilities = VmServiceCapabilities.empty;
+	public readonly vmServiceCapabilities = VmServiceCapabilities.empty;
 	private useWriteServiceInfo = false;
 	protected vmServiceInfoFile?: string;
 	private serviceInfoPollTimer?: NodeJS.Timer;
@@ -2325,8 +2325,6 @@ export interface InstanceWithEvaluateName extends VMInstanceRef {
 	// Undefined means we cannot evaluate
 	evaluateName: string | undefined;
 }
-
-export type VmExceptionMode = "None" | "Unhandled" | "All";
 
 class RemoteEditorTerminalProcess {
 	public killed = false;

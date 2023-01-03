@@ -465,9 +465,12 @@ export class VmServiceConnection {
 		return this.callMethod("addBreakpointWithScriptUri", data);
 	}
 
-	// None, Unhandled, and All
-	public setExceptionPauseMode(isolateId: string, mode: string): Promise<DebuggerResult> {
+	public setExceptionPauseMode(isolateId: string, mode: VmExceptionMode): Promise<DebuggerResult> {
 		return this.callMethod("setExceptionPauseMode", { isolateId, mode });
+	}
+
+	public setIsolatePauseMode(isolateId: string, modes: { exceptionPauseMode?: VmExceptionMode, shouldPauseOnExit?: boolean }): Promise<DebuggerResult> {
+		return this.callMethod("setIsolatePauseMode", { isolateId, ...modes });
 	}
 
 	public removeBreakpoint(isolateId: string, breakpointId: string) {
@@ -624,3 +627,5 @@ export interface FlutterServiceExtensionStateChangedData {
 	extension: string;
 	value: any;
 }
+
+export type VmExceptionMode = "None" | "Unhandled" | "All";

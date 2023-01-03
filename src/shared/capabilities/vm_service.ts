@@ -9,4 +9,5 @@ export class VmServiceCapabilities {
 	get hasLoggingStream() { return versionIsAtLeast(this.version, "3.17.0"); }
 	get serviceStreamIsPublic() { return versionIsAtLeast(this.version, "3.22.0"); }
 	get supportsGetStackLimit() { return versionIsAtLeast(this.version, "3.42.0"); }
+	get supportsSetIsolatePauseMode() { return versionIsAtLeast(this.version, "3.53.0"); }
 }
