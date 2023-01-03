@@ -245,14 +245,6 @@ export class TestModel {
 		return [suite, false];
 	}
 
-	public clearSuite(suitePath: string): void {
-		if (!this.suites[suitePath])
-			return;
-
-		delete this.suites[suitePath];
-		this.updateNode();
-	}
-
 	public clearSuiteOrDirectory(suiteOrDirectoryPath: string): void {
 		// We can't tell if it's a file or directory because it's already been deleted, so just
 		// try both.
@@ -302,6 +294,10 @@ export class TestModel {
 		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed`;
 	}
 
+	public suiteDiscoveredConditional(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
+		return this.suites[suitePath] ?? this.suiteDiscovered(dartCodeDebugSessionID, suitePath);
+	}
+
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
 		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
 		this.updateNode(suite.node);
@@ -349,7 +345,7 @@ export class TestModel {
 		if (!groupNode.parent.children.find((n) => n === groupNode))
 			groupNode.parent.children.push(groupNode);
 
-		this.updateNode(groupNode.parent);
+		this.updateNode(groupNode);
 
 		this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
 

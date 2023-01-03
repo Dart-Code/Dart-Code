@@ -140,12 +140,12 @@ export class TestDiscoverer implements IAmDisposable {
 
 	private rebuildFromOutline(suitePath: string, outline: Outline) {
 		if (isTestFile(suitePath)) {
-			// Force creation of a node if it's not already there.
-			const [suite, _] = this.model.getOrCreateSuite(suitePath);
-
 			// Generate a unique ID for these IDs to be owned by so that they can be looked
 			// up independent of any other ongoing runs.
 			const dartCodeDebugSessionID = `discovery-${getRandomInt(0x1000, 0x10000).toString(16)}`;
+
+			// Force creation of a node if it's not already there.
+			const suite = this.model.suiteDiscoveredConditional(dartCodeDebugSessionID, suitePath);
 
 			// Mark everything in the suite as potentially-deleted so that we can detect anything
 			// that was not present in the new list to remove it afterwards.
