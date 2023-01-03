@@ -301,7 +301,6 @@ export class TestModel {
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
 		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
 		this.updateNode(suite.node);
-		this.updateNode();
 
 		this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 
@@ -456,8 +455,6 @@ export class TestModel {
 		}
 
 		this.updateNode(testNode);
-		this.updateNode(testNode.parent);
-		this.rebuildSuiteNode(suite);
 
 		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testDone(dartCodeDebugSessionID, testNode, result));
