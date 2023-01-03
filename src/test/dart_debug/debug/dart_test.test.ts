@@ -515,7 +515,7 @@ describe("dart test debugger", () => {
 		}
 	}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
-	it("can hide skipped tests from tree", async () => {
+	it("can hide skipped tests and groups from tree", async () => {
 		await openFile(helloWorldTestTreeFile);
 		const config = await startDebugger(dc, helloWorldTestTreeFile);
 		config.noDebug = true;

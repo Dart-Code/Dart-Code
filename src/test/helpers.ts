@@ -82,6 +82,7 @@ export const helloWorldTestEnvironmentFile = vs.Uri.file(path.join(fsPath(helloW
 export const helloWorldTestShortFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "short_test.dart"));
 export const helloWorldTestShort2File = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "short2_test.dart"));
 export const helloWorldTestDiscoveryFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "discovery_test.dart"));
+export const helloWorldTestDiscoveryLargeFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "discovery_large_test.dart"));
 export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dupe_name_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));
 export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "skip_test.dart"));
@@ -1266,8 +1267,8 @@ export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefin
 		if (lastResult) {
 			if (lastResultTestNode.status)
 				nodeString += ` ${TestStatus[lastResultTestNode.status]}`;
-			else if (lastResult.children.length && lastResult.statuses?.size)
-				nodeString += ` ${TestStatus[lastResult.getHighestStatus(true)]}`;
+			else if (lastResult.children.length)
+				nodeString += ` ${TestStatus[lastResult.getHighestChildStatus(true)]}`;
 			const isStale = lastResult.isStale;
 			const isFailure = lastResultTestNode.status === TestStatus.Failed;
 			if ((isStale && onlyActive) || (!isFailure && onlyFailures))
