@@ -696,9 +696,9 @@ export async function acceptFirstSuggestion(): Promise<void> {
 }
 
 export function ensureInsertReplaceRanges(range: undefined | vs.Range | { inserting: vs.Range, replacing: vs.Range }, insertRangeMatch: string, replaceRangeMatch: string) {
-	if (range && ("inserting" in range || "replacing" in range)) {
-		assert.equal((range && "inserting" in range ? range.inserting : undefined)!.isEqual(rangeOf(insertRangeMatch)), true);
-		assert.equal((range && "replacing" in range ? range.replacing : undefined)!.isEqual(rangeOf(replaceRangeMatch)), true);
+	if (range && "inserting" in range && "replacing" in range) {
+		assert.equal(range.inserting.isEqual(rangeOf(insertRangeMatch)), true);
+		assert.equal(range.replacing.isEqual(rangeOf(replaceRangeMatch)), true);
 	} else {
 		assert.equal(range!.isEqual(rangeOf(replaceRangeMatch)), true);
 	}
