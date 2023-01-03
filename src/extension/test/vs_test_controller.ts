@@ -119,7 +119,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	/// Replace the whole tree.
 	private replaceAll() {
 		const suiteTestItems = Object.values(this.model.suites)
-			.map((suite) => this.createOrUpdateNode(suite.node))
+			.map((suite) => this.createOrUpdateNode(suite.node, true))
 			.filter(notUndefined);
 		this.controller.items.replace(suiteTestItems);
 	}
@@ -130,18 +130,20 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return;
 		}
 
-		this.createOrUpdateNode(node);
+		this.createOrUpdateNode(node, false);
 	}
 
-	/// Creates a node (including its children), or if it already exists, updates it
-	/// and its children.
-
+	/// Creates a node or if it already exists, updates it.
+	///
+	/// Recursively creates/updates children unless `updateChildren` is `false` and this node
+	/// already existed.
+	///
 	/// Does not add the item to its parent, so that the calling code can .replace()
 	/// all children if required.
 	///
 	/// Returns undefined if in the case of an error or a node that should
 	/// not be shown in the tree.
-	private createOrUpdateNode(node: TreeNode): vs.TestItem | undefined {
+	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
 		if (!this.shouldShowNode(node))
 			return;
 
@@ -157,10 +159,12 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return;
 		}
 		let existingItem = collection.get(this.idForNode(node));
+		const didCreate = !existingItem;
 
 		// Create new item if required.
 		if (!existingItem) {
 			const newItem = this.createTestItem(node);
+			collection.add(newItem);
 			existingItem = newItem;
 		} else {
 			// Otherwise, update this item to match the latest state.
@@ -172,9 +176,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		if (node instanceof SuiteNode && node.children.length === 0)
 			existingItem.canResolveChildren = true;
 
-		existingItem.children.replace(
-			node.children.map((c) => this.createOrUpdateNode(c)).filter(notUndefined),
-		);
+		if (didCreate || updateChildren) {
+			existingItem.children.replace(
+				node.children.map((c) => this.createOrUpdateNode(c, updateChildren)).filter(notUndefined),
+			);
+		}
 
 		return existingItem;
 	}
