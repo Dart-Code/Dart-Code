@@ -144,6 +144,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	/// Returns undefined if in the case of an error or a node that should
 	/// not be shown in the tree.
 	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
+		const shouldShowNode = this.shouldShowNode(node);
 		let collection;
 		if (node instanceof SuiteNode) {
 			collection = this.controller.items;
@@ -159,20 +160,21 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		let existingItem = collection.get(nodeId);
 		const didCreate = !existingItem;
 
-		if (!this.shouldShowNode(node)) {
-			if (existingItem)
-				collection.delete(nodeId);
-			return;
-		}
+		if (!shouldShowNode && existingItem)
+			collection.delete(nodeId);
 
 		// Create new item if required.
 		if (!existingItem) {
 			const newItem = this.createTestItem(node);
+			if (!shouldShowNode)
+				return;
 			collection.add(newItem);
 			existingItem = newItem;
 		} else {
 			// Otherwise, update this item to match the latest state.
 			this.updateFields(existingItem, node);
+			if (!shouldShowNode)
+				return;
 		}
 
 		// For new suites without chilren, set canResolveChildren because we can

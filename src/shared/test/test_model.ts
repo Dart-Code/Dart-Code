@@ -252,22 +252,22 @@ export class TestModel {
 		// skipped tests may be hidden, so the test counts need
 		// recomputing).
 
-		Object.values(this.suites).forEach((suite) => this.updateSuiteTestCountLabels(suite));
+		Object.values(this.suites).forEach((suite) => this.updateSuiteTestCountLabels(suite, true));
 	}
 
 	public updateNode(node?: TreeNode) {
 		this.onDidChangeDataEmitter.fire(node);
 	}
 
-	public updateSuiteTestCountLabels(suite: SuiteData) {
-		this.updateTestCountLabels(suite.node, false, "DOWN");
+	public updateSuiteTestCountLabels(suite: SuiteData, forceUpdate: boolean) {
+		this.updateTestCountLabels(suite.node, forceUpdate, "DOWN");
 	}
 
 	/// Recomputes the test counts and labels for a node and it's parent/children (based on `direction`).
 	private updateTestCountLabels(node: SuiteNode | GroupNode | TestNode, forceUpdate: boolean, direction: "UP" | "DOWN"): void {
 		if (direction === "DOWN") {
 			for (const child of node.children)
-				this.updateTestCountLabels(child, false, direction);
+				this.updateTestCountLabels(child, forceUpdate, direction);
 		}
 
 		// Update the cached counts on this node.
@@ -477,7 +477,7 @@ export class TestModel {
 			this.updateNode(t);
 		});
 
-		this.updateSuiteTestCountLabels(suite);
+		this.updateSuiteTestCountLabels(suite, false);
 
 		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.suiteDone(dartCodeDebugSessionID, suite.node));
