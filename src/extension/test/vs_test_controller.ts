@@ -144,9 +144,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	/// Returns undefined if in the case of an error or a node that should
 	/// not be shown in the tree.
 	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
-		if (!this.shouldShowNode(node))
-			return;
-
 		let collection;
 		if (node instanceof SuiteNode) {
 			collection = this.controller.items;
@@ -158,8 +155,15 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			this.logger.error(`Failed to find parent (${node.parent?.label}) of node (${node.label})`);
 			return;
 		}
-		let existingItem = collection.get(this.idForNode(node));
+		const nodeId = this.idForNode(node);
+		let existingItem = collection.get(nodeId);
 		const didCreate = !existingItem;
+
+		if (!this.shouldShowNode(node)) {
+			if (existingItem)
+				collection.delete(nodeId);
+			return;
+		}
 
 		// Create new item if required.
 		if (!existingItem) {
