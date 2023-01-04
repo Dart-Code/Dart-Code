@@ -67,6 +67,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 			// 	this.handleAllSuitesNotification(evt as AllSuitesNotification);
 			// 	break;
 			case "suite":
+				this.owningDebugSessions[(evt as SuiteNotification).suite.path] = debugSessionID;
 				this.handleSuiteNotification(dartCodeDebugSessionID, evt as SuiteNotification);
 				break;
 			case "testStart":

@@ -15,6 +15,10 @@ export abstract class TreeNode {
 	public isPotentiallyDeleted = false;
 	public duration: number | undefined;
 
+	public testCount = 0;
+	public testCountPass = 0;
+	public testCountSkip = 0;
+
 	public description: string | undefined;
 
 	constructor(public readonly suiteData: SuiteData) { }
@@ -41,11 +45,6 @@ export abstract class TreeNode {
 			: TestStatus.Unknown;
 	}
 
-	getTestCount(includeSkipped: boolean): number {
-		return this.children.map((t) => t.getTestCount(includeSkipped))
-			.reduce((total, value) => total + value, 0);
-	}
-
 	get label(): string | undefined {
 		const name = this instanceof GroupNode
 			? this.name
@@ -68,11 +67,6 @@ export abstract class TreeNode {
 		}
 
 		return name ?? "<unnamed>";
-	}
-
-	get testPassCount(): number {
-		return this.children.map((t) => t.testPassCount)
-			.reduce((total, value) => total + value, 0);
 	}
 
 	get isStale(): boolean {
@@ -116,18 +110,6 @@ export class TestNode extends TreeNode {
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
 	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
 		super(suiteData);
-	}
-
-	getTestCount(includeSkipped: boolean): number {
-		if (this.children.length)
-			return super.getTestCount(includeSkipped);
-		return includeSkipped || this.status !== TestStatus.Skipped ? 1 : 0;
-	}
-
-	get testPassCount(): number {
-		if (this.children.length)
-			return super.testPassCount;
-		return this.status === TestStatus.Passed ? 1 : 0;
 	}
 
 	get status(): TestStatus {
@@ -270,28 +252,47 @@ export class TestModel {
 		// skipped tests may be hidden, so the test counts need
 		// recomputing).
 
-		Object.values(this.suites).forEach((suite) => this.rebuildSuiteNode(suite));
+		Object.values(this.suites).forEach((suite) => this.updateSuiteTestCountLabels(suite));
 	}
 
 	public updateNode(node?: TreeNode) {
 		this.onDidChangeDataEmitter.fire(node);
 	}
 
-	public rebuildSuiteNode(suite: SuiteData) {
-		// Walk the tree to get the status.
-		this.rebuildNode(suite.node);
-		this.updateNode(suite.node);
+	public updateSuiteTestCountLabels(suite: SuiteData) {
+		this.updateTestCountLabels(suite.node, false, "DOWN");
 	}
 
-	/// Rebuilds any data on a node that is dependent on its children.
-	private rebuildNode(node: SuiteNode | GroupNode | TestNode): void {
-		if (!node.children.length)
-			return;
+	/// Recomputes the test counts and labels for a node and it's parent/children (based on `direction`).
+	private updateTestCountLabels(node: SuiteNode | GroupNode | TestNode, forceUpdate: boolean, direction: "UP" | "DOWN"): void {
+		if (direction === "DOWN") {
+			for (const child of node.children)
+				this.updateTestCountLabels(child, false, direction);
+		}
 
-		for (const child of node.children)
-			this.rebuildNode(child);
+		// Update the cached counts on this node.
+		if (node instanceof TestNode && !node.children.length) {
+			node.testCount = 1;
+			node.testCountPass = node.status === TestStatus.Passed ? 1 : 0;
+			node.testCountSkip = node.status === TestStatus.Skipped ? 1 : 0;
+		} else {
+			node.testCount = node.children.map((c) => c.testCount).reduce((total, value) => total + value, 0);
+			node.testCountPass = node.children.map((c) => c.testCountPass).reduce((total, value) => total + value, 0);
+			node.testCountSkip = node.children.map((c) => c.testCountSkip).reduce((total, value) => total + value, 0);
+		}
+		const totalTests = this.config.showSkippedTests ? node.testCount : node.testCount - node.testCountSkip;
 
-		node.description = `${node.testPassCount}/${node.getTestCount(this.config.showSkippedTests)} passed`;
+		// Update the label.
+		const previousDescription = node.description;
+		node.description = node.children.length && totalTests !== 0 ? `${node.testCountPass}/${totalTests} passed` : "";
+		if (forceUpdate || node.description !== previousDescription)
+			this.updateNode(node);
+
+		if (direction === "UP") {
+			const parent = node.parent;
+			if (parent instanceof SuiteNode || parent instanceof GroupNode || parent instanceof TestNode)
+				this.updateTestCountLabels(parent, false, direction);
+		}
 	}
 
 	public suiteDiscoveredConditional(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
@@ -454,7 +455,7 @@ export class TestModel {
 			// testNode.testStartTime = undefined;
 		}
 
-		this.updateNode(testNode);
+		this.updateTestCountLabels(testNode, true, "UP");
 
 		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testDone(dartCodeDebugSessionID, testNode, result));
@@ -476,7 +477,7 @@ export class TestModel {
 			this.updateNode(t);
 		});
 
-		this.rebuildSuiteNode(suite);
+		this.updateSuiteTestCountLabels(suite);
 
 		if (dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.suiteDone(dartCodeDebugSessionID, suite.node));
