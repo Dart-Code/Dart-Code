@@ -178,7 +178,7 @@ export class Analytics {
 		if (this.disableAnalyticsForSession
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
-			|| !this.workspaceContext.config.disableAnalytics
+			|| this.workspaceContext.config.disableAnalytics
 			|| !env.isTelemetryEnabled
 			|| isDartCodeTestRun
 		)
@@ -234,20 +234,24 @@ export class Analytics {
 		await new Promise<void>((resolve) => {
 			try {
 				const req = https.request(options, (resp) => {
-					if (debug)
-						resp.on("data", (c: Buffer | string) => {
+					if (debug) {
+						const chunks: string[] = [];
+						resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
+						resp.on("end", () => {
+							const json = chunks.join("");
 							try {
-								const gaDebugResp = JSON.parse(c.toString());
+								const gaDebugResp = JSON.parse(json);
 								if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
 									this.logger.info("Sent OK!");
 								else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
-									this.logger.warn(c.toString());
+									this.logger.warn(json);
 								else
-									this.logger.warn(`Unexpected GA debug response: ${c?.toString()}`);
-							} catch (e) {
-								this.logger.warn(`Error in GA debug response: ${c?.toString()}`);
+									this.logger.warn(`Unexpected GA debug response: ${json}`);
+							} catch (e: any) {
+								this.logger.warn(`Error in GA debug response: ${e?.message ?? e} ${json}`);
 							}
 						});
+					}
 
 					if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
 						this.logger.info(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
