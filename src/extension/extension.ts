@@ -313,10 +313,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, dartCapabilities, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, dartCapabilities);
-	const dartCommands = new DartCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities);
-	const flutterCommands = new FlutterCommands(logger, extContext, workspaceContext, sdkUtils, dartCapabilities, flutterCapabilities, deviceManager);
+	const dartCommands = new DartCommands(logger, extContext, workspaceContext, sdkUtils, pubGlobal, dartCapabilities, analytics);
+	const flutterCommands = new FlutterCommands(logger, extContext, workspaceContext, sdkUtils, dartCapabilities, flutterCapabilities, deviceManager, analytics);
 	const packageCommands = new PackageCommands(logger, extContext, workspaceContext, dartCapabilities);
-	const addDependencyCommand = new AddDependencyCommand(logger, extContext, workspaceContext, dartCapabilities, pubApi);
+	const addDependencyCommand = new AddDependencyCommand(logger, extContext, workspaceContext, dartCapabilities, pubApi, analytics);
 	context.subscriptions.push(sdkCommands);
 	context.subscriptions.push(dartCommands);
 	context.subscriptions.push(flutterCommands);

@@ -8,6 +8,7 @@ import { PackageNameCompletionData, PubApi } from "../../shared/pub/api";
 import { PackageCacheData } from "../../shared/pub/pub_add";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
+import { Analytics, EventCommand } from "../analytics";
 import * as util from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands } from "./sdk";
@@ -26,7 +27,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	private cache: PackageCacheData | undefined;
 	private nextPackageNameFetchTimeout: NodeJS.Timeout | undefined;
 
-	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly pubApi: PubApi) {
+	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly pubApi: PubApi, private readonly analytics: Analytics) {
 		super(logger, context, workspace, dartCapabilities);
 
 		this.disposables.push(vs.commands.registerCommand("dart.addDependency", (uri: string | vs.Uri | undefined) => this.promptAndAddDependency(uri, false)));
@@ -103,6 +104,8 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 
 	private async promptAndAddDependency(uri: string | vs.Uri | undefined, isDevDependency: boolean) {
+		this.analytics.logCommand(EventCommand.RestartAnalyzer);
+
 		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to add the dependency to");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).

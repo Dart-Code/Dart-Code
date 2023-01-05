@@ -26,6 +26,7 @@ enum Category {
 	Analyzer,
 	Debugger,
 	FlutterSurvey,
+	Command,
 }
 
 enum EventAction {
@@ -40,6 +41,13 @@ enum EventAction {
 	Shown,
 	Clicked,
 	Dismissed,
+}
+
+export enum EventCommand {
+	DartNewProject,
+	FlutterNewProject,
+	AddDependency,
+	RestartAnalyzer,
 }
 
 enum TimingVariable {
@@ -100,9 +108,6 @@ export class Analytics {
 		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(`${e}`));
 		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`));
 	}
-	public logAnalyzerRestart() {
-		this.event(Category.Analyzer, EventAction.Restart).catch((e) => this.logger.info(`${e}`));
-	}
 	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(`${e}`)); }
 	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.logger.info(`${e}`)); }
@@ -126,10 +131,11 @@ export class Analytics {
 	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(`${e}`)); }
 	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(`${e}`)); }
 	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(`${e}`)); }
+	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]).catch((e) => this.logger.info(`${e}`)); }
 
-	private event(category: Category, action: EventAction, customData?: any): Promise<void> {
+	private event(category: Category, action: EventAction | string, customData?: any): Promise<void> {
 		const data: any = {
-			ea: EventAction[action],
+			ea: typeof action === "string" ? action : EventAction[action],
 			ec: Category[category],
 			t: "event",
 		};

@@ -15,6 +15,7 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { Context } from "../../shared/vscode/workspace";
+import { Analytics, EventCommand } from "../analytics";
 import { config } from "../config";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { SdkUtils } from "../sdk/utils";
@@ -26,7 +27,7 @@ import { BaseSdkCommands, commandState, packageNameRegex } from "./sdk";
 export class FlutterCommands extends BaseSdkCommands {
 	private flutterScreenshotPath?: string;
 
-	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager | undefined) {
+	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly analytics: Analytics) {
 		super(logger, context, workspace, dartCapabilities);
 
 		this.disposables.push(vs.commands.registerCommand("flutter.clean", this.flutterClean, this));
@@ -251,6 +252,8 @@ export class FlutterCommands extends BaseSdkCommands {
 			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
 		}
+
+		this.analytics.logCommand(EventCommand.FlutterNewProject);
 
 		const pickItems = this.getFlutterTemplates();
 

@@ -3,7 +3,7 @@ import { Analyzer } from "../../shared/analyzer";
 import { issueTrackerAction, issueTrackerUri } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { envUtils } from "../../shared/vscode/utils";
-import { Analytics } from "../analytics";
+import { Analytics, EventCommand } from "../analytics";
 
 // Must be global, as all classes are created during an extension restart.
 let forcedReanalyzeCount = 0;
@@ -18,14 +18,14 @@ export class AnalyzerCommands {
 			forcedReanalyzeCount++;
 			if (forcedReanalyzeCount === 10)
 				this.showServerRestartPrompt().catch((e) => logger.error(e));
-			analytics.logAnalyzerRestart();
+			analytics.logCommand(EventCommand.RestartAnalyzer);
 			vs.commands.executeCommand("_dart.reloadExtension");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.forceReanalyze", async () => {
 			forcedReanalyzeCount++;
 			if (forcedReanalyzeCount === 10)
 				this.showServerRestartPrompt().catch((e) => logger.error(e));
-			analytics.logAnalyzerRestart();
+			analytics.logCommand(EventCommand.RestartAnalyzer);
 			await analyzer.forceReanalyze();
 		}));
 	}

@@ -8,6 +8,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, nextAvailableFilename } from "../../shared/utils/fs";
 import { writeDartSdkSettingIntoProject } from "../../shared/utils/projects";
 import { Context } from "../../shared/vscode/workspace";
+import { Analytics, EventCommand } from "../analytics";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { Stagehand } from "../pub/stagehand";
@@ -16,7 +17,7 @@ import { SdkUtils } from "../sdk/utils";
 import { BaseSdkCommands, packageNameRegex } from "./sdk";
 
 export class DartCommands extends BaseSdkCommands {
-	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, dartCapabilities: DartCapabilities) {
+	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, dartCapabilities: DartCapabilities, private readonly analytics: Analytics) {
 		super(logger, context, workspace, dartCapabilities);
 
 		this.disposables.push(vs.commands.registerCommand("dart.createProject", this.createDartProject, this));
@@ -49,6 +50,8 @@ export class DartCommands extends BaseSdkCommands {
 			this.sdkUtils.showDartActivationFailure(command);
 			return;
 		}
+
+		this.analytics.logCommand(EventCommand.DartNewProject);
 
 		// Get the JSON for the available templates by calling stagehand or 'dart create'.
 
