@@ -553,6 +553,31 @@ export class DebugCommands implements IAmDisposable {
 			this.debugMetrics.text = message;
 			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 			this.debugMetrics.show();
+		} else if (event === "dart.toolEvent") {
+			const kind = body.kind;
+			const data = body.data;
+			switch (kind) {
+				case "navigate":
+					const fileUri: string | undefined = data.fileUri ?? data.file;
+					const line: string | undefined = data.line;
+					const col: string | undefined = data.column;
+					if (fileUri && line && col) {
+						// Only navigate if we're not in full-width mode.
+						// TODO(dantup): If we get context added to this event, make this more like the legacy dart.navigate below.
+						const navigate = config.devToolsLocation !== "active";
+						if (navigate)
+							vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(fileUri), line, col, true);
+						// TODO(dantup): This should also occur with inspector context.
+						if (this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
+							// Add a short delay because this will remove the visible selection.
+							setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
+						}
+					}
+					break;
+				default:
+					return false;
+			}
+
 		} else if (event === "dart.navigate") {
 			if (body.file && body.line && body.column) {
 				// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
