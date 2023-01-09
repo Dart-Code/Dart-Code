@@ -520,7 +520,9 @@ export class DebugCommands implements IAmDisposable {
 	}
 
 	private handleCustomEvent(e: vs.DebugSessionCustomEvent): boolean {
-		if (e.event === "dart.log") {
+		const event = e.event;
+		const body = e.body;
+		if (event === "dart.log") {
 			const message: LogMessage = e.body;
 			const logMessage = `[${e.session.name}] ${message.message}`;
 			switch (message.severity) {
@@ -533,30 +535,30 @@ export class DebugCommands implements IAmDisposable {
 				default:
 					this.logger.info(logMessage, message.category);
 			}
-		} else if (e.event === "dart.hotRestartRequest") {
+		} else if (event === "dart.hotRestartRequest") {
 			// This event comes back when the user restarts with the Restart button
 			// (eg. it wasn't intiated from our extension, so we don't get to log it
 			// in the command).
 			this.analytics.logDebuggerRestart();
 			this.onWillHotRestartEmitter.fire();
-		} else if (e.event === "dart.hotReloadRequest") {
+		} else if (event === "dart.hotReloadRequest") {
 			// This event comes back when the user restarts with the Restart button
 			// (eg. it wasn't intiated from our extension, so we don't get to log it
 			// in the command).
 			this.analytics.logDebuggerHotReload();
 			this.onWillHotReloadEmitter.fire();
-		} else if (e.event === "dart.debugMetrics") {
-			const memory = e.body.memory;
+		} else if (event === "dart.debugMetrics") {
+			const memory = body.memory;
 			const message = `${Math.ceil(memory.current / 1024 / 1024)}MB of ${Math.ceil(memory.total / 1024 / 1024)}MB`;
 			this.debugMetrics.text = message;
 			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 			this.debugMetrics.show();
-		} else if (e.event === "dart.navigate") {
-			if (e.body.file && e.body.line && e.body.column) {
+		} else if (event === "dart.navigate") {
+			if (body.file && body.line && body.column) {
 				// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
-				const navigate = !e.body.fromInspector || config.devToolsLocation !== "active";
+				const navigate = !body.fromInspector || config.devToolsLocation !== "active";
 				if (navigate)
-					vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(e.body.file as string), e.body.line, e.body.column, e.body.inOtherEditorColumn);
+					vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(body.file as string), body.line, body.column, body.inOtherEditorColumn);
 				if (this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
 					// Add a short delay because this will remove the visible selection.
 					setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
@@ -573,17 +575,20 @@ export class DebugCommands implements IAmDisposable {
 		this.vmServices.handleDebugEvent(session, e)
 			.catch((e) => this.logger.error(e));
 
-		if (e.event === "dart.webLaunchUrl") {
-			const launched = !!e.body.launched;
+		const event = e.event;
+		const body = e.body;
+
+		if (event === "dart.webLaunchUrl") {
+			const launched = !!body.launched;
 			if (!launched) {
 				try {
-					await envUtils.openInBrowser(e.body.url as string, this.logger);
+					await envUtils.openInBrowser(body.url as string, this.logger);
 				} catch (e: any) {
-					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${e.body.url}`);
+					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${body.url}`);
 				}
 			}
-		} else if (e.event === "dart.exposeUrl") {
-			const originalUrl = e.body.url as string;
+		} else if (event === "dart.exposeUrl") {
+			const originalUrl = body.url as string;
 			try {
 				const exposedUrl = await envUtils.exposeUrl(originalUrl, this.logger);
 				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl });
@@ -591,9 +596,9 @@ export class DebugCommands implements IAmDisposable {
 				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
 				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
 			}
-		} else if (e.event === "flutter.forwardedEvent") {
-			const event = e.body.event;
-			const params = e.body.params;
+		} else if (event === "flutter.forwardedEvent") {
+			const event = body.event;
+			const params = body.params;
 			switch (event) {
 				case "app.webLaunchUrl":
 					const url = params.url as string;
@@ -606,10 +611,10 @@ export class DebugCommands implements IAmDisposable {
 						}
 					}
 			}
-		} else if (e.event === "flutter.forwardedRequest") {
-			const id = e.body.id;
-			const method = e.body.method;
-			const params = e.body.params;
+		} else if (event === "flutter.forwardedRequest") {
+			const id = body.id;
+			const method = body.method;
+			const params = body.params;
 			let result;
 			let error;
 			try {
@@ -630,9 +635,9 @@ export class DebugCommands implements IAmDisposable {
 				error = `${e}`;
 			}
 			session.session.customRequest("flutter.sendForwardedRequestResponse", { id, result, error });
-		} else if (e.event === "dart.debuggerUris") {
-			session.observatoryUri = e.body.observatoryUri;
-			session.vmServiceUri = e.body.vmServiceUri;
+		} else if (event === "dart.debuggerUris") {
+			session.observatoryUri = body.observatoryUri;
+			session.vmServiceUri = body.vmServiceUri;
 			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
 
 			// Open or prompt for DevTools when appropriate.
@@ -662,16 +667,16 @@ export class DebugCommands implements IAmDisposable {
 					});
 				}
 			}
-		} else if (e.event === "dart.progressStart") {
+		} else if (event === "dart.progressStart") {
 			// When a debug session is restarted by VS Code (eg. not handled by the DA), the session-end event
 			// will not fire so we need to clean up the "Terminating debug session" message manually. Doing it here
 			// means it will vanish at the same time as the new one appears, so there are no gaps in progress indicators.
-			if (e.body.progressId === debugLaunchProgressId) {
+			if (body.progressId === debugLaunchProgressId) {
 				session.progress[debugTerminatingProgressId]?.complete();
 				delete session.progress[debugTerminatingProgressId];
 			}
 
-			const progressId = e.body.progressId as string | undefined;
+			const progressId = body.progressId as string | undefined;
 			const isHotEvent = progressId?.includes("reload") || progressId?.includes("restart");
 			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
 
@@ -682,28 +687,28 @@ export class DebugCommands implements IAmDisposable {
 				// https://github.com/Dart-Code/Dart-Code/issues/2597
 				// If this is changed back, ensure the waiting-for-debug-extension notification
 				// is still displayed with additional description.
-				{ location: progressLocation, title: e.body.title },
+				{ location: progressLocation, title: body.title },
 				(progress) => {
 					// Complete any existing one with this ID.
-					session.progress[e.body.progressId]?.complete();
+					session.progress[body.progressId]?.complete();
 
 					// Build a new progress and store it in the session.
 					const completer = new PromiseCompleter<void>();
-					session.progress[e.body.progressId] = new ProgressMessage(progress, completer);
-					if (e.body.message)
-						session.progress[e.body.progressId]?.report(e.body.message as string);
+					session.progress[body.progressId] = new ProgressMessage(progress, completer);
+					if (body.message)
+						session.progress[body.progressId]?.report(body.message as string);
 					return completer.promise;
 				},
 			);
-		} else if (e.event === "dart.progressUpdate") {
-			session.progress[e.body.progressId]?.report(e.body.message as string);
-		} else if (e.event === "dart.progressEnd") {
-			if (e.body.message) {
-				session.progress[e.body.progressId]?.report(e.body.message as string);
+		} else if (event === "dart.progressUpdate") {
+			session.progress[body.progressId]?.report(body.message as string);
+		} else if (event === "dart.progressEnd") {
+			if (body.message) {
+				session.progress[body.progressId]?.report(body.message as string);
 				await new Promise((resolve) => setTimeout(resolve, 400));
 			}
-			session.progress[e.body.progressId]?.complete();
-		} else if (e.event === "dart.flutter.widgetErrorInspectData") {
+			session.progress[body.progressId]?.complete();
+		} else if (event === "dart.flutter.widgetErrorInspectData") {
 			if (this.suppressFlutterWidgetErrors || !config.showInspectorNotificationsForWidgetErrors)
 				return;
 
@@ -731,7 +736,7 @@ export class DebugCommands implements IAmDisposable {
 			}
 			clearTimeout(timer);
 			this.suppressFlutterWidgetErrors = false;
-		} else if (e.event === "flutter.appStarted") {
+		} else if (event === "flutter.appStarted") {
 			session.hasStarted = true;
 		}
 	}
