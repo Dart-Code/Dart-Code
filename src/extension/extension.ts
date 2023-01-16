@@ -194,6 +194,14 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const sdks = workspaceContext.sdks;
 	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
 
+	// Add the PATHs to the Terminal environment so if the user runs commands
+	// there they match the versions (and can be resolved, if not already on PATH).
+	// TODO(dantup): Make this optional with a setting.
+	let envPathPrefix = `${sdks.dart}${path.sep}bin${path.sep}${path.delimiter}`;
+	if (workspaceContext.hasAnyFlutterProjects)
+		envPathPrefix += `${sdks.flutter}${path.sep}bin${path.sep}${path.delimiter}`;
+	context.environmentVariableCollection.prepend("PATH", envPathPrefix);
+
 	// TODO: Move these capabilities into WorkspaceContext.
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
