@@ -147,9 +147,14 @@ export class TestNode extends TreeNode {
 	}
 }
 
+export interface NodeDidChangeEvent {
+	node: TreeNode;
+	nodeWasRemoved?: boolean;
+}
+
 export class TestModel {
-	private readonly onDidChangeDataEmitter: EventEmitter<TreeNode | undefined> = new EventEmitter<TreeNode | undefined>();
-	public readonly onDidChangeTreeData: Event<TreeNode | undefined> = this.onDidChangeDataEmitter.event;
+	private readonly onDidChangeDataEmitter: EventEmitter<NodeDidChangeEvent | undefined> = new EventEmitter<NodeDidChangeEvent | undefined>();
+	public readonly onDidChangeTreeData: Event<NodeDidChangeEvent | undefined> = this.onDidChangeDataEmitter.event;
 
 	private readonly testEventListeners: TestEventListener[] = [];
 
@@ -212,9 +217,7 @@ export class TestModel {
 			...suite.getAllGroups(),
 			...suite.getAllTests(),
 		].filter((t) => t.isPotentiallyDeleted);
-		const toUpdate = new Set(toDelete.map((node) => node.parent));
 		toDelete.forEach((node) => this.removeNode(node));
-		toUpdate.forEach((node) => this.updateNode(node));
 	}
 
 	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
@@ -255,8 +258,8 @@ export class TestModel {
 		Object.values(this.suites).forEach((suite) => this.updateSuiteTestCountLabels(suite, true));
 	}
 
-	public updateNode(node?: TreeNode) {
-		this.onDidChangeDataEmitter.fire(node);
+	public updateNode(event?: NodeDidChangeEvent) {
+		this.onDidChangeDataEmitter.fire(event);
 	}
 
 	public updateSuiteTestCountLabels(suite: SuiteData, forceUpdate: boolean) {
@@ -286,7 +289,7 @@ export class TestModel {
 		const previousDescription = node.description;
 		node.description = node.children.length && totalTests !== 0 ? `${node.testCountPass}/${totalTests} passed` : "";
 		if (forceUpdate || node.description !== previousDescription)
-			this.updateNode(node);
+			this.updateNode({ node });
 
 		if (direction === "UP") {
 			const parent = node.parent;
@@ -301,7 +304,7 @@ export class TestModel {
 
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
 		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
-		this.updateNode(suite.node);
+		this.updateNode({ node: suite.node });
 
 		this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
 
@@ -338,14 +341,14 @@ export class TestModel {
 		const hasChangedParent = oldParent !== parent;
 		if (oldParent && hasChangedParent) {
 			oldParent.children.splice(oldParent.children.indexOf(groupNode), 1);
-			this.updateNode(oldParent);
+			this.updateNode({ node: oldParent });
 		}
 
 		// Push to new parent if required.
 		if (!groupNode.parent.children.find((n) => n === groupNode))
 			groupNode.parent.children.push(groupNode);
 
-		this.updateNode(groupNode);
+		this.updateNode({ node: groupNode });
 
 		this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
 
@@ -395,7 +398,7 @@ export class TestModel {
 		const hasChangedParent = oldParent && oldParent !== testNode.parent;
 		if (oldParent && hasChangedParent) {
 			oldParent.children.splice(oldParent.children.indexOf(testNode), 1);
-			this.updateNode(oldParent);
+			this.updateNode({ node: oldParent });
 		}
 
 		// Push to new parent if required.
@@ -408,7 +411,7 @@ export class TestModel {
 			testNode.status = TestStatus.Running;
 		}
 
-		this.updateNode(testNode);
+		this.updateNode({ node: testNode });
 
 		if (hasStarted && dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testStarted(dartCodeDebugSessionID, testNode));
@@ -474,7 +477,7 @@ export class TestModel {
 		// Anything marked as running should be set back to Unknown
 		suite.getAllTests().filter((t) => t.status === TestStatus.Running).forEach((t) => {
 			t.status = TestStatus.Unknown;
-			this.updateNode(t);
+			this.updateNode({ node: t });
 		});
 
 		this.updateSuiteTestCountLabels(suite, false);
@@ -504,6 +507,7 @@ export class TestModel {
 		const index = parent.children.indexOf(node);
 		if (index > -1)
 			parent.children.splice(index, 1);
+		this.updateNode({ node, nodeWasRemoved: true });
 	}
 
 	private rangeEquals(r1: Range, r2: Range): boolean {

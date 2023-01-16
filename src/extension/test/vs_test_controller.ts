@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { GroupNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, NodeDidChangeEvent, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -124,13 +124,18 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.controller.items.replace(suiteTestItems);
 	}
 
-	private onDidChangeTreeData(node: TreeNode | undefined): void {
-		if (node === undefined) {
+	private onDidChangeTreeData(event: NodeDidChangeEvent | undefined): void {
+		if (event === undefined) {
 			this.replaceAll();
 			return;
 		}
 
-		this.createOrUpdateNode(node, false);
+		if (event.nodeWasRemoved) {
+			this.removeNode(event.node);
+			return;
+		}
+
+		this.createOrUpdateNode(event.node, false);
 	}
 
 	/// Creates a node or if it already exists, updates it.
@@ -189,6 +194,21 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 
 		return existingItem;
+	}
+
+	/// Removes a node from the tree.
+	private removeNode(node: TreeNode): undefined {
+		const collection = node instanceof SuiteNode
+			? this.controller.items
+			: this.itemForNode.get(node.parent!)?.children;
+
+		if (!collection)
+			return;
+
+		const nodeId = this.idForNode(node);
+		const existingItem = collection.get(nodeId);
+		if (existingItem)
+			collection.delete(nodeId);
 	}
 
 	private shouldShowNode(node: TreeNode): boolean {

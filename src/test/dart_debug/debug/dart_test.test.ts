@@ -358,6 +358,7 @@ describe("dart test debugger", () => {
 				path.join("test", "environment_test.dart"),
 				path.join("test", "folder", "folder_test.dart"),
 				path.join("test", "project_test.dart"),
+				path.join("test", "rename_test.dart"),
 				path.join("test", "short_test.dart"),
 				path.join("test", "skip_test.dart"),
 				path.join("test", "tree_test.dart"),

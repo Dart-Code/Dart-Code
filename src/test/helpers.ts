@@ -77,6 +77,7 @@ export const myPackageThingFile = vs.Uri.file(path.join(fsPath(myPackageFolder),
 export const helloWorldTestFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test"));
 export const helloWorldTestMainFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "basic_test.dart"));
 export const helloWorldTestEmptyFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "empty_test.dart"));
+export const helloWorldRenameTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "rename_test.dart"));
 export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "tree_test.dart"));
 export const helloWorldTestEnvironmentFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "environment_test.dart"));
 export const helloWorldTestShortFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "short_test.dart"));
@@ -926,7 +927,7 @@ export function checkTreeNodeResults(actual: string, expected: string, descripti
 	const segments = expected.split(".dart");
 	segments[0] = segments[0].replace(/\//g, path.sep);
 	expected = segments.join(".dart");
-	assert.equal(actual, expected, description);
+	assert.equal(actual.trim(), expected.trim(), description);
 }
 
 export function delay(milliseconds: number): Promise<void> {

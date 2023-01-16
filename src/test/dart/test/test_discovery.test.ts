@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { activate, checkTreeNodeResults, delay, extApi, getExpectedResults, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, makeTestTextTree, openFile, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, delay, extApi, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, makeTestTextTree, openFile, setTestContent, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -25,6 +25,49 @@ describe("dart tests", () => {
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
 		checkTreeNodeResults(actualResults, expectedResults);
+	});
+
+	it("handles renaming of discovered tests", async function () {
+		// Discovery is only supported for LSP.
+		if (!extApi.isLsp)
+			this.skip();
+
+		await openFile(helloWorldRenameTestFile);
+		await setTestContent("");
+
+		// Ensure no results before we start.
+		const initialResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
+		checkTreeNodeResults(initialResults, `
+test/rename_test.dart
+		`);
+
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() => test("test 1", () {});
+		`);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
+		await delay(1500); // Account for debounce.
+
+		let actualResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
+		checkTreeNodeResults(actualResults, `
+test/rename_test.dart [0/1 passed] Unknown
+    test 1 Unknown
+		`);
+
+		await setTestContent(`
+import "package:test/test.dart";
+
+void main() => test("test 2", () {});
+		`);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
+		await delay(1500); // Account for debounce.
+
+		actualResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
+		checkTreeNodeResults(actualResults, `
+test/rename_test.dart [0/1 passed] Unknown
+    test 2 Unknown
+		`);
 	});
 
 	it("discovers a large number of tests in a reasonable time", async function () {
