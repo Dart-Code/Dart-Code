@@ -11,6 +11,7 @@ import { unique } from "../utils/array";
 import { resolveTildePaths } from "../utils/fs";
 import { WorkspaceContext } from "../workspace";
 import { isRunningLocally } from "./utils";
+import { Context } from "./workspace";
 
 export class FlutterDeviceManager implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -20,7 +21,15 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 
-	constructor(private readonly logger: Logger, private daemon: IFlutterDaemon, private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number }, private readonly workspaceContext: WorkspaceContext, runIfNoDevices?: () => void, readonly daemonPortOverride?: number) {
+	constructor(
+		private readonly logger: Logger,
+		private daemon: IFlutterDaemon,
+		private readonly config: { flutterCustomEmulators: CustomEmulatorDefinition[], flutterRememberSelectedDevice: boolean, flutterSelectDeviceWhenConnected: boolean, flutterShowEmulators: "local" | "always" | "never", projectSearchDepth: number },
+		private readonly workspaceContext: WorkspaceContext,
+		private readonly extContext: Context,
+		runIfNoDevices?: () => void,
+		readonly daemonPortOverride?: number
+	) {
 		this.statusBarItem = vs.window.createStatusBarItem("dartStatusFlutterDevice", vs.StatusBarAlignment.Right, 1);
 		this.statusBarItem.name = "Flutter Device";
 		this.statusBarItem.tooltip = "Flutter";
@@ -56,15 +65,32 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return device && (!types || !types || !device.platformType || types.indexOf(device.platformType) !== -1);
 	}
 
-	public async deviceAdded(dev: f.Device): Promise<void> {
-		dev = { ...dev, type: "device" };
-		this.devices.push(dev);
+	public isDevicePreferred(device: f.Device | undefined): boolean {
+		const isPreferred = this.config.flutterRememberSelectedDevice
+			&& !!device
+			&& this.extContext.workspaceLastFlutterDeviceId === device.id;
+		return isPreferred;
+	}
+
+	public async deviceAdded(device: f.Device): Promise<void> {
+		device = { ...device, type: "device" };
+		this.devices.push(device);
+
 		// undefined is treated as true for backwards compatibility.
-		let canAutoSelectDevice = dev.ephemeral !== false;
+		let canAutoSelectDevice = device.ephemeral !== false || this.isDevicePreferred(device);
+		const currentDeviceIsPreferred = this.isDevicePreferred(this.currentDevice);
+
+		if (canAutoSelectDevice && this.rememberNextAddedDevice)
+			this.rememberDevice(device);
+		else if (canAutoSelectDevice && currentDeviceIsPreferred) {
+			this.logger.info(`Will not auto-select ${device.name} because current device is preferred`);
+			// Don't allow auto-selection if we have the remembered device selected.
+			canAutoSelectDevice = false;
+		}
 
 		// In a remote workspace, allow selecting web-server over a non-ephemeral device so
 		// that we don't seem to default to Linux on a remote we probably can't see.
-		if (!isRunningLocally && this.currentDevice?.ephemeral === false && dev.id === "web-server")
+		if (!isRunningLocally && this.currentDevice?.ephemeral === false && device.id === "web-server")
 			canAutoSelectDevice = true;
 
 		const maySelectThisDevice = () => !this.currentDevice
@@ -73,7 +99,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			// web-server, allow switching because most users would prefer the Chrome device.
 			// We can revert this in future if Flutter changes the order these devices show up
 			// or has some other way of deciding priority.
-			|| (this.currentDevice?.id === "web-server" && dev.id === "chrome");
+			|| (this.currentDevice?.id === "web-server" && device.id === "chrome" && !currentDeviceIsPreferred);
 		if (maySelectThisDevice()) {
 			// Finally, check if it's valid for the workspace. We don't want to
 			// auto-select to a mobile if you have a web-only project open.
@@ -81,8 +107,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 			// We need to re-check maySelectThisDevice() as the answer may have changed if
 			// another device was selected while we were awaiting (which would prevent us
 			// selecting a non-ephemeral device here).
-			if (maySelectThisDevice() && this.isSupported(supportedPlatforms, dev)) {
-				this.currentDevice = dev;
+			if (maySelectThisDevice() && this.isSupported(supportedPlatforms, device)) {
+				this.currentDevice = device;
 				this.updateStatusBar();
 			}
 		}
@@ -163,6 +189,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				// to connect.
 				this.currentDevice = undefined;
 				this.statusBarItem.text = `Creating ${emulatorTypeLabel}...`;
+				this.rememberNextAddedDevice = true;
 				await this.createEmulator();
 				this.updateStatusBar();
 				break;
@@ -171,6 +198,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				// to connect.
 				this.currentDevice = undefined;
 				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
+				this.rememberNextAddedDevice = true;
 				const coldBoot = selection.coldBoot ?? false;
 				await this.launchEmulator(selection.device, coldBoot);
 				this.updateStatusBar();
@@ -180,6 +208,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				// to connect.
 				this.currentDevice = undefined;
 				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
+				this.rememberNextAddedDevice = true;
 				await this.launchCustomEmulator(selection.device);
 				this.updateStatusBar();
 				break;
@@ -209,6 +238,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 				break;
 			case "device":
+				this.rememberDevice(selection.device);
 				this.currentDevice = selection.device;
 				this.updateStatusBar();
 				break;
@@ -217,7 +247,20 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return true;
 	}
 
-	private shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
+	/// Whether to remember the next added device as if it was explicitly selected.
+	///
+	/// This is set after the user picks a non-device (like launch emulator) so it's treated as an explicitly selection.
+	private rememberNextAddedDevice = false;
+	private rememberDevice(device: f.Device) {
+		this.rememberNextAddedDevice = false;
+		const deviceIdToRemember = this.config.flutterRememberSelectedDevice
+			? device.id
+			: undefined;
+		this.logger.info(`Saving ${deviceIdToRemember} as preferred device`);
+		this.extContext.workspaceLastFlutterDeviceId = deviceIdToRemember;
+	}
+
+	protected shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
 
 	public getDevice(id: string | undefined) {
 		return this.devices.find((d) => d.id === id);

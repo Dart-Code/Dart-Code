@@ -6,7 +6,7 @@ import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
-import { extApi, logger, sb } from "../helpers";
+import { activateWithoutAnalysis, extApi, logger, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../services/fake_stdio_service";
 import sinon = require("sinon");
 
@@ -14,10 +14,24 @@ describe("device_manager", () => {
 	let dm: FlutterDeviceManager;
 	let daemon: FakeFlutterDaemon;
 
+	beforeEach(() => activateWithoutAnalysis());
 	beforeEach(() => {
+		extApi.context.workspaceLastFlutterDeviceId = undefined;
 		daemon = new FakeFlutterDaemon();
 		// TODO: Tests for custom emulators.
-		dm = new FlutterDeviceManager(logger, daemon, { flutterCustomEmulators: customEmulators, flutterSelectDeviceWhenConnected: true, flutterShowEmulators: "local", projectSearchDepth: 3 }, extApi.workspaceContext);
+		dm = new FlutterDeviceManager(
+			logger,
+			daemon,
+			{
+				flutterCustomEmulators: customEmulators,
+				flutterRememberSelectedDevice: true,
+				flutterSelectDeviceWhenConnected: true,
+				flutterShowEmulators: "local",
+				projectSearchDepth: 3,
+			},
+			extApi.workspaceContext,
+			extApi.context,
+		);
 	});
 
 	afterEach(() => {
@@ -195,6 +209,17 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
 	});
 
+	it("will auto-select a non-ephemeral device if it is preferred", async () => {
+		daemon.enablePlatform(desktop.platformType); // Ensure Desktop is valid before anything is cached.
+		await daemon.connect(physicalAndroidMobile, true);
+		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
+
+		// Connecting desktop does change the selected device.
+		extApi.context.workspaceLastFlutterDeviceId = desktop.id;
+		await daemon.connect(desktop, true);
+		assert.deepStrictEqual(dm.currentDevice, desktop);
+	});
+
 	it("shows unsupported platforms and prompts to run flutter create if selected", async () => {
 		await daemon.connect(desktop, false);
 		const devices = dm.getPickableDevices(["android"]);
@@ -228,15 +253,18 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 
 	public async enablePlatformGlobally(platformType: string): Promise<void> { }
 
+	public async enablePlatform(platformType: string): Promise<void> {
+		this.supportedPlatforms = this.supportedPlatforms ?? [];
+		this.supportedPlatforms.push(platformType);
+	}
+
 	public async checkIfPlatformGloballyDisabled(platformType: string): Promise<boolean> {
 		return false;
 	}
 
 	public async connect(d: f.Device, markTypeAsValid: boolean): Promise<void> {
-		if (markTypeAsValid && d.platformType) {
-			this.supportedPlatforms = this.supportedPlatforms ?? [];
-			this.supportedPlatforms.push(d.platformType);
-		}
+		if (markTypeAsValid && d.platformType)
+			this.enablePlatform(d.platformType);
 
 		await this.notify(this.deviceAddedSubscriptions, d);
 	}

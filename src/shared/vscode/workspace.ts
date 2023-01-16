@@ -45,4 +45,9 @@ export class Context {
 	public asAbsolutePath(relativePath: string): string {
 		return this.context.asAbsolutePath(relativePath);
 	}
+
+	// Workspace-specific.
+
+	get workspaceLastFlutterDeviceId(): string | undefined { return this.context.workspaceState.get("workspaceLastFlutterDeviceId"); }
+	set workspaceLastFlutterDeviceId(value: string | undefined) { this.context.workspaceState.update("workspaceLastFlutterDeviceId", value); }
 }

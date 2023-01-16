@@ -1910,6 +1910,12 @@
 						"description": "The path to a directory to save Flutter screenshots.",
 						"scope": "machine-overridable"
 					},
+					"dart.flutterRememberSelectedDevice": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to remember which device was last (explicitly) selected for each project. When the remembered device is selected, it will prevent newly-connected mobile devices from being automatically selected (regardless of the `#dart.flutterSelectDeviceWhenConnected#` setting).",
+						"scope": "window"
+					},
 					"dart.flutterSelectDeviceWhenConnected": {
 						"type": "boolean",
 						"default": true,
