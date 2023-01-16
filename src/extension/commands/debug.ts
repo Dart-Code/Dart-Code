@@ -561,14 +561,13 @@ export class DebugCommands implements IAmDisposable {
 					const fileUri: string | undefined = data.fileUri ?? data.file;
 					const line: string | undefined = data.line;
 					const col: string | undefined = data.column;
+					const isFlutterInspectorNavigation = data.source === "flutter.inspector";
 					if (fileUri && line && col) {
-						// Only navigate if we're not in full-width mode.
-						// TODO(dantup): If we get context added to this event, make this more like the legacy dart.navigate below.
-						const navigate = config.devToolsLocation !== "active";
+						// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
+						const navigate = !isFlutterInspectorNavigation || config.devToolsLocation !== "active";
 						if (navigate)
 							vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(fileUri), line, col, true);
-						// TODO(dantup): This should also occur with inspector context.
-						if (this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
+						if (isFlutterInspectorNavigation && this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
 							// Add a short delay because this will remove the visible selection.
 							setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
 						}
