@@ -36,6 +36,7 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 		// When using LSP, printing the VM Service URI will break the protocol and
 		// stop the client from working, so it needs to be hidden.
 		analyzerArgs.push(`-DSILENT_OBSERVATORY=true`);
+		analyzerArgs.push(`-DSILENT_VM_SERVICE=true`);
 		analyzerArgs.push(`--disable-service-auth-codes`);
 		analyzerArgs.push(`--no-dds`);
 		if (dartCapabilities.supportsNoServeDevTools)

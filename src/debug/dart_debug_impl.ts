@@ -427,6 +427,7 @@ export class DartDebugSession extends DebugSession {
 		if (this.useWriteServiceInfo && this.vmServiceInfoFile) {
 			allArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
 			allArgs.push("-DSILENT_OBSERVATORY=true");
+			allArgs.push("-DSILENT_VM_SERVICE=true");
 		}
 
 		// Replace in any custom tool.
