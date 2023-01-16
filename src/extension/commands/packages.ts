@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { iUnderstandAction } from "../../shared/constants";
+import { iUnderstandAction, tenSecondsInMs } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -201,6 +201,10 @@ export class PackageCommands extends BaseSdkCommands {
 			return;
 		}
 		isFetchingPackages = true;
+		// VS Code will hide any prompt after 10seconds, so if the user didn't respond within 10s we assume this prompt is not
+		// going to be responded to and should clear the flag to avoid run-pub-get-on-save not working.
+		setTimeout(() => isFetchingPackages = false, tenSecondsInMs);
+
 		// TODO: Extract this into a Pub class with the things in pub.ts.
 
 		try {

@@ -83,7 +83,9 @@ export const skipThisSurveyAction = "Skip This Survey";
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
 export const initializingFlutterMessage = "Initializing Flutter. This may take a few minutes.";
 
-// Minutes.
+// Seconds.
+export const tenSecondsInMs = 1000 * 10;
+
 export const fiveMinutesInMs = 1000 * 60 * 5;
 export const tenMinutesInMs = 1000 * 60 * 10;
 export const twentyMinutesInMs = 1000 * 60 * 20;
