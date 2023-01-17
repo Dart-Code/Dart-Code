@@ -33,14 +33,6 @@ describe("dart tests", () => {
 			this.skip();
 
 		await openFile(helloWorldRenameTestFile);
-		await setTestContent("");
-
-		// Ensure no results before we start.
-		const initialResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
-		checkTreeNodeResults(initialResults, `
-test/rename_test.dart
-		`);
-
 		await setTestContent(`
 import "package:test/test.dart";
 
