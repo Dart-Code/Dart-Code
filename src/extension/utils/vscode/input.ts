@@ -37,7 +37,12 @@ export async function showInputBoxWithSettings(
 			input.hide();
 		});
 
-		input.onDidAccept(() => input.value ? resolve({ value: input.value }) : resolve(undefined));
+		input.onDidAccept(() => {
+			// Don't accept while there's a validation error.
+			if (input.validationMessage)
+				return;
+			input.value ? resolve({ value: input.value }) : resolve(undefined);
+		});
 		input.onDidHide(() => {
 			resolve(undefined);
 		});

@@ -133,7 +133,7 @@ export class DartCommands extends BaseSdkCommands {
 		if (!packageNameRegex.test(input))
 			return "Dart project names should be all lowercase, with underscores to separate words";
 
-		const bannedNames = ["dart", "test"];
+		const bannedNames = ["dart", "test", "this"];
 		if (bannedNames.includes(input))
 			return `You may not use ${input} as the name for a dart project`;
 
