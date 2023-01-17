@@ -82,7 +82,7 @@ function fixVariant(variant: string): string {
 	return variant === "round" ? "rounded" : variant;
 }
 
-const identifierPrefixRewritePattern = new RegExp(`3d|\\d+`);
+const identifierPrefixRewritePattern = new RegExp(`^(?:3d|\\d+)`);
 
 const identifierPrefixRewrites: { [key: string]: string | undefined } = {
 	// See identifierPrefixRewrites in
