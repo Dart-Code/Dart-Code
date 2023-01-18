@@ -17,6 +17,7 @@ export class FlutterCapabilities {
 	get supportsCreatingSamples() { return versionIsAtLeast(this.version, "1.0.0"); }
 	get hasLatestStructuredErrorsWork() { return versionIsAtLeast(this.version, "1.21.0-5.0"); }
 	get supportsFlutterCreateListSamples() { return versionIsAtLeast(this.version, "1.3.10"); }
+	get supportsFlutterHostVmServicePort() { return versionIsAtLeast(this.version, "3.0.0"); }
 	get supportsWsVmService() { return versionIsAtLeast(this.version, "1.18.0-5"); }
 	get supportsWsDebugBackend() { return versionIsAtLeast(this.version, "1.21.0-0"); }
 	get supportsWsInjectedClient() { return versionIsAtLeast(this.version, "2.1.0-13.0"); }

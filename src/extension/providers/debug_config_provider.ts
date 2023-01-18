@@ -685,8 +685,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					break;
 
 				default: // Debug mode.
+					const futterVmServicePortOption = this.flutterCapabilities.supportsFlutterHostVmServicePort ? "host-vmservice-port" : "observatory-port";
 					if (debugConfig.vmServicePort && isDebug)
-						this.addArgsIfNotExist(args, "--observatory-port", debugConfig.vmServicePort.toString());
+						this.addArgsIfNotExist(args, `--${futterVmServicePortOption}`, debugConfig.vmServicePort.toString());
 					if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
 						this.addArgsIfNotExist(args, "--no-track-widget-creation");
 			}
