@@ -183,7 +183,8 @@ export interface VMClass extends VMObj {
 }
 
 export interface VMBoundField {
-	decl: VMFieldRef;
+	decl: VMFieldRef | undefined;
+	name: string | number;
 	value: VMInstanceRef | VMSentinel;
 }
 

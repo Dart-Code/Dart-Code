@@ -1338,8 +1338,11 @@ export class DartDebugSession extends DebugSession {
 
 							let fieldAndGetterPromises: Array<Promise<DebugProtocol.Variable>> = [];
 
-							const fields = sortBy(instance.fields, (f) => f.decl.name);
-							const fieldPromises = fields.map(async (field, i) => this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${field.decl.name}`, field.decl.name, field.value, i <= maxValuesToCallToString));
+							const fields = sortBy(instance.fields, (f) => f.decl?.name ?? f.name);
+							const fieldPromises = fields.map(async (field, i) => {
+								const name = field.decl?.name ?? (typeof field.name === "number" ? `\$${field.name}` : field.name);
+								return this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${name}`, name, field.value, i <= maxValuesToCallToString);
+							});
 							fieldAndGetterPromises = fieldAndGetterPromises.concat(fieldPromises);
 
 							// Add getters
