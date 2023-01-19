@@ -2426,8 +2426,11 @@
 						"scope": "window"
 					},
 					"dart.daemonPort": {
-						"type": "number",
-						"default": false,
+						"type": [
+							"null",
+							"number"
+						],
+						"default": null,
 						"markdownDescription": "EXPERIMENTAL: The port where flutter daemon can be accessed if daemon is run remotely. This setting is intended for use by Google developers.",
 						"scope": "resource"
 					},

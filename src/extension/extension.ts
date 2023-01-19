@@ -128,7 +128,7 @@ const flutterCapabilities = FlutterCapabilities.empty;
 let analysisRoots: string[] = [];
 let analytics: Analytics;
 
-let showTodos: boolean | undefined;
+let showTodos: boolean | string[] | undefined;
 let previousSettings: string;
 
 let analyzerShutdown: Promise<void> | undefined;
@@ -896,7 +896,7 @@ function recalculateDasAnalysisRoots() {
 function handleConfigurationChange(sdks: Sdks) {
 	// TODOs
 	const newShowTodoSetting = config.showTodos;
-	const todoSettingChanged = showTodos !== newShowTodoSetting;
+	const todoSettingChanged = JSON.stringify(showTodos) !== JSON.stringify(newShowTodoSetting);
 	showTodos = newShowTodoSetting;
 
 	// SDK
