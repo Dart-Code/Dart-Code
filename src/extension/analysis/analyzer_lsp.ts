@@ -16,6 +16,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS, DART_MODE } from "../../shared/vscode/constants";
 import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
+import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { IgnoreLintCodeActionProvider } from "../providers/ignore_lint_code_action_provider";
@@ -46,6 +47,7 @@ export class LspAnalyzer extends Analyzer {
 		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware(), this.vmServicePort);
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
+		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.client.registerFeature(this.refactors.feature);
 		this.disposables.push({ dispose: () => this.client.stop() });
