@@ -2183,8 +2183,8 @@ export class DartDebugSession extends DebugSession {
 			return false;
 
 		// HACK: Take a guess at whether it's inside the pubcache (in which case we're considering it external).
-		return path.indexOf("/hosted/pub.dartlang.org/") !== -1
-			|| path.indexOf("\\hosted\\pub.dartlang.org\\") !== -1
+		return path.indexOf("/hosted/pub.") !== -1
+			|| path.indexOf("\\hosted\\pub.") !== -1
 			|| path.indexOf("/third_party/") !== -1
 			|| path.indexOf("\\third_party\\") !== -1;
 	}
