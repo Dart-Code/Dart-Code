@@ -447,7 +447,11 @@ describe("flutter test debugger", () => {
 
 		// Allow some time for the debug service to register its Driver extension so we can find it when
 		// looking for the app debug session later.
-		await waitFor(() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1));
+		await waitFor(
+			() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1),
+			100, // checkEveryMilliseconds
+			20000, // tryForMilliseconds
+		);
 
 		// Run the integration tests
 		const config = await startDebugger(dc, flutterTestDriverTestFile);
