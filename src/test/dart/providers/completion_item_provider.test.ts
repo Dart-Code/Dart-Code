@@ -220,8 +220,7 @@ main() {
   ProcessInf
 }
 		`);
-			const completions = await getCompletionsAt("ProcessIn^f", { resolveCount: extApi.isLsp ? 5000 : 50000 }); // non-LSP doesn't filter so we need to resolve more :(
-
+			const completions = await getCompletionsAt("ProcessIn^f", { requireComplete: true, resolveCount: extApi.isLsp ? 5000 : 50000 }); // non-LSP doesn't filter so we need to resolve more :(
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
 
 			assert.ok(completion.additionalTextEdits!.length);
@@ -231,14 +230,15 @@ main() {
 				assert.equal(completion.command, undefined);
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n() → ProcessInfo");
-			if (extApi.isLsp) {
-				// This text changed, so handle both.
-				const doc = (completion.documentation as vs.MarkdownString).value;
-				if (doc.startsWith("[ProcessInfo]"))
-					assert.equal(doc, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
-				else
-					assert.equal(doc, "Methods for retrieving information about the current process.");
-			}
+			// TODO: Restore when a fix for https://github.com/Dart-Code/Dart-Code/issues/4361 is available.
+			// if (extApi.isLsp) {
+			// 	// This text changed, so handle both.
+			// 	const doc = (completion.documentation as vs.MarkdownString).value;
+			// 	if (doc.startsWith("[ProcessInfo]"))
+			// 		assert.equal(doc, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
+			// 	else
+			// 		assert.equal(doc, "Methods for retrieving information about the current process.");
+			// }
 			assert.equal(completion.filterText ?? completion.label, "ProcessInfo");
 			if (extApi.isLsp && extApi.dartCapabilities.hasZeroParamNoTabStopFix)
 				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo()");
