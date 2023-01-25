@@ -33,7 +33,7 @@ export function createDebugClient(debugType: DebuggerType) {
 	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debugType);
 	const trackerFactory = extApi.debugLogger as DebugAdapterTrackerFactory;
 	const dc = descriptor instanceof DebugAdapterServer
-		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactory, false)
+		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactory)
 		: descriptor instanceof DebugAdapterExecutable
 			? new DartDebugClient(
 				{
@@ -44,11 +44,6 @@ export function createDebugClient(debugType: DebuggerType) {
 				extApi.debugCommands,
 				extApi.testCoordinator,
 				trackerFactory,
-				// Automatically terminate the DA process after we get the TerminatedEvent for the next
-				// few months until https://dart-review.googlesource.com/c/sdk/+/252660/ is resolved.
-				// This can be removed and replaced with a version check once we know which versions
-				// contain the fix.
-				new Date().getTime() < new Date("2022-10-01T00:00:00Z").getTime(),
 			)
 			: undefined;
 	if (!dc)

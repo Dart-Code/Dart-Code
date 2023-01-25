@@ -25,7 +25,7 @@ export class DartDebugClient extends DebugClient {
 	public hasTerminated = false;
 	public readonly isDartDap: boolean;
 
-	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactory: DebugAdapterTrackerFactory, private readonly stopAdapterAfterTerminatedEvent: boolean) {
+	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactory: DebugAdapterTrackerFactory) {
 		super(args.runtime, args.executable, args.args, "dart", undefined, true);
 		this.isDartDap = args.runtime !== undefined && args.runtime !== "node";
 		this.port = args.port;
@@ -56,23 +56,6 @@ export class DartDebugClient extends DebugClient {
 		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
 			this.hasTerminated = true;
 			logger.info(`[terminated]`);
-
-			if (this.stopAdapterAfterTerminatedEvent) {
-				// Grab a reference to the process, because in tests we may
-				// reuse this class so it will get a new process.
-				const thisAdapterProcess = this.adapterProcess;
-				if (thisAdapterProcess !== undefined) {
-					setTimeout(
-						() => {
-							if (thisAdapterProcess !== undefined && !thisAdapterProcess.killed) {
-								logger.info(`[terminated] Stopping adapter...`);
-								thisAdapterProcess.kill();
-							}
-						},
-						500,
-					);
-				}
-			}
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
 			logger.info(`[stopped] ${event.body.reason}`);
