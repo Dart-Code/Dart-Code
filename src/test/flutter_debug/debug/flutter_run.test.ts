@@ -696,6 +696,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await openFile(flutterHelloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
+		const printDef = await getDefinition(printCall);
+		const expectedPrintDefinitionPath = dc.isDartDap ? fsPath(uriFor(printDef)) : undefined;
 		const config = await startDebugger(dc, flutterHelloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
@@ -703,14 +705,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
-				// SDK source will have no filename, because we download it
-				path: undefined,
+				path: expectedPrintDefinitionPath,
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
-				// We don't get a source path, because the source is downloaded from the VM
-				assert.equal(frame.source!.path, undefined);
+				assert.equal(frame.source!.path, expectedPrintDefinitionPath);
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
