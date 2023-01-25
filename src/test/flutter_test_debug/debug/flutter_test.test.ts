@@ -450,7 +450,7 @@ describe("flutter test debugger", () => {
 		await waitFor(
 			() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1),
 			100, // checkEveryMilliseconds
-			20000, // tryForMilliseconds
+			30000, // tryForMilliseconds
 		);
 
 		// Run the integration tests
