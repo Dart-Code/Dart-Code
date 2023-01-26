@@ -23,13 +23,27 @@ window.addEventListener('message', (event) => {
 				devToolsFrame.src = url;
 			break;
 		case "keydown":
+			const data = message.data;
+			// Forward keypresses up to VS Code so you can access the palette etc.
 			// https://github.com/flutter/devtools/issues/2775
-			window.dispatchEvent(new KeyboardEvent('keydown', message.data));
+			// But suppress if it looks like SelectAll because we never want to handle that.
+			// https://github.com/flutter/devtools/issues/5107
+			const isSelectAll = data.code === 'KeyA' && (data.ctrlKey || data.metaKey);
+			if (!isSelectAll)
+				window.dispatchEvent(new KeyboardEvent('keydown', data));
+			}
 			break;
 		case "launchUrl":
 			vscode.postMessage({command: 'launchUrl', data: message.data});
 			break;
 	}
+});
+window.addEventListener('keydown', (event) => {
+	// Move focus back into Frame. This happens if the frame has focus and you tab
+	// away from VS Code, then back. The focus moves to this container page, and not
+	// the DevTools iframe.
+	if (document.activeElement == document.body)
+		devToolsFrame?.contentWindow.focus();
 });
 `;
 
