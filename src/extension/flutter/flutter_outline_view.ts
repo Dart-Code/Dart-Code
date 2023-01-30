@@ -11,6 +11,7 @@ import { getIconForSymbolKind } from "../../shared/vscode/mappings";
 import { lspToPosition, lspToRange, toRange, treeLabel } from "../../shared/vscode/utils";
 import { DasAnalyzer, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { Analytics } from "../analytics";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { isAnalyzable } from "../utils";
 
@@ -28,6 +29,8 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	protected onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	protected lastSelectedWidget: FlutterWidgetItem | undefined;
+
+	constructor(private readonly analytics: Analytics) { }
 
 	protected setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
@@ -120,6 +123,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	}
 
 	public getChildren(element?: FlutterWidgetItem): FlutterWidgetItem[] {
+		this.analytics.logFlutterOutlineActivated();
 		if (element)
 			return element.children;
 		if (this.rootNode)
@@ -146,8 +150,8 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 
 export class DasFlutterOutlineProvider extends FlutterOutlineProvider {
 	protected flutterOutline: as.FlutterOutline | undefined;
-	constructor(private readonly analyzer: DasAnalyzer) {
-		super();
+	constructor(analytics: Analytics, private readonly analyzer: DasAnalyzer) {
+		super(analytics);
 		this.analyzer.client.registerForServerConnected((c) => {
 			if (analyzer.client.capabilities.supportsFlutterOutline) {
 				this.analyzer.client.registerForFlutterOutline((n) => {
@@ -223,8 +227,8 @@ export class DasFlutterOutlineProvider extends FlutterOutlineProvider {
 
 export class LspFlutterOutlineProvider extends FlutterOutlineProvider {
 	protected flutterOutline: FlutterOutline | undefined;
-	constructor(private readonly analyzer: LspAnalyzer) {
-		super();
+	constructor(analytics: Analytics, private readonly analyzer: LspAnalyzer) {
+		super(analytics);
 		this.analyzer.fileTracker.onFlutterOutline.listen((n) => {
 			if (this.activeEditor && fsPath(vs.Uri.parse(n.uri)) === fsPath(this.activeEditor.document.uri)) {
 				this.flutterOutline = n.outline;

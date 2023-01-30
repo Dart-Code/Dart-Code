@@ -26,6 +26,7 @@ enum Category {
 	Analyzer,
 	Debugger,
 	FlutterSurvey,
+	FlutterOutline,
 	Command,
 }
 
@@ -66,6 +67,10 @@ export class Analytics {
 
 	// If analytics fail, they will be disabled for the rest of the session.
 	private disableAnalyticsForSession = false;
+
+	// Some things we only want to log the first use per session to get an idea of
+	// number of sessions using.
+	private hasLoggedFlutterOutline = false;
 
 	constructor(private readonly logger: Logger, public workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
@@ -131,6 +136,12 @@ export class Analytics {
 	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(`${e}`)); }
 	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(`${e}`)); }
 	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(`${e}`)); }
+	public logFlutterOutlineActivated() {
+		if (this.hasLoggedFlutterOutline)
+			return;
+		this.hasLoggedFlutterOutline = true;
+		this.event(Category.FlutterOutline, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
+	}
 	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]).catch((e) => this.logger.info(`${e}`)); }
 
 	private event(category: Category, action: EventAction | string, customData?: any): Promise<void> {
