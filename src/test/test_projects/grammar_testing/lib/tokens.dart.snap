@@ -89,9 +89,8 @@
 #        ^ source.dart keyword.operator.ternary.dart
 #         ^ source.dart
 #          ^^^ source.dart keyword.declaration.dart
-#             ^ source.dart
-#              ^^^ source.dart entity.name.function.dart
-#                 ^^^ source.dart
+#             ^^^^^ source.dart
+#                  ^^ source.dart keyword.operator.closure.dart
 #                    ^^^^^ source.dart
 #                         ^ source.dart punctuation.terminator.dart
 >  set foo(String? value) => _foo = value;
