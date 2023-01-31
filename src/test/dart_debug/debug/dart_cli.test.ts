@@ -500,7 +500,7 @@ void printSomething() {
 			},
 		);
 		await dc.hitBreakpoint(config, {
-			line: httpReadCall.line,
+			line: httpReadCall.line + 1, // vs.Position is 0-based, but DAP is 1-based.
 			path: fsPath(helloWorldHttpFile),
 		});
 		await waitAllThrowIfTerminates(dc,
