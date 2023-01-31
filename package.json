@@ -610,6 +610,16 @@
 				"command": "_flutter.outline.refactor.flutter.removeWidget",
 				"title": "Remove this widget",
 				"category": "Flutter"
+			},
+			{
+				"command": "_dart.showDebuggerNumbersAsHex",
+				"title": "Show integers in Hex",
+				"category": "Dart"
+			},
+			{
+				"command": "_dart.showDebuggerNumbersAsDecimal",
+				"title": "Show integers in Decimal",
+				"category": "Dart"
 			}
 		],
 		"keybindings": [
@@ -990,6 +1000,14 @@
 				{
 					"command": "_flutter.screenshot.touchBar",
 					"when": "false"
+				},
+				{
+					"command": "_dart.showDebuggerNumbersAsHex",
+					"when": "false"
+				},
+				{
+					"command": "_dart.showDebuggerNumbersAsDecimal",
+					"when": "false"
 				}
 			],
 			"debug/toolBar": [
@@ -1012,6 +1030,18 @@
 					"command": "dart.openDevToolsCpuProfiler",
 					"group": "navigation@90",
 					"when": "!dart-code:anyFlutterProjectLoaded && inDebugMode && debugType == dart && config.dart.showDevToolsDebugToolBarButtons"
+				}
+			],
+			"debug/variables/context": [
+				{
+					"command": "_dart.showDebuggerNumbersAsHex",
+					"when": "inDebugMode && debugType == dart && dart-code:supportsDebugValueFormat && !config.dart.showDebuggerNumbersAsHex",
+					"group": "9_debug@5"
+				},
+				{
+					"command": "_dart.showDebuggerNumbersAsDecimal",
+					"when": "inDebugMode && debugType == dart && dart-code:supportsDebugValueFormat && config.dart.showDebuggerNumbersAsHex",
+					"group": "9_debug@5"
 				}
 			],
 			"touchBar": [
@@ -2241,6 +2271,12 @@
 						"default": true,
 						"markdownDescription": "Whether to show logs from the `dart:developer` `log()` function in the debug console.",
 						"scope": "resource"
+					},
+					"dart.showDebuggerNumbersAsHex": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Whether to show integers formatted as Hex in Variables, Watch, Debug Consoles.",
+						"scope": "window"
 					},
 					"dart.showDevToolsDebugToolBarButtons": {
 						"type": "boolean",
