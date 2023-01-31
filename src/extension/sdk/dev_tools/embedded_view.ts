@@ -31,7 +31,6 @@ window.addEventListener('message', (event) => {
 			const isSelectAll = data.code === 'KeyA' && (data.ctrlKey || data.metaKey);
 			if (!isSelectAll)
 				window.dispatchEvent(new KeyboardEvent('keydown', data));
-			}
 			break;
 		case "launchUrl":
 			vscode.postMessage({command: 'launchUrl', data: message.data});
