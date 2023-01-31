@@ -20,12 +20,12 @@ type DebugClientArgs = { runtime: string, executable: string, args: string[], po
 export class DartDebugClient extends DebugClient {
 	private readonly port: number | undefined;
 	public currentSession?: DebugSession;
-	public currentTracker?: DebugAdapterTracker;
+	public currentTrackers: DebugAdapterTracker[] = [];
 	public hasStarted = false;
 	public hasTerminated = false;
 	public readonly isDartDap: boolean;
 
-	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactory: DebugAdapterTrackerFactory) {
+	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[]) {
 		super(args.runtime, args.executable, args.args, "dart", undefined, true);
 		this.isDartDap = args.runtime !== undefined && args.runtime !== "node";
 		this.port = args.port;
@@ -35,8 +35,10 @@ export class DartDebugClient extends DebugClient {
 		const oldDispatch = me.dispatch;
 		me.dispatch = (body: string) => {
 			const rawData = JSON.parse(body);
-			if (this.currentTracker?.onWillReceiveMessage)
-				this.currentTracker.onWillReceiveMessage(rawData);
+			for (const tracker of this.currentTrackers) {
+				if (tracker.onDidSendMessage)
+					tracker.onDidSendMessage(rawData);
+			}
 			if (rawData.type === "request") {
 				const request = rawData as DebugProtocol.Request;
 				this.emit(request.command, request);
@@ -89,8 +91,10 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public send(command: string, args?: any): Promise<any> {
-		if (this.currentTracker?.onDidSendMessage)
-			this.currentTracker.onDidSendMessage({ command, args });
+		for (const tracker of this.currentTrackers) {
+			if (tracker.onWillReceiveMessage)
+				tracker.onWillReceiveMessage({ command, arguments: args });
+		}
 		return super.send(command, args);
 	}
 
@@ -152,11 +156,17 @@ export class DartDebugClient extends DebugClient {
 		};
 
 		// Set up logging.
-		this.currentTracker = (await this.debugTrackerFactory.createDebugAdapterTracker(currentSession))!;
-		this.currentTracker.onWillStartSession!();
+		for (const trackerFactory of this.debugTrackerFactories) {
+			const tracker = (await trackerFactory.createDebugAdapterTracker(currentSession))!;
+			this.currentTrackers.push(tracker);
+			if (tracker.onWillStartSession)
+				tracker.onWillStartSession();
+		}
 		this.on("terminated", (e: DebugProtocol.TerminatedEvent) => {
-			if (this.currentTracker?.onWillStopSession)
-				this.currentTracker.onWillStopSession();
+			for (const tracker of this.currentTrackers) {
+				if (tracker.onWillStopSession)
+					tracker.onWillStopSession();
+			}
 		});
 
 		this.debugCommands.handleDebugSessionStart(currentSession);

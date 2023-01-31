@@ -31,9 +31,9 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 
 export function createDebugClient(debugType: DebuggerType) {
 	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debugType);
-	const trackerFactory = extApi.debugLogger as DebugAdapterTrackerFactory;
+	const trackerFactories = extApi.trackerFactories as DebugAdapterTrackerFactory[];
 	const dc = descriptor instanceof DebugAdapterServer
-		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactory)
+		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactories)
 		: descriptor instanceof DebugAdapterExecutable
 			? new DartDebugClient(
 				{
@@ -43,7 +43,7 @@ export function createDebugClient(debugType: DebuggerType) {
 				},
 				extApi.debugCommands,
 				extApi.testCoordinator,
-				trackerFactory,
+				trackerFactories,
 			)
 			: undefined;
 	if (!dc)

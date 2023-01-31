@@ -22,11 +22,11 @@ class DartDebugAdapterLogger implements DebugAdapterTracker {
 	}
 
 	public onWillReceiveMessage(message: any): void {
-		this.logger.info(`<== ${JSON.stringify(message)}`);
+		this.logger.info(`==> ${JSON.stringify(message)}`);
 	}
 
 	public onDidSendMessage(message: any): void {
-		this.logger.info(`==> ${JSON.stringify(message)}`);
+		this.logger.info(`<== ${JSON.stringify(message)}`);
 	}
 
 	public onWillStopSession() {
