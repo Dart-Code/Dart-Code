@@ -547,6 +547,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
+	const hexFormatter = new DartDebugAdapterHexViewFactory(logger);
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", hexFormatter));
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", new DartDebugAdapterHexViewFactory(logger)));
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
@@ -788,7 +790,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			dartCapabilities,
 			debugAdapterDescriptorFactory,
 			debugCommands,
-			debugLogger,
 			debugProvider,
 			debugSessions,
 			deviceManager,
@@ -813,6 +814,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			testCoordinator,
 			testDiscoverer,
 			testModel,
+			trackerFactories: [debugLogger, hexFormatter],
 			webClient,
 			workspaceContext,
 		} as InternalExtensionApi,

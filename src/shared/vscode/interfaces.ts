@@ -47,7 +47,7 @@ export interface InternalExtensionApi {
 	dartCapabilities: DartCapabilities;
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;
-	debugLogger: any;
+	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
 	debugSessions: Array<{ session: { name?: string }, loadedServiceExtensions: VmServiceExtension[] }>;
 	deviceManager: FlutterDeviceManager | undefined;
