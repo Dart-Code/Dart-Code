@@ -1558,6 +1558,12 @@ export class DartDebugSession extends DebugSession {
 		const isClipboardContext = args.context === "clipboard";
 		const isWatchContext = args.context === "watch";
 		const expression: string = args.expression.replace(trailingSemicolonPattern, "");
+
+		if (expression.endsWith(",nq") || expression.endsWith(",h") || expression.endsWith(",d")) {
+			this.errorResponse(response, "Format specifiers are only supported in the SDK debug adapters");
+			return;
+		}
+
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId = args.frameId;
 		// const context: string = args.context; // "watch", "repl", "hover"
