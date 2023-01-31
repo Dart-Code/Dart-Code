@@ -886,6 +886,27 @@ void printSomething() {
 		await dc.terminateRequest();
 	});
 
+	it("formats local variables as hex when configured", async function () {
+		if (!dc.isDartDap || !extApi.dartCapabilities.supportsFormatSpecifiers)
+			this.skip();
+
+		await setConfigForTest("dart", "showDebuggerNumbersAsHex", true);
+		await openFile(helloWorldMainFile);
+		const debugConfig = await startDebugger(dc, helloWorldMainFile);
+		await dc.hitBreakpoint(debugConfig, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(helloWorldMainFile),
+		});
+
+		const variables = await dc.getTopFrameVariables("Locals");
+		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
+		for (let i = 0; i <= 1; i++) {
+			ensureVariableWithIndex(listVariables, i, `l[${i}]`, `[${i}]`, `0x${i.toString(16)}`);
+		}
+
+		await dc.terminateRequest();
+	});
+
 	it("sorts local variables alphabetically", async () => {
 		await openFile(helloWorldMainFile);
 		const debugConfig = await startDebugger(dc, helloWorldMainFile);
@@ -1041,6 +1062,26 @@ void printSomething() {
 			assert.ok(evaluateResult);
 			assert.equal(evaluateResult.result, `"test"`);
 			assert.equal(evaluateResult.variablesReference, 0);
+
+			await dc.terminateRequest();
+		});
+
+		it("with format specifiers", async function () {
+			if (!dc.isDartDap || !extApi.dartCapabilities.supportsFormatSpecifiers)
+				this.skip();
+
+			await openFile(helloWorldMainFile);
+			const config = await startDebugger(dc, helloWorldMainFile);
+			await waitAllThrowIfTerminates(dc,
+				dc.hitBreakpoint(config, {
+					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
+					path: fsPath(helloWorldMainFile),
+				}),
+			);
+
+			assert.equal((await dc.evaluateForFrame(`"test",nq`)).result, `test`);
+			assert.equal((await dc.evaluateForFrame(`10+10,d`)).result, `20`);
+			assert.equal((await dc.evaluateForFrame(`10+10,h`)).result, `0x14`);
 
 			await dc.terminateRequest();
 		});
