@@ -558,15 +558,15 @@ export class DebugCommands implements IAmDisposable {
 			const data = body.data;
 			switch (kind) {
 				case "navigate":
-					const fileUri: string | undefined = data.fileUri ?? data.file;
+					const uri: string | undefined = data.resolvedFileUri ?? data.resolvedUri ?? data.fileUri ?? data.uri ?? data.file;
 					const line: string | undefined = data.line;
 					const col: string | undefined = data.column;
 					const isFlutterInspectorNavigation = data.source === "flutter.inspector";
-					if (fileUri && line && col) {
+					if (uri && uri.startsWith("file://") && line && col) {
 						// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
 						const navigate = !isFlutterInspectorNavigation || config.devToolsLocation !== "active";
 						if (navigate)
-							vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(fileUri), line, col, true);
+							vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(uri), line, col, true);
 						if (isFlutterInspectorNavigation && this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
 							// Add a short delay because this will remove the visible selection.
 							setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
