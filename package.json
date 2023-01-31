@@ -613,12 +613,12 @@
 			},
 			{
 				"command": "_dart.showDebuggerNumbersAsHex",
-				"title": "Show integers in Hex",
+				"title": "Format integers as Hex",
 				"category": "Dart"
 			},
 			{
 				"command": "_dart.showDebuggerNumbersAsDecimal",
-				"title": "Show integers in Decimal",
+				"title": "Format integers as Decimal",
 				"category": "Dart"
 			}
 		],
