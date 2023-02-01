@@ -374,10 +374,12 @@ export class LspAnalyzer extends Analyzer {
 function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware, vmServicePort: number | undefined): LanguageClient {
 	const clientOptions: ls.LanguageClientOptions = {
 		initializationOptions: {
+			appHost: vs.env.appHost,
 			closingLabels: config.closingLabels,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
+			remoteName: vs.env.remoteName,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
 		},
 		markdown: {
