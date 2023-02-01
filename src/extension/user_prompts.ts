@@ -81,12 +81,24 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
-	if (!shouldSuppress(useRecommendedSettingsPromptKey)) {
+	if (!shouldSuppress(useRecommendedSettingsPromptKey) && !hasAnyExistingDartSettings()) {
 		showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
 		return;
 	}
 
 	// (though, there are no other notifications right now...)
+}
+
+function hasAnyExistingDartSettings(): boolean {
+	const topLevelConfig = vs.workspace.getConfiguration("", null);
+	for (const configKey of ["dart", "[dart]"]) {
+		const dartConfig = topLevelConfig.inspect(configKey);
+		if (dartConfig?.globalValue || dartConfig?.globalLanguageValue
+			|| dartConfig?.workspaceValue || dartConfig?.workspaceLanguageValue
+			|| dartConfig?.workspaceFolderValue || dartConfig?.workspaceFolderLanguageValue)
+			return true;
+	}
+	return false;
 }
 
 async function promptToUseRecommendedSettings(): Promise<boolean> {
