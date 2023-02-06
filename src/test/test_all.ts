@@ -54,8 +54,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 				path.isAbsolute(workspaceFolder)
 					? workspaceFolder
 					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
-				"--user-data-dir",
-				path.join(cwd, ".dcud", testFolder),
+				"--profile-temp",
 				"--crash-reporter-directory",
 				path.join(cwd, ".crash_dumps", testFolder),
 				// Disable the Git extensions as these may be causing test failures on GitHub Actions:
