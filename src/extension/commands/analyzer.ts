@@ -3,6 +3,7 @@ import { Analyzer } from "../../shared/analyzer";
 import { issueTrackerAction, issueTrackerUri } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { envUtils } from "../../shared/vscode/utils";
+import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { Analytics, EventCommand } from "../analytics";
 
 // Must be global, as all classes are created during an extension restart.
@@ -14,6 +15,11 @@ export class AnalyzerCommands {
 			const res = await analyzer.getDiagnosticServerPort();
 			await envUtils.openInBrowser(`http://127.0.0.1:${res.port}/`);
 		}));
+		if (analyzer instanceof LspAnalyzer) {
+			context.subscriptions.push(vs.commands.registerCommand("dart.runThroughputBenchmark", async () => {
+				await analyzer.runThroughputBenchmark();
+			}));
+		}
 		context.subscriptions.push(vs.commands.registerCommand("dart.restartAnalysisServer", async () => {
 			forcedReanalyzeCount++;
 			if (forcedReanalyzeCount === 10)

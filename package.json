@@ -351,6 +351,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.runThroughputBenchmark",
+				"title": "Run Analyzer Throughput Benchmark",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.changeSdk",
 				"title": "Change SDK",
 				"category": "Dart"
@@ -817,6 +822,10 @@
 				},
 				{
 					"command": "dart.openAnalyzerDiagnostics",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
+					"command": "dart.runThroughputBenchmark",
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{

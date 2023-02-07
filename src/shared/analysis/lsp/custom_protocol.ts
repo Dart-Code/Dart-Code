@@ -28,6 +28,10 @@ export class DiagnosticServerRequest {
 	public static type = new RequestType0<{ port: number }, void>("dart/diagnosticServer");
 }
 
+export class RunThroughputBenchmarkRequest {
+	public static type = new RequestType<{ kind: string, data?: string }, void, void>("dart/throughputBenchmark");
+}
+
 export class ReanalyzeRequest {
 	public static type = new RequestType0<void, void>("dart/reanalyze");
 }

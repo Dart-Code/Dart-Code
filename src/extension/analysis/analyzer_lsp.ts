@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
-import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, RunThroughputBenchmarkRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
@@ -346,6 +346,16 @@ export class LspAnalyzer extends Analyzer {
 
 	public async getDiagnosticServerPort(): Promise<{ port: number }> {
 		return this.client.sendRequest(DiagnosticServerRequest.type);
+	}
+
+	public async runThroughputBenchmark(): Promise<void> {
+		const overhead = 202; // Size of JSON/headers.
+		const payload = "0123456789".repeat((8000 - 200) / 10);
+		this.client.sendRequest(RunThroughputBenchmarkRequest.type, { "kind": "START" });
+		for (let i = 1; i <= 2000; i++) {
+			this.client.sendRequest(RunThroughputBenchmarkRequest.type, { "kind": "DATA", "data": payload });
+		}
+		this.client.sendRequest(RunThroughputBenchmarkRequest.type, { "kind": "END" });
 	}
 
 	public async forceReanalyze(): Promise<void> {
