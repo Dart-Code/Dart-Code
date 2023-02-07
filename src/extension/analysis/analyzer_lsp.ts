@@ -389,7 +389,12 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		outputChannelName: "LSP",
 		revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
 		uriConverters: {
-			code2Protocol: (uri) => vs.Uri.file(fsPath(uri, { useRealCasing: !!config.normalizeFileCasing })).toString(),
+			code2Protocol: (uri) => {
+				// VS Code lowercases drive letters in Uri.file().toString() so we need to replace in the outbound URI too until the
+				// server is case-insensitive for drive letters.
+				const fileUri = vs.Uri.file(fsPath(uri, { useRealCasing: !!config.normalizeFileCasing })).toString();
+				return fileUri.replace(/^file:\/\/\/(\w)(:|%3A)\//, (match, driveLetter, colon) => `file:///${driveLetter.toUpperCase()}${colon}/`);
+			},
 			protocol2Code: (file) => vs.Uri.parse(file),
 		},
 	};
