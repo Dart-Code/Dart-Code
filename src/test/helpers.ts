@@ -51,6 +51,7 @@ export const helloWorldPubspec = vs.Uri.file(path.join(fsPath(helloWorldFolder),
 export const helloWorldStack60File = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/stack60.dart"));
 export const helloWorldGettersFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/getters.dart"));
 export const helloWorldBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/broken.dart"));
+export const helloWorldAssertFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/assert.dart"));
 export const helloWorldThrowInSdkFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/throw_in_sdk_code.dart"));
 export const helloWorldThrowInExternalPackageFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/throw_in_external_package.dart"));
 export const helloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/throw_in_local_package.dart"));

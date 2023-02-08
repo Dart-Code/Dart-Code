@@ -12,7 +12,7 @@ import { fsPath, getRandomInt } from "../../../shared/utils/fs";
 import { resolvedPromise } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { activate, breakpointFor, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -1393,6 +1393,58 @@ insp=<inspected variable>
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stderr", "Unhandled exception:"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("has asserts enabled by default in debug mode", async () => {
+		await openFile(helloWorldAssertFile);
+		const config = await startDebugger(dc, helloWorldAssertFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {}).then(() => dc.resume()),
+			dc.assertOutputContains("stderr", "asserts are enabled"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("has asserts enabled by default in noDebug mode", async () => {
+		await openFile(helloWorldAssertFile);
+		const config = await startDebugger(dc, helloWorldAssertFile, {
+			noDebug: true,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertOutputContains("stderr", "asserts are enabled"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("can disable asserts in debug mode", async () => {
+		await openFile(helloWorldAssertFile);
+		const config = await startDebugger(dc, helloWorldAssertFile, {
+			enableAsserts: false,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertOutputContains("stdout", "asserts not enabled"),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("can disable asserts in noDebug mode", async () => {
+		await openFile(helloWorldAssertFile);
+		const config = await startDebugger(dc, helloWorldAssertFile, {
+			enableAsserts: false,
+			noDebug: true,
+		});
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertOutputContains("stdout", "asserts not enabled"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
