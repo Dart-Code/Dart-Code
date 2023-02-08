@@ -632,7 +632,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		this.addArgsIfNotExist(args, ...conf.cliAdditionalArgs);
 
-		if (isDebug && debugConfig.enableAsserts !== false) // undefined = on
+		if (debugConfig.enableAsserts !== false) // undefined = on
 			this.addArgsIfNotExist(args, "--enable-asserts");
 
 		return args;
