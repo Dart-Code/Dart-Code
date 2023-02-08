@@ -37,4 +37,8 @@ void main() {
       expect(1, 1);
     });
   });
+
+  test('`with backticks`', () {
+    expect(1, 1);
+  });
 }

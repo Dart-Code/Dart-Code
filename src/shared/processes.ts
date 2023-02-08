@@ -18,7 +18,7 @@ function quoteAndEscapeArg(arg: string) {
 	// executable with a space in its path and an argument also has a space, you have to then quote _all_ of the
 	// arguments!
 	// https://github.com/nodejs/node/issues/7367
-	let escaped = arg.replace(/"/g, `\\"`);
+	let escaped = arg.replace(/"/g, `\\"`).replace(/`/g, "\\`");
 	// Additionally, on Windows escape redirection symbols with ^ if they come
 	// directly after quotes (?).
 	// https://ss64.com/nt/syntax-esc.html

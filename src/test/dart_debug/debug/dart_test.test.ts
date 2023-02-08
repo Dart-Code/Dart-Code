@@ -145,6 +145,13 @@ describe("dart test debugger", () => {
 		await checkRunTestFromCodeLens(search, testName);
 	});
 
+	it("can run tests from codelens with backticks", async () => {
+		const search = `test^('\`with backticks`;
+		const testName = "`with backticks`";
+
+		await checkRunTestFromCodeLens(search, testName);
+	});
+
 	it("can run using a custom tool", async () => {
 		const root = fsPath(helloWorldFolder);
 		const hasRunFile = prepareHasRunFile(root, "dart_test");
