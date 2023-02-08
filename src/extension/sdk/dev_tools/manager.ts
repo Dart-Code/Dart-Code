@@ -298,6 +298,14 @@ export class DevToolsManager implements vs.Disposable {
 		queryParams.hide = "debugger";
 		queryParams.ide = "VSCode";
 
+		// Add the version to the querystring to avoid any caching of the index.html page.
+		let cacheBust = `dart-${this.dartCapabilities.version}-flutter-${this.flutterCapabilities.version}`;
+		// If using a custom version of DevTools, additionally bust at least every day.
+		if (!!config.customDevTools?.script) { // Don't jus check config.customDevTools as it's a VS Code Proxy object
+			cacheBust += `-custom-${new Date().getTime()}`;
+		}
+		queryParams.cacheBust = cacheBust;
+
 		// Handle new Path URL DevTools.
 		let path = "";
 		if (this.dartCapabilities.supportsDartDevToolsPathUrls) {
