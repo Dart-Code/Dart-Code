@@ -605,7 +605,7 @@
             ]
         },
         "get-pattern": {
-            "match":       "\\b(get)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(?:\\s+(async)\\s*(\\*)?)?\\s*({|=>|;)",
+            "match":       "\\b(get)\\s+([_$]*[a-z][a-zA-Z0-9_$]*)(?:\\s+(a?sync)\\s*(\\*)?)?\\s*({|=>|;)",
             "captures": {
                 "1": {
                     "name":    "keyword.declaration.get.dart"
