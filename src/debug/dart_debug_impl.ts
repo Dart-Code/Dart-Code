@@ -77,7 +77,7 @@ export class DartDebugSession extends DebugSession {
 	public useInspectorNotificationsForWidgetErrors = false;
 	public evaluateGettersInDebugViews = false;
 	protected evaluateToStringInDebugViews = false;
-	protected readonly dartCapabilities = DartCapabilities.empty;
+	public readonly dartCapabilities = DartCapabilities.empty;
 	public readonly vmServiceCapabilities = VmServiceCapabilities.empty;
 	private useWriteServiceInfo = false;
 	protected vmServiceInfoFile?: string;

@@ -50,7 +50,7 @@ export class ThreadManager {
 		if (!this.debugSession?.vmService)
 			return;
 
-		if (this.debugSession.vmServiceCapabilities.supportsSetIsolatePauseMode) {
+		if (this.debugSession.vmServiceCapabilities.supportsSetIsolatePauseMode && this.debugSession.dartCapabilities.supportsSetIsolatePauseModeForWeb) {
 			await this.debugSession.vmService.setIsolatePauseMode(isolateRef.id, { exceptionPauseMode: mode });
 		} else {
 			await this.debugSession.vmService.setExceptionPauseMode(isolateRef.id, mode);
