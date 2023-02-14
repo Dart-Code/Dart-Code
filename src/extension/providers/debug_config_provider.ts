@@ -547,7 +547,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		debugConfig.toolEnv = getToolEnv();
-		debugConfig.sendLogsToClient = true;
+		debugConfig.sendLogsToClient = isLogging;
 		debugConfig.sendCustomProgressEvents = true;
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
 		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
