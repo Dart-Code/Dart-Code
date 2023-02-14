@@ -1512,7 +1512,7 @@
 							"number"
 						],
 						"default": null,
-						"description": "The port number to be used for the Dart DevTools.",
+						"description": "The port number to be used for the Dart DevTools (requires restart).",
 						"scope": "window"
 					},
 					"dart.devToolsReuseWindows": {
