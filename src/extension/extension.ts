@@ -151,6 +151,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (isDevExtension)
 		context.subscriptions.push(logToConsole(logger));
 
+	context.messagePassingProtocol?.onDidReceiveMessage((msg) => {
+		vs.window.showInformationMessage(msg as string);
+	});
+
 	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
 	setupLog(getExtensionLogPath(), LogCategory.General);
