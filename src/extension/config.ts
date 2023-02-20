@@ -41,6 +41,7 @@ class Config {
 	}
 
 	get additionalAnalyzerFileExtensions(): string[] { return this.getConfig<string[]>("additionalAnalyzerFileExtensions", []); }
+	get addSdkToTerminalPath(): boolean { return this.getConfig<boolean>("addSdkToTerminalPath", false); }
 	get allowAnalytics(): boolean { return this.getConfig<boolean>("allowAnalytics", true); }
 	get allowTestsOutsideTestFolder(): boolean { return this.getConfig<boolean>("allowTestsOutsideTestFolder", false); }
 	get analysisServerFolding(): boolean { return this.getConfig<boolean>("analysisServerFolding", true); }
