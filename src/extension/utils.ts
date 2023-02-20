@@ -144,7 +144,7 @@ export function isTestFolder(path: string | undefined): boolean {
 }
 
 export function projectShouldUsePubForTests(folder: string, config: WorkspaceConfig): boolean {
-	return hasPubspec(folder) && !config.useVmForTests;
+	return !config.useVmForTests && hasPubspec(folder);
 }
 
 export function isDartFile(file: string): boolean {

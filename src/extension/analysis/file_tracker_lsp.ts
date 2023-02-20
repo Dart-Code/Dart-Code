@@ -68,6 +68,9 @@ export class LspFileTracker implements IAmDisposable {
 	}
 
 	public supportsPubRunTest(file: { fsPath: string } | string): boolean | undefined {
+		if (this.wsContext.config.useVmForTests)
+			return false;
+
 		// TODO: Both FileTrackers have a copy of this!
 		const path = fsPath(file);
 		if (!util.isPubRunnableTestFile(path))
