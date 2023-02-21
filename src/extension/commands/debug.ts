@@ -141,9 +141,7 @@ export class DebugCommands implements IAmDisposable {
 			} else if (session.hasStarted) {
 				vs.window.showInformationMessage("DevTools is not available for an app running in this mode.");
 			} else {
-				// TODO: Remove the last part of this after the next Flutter release (after 3.0) when the appStarted event
-				//       is passed.
-				vs.window.showInformationMessage("This debug session is not ready yet or does not support DevTools.");
+				vs.window.showInformationMessage("This debug session is not ready yet.");
 			}
 		}));
 
