@@ -93,7 +93,7 @@ export function shouldHotReloadFor(file: { uri: Uri, isUntitled?: boolean, langu
 	if (file.isUntitled || !fsPath(file.uri) || file.uri.scheme !== "file")
 		return false;
 
-	const reloadableFileExtensions = ["dart", "htm", "html", "css"];
+	const reloadableFileExtensions = ["dart", "htm", "html", "css", "frag"];
 
 	const extName = path.extname(fsPath(file.uri));
 	const extension = extName ? extName.substr(1) : undefined;
