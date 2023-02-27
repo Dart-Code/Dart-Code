@@ -9,9 +9,7 @@ export class FlutterCapabilities {
 		this.version = flutterVersion;
 	}
 
-	// TODO(dantup): Set this once a fix for https://github.com/dart-lang/sdk/issues/50802 has landed
-	//  and made it into Flutter.
-	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "9.9.9"); }
+	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "3.8.0-16"); }
 	get supportsCreateSkeleton() { return versionIsAtLeast(this.version, "2.5.0"); }
 	get supportsCreateEmpty() { return versionIsAtLeast(this.version, "3.6.0-3"); }
 	get supportsCreatingSamples() { return versionIsAtLeast(this.version, "1.0.0"); }
