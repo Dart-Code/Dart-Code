@@ -11,8 +11,7 @@ import { Context } from "../../shared/vscode/workspace";
 import { Analytics, EventCommand } from "../analytics";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
-import { Stagehand } from "../pub/stagehand";
-import { DartCreate, DartProjectCreator } from "../sdk/dart/dart_create";
+import { DartCreate } from "../sdk/dart/dart_create";
 import { SdkUtils } from "../sdk/utils";
 import { BaseSdkCommands, packageNameRegex } from "./sdk";
 
@@ -25,19 +24,16 @@ export class DartCommands extends BaseSdkCommands {
 	}
 
 	private dartCreate(projectPath: string, templateName: string) {
-		// TODO: This should move inside DartCreate/Stagehand, but it requires extracting
-		// all the command executing also into a better base class ("run pub in folder" etc.)
-		// instead of being directly in here.
-		if (this.dartCapabilities.supportsDartCreate) {
-			const binPath = path.join(this.sdks.dart, dartVMPath);
-			const projectContainer = path.dirname(projectPath);
-			const projectName = path.basename(projectPath);
-			const args = ["create", "-t", templateName, projectName, "--force"];
-			return this.runCommandInFolder(templateName, projectContainer, binPath, args, false);
-		} else {
-			const args = ["global", "run", "stagehand", templateName];
-			return this.runPubInFolder(projectPath, args, templateName);
+		if (!this.dartCapabilities.supportsDartCreate) {
+			vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
+			return;
 		}
+
+		const binPath = path.join(this.sdks.dart, dartVMPath);
+		const projectContainer = path.dirname(projectPath);
+		const projectName = path.basename(projectPath);
+		const args = ["create", "-t", templateName, projectName, "--force"];
+		return this.runCommandInFolder(templateName, projectContainer, binPath, args, false);
 	}
 
 
@@ -51,17 +47,16 @@ export class DartCommands extends BaseSdkCommands {
 			return;
 		}
 
-		this.analytics.logCommand(EventCommand.DartNewProject);
-
-		// Get the JSON for the available templates by calling stagehand or 'dart create'.
-
-		const creator: DartProjectCreator = this.dartCapabilities.supportsDartCreate
-			? new DartCreate(this.logger, this.sdks)
-			: new Stagehand(this.logger, this.dartCapabilities, this.sdks, this.pubGlobal);
-		const isAvailable = await creator.installIfRequired();
-		if (!isAvailable) {
+		if (!this.dartCapabilities.supportsDartCreate) {
+			vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
 			return;
 		}
+
+		this.analytics.logCommand(EventCommand.DartNewProject);
+
+		// Get the JSON for the available templates by calling 'dart create'.
+
+		const creator = new DartCreate(this.logger, this.sdks);
 		let templates: DartProjectTemplate[];
 		try {
 			templates = await creator.getTemplates();

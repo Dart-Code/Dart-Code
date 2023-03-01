@@ -158,7 +158,7 @@ function error(err: any) {
 export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
 	await Promise.all(getDartWorkspaceFolders().map(async (wf) => {
 		try {
-			await handleStagehandTrigger(logger, wf, DART_CREATE_PROJECT_TRIGGER_FILE);
+			await handleDartCreateTrigger(logger, wf, DART_CREATE_PROJECT_TRIGGER_FILE);
 			await handleFlutterCreateTrigger(wf);
 		} catch (e) {
 			logger.error("Failed to create project");
@@ -168,7 +168,7 @@ export async function handleNewProjects(logger: Logger, context: Context): Promi
 	}));
 }
 
-async function handleStagehandTrigger(logger: Logger, wf: vs.WorkspaceFolder, triggerFilename: string): Promise<void> {
+async function handleDartCreateTrigger(logger: Logger, wf: vs.WorkspaceFolder, triggerFilename: string): Promise<void> {
 	const triggerFile = path.join(fsPath(wf.uri), triggerFilename);
 	if (!fs.existsSync(triggerFile))
 		return;
@@ -178,9 +178,9 @@ async function handleStagehandTrigger(logger: Logger, wf: vs.WorkspaceFolder, tr
 	try {
 		template = JSON.parse(templateJson);
 	} catch (e) {
-		logger.error("Failed to get Stagehand templates");
+		logger.error("Failed to get project templates");
 		logger.error(e);
-		vs.window.showErrorMessage("Failed to run Stagehand to create project");
+		vs.window.showErrorMessage("Failed to get project templates to create project");
 		return;
 	}
 	fs.unlinkSync(triggerFile);

@@ -7,10 +7,8 @@ import { logProcess } from "../../../shared/logging";
 import { cleanPubOutput } from "../../../shared/pub/utils";
 import { safeToolSpawn } from "../../utils/processes";
 
-export class DartCreate implements DartProjectCreator {
+export class DartCreate {
 	constructor(private logger: Logger, private sdks: DartSdks) { }
-
-	public async installIfRequired() { return "0.0.0"; }
 
 	public async getTemplates(): Promise<DartProjectTemplate[]> {
 		const json = await this.getTemplateJson();
@@ -49,9 +47,4 @@ export class DartCreate implements DartProjectCreator {
 			});
 		});
 	}
-}
-
-export interface DartProjectCreator {
-	getTemplates(): DartProjectTemplate[] | PromiseLike<DartProjectTemplate[]>;
-	installIfRequired(): Promise<string | undefined>;
 }
