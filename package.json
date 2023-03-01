@@ -1669,7 +1669,7 @@
 					"dart.enableCompletionCommitCharacters": {
 						"type": "boolean",
 						"default": false,
-						"markdownDescription": "Whether to automatically commit the selected completion item when pressing certain keys such as . , ( and [. This setting does not currently apply to LSP, see `#dart.previewCommitCharacters#`.",
+						"markdownDescription": "Whether to automatically commit the selected completion item when pressing certain keys such as . , ( and \\[. This setting does not currently apply to LSP, see `#dart.previewCommitCharacters#`.",
 						"scope": "resource"
 					},
 					"dart.enableSdkFormatter": {
