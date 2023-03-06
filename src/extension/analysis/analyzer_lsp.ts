@@ -229,17 +229,27 @@ export class LspAnalyzer extends Analyzer {
 			},
 
 			async provideCodeActions(document: vs.TextDocument, range: vs.Range, context: vs.CodeActionContext, token: vs.CancellationToken, next: ls.ProvideCodeActionsSignature) {
+				const originalState = `Original diagnostics:\n${JSON.stringify(context.diagnostics, undefined, "  ")}\n\nDocument has ${document.lineCount} lines`;
 				const documentVersion = document.version;
 				let res = await next(document, range, context, token) || [];
 
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
 				refactors.rewriteCommands(res);
 
-				const hasExistingIgnoreActions = res.find((r) => r.title.startsWith("Ignore "));
-				if (!hasExistingIgnoreActions) {
-					const ignoreActions = ignoreActionProvider.provideCodeActions(document, range, context, token);
-					if (ignoreActions)
-						res = res.concat(ignoreActions);
+				try {
+					const hasExistingIgnoreActions = res.find((r) => r.title.startsWith("Ignore "));
+					if (!hasExistingIgnoreActions) {
+						const ignoreActions = ignoreActionProvider.provideCodeActions(document, range, context, token);
+						if (ignoreActions)
+							res = res.concat(ignoreActions);
+					}
+				} catch (e) {
+					console.warn(`Failed to build Ignore fix for diagnostics. Please report the information below in the Dart-Code/Dart-Code repo on GitHub.`);
+					console.warn(originalState);
+					console.warn(`After CodeAction request diagnostics:\n${JSON.stringify(context.diagnostics, undefined, "  ")}\n\nDocument has ${document.lineCount} lines: ${e}`);
+					if (token.isCancellationRequested) {
+						console.warn(`Attempt to build Ignore fixes was after cancellation`);
+					}
 				}
 
 				return res;
