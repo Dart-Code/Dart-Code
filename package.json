@@ -2320,7 +2320,7 @@
 					"dart.vmAdditionalArgs": {
 						"type": "array",
 						"default": [],
-						"markdownDescription": "Arguments to be passed to the Dart VM when running Dart CLI scripts.\n\nThese arguments appear between \"dart\" and \"run\":\n\n`dart (vmAdditionalArgs) run (toolArgs) bin/main.dart (args)`",
+						"description": "Additional args to pass to the Dart VM when running/debugging command line apps or Dart test scripts.",
 						"scope": "resource",
 						"items": {
 							"type": "string"
@@ -2630,7 +2630,7 @@
 							},
 							"args": {
 								"type": "array",
-								"markdownDescription": "Arguments to be passed to the Dart script being run (passed to `main()`).\n\nThese arguments appear after the script being run.\n\n`dart (vmAdditionalArgs) run (toolArgs) bin/main.dart (args)`\n\n`flutter run (toolArgs) -t lib/main.dart (args)`",
+								"description": "Arguments to be passed to your Dart/Flutter script on the command line. These arguments usually go after the script filename but may be inserted before for some tools where required.",
 								"items": {
 									"type": "string"
 								}
@@ -2641,15 +2641,7 @@
 							"toolArgs": {
 								"type": "array",
 								"default": [],
-								"markdownDescription": "Arguments to be passed to the Dart or Flutter tool.\n\nThese arguments appear after \"dart run\" or \"flutter run\":\n\n`dart (vmAdditionalArgs) run (toolArgs) bin/main.dart (args)`\n\n`flutter run (toolArgs) -t lib/main.dart (args)`",
-								"items": {
-									"type": "string"
-								}
-							},
-							"vmAdditionalArgs": {
-								"type": "array",
-								"default": [],
-								"markdownDescription": "Arguments to be passed to the Dart VM when running Dart CLI scripts.\n\nThese arguments appear between \"dart\" and \"run\":\n\n`dart (vmAdditionalArgs) run (toolArgs) bin/main.dart (args)`",
+								"description": "Arguments to be passed to the Dart VM/Flutter tools on the command line. Unlike `args`, these arguments always go before the script filename.",
 								"items": {
 									"type": "string"
 								}
