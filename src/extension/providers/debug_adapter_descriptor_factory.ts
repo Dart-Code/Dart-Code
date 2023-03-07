@@ -6,6 +6,8 @@ import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../.
 import { DebuggerType } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
+import { fsPath, isWithinPathOrEqual } from "../../shared/utils/fs";
+import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -87,8 +89,19 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			);
 		}
 
+		const toolEnv = getToolEnv();
+
+		// If FLUTTER_ROOT hasn't been set explicitly and any of our open workspace are in the Flutter SDK we're using, then
+		// set that SDK path as FLUTTER_ROOT.
+		const flutterSdk = this.sdks.flutter;
+		if (!process.env.FLUTTER_ROOT && !toolEnv.FLUTTER_ROOT && flutterSdk) {
+			const openFlutterSdkFolders = getDartWorkspaceFolders()?.find((wf) => isWithinPathOrEqual(fsPath(wf.uri), flutterSdk));
+			if (openFlutterSdkFolders)
+				toolEnv.FLUTTER_ROOT = flutterSdk;
+		}
+
 		const executableOptions: DebugAdapterExecutableOptions = {
-			env: getToolEnv(),
+			env: toolEnv,
 		};
 
 		if (config.customDartDapPath && isDartOrDartTest) {
