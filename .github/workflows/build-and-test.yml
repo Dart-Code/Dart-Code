@@ -105,6 +105,7 @@ jobs:
         run: flutter config --enable-web
 
       - run: |
+          dart pub global activate --no-executables crypto
           dart pub global activate --no-executables webdev
           dart pub global activate --no-executables args 2.3.0
           dart pub global activate --no-executables meta 1.7.0

@@ -4,7 +4,7 @@ import { twoHoursInMs } from "../../../shared/constants";
 import { VersionStatus } from "../../../shared/enums";
 import { activate, defer, extApi, sb } from "../../helpers";
 
-const alreadyInstalledPackage = "devtools";
+const alreadyInstalledPackage = "crypto";
 const installedButBelowMinimumPackage1 = "args";
 const installedButBelowMinimumPackage1NewVersion = "2.3.1";
 const installedButBelowMinimumPackage2 = "meta";
