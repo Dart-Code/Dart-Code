@@ -2,7 +2,7 @@ name: hello_world_example
 publish_to: none
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=2.12.0 <4.0.0'
 
 dev_dependencies:
   test: '>=0.12.34'

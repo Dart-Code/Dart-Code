@@ -2,7 +2,7 @@ name: dart_nested_flutter2_flutter_example
 publish_to: none
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=2.12.0 <4.0.0'
 
 dependencies:
   flutter:
