@@ -6,10 +6,10 @@ import { activate, defer, extApi, sb } from "../../helpers";
 
 const alreadyInstalledPackage = "devtools";
 const installedButBelowMinimumPackage1 = "args";
-const installedButBelowMinimumPackage1NewVersion = "1.5.1";
+const installedButBelowMinimumPackage1NewVersion = "2.3.1";
 const installedButBelowMinimumPackage2 = "meta";
-const installedButBelowMinimumPackage2NewVersion = "1.1.7";
-const installedButOutOfDatePackage1 = "pedantic";
+const installedButBelowMinimumPackage2NewVersion = "1.8.0";
+const installedButOutOfDatePackage1 = "lints";
 const installedButOutOfDatePackage2 = "json_annotation";
 const definitelyNotInstalledPackage1 = "path";
 const definitelyNotInstalledPackage2 = "usage";

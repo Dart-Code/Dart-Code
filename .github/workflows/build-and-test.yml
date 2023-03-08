@@ -105,12 +105,11 @@ jobs:
         run: flutter config --enable-web
 
       - run: |
-          dart pub global activate --no-executables devtools
           dart pub global activate --no-executables webdev
-          dart pub global activate --no-executables args 1.5.0
-          dart pub global activate --no-executables meta 1.1.6
-          dart pub global activate --no-executables pedantic 1.4.0
-          dart pub global activate --no-executables json_annotation 1.2.0
+          dart pub global activate --no-executables args 2.3.0
+          dart pub global activate --no-executables meta 1.7.0
+          dart pub global activate --no-executables lints 1.0.0
+          dart pub global activate --no-executables json_annotation 4.0.1
         if: matrix.bot != 'flutter_snap'
         shell: pwsh
 

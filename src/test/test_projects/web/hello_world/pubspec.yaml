@@ -7,4 +7,3 @@ environment:
 dev_dependencies:
   build_runner: ^2.1.5
   build_web_compilers: ^3.2.1
-  pedantic: ^1.11.1
