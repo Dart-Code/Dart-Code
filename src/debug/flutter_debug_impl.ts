@@ -104,7 +104,12 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.runDaemon.registerForAppStarted(async (n) => {
 			this.appHasStarted = true;
 			this.outputCategory = "stdout";
-			await this.connectToVmServiceIfReady();
+			// In modes like Profile, we'll never connect the debugger, so
+			// we should end our progress reporting here.
+			if (!this.vmServiceUri)
+				this.endProgress(debugLaunchProgressId);
+			else
+				await this.connectToVmServiceIfReady();
 		});
 		this.runDaemon.registerForAppStop((n) => {
 			this.currentRunningAppId = undefined;
