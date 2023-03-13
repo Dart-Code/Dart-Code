@@ -260,7 +260,12 @@ export class LspAnalyzer extends Analyzer {
 			},
 
 			executeCommand: async (command: string, args: any[], next: ls.ExecuteCommandSignature) => {
-				if (command === "refactor.perform") {
+				const validateCommand = command === "refactor.perform"
+					? "refactor.validate"
+					: command === "dart.refactor.perform"
+						? "dart.refactor.validate"
+						: undefined;
+				if (validateCommand) {
 					// Handle both the old way (6 args as a list) and the new way (a single arg that's a map).
 					const mapArgsIndex = 0;
 					const listArgsKindIndex = 0;
@@ -277,7 +282,7 @@ export class LspAnalyzer extends Analyzer {
 						if (willPrompt) {
 							if (this.dartCapabilities.supportsRefactorValidate) {
 								try {
-									const validateResult = await next("refactor.validate", args);
+									const validateResult = await next(validateCommand, args);
 									if (validateResult.valid === false) {
 										vs.window.showErrorMessage(validateResult.message as string);
 										return;
