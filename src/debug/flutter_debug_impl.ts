@@ -110,6 +110,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				this.endProgress(debugLaunchProgressId);
 			else
 				await this.connectToVmServiceIfReady();
+			this.sendEvent(new Event("flutter.appStarted"));
 		});
 		this.runDaemon.registerForAppStop((n) => {
 			this.currentRunningAppId = undefined;
