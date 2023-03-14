@@ -203,6 +203,7 @@ jobs:
         with:
           name: test-logs-${{ matrix.os }}
           path: .dart_code_test_logs
+          if-no-files-found: ignore
 
       - name: Store test results
         uses: actions/upload-artifact@v3
@@ -210,6 +211,7 @@ jobs:
         with:
           name: test-results-${{ matrix.os }}
           path: .test_results
+          if-no-files-found: ignore
 
       - name: Store coverage
         uses: actions/upload-artifact@v3
@@ -217,6 +219,7 @@ jobs:
         with:
           name: coverage-${{ matrix.os }}
           path: coverage
+          if-no-files-found: ignore
 
       - name: Store crash dumps
         uses: actions/upload-artifact@v3
@@ -224,6 +227,7 @@ jobs:
         with:
           name: crash-dumps-${{ matrix.os }}
           path: .crash_dumps
+          if-no-files-found: ignore
 
   upload_coverage:
 
