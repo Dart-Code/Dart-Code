@@ -1,7 +1,9 @@
 import { Outline } from "../analysis/lsp/custom_protocol";
+import { isWin } from "../constants";
 import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
 import { disposeAll, uriToFilePath } from "../utils";
+import { normalizeSlashes } from "../utils/fs";
 import { LspTestOutlineVisitor } from "../utils/outline_lsp";
 import { SuiteData, TestModel, TestSource } from "./test_model";
 
@@ -67,8 +69,14 @@ export class TestSessionCoordinator implements IAmDisposable {
 			// 	this.handleAllSuitesNotification(evt as AllSuitesNotification);
 			// 	break;
 			case "suite":
-				this.owningDebugSessions[(evt as SuiteNotification).suite.path] = debugSessionID;
-				this.handleSuiteNotification(dartCodeDebugSessionID, evt as SuiteNotification);
+				const event = evt as SuiteNotification;
+				// HACK: Handle paths with wrong slashes.
+				// https://github.com/Dart-Code/Dart-Code/issues/4441
+				if (isWin)
+					event.suite.path = normalizeSlashes(event.suite.path);
+
+				this.owningDebugSessions[event.suite.path] = debugSessionID;
+				this.handleSuiteNotification(dartCodeDebugSessionID, event);
 				break;
 			case "testStart":
 				this.handleTestStartNotification(dartCodeDebugSessionID, evt as TestStartNotification);
