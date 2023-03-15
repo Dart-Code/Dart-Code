@@ -1686,7 +1686,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				`stderr:`,
 				`stderr: The relevant error-causing widget was:`,
 				`stderr:   MyBrokenHomePage`,
-				`stderr:   MyBrokenHomePage:${flutterHelloWorldBrokenFile}:11:13`,
+				`stderr:   MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
 				`stderr:`,
 				`stderr: When the exception was thrown, this was the stack:`,
 				`stderr: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
