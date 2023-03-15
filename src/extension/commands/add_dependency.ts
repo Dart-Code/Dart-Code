@@ -53,9 +53,9 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			const bytes = await vs.workspace.fs.readFile(this.packageNameCacheUri);
 			const contents = new TextDecoder().decode(bytes);
 			this.cache = PackageCacheData.fromJson(contents.toString());
-			this.logger.info(`Loaded ${this.cache?.packageNames.length} from ${this.packageNameCacheUri}`);
+			this.logger.info(`Loaded ${this.cache?.packageNames.length} package names from ${this.packageNameCacheUri}`);
 		} catch (e) {
-			this.logger.error(`Failed to read package cache file: ${e}`);
+			this.logger.info(`Failed to read package cache file: ${e}`);
 		}
 	}
 
