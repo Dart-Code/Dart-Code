@@ -112,7 +112,7 @@ async function runAllTests(): Promise<void> {
 			await runTests("dart_debug", "hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "false" });
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_debug_sdk_dap") {
-			await runTests("dart_debug", "hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "true" });
+			await runTests("dart_debug", "hello_world", "sdk_dap", { DART_CODE_FORCE_SDK_DAP: "true" });
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_web_debug") {
 			await runTests("web_debug", "web");
