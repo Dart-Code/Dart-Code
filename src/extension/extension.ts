@@ -545,7 +545,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (testDiscoverer)
 		context.subscriptions.push(testDiscoverer);
 	const vsCodeTestController = vs.tests?.createTestController !== undefined // Feature-detect for Theia
-		? new VsCodeTestController(logger, testModel, testDiscoverer)
+		? new VsCodeTestController(logger, testModel, testDiscoverer, workspaceContext.config.forceFlutterWorkspace)
 		: undefined;
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
