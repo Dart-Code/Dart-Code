@@ -11,7 +11,7 @@ import { withTimeout } from "../shared/utils";
 import { faint } from "../shared/utils/colors";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise } from "./helpers";
+import { currentTestName, defer, extApi, getLaunchConfiguration, logger, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -56,38 +56,14 @@ export function createDebugClient(debugType: DebuggerType) {
 			extApi.logger.info(`Skipping shutdown because it never started`);
 			return;
 		}
-		if (dc.hasTerminated) {
-			extApi.logger.info(`Skipping shutdown because debugger already terminated`);
-
-			// Older versions of DDS/DAP didn't corectlycorrectly shut down the debug adapter
-			// so we need to do it ourselves.
-			if (!extApi.dartCapabilities.hasDapShutdownFix) {
-				thisDc.stopAdapter();
-			}
-
-			return;
+		if (!dc.hasTerminated) {
+			// Wait for a terminated event with a timeout.
+			const terminatedEvent = new Promise((resolve) => thisDc.on("terminated", resolve));
+			thisDc.terminateRequest().catch((e) => logger.error(e));
+			await withTimeout(terminatedEvent, "Timed out terminating and cleaning up!", 60);
 		}
 
-		// Wait for a terminated event with a timeout.
-		const terminatedEvent = new Promise((resolve) => thisDc.on("terminated", resolve));
-
-		// When we do terminate, call stopAdapter.
-
-		// Attempt to terminate both gracefully and later forcefully (if not already done).
-		// Don't await these, as it's possible we get "termianted" event and these never complete
-		// depending on timing.
-		thisDc.terminateRequest()
-			.catch((e) => logger.error(e));
-		delay(1000)
-			.then(() => {
-				if (!dc.hasTerminated)
-					thisDc.disconnectRequest();
-			})
-			.catch((e) => logger.error(e));
-
-		// Now wait for the terminated event with a timeout, then stop the adapter.
-		await withTimeout(terminatedEvent, "Timed out terminating and cleaning up!", 60);
-		thisDc.stopAdapter();
+		thisDc.stop().catch((e) => logger.error(e));
 	});
 	return dc;
 }
