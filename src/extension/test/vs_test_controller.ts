@@ -18,7 +18,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
 	private testRuns: { [key: string]: { run: vs.TestRun, shouldEndWithSession: boolean } | undefined } = {};
 
-	constructor(private readonly logger: Logger, private readonly model: TestModel, private readonly discoverer: TestDiscoverer | undefined, private readonly isForceFlutterWorkspace: boolean) {
+	constructor(private readonly logger: Logger, private readonly model: TestModel, private readonly discoverer: TestDiscoverer | undefined, private readonly isForceFlutterWorkspace: boolean | undefined) {
 		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
 		this.controller = controller;
 		this.disposables.push(controller);
