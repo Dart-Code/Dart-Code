@@ -85,6 +85,7 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.restartMacDaemonMessage = flutterConfig.restartMacDaemonMessage;
 		config.localDeviceCommandAdviceMessage = flutterConfig.localDeviceCommandAdviceMessage;
 		config.localMacWarningMessage = flutterConfig.localMacWarningMessage;
+		config.supportsPackageTest = true;
 	} catch (e) {
 		logger.error(e);
 	}

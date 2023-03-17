@@ -66,6 +66,7 @@ export interface WritableWorkspaceConfig {
 	restartMacDaemonMessage?: string;
 	localDeviceCommandAdviceMessage?: string;
 	localMacWarningMessage?: string;
+	supportsPackageTest?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
