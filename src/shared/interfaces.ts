@@ -71,7 +71,7 @@ export interface WritableWorkspaceConfig {
 	/// true: definitely does support it (Bazel)
 	/// false: definitely does not support it (Dart SDK)
 	/// undefined: only if there's a pubspec
-	supportsPackageTest: boolean | undefined;
+	supportsPackageTest?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
