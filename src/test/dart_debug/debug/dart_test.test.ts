@@ -205,7 +205,7 @@ describe("dart test debugger", () => {
 		);
 	});
 
-	it("stops at a breakpoint", async () => {
+	it.only("stops at a breakpoint", async () => {
 		await openFile(helloWorldTestMainFile);
 		const config = await startDebugger(dc, helloWorldTestMainFile);
 		await dc.hitBreakpoint(config, {

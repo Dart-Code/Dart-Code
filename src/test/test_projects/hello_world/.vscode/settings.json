@@ -12,4 +12,5 @@
 	"dart.showIgnoreQuickFixes": true,
 	"dart.showDartDeveloperLogs": true,
 	"dart.experimentalNewRefactors": true,
+	"dart.sdkPath": "/Users/danny/Dev/Dart SDKs/nightly",
 }

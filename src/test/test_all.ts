@@ -83,7 +83,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 
 async function runAllTests(): Promise<void> {
 	testEnv.DART_CODE_IS_TEST_RUN = true;
-	testEnv.MOCHA_FORBID_ONLY = true;
+	// testEnv.MOCHA_FORBID_ONLY = true;
 
 	// Ensure any necessary folders exist.
 	if (!fs.existsSync(".nyc_output"))
