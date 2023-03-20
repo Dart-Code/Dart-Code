@@ -625,9 +625,9 @@
 		"keybindings": [
 			{
 				"command": "dart.showTypeHierarchy",
+				"when": "editorLangId == dart && !dart-code:isLsp",
 				"key": "f4",
-				"mac": "f4",
-				"when": "editorLangId == dart && !dart-code:isLsp"
+				"mac": "f4"
 			},
 			{
 				"command": "dart.hotReload",
@@ -637,14 +637,13 @@
 			{
 				"command": "dart.rerunLastDebugSession",
 				"when": "dart-code:anyProjectLoaded && dart-code:hasLastDebugConfig && !inDebugMode",
-				"key": "cmd+shift+f5",
-				"win": "ctrl+shift+f5"
+				"mac": "cmd+shift+f5",
+				"key": "ctrl+shift+f5"
 			},
 			{
 				"command": "dart.openDevTools",
 				"when": "dart-code:anyProjectLoaded",
-				"key": "ctrl+alt+d",
-				"win": "ctrl+alt+d"
+				"key": "ctrl+alt+d"
 			}
 		],
 		"menus": {
