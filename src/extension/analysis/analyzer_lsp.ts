@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
-import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
@@ -17,6 +17,7 @@ import { ANALYSIS_FILTERS, DART_MODE } from "../../shared/vscode/constants";
 import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
+import { envUtils } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { IgnoreLintCodeActionProvider } from "../providers/ignore_lint_code_action_provider";
@@ -64,6 +65,21 @@ export class LspAnalyzer extends Analyzer {
 			// TODO: Remove this once Dart/Flutter stable LSP servers are using $/progress.
 			this.client.onNotification(AnalyzerStatusNotification.type, (params) => {
 				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: params.isAnalyzing });
+			});
+			this.client.onNotification(OpenUriNotification.type, (params) => {
+				const uri = vs.Uri.parse(params.uri);
+				switch (uri.scheme) {
+					case "file":
+						vs.window.showTextDocument(uri);
+						break;
+					case "http":
+					case "https":
+						envUtils.openInBrowser(uri.toString());
+						break;
+					default:
+						console.error(`Unable to open URI ${uri} as requested by LSP server. Unknown scheme.`);
+
+				}
 			});
 			this.onReadyCompleter.resolve();
 		});
@@ -414,6 +430,7 @@ export class LspAnalyzer extends Analyzer {
 function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware, vmServicePort: number | undefined): LanguageClient {
 	const clientOptions: ls.LanguageClientOptions = {
 		initializationOptions: {
+			allowOpenUri: true,
 			appHost: vs.env.appHost,
 			closingLabels: config.closingLabels,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
