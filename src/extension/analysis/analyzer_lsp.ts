@@ -214,6 +214,27 @@ export class LspAnalyzer extends Analyzer {
 				return results;
 			},
 
+			async provideInlayHints(document: vs.TextDocument, viewPort: vs.Range, token: vs.CancellationToken, next: ls.ProvideInlayHintsSignature) {
+				const hints = await next(document, viewPort, token);
+				if (hints) {
+					for (const hint of hints) {
+						const pos = hint.position;
+						let isValid = pos.character >= 0;
+
+						const labelParts = Array.isArray(hint.label) ? hint.label : [];
+						for (const labelPart of labelParts) {
+							if (labelPart.location && (labelPart.location.range.start.character < 0 || labelPart.location.range.end.character < 0))
+								isValid = false;
+						}
+
+						if (!isValid)
+							console.warn(`Got invalid InlayHint from server: ${document.uri}, ${viewPort.start.line}:${viewPort.start.character}-${viewPort.end.line}:${viewPort.end.character} ${JSON.stringify(hint)}`);
+					}
+				}
+
+				return hints;
+			},
+
 			resolveCompletionItem: (item: vs.CompletionItem, token: vs.CancellationToken, next: ls.ResolveCompletionItemSignature) => {
 				if (item.documentation)
 					item.documentation = cleanDocString(item.documentation);
