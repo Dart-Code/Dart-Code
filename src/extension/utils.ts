@@ -143,8 +143,14 @@ export function isTestFolder(path: string | undefined): boolean {
 		&& fs.statSync(path).isDirectory();
 }
 
-export function projectShouldUsePubForTests(folder: string, config: WorkspaceConfig): boolean {
-	return !config.useVmForTests && hasPubspec(folder);
+export function projectCanUsePackageTest(folder: string, config: WorkspaceConfig): boolean {
+	// Handle explicit flags.
+	if (config.supportsPackageTest === true)
+		return true;
+	else if (config.supportsPackageTest === false)
+		return false;
+
+	return hasPubspec(folder);
 }
 
 export function isDartFile(file: string): boolean {

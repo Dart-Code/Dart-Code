@@ -68,12 +68,11 @@ export class LspFileTracker implements IAmDisposable {
 	}
 
 	public supportsPubRunTest(file: { fsPath: string } | string): boolean | undefined {
-		if (this.wsContext.config.useVmForTests)
-			return false;
-
-		if (this.wsContext.config.supportsPackageTest) {
+		// Handle explicit flags.
+		if (this.wsContext.config.supportsPackageTest === true)
 			return true;
-		}
+		else if (this.wsContext.config.supportsPackageTest === false)
+			return false;
 
 		// TODO: Both FileTrackers have a copy of this!
 		const path = fsPath(file);
@@ -81,7 +80,7 @@ export class LspFileTracker implements IAmDisposable {
 			return false;
 		if (this.pubRunTestSupport[path] === undefined) {
 			const projectRoot = locateBestProjectRoot(path);
-			this.pubRunTestSupport[path] = !!(projectRoot && util.projectShouldUsePubForTests(projectRoot, this.wsContext.config));
+			this.pubRunTestSupport[path] = !!(projectRoot && util.projectCanUsePackageTest(projectRoot, this.wsContext.config));
 		}
 		return this.pubRunTestSupport[fsPath(file)];
 	}

@@ -177,7 +177,7 @@ export class DasFileTracker implements IAmDisposable {
 			return false;
 		if (this.pubRunTestSupport[path] === undefined) {
 			const projectRoot = locateBestProjectRoot(path);
-			this.pubRunTestSupport[path] = !!(projectRoot && util.projectShouldUsePubForTests(projectRoot, this.wsContext.config));
+			this.pubRunTestSupport[path] = !!(projectRoot && util.projectCanUsePackageTest(projectRoot, this.wsContext.config));
 		}
 		return this.pubRunTestSupport[fsPath(file)];
 	}

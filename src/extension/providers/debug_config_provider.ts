@@ -26,7 +26,7 @@ import { getActiveRealFileEditor } from "../editors";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestNameFilter, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectShouldUsePubForTests as shouldUsePubForTests } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestNameFilter, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectCanUsePackageTest } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -326,13 +326,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (isTest)
 			logger.info(`Detected launch project as a Test project`);
-		const canPubRunTest = isTest && debugConfig.cwd && shouldUsePubForTests(debugConfig.cwd, this.wsContext.config);
-		if (isTest && !canPubRunTest)
+		const canUsePackageTest = isTest && debugConfig.cwd && projectCanUsePackageTest(debugConfig.cwd, this.wsContext.config);
+		if (isTest && !canUsePackageTest)
 			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
 		if (isTest) {
 			switch (debugType) {
 				case DebuggerType.Dart:
-					if (canPubRunTest)
+					if (canUsePackageTest)
 						debugType = DebuggerType.DartTest;
 					break;
 				case DebuggerType.Flutter:

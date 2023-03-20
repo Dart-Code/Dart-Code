@@ -57,7 +57,6 @@ export interface WritableWorkspaceConfig {
 	flutterToolsScript?: CustomScript;
 	flutterVersion?: string;
 	useLegacyProtocol?: boolean;
-	useVmForTests?: boolean;
 	forceFlutterWorkspace?: boolean;
 	forceFlutterDebug?: boolean;
 	skipFlutterInitialization?: boolean;
@@ -66,7 +65,13 @@ export interface WritableWorkspaceConfig {
 	restartMacDaemonMessage?: string;
 	localDeviceCommandAdviceMessage?: string;
 	localMacWarningMessage?: string;
-	supportsPackageTest?: boolean;
+	/// Whether or not we can use pkg:test for running tests. This means the tool supports
+	/// arguments like "--plain-name", "--name".
+	///
+	/// true: definitely does support it (Bazel)
+	/// false: definitely does not support it (Dart SDK)
+	/// undefined: only if there's a pubspec
+	supportsPackageTest: boolean | undefined;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;

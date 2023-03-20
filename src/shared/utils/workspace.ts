@@ -5,8 +5,8 @@ import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, dartSdkRoot: string) {
 	config.disableAutomaticPackageGet = true;
-	// The Dart SDKs tests cannot run using pub, so also force them to use the VM.
-	config.useVmForTests = true;
+	// The Dart SDKs tests cannot run using pkg:test, so force them to use the VM.
+	config.supportsPackageTest = false;
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
