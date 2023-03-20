@@ -11,7 +11,7 @@ import { withTimeout } from "../shared/utils";
 import { faint } from "../shared/utils/colors";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, extApi, getLaunchConfiguration, logger, watchPromise } from "./helpers";
+import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -52,20 +52,25 @@ export function createDebugClient(debugType: DebuggerType) {
 	dc.defaultTimeout = 60000;
 	const thisDc = dc;
 	defer("Terminate and clean up debug client/adapter", async () => {
-		if (!dc.hasStarted) {
+		if (!thisDc.hasStarted) {
 			extApi.logger.info(`Skipping shutdown because it never started`);
 			return;
 		}
-		if (!dc.hasTerminated) {
+		if (!thisDc.hasTerminated) {
 			// Wait for a terminated event with a timeout.
 			const terminatedEvent = new Promise((resolve) => thisDc.on("terminated", resolve));
 			thisDc.terminateRequest().catch((e) => logger.error(e));
+			// Tests may require a second terminateRequest because they first print "waiting for test to finish...".
+			if (debugType === DebuggerType.DartTest || debugType === DebuggerType.FlutterTest || debugType === DebuggerType.WebTest) {
+				await Promise.race([delay(300), terminatedEvent]);
+				await thisDc.terminateRequest().catch((e) => logger.error(e));
+			}
 			await withTimeout(terminatedEvent, "Timed out terminating and cleaning up!", 60);
 		}
 
 		thisDc.stop().catch((e) => logger.error(e));
 	});
-	return dc;
+	return thisDc;
 }
 
 /// Waits for all the provided promises, but throws if the debugger terminates before they complete.
