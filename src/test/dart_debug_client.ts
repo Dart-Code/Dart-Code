@@ -26,7 +26,7 @@ export class DartDebugClient extends DebugClient {
 	public readonly isDartDap: boolean;
 
 	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[]) {
-		super(args.runtime, args.executable, args.args, "dart", undefined, true);
+		super(args.runtime, args.executable, args.args, "dart", { shell: args.runtime?.endsWith(".sh") ? true : undefined }, true);
 		this.isDartDap = args.runtime !== undefined && args.runtime !== "node";
 		this.port = args.port;
 
