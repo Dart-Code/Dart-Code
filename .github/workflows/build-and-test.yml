@@ -104,6 +104,10 @@ jobs:
         if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
         run: flutter config --enable-web
 
+      - name: Flutter precache
+        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
+        run: flutter precache
+
       - run: |
           dart pub global activate --no-executables crypto
           dart pub global activate --no-executables webdev
