@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { cpuProfilerPage, dartVMPath, devToolsPages, isDartCodeTestRun, performancePage, reactivateDevToolsAction, skipAction, widgetInspectorPage } from "../../../shared/constants";
+import { cpuProfilerPage, dartVMPath, devToolsPages, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -69,21 +69,13 @@ export class DevToolsManager implements vs.Disposable {
 	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
-				if (workspaceContext.config?.startDevToolsServerEagerly) {
-					await this.spawnIfRequired(true);
-				}
+				await this.spawnIfRequired(true);
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
 				this.logger.error(e);
 				vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
 			}
-
 		}
-	}
-
-	private async preActivate(silent: boolean): Promise<void> {
-		this.devToolsActivationPromise = this.pubGlobal.backgroundActivate(devtoolsPackageName, devtoolsPackageID, silent);
-		await this.devToolsActivationPromise;
 	}
 
 	private routeIdForPage(page: DevToolsPage | undefined | null): string | undefined {
@@ -422,10 +414,9 @@ export class DevToolsManager implements vs.Disposable {
 
 					// If we haven't tried reinstalling, prompt to retry.
 					if (!hasReinstalled) {
-						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try reactivating DevTools?`, reactivateDevToolsAction, skipAction);
-						if (resp === reactivateDevToolsAction) {
+						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try again?`, tryAgainAction, skipAction);
+						if (resp === tryAgainAction) {
 							try {
-								await this.preActivate(false);
 								resolve(await this.startServer(true));
 							} catch (e) {
 								reject(e);

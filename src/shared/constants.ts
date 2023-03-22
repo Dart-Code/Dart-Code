@@ -136,7 +136,7 @@ export const iUnderstandAction = "I Understand";
 export const showRecommendedSettingsAction = "Show Recommended Settings";
 export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-settings/";
 export const openSettingsAction = "Open Settings File";
-export const reactivateDevToolsAction = "Reactivate DevTools";
+export const tryAgainAction = "Try Again";
 export const vmServiceListeningBannerPattern: RegExp = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
 export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
