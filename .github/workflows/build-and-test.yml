@@ -152,6 +152,16 @@ jobs:
         run: dart pub get
         working-directory: src/test/test_projects/dart_nested/nested1
 
+      - name: dart pub get (web/hello_world)
+        if: startsWith(matrix.bot, 'dart_web')
+        run: dart pub get
+        working-directory: src/test/test_projects/web/hello_world
+
+      - name: dart pub get (web/broken)
+        if: startsWith(matrix.bot, 'dart_web')
+        run: dart pub get
+        working-directory: src/test/test_projects/web/broken
+
       - name: dart pub get (dart_nested/nested1/nested2)
         if: matrix.bot == 'misc'
         run: dart pub get
