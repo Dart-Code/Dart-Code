@@ -1717,12 +1717,6 @@
 						"description": "Whether to show CodeLens actions in the editor for opening online DartPad samples.",
 						"scope": "window"
 					},
-					"dart.showIgnoreQuickFixes": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to show quick fixes for ignoring hints and lints.",
-						"scope": "window"
-					},
 					"dart.showMainCodeLens": {
 						"type": "boolean",
 						"default": true,

@@ -13,14 +13,13 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { ANALYSIS_FILTERS, DART_MODE } from "../../shared/vscode/constants";
+import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { cleanDartdoc, createMarkdownString, isDevExtension, isPreReleaseExtension } from "../../shared/vscode/extension_utils";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { envUtils } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { IgnoreLintCodeActionProvider } from "../providers/ignore_lint_code_action_provider";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
@@ -159,7 +158,6 @@ export class LspAnalyzer extends Analyzer {
 
 		const refactors = this.refactors;
 		const snippetTextEdits = this.snippetTextEdits;
-		const ignoreActionProvider = new IgnoreLintCodeActionProvider(DART_MODE);
 
 		const startTimer = (message: string): ({ end: (message: string | undefined) => void }) => {
 			const startTime = process.hrtime();
@@ -270,28 +268,11 @@ export class LspAnalyzer extends Analyzer {
 			},
 
 			async provideCodeActions(document: vs.TextDocument, range: vs.Range, context: vs.CodeActionContext, token: vs.CancellationToken, next: ls.ProvideCodeActionsSignature) {
-				const originalState = `Original diagnostics:\n${JSON.stringify(context.diagnostics, undefined, "  ")}\n\nDocument has ${document.lineCount} lines`;
 				const documentVersion = document.version;
-				let res = await next(document, range, context, token) || [];
+				const res = await next(document, range, context, token) || [];
 
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
 				refactors.rewriteCommands(res);
-
-				try {
-					const hasExistingIgnoreActions = res.find((r) => r.title.startsWith("Ignore "));
-					if (!hasExistingIgnoreActions) {
-						const ignoreActions = ignoreActionProvider.provideCodeActions(document, range, context, token);
-						if (ignoreActions)
-							res = res.concat(ignoreActions);
-					}
-				} catch (e) {
-					console.warn(`Failed to build Ignore fix for diagnostics. Please report the information below in the Dart-Code/Dart-Code repo on GitHub.`);
-					console.warn(originalState);
-					console.warn(`After CodeAction request diagnostics:\n${JSON.stringify(context.diagnostics, undefined, "  ")}\n\nDocument has ${document.lineCount} lines: ${e}`);
-					if (token.isCancellationRequested) {
-						console.warn(`Attempt to build Ignore fixes was after cancellation`);
-					}
-				}
 
 				return res;
 			},
