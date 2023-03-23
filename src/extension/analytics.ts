@@ -1,6 +1,6 @@
 import * as https from "https";
 import * as querystring from "querystring";
-import { env, Uri, version as codeVersion, workspace } from "vscode";
+import { env, TelemetryLogger, TelemetrySender, Uri, version as codeVersion, workspace } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
@@ -57,9 +57,9 @@ enum TimingVariable {
 	SessionDuration,
 }
 
-export class Analytics {
+class InnerAnalytics implements TelemetrySender {
 	public sdkVersion?: string;
-	public flutterSdkVersion?: string;
+	public flutterSdkVersion?: string | undefined;
 	private readonly formatter: string;
 	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -103,92 +103,6 @@ export class Analytics {
 		return dartValue !== undefined && dartValue !== null
 			? dartValue
 			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
-	}
-
-	public logExtensionStartup(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`));
-	}
-	public logExtensionRestart(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(`${e}`));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`));
-	}
-	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
-	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(`${e}`)); }
-	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.logger.info(`${e}`)); }
-	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`)); }
-	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.logger.info(`${e}`)); }
-	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
-		const customData = {
-			cd15: debuggerType,
-			cd16: runType,
-			cd18: sdkDap ? "SDK" : "Legacy",
-			cd6: this.getDebuggerPreference(),
-		};
-		this.event(Category.Debugger, EventAction.Activated, customData).catch((e) => this.logger.info(`${e}`));
-	}
-	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterOutlineActivated() {
-		if (this.hasLoggedFlutterOutline)
-			return;
-		this.hasLoggedFlutterOutline = true;
-		this.event(Category.FlutterOutline, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
-	}
-	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]).catch((e) => this.logger.info(`${e}`)); }
-
-	private event(category: Category, action: EventAction | string, customData?: any): Promise<void> {
-		const data: any = {
-			ea: typeof action === "string" ? action : EventAction[action],
-			ec: Category[category],
-			t: "event",
-		};
-
-		// Copy custom data over.
-		Object.assign(data, customData);
-
-		// Force a session start if this is extension activation.
-		if (category === Category.Extension && action === EventAction.Activated)
-			data.sc = "start";
-
-		// Force a session end if this is extension deactivation.
-		if (category === Category.Extension && action === EventAction.Deactivated)
-			data.sc = "end";
-
-		return this.send(data);
-	}
-
-	private time(category: Category, timingVariable: TimingVariable, timeInMS: number, label?: string) {
-		const data: any = {
-			t: "timing",
-			utc: Category[category],
-			utl: label,
-			utt: Math.round(timeInMS),
-			utv: TimingVariable[timingVariable],
-		};
-
-		this.logger.info(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
-		// if (isDevExtension)
-		// 	console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
-
-		return this.send(data);
-	}
-
-	private error(description: string, fatal: boolean) {
-		const data: any = {
-			exd: description.trim(),
-			exf: fatal ? 1 : 0,
-			t: "exception",
-		};
-
-		return this.send(data);
 	}
 
 	private async send(customData: any): Promise<void> {
@@ -288,6 +202,39 @@ export class Analytics {
 		});
 	}
 
+	sendEventData(eventName: string, { customData, action, category }?: Record<string, any> | undefined): void {
+		const data: any = {
+			ea: typeof action === "string" ? action : EventAction[action],
+			ec: Category[category],
+			t: "event",
+		};
+
+		// Copy custom data over.
+		Object.assign(data, customData);
+
+		// Force a session start if this is extension activation.
+		if (category === Category.Extension && action === EventAction.Activated)
+			data.sc = "start";
+
+		// Force a session end if this is extension deactivation.
+		if (category === Category.Extension && action === EventAction.Deactivated)
+			data.sc = "end";
+
+		// TODO: this sends data asynchronously,
+		// even if you do want to wait for the operation to end.
+		// Collateral damage of using TelemetrySender. Let me know what you
+		// think about this!
+		this.send(data);
+	}
+
+	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
+		throw new Error("Method not implemented.");
+	}
+
+	flush?(): void | Thenable<void> {
+		throw new Error("Method not implemented.");
+	}
+
 	private handleError(e: any) {
 		this.logger.info(`Failed to send analytics, disabling for session: ${e}`);
 		this.disableAnalyticsForSession = true;
@@ -303,4 +250,52 @@ export class Analytics {
 		else
 			return "My code";
 	}
+}
+
+export class Analytics {
+	private telemetryLogger: TelemetryLogger;
+
+	constructor(logger: Logger, workspaceContext: WorkspaceContext) {
+		const innerAnalytics = new InnerAnalytics(logger, workspaceContext);
+		this.telemetryLogger = env.createTelemetryLogger(innerAnalytics);
+	}
+	// TODO: replace this.event calls with this.telemetryLogger.logUsage calls
+	public logExtensionStartup(timeInMS: number) {
+		this.event(Category.Extension, EventAction.Activated).catch((e) => this.telemetryLogger.info(`${e}`));
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`));
+	}
+	public logExtensionRestart(timeInMS: number) {
+		this.event(Category.Extension, EventAction.Restart).catch((e) => this.telemetryLogger.info(`${e}`));
+		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`));
+	}
+	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
+	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
+		const customData = {
+			cd15: debuggerType,
+			cd16: runType,
+			cd18: sdkDap ? "SDK" : "Legacy",
+			cd6: this.getDebuggerPreference(),
+		};
+		this.event(Category.Debugger, EventAction.Activated, customData).catch((e) => this.telemetryLogger.info(`${e}`));
+	}
+	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.telemetryLogger.info(`${e}`)); }
+	public logFlutterOutlineActivated() {
+		if (this.hasLoggedFlutterOutline)
+			return;
+		this.hasLoggedFlutterOutline = true;
+		this.event(Category.FlutterOutline, EventAction.Activated).catch((e) => this.telemetryLogger.info(`${e}`));
+	}
+	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]).catch((e) => this.telemetryLogger.info(`${e}`)); }
 }
