@@ -9,9 +9,7 @@ export class FlutterCapabilities {
 		this.version = flutterVersion;
 	}
 
-	// Temporarily bumped from 3.8.0-16 to 9.9.9 because of
-	// https://github.com/Dart-Code/Dart-Code/issues/4413
-	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "9.9.9"); }
+	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "3.9.0-14"); }
 	get supportsCreateSkeleton() { return versionIsAtLeast(this.version, "2.5.0"); }
 	get supportsCreateEmpty() { return versionIsAtLeast(this.version, "3.6.0-3"); }
 	get supportsCreatingSamples() { return versionIsAtLeast(this.version, "1.0.0"); }
