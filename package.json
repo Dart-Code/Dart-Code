@@ -2388,7 +2388,7 @@
 					},
 					"dart.addSdkToTerminalPath": {
 						"type": "boolean",
-						"default": false,
+						"default": true,
 						"markdownDescription": "Whether to add your selected Dart/Flutter SDK path to the `PATH` environment variable for the embedded terminal. This is useful when switching SDKs via `#dart.sdkPaths#` / `#dart.flutterSdkPaths#` to ensure commands run from the terminal are the same version as being used by the editor/debugger (requires restart).",
 						"scope": "window"
 					}
