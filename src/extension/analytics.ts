@@ -1,7 +1,7 @@
 import * as https from "https";
 import * as querystring from "querystring";
 import { env, TelemetryLogger, TelemetrySender, Uri, version as codeVersion, workspace } from "vscode";
-import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
+import { dartCodeExtensionIdentifier, isChromeOS } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
@@ -57,64 +57,36 @@ enum TimingVariable {
 	SessionDuration,
 }
 
-class InnerAnalytics implements TelemetrySender {
-	public sdkVersion?: string;
-	public flutterSdkVersion?: string | undefined;
-	private readonly formatter: string;
-	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
-	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
+class GoogleAnalyticsTelemetrySender implements TelemetrySender {
+	sendEventData(eventName: string, { customData, action, category }?: Record<string, any> | undefined): void {
+		const data: any = {
+			ea: typeof action === "string" ? action : EventAction[action],
+			ec: Category[category],
+			t: "event",
+		};
 
-	// If analytics fail, they will be disabled for the rest of the session.
-	private disableAnalyticsForSession = false;
+		// Copy custom data over.
+		Object.assign(data, customData);
 
-	// Some things we only want to log the first use per session to get an idea of
-	// number of sessions using.
-	private hasLoggedFlutterOutline = false;
+		// Force a session start if this is extension activation.
+		if (category === Category.Extension && action === EventAction.Activated)
+			data.sc = "start";
 
-	constructor(private readonly logger: Logger, public workspaceContext: WorkspaceContext) {
-		this.formatter = this.getFormatterSetting();
+		// Force a session end if this is extension deactivation.
+		if (category === Category.Extension && action === EventAction.Deactivated)
+			data.sc = "end";
+
+		// TODO: this sends data asynchronously,
+		// even if you do want to wait for the operation to end.
+		// Collateral damage of using TelemetrySender. Let me know what you
+		// think about this!
+		this.send(data);
 	}
 
-	private getFormatterSetting(): string {
-		try {
-			// If there are multiple formatters for Dart, the user can select one, so check
-			// that first so we don't record their formatter being enabled as ours.
-			const otherDefaultFormatter = this.getAppliedConfig("editor", "defaultFormatter", false);
-			if (otherDefaultFormatter && otherDefaultFormatter !== dartCodeExtensionIdentifier)
-				return otherDefaultFormatter;
-
-			// If the user has explicitly disabled ours (without having another selected
-			// then record that).
-			if (!config.enableSdkFormatter)
-				return "Disabled";
-
-			// Otherwise record as enabled (and whether on-save).
-			return this.getAppliedConfig("editor", "formatOnSave")
-				? "Enabled on Save"
-				: "Enabled";
-		} catch {
-			return "Unknown";
-		}
+	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
+		throw new Error("Method not implemented.");
 	}
-
-	private getAppliedConfig(section: string, key: string, isResourceScoped = true) {
-		const dartValue = this.dartConfig ? this.dartConfig[`${section}.${key}`] : undefined;
-		return dartValue !== undefined && dartValue !== null
-			? dartValue
-			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
-	}
-
 	private async send(customData: any): Promise<void> {
-		if (this.disableAnalyticsForSession
-			|| !machineId
-			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
-			|| this.workspaceContext.config.disableAnalytics
-			|| !env.isTelemetryEnabled
-			|| isDartCodeTestRun
-		)
-			return;
-
 		const data = {
 			aip: 1,
 			an: "Dart Code",
@@ -201,38 +173,58 @@ class InnerAnalytics implements TelemetrySender {
 			}
 		});
 	}
+}
 
-	sendEventData(eventName: string, { customData, action, category }?: Record<string, any> | undefined): void {
-		const data: any = {
-			ea: typeof action === "string" ? action : EventAction[action],
-			ec: Category[category],
-			t: "event",
-		};
+export class Analytics {
+	public sdkVersion?: string;
+	public flutterSdkVersion?: string | undefined;
+	private readonly formatter: string;
+	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
 
-		// Copy custom data over.
-		Object.assign(data, customData);
+	// If analytics fail, they will be disabled for the rest of the session.
+	private disableAnalyticsForSession = false;
 
-		// Force a session start if this is extension activation.
-		if (category === Category.Extension && action === EventAction.Activated)
-			data.sc = "start";
+	// Some things we only want to log the first use per session to get an idea of
+	// number of sessions using.
+	private hasLoggedFlutterOutline = false;
 
-		// Force a session end if this is extension deactivation.
-		if (category === Category.Extension && action === EventAction.Deactivated)
-			data.sc = "end";
+	private telemetryLogger: TelemetryLogger;
 
-		// TODO: this sends data asynchronously,
-		// even if you do want to wait for the operation to end.
-		// Collateral damage of using TelemetrySender. Let me know what you
-		// think about this!
-		this.send(data);
+	constructor(logger: Logger, workspaceContext: WorkspaceContext) {
+		this.formatter = this.getFormatterSetting();
+		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender();
+		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
 	}
 
-	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
-		throw new Error("Method not implemented.");
+	private getFormatterSetting(): string {
+		try {
+			// If there are multiple formatters for Dart, the user can select one, so check
+			// that first so we don't record their formatter being enabled as ours.
+			const otherDefaultFormatter = this.getAppliedConfig("editor", "defaultFormatter", false);
+			if (otherDefaultFormatter && otherDefaultFormatter !== dartCodeExtensionIdentifier)
+				return otherDefaultFormatter;
+
+			// If the user has explicitly disabled ours (without having another selected
+			// then record that).
+			if (!config.enableSdkFormatter)
+				return "Disabled";
+
+			// Otherwise record as enabled (and whether on-save).
+			return this.getAppliedConfig("editor", "formatOnSave")
+				? "Enabled on Save"
+				: "Enabled";
+		} catch {
+			return "Unknown";
+		}
 	}
 
-	flush?(): void | Thenable<void> {
-		throw new Error("Method not implemented.");
+	private getAppliedConfig(section: string, key: string, isResourceScoped = true) {
+		const dartValue = this.dartConfig ? this.dartConfig[`${section}.${key}`] : undefined;
+		return dartValue !== undefined && dartValue !== null
+			? dartValue
+			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
 	}
 
 	private handleError(e: any) {
@@ -250,15 +242,7 @@ class InnerAnalytics implements TelemetrySender {
 		else
 			return "My code";
 	}
-}
 
-export class Analytics {
-	private telemetryLogger: TelemetryLogger;
-
-	constructor(logger: Logger, workspaceContext: WorkspaceContext) {
-		const innerAnalytics = new InnerAnalytics(logger, workspaceContext);
-		this.telemetryLogger = env.createTelemetryLogger(innerAnalytics);
-	}
 	// TODO: replace this.event calls with this.telemetryLogger.logUsage calls
 	public logExtensionStartup(timeInMS: number) {
 		this.event(Category.Extension, EventAction.Activated).catch((e) => this.telemetryLogger.info(`${e}`));
