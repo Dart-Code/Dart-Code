@@ -58,28 +58,7 @@ enum TimingVariable {
 }
 
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
-	sendEventData(eventName: string, { customData, action, category }?: Record<string, any> | undefined): void {
-		const data: any = {
-			ea: typeof action === "string" ? action : EventAction[action],
-			ec: Category[category],
-			t: "event",
-		};
-
-		// Copy custom data over.
-		Object.assign(data, customData);
-
-		// Force a session start if this is extension activation.
-		if (category === Category.Extension && action === EventAction.Activated)
-			data.sc = "start";
-
-		// Force a session end if this is extension deactivation.
-		if (category === Category.Extension && action === EventAction.Deactivated)
-			data.sc = "end";
-
-		// TODO: this sends data asynchronously,
-		// even if you do want to wait for the operation to end.
-		// Collateral damage of using TelemetrySender. Let me know what you
-		// think about this!
+	sendEventData(eventName: string, data?: Record<string, any> | undefined): void {
 		this.send(data);
 	}
 
