@@ -177,6 +177,27 @@ export class Analytics {
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
 	}
 
+	private event(category: Category, action: EventAction | string, customData?: any): void {
+		const data: Record<string, any> = {
+			ea: typeof action === "string" ? action : EventAction[action],
+			ec: Category[category],
+			t: "event",
+		};
+
+		// Copy custom data over.
+		Object.assign(data, customData);
+
+		// Force a session start if this is extension activation.
+		if (category === Category.Extension && action === EventAction.Activated)
+			data.sc = "start";
+
+		// Force a session end if this is extension deactivation.
+		if (category === Category.Extension && action === EventAction.Deactivated)
+			data.sc = "end";
+
+		this.telemetryLogger.logUsage("event", data);
+	}
+
 	private getFormatterSetting(): string {
 		try {
 			// If there are multiple formatters for Dart, the user can select one, so check
