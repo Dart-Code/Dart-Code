@@ -227,6 +227,11 @@ export class Analytics {
 			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
 	}
 
+	private handleError(e: any) {
+		this.logger.info(`Failed to send analytics, disabling for session: ${e}`);
+		this.disableAnalyticsForSession = true;
+	}
+
 	private getDebuggerPreference(): string {
 		if (config.debugSdkLibraries && config.debugExternalPackageLibraries)
 			return "All code";
