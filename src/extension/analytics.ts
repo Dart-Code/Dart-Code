@@ -171,7 +171,7 @@ export class Analytics {
 
 	private telemetryLogger: TelemetryLogger;
 
-	constructor(logger: Logger, workspaceContext: WorkspaceContext) {
+	constructor(readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
 		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender();
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
