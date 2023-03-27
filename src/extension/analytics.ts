@@ -262,8 +262,6 @@ export class Analytics {
 		};
 		this.event(Category.Debugger, EventAction.Activated, customData).catch((e) => this.telemetryLogger.info(`${e}`));
 	}
-	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.telemetryLogger.info(`${e}`)); }
-	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.telemetryLogger.info(`${e}`)); }
 	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.telemetryLogger.info(`${e}`)); }
 	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.telemetryLogger.info(`${e}`)); }
 	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.telemetryLogger.info(`${e}`)); }
