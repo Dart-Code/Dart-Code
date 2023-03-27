@@ -84,7 +84,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	}
 
 	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
-		throw new Error("Method not implemented.");
+		return;
 	}
 	private async send(customData: any): Promise<void> {
 		const data = {
