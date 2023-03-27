@@ -241,18 +241,11 @@ export class Analytics {
 	// TODO: replace this.event calls with this.telemetryLogger.logUsage calls
 	public logExtensionStartup(timeInMS: number) {
 		this.event(Category.Extension, EventAction.Activated).catch((e) => this.telemetryLogger.info(`${e}`));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`));
 	}
 	public logExtensionRestart(timeInMS: number) {
 		this.event(Category.Extension, EventAction.Restart).catch((e) => this.telemetryLogger.info(`${e}`));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`));
 	}
-	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.telemetryLogger.info(`${e}`)); }
-	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.telemetryLogger.info(`${e}`)); }
-	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`)); }
-	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.telemetryLogger.info(`${e}`)); }
-	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.telemetryLogger.info(`${e}`)); }
 	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
 		const customData = {
 			cd15: debuggerType,
