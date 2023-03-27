@@ -89,6 +89,11 @@ jobs:
       - run: sudo snap install flutter --classic
         if: matrix.bot == 'flutter_snap'
 
+      - run: dart --disable-analytics
+
+      - run: flutter config --no-analytics
+        if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
+
       - run: flutter update-packages
         if: matrix.bot == 'flutter_repo'
 
