@@ -59,7 +59,8 @@ enum TimingVariable {
 
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	sendEventData(eventName: string, data?: Record<string, any> | undefined): void {
-		this.send(data);
+		if (!data) return;
+		this.send(data).catch(this.handleError);
 	}
 
 	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
