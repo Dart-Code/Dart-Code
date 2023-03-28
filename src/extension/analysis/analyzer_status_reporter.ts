@@ -94,7 +94,6 @@ export class AnalyzerStatusReporter {
 		if (error.stackTrace)
 			this.logger.error(error.stackTrace, LogCategory.Analyzer);
 
-		this.analytics.logError(`Analyzer server error${method ? ` (${method})` : ""}`, error.isFatal);
 
 		errorCount++;
 

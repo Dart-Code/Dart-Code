@@ -358,7 +358,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// tslint:disable-next-line: no-floating-promises
 	analyzer.onReady.then(() => {
 		const analyzerEndTime = new Date();
-		analytics.logAnalyzerStartupTime(analyzerEndTime.getTime() - analyzerStartTime.getTime());
 
 		const analyzerVmServicePort = analyzer.vmServicePort;
 		if (analyzerVmServicePort) {
@@ -376,7 +375,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		// Analysis ends for the first time.
 		if (!status.isAnalyzing && analysisStartTime) {
 			const analysisEndTime = new Date();
-			analytics.logAnalyzerFirstAnalysisTime(analysisEndTime.getTime() - analysisStartTime.getTime());
 			analysisCompleteEvents.dispose();
 		}
 	});
@@ -971,7 +969,6 @@ export async function deactivate(isRestart: boolean = false): Promise<void> {
 	if (!isRestart) {
 		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
 		vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
-		await analytics.logExtensionShutdown();
 		ringLogger?.dispose();
 		logger.dispose();
 	}
