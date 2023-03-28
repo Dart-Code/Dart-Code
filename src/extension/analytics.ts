@@ -80,43 +80,37 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 			port: 443,
 		};
 
-		await new Promise<void>((resolve) => {
-			try {
-				const req = https.request(options, (resp) => {
-					if (debug) {
-						const chunks: string[] = [];
-						resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
-						resp.on("end", () => {
-							const json = chunks.join("");
-							try {
-								const gaDebugResp = JSON.parse(json);
-								if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
-									this.logger.info("Sent OK!");
-								else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
-									this.logger.warn(json);
-								else
-									this.logger.warn(`Unexpected GA debug response: ${json}`);
-							} catch (e: any) {
-								this.logger.warn(`Error in GA debug response: ${e?.message ?? e} ${json}`);
-							}
-						});
-					}
+		await new Promise<void>((resolve, reject) => {
+			const req = https.request(options, (resp) => {
+				if (debug) {
+					const chunks: string[] = [];
+					resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
+					resp.on("end", () => {
+						const json = chunks.join("");
+						try {
+							const gaDebugResp = JSON.parse(json);
+							if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
+								this.logger.info("Sent OK!");
+							else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
+								this.logger.warn(json);
+							else
+								this.logger.warn(`Unexpected GA debug response: ${json}`);
+						} catch (e: any) {
+							this.logger.warn(`Error in GA debug response: ${e?.message ?? e} ${json}`);
+						}
+					});
+				}
 
-					if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-						this.logger.info(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
-					}
-					resolve();
-				});
-				req.write(querystring.stringify(data));
-				req.on("error", (e) => {
-					this.handleError(e);
-					resolve();
-				});
-				req.end();
-			} catch (e) {
-				this.handleError(e);
+				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+					this.logger.info(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
+				}
 				resolve();
-			}
+			});
+			req.write(querystring.stringify(data));
+			req.on("error", (e) => {
+				reject(e);
+			});
+			req.end();
 		});
 	}
 }
