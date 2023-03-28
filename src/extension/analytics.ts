@@ -134,7 +134,7 @@ export class Analytics {
 
 	constructor(readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
-		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender();
+		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender(logger, this.handleError);
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
 	}
 
