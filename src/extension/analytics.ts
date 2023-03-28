@@ -204,14 +204,13 @@ export class Analytics {
 			return "My code";
 	}
 
-	// TODO: replace this.event calls with this.telemetryLogger.logUsage calls
 	public logExtensionStartup(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
+		this.event(Category.Extension, EventAction.Activated);
 	}
 	public logExtensionRestart(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(`${e}`));
+		this.event(Category.Extension, EventAction.Restart);
 	}
-	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(`${e}`)); }
+	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
 	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
 		const customData = {
 			cd15: debuggerType,
@@ -219,19 +218,19 @@ export class Analytics {
 			cd18: sdkDap ? "SDK" : "Legacy",
 			cd6: this.getDebuggerPreference(),
 		};
-		this.event(Category.Debugger, EventAction.Activated, customData).catch((e) => this.logger.info(`${e}`));
+		this.event(Category.Debugger, EventAction.Activated, customData);
 	}
-	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(`${e}`)); }
+	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory); }
+	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline); }
+	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools); }
+	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown); }
+	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked); }
+	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed); }
 	public logFlutterOutlineActivated() {
 		if (this.hasLoggedFlutterOutline)
 			return;
 		this.hasLoggedFlutterOutline = true;
-		this.event(Category.FlutterOutline, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
+		this.event(Category.FlutterOutline, EventAction.Activated);
 	}
-	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]).catch((e) => this.logger.info(`${e}`)); }
+	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]); }
 }
