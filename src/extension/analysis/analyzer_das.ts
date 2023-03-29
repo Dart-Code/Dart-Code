@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { ServerOpenUrlRequestRequest } from "../../shared/analysis_server_types";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath } from "../../shared/constants";
@@ -160,6 +161,10 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
 		});
+
+		this.sendRequest("server.setClientCapabilities", {
+			"requests": ["openUrlRequest", "showMessageRequest"],
+		});
 	}
 
 	private resolvedPromise = Promise.resolve();
@@ -186,6 +191,31 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		if (withError)
 			reportAnalyzerTerminatedWithError(!serverHasStarted);
 		this.notify(this.serverTerminatedSubscriptions, undefined);
+	}
+
+	protected async handleRequest(method: string, params: any): Promise<any> {
+		switch (method) {
+			case "server.showMessageRequest":
+				return this.handleShowMessageRequest(params as as.ServerShowMessageRequestRequest);
+			case "server.openUrlRequest":
+				return this.handleOpenUrl(params as ServerOpenUrlRequestRequest);
+			default:
+				throw new Error(`Unknown request ${method}`);
+		}
+	}
+
+
+	private handleOpenUrl(params: as.ServerOpenUrlRequestRequest) {
+		vs.env.openExternal(vs.Uri.parse(params.url));
+		return;
+	}
+
+	private async handleShowMessageRequest(params: as.ServerShowMessageRequestRequest): Promise<as.ServerShowMessageRequestResponse> {
+		const actionStrings = params.actions.map((s) => s.label);
+		const userChoiceString = await vs.window.showInformationMessage(params.message, ...actionStrings);
+		return {
+			"action": userChoiceString,
+		};
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
