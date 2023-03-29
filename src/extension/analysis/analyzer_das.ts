@@ -160,6 +160,10 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
 		});
+
+		this.sendRequest("server.setClientCapabilities", {
+			"requests": ["openUrlRequest", "showMessageRequest"],
+		});
 	}
 
 	private resolvedPromise = Promise.resolve();
@@ -186,6 +190,21 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		if (withError)
 			reportAnalyzerTerminatedWithError(!serverHasStarted);
 		this.notify(this.serverTerminatedSubscriptions, undefined);
+	}
+
+	protected async handleRequest(method: string, params: any): Promise<any> {
+		switch (method) {
+			case "server.showMessageRequest":
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+				const userChoiceString = await vs.window.showInformationMessage(params.message, ...params.actions.map((s: { label: any; }) => s.label));
+				return { "action": userChoiceString };
+			case "server.openUrlRequest":
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+				vs.env.openExternal(vs.Uri.parse(params.url));
+				return null;
+			default:
+				throw new Error(`Unknown request ${method}`);
+		}
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

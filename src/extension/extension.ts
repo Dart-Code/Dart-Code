@@ -614,11 +614,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			});
 
 			// Set up completions for unimported items.
-			if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
-				await dasClient.completionSetSubscriptions({
-					subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
-				});
-			}
+			// if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
+			// 	await dasClient.completionSetSubscriptions({
+			// 		subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
+			// 	});
+			// }
 		});
 	} else if (isUsingLsp && lspClient && lspAnalyzer) {
 		if (config.previewFlutterUiGuides)
