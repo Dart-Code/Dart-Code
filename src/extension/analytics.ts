@@ -1,7 +1,7 @@
 import * as https from "https";
 import * as querystring from "querystring";
 import { env, TelemetryLogger, TelemetrySender, Uri, version as codeVersion, workspace } from "vscode";
-import { dartCodeExtensionIdentifier, isChromeOS } from "../shared/constants";
+import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
@@ -58,7 +58,7 @@ enum TimingVariable {
 }
 
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
-	constructor (readonly logger: Logger, readonly handleError: (e: Error) => void) {}
+	constructor(readonly logger: Logger, readonly handleError: (e: Error) => void) { }
 
 	sendEventData(eventName: string, data?: Record<string, any> | undefined): void {
 		if (!data) return;
@@ -141,6 +141,15 @@ export class Analytics {
 	}
 
 	private event(category: Category, action: EventAction | string, customData?: any): void {
+		if (this.disableAnalyticsForSession
+			|| !machineId
+			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
+			|| this.workspaceContext.config.disableAnalytics
+			|| !env.isTelemetryEnabled
+			|| isDartCodeTestRun
+		)
+			return;
+
 		const globalData: Record<string, any> = {
 			aip: 1,
 			an: "Dart Code",
