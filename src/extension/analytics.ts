@@ -141,6 +141,37 @@ export class Analytics {
 	}
 
 	private event(category: Category, action: EventAction | string, customData?: any): void {
+		const globalData: Record<string, any> = {
+			aip: 1,
+			an: "Dart Code",
+			av: extensionVersion,
+			cd1: isDevExtension,
+			cd10: config.showTodos ? "On" : "Off",
+			cd11: this.workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP",
+			cd12: this.formatter,
+			cd13: this.flutterSdkVersion,
+			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
+			cd17: this.workspaceContext.hasAnyFlutterProjects
+				? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
+				: null,
+			// cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
+			// 	? config.for(resourceUri).flutterStructuredErrors ? "On" : "Off"
+			// 	: null,
+			cd19: env.remoteName || "None",
+			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
+			cd20: env.appName || "Unknown",
+			cd3: this.sdkVersion,
+			// cd4: this.analysisServerVersion,
+			cd5: codeVersion,
+			cd7: this.workspaceContext.workspaceTypeDescription,
+			cd8: config.closingLabels ? "On" : "Off",
+			cd9: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : null,
+			cid: machineId,
+			tid: "UA-2201586-19",
+			ul: env.language,
+			v: "1", // API Version.
+		};
+
 		const data: Record<string, any> = {
 			ea: typeof action === "string" ? action : EventAction[action],
 			ec: Category[category],
@@ -148,6 +179,7 @@ export class Analytics {
 		};
 
 		// Copy custom data over.
+		Object.assign(data, globalData);
 		Object.assign(data, customData);
 
 		// Force a session start if this is extension activation.
