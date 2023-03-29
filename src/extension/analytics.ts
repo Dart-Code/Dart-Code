@@ -1,7 +1,7 @@
 import * as https from "https";
 import * as querystring from "querystring";
-import { env, Uri, version as codeVersion, workspace } from "vscode";
-import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
+import { env, TelemetryLogger, TelemetrySender, Uri, version as codeVersion, workspace } from "vscode";
+import { dartCodeExtensionIdentifier, isChromeOS } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
@@ -57,9 +57,69 @@ enum TimingVariable {
 	SessionDuration,
 }
 
+class GoogleAnalyticsTelemetrySender implements TelemetrySender {
+	constructor (readonly logger: Logger, readonly handleError: (e: Error) => void) {}
+
+	sendEventData(eventName: string, data?: Record<string, any> | undefined): void {
+		if (!data) return;
+		this.send(data).catch(this.handleError);
+	}
+
+	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
+		return;
+	}
+	private async send(data: Record<string, any>): Promise<void> {
+		if (debug)
+			this.logger.info("Sending analytic: " + JSON.stringify(data));
+
+		const options: https.RequestOptions = {
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+			hostname: "www.google-analytics.com",
+			method: "POST",
+			path: debug ? "/debug/collect" : "/collect",
+			port: 443,
+		};
+
+		await new Promise<void>((resolve, reject) => {
+			const req = https.request(options, (resp) => {
+				if (debug) {
+					const chunks: string[] = [];
+					resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
+					resp.on("end", () => {
+						const json = chunks.join("");
+						try {
+							const gaDebugResp = JSON.parse(json);
+							if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
+								this.logger.info("Sent OK!");
+							else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
+								this.logger.warn(json);
+							else
+								this.logger.warn(`Unexpected GA debug response: ${json}`);
+						} catch (e: any) {
+							this.logger.warn(`Error in GA debug response: ${e?.message ?? e} ${json}`);
+						}
+					});
+				}
+
+				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+					this.logger.info(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
+				}
+				resolve();
+			});
+			req.write(querystring.stringify(data));
+			req.on("error", (e) => {
+				reject(e);
+			});
+			req.end();
+		});
+	}
+}
+
 export class Analytics {
 	public sdkVersion?: string;
-	public flutterSdkVersion?: string;
+	public flutterSdkVersion?: string | undefined;
 	private readonly formatter: string;
 	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -72,8 +132,65 @@ export class Analytics {
 	// number of sessions using.
 	private hasLoggedFlutterOutline = false;
 
-	constructor(private readonly logger: Logger, public workspaceContext: WorkspaceContext) {
+	private telemetryLogger: TelemetryLogger;
+
+	constructor(readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
+		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender(logger, this.handleError);
+		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
+	}
+
+	private event(category: Category, action: EventAction | string, customData?: any): void {
+		const globalData: Record<string, any> = {
+			aip: 1,
+			an: "Dart Code",
+			av: extensionVersion,
+			cd1: isDevExtension,
+			cd10: config.showTodos ? "On" : "Off",
+			cd11: this.workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP",
+			cd12: this.formatter,
+			cd13: this.flutterSdkVersion,
+			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
+			cd17: this.workspaceContext.hasAnyFlutterProjects
+				? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
+				: null,
+			// cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
+			// 	? config.for(resourceUri).flutterStructuredErrors ? "On" : "Off"
+			// 	: null,
+			cd19: env.remoteName || "None",
+			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
+			cd20: env.appName || "Unknown",
+			cd3: this.sdkVersion,
+			// cd4: this.analysisServerVersion,
+			cd5: codeVersion,
+			cd7: this.workspaceContext.workspaceTypeDescription,
+			cd8: config.closingLabels ? "On" : "Off",
+			cd9: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : null,
+			cid: machineId,
+			tid: "UA-2201586-19",
+			ul: env.language,
+			v: "1", // API Version.
+		};
+
+		const data: Record<string, any> = {
+			ea: typeof action === "string" ? action : EventAction[action],
+			ec: Category[category],
+			t: "event",
+		};
+
+		// Copy custom data over.
+		Object.assign(data, globalData);
+		Object.assign(data, customData);
+
+		// Force a session start if this is extension activation.
+		if (category === Category.Extension && action === EventAction.Activated)
+			data.sc = "start";
+
+		// Force a session end if this is extension deactivation.
+		if (category === Category.Extension && action === EventAction.Deactivated)
+			data.sc = "end";
+
+		this.telemetryLogger.logUsage("event", data);
 	}
 
 	private getFormatterSetting(): string {
@@ -105,189 +222,6 @@ export class Analytics {
 			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
 	}
 
-	public logExtensionStartup(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`));
-	}
-	public logExtensionRestart(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Restart).catch((e) => this.logger.info(`${e}`));
-		this.time(Category.Extension, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`));
-	}
-	public logExtensionShutdown(): PromiseLike<void> { return this.event(Category.Extension, EventAction.Deactivated); }
-	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure).catch((e) => this.logger.info(`${e}`)); }
-	public logError(description: string, fatal: boolean) { this.error(description, fatal).catch((e) => this.logger.info(`${e}`)); }
-	public logAnalyzerStartupTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.Startup, timeInMS).catch((e) => this.logger.info(`${e}`)); }
-	public logDebugSessionDuration(debuggerType: string, timeInMS: number) { this.time(Category.Debugger, TimingVariable.SessionDuration, timeInMS, debuggerType).catch((e) => this.logger.info(`${e}`)); }
-	public logAnalyzerFirstAnalysisTime(timeInMS: number) { this.time(Category.Analyzer, TimingVariable.FirstAnalysis, timeInMS).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
-		const customData = {
-			cd15: debuggerType,
-			cd16: runType,
-			cd18: sdkDap ? "SDK" : "Legacy",
-			cd6: this.getDebuggerPreference(),
-		};
-		this.event(Category.Debugger, EventAction.Activated, customData).catch((e) => this.logger.info(`${e}`));
-	}
-	public logDebuggerRestart() { this.event(Category.Debugger, EventAction.Restart).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerHotReload() { this.event(Category.Debugger, EventAction.HotReload).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline).catch((e) => this.logger.info(`${e}`)); }
-	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed).catch((e) => this.logger.info(`${e}`)); }
-	public logFlutterOutlineActivated() {
-		if (this.hasLoggedFlutterOutline)
-			return;
-		this.hasLoggedFlutterOutline = true;
-		this.event(Category.FlutterOutline, EventAction.Activated).catch((e) => this.logger.info(`${e}`));
-	}
-	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]).catch((e) => this.logger.info(`${e}`)); }
-
-	private event(category: Category, action: EventAction | string, customData?: any): Promise<void> {
-		const data: any = {
-			ea: typeof action === "string" ? action : EventAction[action],
-			ec: Category[category],
-			t: "event",
-		};
-
-		// Copy custom data over.
-		Object.assign(data, customData);
-
-		// Force a session start if this is extension activation.
-		if (category === Category.Extension && action === EventAction.Activated)
-			data.sc = "start";
-
-		// Force a session end if this is extension deactivation.
-		if (category === Category.Extension && action === EventAction.Deactivated)
-			data.sc = "end";
-
-		return this.send(data);
-	}
-
-	private time(category: Category, timingVariable: TimingVariable, timeInMS: number, label?: string) {
-		const data: any = {
-			t: "timing",
-			utc: Category[category],
-			utl: label,
-			utt: Math.round(timeInMS),
-			utv: TimingVariable[timingVariable],
-		};
-
-		this.logger.info(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
-		// if (isDevExtension)
-		// 	console.log(`${data.utc}:${data.utv} timing: ${Math.round(timeInMS)}ms ${label ? `(${label})` : ""}`);
-
-		return this.send(data);
-	}
-
-	private error(description: string, fatal: boolean) {
-		const data: any = {
-			exd: description.trim(),
-			exf: fatal ? 1 : 0,
-			t: "exception",
-		};
-
-		return this.send(data);
-	}
-
-	private async send(customData: any): Promise<void> {
-		if (this.disableAnalyticsForSession
-			|| !machineId
-			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
-			|| this.workspaceContext.config.disableAnalytics
-			|| !env.isTelemetryEnabled
-			|| isDartCodeTestRun
-		)
-			return;
-
-		const data = {
-			aip: 1,
-			an: "Dart Code",
-			av: extensionVersion,
-			cd1: isDevExtension,
-			cd10: config.showTodos ? "On" : "Off",
-			cd11: this.workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP",
-			cd12: this.formatter,
-			cd13: this.flutterSdkVersion,
-			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
-			cd17: this.workspaceContext.hasAnyFlutterProjects
-				? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
-				: null,
-			// cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
-			// 	? config.for(resourceUri).flutterStructuredErrors ? "On" : "Off"
-			// 	: null,
-			cd19: env.remoteName || "None",
-			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
-			cd20: env.appName || "Unknown",
-			cd3: this.sdkVersion,
-			// cd4: this.analysisServerVersion,
-			cd5: codeVersion,
-			cd7: this.workspaceContext.workspaceTypeDescription,
-			cd8: config.closingLabels ? "On" : "Off",
-			cd9: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : null,
-			cid: machineId,
-			tid: "UA-2201586-19",
-			ul: env.language,
-			v: "1", // API Version.
-		};
-
-		// Copy custom data over.
-		Object.assign(data, customData);
-
-		if (debug)
-			this.logger.info("Sending analytic: " + JSON.stringify(data));
-
-		const options: https.RequestOptions = {
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded",
-			},
-			hostname: "www.google-analytics.com",
-			method: "POST",
-			path: debug ? "/debug/collect" : "/collect",
-			port: 443,
-		};
-
-		await new Promise<void>((resolve) => {
-			try {
-				const req = https.request(options, (resp) => {
-					if (debug) {
-						const chunks: string[] = [];
-						resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
-						resp.on("end", () => {
-							const json = chunks.join("");
-							try {
-								const gaDebugResp = JSON.parse(json);
-								if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
-									this.logger.info("Sent OK!");
-								else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
-									this.logger.warn(json);
-								else
-									this.logger.warn(`Unexpected GA debug response: ${json}`);
-							} catch (e: any) {
-								this.logger.warn(`Error in GA debug response: ${e?.message ?? e} ${json}`);
-							}
-						});
-					}
-
-					if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-						this.logger.info(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
-					}
-					resolve();
-				});
-				req.write(querystring.stringify(data));
-				req.on("error", (e) => {
-					this.handleError(e);
-					resolve();
-				});
-				req.end();
-			} catch (e) {
-				this.handleError(e);
-				resolve();
-			}
-		});
-	}
-
 	private handleError(e: any) {
 		this.logger.info(`Failed to send analytics, disabling for session: ${e}`);
 		this.disableAnalyticsForSession = true;
@@ -303,4 +237,34 @@ export class Analytics {
 		else
 			return "My code";
 	}
+
+	public logExtensionStartup(timeInMS: number) {
+		this.event(Category.Extension, EventAction.Activated);
+	}
+	public logExtensionRestart(timeInMS: number) {
+		this.event(Category.Extension, EventAction.Restart);
+	}
+	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
+	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
+		const customData = {
+			cd15: debuggerType,
+			cd16: runType,
+			cd18: sdkDap ? "SDK" : "Legacy",
+			cd6: this.getDebuggerPreference(),
+		};
+		this.event(Category.Debugger, EventAction.Activated, customData);
+	}
+	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory); }
+	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline); }
+	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools); }
+	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown); }
+	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked); }
+	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed); }
+	public logFlutterOutlineActivated() {
+		if (this.hasLoggedFlutterOutline)
+			return;
+		this.hasLoggedFlutterOutline = true;
+		this.event(Category.FlutterOutline, EventAction.Activated);
+	}
+	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]); }
 }

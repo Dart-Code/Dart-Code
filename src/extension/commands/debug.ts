@@ -163,14 +163,12 @@ export class DebugCommands implements IAmDisposable {
 				if (shouldReload)
 					await s.session.customRequest("hotReload", args);
 			}));
-			analytics.logDebuggerHotReload();
 		}));
 		this.disposables.push(vs.commands.registerCommand("flutter.hotRestart", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			this.onWillHotRestartEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotRestart", args)));
-			analytics.logDebuggerRestart();
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
@@ -495,7 +493,6 @@ export class DebugCommands implements IAmDisposable {
 			session.progress[progressId]?.complete();
 
 		const debugSessionEnd = new Date();
-		this.analytics.logDebugSessionDuration(DebuggerType[session.debuggerType], debugSessionEnd.getTime() - session.sessionStart.getTime());
 
 		// If this was the last session terminating, then remove all the flags for which service extensions are supported.
 		// Really we should track these per-session, but the changes of them being different given we only support one
@@ -537,13 +534,11 @@ export class DebugCommands implements IAmDisposable {
 			// This event comes back when the user restarts with the Restart button
 			// (eg. it wasn't intiated from our extension, so we don't get to log it
 			// in the command).
-			this.analytics.logDebuggerRestart();
 			this.onWillHotRestartEmitter.fire();
 		} else if (event === "dart.hotReloadRequest") {
 			// This event comes back when the user restarts with the Restart button
 			// (eg. it wasn't intiated from our extension, so we don't get to log it
 			// in the command).
-			this.analytics.logDebuggerHotReload();
 			this.onWillHotReloadEmitter.fire();
 		} else if (event === "dart.debugMetrics") {
 			const memory = body.memory;
