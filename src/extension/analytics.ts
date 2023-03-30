@@ -1,9 +1,9 @@
 import * as https from "https";
 import * as querystring from "querystring";
-import { env, TelemetryLogger, TelemetrySender, Uri, version as codeVersion, workspace } from "vscode";
+import { env, TelemetryLogger, TelemetrySender, Uri, workspace } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
-import { extensionVersion, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
+import { hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
 
@@ -51,26 +51,54 @@ export enum EventCommand {
 	RestartAnalyzer,
 }
 
-enum TimingVariable {
-	Startup,
-	FirstAnalysis,
-	SessionDuration,
-}
-
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	constructor(readonly logger: Logger, readonly handleError: (e: Error) => void) { }
 
 	sendEventData(eventName: string, data?: Record<string, any> | undefined): void {
 		if (!data) return;
-		this.send(data).catch(this.handleError);
+		this.send(data as AnalyticsData).catch(this.handleError);
 	}
 
 	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
-		return;
+		// No errors are collected.
 	}
-	private async send(data: Record<string, any>): Promise<void> {
+
+	private async send(data: AnalyticsData & Record<string, any>): Promise<void> {
+		const analyticsData = {
+			aip: data.anonymize ? 1 : null,
+			an: data["common.extname"],
+			av: data["common.extversion"],
+			cd1: data.isDevExtension,
+			cd10: data.showTodos,
+			cd11: data.analyzerProtocol,
+			cd12: data.formatter,
+			cd13: data.flutterVersion,
+			cd14: data.flutterExtension,
+			cd15: data.debuggerType,
+			cd16: data.debuggerRunType,
+			cd17: data.flutterUiGuides,
+			cd18: data.debuggerAdapterType,
+			cd19: data["common.remotename"],
+			cd2: data.platform,
+			cd20: data.appName ?? "Unknown",
+			cd3: data.dartVersion,
+			cd5: data["common.vscodeversion"],
+			cd6: data.debuggerPreference,
+			cd7: data.workspaceType,
+			cd8: data.closingLabels,
+			cd9: data.flutterHotReloadOnSave,
+			cid: machineId,
+			ea: data.eventAction,
+			ec: data.eventCategory,
+			sc: data.sessionControl,
+			t: "event",
+			tid: "UA-2201586-19",
+			ul: data.language,
+			v: "1", // API Version.
+		};
+
 		if (debug)
-			this.logger.info("Sending analytic: " + JSON.stringify(data));
+			this.logger.info("Sending analytic: " + JSON.stringify(analyticsData));
 
 		const options: https.RequestOptions = {
 			headers: {
@@ -108,7 +136,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 				}
 				resolve();
 			});
-			req.write(querystring.stringify(data));
+			req.write(querystring.stringify(analyticsData));
 			req.on("error", (e) => {
 				reject(e);
 			});
@@ -140,7 +168,7 @@ export class Analytics {
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
 	}
 
-	private event(category: Category, action: EventAction | string, customData?: any): void {
+	private event(category: Category, action: EventAction | string, customData?: Partial<AnalyticsData>): void {
 		if (this.disableAnalyticsForSession
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
@@ -150,54 +178,38 @@ export class Analytics {
 		)
 			return;
 
-		const globalData: Record<string, any> = {
-			aip: 1,
-			an: "Dart Code",
-			av: extensionVersion,
-			cd1: isDevExtension,
-			cd10: config.showTodos ? "On" : "Off",
-			cd11: this.workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP",
-			cd12: this.formatter,
-			cd13: this.flutterSdkVersion,
-			cd14: hasFlutterExtension ? "Installed" : "Not Installed",
-			cd17: this.workspaceContext.hasAnyFlutterProjects
-				? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
-				: null,
-			// cd18: this.workspaceContext.hasAnyFlutterProjects && resourceUri
-			// 	? config.for(resourceUri).flutterStructuredErrors ? "On" : "Off"
-			// 	: null,
-			cd19: env.remoteName || "None",
-			cd2: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
-			cd20: env.appName || "Unknown",
-			cd3: this.sdkVersion,
-			// cd4: this.analysisServerVersion,
-			cd5: codeVersion,
-			cd7: this.workspaceContext.workspaceTypeDescription,
-			cd8: config.closingLabels ? "On" : "Off",
-			cd9: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : null,
-			cid: machineId,
-			tid: "UA-2201586-19",
-			ul: env.language,
-			v: "1", // API Version.
-		};
+		const flutterUiGuides = this.workspaceContext.hasAnyFlutterProjects
+			? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
+			: undefined;
 
-		const data: Record<string, any> = {
-			ea: typeof action === "string" ? action : EventAction[action],
-			ec: Category[category],
-			t: "event",
+		const data: AnalyticsData = {
+			analyzerProtocol: this.workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP",
+			anonymize: true,
+			appName: env.appName,
+			closingLabels: config.closingLabels ? "On" : "Off",
+			dartVersion: this.sdkVersion,
+			eventAction: typeof action === "string" ? action : EventAction[action],
+			eventCategory: Category[category],
+			flutterExtension: hasFlutterExtension ? "Installed" : "Not Installed",
+			flutterHotReloadOnSave: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : undefined,
+			flutterUiGuides,
+			flutterVersion: this.flutterSdkVersion,
+			formatter: this.formatter,
+			isDevExtension,
+			language: env.language,
+			platform: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
+			showTodos: config.showTodos ? "On" : "Off",
+			workspaceType: this.workspaceContext.workspaceTypeDescription,
+			...customData,
 		};
-
-		// Copy custom data over.
-		Object.assign(data, globalData);
-		Object.assign(data, customData);
 
 		// Force a session start if this is extension activation.
 		if (category === Category.Extension && action === EventAction.Activated)
-			data.sc = "start";
+			data.sessionControl = "start";
 
 		// Force a session end if this is extension deactivation.
 		if (category === Category.Extension && action === EventAction.Deactivated)
-			data.sc = "end";
+			data.sessionControl = "end";
 
 		this.telemetryLogger.logUsage("event", data);
 	}
@@ -247,24 +259,18 @@ export class Analytics {
 			return "My code";
 	}
 
-	public logExtensionStartup(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Activated);
-	}
-	public logExtensionRestart(timeInMS: number) {
-		this.event(Category.Extension, EventAction.Restart);
-	}
+	public logExtensionActivated() { this.event(Category.Extension, EventAction.Activated); }
+	public logExtensionRestart() { this.event(Category.Extension, EventAction.Restart); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
-	public logDebuggerStart(debuggerType: string, runType: string, sdkDap: boolean) {
-		const customData = {
-			cd15: debuggerType,
-			cd16: runType,
-			cd18: sdkDap ? "SDK" : "Legacy",
-			cd6: this.getDebuggerPreference(),
+	public logDebuggerStart(debuggerType: string, debuggerRunType: string, sdkDap: boolean) {
+		const customData: Partial<AnalyticsData> = {
+			debuggerAdapterType: sdkDap ? "SDK" : "Legacy",
+			debuggerPreference: this.getDebuggerPreference(),
+			debuggerRunType,
+			debuggerType,
 		};
 		this.event(Category.Debugger, EventAction.Activated, customData);
 	}
-	public logDebuggerOpenObservatory() { this.event(Category.Debugger, EventAction.OpenObservatory); }
-	public logDebuggerOpenTimeline() { this.event(Category.Debugger, EventAction.OpenTimeline); }
 	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools); }
 	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown); }
 	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked); }
@@ -276,4 +282,33 @@ export class Analytics {
 		this.event(Category.FlutterOutline, EventAction.Activated);
 	}
 	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]); }
+}
+
+interface AnalyticsData {
+	anonymize: true,
+	eventAction: string,
+	eventCategory: string,
+	sessionControl?: string,
+	language: string,
+
+	isDevExtension: boolean,
+	platform: string,
+	appName: string | undefined,
+	workspaceType: string,
+	dartVersion: string | undefined,
+	flutterVersion: string | undefined,
+	flutterExtension: string,
+
+	analyzerProtocol: string,
+	formatter: string,
+	showTodos: string,
+	closingLabels: string,
+	flutterUiGuides: string | undefined,
+	flutterHotReloadOnSave: string | undefined,
+
+	// For debugger start events.
+	debuggerType?: string,
+	debuggerRunType?: string,
+	debuggerAdapterType?: string,
+	debuggerPreference?: string,
 }

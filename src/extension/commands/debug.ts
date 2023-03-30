@@ -106,7 +106,6 @@ export class DebugCommands implements IAmDisposable {
 			const session = await this.getDebugSession();
 			if (session && !session.session.configuration.noDebug && session.observatoryUri) {
 				await envUtils.openInBrowser(session.observatoryUri);
-				analytics.logDebuggerOpenObservatory();
 			} else if (session) {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}

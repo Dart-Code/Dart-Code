@@ -172,7 +172,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	showTodos = config.showTodos;
 	previousSettings = getSettingsThatRequireRestart();
 
-	const extensionStartTime = new Date();
 	util.logTime();
 	const sdkUtils = new SdkUtils(logger);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
@@ -751,12 +750,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}
 	}
 
-	// Log how long all this startup took.
-	const extensionEndTime = new Date();
 	if (isRestart) {
-		analytics.logExtensionRestart(extensionEndTime.getTime() - extensionStartTime.getTime());
+		analytics.logExtensionRestart();
 	} else {
-		analytics.logExtensionStartup(extensionEndTime.getTime() - extensionStartTime.getTime());
+		analytics.logExtensionActivated();
 	}
 
 	// Handle changes to the workspace.
