@@ -221,7 +221,7 @@ export class PackageCommands extends BaseSdkCommands {
 				.filter((uri) => config.for(uri).promptToGetPackages)
 				.map((uri) => ({ uri, status: getPubPackageStatus(this.sdks, this.logger, uri) }))
 				.filter((result) => result.status !== undefined);
-			this.logger.info(`Found ${pubStatuses.length} folders requiring "pub get" or "pub upgrade":${pubStatuses.map((result) => `\n    ${fsPath(result.uri)} (get: ${result.status?.probablyRequiresGet}, upgrade: ${result.status?.probablyRequiresUpgrade})`).join("")}`);
+			this.logger.info(`Found ${pubStatuses.length} folders requiring "pub get" or "pub upgrade":${pubStatuses.map((result) => `\n    ${fsPath(result.uri)} (get: ${result.status?.probablyRequiresGet}, upgrade: ${result.status?.probablyRequiresUpgrade}, reason: ${result.status?.reason})`).join("")}`);
 
 			const someProjectsRequirePubUpgrade = pubStatuses.some((result) => result.status?.probablyRequiresUpgrade);
 			const projectsRequiringPub = pubStatuses.map((result) => result.uri);

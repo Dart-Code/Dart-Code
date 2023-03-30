@@ -8,7 +8,7 @@ import { fsPath, getPubGeneratorVersion as getPubGeneratorSdkVersion, isWithinPa
 
 // TODO: Wrap these up into a class.
 
-export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri): { probablyRequiresGet: true, probablyRequiresUpgrade: boolean } | undefined {
+export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri): { probablyRequiresGet: true, probablyRequiresUpgrade: boolean, reason: string } | undefined {
 	const nonRequired = undefined;
 	const getRequired = { probablyRequiresGet: true as const, probablyRequiresUpgrade: false };
 	const upgradeRequired = { probablyRequiresGet: true as const, probablyRequiresUpgrade: true };
@@ -27,7 +27,7 @@ export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri):
 
 	// If we don't have package_config, we probably need running.
 	if (!fs.existsSync(packageMapPath))
-		return getRequired;
+		return { ...getRequired, reason: "package_config.json is missing" };
 
 	// If the Dart SDK version has upgraded by more than just a patch, we should
 	// prefer upgrade.
@@ -40,10 +40,10 @@ export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri):
 		logger.info(`Version last used for Pub is ${lastUsedSdkVersion} (${lastUsedSdkMajorMinor}), current is ${currentSdkVersion} (${currentSdkMajorMinor})`);
 		// For an SDK upgrade, we want to encourage upgrading.
 		if (semver.gt(currentSdkMajorMinor, lastUsedSdkMajorMinor))
-			return upgradeRequired;
+			return { ...upgradeRequired, reason: `The current SDK version (${currentSdkMajorMinor}) is newer than the one last used to run "pub get" (${lastUsedSdkMajorMinor})` };
 		// For a downgrade, Pub Get is enough to fix.
 		else if (semver.lt(currentSdkMajorMinor, lastUsedSdkMajorMinor))
-			return getRequired;
+			return { ...getRequired, reason: `The current SDK version (${currentSdkMajorMinor}) is older than the one last used to run "pub get" (${lastUsedSdkMajorMinor})` };
 	}
 
 	const pubspecModified = fs.statSync(pubspecPath).mtime;
@@ -52,8 +52,11 @@ export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri):
 		: pubspecModified;
 	const packageMapModified = fs.statSync(packageMapPath).mtime;
 
-	if (!(pubspecModified <= pubspecLockModified && pubspecLockModified <= packageMapModified))
-		return getRequired;
+	if (pubspecModified > pubspecLockModified) {
+		return { ...getRequired, reason: `pubspec.yaml was modified (${pubspecModified}) more recently than pubspec.lock (${pubspecLockModified})` };
+	} else if (pubspecLockModified > packageMapModified) {
+		return { ...getRequired, reason: `pubspec.lock was modified (${pubspecLockModified}) more recently than package_config.json (${packageMapModified})` };
+	}
 
 	// If we're a Flutter project and our SDK doesn't match the one used
 	// in the package file, we also need running.
@@ -61,7 +64,7 @@ export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri):
 		const packageMap = PackageMap.loadForProject(logger, folder);
 		const flutterPackagePath = packageMap.getPackagePath("flutter");
 		if (flutterPackagePath && !isWithinPath(flutterPackagePath, sdks.flutter)) {
-			return getRequired;
+			return { ...getRequired, reason: `The referenced Flutter package (${flutterPackagePath}) does not match the current SDK in use (${sdks.flutter})` };
 		}
 	}
 
