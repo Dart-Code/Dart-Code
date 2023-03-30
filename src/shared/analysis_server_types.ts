@@ -28,6 +28,124 @@ export interface ServerSetSubscriptionsRequest {
 }
 
 /**
+ * Requests cancellation of a request sent by the client by id.
+ * This is provided on a best-effort basis and there is no
+ * guarantee the server will be able to cancel any specific
+ * request.
+ *
+ * The server will still always produce a response to the request
+ * even in the case of cancellation, but clients should discard
+ * any results of any cancelled request because they may be
+ * incomplete or inaccurate.
+ *
+ * This request always completes without error regardless of
+ * whether the request is successfully cancelled.
+ */
+export interface ServerCancelRequestRequest {
+	/**
+	 * The id of the request that should be cancelled.
+	 */
+	id: string;
+}
+
+/**
+ * Record the capabilities supported by the client. The default values,
+ * documented below, will be assumed until this request is received.
+ */
+export interface ServerSetClientCapabilitiesRequest {
+	/**
+	 * The names of the requests that the server can safely send to the
+	 * client. Only requests whose name is in the list will be sent.
+	 *
+	 * A request should only be included in the list if the client will
+	 * unconditionally honor the request.
+	 *
+	 * The default, used before this request is received, is an empty list.
+	 *
+	 * The following is a list of the names of the requests that can be
+	 * specified:
+	 */
+	requests: string[];
+}
+
+/**
+ * Note: This is a request from the server to the client.
+ *
+ * Request that a URL be opened.
+ *
+ * The client is expected to open the URL, either within the client's UI or
+ * in the default browser.
+ *
+ * The request will only be sent from the server to the client if the client
+ * has indicated that it supports this request by using the
+ * setClientCapabilities request.
+ */
+export interface ServerOpenUrlRequestRequest {
+	/**
+	 * The URL to be opened.
+	 */
+	url: string;
+}
+
+/**
+ * Note: This is a request from the server to the client.
+ *
+ * Request that a message be displayed to the user.
+ *
+ * The client is expected to display the message to the user with one or more
+ * buttons with the specified labels, and to return a response consisting of
+ * the label of the button that was clicked.
+ *
+ * The request will only be sent from the server to the client if the client
+ * has indicated that it supports this request by using the
+ * setClientCapabilities request.
+ *
+ * This request is modeled after the
+ *
+ * same request from the LSP specification.
+ */
+export interface ServerShowMessageRequestRequest {
+	/**
+	 * The type of the message.
+	 */
+	type: MessageType;
+
+	/**
+	 * The message to be displayed.
+	 */
+	message: string;
+
+	/**
+	 * The labels of the buttons by which the user can dismiss the message.
+	 */
+	actions: MessageAction[];
+}
+
+/**
+ * Note: This is a request from the server to the client.
+ *
+ * Request that a message be displayed to the user.
+ *
+ * The client is expected to display the message to the user with one or more
+ * buttons with the specified labels, and to return a response consisting of
+ * the label of the button that was clicked.
+ *
+ * The request will only be sent from the server to the client if the client
+ * has indicated that it supports this request by using the
+ * setClientCapabilities request.
+ *
+ * This request is modeled after the
+ *
+ * same request from the LSP specification.
+ */
+export interface ServerShowMessageRequestResponse {
+	/**
+	 * The label of the action that was selected by the user.
+	 */
+	action: string | undefined;
+}
+
+/**
  * Return the errors associated with the given file. If the
  * errors for the given file have not yet been computed, or the
  * most recently computed errors for the given file are out of
@@ -429,7 +547,7 @@ export interface AnalysisGetSignatureResponse {
  * file. If none is found, then the parents of the directory
  * will be searched until such a file is found or the root of
  * the file system is reached. If such a file is found, it will
- * be used to resolve package: URI’s within the file.
+ * be used to resolve package: URI's within the file.
  */
 export interface AnalysisSetAnalysisRootsRequest {
 	/**
@@ -449,17 +567,9 @@ export interface AnalysisSetAnalysisRootsRequest {
 	 * that should override the normal package: URI resolution
 	 * mechanism.
 	 *
-	 * If a package root is a directory, then
-	 * the analyzer will behave as though the associated
-	 * source directory in the map contains a special
-	 * pubspec.yaml file which resolves any package: URI to the
-	 * corresponding path within that package root directory. The
-	 * effect is the same as specifying the package root directory as
-	 * a "--package_root" parameter to the Dart VM when
-	 * executing any Dart file inside the source directory.
-	 *
 	 * If a package root is a file, then the analyzer
-	 * will behave as though that file is a ".packages" file in the
+	 * will behave as though that file is a
+	 * ".dart_tool/package_config.json" file in the
 	 * source directory. The effect is the same as specifying the file
 	 * as a "--packages" parameter to the Dart VM when
 	 * executing any Dart file inside the source directory.
@@ -623,6 +733,104 @@ export interface CompletionGetSuggestionsResponse {
 }
 
 /**
+ * Request that completion suggestions for the given offset in the given
+ * file be returned. The suggestions will be filtered using fuzzy matching
+ * with the already existing prefix.
+ */
+export interface CompletionGetSuggestions2Request {
+	/**
+	 * The file containing the point at which suggestions are to be made.
+	 */
+	file: FilePath;
+
+	/**
+	 * The offset within the file at which suggestions are to be made.
+	 */
+	offset: number;
+
+	/**
+	 * The maximum number of suggestions to return. If the number of
+	 * suggestions after filtering is greater than the maxResults,
+	 * then isIncomplete is set to true.
+	 */
+	maxResults: number;
+
+	/**
+	 * The mode of code completion being invoked. If no value is provided,
+	 * MATCH_FIRST_CHAR will be assumed.
+	 */
+	completionCaseMatchingMode?: CompletionCaseMatchingMode;
+
+	/**
+	 * The mode of code completion being invoked. If no value is provided,
+	 * BASIC will be assumed. BASIC is also the only
+	 * currently supported.
+	 */
+	completionMode?: CompletionMode;
+
+	/**
+	 * The number of times that the user has invoked code completion at
+	 * the same code location, counting from 1. If no value is provided,
+	 * 1 will be assumed.
+	 */
+	invocationCount?: number;
+
+	/**
+	 * The approximate time in milliseconds that the server should spend.
+	 * The server will perform some steps anyway, even if it takes longer
+	 * than the specified timeout. This field is intended to be used for
+	 * benchmarking, and usually should not be  provided, so that the
+	 * default timeout is used.
+	 */
+	timeout?: number;
+}
+
+/**
+ * Request that completion suggestions for the given offset in the given
+ * file be returned. The suggestions will be filtered using fuzzy matching
+ * with the already existing prefix.
+ */
+export interface CompletionGetSuggestions2Response {
+	/**
+	 * The offset of the start of the text to be  replaced. This will be
+	 * different from the offset used  to request the completion suggestions
+	 * if there was a portion of an identifier before the original offset.
+	 * In particular, the replacementOffset will be the offset of the
+	 * beginning of said identifier.
+	 */
+	replacementOffset: number;
+
+	/**
+	 * The length of the text to be replaced if the remainder of the
+	 * identifier containing the cursor is to be replaced when the
+	 * suggestion is applied (that is, the number of characters in the
+	 * existing identifier).
+	 */
+	replacementLength: number;
+
+	/**
+	 * The completion suggestions being reported. This list is filtered
+	 * by the already existing prefix, and sorted first by relevance,
+	 * and (if the same) by the suggestion text. The list will have at
+	 * most maxResults items. If the user types a new keystroke,
+	 * the client is expected to either do local filtering (when the
+	 * returned list was complete), or ask the server again (if
+	 * isIncomplete was true).
+	 *
+	 * This list contains suggestions from both imported, and not yet
+	 * imported libraries. Items from not yet imported libraries will
+	 * have isNotImported set to true.
+	 */
+	suggestions: CompletionSuggestion[];
+
+	/**
+	 * True if the number of suggestions after filtering was greater than
+	 * the requested maxResults.
+	 */
+	isIncomplete: boolean;
+}
+
+/**
  * Subscribe for completion services. All previous subscriptions are
  * replaced by the given set of services.
  *
@@ -649,7 +857,7 @@ export interface CompletionRegisterLibraryPathsRequest {
 	/**
 	 * A list of objects each containing a path and the additional libraries from which
 	 * the client is interested in receiving completion suggestions.
-	 * If one configured path is beneath another, the descendent
+	 * If one configured path is beneath another, the descendant
 	 * will override the ancestors' configured libraries of interest.
 	 */
 	paths: LibraryPathSet[];
@@ -710,28 +918,65 @@ export interface CompletionGetSuggestionDetailsResponse {
 }
 
 /**
- * Inspect analysis server's knowledge about all of a file's tokens including
- * their lexeme, type, and what element kinds would have been appropriate for
- * the token's program location.
+ * Clients must make this request when the user has selected a completion
+ * suggestion with the isNotImported field set to true.
+ * The server will respond with the text to insert, as well as any
+ * SourceChange that needs to be applied in case the completion
+ * requires an additional import to be  added. The text to insert might be
+ * different from the original suggestion to include an import prefix if the
+ * library will be imported with a prefix to avoid shadowing
+ * conflicts in the file.
  */
-export interface CompletionListTokenDetailsRequest {
+export interface CompletionGetSuggestionDetails2Request {
 	/**
-	 * The path to the file from which tokens should be returned.
+	 * The path of the file into which this completion is being inserted.
 	 */
 	file: FilePath;
+
+	/**
+	 * The offset in the file where the completion will be inserted.
+	 */
+	offset: number;
+
+	/**
+	 * The completion from the selected
+	 * CompletionSuggestion.  It could be a name of a class, or a
+	 * name of a constructor in form "typeName.constructorName()", or an
+	 * enumeration constant in form "enumName.constantName", etc.
+	 */
+	completion: string;
+
+	/**
+	 * The URI of the library to import, so that the element referenced
+	 * in the completion becomes accessible.
+	 */
+	libraryUri: string;
 }
 
 /**
- * Inspect analysis server's knowledge about all of a file's tokens including
- * their lexeme, type, and what element kinds would have been appropriate for
- * the token's program location.
+ * Clients must make this request when the user has selected a completion
+ * suggestion with the isNotImported field set to true.
+ * The server will respond with the text to insert, as well as any
+ * SourceChange that needs to be applied in case the completion
+ * requires an additional import to be  added. The text to insert might be
+ * different from the original suggestion to include an import prefix if the
+ * library will be imported with a prefix to avoid shadowing
+ * conflicts in the file.
  */
-export interface CompletionListTokenDetailsResponse {
+export interface CompletionGetSuggestionDetails2Response {
 	/**
-	 * A list of the file's scanned tokens including analysis information
-	 * about them.
+	 * The full text to insert, which possibly includes now an import prefix.
+	 * The client should insert this text, not the completion from
+	 * the selected CompletionSuggestion.
 	 */
-	tokens: TokenDetails[];
+	completion: string;
+
+	/**
+	 * A change for the client to apply to make the accepted completion
+	 * suggestion available. In most cases the change is to add a new
+	 * import directive to the file.
+	 */
+	change: SourceChange;
 }
 
 /**
@@ -1048,6 +1293,41 @@ export interface EditFormatResponse {
 }
 
 /**
+ * Format the contents of the files in one or more directories, but only if
+ * the analysis options file for those files has enabled the 'format' option.
+ *
+ * If any of the specified directories does not exist, that directory will be
+ * ignored. If any of the files that are eligible for being formatted cannot
+ * be formatted because of a syntax error in the file, that file will be
+ * ignored.
+ */
+export interface EditFormatIfEnabledRequest {
+	/**
+	 * The paths of the directories containing the code to be formatted.
+	 */
+	directories: FilePath[];
+}
+
+/**
+ * Format the contents of the files in one or more directories, but only if
+ * the analysis options file for those files has enabled the 'format' option.
+ *
+ * If any of the specified directories does not exist, that directory will be
+ * ignored. If any of the files that are eligible for being formatted cannot
+ * be formatted because of a syntax error in the file, that file will be
+ * ignored.
+ */
+export interface EditFormatIfEnabledResponse {
+	/**
+	 * The edit(s) to be applied in order to format the code. The list will
+	 * be empty if none of the files were formatted, whether because they
+	 * were not eligible to be formatted or because they were already
+	 * formatted.
+	 */
+	edits: SourceFileEdit[];
+}
+
+/**
  * Return the set of assists that are available at the given
  * location. An assist is distinguished from a refactoring
  * primarily by the fact that it affects a single file and does
@@ -1123,111 +1403,53 @@ export interface EditGetAvailableRefactoringsResponse {
 }
 
 /**
- * Request information about edit.dartfix
- * such as the list of known fixes that can be specified
- * in an edit.dartfix request.
- */
-export interface EditGetDartfixInfoResponse {
-	/**
-	 * A list of fixes that can be specified
-	 * in an edit.dartfix request.
-	 */
-	fixes: DartFix[];
-}
-
-/**
- * Analyze the specified sources for recommended changes
+ * Analyze the specified sources for fixes that can be applied in bulk
  * and return a set of suggested edits for those sources.
  * These edits may include changes to sources outside the set
  * of specified sources if a change in a specified source requires it.
- *
- * If includedFixes is specified, then those fixes will be applied.
- * If includeRequiredFixes is specified, then "required" fixes will be applied
- * in addition to whatever fixes are specified in includedFixes if any.
- * If neither includedFixes nor includeRequiredFixes is specified,
- * then all fixes will be applied.
- * If excludedFixes is specified, then those fixes will not be applied
- * regardless of whether they are "required" or specified in includedFixes.
  */
-export interface EditDartfixRequest {
+export interface EditBulkFixesRequest {
 	/**
-	 * A list of the files and directories for which edits should be suggested.
+	 * A list of the files and directories for which edits should be
+	 * suggested.
 	 *
-	 * If a request is made with a path that is invalid, e.g. is not absolute and normalized,
-	 * an error of type INVALID_FILE_PATH_FORMAT will be generated.
-	 * If a request is made for a file which does not exist, or which is not currently subject to analysis
-	 * (e.g. because it is not associated with any analysis root specified to analysis.setAnalysisRoots),
-	 * an error of type FILE_NOT_ANALYZED will be generated.
+	 * If a request is made with a path that is invalid, e.g. is not absolute
+	 * and normalized, an error of type INVALID_FILE_PATH_FORMAT
+	 * will be generated. If a request is made for a file which does not
+	 * exist, or which is not currently subject to analysis (e.g. because it
+	 * is not associated with any analysis root specified to
+	 * analysis.setAnalysisRoots), an error of type
+	 * FILE_NOT_ANALYZED will be generated.
 	 */
 	included: FilePath[];
 
 	/**
-	 * A list of names indicating which fixes should be applied.
+	 * A flag indicating whether the bulk fixes are being run in test mode.
+	 * The only difference is that in test mode the fix processor will look
+	 * for a configuration file that can modify the content of the data file
+	 * used to compute the fixes when data-driven fixes are being considered.
 	 *
-	 * If a name is specified that does not match the name of a known fix,
-	 * an error of type UNKNOWN_FIX will be generated.
+	 * If this field is omitted the flag defaults to false.
 	 */
-	includedFixes?: string[];
+	inTestMode?: boolean;
 
 	/**
-	 * A flag indicating that "pedantic" fixes should be applied.
+	 * A list of diagnostic codes to be fixed.
 	 */
-	includePedanticFixes?: boolean;
-
-	/**
-	 * A flag indicating that "required" fixes should be applied.
-	 */
-	includeRequiredFixes?: boolean;
-
-	/**
-	 * A list of names indicating which fixes should not be applied.
-	 *
-	 * If a name is specified that does not match the name of a known fix,
-	 * an error of type UNKNOWN_FIX will be generated.
-	 */
-	excludedFixes?: string[];
-
-	/**
-	 * The absolute and normalized path to a directory to which
-	 * non-nullability migration output will be written. The output is only
-	 * produced if the non-nullable fix is included. Files in the directory
-	 * might be overwritten, but no previously existing files will be
-	 * deleted.
-	 */
-	outputDir?: FilePath;
+	codes?: string[];
 }
 
 /**
- * Analyze the specified sources for recommended changes
+ * Analyze the specified sources for fixes that can be applied in bulk
  * and return a set of suggested edits for those sources.
  * These edits may include changes to sources outside the set
  * of specified sources if a change in a specified source requires it.
- *
- * If includedFixes is specified, then those fixes will be applied.
- * If includeRequiredFixes is specified, then "required" fixes will be applied
- * in addition to whatever fixes are specified in includedFixes if any.
- * If neither includedFixes nor includeRequiredFixes is specified,
- * then all fixes will be applied.
- * If excludedFixes is specified, then those fixes will not be applied
- * regardless of whether they are "required" or specified in includedFixes.
  */
-export interface EditDartfixResponse {
+export interface EditBulkFixesResponse {
 	/**
-	 * A list of recommended changes that can be automatically made
-	 * by applying the 'edits' included in this response.
+	 * An optional message explaining unapplied fixes.
 	 */
-	suggestions: DartFixSuggestion[];
-
-	/**
-	 * A list of recommended changes that could not be automatically made.
-	 */
-	otherSuggestions: DartFixSuggestion[];
-
-	/**
-	 * True if the analyzed source contains errors that might impact the correctness
-	 * of the recommended changes that can be automatically applied.
-	 */
-	hasErrors: boolean;
+	message: string;
 
 	/**
 	 * A list of source edits to apply the recommended changes.
@@ -1235,18 +1457,21 @@ export interface EditDartfixResponse {
 	edits: SourceFileEdit[];
 
 	/**
-	 * Messages that should be displayed to the user that describe details of
-	 * the fix generation. For example, the messages might (a) point out
-	 * details that users might want to explore before committing the changes
-	 * or (b) describe exceptions that were thrown but that did not stop the
-	 * fixes from being produced. The list will be omitted if it is empty.
+	 * Details that summarize the fixes associated with the recommended
+	 * changes.
 	 */
-	details?: string[];
+	details: BulkFix[];
 }
 
 /**
  * Return the set of fixes that are available for the errors at
  * a given offset in a given file.
+ *
+ * If a request is made for a file which does not exist, or
+ * which is not currently subject to analysis (e.g. because it
+ * is not associated with any analysis root specified to
+ * analysis.setAnalysisRoots), an error of type
+ * GET_FIXES_INVALID_FILE will be generated.
  */
 export interface EditGetFixesRequest {
 	/**
@@ -1265,6 +1490,12 @@ export interface EditGetFixesRequest {
 /**
  * Return the set of fixes that are available for the errors at
  * a given offset in a given file.
+ *
+ * If a request is made for a file which does not exist, or
+ * which is not currently subject to analysis (e.g. because it
+ * is not associated with any analysis root specified to
+ * analysis.setAnalysisRoots), an error of type
+ * GET_FIXES_INVALID_FILE will be generated.
  */
 export interface EditGetFixesResponse {
 	/**
@@ -1982,51 +2213,14 @@ export interface AnalyticsSendTimingRequest {
 }
 
 /**
- * Return the list of KytheEntry objects for some file, given the
- * current state of the file system populated by "analysis.updateContent".
- *
- * If a request is made for a file that does not exist, or that is not
- * currently subject to analysis (e.g. because it is not associated with any
- * analysis root specified to analysis.setAnalysisRoots), an error of type
- * GET_KYTHE_ENTRIES_INVALID_FILE will be generated.
- */
-export interface KytheGetKytheEntriesRequest {
-	/**
-	 * The file containing the code for which the Kythe Entry objects are
-	 * being requested.
-	 */
-	file: FilePath;
-}
-
-/**
- * Return the list of KytheEntry objects for some file, given the
- * current state of the file system populated by "analysis.updateContent".
- *
- * If a request is made for a file that does not exist, or that is not
- * currently subject to analysis (e.g. because it is not associated with any
- * analysis root specified to analysis.setAnalysisRoots), an error of type
- * GET_KYTHE_ENTRIES_INVALID_FILE will be generated.
- */
-export interface KytheGetKytheEntriesResponse {
-	/**
-	 * The list of KytheEntry objects for the queried file.
-	 */
-	entries: KytheEntry[];
-
-	/**
-	 * The set of files paths that were required, but not in the file system,
-	 * to give a complete and accurate Kythe graph for the file. This could
-	 * be due to a referenced file that does not exist or generated files not
-	 * being generated or passed before the call to "getKytheEntries".
-	 */
-	files: FilePath[];
-}
-
-/**
  * Return the description of the widget instance at the given location.
  *
  * If the location does not have a support widget, an error of type
  * FLUTTER_GET_WIDGET_DESCRIPTION_NO_WIDGET will be generated.
+ *
+ * If a change to a file happens while widget descriptions are computed,
+ * an error of type FLUTTER_GET_WIDGET_DESCRIPTION_CONTENT_MODIFIED
+ * will be generated.
  */
 export interface FlutterGetWidgetDescriptionRequest {
 	/**
@@ -2045,6 +2239,10 @@ export interface FlutterGetWidgetDescriptionRequest {
  *
  * If the location does not have a support widget, an error of type
  * FLUTTER_GET_WIDGET_DESCRIPTION_NO_WIDGET will be generated.
+ *
+ * If a change to a file happens while widget descriptions are computed,
+ * an error of type FLUTTER_GET_WIDGET_DESCRIPTION_CONTENT_MODIFIED
+ * will be generated.
  */
 export interface FlutterGetWidgetDescriptionResponse {
 	/**
@@ -2083,6 +2281,10 @@ export interface FlutterSetWidgetPropertyValueRequest {
 	 * named argument is removed. If the property isRequired is
 	 * true, FLUTTER_SET_WIDGET_PROPERTY_VALUE_IS_REQUIRED error
 	 * is generated.
+	 *
+	 * If the expression is not a syntactically valid Dart code,
+	 * then FLUTTER_SET_WIDGET_PROPERTY_VALUE_INVALID_EXPRESSION
+	 * is reported.
 	 */
 	value?: FlutterWidgetPropertyValue;
 }
@@ -2160,11 +2362,6 @@ export interface ServerConnectedNotification {
 	 * The process id of the analysis server process.
 	 */
 	pid: number;
-
-	/**
-	 * The session id for this session.
-	 */
-	sessionId?: string;
 }
 
 /**
@@ -2611,7 +2808,7 @@ export interface CompletionResultsNotification {
 	/**
 	 * The client is expected to check this list against the
 	 * ElementKind sent in IncludedSuggestionSet to decide
-	 * whether or not these symbols should should be presented to the user.
+	 * whether or not these symbols should be presented to the user.
 	 */
 	includedElementKinds?: ElementKind[];
 
@@ -2798,12 +2995,6 @@ export interface AnalysisOptions {
 	enableNullAwareOperators?: boolean;
 
 	/**
-	 * True if the client wants to enable support for the
-	 * proposed "less restricted mixins" proposal (DEP 34).
-	 */
-	enableSuperMixins?: boolean;
-
-	/**
 	 * True if hints that are specific to dart2js should be
 	 * generated. This option is ignored if generateHints is false.
 	 */
@@ -2851,6 +3042,37 @@ export interface AnalysisStatus {
 	 * omitted if analyzing is false.
 	 */
 	analysisTarget?: string;
+}
+
+/**
+ * A description of bulk fixes to a library.
+ */
+export interface BulkFix {
+	/**
+	 * The path of the library.
+	 */
+	path: FilePath;
+
+	/**
+	 * A list of bulk fix details.
+	 */
+	fixes: BulkFixDetail[];
+}
+
+/**
+ * A description of a fix applied to a library.
+ */
+export interface BulkFixDetail {
+	/**
+	 * The code of the diagnostic associated with the fix.
+	 */
+	code: string;
+
+	/**
+	 * The number times the associated diagnostic was fixed in the associated
+	 * source edit.
+	 */
+	occurrences: number;
 }
 
 /**
@@ -3236,6 +3458,44 @@ export interface LibraryPathSet {
 }
 
 /**
+ * An enumeration of the kinds of code completion that users can invoke.
+ */
+export type CompletionMode =
+	"BASIC"
+	| "SMART";
+
+/**
+ * An enumeration of the character case matching modes that the user may set in the client.
+ */
+export type CompletionCaseMatchingMode =
+	"FIRST_CHAR"
+	| "ALL_CHARS"
+	| "NONE";
+
+/**
+ * An action associated with a message that the server is requesting the
+ * client to display to the user.
+ */
+export interface MessageAction {
+	/**
+	 * The label of the button to be displayed, and the value to be returned
+	 * to the server if the button is clicked.
+	 */
+	label: string;
+}
+
+/**
+ * The type of a message that the server is requesting the client to display
+ * to the user. The type can be used by the client to control the way in
+ * which the message is displayed.
+ */
+export type MessageType =
+	"ERROR"
+	| "WARNING"
+	| "INFO"
+	| "LOG";
+
+/**
  * An expression for which we want to know its runtime type.
  * In expressions like 'a.b.c.where((e) => e.^)' we want to know the
  * runtime type of 'a.b.c' to enforce it statically at the time when we
@@ -3334,36 +3594,6 @@ export type RuntimeCompletionExpressionTypeKind =
 	"DYNAMIC"
 	| "FUNCTION"
 	| "INTERFACE";
-
-/**
- * A scanned token along with its inferred type information.
- */
-export interface TokenDetails {
-	/**
-	 * The token's lexeme.
-	 */
-	lexeme: string;
-
-	/**
-	 * A unique id for the type of the identifier.
-	 * Omitted if the token is not an identifier in a reference position.
-	 */
-	type?: string;
-
-	/**
-	 * An indication of whether this token is in a declaration or reference
-	 * position. (If no other purpose is found for this field then it should
-	 * be renamed and converted to a boolean value.)
-	 * Omitted if the token is not an identifier.
-	 */
-	validElementKinds?: string[];
-
-	/**
-	 * The offset of the first character of the token in the file which it
-	 * originated from.
-	 */
-	offset: number;
-}
 
 /**
  * An enumeration of the services provided by the execution
@@ -3952,14 +4182,16 @@ export type RequestErrorCode =
 	"CONTENT_MODIFIED"
 	| "DEBUG_PORT_COULD_NOT_BE_OPENED"
 	| "FILE_NOT_ANALYZED"
+	| "FLUTTER_GET_WIDGET_DESCRIPTION_CONTENT_MODIFIED"
 	| "FLUTTER_GET_WIDGET_DESCRIPTION_NO_WIDGET"
+	| "FLUTTER_SET_WIDGET_PROPERTY_VALUE_INVALID_EXPRESSION"
 	| "FLUTTER_SET_WIDGET_PROPERTY_VALUE_INVALID_ID"
 	| "FLUTTER_SET_WIDGET_PROPERTY_VALUE_IS_REQUIRED"
 	| "FORMAT_INVALID_FILE"
 	| "FORMAT_WITH_ERRORS"
 	| "GET_ERRORS_INVALID_FILE"
+	| "GET_FIXES_INVALID_FILE"
 	| "GET_IMPORTED_ELEMENTS_INVALID_FILE"
-	| "GET_KYTHE_ENTRIES_INVALID_FILE"
 	| "GET_NAVIGATION_INVALID_FILE"
 	| "GET_REACHABLE_SOURCES_INVALID_FILE"
 	| "GET_SIGNATURE_INVALID_FILE"
@@ -3978,7 +4210,6 @@ export type RequestErrorCode =
 	| "SERVER_ERROR"
 	| "SORT_MEMBERS_INVALID_FILE"
 	| "SORT_MEMBERS_PARSE_ERRORS"
-	| "UNKNOWN_FIX"
 	| "UNKNOWN_REQUEST"
 	| "UNSUPPORTED_FEATURE";
 
@@ -3987,41 +4218,6 @@ export type RequestErrorCode =
  * request.
  */
 export type SearchId = string;
-
-/**
- * A "fix" that can be specified in an edit.dartfix request.
- */
-export interface DartFix {
-	/**
-	 * The name of the fix.
-	 */
-	name: string;
-
-	/**
-	 * A human readable description of the fix.
-	 */
-	description?: string;
-
-	/**
-	 * `true` if the fix is in the "required" fixes group.
-	 */
-	isRequired?: boolean;
-}
-
-/**
- * A suggestion from an edit.dartfix request.
- */
-export interface DartFixSuggestion {
-	/**
-	 * A human readable description of the suggested change.
-	 */
-	description: string;
-
-	/**
-	 * The location of the suggested change.
-	 */
-	location?: Location;
-}
 
 /**
  * A single result from a search request.
@@ -4118,7 +4314,7 @@ export interface TypeHierarchyItem {
 	/**
 	 * The indexes of the items representing the mixins
 	 * referenced by this class. The list will be empty if
-	 * there are no classes mixed in to this class.
+	 * there are no classes mixed into this class.
 	 */
 	mixins: number[];
 
@@ -4509,6 +4705,30 @@ export interface CompletionSuggestion {
 	displayText?: string;
 
 	/**
+	 * The offset of the start of the text to be
+	 * replaced. If supplied, this should be used in
+	 * preference to the offset provided on the
+	 * containing completion results.
+	 *
+	 * This value may be provided independently of
+	 * replacementLength (for example if only one
+	 * differs from the completion result value).
+	 */
+	replacementOffset?: number;
+
+	/**
+	 * The length of the text to be replaced.
+	 * If supplied, this should be used in preference
+	 * to the offset provided on the
+	 * containing completion results.
+	 *
+	 * This value may be provided independently of
+	 * replacementOffset (for example if only one
+	 * differs from the completion result value).
+	 */
+	replacementLength?: number;
+
+	/**
 	 * The offset, relative to the beginning of the completion, of where the
 	 * selection should be placed after insertion.
 	 */
@@ -4617,6 +4837,34 @@ export interface CompletionSuggestion {
 	 * omitted if the parameterName field is omitted.
 	 */
 	parameterType?: string;
+
+	/**
+	 * This field  is omitted if getSuggestions was used rather
+	 * than getSuggestions2.
+	 *
+	 * This field  is omitted if this suggestion corresponds to a locally
+	 * declared element.
+	 *
+	 * If this suggestion corresponds to an already imported element,
+	 * then this field is the URI of a library that provides this element,
+	 * not the URI of the library where the element is declared.
+	 *
+	 * If this suggestion corresponds to an element from a not yet
+	 * imported library, this field is the URI of a library that could be
+	 * imported to make this suggestion  accessible in the file where
+	 * completion was requested, such as package:foo/bar.dart or
+	 * file:///home/me/workspace/foo/test/bar_test.dart.
+	 */
+	libraryUri?: string;
+
+	/**
+	 * True if the suggestion is for an element from a not yet imported
+	 * library. This field is omitted if the element is declared locally,
+	 * or is from library is already imported, so that the suggestion can
+	 * be inserted as is, or if getSuggestions was used rather
+	 * than getSuggestions2.
+	 */
+	isNotImported?: boolean;
 }
 
 /**
@@ -4632,7 +4880,8 @@ export type CompletionSuggestionKind =
 	| "NAMED_ARGUMENT"
 	| "OPTIONAL_ARGUMENT"
 	| "OVERRIDE"
-	| "PARAMETER";
+	| "PARAMETER"
+	| "PACKAGE_NAME";
 
 /**
  * A message associated with a diagnostic.
@@ -4699,6 +4948,12 @@ export interface Element {
 	 * type parameters, this field will not be defined.
 	 */
 	typeParameters?: string;
+
+	/**
+	 * If the element is a type alias, this field is the aliased type.
+	 * Otherwise this field will not be defined.
+	 */
+	aliasedType?: string;
 }
 
 /**
@@ -4728,6 +4983,7 @@ export type ElementKind =
 	| "PREFIX"
 	| "SETTER"
 	| "TOP_LEVEL_VARIABLE"
+	| "TYPE_ALIAS"
 	| "TYPE_PARAMETER"
 	| "UNIT_TEST_GROUP"
 	| "UNIT_TEST_TEST"
@@ -4747,13 +5003,16 @@ export type FilePath = string;
  */
 export type FoldingKind =
 	"ANNOTATIONS"
+	| "BLOCK"
 	| "CLASS_BODY"
+	| "COMMENT"
 	| "DIRECTIVES"
 	| "DOCUMENTATION_COMMENT"
 	| "FILE_HEADER"
 	| "FUNCTION_BODY"
 	| "INVOCATION"
-	| "LITERAL";
+	| "LITERAL"
+	| "PARAMETERS";
 
 /**
  * A description of a region that can be folded.
@@ -4807,6 +5066,7 @@ export type HighlightRegionType =
 	| "COMMENT_DOCUMENTATION"
 	| "COMMENT_END_OF_LINE"
 	| "CONSTRUCTOR"
+	| "CONSTRUCTOR_TEAR_OFF"
 	| "DIRECTIVE"
 	| "DYNAMIC_TYPE"
 	| "DYNAMIC_LOCAL_VARIABLE_DECLARATION"
@@ -4815,6 +5075,7 @@ export type HighlightRegionType =
 	| "DYNAMIC_PARAMETER_REFERENCE"
 	| "ENUM"
 	| "ENUM_CONSTANT"
+	| "EXTENSION"
 	| "FIELD"
 	| "FIELD_STATIC"
 	| "FUNCTION"
@@ -4829,6 +5090,7 @@ export type HighlightRegionType =
 	| "INSTANCE_GETTER_REFERENCE"
 	| "INSTANCE_METHOD_DECLARATION"
 	| "INSTANCE_METHOD_REFERENCE"
+	| "INSTANCE_METHOD_TEAR_OFF"
 	| "INSTANCE_SETTER_DECLARATION"
 	| "INSTANCE_SETTER_REFERENCE"
 	| "INVALID_STRING_ESCAPE"
@@ -4840,9 +5102,11 @@ export type HighlightRegionType =
 	| "LITERAL_INTEGER"
 	| "LITERAL_LIST"
 	| "LITERAL_MAP"
+	| "LITERAL_RECORD"
 	| "LITERAL_STRING"
 	| "LOCAL_FUNCTION_DECLARATION"
 	| "LOCAL_FUNCTION_REFERENCE"
+	| "LOCAL_FUNCTION_TEAR_OFF"
 	| "LOCAL_VARIABLE"
 	| "LOCAL_VARIABLE_DECLARATION"
 	| "LOCAL_VARIABLE_REFERENCE"
@@ -4850,6 +5114,7 @@ export type HighlightRegionType =
 	| "METHOD_DECLARATION"
 	| "METHOD_DECLARATION_STATIC"
 	| "METHOD_STATIC"
+	| "MIXIN"
 	| "PARAMETER"
 	| "SETTER_DECLARATION"
 	| "TOP_LEVEL_VARIABLE"
@@ -4860,90 +5125,22 @@ export type HighlightRegionType =
 	| "STATIC_GETTER_REFERENCE"
 	| "STATIC_METHOD_DECLARATION"
 	| "STATIC_METHOD_REFERENCE"
+	| "STATIC_METHOD_TEAR_OFF"
 	| "STATIC_SETTER_DECLARATION"
 	| "STATIC_SETTER_REFERENCE"
 	| "TOP_LEVEL_FUNCTION_DECLARATION"
 	| "TOP_LEVEL_FUNCTION_REFERENCE"
+	| "TOP_LEVEL_FUNCTION_TEAR_OFF"
 	| "TOP_LEVEL_GETTER_DECLARATION"
 	| "TOP_LEVEL_GETTER_REFERENCE"
 	| "TOP_LEVEL_SETTER_DECLARATION"
 	| "TOP_LEVEL_SETTER_REFERENCE"
 	| "TOP_LEVEL_VARIABLE_DECLARATION"
+	| "TYPE_ALIAS"
 	| "TYPE_NAME_DYNAMIC"
 	| "TYPE_PARAMETER"
 	| "UNRESOLVED_INSTANCE_MEMBER_REFERENCE"
 	| "VALID_STRING_ESCAPE";
-
-/**
- * This object matches the format and documentation of the Entry object
- * documented in the
- * Kythe Storage
- * Model.
- */
-export interface KytheEntry {
-	/**
-	 * The ticket of the source node.
-	 */
-	source: KytheVName;
-
-	/**
-	 * An edge label. The schema defines which labels are meaningful.
-	 */
-	kind?: string;
-
-	/**
-	 * The ticket of the target node.
-	 */
-	target?: KytheVName;
-
-	/**
-	 * A fact label. The schema defines which fact labels are meaningful.
-	 */
-	fact: string;
-
-	/**
-	 * The String value of the fact.
-	 */
-	value?: number[];
-}
-
-/**
- * This object matches the format and documentation of the Vector-Name object
- * documented in the
- * Kythe
- * Storage Model.
- */
-export interface KytheVName {
-	/**
-	 * An opaque signature generated by the analyzer.
-	 */
-	signature: string;
-
-	/**
-	 * The corpus of source code this KytheVName belongs to.
-	 * Loosely, a corpus is a collection of related files, such as the
-	 * contents of a given source repository.
-	 */
-	corpus: string;
-
-	/**
-	 * A corpus-specific root label, typically a directory path or project
-	 * identifier, denoting a distinct subset of the corpus. This may also be
-	 * used to designate virtual collections like generated files.
-	 */
-	root: string;
-
-	/**
-	 * A path-structured label describing the “location” of the named object
-	 * relative to the corpus and the root.
-	 */
-	path: string;
-
-	/**
-	 * The language this name belongs to.
-	 */
-	language: string;
-}
 
 /**
  * A collection of positions that should be linked (edited simultaneously)
@@ -4952,10 +5149,17 @@ export interface KytheVName {
  * of the positions of the variable name so that if the client wanted to let
  * the user edit the variable name after the operation, all occurrences of
  * the name could be edited simultaneously.
+ *
+ * Edit groups may have a length of 0 and function as tabstops where there
+ * is no default text, for example, an edit that inserts an if
+ * statement might provide an empty group between parens where a condition
+ * should be typed. For this reason, it's also valid for a group to contain
+ * only a single position that is not linked to others.
  */
 export interface LinkedEditGroup {
 	/**
-	 * The positions of the regions that should be edited simultaneously.
+	 * The positions of the regions (after applying the relevant edits) that
+	 * should be edited simultaneously.
 	 */
 	positions: Position[];
 
@@ -5028,6 +5232,18 @@ export interface Location {
 	 * the range.
 	 */
 	startColumn: number;
+
+	/**
+	 * The one-based index of the line containing the character immediately
+	 * following the range.
+	 */
+	endLine?: number;
+
+	/**
+	 * The one-based index of the column containing the character immediately
+	 * following the range.
+	 */
+	endColumn?: number;
 }
 
 /**
@@ -5069,26 +5285,36 @@ export interface NavigationTarget {
 	fileIndex: number;
 
 	/**
-	 * The offset of the region to which the user can navigate.
+	 * The offset of the name of the target to which the user can navigate.
 	 */
 	offset: number;
 
 	/**
-	 * The length of the region to which the user can navigate.
+	 * The length of the name of the target to which the user can navigate.
 	 */
 	length: number;
 
 	/**
 	 * The one-based index of the line containing the first character of the
-	 * region.
+	 * name of the target.
 	 */
 	startLine: number;
 
 	/**
 	 * The one-based index of the column containing the first character of
-	 * the region.
+	 * the name of the target.
 	 */
 	startColumn: number;
+
+	/**
+	 * The offset of the target code to which the user can navigate.
+	 */
+	codeOffset?: number;
+
+	/**
+	 * The length of the target code to which the user can navigate.
+	 */
+	codeLength?: number;
 }
 
 /**
@@ -5181,12 +5407,7 @@ export interface ParameterInfo {
  * An enumeration of the types of parameters.
  */
 export type ParameterKind =
-	// Old
-	"NAMED"
-	| "OPTIONAL"
-	| "REQUIRED"
-	// New
-	| "OPTIONAL_NAMED"
+	"OPTIONAL_NAMED"
 	| "OPTIONAL_POSITIONAL"
 	| "REQUIRED_NAMED"
 	| "REQUIRED_POSITIONAL";
@@ -5335,6 +5556,12 @@ export interface SourceChange {
 	 * applied.
 	 */
 	selection?: Position;
+
+	/**
+	 * The length of the selection (starting at Position) that should be selected after
+	 * the edits have been applied.
+	 */
+	selectionLength?: number;
 
 	/**
 	 * The optional identifier of the change kind. The identifier remains

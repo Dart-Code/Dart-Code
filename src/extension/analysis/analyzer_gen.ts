@@ -685,15 +685,6 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	}
 
 	/**
-	Inspect analysis server's knowledge about all of a file's tokens including
-	their lexeme, type, and what element kinds would have been appropriate for
-	the token's program location.
-	*/
-	completionListTokenDetails(request: as.CompletionListTokenDetailsRequest): Promise<as.CompletionListTokenDetailsResponse> {
-		return this.sendRequest("completion.listTokenDetails", request);
-	}
-
-	/**
 	Perform a search for references to the element defined or
 	referenced at the given offset in the given file.
 	An identifier is returned immediately, and individual
@@ -790,32 +781,6 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	*/
 	editGetAvailableRefactorings(request: as.EditGetAvailableRefactoringsRequest): Promise<as.EditGetAvailableRefactoringsResponse> {
 		return this.sendRequest("edit.getAvailableRefactorings", request);
-	}
-
-	/**
-	Request information about edit.dartfix
-	such as the list of known fixes that can be specified
-	in an edit.dartfix request.
-	*/
-	editGetDartfixInfo(): Promise<as.EditGetDartfixInfoResponse> {
-		return this.sendRequest("edit.getDartfixInfo");
-	}
-
-	/**
-	Analyze the specified sources for recommended changes
-	and return a set of suggested edits for those sources.
-	These edits may include changes to sources outside the set
-	of specified sources if a change in a specified source requires it.
-	If includedFixes is specified, then those fixes will be applied.
-	If includeRequiredFixes is specified, then "required" fixes will be applied
-	in addition to whatever fixes are specified in includedFixes if any.
-	If neither includedFixes nor includeRequiredFixes is specified,
-	then all fixes will be applied.
-	If excludedFixes is specified, then those fixes will not be applied
-	regardless of whether they are "required" or specified in includedFixes.
-	*/
-	editDartfix(request: as.EditDartfixRequest): Promise<as.EditDartfixResponse> {
-		return this.sendRequest("edit.dartfix", request);
 	}
 
 	/**
@@ -1068,18 +1033,6 @@ export abstract class AnalyzerGen extends StdIOService<UnknownNotification> {
 	*/
 	analyticsSendTiming(request: as.AnalyticsSendTimingRequest): Promise<UnknownResponse> {
 		return this.sendRequest("analytics.sendTiming", request);
-	}
-
-	/**
-	Return the list of KytheEntry objects for some file, given the
-	current state of the file system populated by "analysis.updateContent".
-	If a request is made for a file that does not exist, or that is not
-	currently subject to analysis (e.g. because it is not associated with any
-	analysis root specified to analysis.setAnalysisRoots), an error of type
-	GET_KYTHE_ENTRIES_INVALID_FILE will be generated.
-	*/
-	kytheGetKytheEntries(request: as.KytheGetKytheEntriesRequest): Promise<as.KytheGetKytheEntriesResponse> {
-		return this.sendRequest("kythe.getKytheEntries", request);
 	}
 
 	/**
