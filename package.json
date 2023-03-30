@@ -631,7 +631,7 @@
 			},
 			{
 				"command": "dart.hotReload",
-				"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession",
+				"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession",
 				"key": "ctrl+f5"
 			},
 			{
@@ -910,7 +910,7 @@
 				},
 				{
 					"command": "dart.hotReload",
-					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession"
+					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession"
 				},
 				{
 					"command": "dart.openDevTools",
@@ -1013,7 +1013,7 @@
 				{
 					"command": "dart.hotReload",
 					"group": "navigation@59",
-					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession"
+					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession"
 				},
 				{
 					"command": "dart.openDevToolsInspector",
@@ -1046,7 +1046,7 @@
 			"touchBar": [
 				{
 					"command": "_dart.hotReload.touchBar",
-					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || dart-code:isInDartDebugSession",
+					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession",
 					"group": "9_debug@5"
 				},
 				{
@@ -1221,7 +1221,7 @@
 				},
 				{
 					"command": "flutter.openInXcode",
-					"when": "explorerResourceIsFolder && resourceFilename == ios || resourceFilename == macos && dart-code:anyFlutterProjectLoaded && dart-code:dartPlatformName == mac && dart-code:isRunningLocally",
+					"when": "explorerResourceIsFolder && dart-code:anyFlutterProjectLoaded && dart-code:dartPlatformName == mac && dart-code:isRunningLocally && resourceFilename == ios || explorerResourceIsFolder && dart-code:anyFlutterProjectLoaded && dart-code:dartPlatformName == mac && dart-code:isRunningLocally && resourceFilename == macos",
 					"group": "1.5_open_ext@1"
 				},
 				{
