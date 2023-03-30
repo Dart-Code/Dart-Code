@@ -58,7 +58,6 @@ import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
 import { HotReloadOnSaveHandler } from "./dart/hot_reload_save_handler";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
-import { FlutterColorDecorations } from "./decorations/flutter_color_decorations";
 import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decorations_das";
 import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decorations_lsp";
 import { FlutterUiGuideDecorationsDas } from "./decorations/flutter_ui_guides_decorations_das";
@@ -563,16 +562,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (vs.DebugConfigurationProviderTriggerKind) { // Temporary workaround for GitPod/Theia not having this enum.
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new InitialLaunchJsonDebugConfigProvider(logger), vs.DebugConfigurationProviderTriggerKind.Initial));
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger, deviceManager), vs.DebugConfigurationProviderTriggerKind.Dynamic));
-	}
-
-	if (config.flutterGutterIcons) {
-		const colorDecorations = new FlutterColorDecorations(logger, path.join(context.globalStoragePath, "flutterColors"));
-		context.subscriptions.push(colorDecorations);
-
-		// If the server registers for colors and we see a request go out, then we should
-		// remove our own handler.
-		if (lspAnalyzer)
-			lspAnalyzer.onDocumentColorsRequested.then(() => colorDecorations.dispose());
 	}
 
 	if (!isUsingLsp && dasClient && dasAnalyzer) {

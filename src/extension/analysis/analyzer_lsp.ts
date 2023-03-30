@@ -2,7 +2,6 @@ import * as path from "path";
 import * as stream from "stream";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
-import { ProvideDocumentColorsSignature } from "vscode-languageclient/lib/common/colorProvider";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
@@ -11,7 +10,6 @@ import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../sha
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
-import { PromiseCompleter } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { cleanDartdoc, createMarkdownString, isDevExtension, isPreReleaseExtension } from "../../shared/vscode/extension_utils";
@@ -33,9 +31,6 @@ export class LspAnalyzer extends Analyzer {
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
 	private readonly statusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
-
-	protected readonly onDocumentColorsRequestedCompleter = new PromiseCompleter<void>();
-	public readonly onDocumentColorsRequested = this.onDocumentColorsRequestedCompleter.promise;
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
@@ -260,11 +255,6 @@ export class LspAnalyzer extends Analyzer {
 				if (item?.contents)
 					item.contents = item.contents.map((s) => cleanDocString(s));
 				return item;
-			},
-
-			provideDocumentColors: (document: vs.TextDocument, token: vs.CancellationToken, next: ProvideDocumentColorsSignature) => {
-				this.onDocumentColorsRequestedCompleter.resolve();
-				return next(document, token);
 			},
 
 			async provideCodeActions(document: vs.TextDocument, range: vs.Range, context: vs.CodeActionContext, token: vs.CancellationToken, next: ls.ProvideCodeActionsSignature) {
