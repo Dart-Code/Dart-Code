@@ -12,7 +12,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { fsPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
-import { cleanDartdoc, createMarkdownString, isDevExtension, isPreReleaseExtension } from "../../shared/vscode/extension_utils";
+import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { envUtils } from "../../shared/vscode/utils";
@@ -401,7 +401,7 @@ export class LspAnalyzer extends Analyzer {
 function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware, vmServicePort: number | undefined): LanguageClient {
 	const clientOptions: ls.LanguageClientOptions = {
 		initializationOptions: {
-			allowOpenUri: isDevExtension || isPreReleaseExtension,
+			allowOpenUri: true,
 			appHost: vs.env.appHost,
 			closingLabels: config.closingLabels,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
