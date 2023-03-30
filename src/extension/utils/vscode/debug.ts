@@ -7,6 +7,8 @@ export class DartDebugSessionInformation {
 	public vmServiceUri?: string;
 	public readonly sessionStart: Date = new Date();
 	public hasStarted = false;
+	public flutterMode: string | undefined;
+	public flutterDeviceId: string | undefined;
 	public hasEnded = false;
 	public progress: { [key: string]: ProgressMessage } = {};
 	public readonly loadedServiceExtensions: VmServiceExtension[] = [];

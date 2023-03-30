@@ -137,6 +137,8 @@ export class DebugCommands implements IAmDisposable {
 				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, page });
 			} else if (session.session.configuration.noDebug) {
 				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
+			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {
+				vs.window.showInformationMessage(`DevTools is not available for an app running in ${session.flutterMode} mode on device '${session.flutterDeviceId}'.`);
 			} else if (session.hasStarted) {
 				vs.window.showInformationMessage("DevTools is not available for an app running in this mode.");
 			} else {
@@ -754,6 +756,9 @@ export class DebugCommands implements IAmDisposable {
 			this.suppressFlutterWidgetErrors = false;
 		} else if (event === "flutter.appStarted") {
 			session.hasStarted = true;
+		} else if (event === "flutter.appStart") {
+			session.flutterMode = body?.mode;
+			session.flutterDeviceId = body?.deviceId;
 		}
 	}
 
