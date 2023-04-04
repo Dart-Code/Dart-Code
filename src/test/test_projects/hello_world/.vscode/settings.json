@@ -10,5 +10,6 @@
 		"nested_flutter_example",
 	],
 	"dart.showDartDeveloperLogs": true,
-	"dart.experimentalNewRefactors": true,
+	"dart.experimentalNewRefactors": true, // Old flag
+	"dart.experimentalRefactors": true, // New flag
 }
