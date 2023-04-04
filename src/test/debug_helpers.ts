@@ -63,9 +63,13 @@ export function createDebugClient(debugType: DebuggerType) {
 			// Tests may require a second terminateRequest because they first print "waiting for test to finish...".
 			if (debugType === DebuggerType.DartTest || debugType === DebuggerType.FlutterTest || debugType === DebuggerType.WebTest) {
 				await Promise.race([delay(300), terminatedEvent]);
-				await thisDc.terminateRequest().catch((e) => logger.error(e));
+				// If we still hasn't termianted, send the scond.
+				if (!thisDc.hasTerminated) {
+					thisDc.terminateRequest().catch((e) => logger.error(e));
+					await Promise.race([delay(300), terminatedEvent]);
+				}
 			}
-			await withTimeout(terminatedEvent, "Timed out terminating and cleaning up!", 60);
+			await withTimeout(terminatedEvent, "Timed out terminating and cleaning up!", 50);
 		}
 
 		thisDc.stop().catch((e) => logger.error(e));
