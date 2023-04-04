@@ -173,7 +173,10 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a type from an SDK library", async () => {
 		const hover = await getHoverAt("Fut^ure<String>");
-		assert.equal(hover.displayText, "abstract class Future<T>");
+		if (hover.displayText.includes("interface class"))
+			assert.equal(hover.displayText, "abstract interface class Future<T>");
+		else
+			assert.equal(hover.displayText, "abstract class Future<T>");
 		assert.ok(hover.documentation!.startsWith("*dart:async*"));
 		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
