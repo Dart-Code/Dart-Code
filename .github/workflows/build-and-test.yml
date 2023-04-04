@@ -24,7 +24,7 @@ jobs:
       - id: exclude
         name: Exclude some builds if not running on schedule
         if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/tags/')
-        run: echo "excludes=[{\"build-version\":\"dev\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
+        run: echo "excludes=[{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
 
 
   build:
@@ -41,7 +41,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         node-version: [16]
-        build-version: [stable, dev]
+        build-version: [stable, beta]
         bot: [flutter_debug, flutter_debug_chrome, flutter_debug_sdk_dap, flutter_debug_chrome_sdk_dap, flutter_test_debug, flutter_test_debug_sdk_dap, dart_web_debug, flutter_repo, dart_debug, dart_debug_sdk_dap, dart, dart_lsp, flutter, flutter_lsp, misc]
         include:
           - os: ubuntu-latest
@@ -199,7 +199,7 @@ jobs:
           DISPLAY: ":99.0"
           BOT: ${{ matrix.bot }}
           BUILD_VERSION: ${{ matrix.build-version }}
-          LOGS_NAME: ${{ matrix.build-version }}_${{ matrix.build-version }}
+          LOGS_NAME: ${{ matrix.build-version }}
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
       - name: ps -x (after)
