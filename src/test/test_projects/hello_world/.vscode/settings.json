@@ -7,9 +7,9 @@
 	],
 	"dart.analysisExcludedFolders": [
 		"lib/excluded",
-		"nested_flutter_example",
+		"nested_flutter_example"
 	],
 	"dart.showDartDeveloperLogs": true,
 	"dart.experimentalNewRefactors": true, // Old flag
-	"dart.experimentalRefactors": true, // New flag
+	"dart.experimentalRefactors": true // New flag
 }
