@@ -52,11 +52,11 @@ export enum EventCommand {
 }
 
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
-	constructor(readonly logger: Logger, readonly handleError: (e: Error) => void) { }
+	constructor(readonly logger: Logger, readonly handleError: (e: unknown) => void) { }
 
 	sendEventData(eventName: string, data?: Record<string, any> | undefined): void {
 		if (!data) return;
-		this.send(data as AnalyticsData).catch(this.handleError);
+		this.send(data as AnalyticsData).catch((e) => this.handleError(e));
 	}
 
 	sendErrorData(error: Error, data?: Record<string, any> | undefined): void {
@@ -162,9 +162,9 @@ export class Analytics {
 
 	private telemetryLogger: TelemetryLogger;
 
-	constructor(readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
+	constructor(private readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
-		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender(logger, this.handleError);
+		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender(logger, (e) => this.handleError(e));
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
 	}
 
@@ -243,9 +243,9 @@ export class Analytics {
 			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
 	}
 
-	private handleError(e: any) {
-		this.logger.info(`Failed to send analytics, disabling for session: ${e}`);
+	private handleError(e: unknown) {
 		this.disableAnalyticsForSession = true;
+		this.logger.warn(`Failed to send analytics, disabling for session: ${e}`);
 	}
 
 	private getDebuggerPreference(): string {
