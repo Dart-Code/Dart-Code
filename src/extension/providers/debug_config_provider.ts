@@ -16,6 +16,7 @@ import { TestModel } from "../../shared/test/test_model";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { filenameSafe, isWebDevice } from "../../shared/utils";
 import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
+import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { getAllProjectFolders, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
@@ -26,7 +27,7 @@ import { getActiveRealFileEditor } from "../editors";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
-import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestNameFilter, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectCanUsePackageTest } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestFilter, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectCanUsePackageTest } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -76,6 +77,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.cwd)
 			logger.info(`    cwd      : ${debugConfig.cwd}`);
 
+		// Split off any querystring from program because there's a lot of path
+		// manipulation that may not handle it. We'll put it back on at the end.
+		debugConfig.programQuery = debugConfig.program?.includes("?") ? "?" + debugConfig.program.split("?")[1] : undefined;
+		debugConfig.program = debugConfig.program ? getProgramPath(debugConfig.program) : undefined;
+
 		if (this.warnOnUnresolvedVariables("program", debugConfig.program) || this.warnOnUnresolvedVariables("cwd", debugConfig.cwd)) {
 			// Warning is shown from inside warnOnUnresolvedVariables.
 			return null; // null means open launch.json.
@@ -91,12 +97,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return null; // null means open launch.json.
 		}
 
-		const debugType = this.selectDebuggerType(debugConfig, logger);
-
+		const argsHaveTestFilter = !!debugConfig.programPath || hasTestFilter((debugConfig.toolArgs ?? []).concat(debugConfig.args ?? []));
+		const isTest = !!debugConfig.program && isTestFileOrFolder(debugConfig.program);
+		const debugType = this.selectDebuggerType(debugConfig, argsHaveTestFilter, isTest, logger);
 		const isFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterTest;
-		const isTest = isTestFileOrFolder(debugConfig.program);
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
-		const argsHaveTestNameFilter = hasTestNameFilter(debugConfig.toolArgs, debugConfig.args);
 
 		// Handle detecting a Flutter app, but the extension has loaded in Dart-only mode.
 		if (isFlutter && !this.wsContext.hasAnyFlutterProjects) {
@@ -236,10 +241,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					.filter((p) => p.startsWith(debugConfig.program!))
 				: [debugConfig.program!];
 			for (const suitePath of suitePaths)
-				this.testModel.flagSuiteStart(suitePath, !argsHaveTestNameFilter);
+				this.testModel.flagSuiteStart(suitePath, !argsHaveTestFilter);
 		}
 
 		debugConfig.debuggerType = debugType;
+		if (debugConfig.programQuery) {
+			debugConfig.program += debugConfig.programQuery;
+			delete debugConfig.programQuery;
+		}
 
 		logger.info(`Debug session starting...\n    ${JSON.stringify(debugConfig, undefined, 4).replace(/\n/g, "\n    ")}`);
 
@@ -301,11 +310,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return false;
 	}
 
-	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs, logger: Logger): DebuggerType {
-		const isTest = isTestFileOrFolder(debugConfig.program);
+	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): DebuggerType {
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
-		// TODO: Remove argsHaveTestNameFilter now that "flutter test" supports running tests on device (integration tests).
-		const argsHaveTestNameFilter = hasTestNameFilter(debugConfig.toolArgs, debugConfig.args);
 
 		let debugType = DebuggerType.Dart;
 		if (debugConfig.cwd
@@ -339,7 +345,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					if (isIntegrationTest) {
 						// Integration tests always use "flutter test".
 						debugType = DebuggerType.FlutterTest;
-					} else if (debugConfig.runTestsOnDevice && argsHaveTestNameFilter) {
+					} else if (debugConfig.runTestsOnDevice && argsHaveTestFilter) {
+						// TODO: Remove argsHaveTestFilter now that "flutter test" supports running tests on device (integration tests).
 						// Non-integration tests set to run on device but have a test name filter will also have
 						// to run with "flutter test".
 						vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
@@ -459,9 +466,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.program && debugConfig.cwd && !path.isAbsolute(debugConfig.program))
 			debugConfig.program = path.join(debugConfig.cwd, debugConfig.program);
 
-		if (debugConfig.program && path.isAbsolute(debugConfig.program) && !fs.existsSync(debugConfig.program) && !this.wsContext.config.omitTargetFlag) {
-			this.logger.warn(`Launch config references non-existant file ${debugConfig.program}`);
-			window.showWarningMessage(`Your launch config references a program that does not exist. If you have problems launching, check the "program" field in your ".vscode/launch.json" file.`);
+		if (debugConfig.program && path.isAbsolute(debugConfig.program) && !this.wsContext.config.omitTargetFlag) {
+			if (!fs.existsSync(debugConfig.program)) {
+				this.logger.warn(`Launch config references non-existant file ${debugConfig.program}`);
+				window.showWarningMessage(`Your launch config references a program that does not exist. If you have problems launching, check the "program" field in your ".vscode/launch.json" file.`);
+			}
 		}
 	}
 

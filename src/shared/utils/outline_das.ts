@@ -1,5 +1,6 @@
 import * as as from "../analysis_server_types";
 import { Logger } from "../interfaces";
+import { LspTestOutlineInfo } from "./outline_lsp";
 import { extractTestNameFromOutline } from "./test";
 
 export abstract class OutlineVisitor {
@@ -162,13 +163,12 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	}
 }
 
-export interface TestOutlineInfo {
+export type TestOutlineInfo = DasTestOutlineInfo | LspTestOutlineInfo;
+
+export interface DasTestOutlineInfo {
 	fullName: string;
 	file: string;
 	isGroup: boolean;
-}
-
-export interface DasTestOutlineInfo extends TestOutlineInfo {
 	offset: number;
 	length: number;
 }

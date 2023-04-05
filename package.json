@@ -2423,6 +2423,17 @@
 						"default": true,
 						"markdownDescription": "Whether to show skipped tests in the test tree.",
 						"scope": "window"
+					},
+					"dart.testInvocationMode": {
+						"enum": [
+							"name",
+							"line"
+						],
+						"default": [
+							"name"
+						],
+						"description": "How to locate tests for execution. Using `name` is compatible with older versions of `package:test` but cannot handle some complex/dynamic test names.",
+						"scope": "window"
 					}
 				}
 			},
@@ -2865,7 +2876,8 @@
 		"semver": "^7.3.8",
 		"vscode-languageclient": "^8.0.2",
 		"ws": "^8.11.0",
-		"yaml": "^2.2.1"
+		"yaml": "^2.2.1",
+		"vscode-uri": "^3.0.7"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.0.0",

@@ -1,5 +1,6 @@
 import { CancellationToken, TextDocument, Uri, workspace } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
+import { URI } from "vscode-uri";
 import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFlutterOutlineNotification, PublishOutlineNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
@@ -39,7 +40,7 @@ export class LspFileTracker implements IAmDisposable {
 		this.watchPubspec();
 	}
 
-	public getOutlineFor(file: { fsPath: string } | string): Outline | undefined {
+	public getOutlineFor(file: URI | string): Outline | undefined {
 		return this.outlines[fsPath(file)];
 	}
 
@@ -55,7 +56,7 @@ export class LspFileTracker implements IAmDisposable {
 		}, 50, 5000, token);
 	}
 
-	public getFlutterOutlineFor(file: { fsPath: string } | string): FlutterOutline | undefined {
+	public getFlutterOutlineFor(file: URI | string): FlutterOutline | undefined {
 		return this.flutterOutlines[fsPath(file)];
 	}
 
@@ -67,7 +68,7 @@ export class LspFileTracker implements IAmDisposable {
 		}, 50, 5000, token);
 	}
 
-	public supportsPubRunTest(file: { fsPath: string } | string): boolean | undefined {
+	public supportsPubRunTest(file: URI | string): boolean | undefined {
 		// Handle explicit flags.
 		if (this.wsContext.config.supportsPackageTest === true)
 			return true;

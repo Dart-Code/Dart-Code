@@ -1,7 +1,6 @@
 import { Range } from "vscode-languageclient";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { Logger } from "../interfaces";
-import { TestOutlineInfo } from "./outline_das";
 import { extractTestNameFromOutline } from "./test";
 
 export abstract class LspOutlineVisitor {
@@ -186,7 +185,10 @@ export class LspTestOutlineVisitor extends LspOutlineVisitor {
 	}
 }
 
-export interface LspTestOutlineInfo extends TestOutlineInfo {
+export interface LspTestOutlineInfo {
+	fullName: string;
+	file: string;
+	isGroup: boolean;
 	range: Range;
 }
 
