@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { disposeAll, flatMap, notNullOrUndefined, uniq } from "../../shared/utils";
+import { disposeAll, flatMap, notNullOrUndefined, uniq, withTimeout } from "../../shared/utils";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { cancelAction, runFlutterCreatePrompt, skipAction, yesAction } from "../constants";
 import { LogCategory } from "../enums";
@@ -14,6 +14,7 @@ import { isRunningLocally } from "./utils";
 import { Context } from "./workspace";
 
 export class FlutterDeviceManager implements vs.Disposable {
+	private readonly unresponsiveTimeoutPeriodSeconds = 5;
 	private subscriptions: vs.Disposable[] = [];
 	private statusBarItem: vs.StatusBarItem;
 	public currentDevice?: f.Device;
@@ -270,10 +271,23 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public async getValidDevicesForProject(projectFolder: string): Promise<f.Device[]> {
 		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
 		const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes
-			? (await this.daemon.getSupportedPlatforms(projectFolder)).platforms
+			? (await this.tryGetSupportedPlatforms(projectFolder))?.platforms
 			: undefined;
 
 		return sortedDevices.filter((d) => this.isSupported(supportedPlatforms, d));
+	}
+
+	/// Calls the daemon's getSupportedPlatforms, but returns undefined if any error occurs (such as the process
+	/// having exited) or there is no response within 5 seconds.
+	public async tryGetSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse | undefined> {
+		return withTimeout(
+			this.daemon.getSupportedPlatforms(projectRoot),
+			"The daemon did not respond to getSupportedPlatforms",
+			this.unresponsiveTimeoutPeriodSeconds,
+		).then(
+			(result) => result,
+			() => undefined,
+		);
 	}
 
 	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Array<PickableDevice | DeviceSeparator> {

@@ -6,7 +6,7 @@ import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
-import { activateWithoutAnalysis, extApi, logger, sb } from "../helpers";
+import { activateWithoutAnalysis, delay, extApi, logger, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../services/fake_stdio_service";
 import sinon = require("sinon");
 
@@ -243,13 +243,32 @@ describe("device_manager", () => {
 		// Check we prompted, and when we said yes, we called the command.
 		assert.equal(runCreatePrompt.called, true);
 		assert.equal(flutterCreateCommand.called, true);
+	});
 
+	it("tryGetSupportedPlatforms returns platforms", async () => {
+		daemon.supportedPlatforms = ["a", "b"];
+		const platforms = await dm.tryGetSupportedPlatforms("fake");
+		assert.deepStrictEqual(platforms?.platforms, ["a", "b"]);
+	});
+
+	it("handles errors in tryGetSupportedPlatforms", async () => {
+		daemon.supportedPlatforms = ["a", "b"];
+		const platforms = await dm.tryGetSupportedPlatforms(""); // throws because falsy path
+		assert.equal(platforms, undefined);
+	});
+
+	it("handles unresponsive tryGetSupportedPlatforms", async () => {
+		daemon.supportedPlatforms = ["a", "b"];
+		daemon.supportedPlatformsDelaySeconds = 10;
+		const platforms = await dm.tryGetSupportedPlatforms("fake");
+		assert.equal(platforms, undefined);
 	});
 });
 
 class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlutterDaemon {
 	public capabilities = DaemonCapabilities.empty;
 	public supportedPlatforms: f.PlatformType[] | undefined;
+	public supportedPlatformsDelaySeconds: number | undefined;
 
 	public async enablePlatformGlobally(platformType: string): Promise<void> { }
 
@@ -299,6 +318,9 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
 		if (!projectRoot)
 			throw new Error("projectRoot must be specified!");
+
+		if (this.supportedPlatformsDelaySeconds)
+			await delay(this.supportedPlatformsDelaySeconds * 1000);
 
 		return { platforms: this.supportedPlatforms ?? ["android", "ios"] };
 	}

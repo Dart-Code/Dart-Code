@@ -165,7 +165,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (requiresDevice) {
 			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
 				let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
-					? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+					? (await this.deviceManager.tryGetSupportedPlatforms(debugConfig.cwd))?.platforms
 					: undefined;
 
 				if (!debugConfig.suppressPrompts) {
@@ -176,7 +176,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					// Refresh the supported platforms, as the we may have enabled new platforms during
 					// the call to showDevicePicker.
 					supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
-						? (await this.daemon.getSupportedPlatforms(debugConfig.cwd)).platforms
+						? (await this.deviceManager.tryGetSupportedPlatforms(debugConfig.cwd))?.platforms
 						: undefined;
 				}
 

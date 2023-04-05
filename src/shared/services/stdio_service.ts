@@ -96,6 +96,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		const id = this.nextRequestID++;
 
 		return new Promise<TResp>((resolve, reject) => {
+			if (this.processExited) {
+				reject(`Process has already exited with code ${this.process?.exitCode}`);
+				return;
+			}
+
 			// Stash the callbacks so we can call them later.
 			this.activeRequests[id.toString()] = [resolve, reject, method];
 
