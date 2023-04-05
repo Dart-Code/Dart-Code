@@ -97,7 +97,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return null; // null means open launch.json.
 		}
 
-		const argsHaveTestFilter = !!debugConfig.programPath || hasTestFilter((debugConfig.toolArgs ?? []).concat(debugConfig.args ?? []));
+		const argsHaveTestFilter = !!debugConfig.programQuery || hasTestFilter((debugConfig.toolArgs ?? []).concat(debugConfig.args ?? []));
 		const isTest = !!debugConfig.program && isTestFileOrFolder(debugConfig.program);
 		const debugType = this.selectDebuggerType(debugConfig, argsHaveTestFilter, isTest, logger);
 		const isFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterTest;

@@ -2429,9 +2429,7 @@
 							"name",
 							"line"
 						],
-						"default": [
-							"name"
-						],
+						"default": "name",
 						"description": "How to locate tests for execution. Using `name` is compatible with older versions of `package:test` but cannot handle some complex/dynamic test names.",
 						"scope": "window"
 					}

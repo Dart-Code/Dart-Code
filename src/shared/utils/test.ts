@@ -71,8 +71,9 @@ export function makeRegexForTests(names: TestSelection[]) {
 export function getTestExecutionInfo(programPath: string, tests: TestSelection[], supportsRunTestByLine: boolean): { programUri: URI, args: string[] } {
 	if (supportsRunTestByLine && tests.length && tests.every((test) => test.position)) {
 		return {
-			args: tests.slice(1).map(((test) => `${programPath}?line=${test.position?.line}`)),
-			programUri: URI.file(programPath).with({ query: `?line=${tests[0].position?.line}` }),
+			// VS Code lines are 0-based, but Dart is 1-based.
+			args: tests.slice(1).map(((test) => `${programPath}?line=${test.position!.line + 1}`)),
+			programUri: URI.file(programPath).with({ query: `?line=${tests[0].position!.line + 1}` }),
 		};
 	}
 	return {

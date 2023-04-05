@@ -281,7 +281,7 @@ export class Analytics {
 
 	private handleError(e: unknown) {
 		this.disableAnalyticsForSession = true;
-		this.logger.warn(`Failed to send analytics, disabling for session: ${e}`);
+		this.logger.info(`Failed to send analytics, disabling for session: ${e}`);
 	}
 
 	private getDebuggerPreference(): string {

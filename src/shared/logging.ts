@@ -4,7 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import { platformEol } from "./constants";
 import { LogCategory, LogSeverity } from "./enums";
-import { IAmDisposable, Logger, LogMessage, SpawnedProcess } from "./interfaces";
+import { IAmDisposable, LogMessage, Logger, SpawnedProcess } from "./interfaces";
 import { errorString } from "./utils";
 
 class LogEmitter extends EventEmitter {
@@ -114,7 +114,7 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		logStream.write(header);
 
 	const categoryNames = logCategories.map((c) => LogCategory[c]);
-	logStream.write(`Logging Categories:${platformEol}    ${categoryNames.join(", ")}${platformEol}${platformEol}`);
+	logStream.write(`${excludeLogCategories ? "Not " : ""}Logging Categories:${platformEol}    ${categoryNames.join(", ")}${platformEol}${platformEol}`);
 
 	logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file started${platformEol}`);
 	let fileLogger: IAmDisposable | undefined = logger.onLog((e) => {
