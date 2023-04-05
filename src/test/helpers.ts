@@ -5,6 +5,7 @@ import { tmpdir } from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { dartCodeExtensionIdentifier, isDartCodeTestRun, isWin } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory, TestStatus } from "../shared/enums";
@@ -360,7 +361,8 @@ export async function clearTestTree(): Promise<void> {
 		delete extApi.testModel.suites[key];
 	extApi.testModel.updateNode();
 	await delay(50); // Allow tree to be updated.
-	extApi.testDiscoverer.testDiscoveryPerformed = undefined;
+	if (extApi.testDiscoverer)
+		extApi.testDiscoverer.testDiscoveryPerformed = undefined;
 	logger.info(`Done clearing test tree!`);
 }
 
@@ -997,8 +999,8 @@ export async function getResolvedDebugConfiguration(extraConfiguration?: { [key:
 	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs;
 }
 
-export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
-	if (script instanceof vs.Uri)
+export async function getLaunchConfiguration(script?: URI | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
+	if (script && typeof script !== "string")
 		script = getProgramString(script);
 	const launchConfig = Object.assign({}, {
 		program: script,

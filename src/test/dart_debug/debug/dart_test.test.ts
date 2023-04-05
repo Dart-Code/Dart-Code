@@ -43,7 +43,7 @@ describe("dart test debugger", () => {
 	/// nodes to verify trees.
 	async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 		const editor = await openFileBasic(file);
-		extApi.testDiscoverer.forceUpdate(file);
+		extApi.testDiscoverer?.forceUpdate(file);
 		return editor;
 	}
 
@@ -83,10 +83,10 @@ describe("dart test debugger", () => {
 		});
 	});
 
-	for (const supportsRunTestByLine of [false, true]) {
-		describe(`when running tests by ${supportsRunTestByLine ? "line" : "name"}`, () => {
+	for (const runByLine of [false, true]) {
+		describe(`when running tests by ${runByLine ? "line" : "name"}`, () => {
 			beforeEach("set config.testInvocationMode", async () => {
-				await setConfigForTest("dart", "testInvocationMode", supportsRunTestByLine ? "line" : "name");
+				await setConfigForTest("dart", "testInvocationMode", runByLine ? "line" : "name");
 			});
 
 			it("runs a Dart test script to completion", async () => {
@@ -308,7 +308,7 @@ describe("dart test debugger", () => {
 						true,
 						fsPath(helloWorldTestDupeNameFile),
 						[{ name: "group test", isGroup: false, position: undefined }],
-						supportsRunTestByLine,
+						runByLine,
 						false,
 					),
 				);
@@ -404,7 +404,7 @@ describe("dart test debugger", () => {
 
 			it("can run tests through test controller using default launch template", async () => {
 				const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
-				await extApi.testDiscoverer.ensureSuitesDiscovered();
+				await extApi.testDiscoverer?.ensureSuitesDiscovered();
 
 				const controller = extApi.testController;
 				const testNode = controller.controller.items.get(suiteID);
@@ -420,7 +420,7 @@ describe("dart test debugger", () => {
 
 			it("allows more-specific default launch template using noDebug flag", async () => {
 				const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
-				await extApi.testDiscoverer.ensureSuitesDiscovered();
+				await extApi.testDiscoverer?.ensureSuitesDiscovered();
 
 				const controller = extApi.testController;
 				const testNode = controller.controller.items.get(suiteID);
@@ -460,7 +460,7 @@ describe("dart test debugger", () => {
 				visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
 				for (const test of (visitor.tests as TestOutlineInfo[]).filter((t) => !t.isGroup)) {
 					// Run the test.
-					const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestTreeFile), [testUtils.getTestSelectionForOutline(test)], supportsRunTestByLine);
+					const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestTreeFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
 					await runWithoutDebugging(
 						execInfo.programUri,
 						execInfo.args,
@@ -501,13 +501,13 @@ describe("dart test debugger", () => {
 						await editor.edit((e) => e.insert(doc.positionAt(0), "// These\n// are\n// inserted\n// lines.\n\n"));
 					// Re-run each test.
 					for (const test of visitor.tests.filter((t) => !t.isGroup)) {
-						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(test)], supportsRunTestByLine);
+						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
 						await runWithoutDebugging(execInfo.programUri, execInfo.args);
 						await checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
 					}
 					// Re-run each group.
 					for (const group of visitor.tests.filter((t) => t.isGroup)) {
-						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(group)], supportsRunTestByLine);
+						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(group)], runByLine);
 						await runWithoutDebugging(execInfo.programUri, execInfo.args);
 						await checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
 					}
