@@ -12,12 +12,12 @@ import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { ExecutionInfo, safeSpawn } from "../shared/processes";
 import { PackageMap } from "../shared/pub/package_map";
-import { errorString, notUndefined, PromiseCompleter, uniq, uriToFilePath, usingCustomScript } from "../shared/utils";
+import { PromiseCompleter, errorString, notUndefined, uniq, uriToFilePath, usingCustomScript } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, faint } from "../shared/utils/colors";
 import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
 import { mayContainStackFrame, parseStackFrame } from "../shared/utils/stack_trace";
-import { DebuggerResult, Version, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VmExceptionMode, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VmServiceConnection, VMStack, VMTypeRef, VMWriteEvent } from "./dart_debug_protocol";
+import { DebuggerResult, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMStack, VMTypeRef, VMWriteEvent, Version, VmExceptionMode, VmServiceConnection } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { formatPathForVm } from "./utils";
@@ -1665,14 +1665,18 @@ export class DartDebugSession extends DebugSession {
 				reject(new Error(`<timed out>`));
 			}, milliseconds);
 
-			promise
-				// When the main promise completes, cancel the timeout and return its result.
-				.then((result) => {
+			// When the main promise completes (or rejects), cancel the timeout and return its result.
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			promise.then(
+				(result) => {
 					clearTimeout(timeoutTimer);
 					resolve(result);
-				})
-				// And if it errors, pass that up.
-				.catch(reject);
+				},
+				(e) => {
+					clearTimeout(timeoutTimer);
+					reject(e);
+				},
+			);
 		});
 	}
 

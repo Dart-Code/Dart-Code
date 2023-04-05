@@ -249,11 +249,17 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 			reject(new Error(`${msg} within ${seconds}s`));
 		}, seconds * 1000);
 
-		// When the main promise completes, cancel the timeout and return its result.
+		// When the main promise completes (or rejects), cancel the timeout and return its result.
 		// eslint-disable-next-line @typescript-eslint/no-floating-promises
-		promise.then((result) => {
-			clearTimeout(timeoutTimer);
-			resolve(result);
-		});
+		promise.then(
+			(result) => {
+				clearTimeout(timeoutTimer);
+				resolve(result);
+			},
+			(e) => {
+				clearTimeout(timeoutTimer);
+				reject(e);
+			},
+		);
 	});
 }

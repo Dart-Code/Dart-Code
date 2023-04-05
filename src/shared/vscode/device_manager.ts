@@ -40,6 +40,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// Force a request for emulators to stash their names, so we can display
 		// the better name if the automatically-selected device happens to be an
 		// emulator.
+		// TODO: Don't do this until after it's initialised
 		this.getEmulators().then(() => this.updateStatusBar()).catch((e) => console.error(e));
 
 		this.subscriptions.push(this.statusBarItem);
@@ -62,7 +63,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public isSupported(types: f.PlatformType[] | undefined, device: { platformType?: f.PlatformType | null | undefined } | undefined) {
 		// types being `undefined` means we shouldn't filter, but being empty means we legit
 		// don't support any types.
-		return device && (!types || !types || !device.platformType || types.indexOf(device.platformType) !== -1);
+		return device && (!types || !device.platformType || types.indexOf(device.platformType) !== -1);
 	}
 
 	public isDevicePreferred(device: f.Device | undefined): boolean {

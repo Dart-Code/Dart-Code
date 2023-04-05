@@ -77,9 +77,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public startPing(customMessage?: string) {
 		const message = customMessage ?? "The daemon connection was lost. Reload the extension to restart the daemon.";
-		this.pingIntervalId = setInterval(async () =>  {
+		this.pingIntervalId = setInterval(async () => {
 			try {
-				const result = await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
+				await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
 			} catch (e) {
 				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
