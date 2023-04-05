@@ -172,12 +172,8 @@ export function isInsideFolderNamed(file: string | undefined, folderName: string
 	return segments.indexOf(folderName.toLowerCase()) !== -1;
 }
 
-export function hasTestNameFilter(...argss: Array<string[] | undefined>) {
-	for (const args of argss) {
-		if (args && (args.includes("--name") || args.includes("--pname")))
-			return true;
-	}
-	return false;
+export function hasTestFilter(args: string[]) {
+	return args.includes("--name") || args.includes("--pname");
 }
 
 /// Ensures a debug config always has a unique ID we can use to match things up.

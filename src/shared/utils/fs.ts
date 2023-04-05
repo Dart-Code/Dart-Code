@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
+import { URI } from "vscode-uri";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger, MyCancellationToken } from "../interfaces";
 import { nullLogger } from "../logging";
@@ -9,7 +10,7 @@ import { PackageMap } from "../pub/package_map";
 import { nullToUndefined } from "../utils";
 import { sortBy } from "./array";
 
-export function fsPath(uri: { fsPath: string } | string, { useRealCasing = false }: { useRealCasing?: boolean; } = {}) {
+export function fsPath(uri: URI | string, { useRealCasing = false }: { useRealCasing?: boolean; } = {}): string {
 	// tslint:disable-next-line:disallow-fspath
 	let newPath = typeof uri === "string" ? uri : uri.fsPath;
 
@@ -19,7 +20,7 @@ export function fsPath(uri: { fsPath: string } | string, { useRealCasing = false
 		// _only_ by case.
 		// when there was no symlink (eg. the lowercase version of both paths match).
 		if (realPath && realPath.toLowerCase() === newPath.toLowerCase() && realPath !== newPath) {
-			console.warn(`Rewriting path:\n  ${newPath}\nto:\n  ${realPath} because the casing appears munged`);
+			console.warn(`Rewriting path:\n  ${newPath}\nto:\n  ${realPath} because the casing appears incorrect`);
 			newPath = realPath;
 		}
 	}

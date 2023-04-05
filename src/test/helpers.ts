@@ -17,6 +17,7 @@ import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/ut
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
 import { fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
+import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
@@ -998,7 +999,7 @@ export async function getResolvedDebugConfiguration(extraConfiguration?: { [key:
 
 export async function getLaunchConfiguration(script?: vs.Uri | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	if (script instanceof vs.Uri)
-		script = fsPath(script);
+		script = getProgramString(script);
 	const launchConfig = Object.assign({}, {
 		program: script,
 	}, extraConfiguration);
@@ -1237,7 +1238,7 @@ export function isTestDoneNotification(e: vs.DebugSessionCustomEvent) {
 	if (e.event !== "dart.testNotification")
 		return false;
 	const notification = e.body as TestDoneNotification;
-	return notification.type === "testDone" && !notification.hidden;
+	return notification.type === "testDone" && notification.result !== "error" && !notification.hidden;
 }
 
 export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {

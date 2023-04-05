@@ -429,7 +429,7 @@ export class TestModel {
 		for (const child of parent.children) {
 			if (!child.name || typeof child !== typeof parent)
 				continue;
-			const regex = new RegExp(makeRegexForTests([{ name: child.name, isGroup: child instanceof GroupNode }]));
+			const regex = new RegExp(makeRegexForTests([{ name: child.name, isGroup: child instanceof GroupNode, position: undefined }]));
 			if (regex.test(name))
 				return child as any as T;
 		}
