@@ -24,6 +24,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private isShuttingDown = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonStartedCompleter = new PromiseCompleter<void>();
+	public daemonStarted = this.daemonStartedCompleter.promise;
 	private pingIntervalId?: NodeJS.Timer;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 

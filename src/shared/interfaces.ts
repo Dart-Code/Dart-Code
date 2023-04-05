@@ -117,6 +117,7 @@ export interface IAmDisposable {
 }
 
 export interface IFlutterDaemon extends IAmDisposable {
+	daemonStarted: Promise<void>;
 	capabilities: DaemonCapabilities;
 
 	enablePlatformGlobally(platformType: string): Promise<void>;

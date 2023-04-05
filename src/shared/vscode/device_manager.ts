@@ -41,7 +41,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// Force a request for emulators to stash their names, so we can display
 		// the better name if the automatically-selected device happens to be an
 		// emulator.
-		// TODO: Don't do this until after it's initialised
 		this.getEmulators().then(() => this.updateStatusBar()).catch((e) => console.error(e));
 
 		this.subscriptions.push(this.statusBarItem);
@@ -431,6 +430,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	private async getEmulators(): Promise<Emulator[]> {
 		try {
+			await this.daemon.daemonStarted;
 			const emus = await this.daemon.getEmulators();
 
 			const allEmulatorsByID: { [key: string]: Emulator } = {};
