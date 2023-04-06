@@ -1,10 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
-import { Logger } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
+import { getPackageTestCapabilities } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
@@ -15,8 +17,9 @@ import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { getActiveRealFileEditor, isDartDocument } from "../editors";
+import { locateBestProjectRoot } from "../project";
 import { VsCodeTestController } from "../test/vs_test_controller";
-import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isInsideFolderNamed, isTestFile } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isInsideFolderNamed, isPathInsideFlutterProject, isTestFile } from "../utils";
 
 const CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION = "dart-code:canGoToTestOrImplementationFile";
 // HACK: Used for testing since we can't read contexts?
@@ -28,7 +31,7 @@ export type SuiteList = [SuiteNode, TestSelection[]];
 export class TestCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly flutterCapabilities: FlutterCapabilities) {
+	constructor(protected readonly logger: Logger, private readonly testModel: TestModel, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly dartCapabilities: DartCapabilities, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
 			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
@@ -103,6 +106,7 @@ export class TestCommands implements vs.Disposable {
 		await Promise.all(
 			projectsWithTests.map((projectWithTests) => this.runTests({
 				debug: false,
+				isFlutter: undefined, // unknown, runTests will compute
 				launchTemplate: {
 					args: projectWithTests.tests.slice(1),
 					cwd: projectWithTests.projectFolder,
@@ -122,11 +126,13 @@ export class TestCommands implements vs.Disposable {
 	private async runTestsForNode(suiteData: SuiteData, nodes: TreeNode[], debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
 		const testSelection = getTestSelectionForNodes(nodes);
 		const programPath = fsPath(suiteData.path);
-		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(suiteData.path));
+		const isFlutter = isInsideFlutterProject(vs.Uri.file(suiteData.path));
+		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isFlutter;
 		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
 
 		return this.runTests({
 			debug,
+			isFlutter,
 			launchTemplate: undefined,
 			programPath,
 			shouldRunSkippedTests,
@@ -138,7 +144,7 @@ export class TestCommands implements vs.Disposable {
 		});
 	}
 
-	private runTests({ programPath, debug, testSelection, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate }: TestLaunchInfo): Promise<boolean> {
+	private async runTests({ programPath, debug, testSelection, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate, isFlutter }: TestLaunchInfo): Promise<boolean> {
 		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.
 			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
@@ -146,8 +152,22 @@ export class TestCommands implements vs.Disposable {
 				launchTemplate = Object.assign({}, template, launchTemplate);
 		}
 
-		// TODO(dantup): Implement this!
-		const runTestsByLine = true /* supportsRunTestByLine */ && config.testInvocationMode === "line";
+		let runTestsByLine = false;
+		if (testSelection?.length && config.testInvocationMode === "line" && this.dartCapabilities.supportsRunTestsByLine) {
+			isFlutter = isFlutter ?? isPathInsideFlutterProject(programPath);
+			if (isFlutter) {
+				runTestsByLine = true;
+			} else {
+				const projectFolderPath = locateBestProjectRoot(programPath);
+				if (projectFolderPath) {
+					const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext.sdks as DartSdks, projectFolderPath);
+					if (testCapabilities.supportsRunTestsByLine) {
+						// TODO(dantup): Ensure we don't get here for Dart SDK or Bazel where we shouldn't use "dart run"?
+						runTestsByLine = true;
+					}
+				}
+			}
+		}
 
 		const subs: vs.Disposable[] = [];
 		return new Promise<boolean>(async (resolve, reject) => {
@@ -203,11 +223,13 @@ export class TestCommands implements vs.Disposable {
 	}
 
 	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
-		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isInsideFlutterProject(vs.Uri.file(test.file)));
+		const isFlutter = isInsideFlutterProject(vs.Uri.file(test.file));
+		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isFlutter);
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
 		return this.runTests({
 			debug: !noDebug,
+			isFlutter,
 			launchTemplate,
 			programPath: test.file,
 			shouldRunSkippedTests,
@@ -321,6 +343,7 @@ export class TestCommands implements vs.Disposable {
 
 interface TestLaunchInfo {
 	programPath: string;
+	isFlutter: boolean | undefined;
 	debug: boolean;
 	testSelection: TestSelection[] | undefined;
 	shouldRunSkippedTests: boolean;
