@@ -5,14 +5,21 @@ import { dartVMPath } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { runProcess, safeSpawn } from "../processes";
 
+const cachedTestCapabilities: { [key: string]: DartTestCapabilities } = {};
+
 export async function getPackageTestCapabilities(logger: Logger, sdks: DartSdks, folder: string): Promise<DartTestCapabilities> {
-	const binPath = path.join(sdks.dart, dartVMPath);
-	const proc = await runProcess(logger, binPath, ["run", "test:test", "--version"], folder, {}, safeSpawn);
-	const capabilities = DartTestCapabilities.empty;
-	if (proc.exitCode === 0) {
-		if (semver.valid(proc.stdout.trim()))
-			capabilities.version = proc.stdout.trim();
+	if (!cachedTestCapabilities[folder]) {
+		const binPath = path.join(sdks.dart, dartVMPath);
+		const proc = await runProcess(logger, binPath, ["run", "test:test", "--version"], folder, {}, safeSpawn);
+		const capabilities = DartTestCapabilities.empty;
+		if (proc.exitCode === 0) {
+			if (semver.valid(proc.stdout.trim()))
+				capabilities.version = proc.stdout.trim();
+		}
+
+		cachedTestCapabilities[folder] = capabilities;
 	}
-	return capabilities;
+
+	return cachedTestCapabilities[folder];
 
 }

@@ -10,5 +10,6 @@ export class DartTestCapabilities {
 	}
 
 	get supportsIgnoreTimeouts() { return versionIsAtLeast(this.version, "1.20.1"); }
+	get supportsRunTestsByLine() { return versionIsAtLeast(this.version, "1.23.1"); }
 }
 

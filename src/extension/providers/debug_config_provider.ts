@@ -4,7 +4,6 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { DartTestCapabilities } from "../../shared/capabilities/dart_test";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isDartCodeTestRun, showErrorsAction } from "../../shared/constants";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
@@ -642,8 +641,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return args;
 	}
 
-	private cachedTestCapabilities: { [key: string]: DartTestCapabilities } = {};
-
 	protected async buildDartTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
 		const args: string[] = [];
 
@@ -652,8 +649,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// Check whether package:test supports --ignore-timeouts
 			let useIgnoreTimeouts = false;
 			if (debugConfig.cwd) {
-				const testCapabilities = this.cachedTestCapabilities[debugConfig.cwd] ?? await getPackageTestCapabilities(this.logger, this.wsContext.sdks, debugConfig.cwd);
-				this.cachedTestCapabilities[debugConfig.cwd] = testCapabilities;
+				const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext.sdks, debugConfig.cwd);
 				useIgnoreTimeouts = testCapabilities.supportsIgnoreTimeouts;
 			}
 			if (useIgnoreTimeouts)
