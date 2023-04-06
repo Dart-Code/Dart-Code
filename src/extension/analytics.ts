@@ -1,7 +1,9 @@
+import * as fs from "fs";
 import * as https from "https";
+import * as path from "path";
 import * as querystring from "querystring";
 import { env, TelemetryLogger, TelemetrySender, Uri, workspace } from "vscode";
-import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun } from "../shared/constants";
+import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
@@ -153,7 +155,7 @@ export class Analytics {
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
 
-	// If analytics fail, they will be disabled for the rest of the session.
+	// If analytics fail or we see an opt-out for Dart/Flutter, disable for the rest of this session.
 	private disableAnalyticsForSession = false;
 
 	// Some things we only want to log the first use per session to get an idea of
@@ -166,6 +168,40 @@ export class Analytics {
 		this.formatter = this.getFormatterSetting();
 		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender(logger, (e) => this.handleError(e));
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
+
+		if (this.isOptedOutOfDartToolingTelemetry()) {
+			this.disableAnalyticsForSession = true;
+		}
+	}
+
+	/// If a user opts-out of Dart/Flutter telemetry with the command line apps, also opt-out here to avoid
+	/// confusion between Dart/Flutter analytics being reported to Google and extension analytics going
+	/// to Dart-Code. The prompt from the analysis server mentions "VS Code IDE plugins" which suggests the
+	/// mechanism for opting out would apply to Dart-Code.
+	private isOptedOutOfDartToolingTelemetry(): boolean {
+		// Don't let this function ever throw.
+		try {
+			const configDirectory = isWin ? process.env.USERPROFILE : process.env.HOME;
+			if (!configDirectory) {
+				this.logger.warn(`No valid home dir to check Dart/Flutter analytics file, disabling analytics`);
+				return true;
+			}
+
+			const configFile = path.join(configDirectory, ".dart-tool", "dart-flutter-telemetry.config");
+			if (!fs.existsSync(configFile)) {
+				return false; // No file, means not opted out.
+			}
+			const configFileContents = fs.readFileSync(configFile).toString();
+			const optedOutRegex = /^reporting=0/m;
+			if (optedOutRegex.test(configFileContents)) {
+				this.logger.info(`Dart/Flutter tooling telemetry is opted-out, disabling for Dart-Code`);
+				return true;
+			}
+			return false;
+		} catch (e) {
+			this.logger.warn(`Failed to check Dart/Flutter analytics file, disabling analytics: ${e}`);
+			return true;
+		}
 	}
 
 	private event(category: Category, action: EventAction | string, customData?: Partial<AnalyticsData>): void {
