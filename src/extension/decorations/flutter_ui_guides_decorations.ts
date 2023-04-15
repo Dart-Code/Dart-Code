@@ -6,7 +6,7 @@ import { config } from "../config";
 const nonBreakingSpace = "\xa0";
 const verticalLine = "│";
 const horizontalLine = "─";
-const bottomCorner = "└";
+const bottomCorner = "╰";
 const middleCorner = "├";
 
 export abstract class FlutterUiGuideDecorations implements vs.Disposable {
