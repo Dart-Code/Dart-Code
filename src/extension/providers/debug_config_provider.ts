@@ -527,23 +527,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: DartVsCodeLaunchArgs, debugType: DebuggerType, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager | undefined): Promise<void> {
 		const conf = config.for(folder && folder.uri);
 
-		// Attach any properties that weren't explicitly set.
-		if (!debugConfig.name) {
-			if (isFlutter && debugConfig.deviceId) {
-				debugConfig.name = `Flutter (${debugConfig.deviceId})`;
-			} else if (isFlutter && device) {
-				debugConfig.name = `Flutter (${deviceManager ? deviceManager.labelForDevice(device) : device.name})`;
-			} else if (isFlutter) {
-				debugConfig.name = "Flutter";
-			} else {
-				debugConfig.name = "Dart";
-			}
-		}
+		if (!debugConfig.name)
+			debugConfig.name = isFlutter ? "Flutter" : "Dart";
 
-		// Some properties depend on the device, so infer that first if required.
 		if (isFlutter && !debugConfig.deviceId && device) {
+			const deviceLabel = deviceManager ? deviceManager.labelForDevice(device) : device.name;
+
+			// Append the device name onto the session name to make it easier to start a config on multiple devices.
+			// https://github.com/Dart-Code/Dart-Code/issues/4491
+			debugConfig.name += ` (${deviceLabel})`;
+
 			debugConfig.deviceId = device.id;
-			debugConfig.deviceName = `${deviceManager ? deviceManager.labelForDevice(device) : device.name} (${device.platform})`;
+			debugConfig.deviceName = `${deviceLabel} (${device.platform})`;
 		}
 
 		debugConfig.toolEnv = getToolEnv();
