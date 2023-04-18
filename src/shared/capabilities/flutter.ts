@@ -27,6 +27,7 @@ export class FlutterCapabilities {
 	get supportsWebRendererOption() { return versionIsAtLeast(this.version, "1.25.0-0"); }
 	get supportsDevToolsServerAddress() { return versionIsAtLeast(this.version, "1.26.0-12"); }
 	get supportsRunningIntegrationTests() { return versionIsAtLeast(this.version, "2.2.0-10"); }
+	get supportsRunTestsByLine() { return versionIsAtLeast(this.version, "3.10.0-0"); }
 	get supportsSdkDap() { return versionIsAtLeast(this.version, "2.13.0-0"); }
 	get supportsEnvInSdkDAP() { return versionIsAtLeast(this.version, "3.4.0-18"); }
 	get supportsWebInSdkDAP() { return versionIsAtLeast(this.version, "3.4.0-18"); }

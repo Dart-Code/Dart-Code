@@ -152,18 +152,18 @@ export class TestCommands implements vs.Disposable {
 				launchTemplate = Object.assign({}, template, launchTemplate);
 		}
 
-		let runTestsByLine = false;
-		if (testSelection?.length && config.testInvocationMode === "line" && this.dartCapabilities.supportsRunTestsByLine) {
+		let shouldRunTestsByLine = false;
+		// Determine wheher we can and should run tests by line number.
+		if (testSelection?.length && config.testInvocationMode === "line") {
 			isFlutter = isFlutter ?? isPathInsideFlutterProject(programPath);
 			if (isFlutter) {
-				runTestsByLine = true;
+				shouldRunTestsByLine = this.flutterCapabilities.supportsRunTestsByLine;
 			} else {
 				const projectFolderPath = locateBestProjectRoot(programPath);
 				if (projectFolderPath) {
 					const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext.sdks as DartSdks, projectFolderPath);
 					if (testCapabilities.supportsRunTestsByLine) {
-						// TODO(dantup): Ensure we don't get here for Dart SDK or Bazel where we shouldn't use "dart run"?
-						runTestsByLine = true;
+						shouldRunTestsByLine = true;
 					}
 				}
 			}
@@ -181,7 +181,7 @@ export class TestCommands implements vs.Disposable {
 					!debug,
 					programPath,
 					testSelection,
-					runTestsByLine,
+					shouldRunTestsByLine,
 					shouldRunSkippedTests,
 					launchTemplate,
 				),
