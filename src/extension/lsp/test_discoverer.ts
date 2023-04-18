@@ -76,7 +76,6 @@ export class TestDiscoverer implements IAmDisposable {
 				title: "Discovering Tests…",
 			},
 			async () => {
-				await new Promise((resolve) => setTimeout(resolve, 1000));
 				try {
 					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder)));
