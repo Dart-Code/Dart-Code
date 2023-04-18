@@ -14,7 +14,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -103,28 +103,28 @@ describe("dart test debugger", () => {
 				const search = `test^(".split() splits`;
 				const testName = "String .split() splits the string on the delimiter";
 
-				await checkRunTestFromCodeLens(search, testName);
+				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
 			});
 
 			it("can run tests from codelens with greater than", async () => {
 				const search = `test^("without quotes List<String>`;
 				const testName = "greater than without quotes List<String>";
 
-				await checkRunTestFromCodeLens(search, testName);
+				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
 			});
 
 			it("can run tests from codelens with greater than after quote", async () => {
 				const search = `test^('with quotes ">= foo`;
 				const testName = `greater than with quotes ">= foo"`;
 
-				await checkRunTestFromCodeLens(search, testName);
+				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
 			});
 
 			it("can run tests from codelens with backticks", async () => {
 				const search = `test^('\`with backticks`;
 				const testName = "`with backticks`";
 
-				await checkRunTestFromCodeLens(search, testName);
+				await checkRunSingleTestFromCodeLens(helloWorldTestMainFile, search, testName);
 			});
 
 			it("can run using a custom tool", async () => {
@@ -559,17 +559,29 @@ test/tree_test.dart [4/6 passed] Failed
 				// Need to rename a test or something to ensure we get a stale result
 				// after a full suite run?
 			});
+
+			if (runByLine) {
+				describe("dynamic tests", () => {
+					const issues = [4021, 4150, 4168, 4099, 4250];
+					for (const issueNumber of issues) {
+						it(`DartCode issue ${issueNumber}`, async () => {
+							const issueText = `^https://github.com/Dart-Code/Dart-Code/issues/${issueNumber}`;
+							await checkRunSingleTestFromCodeLens(helloWorldTestDynamicFile, issueText, undefined, 1); // delta +1 because comment is on line before the test
+						});
+					}
+				});
+			}
 		});
 	}
 
-	async function checkRunTestFromCodeLens(search: string, testName: string) {
-		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, lineDelta = 0) {
+		const editor = await openFile(fileUri);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(fileUri));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(search);
 
-		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line + lineDelta);
 		assert.equal(codeLensForTest.length, 2);
 
 		if (!codeLensForTest[0].command) {
@@ -581,8 +593,10 @@ test/tree_test.dart [4/6 passed] Failed
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-		assert.equal(runAction.command!.arguments![0].fullName, testName);
-		assert.equal(runAction.command!.arguments![0].isGroup, false);
+		if (testName) {
+			assert.equal(runAction.command!.arguments![0].fullName, testName);
+			assert.equal(runAction.command!.arguments![0].isGroup, false);
+		}
 
 		const customEvents = await captureDebugSessionCustomEvents(async () => {
 			const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
@@ -590,7 +604,9 @@ test/tree_test.dart [4/6 passed] Failed
 		});
 
 		// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-		const testDoneNotification = customEvents.find(isTestDoneNotification);
+		const testDoneNotifications = customEvents.filter(isTestDoneNotification);
+		assert.equal(testDoneNotifications.length, 1);
+		const testDoneNotification = testDoneNotifications[0];
 		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 	}
 
