@@ -45,13 +45,13 @@ describe("packages tree", () => {
 
 			ensurePackageTreeNode(directDependencies, depDirect, "my_package");
 			ensurePackageTreeNode(devDependencies, depDev, "test");
-			ensurePackageTreeNode(transitiveDependencies, depTransitive, "meta");
+			ensurePackageTreeNode(transitiveDependencies, depTransitive, "file");
 		} else {
 			const allDependencies = await extApi.packagesTreeProvider.getChildren(packageNode);
 
 			ensurePackageTreeNode(allDependencies, depDirect, "my_package");
 			ensurePackageTreeNode(allDependencies, depDev, "test");
-			ensurePackageTreeNode(allDependencies, depTransitive, "meta");
+			ensurePackageTreeNode(allDependencies, depTransitive, "file");
 		}
 	});
 
