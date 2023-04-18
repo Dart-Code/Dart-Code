@@ -68,7 +68,7 @@ export class LspFileTracker implements IAmDisposable {
 		}, 50, 5000, token);
 	}
 
-	public supportsPubRunTest(file: URI | string): boolean | undefined {
+	public supportsPackageTest(file: URI | string): boolean | undefined {
 		// Handle explicit flags.
 		if (this.wsContext.config.supportsPackageTest === true)
 			return true;
@@ -77,7 +77,7 @@ export class LspFileTracker implements IAmDisposable {
 
 		// TODO: Both FileTrackers have a copy of this!
 		const path = fsPath(file);
-		if (!util.isPubRunnableTestFile(path))
+		if (!util.isRunnableTestFile(path))
 			return false;
 		if (this.pubRunTestSupport[path] === undefined) {
 			const projectRoot = locateBestProjectRoot(path);

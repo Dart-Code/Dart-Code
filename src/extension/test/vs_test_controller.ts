@@ -286,7 +286,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return false;
 		if ((label.startsWith("(setUp") || label.startsWith("(tearDown")) && label.endsWith(")"))
 			return false;
-		if (this.discoverer?.fileTracker.supportsPubRunTest(node.suiteData.path) === false)
+		if (this.discoverer?.fileTracker.supportsPackageTest(node.suiteData.path) === false)
 			return false;
 		return true;
 	}

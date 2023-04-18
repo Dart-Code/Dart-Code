@@ -173,7 +173,7 @@ export class DasFileTracker implements IAmDisposable {
 	public supportsPubRunTest(file: Uri): boolean | undefined {
 		// TODO: Both FileTrackers have a copy of this!
 		const path = fsPath(file);
-		if (!util.isPubRunnableTestFile(path))
+		if (!util.isRunnableTestFile(path))
 			return false;
 		if (this.pubRunTestSupport[path] === undefined) {
 			const projectRoot = locateBestProjectRoot(path);
