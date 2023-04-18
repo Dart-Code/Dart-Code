@@ -96,7 +96,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return null; // null means open launch.json.
 		}
 
-		const argsHaveTestFilter = !!debugConfig.programQuery || hasTestFilter((debugConfig.toolArgs ?? []).concat(debugConfig.args ?? []));
+		const argsHaveTestFilter = (!!debugConfig.programQuery) || hasTestFilter((debugConfig.toolArgs ?? []).concat(debugConfig.args ?? []));
 		const isTest = !!debugConfig.program && isTestFileOrFolder(debugConfig.program);
 		const debugType = this.selectDebuggerType(debugConfig, argsHaveTestFilter, isTest, logger);
 		const isFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterTest;
@@ -649,7 +649,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// Check whether package:test supports --ignore-timeouts
 			let useIgnoreTimeouts = false;
 			if (debugConfig.cwd) {
-				const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext.sdks, debugConfig.cwd);
+				const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext, debugConfig.cwd);
 				useIgnoreTimeouts = testCapabilities.supportsIgnoreTimeouts;
 			}
 			if (useIgnoreTimeouts)

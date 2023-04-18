@@ -7,6 +7,7 @@ export function processDartSdkRepository(logger: Logger, config: WritableWorkspa
 	config.disableAutomaticPackageGet = true;
 	// The Dart SDKs tests cannot run using pkg:test, so force them to use the VM.
 	config.supportsPackageTest = false;
+	config.supportsDartRunTest = false;
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
@@ -86,6 +87,10 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.localDeviceCommandAdviceMessage = flutterConfig.localDeviceCommandAdviceMessage;
 		config.localMacWarningMessage = flutterConfig.localMacWarningMessage;
 		config.supportsPackageTest = true;
+		// TODO(dantup): Check with helin24 whether this should be enabled. Running
+		//  "dart run test:test --version" is how we check pkg:test capabilities (such
+		//  as whether we can run tests by line number).
+		config.supportsDartRunTest = false;
 	} catch (e) {
 		logger.error(e);
 	}

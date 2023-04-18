@@ -75,7 +75,7 @@ describe("dart test debugger", () => {
 				program: fsPath(helloWorldTestMainFile),
 			})!;
 
-			const testCapabilities = await getPackageTestCapabilities(extApi.logger, extApi.workspaceContext.sdks, resolvedConfig.cwd!);
+			const testCapabilities = await getPackageTestCapabilities(extApi.logger, extApi.workspaceContext, resolvedConfig.cwd!);
 			if (testCapabilities.supportsIgnoreTimeouts)
 				ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--ignore-timeouts"]);
 			else

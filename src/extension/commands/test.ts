@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
-import { DartSdks, Logger } from "../../shared/interfaces";
+import { Logger } from "../../shared/interfaces";
 import { GroupNode, SuiteData, SuiteNode, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
@@ -161,7 +161,7 @@ export class TestCommands implements vs.Disposable {
 			} else {
 				const projectFolderPath = locateBestProjectRoot(programPath);
 				if (projectFolderPath) {
-					const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext.sdks as DartSdks, projectFolderPath);
+					const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext, projectFolderPath);
 					if (testCapabilities.supportsRunTestsByLine) {
 						shouldRunTestsByLine = true;
 					}
