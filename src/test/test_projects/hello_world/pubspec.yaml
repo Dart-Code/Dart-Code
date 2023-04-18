@@ -15,4 +15,5 @@ dependencies:
       path: protobuf
 
 dev_dependencies:
+  meta:
   test: '>=0.12.34'
