@@ -8,13 +8,13 @@ import { fsPath } from "./fs";
 import { TestOutlineInfo } from "./outline_das";
 
 
-export function getLaunchConfig(noDebug: boolean, path: string, testSelection: TestSelection[] | undefined, supportsRunTestByLine: boolean, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
+export function getLaunchConfig(noDebug: boolean, path: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
 	let programString = path;
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
 		toolArgs = toolArgs.concat(template?.toolArgs as []);
 	if (testSelection) {
-		const execInfo = getTestExecutionInfo(programString, testSelection, supportsRunTestByLine);
+		const execInfo = getTestExecutionInfo(programString, testSelection, shouldRunTestByLine);
 		programString = getProgramString(execInfo.programUri);
 		toolArgs.push(...execInfo.args);
 	}
@@ -68,8 +68,8 @@ export function makeRegexForTests(names: TestSelection[]) {
 	return regexSegments.join("|");
 }
 
-export function getTestExecutionInfo(programPath: string, tests: TestSelection[], supportsRunTestByLine: boolean): { programUri: URI, args: string[] } {
-	if (supportsRunTestByLine && tests.length && tests.every((test) => test.position)) {
+export function getTestExecutionInfo(programPath: string, tests: TestSelection[], shouldRunTestByLine: boolean): { programUri: URI, args: string[] } {
+	if (shouldRunTestByLine && tests.length && tests.every((test) => test.position)) {
 		return {
 			// VS Code lines are 0-based, but Dart is 1-based.
 			args: tests.slice(1).map(((test) => `${programPath}?line=${test.position!.line + 1}`)),
