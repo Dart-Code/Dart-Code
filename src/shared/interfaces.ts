@@ -72,6 +72,9 @@ export interface WritableWorkspaceConfig {
 	/// false: definitely does not support it (Dart SDK)
 	/// undefined: only if there's a pubspec
 	supportsPackageTest?: boolean;
+	/// Similar to [supportsPackageTest], but whether we can successfully run
+	/// commands like "dart run test:test --version".
+	supportsDartRunTest?: boolean;
 }
 
 export type WorkspaceConfig = Readonly<WritableWorkspaceConfig>;
