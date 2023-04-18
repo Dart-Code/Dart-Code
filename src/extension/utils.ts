@@ -130,7 +130,7 @@ export function isTestFile(file: string): boolean {
 
 // Similar to isTestFile, but requires that the file is _test.dart because it will be used as
 // an entry point for pub test running.
-export function isPubRunnableTestFile(file: string): boolean {
+export function isRunnableTestFile(file: string): boolean {
 	return !!file && isDartFile(file) && file.toLowerCase().endsWith("_test.dart");
 }
 

@@ -22,7 +22,7 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[] | undefined> {
 		// We should only show the CodeLens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
-		if (!this.analyzer.fileTracker.supportsPubRunTest(document.uri))
+		if (!this.analyzer.fileTracker.supportsPackageTest(document.uri))
 			return;
 
 		// If we don't consider this a test file, we should also not show links (since we may try to run the
