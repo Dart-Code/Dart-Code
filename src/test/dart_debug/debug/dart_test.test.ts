@@ -6,6 +6,7 @@ import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { getPackageTestCapabilities } from "../../../shared/test/version";
+import { SuiteNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { DasTestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
@@ -341,34 +342,38 @@ describe("dart test debugger", () => {
 	it("runs all tests if given a folder", async () => {
 		const config = await startDebugger(dc, "./test/");
 		config.noDebug = true;
+
+		const events: vs.DebugSessionCustomEvent[] = [];
+		const eventHandler = (e: vs.DebugSessionCustomEvent) => events.push(e);
+		dc.on("dart.testNotification", eventHandler);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
+		dc.removeListener("dart.testNotification", eventHandler);
 
-		const topLevelNodes = extApi.testController.controller.items;
-		assert.ok(topLevelNodes);
-
-		const nodeLabels: string[] = [];
-		topLevelNodes.forEach((n) => nodeLabels.push(n.label ?? n.description));
-		nodeLabels.sort(); // Sorting is done by VS Code so the model is unsorted.
+		const testEvents = events.filter((e) => e.event === "dart.testNotification");
+		const suiteEvents = testEvents.filter((e) => e.body.type === "suite");
+		const suiteNames = suiteEvents.map((e) => path.basename((e.body as SuiteNotification).suite.path));
+		suiteNames.sort();
 
 		assert.deepStrictEqual(
-			nodeLabels,
+			suiteNames,
 			[
-				path.join("test", "basic_test.dart"),
-				path.join("test", "broken_test.dart"),
-				path.join("test", "discovery_large_test.dart"),
-				path.join("test", "discovery_test.dart"),
-				path.join("test", "dupe_name_test.dart"),
-				path.join("test", "environment_test.dart"),
-				path.join("test", "folder", "folder_test.dart"),
-				path.join("test", "project_test.dart"),
-				path.join("test", "rename_test.dart"),
-				path.join("test", "short_test.dart"),
-				path.join("test", "skip_test.dart"),
-				path.join("test", "tree_test.dart"),
+				"basic_test.dart",
+				"broken_test.dart",
+				"discovery_large_test.dart",
+				"discovery_test.dart",
+				"dupe_name_test.dart",
+				"dynamic_test.dart",
+				"environment_test.dart",
+				"folder_test.dart",
+				"project_test.dart",
+				"rename_test.dart",
+				"short_test.dart",
+				"skip_test.dart",
+				"tree_test.dart",
 			],
 		);
 	});
