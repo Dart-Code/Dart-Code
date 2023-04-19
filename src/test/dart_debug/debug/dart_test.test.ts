@@ -354,6 +354,8 @@ describe("dart test debugger", () => {
 						"folder_test.dart",
 						"project_test.dart",
 						"rename_test.dart",
+						"selective1_test.dart",
+						"selective2_test.dart",
 						"short_test.dart",
 						"skip_test.dart",
 						"tree_test.dart",
@@ -446,6 +448,7 @@ describe("dart test debugger", () => {
 					.map((e) => e.body as TestStartNotification)
 					.filter((e) => !e.test.name?.startsWith("loading"));
 				const testNames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.url!)))} / ${e.test.name}`);
+				testNames.sort(); // The order is not deterministic.
 
 				// Expect exactly the tests we requested.
 				assert.deepStrictEqual(testNames, [
