@@ -8,7 +8,7 @@ import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -103,7 +103,7 @@ describe("flutter test debugger", () => {
 				});
 
 				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-				const testDoneNotification = customEvents.find(isTestDoneNotification);
+				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
 				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 			});
 
@@ -136,7 +136,7 @@ describe("flutter test debugger", () => {
 				});
 
 				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-				const testDoneNotification = customEvents.find(isTestDoneNotification);
+				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
 				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 			});
 
@@ -171,7 +171,8 @@ describe("flutter test debugger", () => {
 					assert.ok(didStart);
 				});
 
-				const testDoneNotification = customEvents.find(isTestDoneNotification);
+				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
+				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
 				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 
 				const testDone = testDoneNotification.body as TestDoneNotification;
@@ -209,7 +210,8 @@ describe("flutter test debugger", () => {
 					assert.ok(didStart);
 				});
 
-				const testDoneNotification = customEvents.find(isTestDoneNotification);
+				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
+				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
 				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 
 				const testDone = testDoneNotification.body as TestDoneNotification;

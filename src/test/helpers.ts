@@ -1248,7 +1248,7 @@ function getSourceLine(item: vs.TestItem): number {
 	return Math.min(99999999, ...lines);
 }
 
-export function isTestDoneNotification(e: vs.DebugSessionCustomEvent) {
+export function isTestDoneSuccessNotification(e: vs.DebugSessionCustomEvent) {
 	if (e.event !== "dart.testNotification")
 		return false;
 	const notification = e.body as TestDoneNotification;
