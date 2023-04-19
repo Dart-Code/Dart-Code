@@ -317,6 +317,7 @@ describe("flutter test debugger", () => {
 					.map((e) => e.body as TestStartNotification)
 					.filter((e) => !e.test.name?.startsWith("loading"));
 				const testNames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.root_url ?? e.test.url!)))} / ${e.test.name}`);
+				testNames.sort(); // The order is not deterministic.
 
 				// Expect exactly the tests we requested.
 				assert.deepStrictEqual(testNames, [
