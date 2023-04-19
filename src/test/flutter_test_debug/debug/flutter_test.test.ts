@@ -1,13 +1,14 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
-import { TestDoneNotification } from "../../../shared/test_protocol";
+import { TestDoneNotification, TestStartNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -287,6 +288,43 @@ describe("flutter test debugger", () => {
 					assert.ok(actualResults);
 					checkTreeNodeResults(actualResults, expectedResults);
 				}
+			});
+
+			it("can run a selection of tests across multiple files", async () => {
+				// Discover tests in these files.
+				await openFile(flutterTestSelective1File);
+				await openFile(flutterTestSelective2File);
+				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestSelective1File));
+				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestSelective2File));
+				const controller = extApi.testController;
+
+				const testItems: vs.TestItem[] = [];
+
+				// Pick multiple tests from multiple files to run.
+				const suite1Node = controller.controller.items.get(`SUITE:${fsPath(flutterTestSelective1File)}`)!;
+				testItems.push(suite1Node.children.get(`TEST:${fsPath(flutterTestSelective1File)}:pass one`)!);
+				testItems.push(suite1Node.children.get(`TEST:${fsPath(flutterTestSelective1File)}:pass two`)!);
+				const suite2Node = controller.controller.items.get(`SUITE:${fsPath(flutterTestSelective2File)}`)!;
+				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail one`)!);
+				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail two`)!);
+				const testRequest = new vs.TestRunRequest(testItems);
+
+				// Capture all testStart notifications during the debug sessions that are spawned from running these tests.
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken), true);
+				const testEvents = customEvents
+					.filter((e) => e.event === "dart.testNotification")
+					.filter((e) => e.body.type === "testStart")
+					.map((e) => e.body as TestStartNotification)
+					.filter((e) => !e.test.name?.startsWith("loading"));
+				const testNames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.root_url ?? e.test.url!)))} / ${e.test.name}`);
+
+				// Expect exactly the tests we requested.
+				assert.deepStrictEqual(testNames, [
+					"selective1_test.dart / pass one",
+					"selective1_test.dart / pass two",
+					"selective2_test.dart / fail one",
+					"selective2_test.dart / fail two",
+				]);
 			});
 
 			it("runs all tests through Test: Run All Tests", async () => {

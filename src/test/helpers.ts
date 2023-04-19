@@ -84,7 +84,8 @@ export const helloWorldRenameTestFile = vs.Uri.file(path.join(fsPath(helloWorldT
 export const helloWorldTestTreeFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "tree_test.dart"));
 export const helloWorldTestEnvironmentFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "environment_test.dart"));
 export const helloWorldTestShortFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "short_test.dart"));
-export const helloWorldTestShort2File = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "short2_test.dart"));
+export const helloWorldTestSelective1File = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "selective1_test.dart"));
+export const helloWorldTestSelective2File = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "selective2_test.dart"));
 export const helloWorldTestDiscoveryFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "discovery_test.dart"));
 export const helloWorldTestDiscoveryLargeFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "discovery_large_test.dart"));
 export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dupe_name_test.dart"));
@@ -121,6 +122,8 @@ export const flutterBazelHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutt
 export const flutterBazelTestMainFile = vs.Uri.file(path.join(fsPath(flutterBazelHelloWorldFolder), "test/widget_test.dart"));
 // Flutter tests
 export const flutterTestMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/widget_test.dart"));
+export const flutterTestSelective1File = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/selective1_test.dart"));
+export const flutterTestSelective2File = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/selective2_test.dart"));
 export const flutterTestOtherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/other_test.dart"));
 export const flutterTestAnotherFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/another_test.dart"));
 export const flutterTestBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "test/broken_test.dart"));
@@ -1033,28 +1036,36 @@ export function deleteFileIfExists(filePath: string) {
 	}
 }
 
-export async function captureDebugSessionCustomEvents(startDebug: () => void): Promise<vs.DebugSessionCustomEvent[]> {
-	let session: vs.DebugSession;
-	let startSub: IAmDisposable;
-	let endSub: IAmDisposable;
+export async function captureDebugSessionCustomEvents(startDebug: () => void, expectMultipleSessions = false): Promise<vs.DebugSessionCustomEvent[]> {
+	const sessions = new Set<vs.DebugSession>();
+	let startSub: IAmDisposable | undefined;
+	let endSub: IAmDisposable | undefined;
 	const events: vs.DebugSessionCustomEvent[] = [];
 
 	const startPromise = new Promise<void>((resolve) => {
 		startSub = vs.debug.onDidStartDebugSession((s) => {
-			session = s;
+			sessions.add(s);
 			resolve();
 		});
-	}).finally(() => startSub.dispose());
-	const eventSub = vs.debug.onDidReceiveDebugSessionCustomEvent((e) => events.push(e));
+	});
+	const eventSub = vs.debug.onDidReceiveDebugSessionCustomEvent((e) => {
+		if (sessions.has(e.session))
+			events.push(e);
+	});
 	const endPromise = new Promise<void>((resolve) => {
-		endSub = vs.debug.onDidTerminateDebugSession((s) => {
-			if (s === session)
+		endSub = vs.debug.onDidTerminateDebugSession(async (s) => {
+			sessions.delete(s);
+			if (expectMultipleSessions)
+				await delay(1000); // Allow some time for another session to start in case of multi-session test runs.
+			if (sessions.size === 0)
 				resolve();
 		});
-	}).finally(() => endSub.dispose());
+	});
 
 	startDebug();
 	await Promise.all([startPromise, endPromise]);
+	startSub?.dispose();
+	endSub?.dispose();
 	eventSub.dispose();
 
 	return events;

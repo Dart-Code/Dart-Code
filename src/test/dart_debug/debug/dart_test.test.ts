@@ -1,12 +1,13 @@
 import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { Outline as lspOutline } from "../../../shared/analysis/lsp/custom_protocol";
 import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { isWin } from "../../../shared/constants";
 import { DebuggerType } from "../../../shared/enums";
 import { getPackageTestCapabilities } from "../../../shared/test/version";
-import { SuiteNotification } from "../../../shared/test_protocol";
+import { SuiteNotification, TestStartNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
@@ -14,7 +15,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import * as testUtils from "../../../shared/utils/test";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -416,6 +417,43 @@ describe("dart test debugger", () => {
 				const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
 
 				assert.equal(printEvent?.body.message, "LAUNCH_ENV_VAR=default");
+			});
+
+			it("can run a selection of tests across multiple files", async () => {
+				// Discover tests in these files.
+				await openFile(helloWorldTestSelective1File);
+				await openFile(helloWorldTestSelective2File);
+				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestSelective1File));
+				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestSelective2File));
+				const controller = extApi.testController;
+
+				const testItems: vs.TestItem[] = [];
+
+				// Pick multiple tests from multiple files to run.
+				const suite1Node = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestSelective1File)}`)!;
+				testItems.push(suite1Node.children.get(`TEST:${fsPath(helloWorldTestSelective1File)}:pass one`)!);
+				testItems.push(suite1Node.children.get(`TEST:${fsPath(helloWorldTestSelective1File)}:pass two`)!);
+				const suite2Node = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestSelective2File)}`)!;
+				testItems.push(suite2Node.children.get(`TEST:${fsPath(helloWorldTestSelective2File)}:fail one`)!);
+				testItems.push(suite2Node.children.get(`TEST:${fsPath(helloWorldTestSelective2File)}:fail two`)!);
+				const testRequest = new vs.TestRunRequest(testItems);
+
+				// Capture all testStart notifications during the debug sessions that are spawned from running these tests.
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken), true);
+				const testEvents = customEvents
+					.filter((e) => e.event === "dart.testNotification")
+					.filter((e) => e.body.type === "testStart")
+					.map((e) => e.body as TestStartNotification)
+					.filter((e) => !e.test.name?.startsWith("loading"));
+				const testNames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.url!)))} / ${e.test.name}`);
+
+				// Expect exactly the tests we requested.
+				assert.deepStrictEqual(testNames, [
+					"selective1_test.dart / pass one",
+					"selective1_test.dart / pass two",
+					"selective2_test.dart / fail one",
+					"selective2_test.dart / fail two",
+				]);
 			});
 
 			it("allows more-specific default launch template using noDebug flag", async () => {
