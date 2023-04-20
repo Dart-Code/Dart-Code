@@ -87,9 +87,13 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		config.localDeviceCommandAdviceMessage = flutterConfig.localDeviceCommandAdviceMessage;
 		config.localMacWarningMessage = flutterConfig.localMacWarningMessage;
 		config.supportsPackageTest = true;
-		// TODO(dantup): Check with helin24 whether this should be enabled. Running
-		//  "dart run test:test --version" is how we check pkg:test capabilities (such
-		//  as whether we can run tests by line number).
+
+		// It's not valid to run "dart run test:test --version" here. This means
+		// that we won't ever enable any "new" package:test functionality
+		// (see `DartTestCapabilities`). If in future we'd like to support that,
+		// we could store a packageTestVersion here (like `flutterVersion` above)
+		// or if the capabilities need to be enabled individually, hang a whole
+		// `DartTestCapabilities` override here.
 		config.supportsDartRunTest = false;
 	} catch (e) {
 		logger.error(e);
