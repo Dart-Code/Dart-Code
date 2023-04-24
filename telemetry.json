@@ -18,7 +18,7 @@
 			"CommandRestartAnalyzer": { }
 		},
 		"commonProperties": {
-			"common.vscodemachineid": { "classification": "EndUserPseudonymizedInformation", "purpose": "FeatureInsight" },
+			"common.vscodemachineid": { "classification": "EndUserPseudonymizedInformation", "purpose": "FeatureInsight", "comment": "An identifier provided by VS Code to relate coding sessions from the same installation together" },
 			"common.extname":         { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The name of the Dart extension" },
 			"common.extversion":      { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The version of the Dart extension" },
 			"common.vscodeversion":   { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The version of VS Code running the extension" },
@@ -36,6 +36,6 @@
 			"workspaceType":          { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Which type of project(s) are in the current workspace (Dart, Flutter)" },
 			"closingLabels":          { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether Dart's 'closing labels' hints are enabled" },
 			"flutterHotReloadOnSave": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether hot-reload-on-save is enabled" },
-			"language":               { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The user's language as reported by VS Code'" }
+			"language":               { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The user's language as reported by VS Code" }
 		}
 	}
