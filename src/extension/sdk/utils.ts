@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window, workspace } from "vscode";
-import { analyzerSnapshotPath, dartPlatformName, dartVMPath, DART_DOWNLOAD_URL, executableNames, flutterPath, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, isLinux, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, showLogAction } from "../../shared/constants";
 import { Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
@@ -454,17 +454,16 @@ export class SdkUtils {
 	}
 }
 
-
 async function findFuchsiaRoot(logger: Logger, folder: string): Promise<string | undefined> {
-	return findRootContaining(folder, ".jiri_root");
+	return findRootContaining(folder, ".jiri_root", "DIRECTORY");
 }
 
 async function findBazelWorkspaceRoot(logger: Logger, folder: string): Promise<string | undefined> {
-	return findRootContaining(folder, "WORKSPACE", true);
+	return findRootContaining(folder, "WORKSPACE", "FILE");
 }
 
 async function findGitRoot(logger: Logger, folder: string): Promise<string | undefined> {
-	return findRootContaining(folder, ".git");
+	return findRootContaining(folder, ".git", "ANY");
 }
 
 async function findDartSdkRoot(logger: Logger, folder: string): Promise<string | undefined> {
@@ -475,7 +474,7 @@ async function findDartSdkRoot(logger: Logger, folder: string): Promise<string |
 		return undefined;
 }
 
-function findRootContaining(folder: string, childName: string, expectFile = false): string | undefined {
+function findRootContaining(folder: string, childName: string, expect: "FILE" | "DIRECTORY" | "ANY"): string | undefined {
 	if (folder) {
 		// Walk up the directories from the workspace root, and see if there
 		// exists a directory which has `childName` file/directory as a child.
@@ -483,7 +482,7 @@ function findRootContaining(folder: string, childName: string, expectFile = fals
 		while (child) {
 			try {
 				const stat = fs.statSync(path.join(child, childName));
-				if (expectFile ? stat.isFile() : stat.isDirectory()) {
+				if (expect === "ANY" || (expect === "FILE" ? stat.isFile() : stat.isDirectory())) {
 					return child;
 				}
 			} catch { }

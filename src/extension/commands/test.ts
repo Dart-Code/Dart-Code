@@ -224,7 +224,7 @@ export class TestCommands implements vs.Disposable {
 
 	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
 		const isFlutter = isInsideFlutterProject(vs.Uri.file(test.file));
-		const canRunSkippedTest = !test.isGroup && (this.flutterCapabilities.supportsRunSkippedTests || !isFlutter);
+		const canRunSkippedTest = (this.flutterCapabilities.supportsRunSkippedTests || !isFlutter);
 		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
 		return this.runTests({
