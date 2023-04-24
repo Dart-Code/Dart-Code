@@ -255,3 +255,7 @@ export interface CustomDevToolsConfig {
 	cwd?: string;
 	env?: { [key: string]: string };
 }
+
+export interface ExtensionConfig {
+	get experimentalTestRunnerInSdk(): boolean;
+}

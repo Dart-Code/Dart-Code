@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, window, workspace } from "vscode";
 import { analyzerSnapshotPath, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, showLogAction } from "../../shared/constants";
-import { Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
+import { ExtensionConfig, Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
@@ -219,11 +219,11 @@ export class SdkUtils {
 		// runs some specific processing.
 		const workspaceFolders = getDartWorkspaceFolders();
 		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string) => void): Promise<string | undefined> => {
+		const processWorkspaceType = async (search: (logger: Logger, folder: string) => Promise<string | undefined>, process: (logger: Logger, config: WorkspaceConfig, folder: string, extensionConfig: ExtensionConfig) => void): Promise<string | undefined> => {
 			for (const folder of topLevelFolders) {
 				const root = await search(this.logger, folder);
 				if (root) {
-					process(this.logger, workspaceConfig, root);
+					process(this.logger, workspaceConfig, root, config);
 					return root;
 				}
 			}

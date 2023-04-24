@@ -1,21 +1,21 @@
 import * as fs from "fs";
 import * as path from "path";
 import { isWin, MAX_VERSION } from "../constants";
-import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
+import { CustomScript, ExtensionConfig, Logger, WritableWorkspaceConfig } from "../interfaces";
 
-export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, dartSdkRoot: string) {
+export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, dartSdkRoot: string, extensionConfig: ExtensionConfig) {
 	config.disableAutomaticPackageGet = true;
 	// The Dart SDKs tests cannot run using pkg:test, so force them to use the VM.
-	config.supportsPackageTest = false;
+	config.supportsPackageTest = extensionConfig.experimentalTestRunnerInSdk;
 	config.supportsDartRunTest = false;
 }
 
-export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
+export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string, extensionConfig: ExtensionConfig) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
 }
 
-export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
+export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string, extensionConfig: ExtensionConfig) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
 
