@@ -2510,6 +2510,12 @@
 						"default": null,
 						"markdownDescription": "PREVIEW: Whether to use the new debug adapters shipped in the Dart and Flutter SDKs. This setting will only apply if your SDK is new enough to include an appropriate version of the DAP server. Setting the value to `true` will opt-in to the new DAPs. Setting to `false` will opt-out. Leaving as `null` will allow the extension to decide when to enable the SDK DAPs as part of a progressive rollout.",
 						"scope": "window"
+					},
+					"dart.experimentalRefactors": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) refactors on the lightbulb menu. This setting is intended for use by Dart Analysis Server developers or users that want to try out and provide feedback on in-progress refactors.",
+						"scope": "window"
 					}
 				}
 			}
