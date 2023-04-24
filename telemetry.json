@@ -1,0 +1,41 @@
+{
+		"events": {
+			"ExtensionActivated": { },
+			"ExtensionRestart": { },
+			"ExtensionSdkDetectionFailure": { },
+			"DebuggerActivated": {
+				"debuggerPreference":     { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether debugging is to to 'just my code', or includes external package and SDK sources" },
+				"debuggerType":           { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The type (Dart, Flutter, DartTest, FlutterTest) of debug session being started" },
+				"debuggerRunType":        { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the debug session is Run (without Debugging) or Debug" },
+				"debuggerAdapterType":    { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether debugging is using the SDK or legacy debug adapter implementation" }
+			},
+			"DebuggerOpenDevTools": { },
+			"FlutterSurveyShown": { },
+			"FlutterSurveyClicked": { },
+			"FlutterSurveyDismissed": { },
+			"FlutterOutlineActivated": { },
+			"CommandDartNewProject": { },
+			"CommandRestartAnalyzer": { }
+		},
+		"commonProperties": {
+			"common.vscodemachineid": { "classification": "EndUserPseudonymizedInformation", "purpose": "FeatureInsight" },
+			"common.extname":         { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The name of the Dart extension" },
+			"common.extversion":      { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The version of the Dart extension" },
+			"common.vscodeversion":   { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The version of VS Code running the extension" },
+			"common.remotename":      { "classification": "SystemMetaData",	"purpose": "FeatureInsight", "comment": "The 'remoteName' from VS Code (such as 'ssh' or 'docker' for remote workspaces)" },
+			"isDevExtension":         { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the extension is running in development mode (this usually means running from source checked out from the Dart-Code repo)" },
+			"showTodos":              { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether TODOs in Dart code are being shown in the Problems list" },
+			"analyzerProtocol":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the Dart analysis server is running using the LSP or Legacy communication protocol" },
+			"formatter":              { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the formatter is enabled, enabled-on-save, disabled, or set to something other than the Dart SDK formatter" },
+			"flutterVersion":         { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Which version of the Flutter SDK is being used" },
+			"flutterExtension":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the Flutter extension is installed" },
+			"flutterUiGuides":        { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the Flutter 'UI Guides' are enabled and which kind of updates they are configured to use" },
+			"platform":               { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The platform/OS the extension is running on" },
+			"appName":                { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The name of the editor application (usually VS Code, but could be another editor that runs VS Code extensions such as from open-vsix)" },
+			"dartVersion":            { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Which version of the Dart SDK is being used" },
+			"workspaceType":          { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Which type of project(s) are in the current workspace (Dart, Flutter)" },
+			"closingLabels":          { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether Dart's 'closing labels' hints are enabled" },
+			"flutterHotReloadOnSave": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether hot-reload-on-save is enabled" },
+			"language":               { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The user's language as reported by VS Code'" }
+		}
+	}

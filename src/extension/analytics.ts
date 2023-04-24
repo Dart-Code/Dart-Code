@@ -67,6 +67,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 
 	private async send(data: AnalyticsData & Record<string, any>): Promise<void> {
 		const analyticsData = {
+			// Everything listed here should be in the 'telemetry.json' file in the extension root.
 			aip: data.anonymize ? 1 : null,
 			an: data["common.extname"],
 			av: data["common.extversion"],
@@ -295,6 +296,7 @@ export class Analytics {
 			return "My code";
 	}
 
+	// All events below should be included in telemetry.json.
 	public logExtensionActivated() { this.event(Category.Extension, EventAction.Activated); }
 	public logExtensionRestart() { this.event(Category.Extension, EventAction.Restart); }
 	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
