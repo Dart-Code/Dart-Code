@@ -3,24 +3,23 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
-import { DebuggerType, DebugOption, debugOptionNames, LogSeverity, VmServiceExtension } from "../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, Logger, LogMessage, WidgetErrorInspectData } from "../../shared/interfaces";
-import { disposeAll, PromiseCompleter } from "../../shared/utils";
+import { DebugOption, DebuggerType, LogSeverity, VmServiceExtension, debugOptionNames } from "../../shared/enums";
+import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
+import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { timeDilationNormal, timeDilationSlow, VmServiceExtensions } from "../flutter/vm_service_extensions";
+import { VmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
-import { isDartFile, isValidEntryFile } from "../utils";
+import { isDartFile } from "../utils";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
-const CURRENT_FILE_RUNNABLE = "dart-code:currentFileIsRunnable";
 
 // Workaround for https://github.com/microsoft/vscode/issues/100115
 const dynamicDebugSessionName = "Dart ";
@@ -77,9 +76,6 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
-		this.disposables.push(vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)));
-		// Run for current open editor.
-		this.updateEditorContexts(vs.window.activeTextEditor);
 
 		this.disposables.push(vs.commands.registerCommand("flutter.overridePlatform", () => this.vmServices.overridePlatform()));
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.vmServices.toggle(VmServiceExtension.DebugPaint)));
@@ -783,11 +779,6 @@ export class DebugCommands implements IAmDisposable {
 				debugSdkLibraries,
 			});
 		});
-	}
-
-	private updateEditorContexts(e: vs.TextEditor | undefined): void {
-		const isRunnable = !!(e && e.document && e.document.uri.scheme === "file" && isValidEntryFile(fsPath(e.document.uri)));
-		vs.commands.executeCommand("setContext", CURRENT_FILE_RUNNABLE, isRunnable);
 	}
 
 	public dispose(): any {
