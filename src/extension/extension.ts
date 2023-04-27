@@ -771,7 +771,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	workspaceContext.events.onPackageMapChange.fire();
 
 	return {
-		...new DartExtensionApi(),
+		...new DartExtensionApi(debugCommands, lspClient),
 		[internalApiSymbol]: {
 			addDependencyCommand,
 			analyzer,
