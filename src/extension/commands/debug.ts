@@ -594,7 +594,7 @@ export class DebugCommands implements IAmDisposable {
 
 		if (event === "dart.webLaunchUrl") {
 			const launched = !!body.launched;
-			if (!launched) {
+			if (!launched && !session.session.configuration.suppressWebServerDeviceBrowserLaunch) {
 				try {
 					await envUtils.openInBrowser(body.url as string, this.logger);
 				} catch (e: any) {
@@ -617,7 +617,7 @@ export class DebugCommands implements IAmDisposable {
 				case "app.webLaunchUrl":
 					const url = params.url as string;
 					const launched = !!params.launched;
-					if (!launched) {
+					if (!launched && !session.session.configuration.suppressWebServerDeviceBrowserLaunch) {
 						try {
 							await envUtils.openInBrowser(url, this.logger);
 						} catch (e: any) {

@@ -2661,6 +2661,16 @@
 								"items": {
 									"type": "string"
 								}
+							},
+							"suppressWebServerDeviceBrowserLaunch": {
+								"type": "boolean",
+								"markdownDescription": "Suppress launching a browser window when running on the web-server device. This is useful for launch compound configurations where another app is being started that will embed the application.",
+								"default": false
+							},
+							"noDebug": {
+								"type": "boolean",
+								"markdownDescription": "Whether to run the application without attaching a debugger. This will prevent breakpoints, break-on-exception and commands that require calling VM Service extensions from working.",
+								"default": false
 							}
 						}
 					},
