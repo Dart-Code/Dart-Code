@@ -1450,6 +1450,12 @@
 						"description": "The port number to be used for the Dart Analysis Server VM service. This setting is intended for use by Dart Analysis Server developers.",
 						"scope": "window"
 					},
+					"dart.includeDependenciesInWorkspaceSymbols": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "Whether to include symbols from the SDK and package dependencies in the \"Go to Symbol in Workspace\" (`cmd/ctrl`+`T`) list. This can only be disabled when using Dart 3.0 / Flutter 3.10 or later.",
+						"scope": "window"
+					},
 					"dart.notifyAnalyzerErrors": {
 						"type": "boolean",
 						"default": true,
