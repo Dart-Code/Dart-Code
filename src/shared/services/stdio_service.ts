@@ -91,12 +91,15 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		};
 	}
 
+	protected notifyRequestAfterExit() { }
+
 	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Promise<TResp> {
 		// Generate an ID for this request so we can match up the response.
 		const id = this.nextRequestID++;
 
 		return new Promise<TResp>((resolve, reject) => {
 			if (this.processExited) {
+				this.notifyRequestAfterExit();
 				reject(`Process has already exited with code ${this.process?.exitCode}`);
 				return;
 			}

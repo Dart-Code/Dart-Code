@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { flutterPath, isChromeOS, isDartCodeTestRun } from "../../shared/constants";
+import { flutterPath, isChromeOS, isDartCodeTestRun, tenMinutesInMs } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
 import { FlutterWorkspaceContext, IFlutterDaemon, Logger, SpawnedProcess } from "../../shared/interfaces";
@@ -20,7 +20,7 @@ import { getGlobalFlutterArgs, getToolEnv, runToolProcess, safeToolSpawn } from 
 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
-	private hasShownTerminationError = false;
+	private hasShownTerminatedError = false;
 	private isShuttingDown = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonStartedCompleter = new PromiseCompleter<void>();
@@ -84,7 +84,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			} catch (e) {
 				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
-				this.hasShownTerminationError = true;
+				this.hasShownTerminatedError = true;
 				promptToReloadExtension(message);
 			}
 		}, 60 * 1000);
@@ -106,17 +106,39 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
-		if (code && !this.hasShownTerminationError && !this.isShuttingDown) {
-			if (this.runIfNoDevices) {
-				this.runIfNoDevices();
-			} else {
-				this.hasShownTerminationError = true;
-				const message = this.hasStarted ? "has terminated" : "failed to start";
-				// tslint:disable-next-line: no-floating-promises
-				promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
-			}
-		}
+		if (code && !this.isShuttingDown)
+			this.handleUncleanExit();
+
 		super.handleExit(code, signal);
+	}
+
+	private handleUncleanExit() {
+		if (this.runIfNoDevices) {
+			this.runIfNoDevices();
+		} else if (!this.hasShownTerminatedError) {
+			this.showTerminatedError(this.hasStarted ? "has terminated" : "failed to start");
+		}
+	}
+
+	protected notifyRequestAfterExit() {
+		this.showTerminatedError("is not running");
+	}
+
+	private lastShownTerminatedError: number | undefined;
+	private readonly noRepeatTerminatedErrorThresholdMs = tenMinutesInMs;
+	private showTerminatedError(message: string) {
+		// Don't show this notification if we've shown it recently.
+		if (this.lastShownTerminatedError && Date.now() - this.lastShownTerminatedError < this.noRepeatTerminatedErrorThresholdMs)
+			return;
+
+		this.lastShownTerminatedError = Date.now();
+
+		// This flag is set here, but checked in handleUncleanExit because explicit calls
+		// here can override hasShownTerminationError, for example to show the error when
+		// something tries to interact with the API (`notifyRequestAfterExit`).
+		this.hasShownTerminatedError = true;
+		// tslint:disable-next-line: no-floating-promises
+		promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
 	}
 
 	public dispose() {
@@ -133,8 +155,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		try {
 			super.sendMessage(json);
 		} catch (e) {
-			if (!this.hasShownTerminationError && !this.isShuttingDown) {
-				this.hasShownTerminationError = true;
+			if (!this.hasShownTerminatedError && !this.isShuttingDown) {
+				this.hasShownTerminatedError = true;
 				// tslint:disable-next-line: no-floating-promises
 				promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
 				throw e;
@@ -280,7 +302,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public shutdown(): Thenable<void> {
-		return this.hasStarted && !this.hasShownTerminationError ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
+		return this.hasStarted && !this.hasShownTerminatedError ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
 	}
 
 	// Subscription methods.
