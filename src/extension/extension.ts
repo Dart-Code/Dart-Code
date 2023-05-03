@@ -29,7 +29,7 @@ import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
-import { DartExtensionApi } from "./api";
+import { DartExtensionApi } from "./api/api";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { LspFlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples_lsp";
 import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
