@@ -75,6 +75,8 @@ class LanguageApi implements DartCodeLanguageApi {
 	constructor(private readonly lspClient: LanguageClient) { }
 
 	public rawRequest(method: string, params: unknown): Promise<unknown> {
+		// TODO(dantup): Whitelist what we allow here. We certainly shouldn't allow
+		//  things like modifying the overlays or analysis roots.
 		return this.lspClient.sendRequest(method, params);
 	}
 
