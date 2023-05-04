@@ -163,16 +163,22 @@ export class Analytics {
 	// number of sessions using.
 	private hasLoggedFlutterOutline = false;
 
-	private telemetryLogger: TelemetryLogger;
+	private telemetryLogger: TelemetryLogger | undefined;
 
 	constructor(private readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
+
+		// If the API isn't supported (Theia) then we'll just not set anything up.
+		if (!env.createTelemetryLogger)
+			return;
+
+		// Similarly, if the user has opted out of Dart/Flutter's telemetry, we should assume they might
+		// (reasonably) expect that covers this extension, so don't set anything up in that case either.
+		if (this.isOptedOutOfDartToolingTelemetry())
+			return;
+
 		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender(logger, (e) => this.handleError(e));
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
-
-		if (this.isOptedOutOfDartToolingTelemetry()) {
-			this.disableAnalyticsForSession = true;
-		}
 	}
 
 	/// If a user opts-out of Dart/Flutter telemetry with the command line apps, also opt-out here to avoid
@@ -207,6 +213,7 @@ export class Analytics {
 
 	private event(category: Category, action: EventAction | string, customData?: Partial<AnalyticsData>): void {
 		if (this.disableAnalyticsForSession
+			|| !this.telemetryLogger
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
 			|| this.workspaceContext.config.disableAnalytics
