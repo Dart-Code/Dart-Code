@@ -11,7 +11,7 @@ describe("completion_item_provider", () => {
 	it("includes expected completions", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		await extApi.currentAnalysis();
-		const completions = await getCompletionsAt("return ^Text");
+		const completions = await getCompletionsAt("return T^ext");
 
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text(…)", "Text");
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text.rich(…)", "Text.rich");
@@ -70,7 +70,7 @@ main() {
 import 'package:flutter/rendering.dart';
 
 main() {
-  ProcessInf
+  ProcessRes
 }
 		`);
 			const count = 50;
@@ -81,8 +81,8 @@ main() {
 				const startMemoryInner = process.memoryUsage();
 				const startTimeInner = Date.now();
 
-				const completions = await getCompletionsAt("ProcessInf^");
-				ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+				const completions = await getCompletionsAt("ProcessRes^");
+				ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
 
 				const heapChangeMbs = (process.memoryUsage().heapUsed - startMemoryInner.heapUsed) / 1024 / 1024;
 				console.log(`Iteration #${i < 10 ? " " : ""}${i} took ${Date.now() - startTimeInner} ms to return ${completions.length} results, heap change was ${Math.round(heapChangeMbs)} MB`);

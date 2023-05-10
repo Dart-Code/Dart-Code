@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
-import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureInsertReplaceRanges as ensureRanges, ensureNoCompletion, ensureTestContent, ensureTestContentWithCursorPos, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
+import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
@@ -91,16 +91,19 @@ main() {
 import 'dart:io';
 
 main() {
-  ProcessInf
+  ProcessRes
 }
 		`);
-		const completions = await getCompletionsAt(`ProcessInf^`);
+		const completions = await getCompletionsAt(`ProcessRes^`);
 
-		const classComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+		const classComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
 		assert.equal(classComp.detail, undefined);
 
-		const constrComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
-		assert.equal(constrComp.detail, "() → ProcessInfo");
+		const constrComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessResult(…)", "ProcessResult");
+		if (extApi.isLsp)
+			assert.equal(constrComp.detail, "(int pid, int exitCode, dynamic stdout, dynamic stderr) → ProcessResult");
+		else
+			assert.equal(constrComp.detail, "(this.pid, this.exitCode, this.stdout, this.stderr) → ProcessResult");
 	});
 
 	it("fully populates a completion", async () => {
@@ -181,78 +184,76 @@ ${extraUnwantedIndent}  String get fullName => |${expectedBody}|; //
 		it("includes unimported symbols", async () => {
 			await setTestContent(`
 main() {
-  ProcessInf
+  ProcessRes
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^", { resolveCount: 5000 });
+			const completions = await getCompletionsAt("ProcessRes^", { resolveCount: 5000 });
 
-			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
 		});
 
 		it("fully populates a completion for a class in an unimported library", async () => {
 			await setTestContent(`
 main() {
-  ProcessInf
+  ProcessRes
 }
 		`);
-			const completions = await getCompletionsAt("Process^Inf", { resolveCount: 5000 });
+			const completions = await getCompletionsAt("Process^Res", { resolveCount: 5000 });
 
-			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
 
 			assert.ok(completion.additionalTextEdits!.length);
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
-			assert.equal(completion.filterText ?? completion.label, "ProcessInfo");
-			assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo");
+			assert.equal(completion.filterText ?? completion.label, "ProcessResult");
+			assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessResult");
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
 			assert.equal(completion.kind, vs.CompletionItemKind.Class);
-			assert.equal(completion.label, "ProcessInfo");
+			assert.equal(completion.label, "ProcessResult");
 			assert.notEqual(completion.preselect, true);
-			ensureRanges(completion.range, "|Process|Inf", "|ProcessInf|");
+			ensureRanges(completion.range, "|Process|Res", "|ProcessRes|");
 		});
 
 		it("fully populates a completion for a undeclared constructor in an unimported library", async () => {
 			await setTestContent(`
 main() {
-  ProcessInf
+  ProcessRes
 }
 		`);
-			const completions = await getCompletionsAt("ProcessIn^f", { requireComplete: true, resolveCount: extApi.isLsp ? 5000 : 50000 }); // non-LSP doesn't filter so we need to resolve more :(
-			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessInfo()", "ProcessInfo");
+			const completions = await getCompletionsAt("ProcessRe^s", { requireComplete: true, resolveCount: extApi.isLsp ? 5000 : 50000 }); // non-LSP doesn't filter so we need to resolve more :(
+			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessResult(…)", "ProcessResult");
 
 			assert.ok(completion.additionalTextEdits!.length);
-			if (extApi.isLsp && !extApi.dartCapabilities.hasZeroParamNoTabStopFix)
+			if (extApi.isLsp)
 				assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
 			else
 				assert.equal(completion.command, undefined);
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
-			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n() → ProcessInfo");
+			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n(int pid, int exitCode, dynamic stdout, dynamic stderr) → ProcessResult");
 			// TODO: Restore when a fix for https://github.com/Dart-Code/Dart-Code/issues/4361 is available.
 			// if (extApi.isLsp) {
 			// 	// This text changed, so handle both.
 			// 	const doc = (completion.documentation as vs.MarkdownString).value;
-			// 	if (doc.startsWith("[ProcessInfo]"))
+			// 	if (doc.startsWith("[ProcessResult]"))
 			// 		assert.equal(doc, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 			// 	else
 			// 		assert.equal(doc, "Methods for retrieving information about the current process.");
 			// }
-			assert.equal(completion.filterText ?? completion.label, "ProcessInfo");
-			if (extApi.isLsp && extApi.dartCapabilities.hasZeroParamNoTabStopFix)
-				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo()");
-			else if (extApi.isLsp)
-				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo(${0:})");
+			assert.equal(completion.filterText ?? completion.label, "ProcessResult");
+			if (extApi.isLsp)
+				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessResult(${1:pid}, ${2:exitCode}, ${3:stdout}, ${4:stderr})");
 			else
-				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessInfo()");
+				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessResult()");
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
 			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
-			assert.equal(completion.label, "ProcessInfo()");
+			assert.equal(completion.label, "ProcessResult(…)");
 			assert.notEqual(completion.preselect, true);
-			ensureRanges(completion.range, "|ProcessIn|f", "|ProcessInf|");
+			ensureRanges(completion.range, "|ProcessRe|s", "|ProcessRes|");
 		});
 
 		it("fully populates a completion for a declared constructor in an unimported library", async () => {
@@ -300,12 +301,12 @@ main() {
 		it("includes auto-import notes on unimported symbols", async () => {
 			await setTestContent(`
 main() {
-  final a = ProcessInf
+  final a = ProcessRes
 }
 		`);
-			const completions = await getCompletionsAt("ProcessInf^", { resolveCount: 5000 });
+			const completions = await getCompletionsAt("ProcessRes^", { resolveCount: 5000 });
 
-			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessInfo", "ProcessInfo");
+			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
 
 			assert.equal(completion.detail!.startsWith("Auto import from 'dart:io'"), true);
 		});
@@ -313,19 +314,17 @@ main() {
 		it("insert imports automatically when completing unimported symbols", async () => {
 			await setTestContent(`
 main() {
-  final a = ProcessInf
+  final a = ProcessRes
 }
 		`);
-			select(rangeOf("ProcessInf||"));
+			select(rangeOf("ProcessRes||"));
 
 			await acceptFirstSuggestion();
-			// TODO: Cursor positions are bad in older versions of LSP.
-			const parens = extApi.isLsp && !extApi.dartCapabilities.hasZeroParamNoTabStopFix ? "(^)" : "()^";
-			await ensureTestContentWithCursorPos(`
+			await ensureTestContentWithSelection(`
 import 'dart:io';
 
 main() {
-  final a = ProcessInfo${parens}
+  final a = ProcessResult(|pid|, exitCode, stdout, stderr)
 }
 		`);
 		});
@@ -336,19 +335,17 @@ main() {
 part of 'part_wrapper.dart';
 
 main() {
-  final a = ProcessInf
+  final a = ProcessRes
 }
 		`);
-			select(rangeOf("ProcessInf||"));
+			select(rangeOf("ProcessRes||"));
 
 			await acceptFirstSuggestion();
-			// TODO: Cursor positions are bad in older versions of LSP.
-			const parens = extApi.isLsp && !extApi.dartCapabilities.hasZeroParamNoTabStopFix ? "(^)" : "()^";
-			await ensureTestContentWithCursorPos(`
+			await ensureTestContentWithSelection(`
 part of 'part_wrapper.dart';
 
 main() {
-  final a = ProcessInfo${parens}
+  final a = ProcessResult(|pid|, exitCode, stdout, stderr)
 }
 		`);
 
