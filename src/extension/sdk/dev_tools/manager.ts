@@ -141,7 +141,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open without a debug session.
 	public async spawnForNoSession(): Promise<{ url: string; dispose: () => void } | undefined> {
-		this.analytics.logDebuggerOpenDevTools();
+		this.analytics.logDevToolsOpened();
 
 		const url = await this.spawnIfRequired();
 		if (!url)
@@ -157,7 +157,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
 	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
-		this.analytics.logDebuggerOpenDevTools();
+		this.analytics.logDevToolsOpened();
 
 		const url = await this.spawnIfRequired();
 		if (!url)
