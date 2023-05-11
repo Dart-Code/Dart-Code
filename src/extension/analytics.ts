@@ -25,35 +25,22 @@ const machineId = env.machineId !== "someValue.machineId"
 
 const sessionId = getRandomInt(0x1000, 0x100000).toString(16);
 
-enum Category {
-	Extension,
-	Analyzer,
-	Debugger,
-	FlutterSurvey,
-	FlutterOutline,
-	Command,
-}
-
-enum EventAction {
-	Activated,
+enum AnalyticsEvent {
+	Extension_Activated,
+	Extension_Restart,
 	SdkDetectionFailure,
-	Deactivated,
-	Restart,
-	HotReload,
-	OpenObservatory,
-	OpenTimeline,
-	OpenDevTools,
-	Shown,
-	Clicked,
-	Dismissed,
+	Debugger_Activated,
+	DevTools_Opened,
+	FlutterSurvey_Shown,
+	FlutterSurvey_Clicked,
+	FlutterSurvey_Dismissed,
+	FlutterOutline_Activated,
+	Command_DartNewProject,
+	Command_FlutterNewProject,
+	Command_AddDependency,
+	Command_RestartAnalyzer,
 }
 
-export enum EventCommand {
-	DartNewProject,
-	FlutterNewProject,
-	AddDependency,
-	RestartAnalyzer,
-}
 
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	constructor(readonly logger: Logger, readonly handleError: (e: unknown) => void) { }
@@ -227,7 +214,7 @@ export class Analytics {
 		}
 	}
 
-	private event(category: Category, action: EventAction | string, customData?: Partial<AnalyticsData>): void {
+	private event(category: AnalyticsEvent, customData?: Partial<AnalyticsData>): void {
 		if (this.disableAnalyticsForSession
 			|| !this.telemetryLogger
 			|| !machineId
@@ -248,8 +235,7 @@ export class Analytics {
 			appName: env.appName,
 			closingLabels: config.closingLabels ? "On" : "Off",
 			dartVersion: this.sdkVersion,
-			eventAction: typeof action === "string" ? action : EventAction[action],
-			eventCategory: Category[category],
+			event: AnalyticsEvent[category],
 			flutterExtension: hasFlutterExtension ? "Installed" : "Not Installed",
 			flutterHotReloadOnSave: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : undefined,
 			flutterUiGuides,
@@ -312,9 +298,9 @@ export class Analytics {
 	}
 
 	// All events below should be included in telemetry.json.
-	public logExtensionActivated() { this.event(Category.Extension, EventAction.Activated); }
-	public logExtensionRestart() { this.event(Category.Extension, EventAction.Restart); }
-	public logSdkDetectionFailure() { this.event(Category.Extension, EventAction.SdkDetectionFailure); }
+	public logExtensionActivated() { this.event(AnalyticsEvent.Extension_Activated); }
+	public logExtensionRestart() { this.event(AnalyticsEvent.Extension_Restart); }
+	public logSdkDetectionFailure() { this.event(AnalyticsEvent.SdkDetectionFailure); }
 	public logDebuggerStart(debuggerType: string, debuggerRunType: string, sdkDap: boolean) {
 		const customData: Partial<AnalyticsData> = {
 			debuggerAdapterType: sdkDap ? "SDK" : "Legacy",
@@ -322,25 +308,24 @@ export class Analytics {
 			debuggerRunType,
 			debuggerType,
 		};
-		this.event(Category.Debugger, EventAction.Activated, customData);
+		this.event(AnalyticsEvent.Debugger_Activated, customData);
 	}
-	public logDebuggerOpenDevTools() { this.event(Category.Debugger, EventAction.OpenDevTools); }
-	public logFlutterSurveyShown() { this.event(Category.FlutterSurvey, EventAction.Shown); }
-	public logFlutterSurveyClicked() { this.event(Category.FlutterSurvey, EventAction.Clicked); }
-	public logFlutterSurveyDismissed() { this.event(Category.FlutterSurvey, EventAction.Dismissed); }
+	public logDevToolsOpened() { this.event(AnalyticsEvent.DevTools_Opened); }
+	public logFlutterSurveyShown() { this.event(AnalyticsEvent.FlutterSurvey_Shown); }
+	public logFlutterSurveyClicked() { this.event(AnalyticsEvent.FlutterSurvey_Clicked); }
+	public logFlutterSurveyDismissed() { this.event(AnalyticsEvent.FlutterSurvey_Dismissed); }
 	public logFlutterOutlineActivated() {
 		if (this.hasLoggedFlutterOutline)
 			return;
 		this.hasLoggedFlutterOutline = true;
-		this.event(Category.FlutterOutline, EventAction.Activated);
+		this.event(AnalyticsEvent.FlutterOutline_Activated);
 	}
-	public logCommand(command: EventCommand) { this.event(Category.Command, EventCommand[command]); }
+	public log(category: AnalyticsEvent) { this.event(category); }
 }
 
 interface AnalyticsData {
 	anonymize: true,
-	eventAction: string,
-	eventCategory: string,
+	event: string,
 	language: string,
 
 	isDevExtension: boolean,
