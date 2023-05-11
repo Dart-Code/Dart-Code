@@ -344,6 +344,7 @@ interface AnalyticsData {
 	flutterHotReloadOnSave: string | undefined,
 
 	// For debugger start events.
+	// TODO(dantup): Should these be params on the event, rather than user properties?
 	debuggerType?: string,
 	debuggerRunType?: string,
 	debuggerAdapterType?: string,
