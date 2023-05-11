@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
-import * as querystring from "querystring";
 import { env, TelemetryLogger, TelemetrySender, Uri, workspace } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
+import { getRandomInt } from "../shared/utils/fs";
 import { hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
@@ -22,6 +22,8 @@ const sendAnalyticsFromExtensionDevHost = false;
 const machineId = env.machineId !== "someValue.machineId"
 	? env.machineId
 	: (sendAnalyticsFromExtensionDevHost ? "35009a79-1a05-49d7-dede-dededededede" : undefined);
+
+const sessionId = getRandomInt(0x1000, 0x100000).toString(16);
 
 enum Category {
 	Extension,
@@ -68,36 +70,14 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	private async send(data: AnalyticsData & Record<string, any>): Promise<void> {
 		const analyticsData = {
 			// Everything listed here should be in the 'telemetry.json' file in the extension root.
-			aip: data.anonymize ? 1 : null,
-			an: data["common.extname"],
-			av: data["common.extversion"],
-			cd1: data.isDevExtension,
-			cd10: data.showTodos,
-			cd11: data.analyzerProtocol,
-			cd12: data.formatter,
-			cd13: data.flutterVersion,
-			cd14: data.flutterExtension,
-			cd15: data.debuggerType,
-			cd16: data.debuggerRunType,
-			cd17: data.flutterUiGuides,
-			cd18: data.debuggerAdapterType,
-			cd19: data["common.remotename"],
-			cd2: data.platform,
-			cd20: data.appName ?? "Unknown",
-			cd3: data.dartVersion,
-			cd5: data["common.vscodeversion"],
-			cd6: data.debuggerPreference,
-			cd7: data.workspaceType,
-			cd8: data.closingLabels,
-			cd9: data.flutterHotReloadOnSave,
-			cid: machineId,
-			ea: data.eventAction,
-			ec: data.eventCategory,
-			sc: data.sessionControl,
-			t: "event",
-			tid: "UA-2201586-19",
-			ul: data.language,
-			v: "1", // API Version.
+			client_id: machineId, // eslint-disable-line camelcase
+			events: [{
+				name: `${data.eventCategory}_${data.eventAction}`,
+				params: {
+					"session_id": sessionId,
+				},
+			}],
+			user_properties: this.buildUserProperties(data), // eslint-disable-line camelcase
 		};
 
 		if (debug)
@@ -105,11 +85,13 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 
 		const options: https.RequestOptions = {
 			headers: {
-				"Content-Type": "application/x-www-form-urlencoded",
+				"Content-Type": "application/json",
 			},
 			hostname: "www.google-analytics.com",
 			method: "POST",
-			path: debug ? "/debug/collect" : "/collect",
+			path: (debug ? "/debug/mp/collect" : "/mp/collect")
+				// Not really secret, is it...
+				+ "?api_secret=Y7bcxwkTQ-ekVL0ys4htBA&measurement_id=G-WXNLFN7DDJ",
 			port: 443,
 		};
 
@@ -139,12 +121,46 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 				}
 				resolve();
 			});
-			req.write(querystring.stringify(analyticsData));
+			req.write(JSON.stringify(analyticsData));
 			req.on("error", (e) => {
 				reject(e);
 			});
 			req.end();
 		});
+	}
+
+	private buildUserProperties(data: AnalyticsData & Record<string, any>) {
+		const userProperties: { [key: string]: any } = {};
+
+		function add(name: string, value: any) {
+			if (value)
+				userProperties[name] = { value };
+		}
+
+		add("analyzerProtocol", data.analyzerProtocol);
+		add("appName", data.appName ?? "Unknown");
+		add("appVersion", data["common.extversion"]);
+		add("closingLabels", data.closingLabels);
+		add("codeVersion", data["common.vscodeversion"]);
+		add("dartVersion", data.dartVersion);
+		add("debuggerAdapterType", data.debuggerAdapterType);
+		add("debuggerPreference", data.debuggerPreference);
+		add("debuggerRunType", data.debuggerRunType);
+		add("debuggerType", data.debuggerType);
+		add("extensionName", data["common.extname"]);
+		add("flutterExtension", data.flutterExtension);
+		add("flutterHotReloadOnSave", data.flutterHotReloadOnSave);
+		add("flutterUiGuides", data.flutterUiGuides);
+		add("flutterVersion", data.flutterVersion);
+		add("formatter", data.formatter);
+		add("isDevExtension", data.isDevExtension);
+		add("platform", data.platform);
+		add("remotename", data["common.remotename"]);
+		add("showTodos", data.showTodos);
+		add("userLanguage", data.language);
+		add("workspaceType", data.workspaceType);
+
+		return userProperties;
 	}
 }
 
@@ -247,14 +263,6 @@ export class Analytics {
 			...customData,
 		};
 
-		// Force a session start if this is extension activation.
-		if (category === Category.Extension && action === EventAction.Activated)
-			data.sessionControl = "start";
-
-		// Force a session end if this is extension deactivation.
-		if (category === Category.Extension && action === EventAction.Deactivated)
-			data.sessionControl = "end";
-
 		this.telemetryLogger.logUsage("event", data);
 	}
 
@@ -333,7 +341,6 @@ interface AnalyticsData {
 	anonymize: true,
 	eventAction: string,
 	eventCategory: string,
-	sessionControl?: string,
 	language: string,
 
 	isDevExtension: boolean,
