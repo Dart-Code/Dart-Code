@@ -288,7 +288,8 @@ export class FlutterCommands extends BaseSdkCommands {
 		const folderPath = fsPath(folders[0]);
 		this.context.lastUsedNewProjectPath = folderPath;
 
-		const defaultName = nextAvailableFilename(folderPath, "flutter_application_");
+		const projectKind = this.getProjectKind(template.id);
+		const defaultName = nextAvailableFilename(folderPath, `flutter_${projectKind}_`);
 		const name = await this.promptForNameWithSettings(defaultName, folderPath);
 		if (!name)
 			return;
@@ -391,6 +392,17 @@ export class FlutterCommands extends BaseSdkCommands {
 
 		if (fs.existsSync(path.join(folderDir, input)))
 			return `A project with this name already exists within the selected directory`;
+	}
+
+	private getProjectKind(templateName: string) {
+		if (templateName.includes("module"))
+			return "module";
+		if (templateName.includes("package"))
+			return "package";
+		if (templateName.includes("plugin"))
+			return "plugin";
+
+		return "application";
 	}
 }
 

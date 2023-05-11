@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, DART_CREATE_PROJECT_TRIGGER_FILE } from "../../shared/constants";
+import { DART_CREATE_PROJECT_TRIGGER_FILE, dartVMPath } from "../../shared/constants";
 import { DartProjectTemplate, DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath, nextAvailableFilename } from "../../shared/utils/fs";
@@ -100,7 +100,8 @@ export class DartCommands extends BaseSdkCommands {
 		const folderPath = fsPath(folders[0]);
 		this.context.lastUsedNewProjectPath = folderPath;
 
-		const defaultName = nextAvailableFilename(folderPath, "dart_application_");
+		const projectKind = this.getProjectKind(selectedTemplate.template.name);
+		const defaultName = nextAvailableFilename(folderPath, `dart_${projectKind}_`);
 		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, folderPath) });
 		if (!name)
 			return;
@@ -134,5 +135,14 @@ export class DartCommands extends BaseSdkCommands {
 
 		if (fs.existsSync(path.join(folderDir, input)))
 			return `A project with this name already exists within the selected directory`;
+	}
+
+	private getProjectKind(templateName: string) {
+		if (templateName.includes("package"))
+			return "package";
+		if (templateName.includes("web"))
+			return "web_application";
+
+		return "application";
 	}
 }
