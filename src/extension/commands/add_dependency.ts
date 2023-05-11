@@ -8,7 +8,7 @@ import { PackageNameCompletionData, PubApi } from "../../shared/pub/api";
 import { PackageCacheData } from "../../shared/pub/pub_add";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
-import { Analytics, EventCommand } from "../analytics";
+import { Analytics, AnalyticsEvent } from "../analytics";
 import * as util from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands } from "./sdk";
@@ -104,7 +104,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 
 	private async promptAndAddDependency(uri: string | vs.Uri | undefined, isDevDependency: boolean) {
-		this.analytics.logCommand(EventCommand.RestartAnalyzer);
+		this.analytics.log(AnalyticsEvent.Command_AddDependency);
 
 		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to add the dependency to");

@@ -1,21 +1,24 @@
 {
 		"events": {
-			"ExtensionActivated": { },
-			"ExtensionRestart": { },
-			"ExtensionSdkDetectionFailure": { },
-			"DebuggerActivated": {
+			"Extension_Activated": { },
+			"Extension_Restart": { },
+			"SdkDetectionFailure": { },
+			"Debugger_Activated": {
 				"debuggerPreference":     { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether debugging is to to 'just my code', or includes external package and SDK sources" },
 				"debuggerType":           { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The type (Dart, Flutter, DartTest, FlutterTest) of debug session being started" },
 				"debuggerRunType":        { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the debug session is Run (without Debugging) or Debug" },
 				"debuggerAdapterType":    { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether debugging is using the SDK or legacy debug adapter implementation" }
 			},
-			"DebuggerOpenDevTools": { },
-			"FlutterSurveyShown": { },
-			"FlutterSurveyClicked": { },
-			"FlutterSurveyDismissed": { },
-			"FlutterOutlineActivated": { },
-			"CommandDartNewProject": { },
-			"CommandRestartAnalyzer": { }
+			"DevTools_Opened": { },
+			"FlutterSurvey_Shown": { },
+			"FlutterSurvey_Clicked": { },
+			"FlutterSurvey_Dismissed": { },
+			"FlutterOutline_Activated": { },
+			"Command_DartNewProject": { },
+			"Command_FlutterNewProject": { },
+			"Command_AddDependency": { },
+			"Command_RestartAnalyzer": { },
+			"Command_ForceReanalyze": { }
 		},
 		"commonProperties": {
 			"common.vscodemachineid": { "classification": "EndUserPseudonymizedInformation", "purpose": "FeatureInsight", "comment": "An identifier provided by VS Code to relate coding sessions from the same installation together" },

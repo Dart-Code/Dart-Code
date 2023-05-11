@@ -25,7 +25,7 @@ const machineId = env.machineId !== "someValue.machineId"
 
 const sessionId = getRandomInt(0x1000, 0x100000).toString(16);
 
-enum AnalyticsEvent {
+export enum AnalyticsEvent {
 	Extension_Activated,
 	Extension_Restart,
 	SdkDetectionFailure,
@@ -39,8 +39,8 @@ enum AnalyticsEvent {
 	Command_FlutterNewProject,
 	Command_AddDependency,
 	Command_RestartAnalyzer,
+	Command_ForceReanalyze,
 }
-
 
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	constructor(readonly logger: Logger, readonly handleError: (e: unknown) => void) { }
