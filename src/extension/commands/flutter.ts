@@ -15,7 +15,7 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { Context } from "../../shared/vscode/workspace";
-import { Analytics, EventCommand } from "../analytics";
+import { Analytics, AnalyticsEvent } from "../analytics";
 import { config } from "../config";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { SdkUtils } from "../sdk/utils";
@@ -253,7 +253,7 @@ export class FlutterCommands extends BaseSdkCommands {
 			return;
 		}
 
-		this.analytics.logCommand(EventCommand.FlutterNewProject);
+		this.analytics.log(AnalyticsEvent.Command_FlutterNewProject);
 
 		const pickItems = this.getFlutterTemplates();
 

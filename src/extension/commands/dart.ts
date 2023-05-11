@@ -8,7 +8,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, nextAvailableFilename } from "../../shared/utils/fs";
 import { writeDartSdkSettingIntoProject } from "../../shared/utils/projects";
 import { Context } from "../../shared/vscode/workspace";
-import { Analytics, EventCommand } from "../analytics";
+import { Analytics, AnalyticsEvent } from "../analytics";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { DartCreate } from "../sdk/dart/dart_create";
@@ -52,7 +52,7 @@ export class DartCommands extends BaseSdkCommands {
 			return;
 		}
 
-		this.analytics.logCommand(EventCommand.DartNewProject);
+		this.analytics.log(AnalyticsEvent.Command_DartNewProject);
 
 		// Get the JSON for the available templates by calling 'dart create'.
 
