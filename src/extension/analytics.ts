@@ -24,6 +24,7 @@ const machineId = env.machineId !== "someValue.machineId"
 	: (sendAnalyticsFromExtensionDevHost ? "35009a79-1a05-49d7-dede-dededededede" : undefined);
 
 const sessionId = getRandomInt(0x1000, 0x100000).toString(16);
+const sessionStartMs = new Date().getTime();
 
 export enum AnalyticsEvent {
 	Extension_Activated,
@@ -59,8 +60,10 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 			// Everything listed here should be in the 'telemetry.json' file in the extension root.
 			client_id: machineId, // eslint-disable-line camelcase
 			events: [{
-				name: `${data.eventCategory}_${data.eventAction}`,
+				name: data.event,
 				params: {
+					// GA4 doesn't record any users unless there is non-zero engagement time.
+					"engagement_time_msec": new Date().getTime() - sessionStartMs,
 					"session_id": sessionId,
 				},
 			}],
@@ -142,7 +145,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("formatter", data.formatter);
 		add("isDevExtension", data.isDevExtension);
 		add("platform", data.platform);
-		add("remotename", data["common.remotename"]);
+		add("remoteName", data["common.remotename"]);
 		add("showTodos", data.showTodos);
 		add("userLanguage", data.language);
 		add("workspaceType", data.workspaceType);
