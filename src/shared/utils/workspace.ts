@@ -99,3 +99,23 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 		logger.error(e);
 	}
 }
+
+// Cleans a version in the form x.y.z-foo.a.b.c into just
+// x.y-foo to reduce the number of unique versions being recorded.
+export function simplifyVersion(rawVersion: any): string | undefined {
+	if (typeof rawVersion !== "string")
+		return;
+
+	const parts = rawVersion.split("-");
+	const versionNumber = parts[0];
+	const versions = versionNumber.split(".");
+	const prereleaseTag = parts.length > 1 ? parts[1].split(".")[0] : undefined;
+
+	const cleanParts: string[] = [];
+	cleanParts.push(versions[0]);
+	if (versions.length > 1)
+		cleanParts.push(`.${versions[1]}`);
+	if (prereleaseTag)
+		cleanParts.push(`-${prereleaseTag}`);
+	return cleanParts.join("");
+}

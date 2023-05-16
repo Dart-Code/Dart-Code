@@ -5,6 +5,7 @@ import { env, TelemetryLogger, TelemetrySender, Uri, workspace } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
 import { Logger } from "../shared/interfaces";
 import { getRandomInt } from "../shared/utils/fs";
+import { simplifyVersion } from "../shared/utils/workspace";
 import { hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
@@ -129,10 +130,17 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 
 		add("analyzerProtocol", data.analyzerProtocol);
 		add("appName", data.appName ?? "Unknown");
-		add("appVersion", data["common.extversion"]);
 		add("closingLabels", data.closingLabels);
-		add("codeVersion", data["common.vscodeversion"]);
-		add("dartVersion", data.dartVersion);
+
+		add("appVersionRaw", data["common.extversion"]);
+		add("appVersion", simplifyVersion(data["common.extversion"]));
+		add("codeVersionRaw", data["common.vscodeversion"]);
+		add("codeVersion", simplifyVersion(data["common.vscodeversion"]));
+		add("dartVersionRaw", data.dartVersion);
+		add("dartVersion", simplifyVersion(data.dartVersion));
+		add("flutterVersionRaw", data.flutterVersion);
+		add("flutterVersion", simplifyVersion(data.flutterVersion));
+
 		add("debuggerAdapterType", data.debuggerAdapterType);
 		add("debuggerPreference", data.debuggerPreference);
 		add("debuggerRunType", data.debuggerRunType);
@@ -141,7 +149,6 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("flutterExtension", data.flutterExtension);
 		add("flutterHotReloadOnSave", data.flutterHotReloadOnSave);
 		add("flutterUiGuides", data.flutterUiGuides);
-		add("flutterVersion", data.flutterVersion);
 		add("formatter", data.formatter);
 		add("isDevExtension", data.isDevExtension);
 		add("platform", data.platform);
