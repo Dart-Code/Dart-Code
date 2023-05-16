@@ -200,6 +200,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			: sdks.dart;
 		const envPathPrefix = [baseSdk, "bin", path.delimiter].join(path.sep);
 		context.environmentVariableCollection.prepend("PATH", envPathPrefix);
+	} else {
+		// Since the value persists (which we want, so upon reload we don't miss
+		// any terminals that were already restored before we activated), we need
+		// to explicitly remove the path when the setting is disabled.
+		context.environmentVariableCollection.clear();
 	}
 
 	// TODO: Move these capabilities into WorkspaceContext.
