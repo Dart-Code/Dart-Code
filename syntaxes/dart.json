@@ -1,6 +1,6 @@
 {
 	"name": "Dart",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"fileTypes": [
 		"dart"
 	],
@@ -302,6 +302,9 @@
 				{
 					"name": "keyword.declaration.dart",
 					"match": "extends"
+				},
+				{
+					"include": "#comments"
 				}
 			]
 		},
