@@ -2677,6 +2677,14 @@
 								"type": "boolean",
 								"markdownDescription": "Whether to run the application without attaching a debugger. This will prevent breakpoints, break-on-exception and commands that require calling VM Service extensions from working.",
 								"default": false
+							},
+							"customTool": {
+								"type": "string",
+								"markdownDescription": "An optional tool to run instead of `dart` or `flutter` when launching applications. The custom tool must be completely compatible with the tool/command it is replacing including supporting all the same arguments and (if applicable) providing the same stdin/stdout APIs. This setting is for some specific advanced configurations and should not normally be set."
+							},
+							"customToolReplacesArgs": {
+								"type": "number",
+								"markdownDescription": "The number of arguments to delete from the beginning of the argument list when invoking 'customTool'. Setting 'customTool' to 'dart_test' and 'customToolReplacesArgs' to 2 for a test run would invoke 'dart_test foo_test.dart' instead of 'dart run test:test foo_test.dart' (if larger than the number of computed arguments all arguments will be removed, if not supplied will default to 0). This setting is for some specific advanced configurations and should not normally be set."
 							}
 						}
 					},
