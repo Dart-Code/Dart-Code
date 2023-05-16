@@ -25,3 +25,7 @@ export class EventEmitter<T> implements IAmDisposable {
 export interface Event<T> {
 	listen(listener: (x: T) => void): IAmDisposable;
 }
+
+export interface VsEvent<T> {
+	(listener: (e: T) => any, thisArgs?: any, disposables?: IAmDisposable[]): IAmDisposable;
+}

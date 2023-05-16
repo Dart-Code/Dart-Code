@@ -3,14 +3,18 @@ import * as path from "path";
 import { DartCapabilities } from "./capabilities/dart";
 import { dartVMPath, isWin, pubPath } from "./constants";
 import { LogCategory } from "./enums";
-import { Logger, SpawnedProcess } from "./interfaces";
+import { CancellationToken, Logger, SpawnedProcess } from "./interfaces";
 import { logProcess } from "./logging";
 import { nullToUndefined } from "./utils";
+
+const simpleCommandRegex = new RegExp("^[\\w\\-.]+$");
 
 export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: { [key: string]: string | undefined } | undefined): SpawnedProcess {
 	const quotedArgs = args.map(quoteAndEscapeArg);
 	const customEnv = Object.assign({}, process.env, env);
-	return child_process.spawn(`"${binPath}"`, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true }) as SpawnedProcess;
+	// Putting quotes around something like "git" will cause it to fail, so don't do it if binPath is just a single identifier.
+	binPath = simpleCommandRegex.test(binPath) ? binPath : `"${binPath}"`;
+	return child_process.spawn(binPath, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true }) as SpawnedProcess;
 }
 
 function quoteAndEscapeArg(arg: string) {
@@ -31,10 +35,11 @@ export class RunProcessResult {
 	constructor(public readonly exitCode: number | undefined, public readonly stdout: string, public readonly stderr: string) { }
 }
 
-export function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: { [key: string]: string | undefined } | undefined, spawn: SpawnFunction): Promise<RunProcessResult> {
+export function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: { [key: string]: string | undefined } | undefined, spawn: SpawnFunction, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
 	return new Promise((resolve) => {
 		logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(env)}`);
 		const proc = spawn(workingDirectory, binPath, args, env);
+		cancellationToken?.onCancellationRequested(() => proc.kill());
 		logProcess(logger, LogCategory.CommandProcesses, proc);
 
 		const out: string[] = [];

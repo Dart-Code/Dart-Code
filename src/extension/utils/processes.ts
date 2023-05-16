@@ -1,6 +1,7 @@
+import { CancellationToken } from "vscode";
 import { isDartCodeTestRun } from "../../shared/constants";
 import { Logger, SpawnedProcess } from "../../shared/interfaces";
-import { runProcess, RunProcessResult, safeSpawn } from "../../shared/processes";
+import { RunProcessResult, runProcess, safeSpawn } from "../../shared/processes";
 
 // Environment used when spawning Dart and Flutter processes.
 let toolEnv: { [key: string]: string } = {};
@@ -38,6 +39,6 @@ export function safeToolSpawn(workingDirectory: string | undefined, binPath: str
 }
 
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
-export function runToolProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): Promise<RunProcessResult> {
-	return runProcess(logger, binPath, args, workingDirectory, envOverrides, safeToolSpawn);
+export function runToolProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
+	return runProcess(logger, binPath, args, workingDirectory, envOverrides, safeToolSpawn, cancellationToken);
 }
