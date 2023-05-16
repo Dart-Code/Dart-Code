@@ -31,27 +31,27 @@ describe("extension", () => {
 
 describe("command", () => {
 	it("Flutter: New Project can be invoked and creates app trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "app");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "app", "application");
 	});
 
 	it("Flutter: New Project can be invoked and creates module trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "module");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "module", "module");
 	});
 
 	it("Flutter: New Project can be invoked and creates package trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "package");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "package", "package");
 	});
 
 	it("Flutter: New Project can be invoked and creates plugin trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "plugin");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "plugin", "plugin");
 	});
 
 	it("Flutter: New Project can be invoked and creates skeleton trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "skeleton");
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "skeleton", "application");
 	});
 
 	it("Flutter: New Project can be invoked and creates empty application trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "application", true);
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "application", "application", true);
 	});
 
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
@@ -80,7 +80,7 @@ describe("command", () => {
 	});
 });
 
-async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string, empty?: boolean): Promise<void> {
+async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string, expectedName: string, empty?: boolean): Promise<void> {
 	attachLoggingWhenExtensionAvailable();
 
 	// Return the expected project type from the prompt.
@@ -95,8 +95,8 @@ async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: s
 	const inputBox = stubCreateInputBox("my_test_flutter_proj");
 
 	// Create some folders in the temp folder to check the default name is correctly incremented.
-	fs.mkdirSync(path.join(tempFolder, "flutter_application_1"));
-	fs.mkdirSync(path.join(tempFolder, "flutter_application_2"));
+	fs.mkdirSync(path.join(tempFolder, `flutter_${expectedName}_1`));
+	fs.mkdirSync(path.join(tempFolder, `flutter_${expectedName}_2`));
 
 	// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
 	const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
@@ -104,7 +104,7 @@ async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: s
 	const projectFolderUri: string | undefined = await vs.commands.executeCommand(commandToExecute);
 
 	assert.ok(projectFolderUri);
-	assert.equal(inputBox.promptedValue, "flutter_application_3");
+	assert.equal(inputBox.promptedValue, `flutter_${expectedName}_3`);
 	assert.ok(showOpenDialog.calledOnce);
 	assert.ok(openFolder.calledOnce);
 
