@@ -6,7 +6,7 @@ import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } fro
 import { Logger } from "../shared/interfaces";
 import { getRandomInt } from "../shared/utils/fs";
 import { simplifyVersion } from "../shared/utils/workspace";
-import { hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
+import { hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
 
@@ -120,7 +120,8 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		});
 	}
 
-	private buildUserProperties(data: AnalyticsData & Record<string, any>) {
+	private buildUserProperties(data: AnalyticsData) {
+		const dataMap = data as Record<string, any>;
 		const userProperties: { [key: string]: any } = {};
 
 		function add(name: string, value: any) {
@@ -132,10 +133,10 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("appName", data.appName ?? "Unknown");
 		add("closingLabels", data.closingLabels);
 
-		add("appVersionRaw", data["common.extversion"]);
-		add("appVersion", simplifyVersion(data["common.extversion"]));
-		add("codeVersionRaw", data["common.vscodeversion"]);
-		add("codeVersion", simplifyVersion(data["common.vscodeversion"]));
+		add("appVersionRaw", dataMap["common.extversion"]);
+		add("appVersion", simplifyVersion(dataMap["common.extversion"]));
+		add("codeVersionRaw", dataMap["common.vscodeversion"]);
+		add("codeVersion", simplifyVersion(dataMap["common.vscodeversion"]));
 		add("dartVersionRaw", data.dartVersion);
 		add("dartVersion", simplifyVersion(data.dartVersion));
 		add("flutterVersionRaw", data.flutterVersion);
@@ -145,14 +146,14 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("debuggerPreference", data.debuggerPreference);
 		add("debuggerRunType", data.debuggerRunType);
 		add("debuggerType", data.debuggerType);
-		add("extensionName", data["common.extname"]);
+		add("extensionName", dataMap["common.extname"]);
 		add("flutterExtension", data.flutterExtension);
 		add("flutterHotReloadOnSave", data.flutterHotReloadOnSave);
 		add("flutterUiGuides", data.flutterUiGuides);
 		add("formatter", data.formatter);
-		add("isDevExtension", data.isDevExtension);
+		add("extensionKind", data.extensionKind);
 		add("platform", data.platform);
-		add("remoteName", data["common.remotename"]);
+		add("remoteName", dataMap["common.remotename"]);
 		add("showTodos", data.showTodos);
 		add("userLanguage", data.language);
 		add("workspaceType", data.workspaceType);
@@ -246,12 +247,12 @@ export class Analytics {
 			closingLabels: config.closingLabels ? "On" : "Off",
 			dartVersion: this.sdkVersion,
 			event: AnalyticsEvent[category],
+			extensionKind: isDevExtension ? "Dev" : isPreReleaseExtension ? "Pre-Release" : "Stable",
 			flutterExtension: hasFlutterExtension ? "Installed" : "Not Installed",
 			flutterHotReloadOnSave: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : undefined,
 			flutterUiGuides,
 			flutterVersion: this.flutterSdkVersion,
 			formatter: this.formatter,
-			isDevExtension,
 			language: env.language,
 			platform: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			showTodos: config.showTodos ? "On" : "Off",
@@ -338,7 +339,7 @@ interface AnalyticsData {
 	event: string,
 	language: string,
 
-	isDevExtension: boolean,
+	extensionKind: string,
 	platform: string,
 	appName: string | undefined,
 	workspaceType: string,
