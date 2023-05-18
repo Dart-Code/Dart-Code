@@ -63,6 +63,10 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 			events: [{
 				name: data.event,
 				params: {
+					"debuggerAdapterType": data.debuggerAdapterType,
+					"debuggerPreference": data.debuggerPreference,
+					"debuggerRunType": data.debuggerRunType,
+					"debuggerType": data.debuggerType,
 					// GA4 doesn't record any users unless there is non-zero engagement time.
 					"engagement_time_msec": new Date().getTime() - sessionStartMs,
 					"session_id": sessionId,
@@ -142,10 +146,6 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("flutterVersionRaw", data.flutterVersion);
 		add("flutterVersion", simplifyVersion(data.flutterVersion));
 
-		add("debuggerAdapterType", data.debuggerAdapterType);
-		add("debuggerPreference", data.debuggerPreference);
-		add("debuggerRunType", data.debuggerRunType);
-		add("debuggerType", data.debuggerType);
 		add("extensionName", dataMap["common.extname"]);
 		add("flutterExtension", data.flutterExtension);
 		add("flutterHotReloadOnSave", data.flutterHotReloadOnSave);
