@@ -59,6 +59,7 @@ class Config {
 	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
 	get cliConsole(): "debugConsole" | "terminal" | "externalTerminal" { return this.getConfig<"debugConsole" | "terminal" | "externalTerminal">("cliConsole", "debugConsole"); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
+	get completionBudgetMilliseconds(): number | undefined { return this.getConfig<number | undefined>("completionBudgetMilliseconds", undefined); }
 	get customDartDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customDartDapPath", null)); }
 	get customDevTools(): undefined | CustomDevToolsConfig { return this.getConfig<null | CustomDevToolsConfig>("customDevTools", null); }
 	get customFlutterDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customFlutterDapPath", null)); }

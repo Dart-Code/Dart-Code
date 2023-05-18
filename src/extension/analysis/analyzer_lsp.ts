@@ -404,6 +404,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			allowOpenUri: true,
 			appHost: vs.env.appHost,
 			closingLabels: config.closingLabels,
+			completionBudgetMilliseconds: config.completionBudgetMilliseconds,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
