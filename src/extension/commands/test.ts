@@ -82,12 +82,15 @@ export class TestCommands implements vs.Disposable {
 				const testType = integrationTests ? "Integration Tests" : "Tests";
 				const name = `${projectName} ${testType}`;
 
+				// Use relative paths.
+				testPaths = testPaths.map((suitePath) => path.relative(projectFolder, suitePath));
+
 				// To avoid making a huge list of suite names that may trigger
 				// "The command line is too long" on Windows, if we know we're running them
 				// _all_ we can simplify the list of test names to just the top-level folders
 				// that contain each.
 				if (isRunningAll)
-					testPaths = uniq(testPaths.map((suitePath) => path.relative(projectFolder, suitePath).split(path.sep)[0]));
+					testPaths = uniq(testPaths.map((suitePath) => suitePath.split(path.sep)[0]));
 
 				projectsWithTests.push({ projectFolder, name, tests: testPaths });
 			}
