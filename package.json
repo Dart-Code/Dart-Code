@@ -1408,7 +1408,16 @@
 					"dart.analyzerAdditionalArgs": {
 						"type": "array",
 						"default": [],
-						"description": "Additional arguments to pass to the Dart Analysis Server.",
+						"description": "Additional arguments to pass to the Dart Analysis Server. This setting is can be useful for troubleshooting issues with the Dart Analysis Server.",
+						"scope": "window",
+						"items": {
+							"type": "string"
+						}
+					},
+					"dart.analyzerVmAdditionalArgs": {
+						"type": "array",
+						"default": [],
+						"description": "Additional arguments to pass to the VM running the Dart Analysis Server. This setting is can be useful for troubleshooting issues with the Dart Analysis Server.",
 						"scope": "window",
 						"items": {
 							"type": "string"
@@ -1420,7 +1429,7 @@
 							"number"
 						],
 						"default": null,
-						"description": "The port number to be used for the Dart analyzer diagnostic server.",
+						"description": "The port number to be used for the Dart analyzer diagnostic server. This setting is can be useful for troubleshooting issues with the Dart Analysis Server.",
 						"scope": "window"
 					},
 					"dart.analyzerPath": {

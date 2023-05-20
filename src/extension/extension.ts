@@ -360,10 +360,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// tslint:disable-next-line: no-floating-promises
 	analyzer.onReady.then(() => {
-		const analyzerEndTime = new Date();
-
-		const analyzerVmServicePort = analyzer.vmServicePort;
-		if (analyzerVmServicePort) {
+		if (config.analyzerVmServicePort) {
 			vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
 		}
 	});
@@ -935,6 +932,7 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzerInstrumentationLogFile
 		+ config.extensionLogFile
 		+ config.analyzerAdditionalArgs
+		+ config.analyzerVmAdditionalArgs
 		+ config.flutterSdkPath
 		+ config.flutterSdkPaths?.length
 		+ config.flutterSelectDeviceWhenConnected

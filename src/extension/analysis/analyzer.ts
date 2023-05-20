@@ -8,7 +8,7 @@ import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 
-export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, isLsp: boolean, vmServicePort: number | undefined) {
+export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, isLsp: boolean) {
 	const analyzerPath = config.analyzerPath || (
 		dartCapabilities.supportsLanguageServerCommand
 			? "language-server"
@@ -24,13 +24,14 @@ export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities
 		throw new Error(msg);
 	}
 
-	return buildAnalyzerArgs(analyzerPath, dartCapabilities, isLsp, vmServicePort);
+	return buildAnalyzerArgs(analyzerPath, dartCapabilities, isLsp);
 }
 
-function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilities, isLsp: boolean, vmServicePort: number | undefined) {
+function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilities, isLsp: boolean) {
 	let analyzerArgs = [];
 
 	// Optionally start the VM service for the analyzer.
+	const vmServicePort = config.analyzerVmServicePort;
 	if (vmServicePort) {
 		analyzerArgs.push(`--enable-vm-service=${vmServicePort}`);
 		// When using LSP, printing the VM Service URI will break the protocol and
@@ -42,6 +43,10 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 		if (dartCapabilities.supportsNoServeDevTools)
 			analyzerArgs.push("--no-serve-devtools");
 	}
+
+	// Allow arbitrary VM args to be passed to the analysis server.
+	if (config.analyzerVmAdditionalArgs)
+		analyzerArgs = analyzerArgs.concat(config.analyzerVmAdditionalArgs);
 
 	analyzerArgs.push(analyzerPath);
 

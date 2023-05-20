@@ -48,7 +48,6 @@ export class AnalyzerCapabilities {
 export class DasAnalyzer extends Analyzer {
 	public readonly client: DasAnalyzerClient;
 	public readonly fileTracker: DasFileTracker;
-	public readonly vmServicePort: number | undefined;
 
 	private readonly statusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
@@ -57,8 +56,7 @@ export class DasAnalyzer extends Analyzer {
 
 		this.setupStatusItem();
 
-		this.vmServicePort = config.analyzerVmServicePort;
-		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities, this.vmServicePort);
+		this.client = new DasAnalyzerClient(this.logger, sdks, dartCapabilities);
 		this.fileTracker = new DasFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client);
 		this.disposables.push(this.fileTracker);
@@ -106,10 +104,10 @@ export class DasAnalyzerClient extends AnalyzerGen {
 	private currentAnalysisCompleter?: PromiseCompleter<void>;
 	public capabilities: AnalyzerCapabilities = AnalyzerCapabilities.empty;
 
-	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, vmServicePort: number | undefined) {
+	constructor(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities) {
 		super(logger, config.maxLogLineLength);
 
-		this.launchArgs = getAnalyzerArgs(logger, sdks, dartCapabilities, false, vmServicePort);
+		this.launchArgs = getAnalyzerArgs(logger, sdks, dartCapabilities, false);
 
 		// Hook error subscriptions so we can try and get diagnostic info if this happens.
 		this.registerForServerError((e) => this.requestDiagnosticsUpdate());
