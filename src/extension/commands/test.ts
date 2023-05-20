@@ -65,7 +65,7 @@ export class TestCommands implements vs.Disposable {
 			return projectFolders.find((f) => isWithinPath(suitePath, f));
 		}
 
-		const projectsWithTests: Array<{ projectFolder: string, name: string, tests: string[] }> = [];
+		const projectsWithTests: Array<{ projectFolder: string, name: string, relativeTestPaths: string[] }> = [];
 		function addTestItemsForProject(projectFolder: string, integrationTests: boolean) {
 			if (!suites)
 				return;
@@ -92,7 +92,7 @@ export class TestCommands implements vs.Disposable {
 				if (isRunningAll)
 					testPaths = uniq(testPaths.map((suitePath) => suitePath.split(path.sep)[0]));
 
-				projectsWithTests.push({ projectFolder, name, tests: testPaths });
+				projectsWithTests.push({ projectFolder, name, relativeTestPaths: testPaths });
 			}
 		}
 
@@ -111,11 +111,11 @@ export class TestCommands implements vs.Disposable {
 				debug: false,
 				isFlutter: undefined, // unknown, runTests will compute
 				launchTemplate: {
-					args: projectWithTests.tests.slice(1),
+					args: projectWithTests.relativeTestPaths.slice(1),
 					cwd: projectWithTests.projectFolder,
 					name: projectWithTests.name,
 				},
-				programPath: projectWithTests.tests[0],
+				programPath: path.join(projectWithTests.projectFolder, projectWithTests.relativeTestPaths[0]),
 				shouldRunSkippedTests: false,
 				suppressPrompts: suites?.length !== 1,
 				testRun,
