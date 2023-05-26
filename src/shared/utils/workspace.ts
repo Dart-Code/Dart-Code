@@ -109,7 +109,13 @@ export function simplifyVersion(rawVersion: any): string | undefined {
 	const parts = rawVersion.split("-");
 	const versionNumber = parts[0];
 	const versions = versionNumber.split(".");
-	const prereleaseTag = parts.length > 1 ? parts[1].split(".")[0] : undefined;
+	const prereleasePart = parts.length > 1 ? parts[1] : undefined;
+	let prereleaseTag: string | undefined;
+	for (const knownName of ["beta", "alpha", "dev", "edge"]) {
+		if (prereleasePart?.includes(knownName))
+			prereleaseTag = knownName;
+	}
+
 
 	const cleanParts: string[] = [];
 	cleanParts.push(versions[0]);
@@ -117,5 +123,7 @@ export function simplifyVersion(rawVersion: any): string | undefined {
 		cleanParts.push(`.${versions[1]}`);
 	if (prereleaseTag)
 		cleanParts.push(`-${prereleaseTag}`);
+	else if (prereleasePart)
+		cleanParts.push(`-pre`);
 	return cleanParts.join("");
 }

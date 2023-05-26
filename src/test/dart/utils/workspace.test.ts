@@ -14,28 +14,32 @@ describe("simplifyVersion", () => {
 		assert.equal(simplifyVersion("999.998"), "999.998");
 	});
 
-	it("handles simple x.y.z-pre versions", () => {
-		assert.equal(simplifyVersion("1.2.3-pre"), "1.2-pre");
-		assert.equal(simplifyVersion("0.0.3-pre"), "0.0-pre");
-		assert.equal(simplifyVersion("999.998.997-pre"), "999.998-pre");
+	it("handles simple x.y.z with known pre-release kinds", () => {
+		for (const knownName of ["beta", "alpha", "dev", "edge"]) {
+			assert.equal(simplifyVersion(`3.1.0-63.1.${knownName}`), `3.1-${knownName}`);
+			assert.equal(simplifyVersion(`3.1.0-${knownName}.1.2`), `3.1-${knownName}`);
+			assert.equal(simplifyVersion(`3.1.0-1.${knownName}.2`), `3.1-${knownName}`);
+		}
 	});
 
-	it("handles simple x.y-pre versions", () => {
-		assert.equal(simplifyVersion("1.2-pre"), "1.2-pre");
-		assert.equal(simplifyVersion("0.0-pre"), "0.0-pre");
-		assert.equal(simplifyVersion("999.998-pre"), "999.998-pre");
+	it("handles simple x.y with known pre-release kinds", () => {
+		for (const knownName of ["beta", "alpha", "dev", "edge"]) {
+			assert.equal(simplifyVersion(`3.0-63.1.${knownName}`), `3.0-${knownName}`);
+			assert.equal(simplifyVersion(`3.0-${knownName}.1.2`), `3.0-${knownName}`);
+			assert.equal(simplifyVersion(`3.0-1.${knownName}.2`), `3.0-${knownName}`);
+		}
 	});
 
-	it("handles simple x.y.z-pre.foo versions", () => {
-		assert.equal(simplifyVersion("1.2.3-pre.foo"), "1.2-pre");
-		assert.equal(simplifyVersion("0.0.3-pre.foo"), "0.0-pre");
-		assert.equal(simplifyVersion("999.998.997-pre.foo"), "999.998-pre");
+	it("handles simple x.y.z with unknown pre-release kinds", () => {
+		assert.equal(simplifyVersion("3.1.0-63.1.apple"), "3.1-pre");
+		assert.equal(simplifyVersion("3.1.0-apple.pear.123"), "3.1-pre");
+		assert.equal(simplifyVersion("3.1.0-123.apple.123"), "3.1-pre");
 	});
 
-	it("handles simple x.y-pre.foo versions", () => {
-		assert.equal(simplifyVersion("1.2-pre.foo"), "1.2-pre");
-		assert.equal(simplifyVersion("0.0-pre.foo"), "0.0-pre");
-		assert.equal(simplifyVersion("999.998-pre.foo"), "999.998-pre");
+	it("handles simple x.y with unknown pre-release kinds", () => {
+		assert.equal(simplifyVersion("3.0-63.1.apple"), "3.0-pre");
+		assert.equal(simplifyVersion("3.0-apple.pear.123"), "3.0-pre");
+		assert.equal(simplifyVersion("3.0-123.apple.123"), "3.0-pre");
 	});
 
 	it("handles non-strings", () => {
@@ -48,7 +52,7 @@ describe("simplifyVersion", () => {
 
 	it("handles other non-standard input", () => {
 		assert.equal(simplifyVersion("1"), "1");
-		assert.equal(simplifyVersion("1-foo"), "1-foo");
+		assert.equal(simplifyVersion("1-foo"), "1-pre");
 		assert.equal(simplifyVersion("TEST"), "TEST");
 		assert.equal(simplifyVersion(""), "");
 	});
