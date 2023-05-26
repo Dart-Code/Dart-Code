@@ -166,7 +166,10 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a type from another package", async () => {
 		const hover = await getHoverAt("http.Cli^ent");
-		assert.equal(hover.displayText, "abstract class Client");
+		if (hover.displayText.includes("interface class"))
+			assert.equal(hover.displayText, "abstract interface class Client");
+		else
+			assert.equal(hover.displayText, "abstract class Client");
 		assert.ok(hover.documentation!.startsWith("*package:http/src/client.dart*"));
 		assert.deepStrictEqual(hover.range, rangeOf("http.|Client|"));
 	});
