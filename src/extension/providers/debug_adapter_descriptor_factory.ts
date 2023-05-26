@@ -35,14 +35,17 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		let isSdkDapSupported = false;
 		let canDefaultToSdkDap = false;
 		let isPreReleaseSdk = false;
+		let isInSdkDapExperiment = false;
 		if (isDartOrDartTest) {
 			isSdkDapSupported = this.dartCapabilities.supportsSdkDap;
 			canDefaultToSdkDap = this.dartCapabilities.canDefaultSdkDaps;
 			isPreReleaseSdk = this.dartCapabilities.version.includes("-");
+			isInSdkDapExperiment = this.experiments.dartSdkDaps.applies;
 		} else if (isFlutterOrFlutterTest) {
 			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
 			canDefaultToSdkDap = this.flutterCapabilities.canDefaultSdkDaps;
 			isPreReleaseSdk = this.flutterCapabilities.version.includes("-");
+			isInSdkDapExperiment = this.experiments.flutterSdkDaps.applies;
 		}
 
 		const forceSdkDap = process.env.DART_CODE_FORCE_SDK_DAP === "true"
@@ -69,7 +72,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 				useSdkDap = true;
 				sdkDapReason = "canDefaultToSdkDap and using pre-release SDK";
 			} else {
-				useSdkDap = this.experiments.sdkDaps.applies;
+				useSdkDap = isInSdkDapExperiment;
 				sdkDapReason = "sdkDaps experiment";
 				if (useSdkDap && !canDefaultToSdkDap) {
 					useSdkDap = false;

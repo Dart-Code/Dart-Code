@@ -8,12 +8,14 @@ const clearAllExperiments = false;
 
 export interface KnownExperiments {
 	// example: Experiment,
-	sdkDaps: SdkDapExperiment,
+	dartSdkDaps: SdkDapExperiment,
+	flutterSdkDaps: SdkDapExperiment,
 }
 export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
 	return {
 		// example: new ExampleExperiment(logger, workspaceContext, context),
-		sdkDaps: new SdkDapExperiment(logger, workspaceContext, context),
+		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 30),
+		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 10),
 	};
 }
 
@@ -70,8 +72,8 @@ class Experiment {
 }
 
 class SdkDapExperiment extends Experiment {
-	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context) {
-		super(logger, workspaceContext, context, "sdkDaps", 10);
+	constructor(logger: Logger, workspaceContext: WorkspaceContext, context: Context, percentEnabled: number) {
+		super(logger, workspaceContext, context, "sdkDaps", percentEnabled);
 	}
 
 	get applies(): boolean { return super.applies; }
