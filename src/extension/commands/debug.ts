@@ -10,16 +10,18 @@ import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
+import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { Analytics } from "../analytics";
 import { config } from "../config";
 import { VmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
-import { isDartFile } from "../utils";
+import { isDartFile, isValidEntryFile } from "../utils";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
+const CURRENT_FILE_RUNNABLE = "dart-code:currentFileIsRunnable";
 
 // Workaround for https://github.com/microsoft/vscode/issues/100115
 const dynamicDebugSessionName = "Dart ";
@@ -63,7 +65,7 @@ export class DebugCommands implements IAmDisposable {
 	public isInspectingWidget = false;
 	private autoCancelNextInspectWidgetMode = false;
 
-	constructor(private readonly logger: Logger, private context: Context, private workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
+	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker | undefined, private context: Context, private workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly analytics: Analytics, pubGlobal: PubGlobal, flutterDaemon: IFlutterDaemon | undefined) {
 		this.vmServices = new VmServiceExtensions(logger, this, workspaceContext);
 		this.devTools = new DevToolsManager(logger, workspaceContext, this, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
 		this.disposables.push(this.devTools);
@@ -76,6 +78,13 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
+
+		// Handle enabling Run/Debug buttons for the file if an entry point or have a main() method.
+		if (this.fileTracker)
+			this.disposables.push(this.fileTracker.onOutline.listen(() => this.updateRunnableContexts()));
+		this.disposables.push(vs.window.onDidChangeActiveTextEditor(() => this.updateRunnableContexts()));
+		// Run for current open editor.
+		this.updateRunnableContexts();
 
 		this.disposables.push(vs.commands.registerCommand("flutter.overridePlatform", () => this.vmServices.overridePlatform()));
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleDebugPainting", () => this.vmServices.toggle(VmServiceExtension.DebugPaint)));
@@ -779,6 +788,24 @@ export class DebugCommands implements IAmDisposable {
 				debugSdkLibraries,
 			});
 		});
+	}
+
+	private updateRunnableContexts(): void {
+		const editor = vs.window.activeTextEditor;
+		const documentUri = editor?.document.uri;
+		if (!documentUri || documentUri.scheme !== "file")
+			return;
+
+		const documentPath = fsPath(documentUri);
+		// Try simple check first to avoid possible out-of-sync outline.
+		let isRunnable = isValidEntryFile(documentPath);
+
+		if (!isRunnable) {
+			const outline = this.fileTracker?.getOutlineFor(documentPath);
+			isRunnable = !!outline?.children?.find((c) => c.element.name === "main");
+		}
+
+		vs.commands.executeCommand("setContext", CURRENT_FILE_RUNNABLE, isRunnable);
 	}
 
 	public dispose(): any {

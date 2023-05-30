@@ -336,8 +336,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(flutterCommands);
 	context.subscriptions.push(packageCommands);
 	context.subscriptions.push(addDependencyCommand);
-	const debugCommands = new DebugCommands(logger, extContext, workspaceContext, dartCapabilities, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
-	context.subscriptions.push(debugCommands);
 
 	// Handle new projects before creating the analyer to avoid a few issues with
 	// showing errors while packages are fetched, plus issues like
@@ -476,6 +474,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
+
+	// Debug commands.
+	const debugCommands = new DebugCommands(logger, lspAnalyzer?.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
+	context.subscriptions.push(debugCommands);
 
 	// Task handlers.
 	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(logger, context, sdks, dartCapabilities)));
