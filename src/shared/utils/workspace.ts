@@ -102,6 +102,10 @@ export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWor
 
 // Cleans a version in the form x.y.z-foo.a.b.c into just
 // x.y-foo to reduce the number of unique versions being recorded.
+//
+// To avoid trailing zeros being trimmed (eg. "3.10" being treated as the number
+// 3.1), the version will actually be reported like "3.10.x" where x is literally "x"
+// for all versions.
 export function simplifyVersion(rawVersion: any): string | undefined {
 	if (typeof rawVersion !== "string")
 		return;
@@ -118,9 +122,15 @@ export function simplifyVersion(rawVersion: any): string | undefined {
 
 
 	const cleanParts: string[] = [];
-	cleanParts.push(versions[0]);
+	if (versions[0].length)
+		cleanParts.push(versions[0]);
+	else
+		cleanParts.push("0");
 	if (versions.length > 1)
 		cleanParts.push(`.${versions[1]}`);
+	else
+		cleanParts.push(`.x`);
+	cleanParts.push(`.x`); // 0.0.x
 	if (prereleaseTag)
 		cleanParts.push(`-${prereleaseTag}`);
 	else if (prereleasePart)
