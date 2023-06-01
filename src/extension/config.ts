@@ -40,19 +40,19 @@ class Config {
 		await this.config.update(key, value, target);
 	}
 
+	get addSdkToTerminalPath(): boolean { return this.getConfig<boolean>("addSdkToTerminalPath", true); }
 	get additionalAnalyzerFileExtensions(): string[] { return this.getConfig<string[]>("additionalAnalyzerFileExtensions", []); }
-	get addSdkToTerminalPath(): boolean { return this.getConfig<boolean>("addSdkToTerminalPath", false); }
 	get allowAnalytics(): boolean { return this.getConfig<boolean>("allowAnalytics", true); }
 	get allowTestsOutsideTestFolder(): boolean { return this.getConfig<boolean>("allowTestsOutsideTestFolder", false); }
 	get analysisServerFolding(): boolean { return this.getConfig<boolean>("analysisServerFolding", true); }
 	get analyzeAngularTemplates(): boolean { return this.getConfig<boolean>("analyzeAngularTemplates", true); }
 	get analyzerAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerAdditionalArgs", []); }
-	get analyzerVmAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerVmAdditionalArgs", []); }
 	get analyzerDiagnosticsPort(): undefined | number { return this.getConfig<null | number>("analyzerDiagnosticsPort", null); }
 	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null))); }
 	get analyzerLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null))); }
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get analyzerSshHost(): undefined | string { return this.getConfig<null | string>("analyzerSshHost", null); }
+	get analyzerVmAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerVmAdditionalArgs", []); }
 	get analyzerVmServicePort(): undefined | number { return this.getConfig<null | number>("analyzerVmServicePort", null); }
 	get autoImportCompletions(): boolean { return this.getConfig<boolean>("autoImportCompletions", true); }
 	get automaticCommentSlashes(): "none" | "tripleSlash" | "all" { return this.getConfig<"none" | "tripleSlash" | "all">("automaticCommentSlashes", "tripleSlash"); }
@@ -82,6 +82,7 @@ class Config {
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): any { return this.getConfig<any>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
+	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
 	get experimentalTestRunnerInSdk(): boolean { return this.getConfig<boolean>("experimentalTestRunnerInSdk", false); }
 	get flutterAdbConnectOnChromeOs(): boolean { return this.getConfig<boolean>("flutterAdbConnectOnChromeOs", false); }
@@ -125,6 +126,7 @@ class Config {
 			return value;
 	}
 	get hotReloadProgress(): "notification" | "statusBar" { return this.getConfig<"notification" | "statusBar">("hotReloadProgress", "notification"); }
+	get includeDependenciesInWorkspaceSymbols(): boolean { return this.getConfig<boolean>("includeDependenciesInWorkspaceSymbols", true); }
 	get lspSnippetTextEdits(): boolean { return this.getConfig<boolean>("lspSnippetTextEdits", true); }
 	get maxCompletionItems(): number { return this.getConfig<number>("maxCompletionItems", 100000); }
 	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }
