@@ -192,7 +192,7 @@ export class VmServiceExtensions {
 	}
 
 	/// Tracks registered services and updates contexts to enable VS Code commands.
-	private handleServiceRegistered(service: VmService, method: string) {
+	public handleServiceRegistered(service: VmService, method: string) {
 		this.registeredServices[service] = method;
 		vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${service}`, true);
 	}

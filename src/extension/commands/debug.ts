@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
-import { DebugOption, DebuggerType, LogSeverity, VmServiceExtension, debugOptionNames } from "../../shared/enums";
+import { DebugOption, DebuggerType, LogSeverity, VmService, VmServiceExtension, debugOptionNames } from "../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IAmDisposable, IFlutterDaemon, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
@@ -761,9 +761,14 @@ export class DebugCommands implements IAmDisposable {
 			this.suppressFlutterWidgetErrors = false;
 		} else if (event === "flutter.appStarted") {
 			session.hasStarted = true;
+			// In noDebug mode, we won't see services registered but we can tell if Hot Reload
+			// is available.
+			if (session.supportsHotReload)
+				this.vmServices.handleServiceRegistered(VmService.HotReload, VmService.HotReload);
 		} else if (event === "flutter.appStart") {
 			session.flutterMode = body?.mode;
 			session.flutterDeviceId = body?.deviceId;
+			session.supportsHotReload = body?.supportsRestart;
 		}
 	}
 

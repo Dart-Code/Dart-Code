@@ -9,6 +9,7 @@ export class DartDebugSessionInformation {
 	public hasStarted = false;
 	public flutterMode: string | undefined;
 	public flutterDeviceId: string | undefined;
+	public supportsHotReload: boolean | undefined;
 	public hasEnded = false;
 	public progress: { [key: string]: ProgressMessage } = {};
 	public readonly loadedServiceExtensions: VmServiceExtension[] = [];
