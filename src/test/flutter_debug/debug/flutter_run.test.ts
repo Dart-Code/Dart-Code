@@ -175,25 +175,27 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		config.noDebug = true;
 		await waitAllThrowIfTerminates(dc,
+			dc.waitForCustomEvent("flutter.appStarted"),
 			dc.debuggerReady(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
 
-		const expectServices = !dc.isDartDap;
+		const expectHotReload = true;
+		const expectOtherServices = !dc.isDartDap;
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === expectServices, "Hot restart registered", 30000);
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === expectServices, "Hot reload registered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === expectServices, "Debug paint loaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === expectServices, "Debug banner loaded");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === expectHotReload, "Hot reload registered");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === expectOtherServices, "Hot restart registered", 30000);
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === expectOtherServices, "Debug paint loaded");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === expectOtherServices, "Debug banner loaded");
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false, "Hot restart unregistered");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
+		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotRestart) === false, "Hot restart unregistered");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
