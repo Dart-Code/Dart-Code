@@ -1,9 +1,10 @@
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
-import { env, TelemetryLogger, TelemetrySender, Uri, workspace } from "vscode";
+import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, env, TelemetryLogger, TelemetrySender, Uri, workspace } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
-import { Logger } from "../shared/interfaces";
+import { IAmDisposable, Logger } from "../shared/interfaces";
+import { disposeAll } from "../shared/utils";
 import { getRandomInt } from "../shared/utils/fs";
 import { simplifyVersion } from "../shared/utils/workspace";
 import { hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
@@ -12,7 +13,7 @@ import { config } from "./config";
 
 // Set to true for analytics to be sent to the debug endpoint (non-logging) for validation.
 // This is only required for debugging analytics and needn't be sent for standard Dart Code development (dev hits are already filtered with isDevelopment).
-const debug = false;
+const debugMode = false;
 
 /// Analytics require that we send a value for uid or cid, but when running in the VS Code
 // dev host we don't have either.
@@ -64,6 +65,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 				name: data.event,
 				params: {
 					"debuggerAdapterType": data.debuggerAdapterType,
+					"debuggerExceptionBreakMode": data.debuggerExceptionBreakMode,
 					"debuggerPreference": data.debuggerPreference,
 					"debuggerRunType": data.debuggerRunType,
 					"debuggerType": data.debuggerType,
@@ -75,7 +77,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 			user_properties: this.buildUserProperties(data), // eslint-disable-line camelcase
 		};
 
-		if (debug)
+		if (debugMode)
 			this.logger.info("Sending analytic: " + JSON.stringify(analyticsData));
 
 		const options: https.RequestOptions = {
@@ -84,7 +86,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 			},
 			hostname: "www.google-analytics.com",
 			method: "POST",
-			path: (debug ? "/debug/mp/collect" : "/mp/collect")
+			path: (debugMode ? "/debug/mp/collect" : "/mp/collect")
 				// Not really secret, is it...
 				+ "?api_secret=Y7bcxwkTQ-ekVL0ys4htBA&measurement_id=G-WXNLFN7DDJ",
 			port: 443,
@@ -92,7 +94,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 
 		await new Promise<void>((resolve, reject) => {
 			const req = https.request(options, (resp) => {
-				if (debug) {
+				if (debugMode) {
 					const chunks: string[] = [];
 					resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
 					resp.on("end", () => {
@@ -162,7 +164,9 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 	}
 }
 
-export class Analytics {
+export class Analytics implements IAmDisposable {
+	private readonly disposables: IAmDisposable[] = [];
+
 	public sdkVersion?: string;
 	public flutterSdkVersion?: string | undefined;
 	private readonly formatter: string;
@@ -178,9 +182,12 @@ export class Analytics {
 	private hasLoggedFlutterOutline = false;
 
 	private telemetryLogger: TelemetryLogger | undefined;
+	private readonly exceptionBreakTrackerFactory: DebugAdapterExceptionSettingTrackerFactory;
 
 	constructor(private readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
 		this.formatter = this.getFormatterSetting();
+		this.exceptionBreakTrackerFactory = new DebugAdapterExceptionSettingTrackerFactory();
+		this.disposables.push(debug.registerDebugAdapterTrackerFactory("dart", this.exceptionBreakTrackerFactory));
 
 		// If the API isn't supported (Theia) then we'll just not set anything up.
 		if (!env.createTelemetryLogger)
@@ -315,6 +322,7 @@ export class Analytics {
 	public logDebuggerStart(debuggerType: string, debuggerRunType: string, sdkDap: boolean) {
 		const customData: Partial<AnalyticsData> = {
 			debuggerAdapterType: sdkDap ? "SDK" : "Legacy",
+			debuggerExceptionBreakMode: debuggerRunType === "Debug" ? this.exceptionBreakTrackerFactory.lastTracker?.lastExceptionOptions : undefined,
 			debuggerPreference: this.getDebuggerPreference(),
 			debuggerRunType,
 			debuggerType,
@@ -332,6 +340,10 @@ export class Analytics {
 		this.event(AnalyticsEvent.FlutterOutline_Activated);
 	}
 	public log(category: AnalyticsEvent) { this.event(category); }
+
+	public dispose(): any {
+		disposeAll(this.disposables);
+	}
 }
 
 interface AnalyticsData {
@@ -360,4 +372,25 @@ interface AnalyticsData {
 	debuggerRunType?: string,
 	debuggerAdapterType?: string,
 	debuggerPreference?: string,
+	debuggerExceptionBreakMode?: string,
+}
+
+export class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {
+	public lastTracker: DebugAdapterExceptionSettingTracker | undefined;
+	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
+		this.lastTracker = new DebugAdapterExceptionSettingTracker();
+		return this.lastTracker;
+	}
+}
+
+class DebugAdapterExceptionSettingTracker implements DebugAdapterTracker {
+	public lastExceptionOptions: string | undefined;
+	onWillReceiveMessage(message: any): void {
+		if (message.command === "setExceptionBreakpoints") {
+			const exceptionFilters = message.arguments?.filters ?? [];
+			this.lastExceptionOptions = exceptionFilters.slice().sort().join(", ");
+			if (!this.lastExceptionOptions)
+				this.lastExceptionOptions = "None";
+		}
+	}
 }
