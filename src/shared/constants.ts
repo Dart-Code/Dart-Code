@@ -181,12 +181,6 @@ export const dartRecommendedConfig = {
 	// with Dart's ability to highlight only exact references to the selected variable.
 	"editor.selectionHighlight": false,
 
-	// By default, VS Code prevents code completion from popping open when in
-	// "snippet mode" (editing placeholders in inserted code). Setting this option
-	// to `false` stops that and allows completion to open as normal, as if you
-	// weren't in a snippet placeholder.
-	"editor.suggest.snippetsPreventQuickSuggestions": false,
-
 	// By default, VS Code will pre-select the most recently used item from code
 	// completion. This is usually not the most relevant item.
 	//
