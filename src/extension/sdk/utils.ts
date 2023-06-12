@@ -156,8 +156,8 @@ export class SdkUtils {
 
 	private async tryFlutterCloneIfGitAvailable(logger: Logger): Promise<boolean> {
 		const gitAvailable = await window.withProgress({
-			location: ProgressLocation.Notification,
 			cancellable: true,
+			location: ProgressLocation.Notification,
 			title: "Checking for git",
 		}, async (_, cancellationToken) => {
 			try {
@@ -208,11 +208,11 @@ export class SdkUtils {
 	}
 
 	private async cloneFlutterWithProgress(workingDirectory: string): Promise<boolean> {
-		const gitUrl = /*process.env.FLUTTER_GIT_URL ||*/ "https://github.com/flutter/flutter.git";
+		const gitUrl = "https://github.com/flutter/flutter.git";
 
 		return await window.withProgress({
-			location: ProgressLocation.Notification,
 			cancellable: true,
+			location: ProgressLocation.Notification,
 			title: cloningFlutterMessage,
 		}, async (_, cancellationToken) => {
 			const gitProc = await runToolProcess(this.logger, workingDirectory, "git", ["clone", "-b", "stable", "--single-branch", gitUrl], undefined, cancellationToken);
