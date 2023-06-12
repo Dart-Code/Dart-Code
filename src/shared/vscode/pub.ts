@@ -20,6 +20,11 @@ export function getPubPackageStatus(sdks: Sdks, logger: Logger, folderUri: Uri):
 	if (!folder || !fs.existsSync(pubspecPath))
 		return nonRequired;
 
+	// If a folder starts with '__' or '{' then it's probably a template of some
+	// sort and we shouldn't run.
+	if (folder.includes("__") || folder.includes("{"))
+		return nonRequired;
+
 	// If we don't appear to have deps listed in pubspec, then no point prompting.
 	const regex = new RegExp("dependencies\\s*:", "i");
 	if (!regex.test(fs.readFileSync(pubspecPath).toString()))
