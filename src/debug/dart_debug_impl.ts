@@ -2268,7 +2268,7 @@ export class DartDebugSession extends DebugSession {
 	///    [5:01:50 PM] [General] [Info] [stderr]
 	///    [5:01:50 PM] [General] [Info] [stderr]
 	///    [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
-	///    [5:01:50 PM] [General] [Info] [stderr] Dart-Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
+	///    [5:01:50 PM] [General] [Info] [stderr] Dart Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
 	protected logToUserBuffered(message: string, category: string) {
 		this.logBuffer[category] = this.logBuffer[category] || "";
 		this.logBuffer[category] += message;

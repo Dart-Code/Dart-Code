@@ -27,7 +27,7 @@
 			"common.extversion":      { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The version of the Dart extension" },
 			"common.vscodeversion":   { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The version of VS Code running the extension" },
 			"common.remotename":      { "classification": "SystemMetaData",	"purpose": "FeatureInsight", "comment": "The 'remoteName' from VS Code (such as 'ssh' or 'docker' for remote workspaces)" },
-			"isDevExtension":         { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the extension is running in development mode (this usually means running from source checked out from the Dart-Code repo)" },
+			"isDevExtension":         { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the extension is running in development mode (this usually means running from source checked out from the Dart Code repo)" },
 			"showTodos":              { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether TODOs in Dart code are being shown in the Problems list" },
 			"analyzerProtocol":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the Dart analysis server is running using the LSP or Legacy communication protocol" },
 			"formatter":              { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the formatter is enabled, enabled-on-save, disabled, or set to something other than the Dart SDK formatter" },

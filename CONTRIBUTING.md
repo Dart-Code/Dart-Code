@@ -13,9 +13,9 @@ For general details on developing VS Code extensions see the [VS Code API docs](
 
 ## LSP and DAP
 
-At the time of writing, the Dart/Flutter extensions are migrating from using VS Code APIs directly for language integration to a [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation [in the Dart analysis server](https://github.com/dart-lang/sdk/blob/main/pkg/analysis_server/tool/lsp_spec/README.md) and also from a Dart-Code shipped [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/) implementation to one shipped in the [Dart](https://github.com/dart-lang/sdk/blob/master/pkg/dds/tool/dap/README.md)/[Flutter](https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/debug_adapters/README.md) SDKs.
+At the time of writing, the Dart/Flutter extensions are migrating from using VS Code APIs directly for language integration to a [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation [in the Dart analysis server](https://github.com/dart-lang/sdk/blob/main/pkg/analysis_server/tool/lsp_spec/README.md) and also from a Dart Code shipped [Debug Adapter Protocol](https://microsoft.github.io/debug-adapter-protocol/) implementation to one shipped in the [Dart](https://github.com/dart-lang/sdk/blob/master/pkg/dds/tool/dap/README.md)/[Flutter](https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/debug_adapters/README.md) SDKs.
 
-This means there may be two implementations (one here, one in the SDK) of some functionality. The Dart-Code implementations remain available for older SDKs but generally new work should be done in just the SDK LSP/DAP servers (except where the protocols do not support the required functionality).
+This means there may be two implementations (one here, one in the SDK) of some functionality. The Dart Code implementations remain available for older SDKs but generally new work should be done in just the SDK LSP/DAP servers (except where the protocols do not support the required functionality).
 
 ## Project Structure
 
@@ -49,7 +49,7 @@ This folder contains all shared code that can be used by `extension`, `debug` an
 
 ### src/test
 
-Code for automated tests, including some test projects (in `src/test/test_projects`) required by the tests. Code here should not be imported into any files outside of this folder. Small classes are tested with unit tests, but classes that interact directly with VS Code are usually tested with integration tests, which allows the same tests to be used for both DAS+LSP and both Dart-Code+SDK implementations of the DAP. There are launch configurations (`launch.json`) to run tests in either of these configurations.
+Code for automated tests, including some test projects (in `src/test/test_projects`) required by the tests. Code here should not be imported into any files outside of this folder. Small classes are tested with unit tests, but classes that interact directly with VS Code are usually tested with integration tests, which allows the same tests to be used for both DAS+LSP and both Dart Code+SDK implementations of the DAP. There are launch configurations (`launch.json`) to run tests in either of these configurations.
 
 ### src/tool
 
@@ -78,7 +78,7 @@ All tests will be run on all supported platforms via GitHub Actions periodically
 
 ## Debugging the Debug Adapters
 
-Debug adapters run out-of-process so are not directly debuggable with the extension. There are generated launch configurations that will run them in server-mode and attach the debugger so that they can be debugged simultaneously with the extension code (this also applies to running automated tests), although this only applies to the original Dart-Code implementations of the DAP. The new SDK DAPs cannot currently be debugged this way (and should be developed/debugged in the SDK repo using its own tests).
+Debug adapters run out-of-process so are not directly debuggable with the extension. There are generated launch configurations that will run them in server-mode and attach the debugger so that they can be debugged simultaneously with the extension code (this also applies to running automated tests), although this only applies to the original Dart Code implementations of the DAP. The new SDK DAPs cannot currently be debugged this way (and should be developed/debugged in the SDK repo using its own tests).
 
 ## Code Etiquette and Style
 

@@ -204,8 +204,8 @@ export class Analytics implements IAmDisposable {
 
 	/// If a user opts-out of Dart/Flutter telemetry with the command line apps, also opt-out here to avoid
 	/// confusion between Dart/Flutter analytics being reported to Google and extension analytics going
-	/// to Dart-Code. The prompt from the analysis server mentions "VS Code IDE plugins" which suggests the
-	/// mechanism for opting out would apply to Dart-Code.
+	/// to Dart Code. The prompt from the analysis server mentions "VS Code IDE plugins" which suggests the
+	/// mechanism for opting out would apply to Dart Code.
 	private isOptedOutOfDartToolingTelemetry(): boolean {
 		// Don't let this function ever throw.
 		try {
@@ -222,7 +222,7 @@ export class Analytics implements IAmDisposable {
 			const configFileContents = fs.readFileSync(configFile).toString();
 			const optedOutRegex = /^reporting=0/m;
 			if (optedOutRegex.test(configFileContents)) {
-				this.logger.info(`Dart/Flutter tooling telemetry is opted-out, disabling for Dart-Code`);
+				this.logger.info(`Dart/Flutter tooling telemetry is opted-out, disabling for Dart Code`);
 				return true;
 			}
 			return false;

@@ -1492,7 +1492,7 @@
 					"dart.useLegacyAnalyzerProtocol": {
 						"type": "boolean",
 						"default": false,
-						"markdownDescription": "Whether to use the Dart Analyzer's original protocol instead of LSP. Some features are not supported when using the legacy protocol and support for it will eventually be removed. Please file issues on GitHub in the Dart-Code repo if you find yourself needing to enable this setting.",
+						"markdownDescription": "Whether to use the Dart Analyzer's original protocol instead of LSP. Some features are not supported when using the legacy protocol and support for it will eventually be removed. Please file issues on GitHub in the Dart Code repo if you find yourself needing to enable this setting.",
 						"scope": "window"
 					}
 				}
