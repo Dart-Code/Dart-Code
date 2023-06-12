@@ -2929,7 +2929,7 @@
 		"@typescript-eslint/eslint-plugin-tslint": "^5.48.0",
 		"@typescript-eslint/parser": "^5.48.0",
 		"@vscode/debugadapter-testsupport": "^1.51.0",
-		"@vscode/test-electron": "^2.1.5",
+		"@vscode/test-electron": "^2.3.3",
 		"eslint": "^8.31.0",
 		"glob": "^8.0.3",
 		"mocha": "^9.2.2",
