@@ -80,8 +80,8 @@ export const takeSurveyAction = "Take Survey";
 export const skipThisSurveyAction = "Skip This Survey";
 
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
-export const initializingFlutterMessage = "Initializing Flutter. This may take a few minutes.";
-export const cloningFlutterMessage = "Cloning Flutter. This may take a few minutes.";
+export const initializingFlutterMessage = "Initializing the Flutter SDK. This may take a few minutes.";
+export const cloningFlutterMessage = "Downloading the Flutter SDK. This may take a few minutes.";
 
 // Seconds.
 export const tenSecondsInMs = 1000 * 10;

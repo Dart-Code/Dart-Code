@@ -139,7 +139,7 @@ export class SdkUtils {
 				}
 			} else if (selectedItem === downloadAction) {
 				if (sdkType === "Flutter" && config.experimentalFlutterGitClone) {
-					if (await this.tryFlutterCloneIfGitAvailable(this.logger)) {
+					if (await this.tryFlutterCloneIfGitAvailable(this.logger, commandToReRun)) {
 						break;
 					}
 				}
@@ -154,7 +154,7 @@ export class SdkUtils {
 		}
 	}
 
-	private async tryFlutterCloneIfGitAvailable(logger: Logger): Promise<boolean> {
+	private async tryFlutterCloneIfGitAvailable(logger: Logger, commandToReRun: string | undefined): Promise<boolean> {
 		const gitAvailable = await window.withProgress({
 			cancellable: true,
 			location: ProgressLocation.Notification,
@@ -179,12 +179,21 @@ export class SdkUtils {
 		if (!gitAvailable)
 			return false;
 
-		await this.promptForFlutterClone(logger);
+		const flutterSdkFolder = await this.promptForFlutterClone(logger);
+		if (!flutterSdkFolder)
+			return false;
+
+		await config.setGlobalFlutterSdkPath(flutterSdkFolder);
+		await initializeFlutterSdk(this.logger, path.join(flutterSdkFolder, flutterPath));
+		await commands.executeCommand("_dart.reloadExtension");
+		if (commandToReRun)
+			commands.executeCommand(commandToReRun);
+
 		return true;
 
 	}
 
-	private async promptForFlutterClone(logger: Logger): Promise<void> {
+	private async promptForFlutterClone(logger: Logger): Promise<string | undefined> {
 		const selectedFolders =
 			await window.showOpenDialog({
 				canSelectFiles: false,
@@ -197,13 +206,7 @@ export class SdkUtils {
 			const workingDirectory = fsPath(selectedFolders[0]);
 			const didClone = await this.cloneFlutterWithProgress(workingDirectory);
 
-			if (!didClone) {
-				return;
-			}
-
-			// If we got here, we cloned. Set the SDK path and reload to trigger initialisation.
-			await config.setGlobalFlutterSdkPath(path.join(workingDirectory, "flutter"));
-			commands.executeCommand("_dart.reloadExtension");
+			return didClone ? path.join(workingDirectory, "flutter") : undefined;
 		}
 	}
 
