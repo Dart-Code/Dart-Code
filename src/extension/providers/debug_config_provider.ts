@@ -3,7 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
-import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugAnywayAction, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, isDartCodeTestRun, showErrorsAction } from "../../shared/constants";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
@@ -18,19 +17,19 @@ import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, i
 import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { getAllProjectFolders, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
-import { Analytics } from "../analytics";
-import { DebugCommands, debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
+import { debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config, ResourceConfig } from "../config";
 import { getActiveRealFileEditor } from "../editors";
 import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
+import { DevToolsManager } from "../sdk/dev_tools/manager";
 import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestFilter, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectCanUsePackageTest } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
-	constructor(private readonly logger: Logger, private readonly wsContext: DartWorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly debugCommands: DebugCommands, private dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly wsContext: DartWorkspaceContext, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly devTools: DevToolsManager, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
 		ensureDebugLaunchUniqueId(debugConfig);
@@ -721,7 +720,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {
 			this.logger.info("Getting DevTools server address to pass to Flutter...");
 			try {
-				const devtoolsUrl = await this.debugCommands.devTools.devtoolsUrl;
+				const devtoolsUrl = await this.devTools.devtoolsUrl;
 				if (devtoolsUrl)
 					this.addArgsIfNotExist(args, "--devtools-server-address", devtoolsUrl.toString());
 				else if (!isDartCodeTestRun) // Suppress warning on test runs as they're fast and can launch before the server starts

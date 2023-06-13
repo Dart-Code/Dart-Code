@@ -98,6 +98,7 @@ import { RefactorCodeActionProvider } from "./providers/refactor_code_action_pro
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
 import { PubGlobal } from "./pub/global";
+import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
@@ -475,8 +476,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
+	const devTools = new DevToolsManager(logger, workspaceContext, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
+	context.subscriptions.push(devTools);
+
 	// Debug commands.
-	const debugCommands = new DebugCommands(logger, lspAnalyzer?.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, analytics, pubGlobal, flutterDaemon);
+	const debugCommands = new DebugCommands(logger, lspAnalyzer?.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, devTools);
 	context.subscriptions.push(debugCommands);
 
 	// Task handlers.
@@ -553,7 +557,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
-	const debugProvider = new DebugConfigProvider(logger, workspaceContext, analytics, pubGlobal, testModel, flutterDaemon, deviceManager, debugCommands, dartCapabilities, flutterCapabilities);
+	const debugProvider = new DebugConfigProvider(logger, workspaceContext, pubGlobal, testModel, flutterDaemon, deviceManager, devTools, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
@@ -690,7 +694,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}));
 		context.subscriptions.push(tree);
 		context.subscriptions.push(flutterOutlineTreeProvider);
-		// TODO: This doesn't work for LSP!!!
+
+
+		// TODO: This doesn't work for LSP!
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
@@ -790,6 +796,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			debugCommands,
 			debugProvider,
 			debugSessions,
+			devTools,
 			deviceManager,
 			envUtils,
 			fileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : (lspAnalyzer ? lspAnalyzer.fileTracker : undefined),

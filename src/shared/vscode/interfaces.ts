@@ -24,9 +24,6 @@ export interface DebugCommandHandler {
 	handleDebugSessionStart(session: DebugSession): void;
 	handleDebugSessionEnd(session: DebugSession): void;
 	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
-	devTools: {
-		devtoolsUrl: Thenable<string> | undefined;
-	};
 }
 
 export interface InternalExtensionApi {
@@ -47,6 +44,9 @@ export interface InternalExtensionApi {
 	dartCapabilities: DartCapabilities;
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;
+	devTools: {
+		devtoolsUrl: Thenable<string> | undefined;
+	};
 	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
 	debugSessions: Array<{ session: { name?: string }, loadedServiceExtensions: VmServiceExtension[] }>;

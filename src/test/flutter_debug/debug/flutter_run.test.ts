@@ -511,8 +511,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		if (!extApi.flutterCapabilities.supportsDevToolsServerAddress)
 			this.skip();
 
-		assert.ok(extApi.debugCommands.devTools.devtoolsUrl);
-		assert.ok((await extApi.debugCommands.devTools.devtoolsUrl).startsWith("http://"));
+		assert.ok(extApi.devTools.devtoolsUrl);
+		assert.ok((await extApi.devTools.devtoolsUrl).startsWith("http://"));
 	});
 
 	it("can launch DevTools externally", async () => {

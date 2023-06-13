@@ -43,12 +43,13 @@ export class DevToolsManager implements vs.Disposable {
 	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
 	public get devToolsActivation() { return this.devToolsActivationPromise; }
 	private service?: DevToolsService;
+	public debugCommands: DebugCommands | undefined;
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly debugCommands: DebugCommands, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
 		this.statusBarItem.text = "Dart DevTools";
 		this.statusBarItem.name = "Dart/Flutter DevTools";
 		this.setNotStartedStatusBar();
@@ -69,7 +70,7 @@ export class DevToolsManager implements vs.Disposable {
 	private async handleEagerActivationAndStartup(workspaceContext: DartWorkspaceContext) {
 		if (workspaceContext.config?.startDevToolsServerEagerly) {
 			try {
-				await this.spawnIfRequired(true);
+				await this.start(true);
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
 				this.logger.error(e);
@@ -88,7 +89,15 @@ export class DevToolsManager implements vs.Disposable {
 		return page.id;
 	}
 
-	private async spawnIfRequired(silent = false): Promise<string | undefined> {
+	public async urlFor(page: string): Promise<string | undefined> {
+		const base = await this.devtoolsUrl;
+		if (!base) return base;
+
+		const separator = base.endsWith("/") ? "" : "/";
+		return `${base}${separator}${page}`;
+	}
+
+	public async start(silent = false): Promise<string | undefined> {
 		// If we're mid-silent-activation, wait until that's finished.
 		await this.devToolsActivationPromise;
 
@@ -143,7 +152,7 @@ export class DevToolsManager implements vs.Disposable {
 	public async spawnForNoSession(): Promise<{ url: string; dispose: () => void } | undefined> {
 		this.analytics.logDevToolsOpened();
 
-		const url = await this.spawnIfRequired();
+		const url = await this.start();
 		if (!url)
 			return;
 
@@ -159,7 +168,7 @@ export class DevToolsManager implements vs.Disposable {
 	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
 		this.analytics.logDevToolsOpened();
 
-		const url = await this.spawnIfRequired();
+		const url = await this.start();
 		if (!url)
 			return;
 
@@ -187,11 +196,13 @@ export class DevToolsManager implements vs.Disposable {
 				location: vs.ProgressLocation.Notification,
 				title: "Opening DevTools...",
 			}, async () => {
+				const debugCommands = this.debugCommands;
 				const canLaunchDevToolsThroughService = isRunningLocally
+					&& debugCommands
 					&& options.location === "external"
 					&& !isDartCodeTestRun
 					&& config.devToolsBrowser === "chrome"
-					&& await waitFor(() => this.debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
+					&& await waitFor(() => debugCommands.vmServices.serviceIsRegistered(VmService.LaunchDevTools), 500);
 
 				await this.launch(!!canLaunchDevToolsThroughService, session, options);
 			});
@@ -343,7 +354,7 @@ export class DevToolsManager implements vs.Disposable {
 			await session.session.customRequest(
 				"callService",
 				{
-					method: this.debugCommands.vmServices.getServiceMethodName(VmService.LaunchDevTools),
+					method: this.debugCommands!.vmServices.getServiceMethodName(VmService.LaunchDevTools),
 					params,
 				},
 			);
@@ -385,13 +396,15 @@ export class DevToolsManager implements vs.Disposable {
 			service.registerForServerStarted((n) => {
 				// When a new debug session starts, we need to wait for its VM
 				// Service, then register it with this server.
-				this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(async (session) => {
-					if (session.vmServiceUri) {
-						service.vmRegister({ uri: session.vmServiceUri });
-						// Also reconnect any orphaned DevTools views.
-						await this.reconnectDisconnectedEmbeddedViews(session as DartDebugSessionInformation & { vmServiceUri: string });
-					}
-				}));
+				if (this.debugCommands) {
+					this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(async (session) => {
+						if (session.vmServiceUri) {
+							service.vmRegister({ uri: session.vmServiceUri });
+							// Also reconnect any orphaned DevTools views.
+							await this.reconnectDisconnectedEmbeddedViews(session as DartDebugSessionInformation & { vmServiceUri: string });
+						}
+					}));
+				}
 
 				// And send any existing sessions we have.
 				for (const session of debugSessions) {
