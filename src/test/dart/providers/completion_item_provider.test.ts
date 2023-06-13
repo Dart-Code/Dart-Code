@@ -329,7 +329,10 @@ main() {
 		`);
 		});
 
-		it("inserts imports into the library file while inserting code into the part file", async () => {
+		// Temporarily skipped due to:
+		// https://github.com/Dart-Code/Dart-Code/issues/4583
+		// https://github.com/microsoft/vscode/issues/184924
+		it.skip("inserts imports into the library file while inserting code into the part file", async () => {
 			await openFile(helloWorldPartFile);
 			await setTestContent(`
 part of 'part_wrapper.dart';
