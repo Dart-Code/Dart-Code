@@ -33,7 +33,8 @@
 		"Snippets",
 		"Linters",
 		"Formatters",
-		"Debuggers"
+		"Debuggers",
+		"Testing"
 	],
 	"keywords": [
 		"dart",
