@@ -310,7 +310,7 @@ export class Analytics implements IAmDisposable {
 		else if (config.debugSdkLibraries)
 			return "My code + SDK";
 		else if (config.debugExternalPackageLibraries)
-			return "My code + Libraries";
+			return "My code + Packages";
 		else
 			return "My code";
 	}
