@@ -21,6 +21,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private devices: f.Device[] = [];
 	private emulators: Emulator[] = [];
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
+	protected readonly onCurrentDeviceChangedEmitter = new vs.EventEmitter<f.Device | undefined>();
+	public readonly onCurrentDeviceChanged = this.onCurrentDeviceChangedEmitter.event;
 
 	constructor(
 		private readonly logger: Logger,
@@ -109,26 +111,30 @@ export class FlutterDeviceManager implements vs.Disposable {
 			// another device was selected while we were awaiting (which would prevent us
 			// selecting a non-ephemeral device here).
 			if (maySelectThisDevice() && this.isSupported(supportedPlatforms, device)) {
-				this.currentDevice = device;
-				this.updateStatusBar();
+				this.setCurrentDevice(device);
 			}
 		}
+	}
+
+	private setCurrentDevice(device: f.Device | undefined) {
+		this.currentDevice = device;
+		this.updateStatusBar();
 	}
 
 	public async deviceRemoved(dev: f.Device) {
 		this.devices = this.devices.filter((d) => d.id !== dev.id);
 		if (this.currentDevice && this.currentDevice.id === dev.id) {
-			this.currentDevice = undefined;
+			let nextDevice: f.Device | undefined;
 
 			// Try to select the next-best device
 			if (this.devices.length) {
 				const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
 				const supportedDevices = this.devices.filter((d) => this.isSupported(supportedPlatforms, d));
 				if (supportedDevices && supportedDevices.length)
-					this.currentDevice = supportedDevices[0];
+					nextDevice = supportedDevices[0];
 			}
 
-			this.updateStatusBar();
+			this.setCurrentDevice(nextDevice);
 		}
 	}
 
@@ -188,7 +194,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			case "emulator-creator":
 				// Clear the current device so we can wait for the new one
 				// to connect.
-				this.currentDevice = undefined;
+				this.setCurrentDevice(undefined);
 				this.statusBarItem.text = `Creating ${emulatorTypeLabel}...`;
 				this.rememberNextAddedDevice = true;
 				await this.createEmulator();
@@ -197,7 +203,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			case "emulator":
 				// Clear the current device so we can wait for the new one
 				// to connect.
-				this.currentDevice = undefined;
+				this.setCurrentDevice(undefined);
 				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
 				this.rememberNextAddedDevice = true;
 				const coldBoot = selection.coldBoot ?? false;
@@ -207,7 +213,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			case "custom-emulator":
 				// Clear the current device so we can wait for the new one
 				// to connect.
-				this.currentDevice = undefined;
+				this.setCurrentDevice(undefined);
 				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
 				this.rememberNextAddedDevice = true;
 				await this.launchCustomEmulator(selection.device);
@@ -240,8 +246,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				break;
 			case "device":
 				this.rememberDevice(selection.device);
-				this.currentDevice = selection.device;
-				this.updateStatusBar();
+				this.setCurrentDevice(selection.device);
 				break;
 		}
 
