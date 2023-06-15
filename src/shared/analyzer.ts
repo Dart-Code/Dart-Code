@@ -32,7 +32,7 @@ export abstract class Analyzer implements IAmDisposable {
 
 	private async setup(): Promise<void> {
 		await this.onReady;
-		this.onAnalysisStatusChange.listen((status) => {
+		this.onAnalysisStatusChange((status) => {
 			this.isAnalyzing = status.isAnalyzing;
 			if (!status.isAnalyzing) {
 				this.onAnalysisCompleteCompleter.resolve();

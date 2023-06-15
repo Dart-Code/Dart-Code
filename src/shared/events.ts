@@ -15,15 +15,11 @@ export class EventEmitter<T> implements IAmDisposable {
 		};
 	}
 
-	public get event(): Event<T> { return this; }
+	public get event(): Event<T> { return this.listen; }
 
 	public dispose() {
 		this.emitter.removeAllListeners();
 	}
 }
 
-export interface Event<T> {
-	listen(listener: (x: T) => void): IAmDisposable;
-}
-
-export type VsEvent<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: IAmDisposable[]) => IAmDisposable;
+export type Event<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: IAmDisposable[]) => IAmDisposable;

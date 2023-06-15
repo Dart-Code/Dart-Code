@@ -77,7 +77,7 @@ export class DebugCommands implements IAmDisposable {
 
 		// Handle enabling Run/Debug buttons for the file if an entry point or have a main() method.
 		if (this.fileTracker)
-			this.disposables.push(this.fileTracker.onOutline.listen(() => this.updateRunnableContexts()));
+			this.disposables.push(this.fileTracker.onOutline(() => this.updateRunnableContexts()));
 		this.disposables.push(vs.window.onDidChangeActiveTextEditor(() => this.updateRunnableContexts()));
 		// Run for current open editor.
 		this.updateRunnableContexts();

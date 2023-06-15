@@ -9,7 +9,7 @@ export class LspAnalyzerStatusReporter {
 	private analyzingPromise?: PromiseCompleter<void>;
 
 	constructor(readonly analyzer: Analyzer) {
-		analyzer.onAnalysisStatusChange.listen((params) => this.handleServerStatus(params));
+		analyzer.onAnalysisStatusChange((params) => this.handleServerStatus(params));
 	}
 
 	private handleServerStatus(params: AnalyzingEvent) {

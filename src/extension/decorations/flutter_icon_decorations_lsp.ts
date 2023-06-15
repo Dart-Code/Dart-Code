@@ -12,7 +12,7 @@ export class FlutterIconDecorationsLsp extends FlutterIconDecorations {
 		super(logger);
 		this.computer = new IconRangeComputerLsp(logger);
 
-		this.subscriptions.push(this.analyzer.fileTracker.onFlutterOutline.listen(async (op) => {
+		this.subscriptions.push(this.analyzer.fileTracker.onFlutterOutline(async (op) => {
 			if (this.activeEditor && fsPath(this.activeEditor.document.uri) === fsPath(vs.Uri.parse(op.uri))) {
 				this.update(op.outline);
 			}

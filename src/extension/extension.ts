@@ -29,7 +29,7 @@ import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
 import { FileChangeHandler } from "./analysis/file_change_handler";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
-import { DartExtensionApi } from "./api";
+import { DartExtensionApi } from "./api/extension_api";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { LspFlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples_lsp";
 import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
@@ -366,7 +366,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Log analysis server first analysis completion time when it completes.
 	let analysisStartTime: Date;
-	const analysisCompleteEvents = analyzer.onAnalysisStatusChange.listen((status) => {
+	const analysisCompleteEvents = analyzer.onAnalysisStatusChange((status) => {
 		// Analysis started for the first time.
 		if (status.isAnalyzing && !analysisStartTime)
 			analysisStartTime = new Date();

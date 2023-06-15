@@ -12,7 +12,7 @@ export class FlutterUiGuideDecorationsLsp extends FlutterUiGuideDecorations {
 
 		// Whenever we get a new Flutter Outline, if it's for the active document,
 		// update that too.
-		this.disposables.push(this.analyzer.fileTracker.onFlutterOutline.listen((op) => {
+		this.disposables.push(this.analyzer.fileTracker.onFlutterOutline((op) => {
 			const editor = vs.window.activeTextEditor;
 			if (editor && editor.document && fsPath(editor.document.uri) === fsPath(vs.Uri.parse(op.uri)))
 				this.buildFromOutline(editor, op.outline);

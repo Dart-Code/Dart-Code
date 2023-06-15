@@ -229,7 +229,7 @@ export class LspFlutterOutlineProvider extends FlutterOutlineProvider {
 	protected flutterOutline: FlutterOutline | undefined;
 	constructor(analytics: Analytics, private readonly analyzer: LspAnalyzer) {
 		super(analytics);
-		this.analyzer.fileTracker.onFlutterOutline.listen((n) => {
+		this.analyzer.fileTracker.onFlutterOutline((n) => {
 			if (this.activeEditor && fsPath(vs.Uri.parse(n.uri)) === fsPath(this.activeEditor.document.uri)) {
 				this.flutterOutline = n.outline;
 				this.treeNodesByLine = [];

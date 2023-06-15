@@ -2,7 +2,7 @@ import * as child_process from "child_process";
 import * as stream from "stream";
 import { DaemonCapabilities } from "./capabilities/flutter";
 import { LogCategory, LogSeverity } from "./enums";
-import { VsEvent } from "./events";
+import { Event } from "./events";
 import * as f from "./flutter/daemon_interfaces";
 import { UnknownResponse } from "./services/interfaces";
 import { WorkspaceContext } from "./workspace";
@@ -122,7 +122,7 @@ export interface IAmDisposable {
 
 export interface CancellationToken {
 	isCancellationRequested: boolean;
-	onCancellationRequested: VsEvent<any>;
+	onCancellationRequested: Event<any>;
 }
 
 export interface IFlutterDaemon extends IAmDisposable {

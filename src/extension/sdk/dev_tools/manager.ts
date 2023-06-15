@@ -335,7 +335,7 @@ export class DevToolsManager implements vs.Disposable {
 		let frame = this.devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || dtev.session.hasEnded);
 		if (!frame) {
 			frame = new DevToolsEmbeddedView(session, uri, page, location);
-			frame.onDispose.listen(() => delete this.devToolsEmbeddedViews[pageId]);
+			frame.onDispose(() => delete this.devToolsEmbeddedViews[pageId]);
 			this.devToolsEmbeddedViews[pageId]?.push(frame);
 		}
 		frame?.load(session, uri);

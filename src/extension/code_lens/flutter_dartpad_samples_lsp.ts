@@ -16,7 +16,7 @@ export class LspFlutterDartPadSamplesCodeLensProvider implements CodeLensProvide
 	private readonly flutterPackagesFolder: string;
 
 	constructor(private readonly logger: Logger, private readonly analyzer: LspAnalyzer, private readonly sdks: FlutterSdks) {
-		this.disposables.push(this.analyzer.fileTracker.onOutline.listen(() => {
+		this.disposables.push(this.analyzer.fileTracker.onOutline(() => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 

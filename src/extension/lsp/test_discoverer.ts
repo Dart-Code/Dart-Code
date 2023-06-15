@@ -25,7 +25,7 @@ export class TestDiscoverer implements IAmDisposable {
 	public testDiscoveryPerformed: Promise<void> | undefined;
 
 	constructor(private readonly logger: Logger, public readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
-		this.disposables.push(fileTracker.onOutline.listen((o) => this.handleOutline(o)));
+		this.disposables.push(fileTracker.onOutline((o) => this.handleOutline(o)));
 	}
 
 	/// Performs suite discovery if it has not already finished. If discovery

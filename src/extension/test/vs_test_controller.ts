@@ -22,7 +22,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
 		this.controller = controller;
 		this.disposables.push(controller);
-		this.disposables.push(model.onDidChangeTreeData.listen((node) => this.onDidChangeTreeData(node)));
+		this.disposables.push(model.onDidChangeTreeData((node) => this.onDidChangeTreeData(node)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((e) => this.handleDebugSessionEnd(e)));
 		model.addTestEventListener(this);
 
