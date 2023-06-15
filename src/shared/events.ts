@@ -8,18 +8,20 @@ export class EventEmitter<T> implements IAmDisposable {
 		this.emitter.emit("thing", x);
 	}
 
-	public listen(listener: (x: T) => void): IAmDisposable {
+	public listen(listener: (e: T) => any, thisArgs?: any): IAmDisposable {
+		if (thisArgs)
+			listener = listener.bind(thisArgs);
 		this.emitter.on("thing", listener);
 		return {
 			dispose: () => { this.emitter.removeListener("thing", listener); },
 		};
 	}
 
-	public get event(): Event<T> { return this.listen; }
+	public get event(): Event<T> { return this.listen.bind(this); }
 
 	public dispose() {
 		this.emitter.removeAllListeners();
 	}
 }
 
-export type Event<T> = (listener: (e: T) => any, thisArgs?: any, disposables?: IAmDisposable[]) => IAmDisposable;
+export type Event<T> = (listener: (e: T) => any, thisArgs?: any) => IAmDisposable;
