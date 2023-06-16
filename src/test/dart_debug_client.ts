@@ -77,7 +77,7 @@ export class DartDebugClient extends DebugClient {
 			});
 
 			terminal.show();
-			terminal.processId.then((pid) => {
+			void terminal.processId.then((pid) => {
 				this.sendResponse(request, { shellProcessId: pid });
 			});
 		});

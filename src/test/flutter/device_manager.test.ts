@@ -210,7 +210,7 @@ describe("device_manager", () => {
 	});
 
 	it("will auto-select a non-ephemeral device if it is preferred", async () => {
-		daemon.enablePlatform(desktop.platformType); // Ensure Desktop is valid before anything is cached.
+		await daemon.enablePlatform(desktop.platformType); // Ensure Desktop is valid before anything is cached.
 		await daemon.connect(physicalAndroidMobile, true);
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
 
@@ -284,7 +284,7 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 
 	public async connect(d: f.Device, markTypeAsValid: boolean): Promise<void> {
 		if (markTypeAsValid && d.platformType)
-			this.enablePlatform(d.platformType);
+			await this.enablePlatform(d.platformType);
 
 		await this.notify(this.deviceAddedSubscriptions, d);
 	}

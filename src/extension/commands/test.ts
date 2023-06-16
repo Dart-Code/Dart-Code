@@ -102,7 +102,7 @@ export class TestCommands implements vs.Disposable {
 		}
 
 		if (projectsWithTests.length === 0) {
-			vs.window.showErrorMessage("Unable to find any test folders");
+			void vs.window.showErrorMessage("Unable to find any test folders");
 			return;
 		}
 
@@ -307,7 +307,7 @@ export class TestCommands implements vs.Disposable {
 			}
 		}
 
-		vs.commands.executeCommand("setContext", CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION, isInTestFileThatHasImplementation || isInImplementationFileThatCanHaveTest);
+		void vs.commands.executeCommand("setContext", CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION, isInTestFileThatHasImplementation || isInImplementationFileThatCanHaveTest);
 	}
 
 	private getImplementationFileForTest(filePath: string) {

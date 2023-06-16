@@ -59,7 +59,7 @@ export class TestDiscoverer implements IAmDisposable {
 				vs.workspace.onDidRenameFiles(async (e) => {
 					e.files.forEach(async (file) => {
 						this.model.clearSuiteOrDirectory(fsPath(file.oldUri));
-						this.discoverTestSuites(fsPath(file.newUri));
+						void this.discoverTestSuites(fsPath(file.newUri));
 					});
 				}),
 				vs.workspace.onDidDeleteFiles(async (e) => {

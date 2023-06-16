@@ -39,7 +39,7 @@ describe("test_flutter_dartpad_samples", () => {
 
 		// Execute the command and ensure it tried to open the correct URL.
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
-		vs.commands.executeCommand(codeLens.command.command, ...codeLens.command.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+		await vs.commands.executeCommand(codeLens.command.command, ...codeLens.command.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(openBrowserCommand.calledWith("https://api.flutter.dev/flutter/material/AppBar-class.html#material.AppBar.1"));
 	});

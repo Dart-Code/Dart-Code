@@ -20,8 +20,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	});
 
 	constructor(private readonly analyzer: LanguageClient) {
-		// tslint:disable-next-line: no-floating-promises
-		analyzer.start().then(() => {
+		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
 				const filePath = fsPath(vs.Uri.parse(n.uri));
 				this.closingLabels[filePath] = n;

@@ -107,7 +107,7 @@ export class PackageCommands extends BaseSdkCommands {
 
 	private async upgradePackagesMajorVersions(uri: string | vs.Uri | undefined) {
 		if (!this.dartCapabilities.supportsPubUpgradeMajorVersions) {
-			vs.window.showErrorMessage("Your current Dart SDK does not support 'pub upgrade --major-versions'");
+			void vs.window.showErrorMessage("Your current Dart SDK does not support 'pub upgrade --major-versions'");
 			return;
 		}
 
@@ -190,8 +190,7 @@ export class PackageCommands extends BaseSdkCommands {
 		runPubGetDelayTimer = setTimeout(() => {
 			runPubGetDelayTimer = undefined;
 			lastPubspecSaveReason = undefined;
-			// tslint:disable-next-line: no-floating-promises
-			this.fetchPackagesOrPrompt(projectUri, { alwaysPrompt: conf.runPubGetOnPubspecChanges === "prompt" });
+			void this.fetchPackagesOrPrompt(projectUri, { alwaysPrompt: conf.runPubGetOnPubspecChanges === "prompt" });
 		}, debounceDuration); // TODO: Does this need to be configurable?
 	}
 

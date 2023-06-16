@@ -50,10 +50,8 @@ export class DasFileTracker implements IAmDisposable {
 		// to send again.
 		this.disposables.push(this.analyzer.registerForServerConnected((s) => this.updateSubscriptions(true)));
 		// Handle already-open files.
-		// tslint:disable-next-line: no-floating-promises
-		this.updatePriorityFiles();
-		// tslint:disable-next-line: no-floating-promises
-		this.updateSubscriptions();
+		void this.updatePriorityFiles();
+		void this.updateSubscriptions();
 		this.watchPubspec();
 	}
 

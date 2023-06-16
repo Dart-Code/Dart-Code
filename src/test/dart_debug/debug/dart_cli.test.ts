@@ -254,7 +254,7 @@ void printSomething() {
   print('ORIGINAL CONTENT');
 }
 		`);
-		currentDoc().save();
+		await currentDoc().save();
 
 		const config = await startDebugger(dc, emptyFile);
 		await waitAllThrowIfTerminates(dc,
@@ -1503,10 +1503,10 @@ insp=<inspected variable>
 			enableAsserts: false,
 		});
 
-		// Can't await these, are we removed the debug/pause flags so
+		// Can't await these, as we removed the debug/pause flags so
 		// the debugger will never connect and we'll terminate quite quickly.
-		dc.configurationSequence();
-		dc.launch(config);
+		void dc.configurationSequence();
+		void dc.launch(config);
 		await dc.waitForEvent("terminated");
 
 		const expectedPath = dc.isDartDap ? fsPath(helloWorldMainFile) : path.join("bin", "main.dart");

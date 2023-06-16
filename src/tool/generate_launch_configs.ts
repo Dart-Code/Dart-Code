@@ -219,5 +219,4 @@ interface TestConfig {
 	chrome?: boolean;
 }
 
-// tslint:disable-next-line: no-floating-promises
-main();
+void main();

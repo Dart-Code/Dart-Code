@@ -15,13 +15,13 @@ export function setUpDaemonMessageHandler(logger: Logger, context: ExtensionCont
 		const message = `${title} ${l.message}`.trim();
 		switch (l.level) {
 			case "info":
-				window.showInformationMessage(message);
+				void window.showInformationMessage(message);
 				break;
 			case "warning":
-				window.showWarningMessage(message);
+				void window.showWarningMessage(message);
 				break;
 			case "error":
-				window.showErrorMessage(message);
+				void window.showErrorMessage(message);
 				break;
 			default:
 				logger.warn(`Unexpected daemon.showMessage type: ${l.level}`);

@@ -63,7 +63,7 @@ class DartDebugAdapterHexView implements vs.DebugAdapterTracker {
 	onDidSendMessage(message: any): void {
 		if (!this.factory.supportsFormatting && message?.command === "initialize" && message?.body?.supportsValueFormattingOptions) {
 			this.factory.supportsFormatting = true;
-			vs.commands.executeCommand("setContext", SUPPORTS_DEBUG_VALUE_FORMAT, true);
+			void vs.commands.executeCommand("setContext", SUPPORTS_DEBUG_VALUE_FORMAT, true);
 		}
 	}
 

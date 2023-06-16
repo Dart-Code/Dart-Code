@@ -92,15 +92,15 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.vmServices.toggle(VmServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
 		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget", () => {
 			this.autoCancelNextInspectWidgetMode = false;
-			this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
+			void this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
 		}));
 		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget.autoCancel", () => {
 			this.autoCancelNextInspectWidgetMode = true;
-			this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
+			void this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
 		}));
 		this.disposables.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => {
 			this.autoCancelNextInspectWidgetMode = false;
-			this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false);
+			void this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false);
 		}));
 
 		this.disposables.push(vs.commands.registerCommand("dart.openObservatory", async () => {
@@ -137,13 +137,13 @@ export class DebugCommands implements IAmDisposable {
 			if (session.vmServiceUri) {
 				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, page });
 			} else if (session.session.configuration.noDebug) {
-				vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
+				void vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {
-				vs.window.showInformationMessage(`DevTools is not available for an app running in ${session.flutterMode} mode on device '${session.flutterDeviceId}'.`);
+				void vs.window.showInformationMessage(`DevTools is not available for an app running in ${session.flutterMode} mode on device '${session.flutterDeviceId}'.`);
 			} else if (session.hasStarted) {
-				vs.window.showInformationMessage("DevTools is not available for an app running in this mode.");
+				void vs.window.showInformationMessage("DevTools is not available for an app running in this mode.");
 			} else {
-				vs.window.showInformationMessage("This debug session is not ready yet.");
+				void vs.window.showInformationMessage("This debug session is not ready yet.");
 			}
 		}));
 
@@ -172,7 +172,7 @@ export class DebugCommands implements IAmDisposable {
 			this.onWillHotRestartEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotRestart", args)));
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", async (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
 				{
 					name: dynamicDebugSessionName,
@@ -185,9 +185,9 @@ export class DebugCommands implements IAmDisposable {
 					program: fsPath(resource),
 				},
 			);
-			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
+			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", (resource: vs.Uri, launchTemplate: any | undefined) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", async (resource: vs.Uri, launchTemplate: any | undefined) => {
 			const launchConfig = Object.assign(
 				{
 					name: dynamicDebugSessionName,
@@ -200,34 +200,34 @@ export class DebugCommands implements IAmDisposable {
 					program: fsPath(resource),
 				},
 			);
-			vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
+			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration, this));
-		this.disposables.push(vs.commands.registerCommand("dart.rerunLastDebugSession", () => {
+		this.disposables.push(vs.commands.registerCommand("dart.rerunLastDebugSession", async () => {
 			if (LastDebugSession.debugConfig) {
-				vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);
+				await vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);
 			} else {
-				vs.window.showErrorMessage("There is no previous debug session to run.");
+				void vs.window.showErrorMessage("There is no previous debug session to run.");
 			}
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.rerunLastTestDebugSession", () => {
+		this.disposables.push(vs.commands.registerCommand("dart.rerunLastTestDebugSession", async () => {
 			if (LastTestDebugSession.debugConfig) {
-				vs.debug.startDebugging(LastTestDebugSession.workspaceFolder, LastTestDebugSession.debugConfig);
+				await vs.debug.startDebugging(LastTestDebugSession.workspaceFolder, LastTestDebugSession.debugConfig);
 			} else {
-				vs.window.showErrorMessage("There is no previous test session to run.");
+				void vs.window.showErrorMessage("There is no previous test session to run.");
 			}
 		}));
 
 		// Attach commands.
-		this.disposables.push(vs.commands.registerCommand("dart.attach", () => {
-			vs.debug.startDebugging(undefined, {
+		this.disposables.push(vs.commands.registerCommand("dart.attach", async () => {
+			await vs.debug.startDebugging(undefined, {
 				name: "Dart: Attach to Process",
 				request: "attach",
 				type: "dart",
 			});
 		}));
-		this.disposables.push(vs.commands.registerCommand("flutter.attachProcess", () => {
-			vs.debug.startDebugging(undefined, {
+		this.disposables.push(vs.commands.registerCommand("flutter.attachProcess", async () => {
+			await vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Process",
 				request: "attach",
 				type: "dart",
@@ -244,7 +244,7 @@ export class DebugCommands implements IAmDisposable {
 			});
 			if (!this.context.hasNotifiedAboutProfileModeDefaultConfiguration) {
 				this.context.hasNotifiedAboutProfileModeDefaultConfiguration = true;
-				vs.window.showInformationMessage("Profiling Flutter app with default configuration. To customize this, create a launch configuration (and include 'flutterMode': 'profile').");
+				void vs.window.showInformationMessage("Profiling Flutter app with default configuration. To customize this, create a launch configuration (and include 'flutterMode': 'profile').");
 			}
 		}));
 		this.disposables.push(vs.commands.registerCommand("flutter.runReleaseMode", async () => {
@@ -255,8 +255,8 @@ export class DebugCommands implements IAmDisposable {
 				type: "dart",
 			});
 		}));
-		this.disposables.push(vs.commands.registerCommand("flutter.attach", () => {
-			vs.debug.startDebugging(undefined, {
+		this.disposables.push(vs.commands.registerCommand("flutter.attach", async () => {
+			await vs.debug.startDebugging(undefined, {
 				name: "Flutter: Attach to Device",
 				request: "attach",
 				type: "dart",
@@ -346,10 +346,10 @@ export class DebugCommands implements IAmDisposable {
 
 		// Open the correct file based on workspace or workspace folder.
 		if (hasWorkspaceConfigs) {
-			vs.commands.executeCommand("workbench.action.openWorkspaceConfigFile");
+			void vs.commands.executeCommand("workbench.action.openWorkspaceConfigFile");
 		} else {
 			const launchConfig = path.join(workspaceFolderPath, ".vscode", "launch.json");
-			vs.workspace.openTextDocument(launchConfig).then((doc) => vs.window.showTextDocument(doc));
+			void vs.workspace.openTextDocument(launchConfig).then((doc) => vs.window.showTextDocument(doc));
 		}
 	}
 
@@ -411,7 +411,7 @@ export class DebugCommands implements IAmDisposable {
 
 		const debugJustMyCodeAction = "Debug my code";
 		const debugEverything = "Debug all code";
-		vs.window.showWarningMessage(message, debugJustMyCodeAction, debugEverything, doNotAskAgainAction).then((choice) => {
+		void vs.window.showWarningMessage(message, debugJustMyCodeAction, debugEverything, doNotAskAgainAction).then((choice) => {
 			if (choice === doNotAskAgainAction)
 				this.context.breakpointInNonDebuggableFileDoNotShowAgain = true;
 			if (choice !== debugEverything)
@@ -438,17 +438,17 @@ export class DebugCommands implements IAmDisposable {
 			const isReleaseMode = s.configuration.toolArgs?.includes("--release");
 
 			if (isReleaseMode) {
-				vs.commands.executeCommand("setContext", isInFlutterReleaseModeDebugSessionContext, true);
+				void vs.commands.executeCommand("setContext", isInFlutterReleaseModeDebugSessionContext, true);
 			} else if (isProfileMode) {
 				isInFlutterProfileModeDebugSession = true;
-				vs.commands.executeCommand("setContext", isInFlutterProfileModeDebugSessionContext, true);
+				void vs.commands.executeCommand("setContext", isInFlutterProfileModeDebugSessionContext, true);
 			} else {
 				isInFlutterDebugModeDebugSession = true;
-				vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
+				void vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
 			}
 		} else if (s.configuration.debuggerType === DebuggerType.Dart) {
 			isInDartDebugSession = true;
-			vs.commands.executeCommand("setContext", isInDartDebugSessionContext, true);
+			void vs.commands.executeCommand("setContext", isInDartDebugSessionContext, true);
 		}
 
 		// Process any queued events that came in before the session start
@@ -458,8 +458,7 @@ export class DebugCommands implements IAmDisposable {
 
 		eventsToProcess.forEach((e) => {
 			this.logger.info(`Processing delayed event ${e.event} for session ${e.session.id}`);
-			// tslint:disable-next-line: no-floating-promises
-			this.handleCustomEventWithSession(session, e);
+			void this.handleCustomEventWithSession(session, e);
 		});
 
 		this.debugOptions.show();
@@ -476,8 +475,7 @@ export class DebugCommands implements IAmDisposable {
 			pendingCustomEvents.push(e);
 			return;
 		}
-		// tslint:disable-next-line: no-floating-promises
-		this.handleCustomEventWithSession(session, e);
+		void this.handleCustomEventWithSession(session, e);
 	}
 
 	public handleDebugSessionEnd(s: vs.DebugSession): void {
@@ -512,7 +510,7 @@ export class DebugCommands implements IAmDisposable {
 				isInFlutterProfileModeDebugSessionContext,
 				isInFlutterReleaseModeDebugSessionContext,
 			])
-				vs.commands.executeCommand("setContext", debugContext, false);
+				void vs.commands.executeCommand("setContext", debugContext, false);
 		}
 	}
 
@@ -561,7 +559,7 @@ export class DebugCommands implements IAmDisposable {
 						// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
 						const navigate = !isFlutterInspectorNavigation || config.devToolsLocation !== "active";
 						if (navigate)
-							vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(uri), line, col, true);
+							void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(uri), line, col, true);
 						if (isFlutterInspectorNavigation && this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
 							// Add a short delay because this will remove the visible selection.
 							setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
@@ -577,7 +575,7 @@ export class DebugCommands implements IAmDisposable {
 				// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
 				const navigate = !body.fromInspector || config.devToolsLocation !== "active";
 				if (navigate)
-					vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(body.file as string), body.line, body.column, body.inOtherEditorColumn);
+					void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(body.file as string), body.line, body.column, body.inOtherEditorColumn);
 				if (this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
 					// Add a short delay because this will remove the visible selection.
 					setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
@@ -610,10 +608,10 @@ export class DebugCommands implements IAmDisposable {
 			const originalUrl = body.url as string;
 			try {
 				const exposedUrl = await envUtils.exposeUrl(originalUrl, this.logger);
-				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl });
+				await session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl });
 			} catch (e) {
 				this.logger.error(`Failed to expose URL ${originalUrl}: ${e}`);
-				session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
+				await session.session.customRequest("exposeUrlResponse", { originalUrl, exposedUrl: originalUrl });
 			}
 		} else if (event === "flutter.forwardedEvent") {
 			const event = body.event;
@@ -653,7 +651,7 @@ export class DebugCommands implements IAmDisposable {
 			} catch (e) {
 				error = `${e}`;
 			}
-			session.session.customRequest("flutter.sendForwardedRequestResponse", { id, result, error });
+			void session.session.customRequest("flutter.sendForwardedRequestResponse", { id, result, error });
 		} else if (event === "dart.debuggerUris") {
 			session.observatoryUri = body.observatoryUri;
 			session.vmServiceUri = body.vmServiceUri;
@@ -666,9 +664,9 @@ export class DebugCommands implements IAmDisposable {
 					const pageId = session.session.configuration.openDevTools;
 					const page = devToolsPages.find((p) => p.id === pageId);
 					if (pageId) {
-						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
+						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
 					} else {
-						vs.window.showWarningMessage(`Debug configuration contain an invalid DevTools page '${pageId}' in 'openDevTools'`);
+						void vs.window.showWarningMessage(`Debug configuration contain an invalid DevTools page '${pageId}' in 'openDevTools'`);
 					}
 				} else if (config.openDevTools !== "never") {
 					const shouldLaunch = debuggerType !== DebuggerType.Dart || config.openDevTools === "always";
@@ -676,13 +674,12 @@ export class DebugCommands implements IAmDisposable {
 						// If embedded DevTools is enabled and it's a Flutter app, assume the user wants the Widget inspector.
 						// Otherwise, DevTools will be launched externally (since it's not clear which page they may want).
 						const page = debuggerType === DebuggerType.Flutter ? widgetInspectorPage : null;
-						vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
+						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
 					}
 				} else if (debuggerType === DebuggerType.Flutter) {
-					// tslint:disable-next-line: no-floating-promises
-					showDevToolsNotificationIfAppropriate(this.context).then((res) => {
+					void showDevToolsNotificationIfAppropriate(this.context).then((res) => {
 						if (res.shouldAlwaysOpen)
-							config.setOpenDevTools("flutter");
+							void config.setOpenDevTools("flutter");
 					});
 				}
 			}
@@ -699,7 +696,7 @@ export class DebugCommands implements IAmDisposable {
 			const isHotEvent = progressId?.includes("reload") || progressId?.includes("restart");
 			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
 
-			vs.window.withProgress(
+			await vs.window.withProgress(
 				// TODO: This was previously Window to match what we'd get using DAP progress
 				// notifications but users prefer larger notifications as they're easier to
 				// see (especially when it comes to things like waiting for debug extension).
@@ -743,7 +740,7 @@ export class DebugCommands implements IAmDisposable {
 			const inspectAction = `Inspect Widget`;
 			const choice = await vs.window.showWarningMessage(data.errorDescription, inspectAction, doNotAskAgainAction);
 			if (choice === inspectAction && session.vmServiceUri) {
-				this.devTools.spawnForSession(
+				void this.devTools.spawnForSession(
 					session as DartDebugSessionInformation & { vmServiceUri: string },
 					{
 						inspectorRef: data.inspectorReference,
@@ -751,7 +748,7 @@ export class DebugCommands implements IAmDisposable {
 					},
 				);
 			} else if (choice === doNotAskAgainAction) {
-				config.setShowInspectorNotificationsForWidgetErrors(false);
+				void config.setShowInspectorNotificationsForWidgetErrors(false);
 			}
 			clearTimeout(timer);
 			this.suppressFlutterWidgetErrors = false;
@@ -780,11 +777,11 @@ export class DebugCommands implements IAmDisposable {
 		const debugExternalPackageLibraries = this.currentDebugOption === DebugOption.MyCodePackages || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
 		const debugSdkLibraries = this.currentDebugOption === DebugOption.MyCodeSdk || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
 
-		config.setGlobalDebugExternalPackageLibraries(debugExternalPackageLibraries);
-		config.setGlobalDebugSdkLibraries(debugSdkLibraries);
+		void config.setGlobalDebugExternalPackageLibraries(debugExternalPackageLibraries);
+		void config.setGlobalDebugSdkLibraries(debugSdkLibraries);
 
 		debugSessions.forEach((session) => {
-			session.session.customRequest("updateDebugOptions", {
+			void session.session.customRequest("updateDebugOptions", {
 				debugExternalPackageLibraries,
 				debugSdkLibraries,
 			});
@@ -806,7 +803,7 @@ export class DebugCommands implements IAmDisposable {
 			isRunnable = !!outline?.children?.find((c) => c.element.name === "main");
 		}
 
-		vs.commands.executeCommand("setContext", CURRENT_FILE_RUNNABLE, isRunnable);
+		void vs.commands.executeCommand("setContext", CURRENT_FILE_RUNNABLE, isRunnable);
 	}
 
 	public dispose(): any {

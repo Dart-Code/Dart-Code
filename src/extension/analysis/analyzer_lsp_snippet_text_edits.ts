@@ -80,7 +80,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 		const editor = await vs.window.showTextDocument(doc);
 
 		if (doc.version !== documentVersion)
-			vs.window.showErrorMessage(`Unable to apply snippet, document was modified`);
+			void vs.window.showErrorMessage(`Unable to apply snippet, document was modified`);
 
 		const leadingIndentCharacters = doc.lineAt(edit.range.start.line).firstNonWhitespaceCharacterIndex;
 		const newText = this.compensateForVsCodeIndenting(edit.newText, leadingIndentCharacters);

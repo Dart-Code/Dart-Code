@@ -50,7 +50,7 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 
 	// Prompt to show and handle response.
 	analytics.logFlutterSurveyShown();
-	vs.window.showInformationMessage(surveyData.title, takeSurveyAction, skipThisSurveyAction).then(async (choice) => {
+	void vs.window.showInformationMessage(surveyData.title, takeSurveyAction, skipThisSurveyAction).then(async (choice) => {
 		if (choice === skipThisSurveyAction) {
 			context.setFlutterSurveyNotificationDoNotShow(surveyData.uniqueId, true);
 			analytics.logFlutterSurveyDismissed();
@@ -95,10 +95,10 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 		context.devToolsNotificationDoNotShow = true;
 		return { didOpen: false };
 	} else if (choice === alwaysOpenAction) {
-		vs.commands.executeCommand("dart.openDevTools");
+		void vs.commands.executeCommand("dart.openDevTools");
 		return { didOpen: true, shouldAlwaysOpen: true };
 	} else if (choice === openAction) {
-		vs.commands.executeCommand("dart.openDevTools");
+		void vs.commands.executeCommand("dart.openDevTools");
 		return { didOpen: true };
 	} else {
 		// No thanks.

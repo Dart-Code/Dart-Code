@@ -15,7 +15,7 @@ export class DartUriHandler implements vs.UriHandler {
 		if (handlerPrefix) {
 			await this.handlers[handlerPrefix].handle(uri.path.substr(handlerPrefix.length));
 		} else {
-			vs.window.showErrorMessage(`No handler for '${uri.path}'. Check you have the latest version of the Dart plugin and try again.`);
+			void vs.window.showErrorMessage(`No handler for '${uri.path}'. Check you have the latest version of the Dart plugin and try again.`);
 		}
 	}
 }

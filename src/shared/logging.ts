@@ -136,9 +136,9 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		logStream.write(`${e.toLine(maxLogLineLength)}${os.EOL}`);
 	});
 	return {
-		dispose(): Promise<void> | void {
+		async dispose(): Promise<void> {
 			if (fileLogger) {
-				fileLogger.dispose();
+				await fileLogger.dispose();
 				fileLogger = undefined;
 			}
 			return new Promise((resolve) => {

@@ -49,8 +49,7 @@ export class LspAnalyzer extends Analyzer {
 		this.disposables.push(this.refactors);
 		this.disposables.push(this.statusItem);
 
-		// tslint:disable-next-line: no-floating-promises
-		this.client.start().then(() => {
+		void this.client.start().then(() => {
 			this.statusItem.detail = "Started";
 			// Reminder: These onNotification calls only hold ONE handler!
 			// https://github.com/microsoft/vscode-languageserver-node/issues/174
@@ -62,11 +61,11 @@ export class LspAnalyzer extends Analyzer {
 				const uri = vs.Uri.parse(params.uri);
 				switch (uri.scheme) {
 					case "file":
-						vs.window.showTextDocument(uri);
+						void vs.window.showTextDocument(uri);
 						break;
 					case "http":
 					case "https":
-						envUtils.openInBrowser(uri.toString());
+						void envUtils.openInBrowser(uri.toString());
 						break;
 					default:
 						console.error(`Unable to open URI ${uri} as requested by LSP server. Unknown scheme.`);
@@ -290,7 +289,7 @@ export class LspAnalyzer extends Analyzer {
 								try {
 									const validateResult = await next(validateCommand, args);
 									if (validateResult.valid === false) {
-										vs.window.showErrorMessage(validateResult.message as string);
+										void vs.window.showErrorMessage(validateResult.message as string);
 										return;
 									}
 								} catch (e) {
@@ -336,7 +335,7 @@ export class LspAnalyzer extends Analyzer {
 							return await next(command, args);
 						} catch (e: any) {
 							if (e?.code === refactorFailedErrorCode) {
-								vs.window.showErrorMessage(e.message as string);
+								void vs.window.showErrorMessage(e.message as string);
 								return;
 							} else {
 								throw e;
@@ -377,7 +376,7 @@ export class LspAnalyzer extends Analyzer {
 		try {
 			return await this.client.sendRequest(ReanalyzeRequest.type);
 		} catch (e) {
-			vs.window.showErrorMessage("Reanalyze is not supported by this version of the Dart SDK's LSP server.");
+			void vs.window.showErrorMessage("Reanalyze is not supported by this version of the Dart SDK's LSP server.");
 		}
 	}
 

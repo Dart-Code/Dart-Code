@@ -29,7 +29,7 @@ export async function getFolderToRunCommandIn(logger: Logger, placeHolder: strin
 
 	if (!selectableFolders || !selectableFolders.length) {
 		const projectTypes = flutterOnly ? "Flutter" : "Dart/Flutter";
-		vs.window.showWarningMessage(`No ${projectTypes} project roots were found. Do you have a pubspec.yaml file?`);
+		void vs.window.showWarningMessage(`No ${projectTypes} project roots were found. Do you have a pubspec.yaml file?`);
 		return undefined;
 	}
 

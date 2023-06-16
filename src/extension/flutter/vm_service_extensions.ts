@@ -152,7 +152,7 @@ export class VmServiceExtensions {
 	private syncContextStates(id: string, value: any) {
 		if (id === VmServiceExtension.InspectorSelectMode) {
 			/// Keep the context in sync so that the "Cancel Inspect Widget" command is enabled/disabled.
-			vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, !!value);
+			void vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, !!value);
 			this.debugCommands.isInspectingWidget = !!value;
 		}
 	}
@@ -194,7 +194,7 @@ export class VmServiceExtensions {
 	/// Tracks registered services and updates contexts to enable VS Code commands.
 	public handleServiceRegistered(service: VmService, method: string) {
 		this.registeredServices[service] = method;
-		vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${service}`, true);
+		void vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${service}`, true);
 	}
 
 	/// Tracks loaded service extensions and updates contexts to enable VS Code commands.
@@ -203,7 +203,7 @@ export class VmServiceExtensions {
 		this.loadedServiceExtensions.push(extensionRPC);
 		if (isolateId)
 			this.loadedServiceExtensionIsolateIds.set(extensionRPC, isolateId);
-		vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${extensionRPC}`, true);
+		void vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${extensionRPC}`, true);
 
 		// If this extension is one we have an override value for, then this must be the extension loading
 		// for a new isolate (perhaps after a restart), so send its value.
@@ -219,7 +219,7 @@ export class VmServiceExtensions {
 	/// Marks all services as not-loaded (happens after session ends).
 	public markAllServicesUnloaded() {
 		for (const id of Object.keys(this.registeredServices)) {
-			vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${id}`, undefined);
+			void vs.commands.executeCommand("setContext", `${SERVICE_CONTEXT_PREFIX}${id}`, undefined);
 		}
 		this.registeredServices = {};
 	}
@@ -227,7 +227,7 @@ export class VmServiceExtensions {
 	/// Marks all service extensions as not-loaded (happens after session ends or after hot restart).
 	public markAllServiceExtensionsUnloaded() {
 		for (const id of this.loadedServiceExtensions) {
-			vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
+			void vs.commands.executeCommand("setContext", `${SERVICE_EXTENSION_CONTEXT_PREFIX}${id}`, undefined);
 		}
 		this.loadedServiceExtensions.length = 0;
 		this.loadedServiceExtensionIsolateIds.clear();

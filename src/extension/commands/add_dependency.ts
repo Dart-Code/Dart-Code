@@ -261,7 +261,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 				return { path: packagePath, packageName: packageNameResult[1], marker: "PATH" };
 		} catch (e) {
 			this.logger.error(e);
-			vs.window.showErrorMessage("The selected folder does not appear to be a valid Pub package");
+			void vs.window.showErrorMessage("The selected folder does not appear to be a valid Pub package");
 			return;
 		}
 	}

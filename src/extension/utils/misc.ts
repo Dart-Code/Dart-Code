@@ -13,8 +13,7 @@ export function reportAnalyzerTerminatedWithError(duringStartup: boolean = false
 	const message = duringStartup
 		? "The Dart Analyzer could not be started."
 		: "The Dart Analyzer has terminated.";
-	// tslint:disable-next-line: no-floating-promises
-	promptToReloadExtension(message, undefined, true).then(() => isShowingAnalyzerError = false);
+	void promptToReloadExtension(message, undefined, true).then(() => isShowingAnalyzerError = false);
 }
 
 export async function getFlutterConfigValue<T>(logger: Logger, flutterSdkPath: string | undefined, folder: string, flutterConfigKey: string): Promise<T> {

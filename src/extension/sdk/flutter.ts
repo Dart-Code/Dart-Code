@@ -35,9 +35,9 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 					if (code) {
 						const ringLogContents = ringLog.toString();
 						logger.error(`Failed to initialize Flutter: Process exited with code ${code}.`);
-						window.showErrorMessage(`Failed to initialize Flutter: Process exited with code ${code}.`, showLogAction).then((chosenAction) => {
+						void window.showErrorMessage(`Failed to initialize Flutter: Process exited with code ${code}.`, showLogAction).then((chosenAction) => {
 							if (chosenAction === showLogAction)
-								openLogContents(undefined, ringLogContents);
+								void openLogContents(undefined, ringLogContents);
 						});
 						reject();
 					} else {

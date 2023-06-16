@@ -74,16 +74,14 @@ export class SdkUtils {
 	}
 
 	public showFluttersDartSdkActivationFailure() {
-		// tslint:disable-next-line: no-floating-promises
-		promptToReloadExtension("Could not find Dart in your Flutter SDK. " +
+		void promptToReloadExtension("Could not find Dart in your Flutter SDK. " +
 			"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 			"Reload", // eslint-disable-line @typescript-eslint/indent
 			true, // eslint-disable-line @typescript-eslint/indent
 		);
 	}
 	public showFlutterActivationFailure(commandToReRun?: string) {
-		// tslint:disable-next-line: no-floating-promises
-		this.showSdkActivationFailure(
+		void this.showSdkActivationFailure(
 			"Flutter",
 			(p) => this.findFlutterSdk(p),
 			FLUTTER_DOWNLOAD_URL,
@@ -92,8 +90,7 @@ export class SdkUtils {
 		);
 	}
 	public showDartActivationFailure(commandToReRun?: string) {
-		// tslint:disable-next-line: no-floating-promises
-		this.showSdkActivationFailure(
+		void this.showSdkActivationFailure(
 			"Dart",
 			(p) => this.findDartSdk(p),
 			DART_DOWNLOAD_URL,
@@ -130,7 +127,7 @@ export class SdkUtils {
 						await saveSdkPath(matchingSdkFolder.sdkPath);
 						await promptToReloadExtension();
 						if (commandToReRun) {
-							commands.executeCommand(commandToReRun);
+							void commands.executeCommand(commandToReRun);
 						}
 						break;
 					} else {
@@ -146,7 +143,7 @@ export class SdkUtils {
 				await envUtils.openInBrowser(downloadUrl);
 				break;
 			} else if (selectedItem === showLogAction) {
-				openLogContents(undefined, ringLogContents);
+				void openLogContents(undefined, ringLogContents);
 				break;
 			} else {
 				break;
@@ -187,7 +184,7 @@ export class SdkUtils {
 		await initializeFlutterSdk(this.logger, path.join(flutterSdkFolder, flutterPath));
 		await commands.executeCommand("_dart.reloadExtension");
 		if (commandToReRun)
-			commands.executeCommand(commandToReRun);
+			void commands.executeCommand(commandToReRun);
 
 		return true;
 
@@ -227,7 +224,7 @@ export class SdkUtils {
 					+ `stderr: ${gitProc.stderr}\n`);
 
 				if (!cancellationToken.isCancellationRequested)
-					window.showErrorMessage(`Failed to clone Flutter: ${gitProc.stderr}`);
+					void window.showErrorMessage(`Failed to clone Flutter: ${gitProc.stderr}`);
 
 				return false;
 			}

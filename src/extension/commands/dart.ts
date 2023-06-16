@@ -25,7 +25,7 @@ export class DartCommands extends BaseSdkCommands {
 
 	private dartCreate(projectPath: string, templateName: string) {
 		if (!this.dartCapabilities.supportsDartCreate) {
-			vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
+			void vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
 			return;
 		}
 
@@ -48,7 +48,7 @@ export class DartCommands extends BaseSdkCommands {
 		}
 
 		if (!this.dartCapabilities.supportsDartCreate) {
-			vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
+			void vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
 			return;
 		}
 
@@ -61,7 +61,7 @@ export class DartCommands extends BaseSdkCommands {
 		try {
 			templates = await creator.getTemplates();
 		} catch (e) {
-			vs.window.showErrorMessage(`Unable to fetch project templates. ${e}`);
+			void vs.window.showErrorMessage(`Unable to fetch project templates. ${e}`);
 			return;
 		}
 
@@ -110,7 +110,7 @@ export class DartCommands extends BaseSdkCommands {
 		const projectFolderPath = fsPath(projectFolderUri);
 
 		if (fs.existsSync(projectFolderPath)) {
-			vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderPath}`);
+			void vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderPath}`);
 			return;
 		}
 
@@ -122,7 +122,7 @@ export class DartCommands extends BaseSdkCommands {
 		if (config.workspaceSdkPath)
 			writeDartSdkSettingIntoProject(config.workspaceSdkPath, projectFolderPath);
 
-		vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
+		void vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
 	}
 
 	private validateDartProjectName(input: string, folderDir: string) {

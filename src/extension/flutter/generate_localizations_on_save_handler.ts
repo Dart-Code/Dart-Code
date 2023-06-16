@@ -57,7 +57,7 @@ export class GenerateLocalizationsOnSaveHandler implements IAmDisposable {
 
 		this.debounceDelayTimer = setTimeout(() => {
 			this.debounceDelayTimer = undefined;
-			commands.executeCommand(commandToRun, args);
+			void commands.executeCommand(commandToRun, args);
 		}, 200);
 	}
 

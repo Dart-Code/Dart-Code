@@ -19,7 +19,7 @@ export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities
 	// might not exist on the local machine.
 	if (!config.analyzerSshHost && analyzerPath !== "language-server" && !fs.existsSync(analyzerPath)) {
 		const msg = "Could not find a Dart Analysis Server at " + analyzerPath;
-		vs.window.showErrorMessage(msg);
+		void vs.window.showErrorMessage(msg);
 		logger.error(msg);
 		throw new Error(msg);
 	}

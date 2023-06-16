@@ -10,7 +10,7 @@ import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../u
 export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string, flutterSdkOverride?: string): vs.Uri | undefined {
 	// Ensure we're on at least Flutter v1 so we know creating samples works.
 	if (!flutterCapabilities.supportsCreatingSamples) {
-		vs.window.showErrorMessage("Opening sample projects requires Flutter v1.0 or later");
+		void vs.window.showErrorMessage("Opening sample projects requires Flutter v1.0 or later");
 		return;
 	}
 
@@ -28,7 +28,7 @@ export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapa
 		writeFlutterSdkSettingIntoProject(flutterSdkOverride, tempSamplePath);
 
 	const folderUri = vs.Uri.file(tempSamplePath);
-	vs.commands.executeCommand("vscode.openFolder", folderUri);
+	void vs.commands.executeCommand("vscode.openFolder", folderUri);
 
 	return folderUri;
 }

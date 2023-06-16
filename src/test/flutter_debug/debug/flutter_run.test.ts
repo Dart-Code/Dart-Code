@@ -352,8 +352,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		const configSequence = dc.configurationSequence();
 		// Kick off a build, but do not await it...
-		// tslint:disable-next-line: no-floating-promises
-		dc.launch(config);
+		void dc.launch(config);
 
 		// Wait 5 seconds after configuration sequence completes to ensure the build is in progress...
 		await configSequence;

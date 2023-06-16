@@ -19,7 +19,7 @@ export class AnalyzerCommands {
 			if (forcedReanalyzeCount === 10)
 				this.showServerRestartPrompt().catch((e) => logger.error(e));
 			analytics.log(AnalyticsEvent.Command_RestartAnalyzer);
-			vs.commands.executeCommand("_dart.reloadExtension");
+			void vs.commands.executeCommand("_dart.reloadExtension");
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.forceReanalyze", async () => {
 			forcedReanalyzeCount++;

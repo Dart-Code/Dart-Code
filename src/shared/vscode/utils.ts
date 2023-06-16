@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { URL } from "url";
 import * as vs from "vscode";
-import { CodeActionKind, env as vsEnv, ExtensionKind, extensions, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, workspace, WorkspaceFolder } from "vscode";
+import { CodeActionKind, ExtensionKind, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, WorkspaceFolder, extensions, env as vsEnv, workspace } from "vscode";
 import * as lsp from "vscode-languageclient";
 import * as YAML from "yaml";
 import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchProgressNotificationDelayInMs, projectSearchProgressText } from "../constants";
@@ -104,7 +104,7 @@ export async function getAllProjectFolders(
 	// to stop the search, which automatically hides when `resultsPromise` resolves.
 	setTimeout(() => {
 		if (!isComplete) {
-			vs.window.withProgress({
+			void vs.window.withProgress({
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
 				title: projectSearchProgressText,
@@ -200,7 +200,7 @@ export function warnIfPathCaseMismatch(logger: Logger, p: string, pathDescriptio
 		const message = `The casing of ${pathDescription} does not match the casing on disk; please ${helpText}. `
 			+ `Expected ${realPath} but got ${userPath}`;
 		logger.warn(message);
-		vs.window.showWarningMessage(message);
+		void vs.window.showWarningMessage(message);
 		return true;
 	}
 	return false;

@@ -162,5 +162,4 @@ async function runAllTests(): Promise<void> {
 	}
 }
 
-// tslint:disable-next-line: no-floating-promises
-runAllTests().then(() => process.exit(exitCode));
+void runAllTests().then(() => process.exit(exitCode));

@@ -35,8 +35,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	protected setTrackingFile(editor: vs.TextEditor | undefined) {
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
-			// tslint:disable-next-line: no-floating-promises
-			this.loadExistingOutline();
+			void this.loadExistingOutline();
 		} else if (editor && editor.document.uri.scheme === "file") {
 			// HACK: We can't currently reliably tell when editors are changed that are only real
 			// text editors (debug window is considered an editor) so we should only hide the tree
@@ -68,7 +67,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 
 		// Clear all contexts that enabled refactors.
 		for (const refactor of flutterOutlineCommands) {
-			vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + refactor, false);
+			void vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + refactor, false);
 		}
 
 		// Set up the new contexts for our node and mark is as current.
@@ -81,7 +80,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 			selection[0].fixes = fixes;
 
 			for (const fix of fixes)
-				vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + (fix.kind ? fix.kind.value : "NOKIND"), true);
+				void vs.commands.executeCommand("setContext", WIDGET_SUPPORTS_CONTEXT_PREFIX + (fix.kind ? fix.kind.value : "NOKIND"), true);
 
 			// Used so we can show context menu if you right-click the selected one.
 			// We can't support arbitrary context menus, because we can't get the fixes up-front (see
@@ -136,7 +135,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	}
 
 	private static setTreeVisible(visible: boolean) {
-		vs.commands.executeCommand("setContext", DART_SHOW_FLUTTER_OUTLINE, visible);
+		void vs.commands.executeCommand("setContext", DART_SHOW_FLUTTER_OUTLINE, visible);
 	}
 
 	public static showTree() { this.setTreeVisible(true); }
@@ -162,8 +161,7 @@ export class DasFlutterOutlineProvider extends FlutterOutlineProvider {
 						if (this.updateTimeout)
 							clearTimeout(this.updateTimeout);
 						if (!this.rootNode)
-							// tslint:disable-next-line: no-floating-promises
-							this.update();
+							void this.update();
 						else
 							this.updateTimeout = setTimeout(() => this.update(), 200);
 					}
@@ -237,8 +235,7 @@ export class LspFlutterOutlineProvider extends FlutterOutlineProvider {
 				if (this.updateTimeout)
 					clearTimeout(this.updateTimeout);
 				if (!this.rootNode)
-					// tslint:disable-next-line: no-floating-promises
-					this.update();
+					void this.update();
 				else
 					this.updateTimeout = setTimeout(() => this.update(), 200);
 			}

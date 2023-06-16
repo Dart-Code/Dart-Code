@@ -155,12 +155,11 @@ export class DasAnalyzerClient extends AnalyzerGen {
 			}
 		});
 
-		// tslint:disable-next-line: no-floating-promises
-		this.serverSetSubscriptions({
+		void this.serverSetSubscriptions({
 			subscriptions: ["STATUS"],
 		});
 
-		this.sendRequest("server.setClientCapabilities", {
+		void this.sendRequest("server.setClientCapabilities", {
 			"requests": ["openUrlRequest", "showMessageRequest"],
 		});
 	}
@@ -188,7 +187,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		const serverHasStarted = !!this.version;
 		if (withError)
 			reportAnalyzerTerminatedWithError(!serverHasStarted);
-		this.notify(this.serverTerminatedSubscriptions, undefined);
+		void this.notify(this.serverTerminatedSubscriptions, undefined);
 	}
 
 	protected async handleRequest(method: string, params: any): Promise<any> {
@@ -204,7 +203,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 
 
 	private handleOpenUrl(params: as.ServerOpenUrlRequestRequest) {
-		vs.env.openExternal(vs.Uri.parse(params.url));
+		void vs.env.openExternal(vs.Uri.parse(params.url));
 		return;
 	}
 
@@ -249,8 +248,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 			edits: [{ offset: 0, length: 0, replacement: "", id: "" }],
 			type: "change",
 		};
-		// tslint:disable-next-line: no-floating-promises
-		this.analysisUpdateContent({ files });
+		void this.analysisUpdateContent({ files });
 	}
 
 	// Wraps completionGetSuggestions to return the final result automatically in the original promise

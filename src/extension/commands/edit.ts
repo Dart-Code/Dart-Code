@@ -111,36 +111,36 @@ export class EditCommands implements vs.Disposable {
 			switch (commonPrefix) {
 				case "NONE":
 					// If no prefix, insert triples.
-					this.prefixLines(editor, selections, "/// ");
+					await this.prefixLines(editor, selections, "/// ");
 					break;
 				case "DOUBLE":
 					// If already double, just add the additional one slash.
-					this.prefixLines(editor, selections, "/");
+					await this.prefixLines(editor, selections, "/");
 					break;
 				case "TRIPLE":
 					// If already triple, remove slashes.
-					this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
+					await this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
 					break;
 			}
 		} else {
 			switch (commonPrefix) {
 				case "NONE":
 					// If no prefix, insert doubles.
-					this.prefixLines(editor, selections, "// ");
+					await this.prefixLines(editor, selections, "// ");
 					break;
 				case "DOUBLE":
 					// If already double, add an additional slash to make triple.
-					this.prefixLines(editor, selections, "/");
+					await this.prefixLines(editor, selections, "/");
 					break;
 				case "TRIPLE":
 					// If already triple, remove slashes.
-					this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
+					await this.removeLinePrefixes(editor, selections, ["/// ", "///"]);
 					break;
 			}
 		}
 	}
 
-	private prefixLines(editor: vs.TextEditor, selections: readonly vs.Selection[], prefix: string) {
+	private async prefixLines(editor: vs.TextEditor, selections: readonly vs.Selection[], prefix: string) {
 		const document = editor.document;
 		// In case we have overlapping selections, keep track of lines we've done.
 		const doneLines = new Set<number>();
@@ -159,7 +159,7 @@ export class EditCommands implements vs.Disposable {
 			}
 		}
 
-		editor.edit((edit) => {
+		await editor.edit((edit) => {
 			for (const selection of selections) {
 				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
 					if (doneLines.has(lineNumber))
@@ -177,12 +177,12 @@ export class EditCommands implements vs.Disposable {
 		});
 	}
 
-	private removeLinePrefixes(editor: vs.TextEditor, selections: readonly vs.Selection[], prefixes: string[]) {
+	private async removeLinePrefixes(editor: vs.TextEditor, selections: readonly vs.Selection[], prefixes: string[]) {
 		const document = editor.document;
 		// In case we have overlapping selections, keep track of lines we've done.
 		const doneLines = new Set<number>();
 
-		editor.edit((edit) => {
+		await editor.edit((edit) => {
 			for (const selection of selections) {
 				for (let lineNumber = selection.start.line; lineNumber <= selection.end.line; lineNumber++) {
 					if (doneLines.has(lineNumber))

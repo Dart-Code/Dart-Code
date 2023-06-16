@@ -2,9 +2,9 @@ import { Thread, ThreadEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
-import { errorString, PromiseCompleter } from "../shared/utils";
+import { PromiseCompleter, errorString } from "../shared/utils";
 import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
-import { DebuggerResult, VMBreakpoint, VMEvent, VmExceptionMode, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef } from "./dart_debug_protocol";
+import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef, VmExceptionMode } from "./dart_debug_protocol";
 
 export class ThreadManager {
 	public nextThreadId: number = 0;
@@ -309,8 +309,7 @@ export class ThreadInfo {
 
 	public checkResume() {
 		if (this.paused && this.gotPauseStart && this.initialBreakpoints && this.hasConfigurationDone)
-			// tslint:disable-next-line: no-floating-promises
-			this.resume();
+			void this.resume();
 	}
 
 	public handleResumed() {

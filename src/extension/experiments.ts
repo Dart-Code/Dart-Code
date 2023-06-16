@@ -50,7 +50,7 @@ class Experiment {
 			const isFirst = !context.get(contextHasActivatedKey);
 			context.update(contextHasActivatedKey, true);
 			logger.info(`Experiment '${id}' is activating (${isFirst ? "first time" : "not first time"})`);
-			this.activate(isFirst)
+			void this.activate(isFirst)
 				// Activate is allowed to return false if it skipped activating (eg. not relevant) so
 				// first activation can re-run in future.
 				.then((v) => {

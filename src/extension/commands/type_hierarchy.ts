@@ -19,7 +19,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 	private async showTypeHierarchy(): Promise<void> {
 		const editor = editors.getActiveDartEditor();
 		if (!editor) {
-			vs.window.showWarningMessage("No active Dart editor.");
+			void vs.window.showWarningMessage("No active Dart editor.");
 			return;
 		}
 
@@ -33,7 +33,7 @@ export class TypeHierarchyCommand implements vs.Disposable {
 
 		const items = response.hierarchyItems;
 		if (!items) {
-			vs.window.showInformationMessage("Type hierarchy not available.");
+			void vs.window.showInformationMessage("Type hierarchy not available.");
 			return;
 		}
 

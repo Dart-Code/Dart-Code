@@ -94,7 +94,7 @@ export class RefactorCommands implements vs.Disposable {
 			.filter((e) => e.severity === "FATAL");
 
 		if (validationProblems.length) {
-			vs.window.showErrorMessage(validationProblems[0].message);
+			void vs.window.showErrorMessage(validationProblems[0].message);
 			return true;
 		}
 		return false;
@@ -111,7 +111,7 @@ export class RefactorCommands implements vs.Disposable {
 
 		// Fatal errors can never be applied, just tell the user and quit.
 		if (editFatals.length) {
-			vs.window.showErrorMessage(unique(editFatals.map((e) => e.message)).join("\n\n") + "\n\nYour refactor was not applied.");
+			void vs.window.showErrorMessage(unique(editFatals.map((e) => e.message)).join("\n\n") + "\n\nYour refactor was not applied.");
 			return false;
 		}
 
@@ -129,7 +129,7 @@ export class RefactorCommands implements vs.Disposable {
 
 		// If we're trying to apply changes but the document is modified, we have to quit.
 		if (applyEdits && document && document.version !== originalDocumentVersion) {
-			vs.window.showErrorMessage(REFACTOR_FAILED_DOC_MODIFIED);
+			void vs.window.showErrorMessage(REFACTOR_FAILED_DOC_MODIFIED);
 			return false;
 		}
 
@@ -194,7 +194,7 @@ export class RefactorCommands implements vs.Disposable {
 				continue;
 
 			if (hasOverlappingEdits(editResult.change)) {
-				vs.window.showErrorMessage("Unable to update references; edits contain ambigious positions.");
+				void vs.window.showErrorMessage("Unable to update references; edits contain ambigious positions.");
 				this.logger.error(`Unable to apply MOVE_FILE edits due to ambigious edits:\n\n${JSON.stringify(editResult.change, undefined, 4)}`);
 				return;
 			}

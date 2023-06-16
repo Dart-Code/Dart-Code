@@ -24,7 +24,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 		let androidStudioDir = await this.getAndroidStudioDir(folder);
 
 		if (!androidStudioDir) {
-			vs.window.showErrorMessage("Unable to find Android Studio");
+			void vs.window.showErrorMessage("Unable to find Android Studio");
 			return;
 		}
 
@@ -41,7 +41,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 				}
 			}
 		}
-		vs.window.showErrorMessage("Unable to locate Android Studio executable");
+		void vs.window.showErrorMessage("Unable to locate Android Studio executable");
 	}
 
 	private async openInXcode(resource: vs.Uri): Promise<void> {
@@ -54,7 +54,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 
 		if (!files || !files.length) {
 			const basename = path.basename(folder);
-			vs.window.showErrorMessage(`Unable to find an Xcode project in your '${basename}' folder`);
+			void vs.window.showErrorMessage(`Unable to find an Xcode project in your '${basename}' folder`);
 			return;
 		}
 

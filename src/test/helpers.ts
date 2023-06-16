@@ -1064,8 +1064,8 @@ export async function captureDebugSessionCustomEvents(startDebug: () => void, ex
 
 	startDebug();
 	await Promise.all([startPromise, endPromise]);
-	startSub?.dispose();
-	endSub?.dispose();
+	await startSub?.dispose();
+	await endSub?.dispose();
 	eventSub.dispose();
 
 	return events;
@@ -1140,8 +1140,7 @@ export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<
 	// We'll log completion of the promise only if we'd logged that it was still in
 	// progress at some point.
 	let logCompletion = false;
-	// tslint:disable-next-line: no-floating-promises
-	promise.then(() => {
+	void promise.then(() => {
 		didComplete = true;
 		if (logCompletion)
 			logger.info(`Promise ${name} resolved!`, LogCategory.CI);

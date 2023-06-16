@@ -151,7 +151,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (isDevExtension)
 		context.subscriptions.push(logToConsole(logger));
 
-	vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
+	void vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
 	setupLog(getExtensionLogPath(), LogCategory.General);
 
@@ -212,8 +212,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	if (sdks.dartVersion) {
 		dartCapabilities.version = sdks.dartVersion;
 		analytics.sdkVersion = sdks.dartVersion;
-		// tslint:disable-next-line: no-floating-promises
-		checkForStandardDartSdkUpdates(logger, workspaceContext);
+		void checkForStandardDartSdkUpdates(logger, workspaceContext);
 	}
 
 	if (sdks.flutterVersion) {
@@ -255,7 +254,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	}
 	const isUsingLsp = shouldUseLsp();
 	writableConfig.useLegacyProtocol = !isUsingLsp;
-	vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
+	void vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
 
 	// Build log headers now we know analyzer type.
 	buildLogHeaders(logger, workspaceContextUnverified);
@@ -265,10 +264,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext, isUsingLsp));
 
 	if (isVirtualWorkspace && !dartCapabilities.supportsNonFileSchemeWorkspaces) {
-		vs.window.showWarningMessage("Please upgrade to the latest Dart/Flutter SDK to prevent errors in workspaces with virtual folders");
+		void vs.window.showWarningMessage("Please upgrade to the latest Dart/Flutter SDK to prevent errors in workspaces with virtual folders");
 	}
 
-	vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
+	void vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
@@ -279,7 +278,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			runIfNoDevices = () => {
 				if (!hasRunNoDevicesMessage) {
 					const instruction = workspaceContext.config.restartMacDaemonMessage;
-					promptToReloadExtension(`${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
+					void promptToReloadExtension(`${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
 					hasRunNoDevicesMessage = true;
 				}
 			};
@@ -303,7 +302,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 					portFromLocalExtension = parseInt(results[1]);
 				} else if (resultMessage !== null) {
 					const displayError = `The local extension to expose devices failed: ${resultMessage}. ${workspaceContext.config.localDeviceCommandAdviceMessage ?? ""}`;
-					vs.window.showErrorMessage(displayError);
+					void vs.window.showErrorMessage(displayError);
 				}
 			}
 		}
@@ -322,7 +321,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	}
 
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {
-		vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
+		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
 	}
 
 	const pubApi = new PubApi(webClient);
@@ -357,10 +356,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const lspClient = dasClient ? undefined : (analyzer as LspAnalyzer).client;
 	context.subscriptions.push(analyzer);
 
-	// tslint:disable-next-line: no-floating-promises
-	analyzer.onReady.then(() => {
+	void analyzer.onReady.then(() => {
 		if (config.analyzerVmServicePort) {
-			vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
+			void vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
 		}
 	});
 
@@ -373,8 +371,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 		// Analysis ends for the first time.
 		if (!status.isAnalyzing && analysisStartTime) {
-			const analysisEndTime = new Date();
-			analysisCompleteEvents.dispose();
+			void analysisCompleteEvents.dispose();
 		}
 	});
 
@@ -523,7 +520,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			const handleOpenFile = (d: vs.TextDocument) => {
 				if (!hasWarnedAboutLooseDartFiles && d.languageId === "dart" && d.uri.scheme === "file" && analysisRoots.length === 0) {
 					hasWarnedAboutLooseDartFiles = true;
-					vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual loose files");
+					void vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual loose files");
 				}
 			};
 			context.subscriptions.push(vs.workspace.onDidOpenTextDocument((d) => handleOpenFile(d)));
@@ -689,7 +686,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			if (e.selections && e.selections.length) {
 				const node = flutterOutlineTreeProvider!.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
 				if (node && tree.visible)
-					tree.reveal(node, { select: true, focus: false, expand: true });
+					void tree.reveal(node, { select: true, focus: false, expand: true });
 			}
 		}));
 		context.subscriptions.push(tree);
@@ -704,7 +701,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		if (!filePath) return;
 
 		vs.workspace.openTextDocument(filePath).then((document) => {
-			vs.window.showTextDocument(document, { preview: true });
+			void vs.window.showTextDocument(document, { preview: true });
 		}, (error) => logger.error(error));
 	}));
 
@@ -718,20 +715,18 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		// tslint:disable-next-line: no-floating-promises
-		showUserPrompts(logger, extContext, webClient, analytics, workspaceContext);
+		void showUserPrompts(logger, extContext, webClient, analytics, workspaceContext);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);
-	vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, dartPlatformName);
+	void vs.commands.executeCommand("setContext", DART_PLATFORM_NAME, dartPlatformName);
 
 	// Prompt for pub get/upgrade if required
 	function checkForPackages() {
 		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
 		if (workspaceContext.config.disableAutomaticPackageGet)
 			return;
-		// tslint:disable-next-line: no-floating-promises
-		packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true, upgradeOnSdkChange: true });
+		void packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true, upgradeOnSdkChange: true });
 	}
 	checkForPackages();
 
@@ -743,7 +738,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			// Do NOT await this.. the Flutter extension needs to wait for the Dart extension to finish activating
 			// so that it can call its exported API, therefore we'll deadlock if we wait for the Flutter extension
 			// to finish activating.
-			flutterExtension.activate()
+			void flutterExtension.activate()
 				// Then rebuild log because it includes whether we activated Flutter.
 				.then(() => buildLogHeaders(logger, workspaceContextUnverified));
 		}
@@ -765,8 +760,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
 		) {
-			// tslint:disable-next-line: no-floating-promises
-			util.promptToReloadExtension();
+			void util.promptToReloadExtension();
 			return;
 		}
 
@@ -895,8 +889,7 @@ function recalculateDasAnalysisRoots() {
 			excludeFolders.push(folder);
 	});
 
-	// tslint:disable-next-line: no-floating-promises
-	(analyzer as DasAnalyzer).client.analysisSetAnalysisRoots({
+	void (analyzer as DasAnalyzer).client.analysisSetAnalysisRoots({
 		excluded: excludeFolders,
 		included: analysisRoots,
 	});
@@ -914,8 +907,7 @@ function handleConfigurationChange(sdks: Sdks) {
 	previousSettings = newSettings;
 
 	if (todoSettingChanged && analyzer instanceof DasAnalyzer) {
-		// tslint:disable-next-line: no-floating-promises
-		analyzer.client.analysisReanalyze();
+		void analyzer.client.analysisReanalyze();
 	}
 
 	if (settingsChanged) {
@@ -957,24 +949,24 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart: boolean = false): Promise<void> {
 	setCommandVisiblity(false);
-	analyzer?.dispose();
+	void analyzer?.dispose();
 	await flutterDaemon?.shutdown();
 	if (loggers) {
 		await Promise.all(loggers.map((logger) => logger.dispose()));
 		loggers.length = 0;
 	}
-	vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
+	void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
 	if (!isRestart) {
-		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
-		vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
-		ringLogger?.dispose();
+		void vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
+		void vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
+		void ringLogger?.dispose();
 		logger.dispose();
 	}
 }
 
 function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContext) {
-	vs.commands.executeCommand("setContext", PROJECT_LOADED, enable);
-	vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyStandardDartProjects);
-	vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
-	vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);
+	void vs.commands.executeCommand("setContext", PROJECT_LOADED, enable);
+	void vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyStandardDartProjects);
+	void vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
+	void vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);
 }

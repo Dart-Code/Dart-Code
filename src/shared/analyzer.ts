@@ -26,8 +26,7 @@ export abstract class Analyzer implements IAmDisposable {
 
 	constructor(protected readonly logger: Logger) {
 		this.disposables.push(this.onAnalysisStatusChangeEmitter);
-		// tslint:disable-next-line: no-floating-promises
-		this.setup();
+		void this.setup();
 	}
 
 	private async setup(): Promise<void> {

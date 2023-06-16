@@ -55,7 +55,7 @@ export class DevToolsManager implements vs.Disposable {
 		this.setNotStartedStatusBar();
 		this.disposables.push(this.statusBarItem);
 
-		this.handleEagerActivationAndStartup(workspaceContext);
+		void this.handleEagerActivationAndStartup(workspaceContext);
 	}
 
 	private setNotStartedStatusBar() {
@@ -74,7 +74,7 @@ export class DevToolsManager implements vs.Disposable {
 			} catch (e) {
 				this.logger.error("Failed to background start DevTools");
 				this.logger.error(e);
-				vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
+				void vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
 			}
 		}
 	}
@@ -157,7 +157,7 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 
 		try {
-			envUtils.openInBrowser(url.toString(), this.logger);
+			await envUtils.openInBrowser(url.toString(), this.logger);
 		} catch (e) {
 			this.showError(e);
 		}
@@ -234,7 +234,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	private showError(e: any) {
 		this.logger.error(e);
-		vs.window.showErrorMessage(`${e}`);
+		void vs.window.showErrorMessage(`${e}`);
 	}
 
 	/// When a new Debug session starts, we can reconnect any views that are still open
@@ -362,13 +362,13 @@ export class DevToolsManager implements vs.Disposable {
 			return true;
 		} catch (e: any) {
 			this.logger.error(`DevTools failed to launch Chrome, will launch default browser locally instead: ${e.message}`);
-			vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
+			void vs.window.showWarningMessage(`Dart DevTools was unable to launch Chrome so your default browser was launched instead.`, "Show Full Error").then((res) => {
 				if (res) {
 					const fileName = `bug-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`;
 					const tempPath = path.join(os.tmpdir(), fileName);
 					fs.writeFileSync(tempPath, `${e.message ?? e}`);
-					workspace.openTextDocument(tempPath).then((document) => {
-						window.showTextDocument(document);
+					void workspace.openTextDocument(tempPath).then((document) => {
+						void window.showTextDocument(document);
 					});
 				}
 			});
@@ -399,7 +399,7 @@ export class DevToolsManager implements vs.Disposable {
 				if (this.debugCommands) {
 					this.disposables.push(this.debugCommands.onDebugSessionVmServiceAvailable(async (session) => {
 						if (session.vmServiceUri) {
-							service.vmRegister({ uri: session.vmServiceUri });
+							void service.vmRegister({ uri: session.vmServiceUri });
 							// Also reconnect any orphaned DevTools views.
 							await this.reconnectDisconnectedEmbeddedViews(session as DartDebugSessionInformation & { vmServiceUri: string });
 						}
@@ -409,7 +409,7 @@ export class DevToolsManager implements vs.Disposable {
 				// And send any existing sessions we have.
 				for (const session of debugSessions) {
 					if (session.vmServiceUri)
-						service.vmRegister({ uri: session.vmServiceUri });
+						void service.vmRegister({ uri: session.vmServiceUri });
 				}
 
 				portToBind = n.port;

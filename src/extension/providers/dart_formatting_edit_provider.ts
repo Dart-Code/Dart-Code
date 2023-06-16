@@ -57,7 +57,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 		} catch {
 			if (!this.context.hasWarnedAboutFormatterSyntaxLimitation) {
 				this.context.hasWarnedAboutFormatterSyntaxLimitation = true;
-				window.showInformationMessage("The Dart formatter will not run if the file has syntax errors");
+				void window.showInformationMessage("The Dart formatter will not run if the file has syntax errors");
 			}
 			return undefined;
 		}

@@ -14,7 +14,7 @@ export class DartFileUriLinkProvider implements vs.TerminalLinkProvider<DartFile
 
 	public handleTerminalLink(link: DartFileUriLink): vs.ProviderResult<void> {
 		const filePath = fsPath(link.uri);
-		vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
+		void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
 	}
 
 	public async provideDocumentLinks(document: vs.TextDocument, token: vs.CancellationToken): Promise<vs.DocumentLink[]> {

@@ -171,8 +171,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		try {
 			if (msg && this.isNotification(msg))
-				// tslint:disable-next-line: no-floating-promises
-				this.handleNotification(msg as T).catch((e) => this.logger.error(e));
+				void this.handleNotification(msg as T).catch((e) => this.logger.error(e));
 			else if (msg && this.isRequest(msg))
 				this.processServerRequest(msg as Request<any>).catch((e) => this.logger.error(e));
 			else if (msg && this.isResponse(msg))

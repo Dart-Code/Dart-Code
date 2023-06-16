@@ -7,7 +7,7 @@ import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { getPubExecutionInfo } from "../../shared/processes";
-import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
+import { PromiseCompleter, disposeAll, nullToUndefined, usingCustomScript } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
@@ -140,8 +140,7 @@ export class BaseSdkCommands implements IAmDisposable {
 				// the output pane.
 				const completedWithErrorPromise = new Promise((resolve) => proc.on("close", resolve));
 				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), 10000));
-				// tslint:disable-next-line: no-floating-promises
-				Promise.race([completedWithErrorPromise, timedOutPromise]).then((showOutput) => {
+				void Promise.race([completedWithErrorPromise, timedOutPromise]).then((showOutput) => {
 					if (showOutput)
 						channel.show(true);
 				});
@@ -171,7 +170,7 @@ export class SdkCommands extends BaseSdkCommands {
 		}
 
 		// Monitor version files for SDK upgrades.
-		this.setupVersionWatcher();
+		void this.setupVersionWatcher();
 	}
 
 	private async setupVersionWatcher() {
@@ -239,8 +238,7 @@ class ChainedProcess {
 	constructor(private readonly spawn: () => SpawnedProcess, parent: ChainedProcess | undefined) {
 		// We'll either start immediately, or if given a parent process only when it completes.
 		if (parent) {
-			// tslint:disable-next-line: no-floating-promises
-			parent.completed.then(() => this.start());
+			void parent.completed.then(() => this.start());
 		} else {
 			this.start();
 		}

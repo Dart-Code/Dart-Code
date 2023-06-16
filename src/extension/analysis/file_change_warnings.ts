@@ -43,12 +43,12 @@ export class FileChangeWarnings implements vs.Disposable {
 			const dontShowAgainAction = "Don't Warn Me";
 
 			if (shouldWarn) {
-				vs.window.showWarningMessage(promptText, moreInfoAction, dontShowAgainAction)
+				void vs.window.showWarningMessage(promptText, moreInfoAction, dontShowAgainAction)
 					.then(async (action) => {
 						if (action === moreInfoAction) {
 							await envUtils.openInBrowser(modifyingFilesOutsideWorkspaceInfoUrl);
 						} else if (action === dontShowAgainAction)
-							dontShowAgainSetter();
+							void dontShowAgainSetter();
 					});
 				this.filesWarnedAbout.add(filePath);
 			}

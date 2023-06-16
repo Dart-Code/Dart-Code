@@ -192,8 +192,6 @@ module.exports = {
 		"@typescript-eslint/no-namespace": "off",
 		"@typescript-eslint/no-explicit-any": "off",
 		// TODO: Re-enable this when fixed.
-		"@typescript-eslint/no-floating-promises": "off",
-		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-assignment": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-call": "off",

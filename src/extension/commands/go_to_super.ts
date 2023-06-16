@@ -16,7 +16,7 @@ export class GoToSuperCommand implements vs.Disposable {
 	private async goToSuper(): Promise<void> {
 		const editor = editors.getActiveDartEditor();
 		if (!editor) {
-			vs.window.showWarningMessage("No active Dart editor.");
+			void vs.window.showWarningMessage("No active Dart editor.");
 			return;
 		}
 

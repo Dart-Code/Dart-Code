@@ -45,7 +45,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (v) {
 			this.logger.error(`Launch config property '${property}' has unresolvable variable ${v}`);
-			window.showErrorMessage(`Launch config property '${property}' has unresolvable variable ${v}`);
+			void window.showErrorMessage(`Launch config property '${property}' has unresolvable variable ${v}`);
 			return true;
 		}
 		return false;
@@ -91,7 +91,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!isAttachRequest && !debugConfig.program) {
 			this.logger.warn("No program was set in launch config");
 			const exampleEntryPoint = this.wsContext.hasAnyFlutterProjects ? "lib/main.dart" : "bin/main.dart";
-			window.showInformationMessage(`Set the 'program' value in your launch config (eg '${exampleEntryPoint}') then launch again`);
+			void window.showInformationMessage(`Set the 'program' value in your launch config (eg '${exampleEntryPoint}') then launch again`);
 			return null; // null means open launch.json.
 		}
 
@@ -104,7 +104,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Handle detecting a Flutter app, but the extension has loaded in Dart-only mode.
 		if (isFlutter && !this.wsContext.hasAnyFlutterProjects) {
 			this.logger.warn("Tried to launch Flutter project in non-Flutter workspace");
-			window.showErrorMessage(`Unable to launch Flutter project in a Dart-only workspace. Please open a folder closer to your Flutter project root or increase the value of the "dart.projectSearchDepth" setting.`);
+			void window.showErrorMessage(`Unable to launch Flutter project in a Dart-only workspace. Please open a folder closer to your Flutter project root or increase the value of the "dart.projectSearchDepth" setting.`);
 			return undefined; // undefined means abort
 		}
 
@@ -132,7 +132,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// TODO: IMPORTANT! When removing this if statement, add WebTest to
 			// the call to TestResultsProvider.flagSuiteStart below!
 			logger.error("Tests in web projects are not currently supported");
-			window.showErrorMessage("Tests in web projects are not currently supported");
+			void window.showErrorMessage("Tests in web projects are not currently supported");
 			return undefined; // undefined means silent (don't open launch.json).
 		}
 
@@ -153,7 +153,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 			if (!debugConfig.vmServiceUri && !isFlutter) {
 				logger.warn("No VM service URI/port was provided");
-				window.showInformationMessage("You must provide a VM service URI/port to attach a debugger");
+				void window.showInformationMessage("You must provide a VM service URI/port to attach a debugger");
 				return undefined; // undefined means silent (don't open launch.json).
 			}
 		}
@@ -188,10 +188,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					if (!debugConfig.suppressPrompts) {
 						if (deviceToLaunchOn) {
 							logger.warn(`Unable to launch because ${deviceToLaunchOn.id} is not valid for this project (${deviceToLaunchOn.platformType} is not allowed according to [${supportedPlatforms?.join(", ")}])`);
-							window.showInformationMessage("Cannot launch without a valid device for this project");
+							void window.showInformationMessage("Cannot launch without a valid device for this project");
 						} else {
 							logger.warn("Unable to launch due to no active device");
-							window.showInformationMessage("Cannot launch without an active device");
+							void window.showInformationMessage("Cannot launch without an active device");
 						}
 					}
 					return undefined; // undefined means silent (don't open launch.json).
@@ -253,13 +253,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Stash the config to support the "rerun last debug session" command.
 		LastDebugSession.workspaceFolder = folder;
 		LastDebugSession.debugConfig = Object.assign({}, debugConfig);
-		vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, true);
+		void vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, true);
 
 		// Stash the config to support the "rerun last test(s)" command.
 		if (isTest) {
 			LastTestDebugSession.workspaceFolder = folder;
 			LastTestDebugSession.debugConfig = Object.assign({}, debugConfig);
-			vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, true);
+			void vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, true);
 		}
 
 		return debugConfig;
@@ -300,7 +300,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			} else {
 				logger.info("Aborting!");
 				if (action === showErrorsAction)
-					vs.commands.executeCommand("workbench.action.showErrorsWarnings");
+					void vs.commands.executeCommand("workbench.action.showErrorsWarnings");
 				return true;
 			}
 		}
@@ -347,7 +347,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 						// TODO: Remove argsHaveTestFilter now that "flutter test" supports running tests on device (integration tests).
 						// Non-integration tests set to run on device but have a test name filter will also have
 						// to run with "flutter test".
-						vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
+						void vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
 						logger.info(`runTestsOnDevice is set but args have test filter so will still use Flutter`);
 						debugType = DebuggerType.FlutterTest;
 					} else if (debugConfig.runTestsOnDevice) {
@@ -467,14 +467,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (debugConfig.program && path.isAbsolute(debugConfig.program) && !this.wsContext.config.omitTargetFlag) {
 			if (!fs.existsSync(debugConfig.program)) {
 				this.logger.warn(`Launch config references non-existant file ${debugConfig.program}`);
-				window.showWarningMessage(`Your launch config references a program that does not exist. If you have problems launching, check the "program" field in your ".vscode/launch.json" file.`);
+				void window.showWarningMessage(`Your launch config references a program that does not exist. If you have problems launching, check the "program" field in your ".vscode/launch.json" file.`);
 			}
 		}
 	}
 
 	private errorWithoutOpeningLaunchConfig(message: string) {
 		this.logger.error(message);
-		window.showErrorMessage(message);
+		void window.showErrorMessage(message);
 		return undefined; // undefined means silent (don't open launch.json).
 	}
 
@@ -576,7 +576,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!isFlutter && !isAttach && !isTest && debugConfig.console === undefined && config.cliConsole !== undefined)
 			debugConfig.console = config.cliConsole;
 		else if (isFlutter && (debugConfig.console === "terminal" || debugConfig.console === "externalTerminal"))
-			vs.window.showWarningMessage(`Flutter projects do not support "terminal" or "externalTerminal" for the "console" setting of a launch configuration. This setting will be ignored.`);
+			void vs.window.showWarningMessage(`Flutter projects do not support "terminal" or "externalTerminal" for the "console" setting of a launch configuration. This setting will be ignored.`);
 
 		if (isFlutter && this.wsContext.sdks.flutter) {
 			debugConfig.flutterSdkPath = this.wsContext.sdks.flutter;

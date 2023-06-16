@@ -21,7 +21,7 @@ export class FlutterOutlineCommands {
 		}
 	}
 
-	private applyRefactoring(refactorType: string): void {
+	private async applyRefactoring(refactorType: string): Promise<void> {
 		if (!this.tree.selection || this.tree.selection.length !== 1) {
 			console.error(`Invalid selection when running Flutter Outline refactor: ${refactorType}`);
 			return;
@@ -31,9 +31,9 @@ export class FlutterOutlineCommands {
 		const fix = widget.fixes.find((f) => f.kind && f.kind.value.endsWith(refactorType));
 		if (fix) {
 			if (fix.command && fix.command.arguments)
-				vs.commands.executeCommand(fix.command.command, ...fix.command.arguments); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+				await vs.commands.executeCommand(fix.command.command, ...fix.command.arguments); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			else if (fix.edit)
-				vs.workspace.applyEdit(fix.edit);
+				await vs.workspace.applyEdit(fix.edit);
 			else
 				console.error(`Flutter Outline fix was missing command/arguments`);
 		} else {

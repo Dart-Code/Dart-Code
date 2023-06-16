@@ -7,7 +7,7 @@ export class FlutterSampleUriHandler {
 
 	public handle(sampleID: string): void {
 		if (!this.isValidSampleName(sampleID)) {
-			vs.window.showErrorMessage(`${sampleID} is not a valid Flutter sample identifier`);
+			void vs.window.showErrorMessage(`${sampleID} is not a valid Flutter sample identifier`);
 			return;
 		}
 

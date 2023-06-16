@@ -70,7 +70,7 @@ export class LoggingCommands implements vs.Disposable {
 		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), captureLogsMaxLineLength, allLoggedCategories);
 		isLogging = true;
 		this.disposables.push(logger);
-		vs.commands.executeCommand("setContext", DART_IS_CAPTURING_LOGS_CONTEXT, true);
+		void vs.commands.executeCommand("setContext", DART_IS_CAPTURING_LOGS_CONTEXT, true);
 		const completer = new PromiseCompleter<void>();
 		this.currentLogCompleter = completer;
 

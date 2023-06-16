@@ -29,8 +29,7 @@ export class FileChangeHandler implements vs.Disposable {
 			type: "add",
 		};
 
-		// tslint:disable-next-line: no-floating-promises
-		this.analyzer.analysisUpdateContent({ files });
+		void this.analyzer.analysisUpdateContent({ files });
 	}
 
 	public onDidChangeTextDocument(e: vs.TextDocumentChangeEvent) {
@@ -47,8 +46,7 @@ export class FileChangeHandler implements vs.Disposable {
 			type: "change",
 		};
 
-		// tslint:disable-next-line: no-floating-promises
-		this.analyzer.analysisUpdateContent({ files });
+		void this.analyzer.analysisUpdateContent({ files });
 	}
 
 	public onDidCloseTextDocument(document: vs.TextDocument) {
@@ -61,8 +59,7 @@ export class FileChangeHandler implements vs.Disposable {
 			type: "remove",
 		};
 
-		// tslint:disable-next-line: no-floating-promises
-		this.analyzer.analysisUpdateContent({ files });
+		void this.analyzer.analysisUpdateContent({ files });
 	}
 
 	private convertChange(document: vs.TextDocument, change: vs.TextDocumentContentChangeEvent): as.SourceEdit {

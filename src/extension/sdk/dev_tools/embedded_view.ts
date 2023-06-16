@@ -89,7 +89,7 @@ export class DevToolsEmbeddedView {
 
 	public load(session: DartDebugSessionInformation, uri: string): void {
 		this.session = session;
-		this.panel.webview.postMessage({ command: "setUrl", url: uri });
+		void this.panel.webview.postMessage({ command: "setUrl", url: uri });
 		this.panel.reveal();
 	}
 

@@ -71,7 +71,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 			definition.args = (definition.args ?? []).concat((await options?.runtimeArgs()) ?? []);
 		}
 
-		this.injectArgs(definition);
+		await this.injectArgs(definition);
 
 		// We *must* return a new Task here, otherwise the task cannot be customised
 		// in task.json.

@@ -113,7 +113,7 @@ export class DartTestDebugSession extends DartDebugSession {
 			// is currently being produced on the bots running against Flutter
 			// master).
 			if (n.observatoryUri && n.observatoryUri !== "null")
-				this.initDebugger(`${n.observatoryUri}ws`);
+				void this.initDebugger(`${n.observatoryUri}ws`);
 		});
 		runner.registerForAllTestNotifications(async (n) => {
 			try {
@@ -243,7 +243,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		if (suitePath) {
 			this.sendEvent(new Event(
 				"dart.testNotification",
-				notification ,
+				notification,
 			));
 		}
 	}

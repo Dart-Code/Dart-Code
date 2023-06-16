@@ -36,9 +36,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		this.registerForDaemonConnected((e) => {
 			this.additionalPidsToTerminate.push(e.pid);
 			this.capabilities.version = e.version;
-			vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
+			void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
 
-			this.deviceEnable();
+			void this.deviceEnable();
 		});
 
 		const daemonArgs = [];
@@ -85,7 +85,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
 				this.hasShownTerminatedError = true;
-				promptToReloadExtension(message);
+				void promptToReloadExtension(message);
 			}
 		}, 60 * 1000);
 	}
@@ -100,7 +100,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
 		this.process.on("exit", (code, signal) => this.handleExit(code, signal));
 		this.process.on("error", (error) => {
-			vs.window.showErrorMessage(`Remote daemon startup had an error: ${error}. Check the instructions for using dart.daemonPort`);
+			void vs.window.showErrorMessage(`Remote daemon startup had an error: ${error}. Check the instructions for using dart.daemonPort`);
 			this.handleError(error);
 		});
 	}
@@ -137,8 +137,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		// here can override hasShownTerminationError, for example to show the error when
 		// something tries to interact with the API (`notifyRequestAfterExit`).
 		this.hasShownTerminatedError = true;
-		// tslint:disable-next-line: no-floating-promises
-		promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
+		void promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
 	}
 
 	public dispose() {
@@ -157,8 +156,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		} catch (e) {
 			if (!this.hasShownTerminatedError && !this.isShuttingDown) {
 				this.hasShownTerminatedError = true;
-				// tslint:disable-next-line: no-floating-promises
-				promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
+				void promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
 				throw e;
 			}
 		}
@@ -190,13 +188,13 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 		if (upgradeMessage) {
 			if (await vs.window.showWarningMessage(upgradeMessage, "Upgrade Flutter"))
-				vs.commands.executeCommand("flutter.upgrade");
+				void vs.commands.executeCommand("flutter.upgrade");
 			return;
 		}
 
 		if (!this.hasShownStartupError && message.startsWith("Flutter requires")) {
 			this.logger.error(message, LogCategory.FlutterDaemon);
-			vs.window.showErrorMessage(message);
+			void vs.window.showErrorMessage(message);
 			this.hasShownStartupError = true;
 			return;
 		}
@@ -210,7 +208,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				if (this.startupReporter) {
 					this.startupReporter.report({ message });
 				} else {
-					vs.window.withProgress({
+					void vs.window.withProgress({
 						location: ProgressLocation.Notification,
 						title: "Flutter Setup",
 					}, (progressReporter) => {

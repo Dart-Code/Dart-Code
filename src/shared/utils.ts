@@ -234,7 +234,7 @@ export function disposeAll(disposables: IAmDisposable[]) {
 	disposables.length = 0;
 	for (const d of toDispose) {
 		try {
-			d.dispose();
+			void d.dispose();
 		} catch (e) {
 			console.warn(e);
 		}

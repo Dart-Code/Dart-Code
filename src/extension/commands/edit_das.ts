@@ -53,7 +53,7 @@ export class DasEditCommands implements vs.Disposable {
 
 	private async sendEdit(f: (a: { file: string }) => Thenable<{ edit: as.SourceFileEdit }>, commandName: string, document: vs.TextDocument): Promise<void> {
 		if (!document || !editors.isDartDocument(document)) {
-			vs.window.showWarningMessage("Not a Dart file.");
+			void vs.window.showWarningMessage("Not a Dart file.");
 			return;
 		}
 
@@ -69,12 +69,12 @@ export class DasEditCommands implements vs.Disposable {
 				return;
 
 			if (document.isClosed) {
-				vs.window.showErrorMessage(`Error running ${commandName}: Document has been closed.`);
+				void vs.window.showErrorMessage(`Error running ${commandName}: Document has been closed.`);
 				return;
 			}
 
 			if (document.version !== originalDocumentVersion) {
-				vs.window.showErrorMessage(`Error running ${commandName}: Document has been modified.`);
+				void vs.window.showErrorMessage(`Error running ${commandName}: Document has been modified.`);
 				return;
 			}
 
@@ -88,7 +88,7 @@ export class DasEditCommands implements vs.Disposable {
 			});
 			await vs.workspace.applyEdit(editBuilder);
 		} catch (error) {
-			vs.window.showErrorMessage(`Error running ${commandName}: ${errorString(error)}.`);
+			void vs.window.showErrorMessage(`Error running ${commandName}: ${errorString(error)}.`);
 		}
 	}
 
@@ -122,7 +122,7 @@ export class DasEditCommands implements vs.Disposable {
 			// If we create the file ourselves, it won't go into the single undo buffer.
 			if (!fs.existsSync(edit.file) && edit.edits.find((e) => e.offset !== 0 || e.length !== 0)) {
 				this.logger.error(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
-				vs.window.showErrorMessage(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
+				void vs.window.showErrorMessage(`Unable to edit file ${edit.file} because it does not exist and had an edit that was not the start of the file`);
 				continue;
 			}
 			const document = fs.existsSync(edit.file) ? await vs.workspace.openTextDocument(uri) : undefined;

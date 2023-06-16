@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_CREATE_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
@@ -56,7 +56,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 
 			if (installedForbiddenLocation) {
 				logger.error(`Flutter is installed in protected folder: ${installedForbiddenLocation}`);
-				vs.window.showErrorMessage("The Flutter SDK is installed in a protected folder and may not function correctly. Please move the SDK to a location that is user-writable without Administration permissions and restart.");
+				void vs.window.showErrorMessage("The Flutter SDK is installed in a protected folder and may not function correctly. Please move the SDK to a location that is user-writable without Administration permissions and restart.");
 			}
 		}
 	}
@@ -69,8 +69,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		context.lastSeenVersion = extensionVersionForReleaseNotes;
 	} else if (!isDevExtension && lastSeenVersionNotification !== extensionVersionForReleaseNotes) {
 		const versionLink = extensionVersionForReleaseNotes.split(".").slice(0, 2).join(".").replace(".", "-");
-		// tslint:disable-next-line: no-floating-promises
-		promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
+		void promptToShowReleaseNotes(extensionVersion, versionLink).then(() =>
 			context.lastSeenVersion = extensionVersionForReleaseNotes,
 		);
 		return;
@@ -129,12 +128,11 @@ async function promptToInstallFlutterExtension(): Promise<boolean> {
 
 				return new Promise<void>((resolve) => {
 					vs.extensions.onDidChange((e) => resolve());
-					vs.commands.executeCommand("workbench.extensions.installExtension", flutterExtensionIdentifier);
+					void vs.commands.executeCommand("workbench.extensions.installExtension", flutterExtensionIdentifier);
 				});
 			},
 		);
-		// tslint:disable-next-line: no-floating-promises
-		promptToReloadExtension();
+		void promptToReloadExtension();
 	}
 
 	return false;
@@ -152,7 +150,7 @@ async function promptToShowReleaseNotes(versionDisplay: string, versionLink: str
 }
 
 function error(err: any) {
-	vs.window.showErrorMessage(`${err.message ?? err}`);
+	void vs.window.showErrorMessage(`${err.message ?? err}`);
 }
 
 export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
@@ -163,7 +161,7 @@ export async function handleNewProjects(logger: Logger, context: Context): Promi
 		} catch (e) {
 			logger.error("Failed to create project");
 			logger.error(e);
-			vs.window.showErrorMessage("Failed to create project");
+			void vs.window.showErrorMessage("Failed to create project");
 		}
 	}));
 }
@@ -180,7 +178,7 @@ async function handleDartCreateTrigger(logger: Logger, wf: vs.WorkspaceFolder, t
 	} catch (e) {
 		logger.error("Failed to get project templates");
 		logger.error(e);
-		vs.window.showErrorMessage("Failed to get project templates to create project");
+		void vs.window.showErrorMessage("Failed to get project templates to create project");
 		return;
 	}
 	fs.unlinkSync(triggerFile);
@@ -238,9 +236,9 @@ function handleFlutterWelcome(workspaceFolder: vs.WorkspaceFolder, triggerData: 
 	const entryFile = path.join(fsPath(workspaceFolder.uri), "lib/main.dart");
 	openFile(entryFile);
 	if (triggerData?.sample)
-		vs.window.showInformationMessage(`${triggerData.sample} sample ready! Press F5 to start running.`);
+		void vs.window.showInformationMessage(`${triggerData.sample} sample ready! Press F5 to start running.`);
 	else
-		vs.window.showInformationMessage("Your Flutter project is ready! Press F5 to start running.");
+		void vs.window.showInformationMessage("Your Flutter project is ready! Press F5 to start running.");
 }
 
 function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: DartProjectTemplate) {
@@ -248,7 +246,7 @@ function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: DartPr
 	const projectName = path.basename(workspacePath);
 	const entryFile = path.join(workspacePath, template.entrypoint.replace("__projectName__", projectName));
 	openFile(entryFile);
-	vs.window.showInformationMessage(`${template.label} project ready!`);
+	void vs.window.showInformationMessage(`${template.label} project ready!`);
 }
 
 /// Opens a file, but does it in a setTimeout to work around VS Code reveal bug
@@ -259,6 +257,6 @@ function openFile(entryFile: string) {
 
 	// TODO: Remove this setTimeout when it's no longer required.
 	setTimeout(() => {
-		vs.commands.executeCommand("vscode.open", vs.Uri.file(entryFile));
+		void vs.commands.executeCommand("vscode.open", vs.Uri.file(entryFile));
 	}, 100);
 }

@@ -82,11 +82,11 @@ export class FlutterCommands extends BaseSdkCommands {
 
 		const debugSession = vs.debug.activeDebugSession;
 		if (!debugSession) {
-			vs.window.showErrorMessage("You must have an active Flutter debug session to take screenshots");
+			void vs.window.showErrorMessage("You must have an active Flutter debug session to take screenshots");
 			return;
 		}
 		if (debugSession.type !== "dart") {
-			vs.window.showErrorMessage("The active debug session is not a Flutter app");
+			void vs.window.showErrorMessage("The active debug session is not a Flutter app");
 			return;
 		}
 
@@ -298,7 +298,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		const projectFolderPath = fsPath(projectFolderUri);
 
 		if (fs.existsSync(projectFolderPath)) {
-			vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderPath}`);
+			void vs.window.showErrorMessage(`A folder named ${name} already exists in ${folderPath}`);
 			return;
 		}
 
@@ -314,7 +314,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		if (config.workspaceFlutterSdkPath)
 			writeFlutterSdkSettingIntoProject(config.workspaceFlutterSdkPath, projectFolderPath);
 
-		vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
+		void vs.commands.executeCommand("vscode.openFolder", projectFolderUri);
 
 		return projectFolderUri;
 	}
@@ -358,7 +358,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		try {
 			snippets = await getFlutterSnippets(this.logger, this.sdks, this.flutterCapabilities);
 		} catch {
-			vs.window.showErrorMessage("Unable to retrieve Flutter documentation snippets");
+			void vs.window.showErrorMessage("Unable to retrieve Flutter documentation snippets");
 			return;
 		}
 

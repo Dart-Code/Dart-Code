@@ -179,8 +179,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 		});
 		quickPickIsValid = false;
 		quickPick.dispose();
-		deviceAddedSubscription.dispose();
-		deviceRemovedSubscription.dispose();
+		await deviceAddedSubscription.dispose();
+		await deviceRemovedSubscription.dispose();
 
 		if (selection && await this.selectDevice(selection))
 			return this.currentDevice;
@@ -240,7 +240,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 					const restartAction = "Reload";
 					const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
 					if (chosenAction === restartAction)
-						vs.commands.executeCommand("_dart.reloadExtension");
+						void vs.commands.executeCommand("_dart.reloadExtension");
 				}
 
 				break;
@@ -489,7 +489,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		const cancellationTokenSource = new vs.CancellationTokenSource();
 		const waitingForRealDeviceSubscription = this.daemon.registerForDeviceAdded(() => {
 			cancellationTokenSource.cancel();
-			waitingForRealDeviceSubscription.dispose();
+			void waitingForRealDeviceSubscription.dispose();
 		});
 		const selectedEmulator =
 			await vs.window.showQuickPick(
@@ -499,7 +499,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 					placeHolder: "Connect a device or select an emulator to launch",
 				},
 				cancellationTokenSource.token);
-		waitingForRealDeviceSubscription.dispose();
+		void waitingForRealDeviceSubscription.dispose();
 
 		if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator-creator") {
 			return this.createEmulator();
@@ -523,7 +523,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// no name, user probably wanted to cancel
 		const name: string | undefined = undefined;
 		const create = this.daemon.createEmulator(name);
-		vs.window.withProgress({
+		void vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title: `${`Creating emulator ${name ? name : ""}`.trim()}...`,
 		}, () => create);
@@ -534,7 +534,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				name: res.emulatorName,
 			}, false);
 		} else {
-			vs.window.showErrorMessage(res.error);
+			void vs.window.showErrorMessage(res.error);
 			return false;
 		}
 	}
@@ -606,7 +606,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				throw new Error("Emulator didn't connect within 60 seconds");
 			});
 		} catch (e) {
-			vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
+			void vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
 			return false;
 		}
 		// Wait an additional second to try and void some possible races.
@@ -641,7 +641,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				throw new Error("Emulator didn't connect within 60 seconds");
 			});
 		} catch (e) {
-			vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
+			void vs.window.showErrorMessage(`Failed to launch ${emulator.name}: ${e}`);
 			return false;
 		}
 		// Wait an additional second to try and void some possible races.

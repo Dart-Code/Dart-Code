@@ -22,7 +22,7 @@ abstract class SdkManager {
 		if (this.sdkPaths)
 			this.searchForSdks(this.sdkPaths).catch((e) => console.error(e));
 		else
-			vs.window.showWarningMessage("Set `${configName}` to enable fast SDK switching.");
+			void vs.window.showWarningMessage("Set `${configName}` to enable fast SDK switching.");
 	}
 
 	public async searchForSdks(sdkPaths: string[]) {
@@ -71,7 +71,7 @@ abstract class SdkManager {
 			version: undefined,
 		} as SdkPickItem].concat(sdkItems);
 
-		vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
+		void vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
 			.then((sdk) => { if (sdk) this.setSdk(sdk.folder); });
 	}
 }
@@ -85,7 +85,7 @@ export class DartSdkManager extends SdkManager {
 	protected getLabel(version: string) {
 		return `Dart SDK ${version}`;
 	}
-	protected setSdk(folder: string | undefined) { config.setSdkPath(folder); }
+	protected setSdk(folder: string | undefined) { void config.setSdkPath(folder); }
 }
 
 export class FlutterSdkManager extends SdkManager {
@@ -97,7 +97,7 @@ export class FlutterSdkManager extends SdkManager {
 	protected getLabel(version: string) {
 		return `Flutter SDK ${version}`;
 	}
-	protected setSdk(folder: string | undefined) { config.setFlutterSdkPath(folder); }
+	protected setSdk(folder: string | undefined) { void config.setFlutterSdkPath(folder); }
 }
 
 interface SdkPickItem {

@@ -109,7 +109,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 
 		this.dartHotReloadDelayTimer = setTimeout(() => {
 			this.dartHotReloadDelayTimer = undefined;
-			commands.executeCommand(commandToRun, args);
+			void commands.executeCommand(commandToRun, args);
 		}, 200);
 	}
 
@@ -129,7 +129,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		};
 
 		if (this.flutterCapabilities.supportsRestartDebounce) {
-			commands.executeCommand(commandToRun, args);
+			void commands.executeCommand(commandToRun, args);
 		} else {
 			// Debounce to avoid reloading multiple times during multi-file-save (Save All).
 			// Hopefully we can improve in future: https://github.com/microsoft/vscode/issues/86087
@@ -139,7 +139,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 
 			this.flutterHotReloadDelayTimer = setTimeout(() => {
 				this.flutterHotReloadDelayTimer = undefined;
-				commands.executeCommand(commandToRun, args);
+				void commands.executeCommand(commandToRun, args);
 			}, 200);
 		}
 	}

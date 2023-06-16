@@ -29,7 +29,7 @@ export async function checkForStandardDartSdkUpdates(logger: Logger, workspaceCo
 		if (action === goToDownloadsAction)
 			await envUtils.openInBrowser(DART_DOWNLOAD_URL);
 		else if (action === dontShowAgainAction)
-			config.setCheckForSdkUpdates(false);
+			void config.setCheckForSdkUpdates(false);
 
 	} catch (e) {
 		logger.error(e);

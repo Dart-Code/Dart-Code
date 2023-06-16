@@ -277,9 +277,9 @@ export class FlutterDebugSession extends DartDebugSession {
 					// Request to quit/detach, but don't await it since we sometimes
 					// don't get responses before the process quits.
 					if (this.runDaemon.mode === RunMode.Run)
-						this.runDaemon.stop(this.currentRunningAppId);
+						void this.runDaemon.stop(this.currentRunningAppId);
 					else
-						this.runDaemon.detach(this.currentRunningAppId);
+						void this.runDaemon.detach(this.currentRunningAppId);
 
 					// Now wait for the process to terminate up to 3s.
 					await Promise.race([

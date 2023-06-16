@@ -24,7 +24,7 @@ export class LspAnalyzerStatusReporter {
 				// When the timeout fires, we need to check analysisInProgress again in case
 				// analysis has already finished.
 				if (this.analysisInProgress && !this.analyzingPromise) {
-					window.withProgress({ location: ProgressLocation.Window, title: "Analyzing…" }, () => {
+					void window.withProgress({ location: ProgressLocation.Window, title: "Analyzing…" }, () => {
 						if (!this.analyzingPromise) // Re-check, since we don't know how long before this callback is called.
 							this.analyzingPromise = new PromiseCompleter();
 						return this.analyzingPromise.promise;

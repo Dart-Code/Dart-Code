@@ -686,7 +686,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 
 		if (hasProblematicEdits) {
 			this.logger.error("Unable to insert imports because of overlapping edits from the server.");
-			vs.window.showErrorMessage(`Unable to insert imports because of overlapping edits from the server`);
+			void vs.window.showErrorMessage(`Unable to insert imports because of overlapping edits from the server`);
 			return undefined;
 		}
 

@@ -64,11 +64,11 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 	public handleTerminalLink(link: DartPackageUriLink): vs.ProviderResult<void> {
 		const filePath = this.resolvePackageUri(link.uri);
 		if (!filePath) {
-			vs.window.showErrorMessage(`Unable to find root for package ${link.packageName}`);
+			void vs.window.showErrorMessage(`Unable to find root for package ${link.packageName}`);
 			return;
 		}
 
-		vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
+		void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
 	}
 
 	public async provideDocumentLinks(document: vs.TextDocument, token: vs.CancellationToken): Promise<vs.DocumentLink[]> {

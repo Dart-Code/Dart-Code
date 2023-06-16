@@ -36,8 +36,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
 		if (event === "dart.testNotification") {
-			// tslint:disable-next-line: no-floating-promises
-			this.handleNotification(debugSessionID, dartCodeDebugSessionID ?? `untagged-session-${debugSessionID}`, body as Notification).catch((e) => this.logger.error(e));
+			void this.handleNotification(debugSessionID, dartCodeDebugSessionID ?? `untagged-session-${debugSessionID}`, body as Notification).catch((e) => this.logger.error(e));
 		}
 	}
 

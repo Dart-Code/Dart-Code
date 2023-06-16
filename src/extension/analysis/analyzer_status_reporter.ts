@@ -1,4 +1,4 @@
-import { env, ProgressLocation, version as codeVersion, window } from "vscode";
+import { ProgressLocation, version as codeVersion, env, window } from "vscode";
 import { RequestError, ServerErrorNotification, ServerStatusNotification } from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
@@ -53,7 +53,7 @@ export class AnalyzerStatusReporter {
 				// When the timeout fires, we need to check analysisInProgress again in case
 				// analysis has already finished.
 				if (this.analysisInProgress && !this.analyzingPromise) {
-					window.withProgress({ location: ProgressLocation.Window, title: "Analyzing…" }, () => {
+					void window.withProgress({ location: ProgressLocation.Window, title: "Analyzing…" }, () => {
 						if (!this.analyzingPromise) // Re-check, since we don't know how long before this callback is called.
 							this.analyzingPromise = new PromiseCompleter();
 						return this.analyzingPromise.promise;
@@ -100,14 +100,14 @@ export class AnalyzerStatusReporter {
 		// Offer to report the error.
 		if (config.notifyAnalyzerErrors && errorCount <= maxErrorReportCount) {
 			const showLog: string = "Show log";
-			window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, showLog).then((res) => {
+			void window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, showLog).then((res) => {
 				if (res === showLog)
-					this.showErrorLog(error, method);
+					void this.showErrorLog(error, method);
 			});
 		}
 	}
 
-	private showErrorLog(error: ServerErrorNotification, method?: string) {
+	private async showErrorLog(error: ServerErrorNotification, method?: string) {
 		const sdkVersion = this.workspaceContext.sdks.dartVersion;
 		const flutterSdkVersion = this.workspaceContext.sdks.flutterVersion;
 
@@ -134,6 +134,6 @@ ${error.message}
 ${error.stackTrace.trim()}
 `;
 
-		openLogContents("md", data);
+		await openLogContents("md", data);
 	}
 }

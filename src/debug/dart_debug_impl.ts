@@ -241,8 +241,7 @@ export class DartDebugSession extends DebugSession {
 				process.on("error", (error) => {
 					this.logToUser(`${error}\n`, "stderr");
 				});
-				// tslint:disable-next-line: no-floating-promises
-				this.processExit.then(async ({ code, signal }) => {
+				void this.processExit.then(async ({ code, signal }) => {
 					this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
 					this.processExited = true;
 					this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
