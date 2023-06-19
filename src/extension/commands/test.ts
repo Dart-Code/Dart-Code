@@ -37,7 +37,7 @@ export class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, treeNodes, true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, treeNodes, false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suites, testRun, isRunningAll)),
+			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, testRun, isRunningAll)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
@@ -47,7 +47,7 @@ export class TestCommands implements vs.Disposable {
 		this.updateEditorContexts(vs.window.activeTextEditor);
 	}
 
-	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<void> {
+	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, exclusions: TestNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<void> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
 		// as the first one that runs will be used for resolving package: URIs etc. We also can't mix and match
@@ -76,6 +76,13 @@ export class TestCommands implements vs.Disposable {
 				.filter((suitePath) => isInsideFolderNamed(suitePath, "integration_test") === integrationTests)
 				.filter((suitePath) => closestProjectFolder(suitePath) === projectFolder);
 
+			// If we might be running all, compute if there are any exclusions in this project. If not, we
+			// can drop passing all the test names to "dart test" and just run the whole top level folder.
+			const hasExclusions = isRunningAll && exclusions?.length && !!exclusions
+				.map((node) => node.suiteData.path)
+				.filter((suitePath) => isWithinPath(suitePath, projectFolder))
+				.filter((suitePath) => isInsideFolderNamed(suitePath, "integration_test") === integrationTests)
+				.find((suitePath) => closestProjectFolder(suitePath) === projectFolder);
 
 			if (testPaths.length) {
 				const projectName = path.basename(projectFolder);
@@ -89,7 +96,7 @@ export class TestCommands implements vs.Disposable {
 				// "The command line is too long" on Windows, if we know we're running them
 				// _all_ we can simplify the list of test names to just the top-level folders
 				// that contain each.
-				if (isRunningAll)
+				if (isRunningAll && !hasExclusions)
 					testPaths = uniq(testPaths.map((suitePath) => suitePath.split(path.sep)[0]));
 
 				projectsWithTests.push({ projectFolder, name, relativeTestPaths: testPaths });

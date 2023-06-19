@@ -68,24 +68,26 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		await this.discoverer?.ensureSuitesDiscovered();
 
 		const testsToRun = new Set<vs.TestItem>();
-		const isRunningAll = !request.include?.length && !request.exclude?.length;
+		const testsToExclude = new Set<vs.TestItem>();
+		const isRunningAll = !request.include?.length;
 		(request.include ?? this.controller.items).forEach((item) => testsToRun.add(item));
-		request.exclude?.forEach((item) => testsToRun.delete(item));
+		request.exclude?.forEach((item) => { testsToRun.delete(item); testsToExclude.add(item); });
 
 		// For each item in the set, remove any of its descendants because they will be run by the parent.
-		function removeWithDescendants(item: vs.TestItem) {
-			testsToRun.delete(item);
-			item.children.forEach((child) => removeWithDescendants(child));
-		}
-		const all = [...testsToRun];
-		all.forEach((item) => item.children.forEach((child) => removeWithDescendants(child)));
+		this.removeRedundantChildNodes(testsToRun);
+
+		// Similarly, remove any excluded tests that are already excluded by their suite, because that will allow the
+		// optimisation below (which requires only excluded suites) to work in more cases.
+		this.removeRedundantChildNodes(testsToExclude);
 
 		const run = this.controller.createTestRun(request);
 		try {
 			// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
 			// suites), we can run the "fast path" in a single `dart test` invocation.
-			if (!debug && [...testsToRun].every((item) => this.nodeForItem.get(item) instanceof SuiteNode)) {
-				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", [...testsToRun].map((item) => this.nodeForItem.get(item)), run, isRunningAll);
+			const nodesToRun = [...testsToRun].map((item) => this.nodeForItem.get(item));
+			const nodesToExclude = [...testsToExclude].map((item) => this.nodeForItem.get(item));
+			if (!debug && nodesToRun.every((item) => item instanceof SuiteNode) && nodesToExclude.every((item) => item instanceof SuiteNode)) {
+				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", nodesToRun, nodesToExclude, run, isRunningAll);
 				return;
 			}
 
@@ -114,6 +116,17 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		} finally {
 			run.end();
 		}
+	}
+
+	/// Removes any items from a set that are children of other items in the set.
+	private removeRedundantChildNodes(set: Set<vs.TestItem>): void {
+		// For each item in the set, remove any of its descendants because they will be run by the parent.
+		function removeWithDescendants(item: vs.TestItem) {
+			set.delete(item);
+			item.children.forEach((child) => removeWithDescendants(child));
+		}
+		const all = [...set];
+		all.forEach((item) => item.children.forEach((child) => removeWithDescendants(child)));
 	}
 
 	/// Replace the whole tree.
