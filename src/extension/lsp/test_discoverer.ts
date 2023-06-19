@@ -110,6 +110,9 @@ export class TestDiscoverer implements IAmDisposable {
 
 	public async discoverTestsForSuite(node: SuiteNode): Promise<void> {
 		const doc = await vs.workspace.openTextDocument(node.suiteData.path);
+		// Opening a file that hasn't been opened before does not force analysis, so send a light request that will force
+		// analysis and for the outline to be sent.
+		await vs.commands.executeCommand("vscode.executeHoverProvider", doc.uri, new vs.Position(0, 0));
 		await this.fileTracker.waitForOutline(doc, undefined);
 	}
 
