@@ -260,6 +260,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		const selectedTemplate = await vs.window.showQuickPick(
 			pickItems,
 			{
+				ignoreFocusOut: true,
 				matchOnDescription: true,
 				placeHolder: "Which Flutter template?",
 			},
@@ -324,6 +325,7 @@ export class FlutterCommands extends BaseSdkCommands {
 			const response = await showInputBoxWithSettings(
 				this.context,
 				{
+					ignoreFocusOut: true,
 					placeholder: defaultName,
 					prompt: "Enter a name for your new project",
 					title: "Project Name",
@@ -372,6 +374,7 @@ export class FlutterCommands extends BaseSdkCommands {
 				snippet: s,
 			})),
 			{
+				ignoreFocusOut: true,
 				matchOnDescription: true,
 				placeHolder: "Which Flutter sample?",
 			},

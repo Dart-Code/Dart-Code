@@ -4,6 +4,7 @@ import { Context } from "../../../shared/vscode/workspace";
 export async function showInputBoxWithSettings(
 	context: Context,
 	options: {
+		ignoreFocusOut: boolean,
 		title: string,
 		prompt: string,
 		placeholder: string,
@@ -12,6 +13,7 @@ export async function showInputBoxWithSettings(
 	},
 ): Promise<UserInputOrSettings | undefined> {
 	const input = vs.window.createInputBox();
+	input.ignoreFocusOut = options.ignoreFocusOut;
 	input.title = options.title;
 	input.prompt = options.prompt;
 	input.placeholder = options.placeholder;

@@ -81,6 +81,7 @@ export class DartCommands extends BaseSdkCommands {
 				: await vs.window.showQuickPick(
 					pickItems,
 					{
+						ignoreFocusOut: true,
 						matchOnDescription: true,
 						placeHolder: "Which Dart template?",
 					},
@@ -102,7 +103,13 @@ export class DartCommands extends BaseSdkCommands {
 
 		const projectKind = this.getProjectKind(selectedTemplate.template.name);
 		const defaultName = nextAvailableFilename(folderPath, `dart_${projectKind}_`);
-		const name = await vs.window.showInputBox({ prompt: "Enter a name for your new project", placeHolder: defaultName, value: defaultName, validateInput: (s) => this.validateDartProjectName(s, folderPath) });
+		const name = await vs.window.showInputBox({
+			ignoreFocusOut: true,
+			placeHolder: defaultName,
+			prompt: "Enter a name for your new project",
+			validateInput: (s) => this.validateDartProjectName(s, folderPath),
+			value: defaultName,
+		});
 		if (!name)
 			return;
 
