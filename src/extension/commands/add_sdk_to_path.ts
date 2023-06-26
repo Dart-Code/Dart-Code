@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { addedToPathPrompt, closeAction, copySdkPathToClipboardAction, failedToAddToPathPrompt, isWin, noSdkAvailablePrompt, openInstructionsAction, sdkAlreadyOnPathPrompt } from "../../shared/constants";
+import { addedToPathPrompt, closeAction, copySdkPathToClipboardAction, failedToAddToPathPrompt, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, openInstructionsAction, sdkAlreadyOnPathPrompt } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -31,14 +31,23 @@ export class AddSdkToPath {
 			} else if (result === AddSdkToPathResult.succeeded) {
 				void vs.window.showInformationMessage(addedToPathPrompt);
 			} else {
-				while (true) {
-					const action = await vs.window.showWarningMessage(failedToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, closeAction);
-					if (action === openInstructionsAction) {
-						await envUtils.openInBrowser("https://docs.flutter.dev/get-started/install/macos#update-your-path");
-					} else if (action === copySdkPathToClipboardAction) {
-						await vs.env.clipboard.writeText(sdkPath);
-					} else {
-						break;
+				const addToPathUrl = isWin
+					? "https://docs.flutter.dev/get-started/install/windows#update-your-path"
+					: isMac
+						? "https://docs.flutter.dev/get-started/install/macos#update-your-path"
+						: isLinux && !isChromeOS
+							? "https://docs.flutter.dev/get-started/install/linux#update-your-path"
+							: "";
+				if (addToPathUrl) {
+					while (true) {
+						const action = await vs.window.showWarningMessage(failedToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, closeAction);
+						if (action === openInstructionsAction) {
+							await envUtils.openInBrowser(addToPathUrl);
+						} else if (action === copySdkPathToClipboardAction) {
+							await vs.env.clipboard.writeText(sdkPath);
+						} else {
+							break;
+						}
 					}
 				}
 			}
