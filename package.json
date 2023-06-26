@@ -839,7 +839,7 @@
 				},
 				{
 					"command": "dart.changeSdk",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.changeFlutterSdk",

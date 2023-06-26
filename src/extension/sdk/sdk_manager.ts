@@ -44,7 +44,7 @@ abstract class SdkManager {
 			.filter((f) => fs.existsSync(path.join(f, this.executablePath))); // Only those that look like SDKs.
 
 		const sdkItems: SdkPickItem[] = sdkFolders.map((f) => {
-			// Resolve synlinks so we look in correct folder for version file.
+			// Resolve symlinks so we look in correct folder for version file.
 			const actualBinary = fs.realpathSync(path.join(f, this.executablePath));
 			// Then we need to take the executable name and /bin back off
 			const actualFolder = path.dirname(path.dirname(actualBinary));
