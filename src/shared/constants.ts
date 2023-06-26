@@ -83,10 +83,17 @@ export const noSdkAvailablePrompt = "No SDK is available to add to PATH";
 export const sdkAlreadyOnPathPrompt = "The SDK is already in your PATH";
 export const addedToPathPrompt = "The SDK was added to your PATH";
 export const addSdkToPathPrompt = "Would like you to add the Flutter SDK to your PATH environment variable?";
-export const unableToAddToPathPrompt = "Unable to add SDK to PATH environment variable automatically. Show instructions to add manually?";
+export const unableToAddToPathPrompt = "Cannot add SDK to PATH environment variable automatically. Show instructions to add manually?";
 export const openInstructionsAction = "Open Instructions";
 export const copySdkPathToClipboardAction = "Copy SDK path to Clipboard";
 export const addSdkToPathAction = "Add SDK to PATH";
+export const addToPathInstructionsUrl = isWin
+	? "https://docs.flutter.dev/get-started/install/windows#update-your-path"
+	: isMac
+		? "https://docs.flutter.dev/get-started/install/macos#update-your-path"
+		: isLinux && !isChromeOS
+			? "https://docs.flutter.dev/get-started/install/linux#update-your-path"
+			: undefined;
 
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
 export const initializingFlutterMessage = "Initializing the Flutter SDK. This may take a few minutes.";

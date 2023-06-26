@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { addSdkToPathAction, addSdkToPathPrompt, addedToPathPrompt, closeAction, copySdkPathToClipboardAction, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
+import { addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkPathToClipboardAction, isChromeOS, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -63,20 +63,13 @@ export class AddSdkToPath {
 	}
 
 	private async showManualInstructions(sdkPath: string, didFailToAutomaticallyAdd = false): Promise<void> {
-		const addToPathInstructionsUrl = isWin
-			? "https://docs.flutter.dev/get-started/install/windows#update-your-path"
-			: isMac
-				? "https://docs.flutter.dev/get-started/install/macos#update-your-path"
-				: isLinux && !isChromeOS
-					? "https://docs.flutter.dev/get-started/install/linux#update-your-path"
-					: undefined;
 		if (!addToPathInstructionsUrl)
 			return;
 
 		while (true) {
 			const action = didFailToAutomaticallyAdd
-				? await vs.window.showWarningMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, closeAction)
-				: await vs.window.showInformationMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, closeAction);
+				? await vs.window.showWarningMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, noThanksAction)
+				: await vs.window.showInformationMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, noThanksAction);
 			if (action === openInstructionsAction) {
 				await envUtils.openInBrowser(addToPathInstructionsUrl);
 			} else if (action === copySdkPathToClipboardAction) {
