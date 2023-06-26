@@ -79,9 +79,19 @@ export const flutterSurveyDataUrl = "https://docs.flutter.dev/f/flutter-survey-m
 export const takeSurveyAction = "Take Survey";
 export const skipThisSurveyAction = "Skip This Survey";
 
+export const noSdkAvailablePrompt = "No SDK is available to add to PATH";
+export const sdkAlreadyOnPathPrompt = "The SDK is already in your PATH";
+export const addedToPathPrompt = "The SDK was added to your PATH";
+export const failedToAddToPathPrompt = "Unable to add SDK to path automatically. Show instructions to add to path manually?";
+export const openInstructionsAction = "Open Instructions";
+export const copySdkPathToClipboardAction = "Copy SDK path to Clipboard";
+
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
 export const initializingFlutterMessage = "Initializing the Flutter SDK. This may take a few minutes.";
 export const cloningFlutterMessage = "Downloading the Flutter SDK. This may take a few minutes.";
+
+export const cancelAction = "Cancel";
+export const closeAction = "Close";
 
 // Seconds.
 export const tenSecondsInMs = 1000 * 10;
@@ -145,7 +155,6 @@ export const runFlutterCreatePrompt = (platformType: string, platformNeedsGlobal
 	platformNeedsGloballyEnabling
 		? `Enable the ${platformType} platform and add it to this project?`
 		: `Add the ${platformType} platform to this project?`;
-export const cancelAction = "Cancel";
 
 export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
 export const validClassNameRegex = validMethodNameRegex;

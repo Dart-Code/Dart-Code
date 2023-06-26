@@ -37,6 +37,7 @@ import { LspMainCodeLensProvider } from "./code_lens/main_code_lens_provider_lsp
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { LspTestCodeLensProvider } from "./code_lens/test_code_lens_provider_lsp";
 import { AddDependencyCommand } from "./commands/add_dependency";
+import { AddSdkToPathCommands } from "./commands/add_sdk_to_path";
 import { AnalyzerCommands } from "./commands/analyzer";
 import { getOutputChannel } from "./commands/channels";
 import { DartCommands } from "./commands/dart";
@@ -173,8 +174,10 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	previousSettings = getSettingsThatRequireRestart();
 
 	util.logTime();
-	const sdkUtils = new SdkUtils(logger);
+	analytics = new Analytics(logger);
+	const sdkUtils = new SdkUtils(logger, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
+	analytics.workspaceContext = workspaceContextUnverified;
 	util.logTime("initWorkspace");
 
 	// Set up log files.
@@ -183,7 +186,6 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	setupLog(config.dapLogFile, LogCategory.DAP);
 	setupLog(config.devToolsLogFile, LogCategory.DevTools);
 
-	analytics = new Analytics(logger, workspaceContextUnverified);
 	if (!workspaceContextUnverified.sdks.dart || (workspaceContextUnverified.hasAnyFlutterProjects && !workspaceContextUnverified.sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
 		return sdkUtils.handleMissingSdks(context, analytics, workspaceContextUnverified);
@@ -324,6 +326,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
 	}
 
+	context.subscriptions.push(new AddSdkToPathCommands(logger, context, workspaceContext, analytics));
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, dartCapabilities, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, dartCapabilities);

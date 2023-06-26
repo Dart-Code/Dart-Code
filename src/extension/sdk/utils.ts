@@ -9,7 +9,7 @@ import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processDartSdkRepository, processFuchsiaWorkspace } from "../../shared/utils/workspace";
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
-import { Analytics } from "../analytics";
+import { Analytics, CloneSdkResult } from "../analytics";
 import { config } from "../config";
 import { ringLog } from "../extension";
 import { getExcludedFolders, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
@@ -18,7 +18,7 @@ import { initializeFlutterSdk } from "./flutter";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
 export class SdkUtils {
-	constructor(private readonly logger: Logger) { }
+	constructor(private readonly logger: Logger, private readonly analytics: Analytics) { }
 
 	public handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
 		// Note: This code only runs if we fail to find the Dart SDK, or fail to find the Flutter SDK
@@ -136,7 +136,7 @@ export class SdkUtils {
 				}
 			} else if (selectedItem === downloadAction) {
 				if (sdkType === "Flutter" && config.experimentalFlutterGitClone) {
-					if (await this.tryFlutterCloneIfGitAvailable(this.logger, commandToReRun)) {
+					if (await this.tryFlutterCloneIfGitAvailable(commandToReRun)) {
 						break;
 					}
 				}
@@ -151,32 +151,34 @@ export class SdkUtils {
 		}
 	}
 
-	private async tryFlutterCloneIfGitAvailable(logger: Logger, commandToReRun: string | undefined): Promise<boolean> {
+	private async tryFlutterCloneIfGitAvailable(commandToReRun: string | undefined): Promise<boolean> {
 		const gitAvailable = await window.withProgress({
 			cancellable: true,
 			location: ProgressLocation.Notification,
 			title: "Checking for git",
 		}, async (_, cancellationToken) => {
 			try {
-				const gitProc = await runToolProcess(logger, undefined, "git", ["--version"], undefined, cancellationToken);
+				const gitProc = await runToolProcess(this.logger, undefined, "git", ["--version"], undefined, cancellationToken);
 				if (gitProc.exitCode !== 0) {
-					logger.error(`Failed to run "git --version" to detect git, so skipping "clone Flutter SDK" workflow":\n`
+					this.logger.error(`Failed to run "git --version" to detect git, so skipping "clone Flutter SDK" workflow":\n`
 						+ `Exit code: ${gitProc.exitCode}\n`
 						+ `stdout: ${gitProc.stdout}\n`
 						+ `stderr: ${gitProc.stderr}\n`);
 					return false;
 				}
 			} catch (e) {
-				logger.error(`Failed to run "git --version" to detect git, so skipping "clone Flutter SDK" workflow": ${e}`);
+				this.logger.error(`Failed to run "git --version" to detect git, so skipping "clone Flutter SDK" workflow": ${e}`);
 				return false;
 			}
 			return true;
 		});
 
-		if (!gitAvailable)
+		if (!gitAvailable) {
+			this.analytics.logGitCloneSdk(CloneSdkResult.noGit);
 			return false;
+		}
 
-		const flutterSdkFolder = await this.promptForFlutterClone(logger);
+		const flutterSdkFolder = await this.promptForFlutterClone();
 		if (!flutterSdkFolder)
 			return false;
 
@@ -190,7 +192,7 @@ export class SdkUtils {
 
 	}
 
-	private async promptForFlutterClone(logger: Logger): Promise<string | undefined> {
+	private async promptForFlutterClone(): Promise<string | undefined> {
 		const selectedFolders =
 			await window.showOpenDialog({
 				canSelectFiles: false,
@@ -202,6 +204,9 @@ export class SdkUtils {
 		if (selectedFolders && selectedFolders.length === 1) {
 			const workingDirectory = fsPath(selectedFolders[0]);
 			const didClone = await this.cloneFlutterWithProgress(workingDirectory);
+
+			const result = didClone ? CloneSdkResult.succeeded : CloneSdkResult.failed;
+			this.analytics.logGitCloneSdk(result);
 
 			return didClone ? path.join(workingDirectory, "flutter") : undefined;
 		}

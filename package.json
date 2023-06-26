@@ -120,6 +120,16 @@
 				"category": "Dart"
 			},
 			{
+				"command": "flutter.addSdkToPath",
+				"title": "Add Flutter SDK to PATH",
+				"category": "Flutter"
+			},
+			{
+				"command": "dart.addSdkToPath",
+				"title": "Add Dart SDK to PATH",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.writeRecommendedSettings",
 				"title": "Use Recommended Settings",
 				"category": "Dart"
@@ -706,6 +716,14 @@
 				{
 					"command": "pub.outdated",
 					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported"
+				},
+				{
+					"command": "dart.addSdkToPath",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
+					"command": "flutter.addSdkToPath",
+					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
 					"command": "dart.writeRecommendedSettings",

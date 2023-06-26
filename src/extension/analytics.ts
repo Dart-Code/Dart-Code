@@ -38,6 +38,8 @@ export enum AnalyticsEvent {
 	FlutterSurvey_Clicked,
 	FlutterSurvey_Dismissed,
 	FlutterOutline_Activated,
+	Command_AddSdkToPath,
+	Command_CloneSdk,
 	Command_DartNewProject,
 	Command_FlutterNewProject,
 	Command_AddDependency,
@@ -64,6 +66,8 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 			events: [{
 				name: data.event,
 				params: {
+					"addSdkToPathResult": data.addSdkToPathResult,
+					"cloneSdkResult": data.cloneSdkResult,
 					"debuggerAdapterType": data.debuggerAdapterType,
 					"debuggerExceptionBreakMode": data.debuggerExceptionBreakMode,
 					"debuggerPreference": data.debuggerPreference,
@@ -184,7 +188,9 @@ export class Analytics implements IAmDisposable {
 	private telemetryLogger: TelemetryLogger | undefined;
 	private readonly exceptionBreakTrackerFactory: DebugAdapterExceptionSettingTrackerFactory;
 
-	constructor(private readonly logger: Logger, readonly workspaceContext: WorkspaceContext) {
+	public workspaceContext: WorkspaceContext | undefined;
+
+	constructor(private readonly logger: Logger) {
 		this.formatter = this.getFormatterSetting();
 		this.exceptionBreakTrackerFactory = new DebugAdapterExceptionSettingTrackerFactory();
 		this.disposables.push(debug.registerDebugAdapterTrackerFactory("dart", this.exceptionBreakTrackerFactory));
@@ -237,18 +243,18 @@ export class Analytics implements IAmDisposable {
 			|| !this.telemetryLogger
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
-			|| this.workspaceContext.config.disableAnalytics
+			|| this.workspaceContext?.config.disableAnalytics
 			|| !env.isTelemetryEnabled
 			|| isDartCodeTestRun
 		)
 			return;
 
-		const flutterUiGuides = this.workspaceContext.hasAnyFlutterProjects
+		const flutterUiGuides = this.workspaceContext?.hasAnyFlutterProjects
 			? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
 			: undefined;
 
 		const data: AnalyticsData = {
-			analyzerProtocol: this.workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP",
+			analyzerProtocol: this.workspaceContext?.config.useLegacyProtocol ? "DAS" : "LSP",
 			anonymize: true,
 			appName: env.appName,
 			closingLabels: config.closingLabels ? "On" : "Off",
@@ -256,14 +262,14 @@ export class Analytics implements IAmDisposable {
 			event: AnalyticsEvent[category],
 			extensionKind: isDevExtension ? "Dev" : isPreReleaseExtension ? "Pre-Release" : "Stable",
 			flutterExtension: hasFlutterExtension ? "Installed" : "Not Installed",
-			flutterHotReloadOnSave: this.workspaceContext.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : undefined,
+			flutterHotReloadOnSave: this.workspaceContext?.hasAnyFlutterProjects ? config.flutterHotReloadOnSave : undefined,
 			flutterUiGuides,
 			flutterVersion: this.flutterSdkVersion,
 			formatter: this.formatter,
 			language: env.language,
 			platform: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			showTodos: config.showTodos ? "On" : "Off",
-			workspaceType: this.workspaceContext.workspaceTypeDescription,
+			workspaceType: this.workspaceContext?.workspaceTypeDescription,
 			...customData,
 		};
 
@@ -329,6 +335,18 @@ export class Analytics implements IAmDisposable {
 		};
 		this.event(AnalyticsEvent.Debugger_Activated, customData);
 	}
+	public logAddSdkToPath(result: AddSdkToPathResult) {
+		const customData: Partial<AnalyticsData> = {
+			addSdkToPathResult: AddSdkToPathResult[result],
+		};
+		this.event(AnalyticsEvent.Command_AddSdkToPath, customData);
+	}
+	public logGitCloneSdk(result: CloneSdkResult) {
+		const customData: Partial<AnalyticsData> = {
+			cloneSdkResult: CloneSdkResult[result],
+		};
+		this.event(AnalyticsEvent.Command_CloneSdk, customData);
+	}
 	public logDevToolsOpened() { this.event(AnalyticsEvent.DevTools_Opened); }
 	public logFlutterSurveyShown() { this.event(AnalyticsEvent.FlutterSurvey_Shown); }
 	public logFlutterSurveyClicked() { this.event(AnalyticsEvent.FlutterSurvey_Clicked); }
@@ -354,7 +372,7 @@ interface AnalyticsData {
 	extensionKind: string,
 	platform: string,
 	appName: string | undefined,
-	workspaceType: string,
+	workspaceType: string | undefined,
 	dartVersion: string | undefined,
 	flutterVersion: string | undefined,
 	flutterExtension: string,
@@ -373,6 +391,12 @@ interface AnalyticsData {
 	debuggerAdapterType?: string,
 	debuggerPreference?: string,
 	debuggerExceptionBreakMode?: string,
+
+	// For "Add SDK to PATH" command.
+	addSdkToPathResult?: string,
+
+	// For "Download SDK" git-clone flow.
+	cloneSdkResult?: string,
 }
 
 export class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {
@@ -393,4 +417,17 @@ class DebugAdapterExceptionSettingTracker implements DebugAdapterTracker {
 				this.lastExceptionOptions = "None";
 		}
 	}
+}
+
+export enum AddSdkToPathResult {
+	alreadyExisted,
+	succeeded,
+	failed,
+	unavailableOnPlatform,
+}
+
+export enum CloneSdkResult {
+	noGit,
+	succeeded,
+	failed,
 }
