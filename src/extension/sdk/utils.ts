@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, ProgressLocation, window, workspace } from "vscode";
-import { addSdkToPathAction, addSdkToPathPrompt, analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, isWin, noThanksAction, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, showLogAction } from "../../shared/constants";
 import { ExtensionConfig, Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
@@ -187,9 +187,7 @@ export class SdkUtils {
 		await config.setGlobalFlutterSdkPath(flutterSdkFolder);
 		await initializeFlutterSdk(this.logger, path.join(flutterSdkFolder, flutterPath));
 
-		// TODO(dantup): Change isWin here if we support this on other platforms.
-		if (isWin && await window.showInformationMessage(addSdkToPathPrompt, addSdkToPathAction, noThanksAction) === addSdkToPathAction)
-			await new AddSdkToPath(this.logger, this.context, this.analytics).addToPath(flutterSdkFolder);
+		await new AddSdkToPath(this.logger, this.context, this.analytics).promptToAddToPath(flutterSdkFolder);
 
 		await commands.executeCommand("_dart.reloadExtension");
 		if (commandToReRun)

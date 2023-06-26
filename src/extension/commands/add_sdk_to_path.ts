@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { addedToPathPrompt, closeAction, copySdkPathToClipboardAction, failedToAddToPathPrompt, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, openInstructionsAction, sdkAlreadyOnPathPrompt } from "../../shared/constants";
+import { addSdkToPathAction, addSdkToPathPrompt, addedToPathPrompt, closeAction, copySdkPathToClipboardAction, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -21,38 +21,69 @@ export class AddSdkToPath {
 
 		let result = AddSdkToPathResult.failed;
 		try {
-			result = isWin
-				? await this.addToPathWindows(sdkPath)
-				// TODO(dantup): If we add more platforms here, we must also remove the isWin check in
-				//  tryFlutterCloneIfAvailable() so the prompt to add to PATH shows.
+
+
+			result = this.canAddPathAutomatically()
+				? isWin
+					? await this.addToPathWindows(sdkPath)
+					// If we add more platforms here, we must also remove the isWin check in
+					// tryFlutterCloneIfGitAvailable() so the prompt to add to PATH shows.
+					: AddSdkToPathResult.unavailableOnPlatform
 				: AddSdkToPathResult.unavailableOnPlatform;
 			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(sdkPath))) {
 				void vs.window.showInformationMessage(sdkAlreadyOnPathPrompt);
 			} else if (result === AddSdkToPathResult.succeeded) {
 				void vs.window.showInformationMessage(addedToPathPrompt);
-			} else {
-				const addToPathUrl = isWin
-					? "https://docs.flutter.dev/get-started/install/windows#update-your-path"
-					: isMac
-						? "https://docs.flutter.dev/get-started/install/macos#update-your-path"
-						: isLinux && !isChromeOS
-							? "https://docs.flutter.dev/get-started/install/linux#update-your-path"
-							: "";
-				if (addToPathUrl) {
-					while (true) {
-						const action = await vs.window.showWarningMessage(failedToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, closeAction);
-						if (action === openInstructionsAction) {
-							await envUtils.openInBrowser(addToPathUrl);
-						} else if (action === copySdkPathToClipboardAction) {
-							await vs.env.clipboard.writeText(sdkPath);
-						} else {
-							break;
-						}
-					}
-				}
+			} else if (this.canShowInstructions()) {
+				await this.showManualInstructions(sdkPath, result === AddSdkToPathResult.failed);
 			}
 		} finally {
 			this.analytics.logAddSdkToPath(result);
+		}
+	}
+
+	public async promptToAddToPath(sdkPath: string): Promise<void> {
+		if (!this.canAddPathAutomatically() && !this.canShowInstructions())
+			return;
+
+		// Change isWin here if we support this on other platforms in AddSdkToPath.addToPath.
+		if (this.canAddPathAutomatically() && await vs.window.showInformationMessage(addSdkToPathPrompt, addSdkToPathAction, noThanksAction) === addSdkToPathAction) {
+			await new AddSdkToPath(this.logger, this.context, this.analytics).addToPath(sdkPath);
+		} else {
+			await this.showManualInstructions(sdkPath);
+		}
+	}
+
+	private canAddPathAutomatically(): boolean {
+		return isWin;
+	}
+
+	private canShowInstructions(): boolean {
+		return !isChromeOS;
+	}
+
+	private async showManualInstructions(sdkPath: string, didFailToAutomaticallyAdd = false): Promise<void> {
+		const addToPathInstructionsUrl = isWin
+			? "https://docs.flutter.dev/get-started/install/windows#update-your-path"
+			: isMac
+				? "https://docs.flutter.dev/get-started/install/macos#update-your-path"
+				: isLinux && !isChromeOS
+					? "https://docs.flutter.dev/get-started/install/linux#update-your-path"
+					: undefined;
+		if (!addToPathInstructionsUrl)
+			return;
+
+		while (true) {
+			const action = didFailToAutomaticallyAdd
+				? await vs.window.showWarningMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, closeAction)
+				: await vs.window.showInformationMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, closeAction);
+			if (action === openInstructionsAction) {
+				await envUtils.openInBrowser(addToPathInstructionsUrl);
+			} else if (action === copySdkPathToClipboardAction) {
+				await vs.env.clipboard.writeText(sdkPath);
+			} else {
+				break;
+			}
 		}
 	}
 
