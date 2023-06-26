@@ -8,23 +8,10 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { AddSdkToPathResult, Analytics } from "../analytics";
 import { runToolProcess } from "../utils/processes";
 
+export class AddSdkToPath {
+	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, private readonly analytics: Analytics) { }
 
-export class AddSdkToPathCommands implements IAmDisposable {
-	private disposables: IAmDisposable[] = [];
-
-	constructor(private readonly logger: Logger, private readonly context: vs.ExtensionContext, wsContext: WorkspaceContext, private readonly analytics: Analytics) {
-		this.disposables.push(vs.commands.registerCommand("dart.addSdkToPath", async () => {
-			if (wsContext.sdks.dartSdkIsFromFlutter) {
-				return vs.commands.executeCommand("flutter.addSdkToPath");
-			}
-			await this.addToPath(wsContext.sdks.dart);
-		}));
-		this.disposables.push(vs.commands.registerCommand("flutter.addSdkToPath", async () => {
-			await this.addToPath(wsContext.sdks.flutter);
-		}));
-	}
-
-	private async addToPath(sdkPath: string | undefined): Promise<void> {
+	public async addToPath(sdkPath: string | undefined): Promise<void> {
 		if (!sdkPath) {
 			void vs.window.showErrorMessage(noSdkAvailablePrompt);
 			return;
@@ -36,6 +23,8 @@ export class AddSdkToPathCommands implements IAmDisposable {
 		try {
 			result = isWin
 				? await this.addToPathWindows(sdkPath)
+				// TODO(dantup): If we add more platforms here, we must also remove the isWin check in
+				//  tryFlutterCloneIfAvailable() so the prompt to add to PATH shows.
 				: AddSdkToPathResult.unavailableOnPlatform;
 			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(sdkPath))) {
 				void vs.window.showInformationMessage(sdkAlreadyOnPathPrompt);
@@ -52,7 +41,6 @@ export class AddSdkToPathCommands implements IAmDisposable {
 						break;
 					}
 				}
-
 			}
 		} finally {
 			this.analytics.logAddSdkToPath(result);
@@ -87,10 +75,25 @@ export class AddSdkToPathCommands implements IAmDisposable {
 			return AddSdkToPathResult.failed;
 		}
 	}
+}
+
+export class AddSdkToPathCommands extends AddSdkToPath implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
+
+	constructor(logger: Logger, context: vs.ExtensionContext, wsContext: WorkspaceContext, analytics: Analytics) {
+		super(logger, context, analytics);
+		this.disposables.push(vs.commands.registerCommand("dart.addSdkToPath", async () => {
+			if (wsContext.sdks.dartSdkIsFromFlutter) {
+				return vs.commands.executeCommand("flutter.addSdkToPath");
+			}
+			await this.addToPath(wsContext.sdks.dart);
+		}));
+		this.disposables.push(vs.commands.registerCommand("flutter.addSdkToPath", async () => {
+			await this.addToPath(wsContext.sdks.flutter);
+		}));
+	}
 
 	public dispose(): any {
 		disposeAll(this.disposables);
 	}
 }
-
-

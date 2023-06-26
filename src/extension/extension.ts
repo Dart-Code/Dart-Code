@@ -175,7 +175,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	util.logTime();
 	analytics = new Analytics(logger);
-	const sdkUtils = new SdkUtils(logger, analytics);
+	const sdkUtils = new SdkUtils(logger, context, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
 	analytics.workspaceContext = workspaceContextUnverified;
 	util.logTime("initWorkspace");
@@ -188,7 +188,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 
 	if (!workspaceContextUnverified.sdks.dart || (workspaceContextUnverified.hasAnyFlutterProjects && !workspaceContextUnverified.sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
-		return sdkUtils.handleMissingSdks(context, analytics, workspaceContextUnverified);
+		return sdkUtils.handleMissingSdks(workspaceContextUnverified);
 	}
 
 	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;

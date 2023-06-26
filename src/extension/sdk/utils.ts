@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, ProgressLocation, window, workspace } from "vscode";
-import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, showLogAction } from "../../shared/constants";
+import { addSdkToPathAction, addSdkToPathPrompt, analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, isWin, noThanksAction, showLogAction } from "../../shared/constants";
 import { ExtensionConfig, Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
@@ -10,6 +10,7 @@ import { processBazelWorkspace, processDartSdkRepository, processFuchsiaWorkspac
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics, CloneSdkResult } from "../analytics";
+import { AddSdkToPath } from "../commands/add_sdk_to_path";
 import { config } from "../config";
 import { ringLog } from "../extension";
 import { getExcludedFolders, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
@@ -18,28 +19,29 @@ import { initializeFlutterSdk } from "./flutter";
 
 // TODO: Tidy this class up (it exists mainly to share logger).
 export class SdkUtils {
-	constructor(private readonly logger: Logger, private readonly analytics: Analytics) { }
+	constructor(private readonly logger: Logger, private readonly context: ExtensionContext, private readonly analytics: Analytics) { }
 
-	public handleMissingSdks(context: ExtensionContext, analytics: Analytics, workspaceContext: WorkspaceContext) {
+	public handleMissingSdks(workspaceContext: WorkspaceContext) {
+		const context = this.context;
 		// Note: This code only runs if we fail to find the Dart SDK, or fail to find the Flutter SDK
 		// and are in a Flutter project. In the case where we fail to find the Flutter SDK but are not
 		// in a Flutter project (eg. we ran Flutter Doctor without the extension activated) then
 		// this code will not be run as the extension will activate normally, and then the command-handling
 		// code for each command will detect the missing Flutter SDK and respond appropriately.
 		context.subscriptions.push(commands.registerCommand("flutter.createProject", () => {
-			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.createProject");
+			this.showRelevantActivationFailureMessage(workspaceContext, true, "flutter.createProject");
 		}));
 		context.subscriptions.push(commands.registerCommand("dart.createProject", () => {
-			this.showRelevantActivationFailureMessage(analytics, workspaceContext, false, "dart.createProject");
+			this.showRelevantActivationFailureMessage(workspaceContext, false, "dart.createProject");
 		}));
 		context.subscriptions.push(commands.registerCommand("_dart.flutter.createSampleProject", () => {
-			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "_dart.flutter.createSampleProject");
+			this.showRelevantActivationFailureMessage(workspaceContext, true, "_dart.flutter.createSampleProject");
 		}));
 		context.subscriptions.push(commands.registerCommand("flutter.doctor", () => {
-			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.doctor");
+			this.showRelevantActivationFailureMessage(workspaceContext, true, "flutter.doctor");
 		}));
 		context.subscriptions.push(commands.registerCommand("flutter.upgrade", () => {
-			this.showRelevantActivationFailureMessage(analytics, workspaceContext, true, "flutter.upgrade");
+			this.showRelevantActivationFailureMessage(workspaceContext, true, "flutter.upgrade");
 		}));
 		// Wait a while before showing the error to allow the code above to have run if it will.
 		setTimeout(() => {
@@ -47,9 +49,9 @@ export class SdkUtils {
 			// a result of one of the above commands beinv invoked.
 			if (!this.hasShownActivationFailure) {
 				if (workspaceContext.hasAnyFlutterProjects) {
-					this.showRelevantActivationFailureMessage(analytics, workspaceContext, true);
+					this.showRelevantActivationFailureMessage(workspaceContext, true);
 				} else if (workspaceContext.hasAnyStandardDartProjects) {
-					this.showRelevantActivationFailureMessage(analytics, workspaceContext, false);
+					this.showRelevantActivationFailureMessage(workspaceContext, false);
 				} else {
 					this.logger.error("No Dart or Flutter SDK was found. Suppressing prompt because it doesn't appear that a Dart/Flutter project is open.");
 				}
@@ -59,7 +61,7 @@ export class SdkUtils {
 	}
 
 	private hasShownActivationFailure = false;
-	private showRelevantActivationFailureMessage(analytics: Analytics, workspaceContext: WorkspaceContext, isFlutter: boolean, commandToReRun?: string) {
+	private showRelevantActivationFailureMessage(workspaceContext: WorkspaceContext, isFlutter: boolean, commandToReRun?: string) {
 		if (isFlutter && workspaceContext.sdks.flutter && !workspaceContext.sdks.dart) {
 			this.showFluttersDartSdkActivationFailure();
 		} else if (isFlutter) {
@@ -68,7 +70,7 @@ export class SdkUtils {
 			this.showDartActivationFailure(commandToReRun);
 		}
 		if (!this.hasShownActivationFailure) {
-			analytics.logSdkDetectionFailure();
+			this.analytics.logSdkDetectionFailure();
 			this.hasShownActivationFailure = true;
 		}
 	}
@@ -184,6 +186,11 @@ export class SdkUtils {
 
 		await config.setGlobalFlutterSdkPath(flutterSdkFolder);
 		await initializeFlutterSdk(this.logger, path.join(flutterSdkFolder, flutterPath));
+
+		// TODO(dantup): Change isWin here if we support this on other platforms.
+		if (isWin && await window.showInformationMessage(addSdkToPathPrompt, addSdkToPathAction, noThanksAction) === addSdkToPathAction)
+			await new AddSdkToPath(this.logger, this.context, this.analytics).addToPath(flutterSdkFolder);
+
 		await commands.executeCommand("_dart.reloadExtension");
 		if (commandToReRun)
 			void commands.executeCommand(commandToReRun);
