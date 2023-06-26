@@ -348,9 +348,12 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item) {
-			// TODO: isFailure??
-			this.appendTestOutputLines(run, item, message);
-			this.appendTestOutputLines(run, item, stack);
+			// TODO(dantup): If the change described here:
+			//  https://github.com/microsoft/vscode/issues/185778#issuecomment-1603742803
+			//  goes ahead, then if isFailure=true, capture the output of this as the
+			//  "lastFailureEvent" and then use that to pass to .failed() in testDone
+			//  instead of making a new TestMessage.
+			this.appendTestOutputLines(run, item, `${message}\r\n${stack}`.trimEnd());
 		}
 	}
 
