@@ -48,7 +48,7 @@ export class AddSdkToPath {
 
 		// Change isWin here if we support this on other platforms in AddSdkToPath.addToPath.
 		if (this.canAddPathAutomatically() && await vs.window.showInformationMessage(addSdkToPathPrompt, addSdkToPathAction, noThanksAction) === addSdkToPathAction) {
-			await new AddSdkToPath(this.logger, this.context, this.analytics).addToPath(sdkPath);
+			await this.addToPath(sdkPath);
 		} else {
 			await this.showManualInstructions(sdkPath);
 		}
