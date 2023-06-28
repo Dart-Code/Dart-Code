@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, ProgressLocation, window, workspace } from "vscode";
-import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, showLogAction } from "../../shared/constants";
 import { ExtensionConfig, Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
@@ -371,6 +371,10 @@ export class SdkUtils {
 			}
 
 			flutterSdkPath = flutterSdkResult.sdkPath;
+
+			if (hasAnyFlutterProject) {
+				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkPath, "dart.flutterSdkPath");
+			}
 		}
 
 		// Since we just blocked on a lot of sync FS, yield.
@@ -411,6 +415,10 @@ export class SdkUtils {
 		await resolvedPromise;
 
 		let dartSdkPath = this.findDartSdk(dartSdkSearchPaths).sdkPath;
+
+		if (!hasAnyFlutterProject && !fuchsiaRoot && !firstFlutterMobileProject && !workspaceConfig.forceFlutterWorkspace) {
+			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkPath, "dart.sdkPath");
+		}
 
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
@@ -456,6 +464,20 @@ export class SdkUtils {
 			hasAnyStandardDartProject,
 			!!fuchsiaRoot && hasAnyStandardDartProject,
 		);
+	}
+
+	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdkPath: string | undefined, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath"): Promise<void> {
+		if (!configSdkPath || !foundSdkPath) return;
+
+		configSdkPath = path.normalize(path.normalize(configSdkPath).toLowerCase() + path.sep);
+		foundSdkPath = path.normalize(path.normalize(foundSdkPath).toLowerCase() + path.sep);
+
+		if (configSdkPath !== foundSdkPath) {
+			const action = await window.showWarningMessage(`The SDK configured in ${sdkConfigName} is not a valid SDK folder.`, openSettingsAction);
+			if (openSettingsAction === action) {
+				await commands.executeCommand("workbench.action.openSettingsJson");
+			}
+		}
 	}
 
 	private findDartSdk(folders: string[]) {
