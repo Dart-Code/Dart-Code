@@ -137,7 +137,7 @@ export class SdkUtils {
 					}
 				}
 			} else if (selectedItem === downloadAction) {
-				if (sdkType === "Flutter" && config.experimentalFlutterGitClone) {
+				if (sdkType === "Flutter") {
 					if (await this.tryFlutterCloneIfGitAvailable(commandToReRun)) {
 						break;
 					}
