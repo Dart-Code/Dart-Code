@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, ProgressLocation, window, workspace } from "vscode";
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, showLogAction } from "../../shared/constants";
-import { ExtensionConfig, Logger, Sdks, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
+import { ExtensionConfig, Logger, Sdks, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
@@ -370,11 +370,11 @@ export class SdkUtils {
 				flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
 			}
 
-			flutterSdkPath = flutterSdkResult.sdkPath;
-
 			if (hasAnyFlutterProject) {
-				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkPath, "dart.flutterSdkPath");
+				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkResult, "dart.flutterSdkPath");
 			}
+
+			flutterSdkPath = flutterSdkResult.sdkPath;
 		}
 
 		// Since we just blocked on a lot of sync FS, yield.
@@ -414,11 +414,13 @@ export class SdkUtils {
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
 
-		let dartSdkPath = this.findDartSdk(dartSdkSearchPaths).sdkPath;
+		const dartSdkResult = this.findDartSdk(dartSdkSearchPaths);
 
 		if (!hasAnyFlutterProject && !fuchsiaRoot && !firstFlutterMobileProject && !workspaceConfig.forceFlutterWorkspace) {
-			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkPath, "dart.sdkPath");
+			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath");
 		}
+
+		let dartSdkPath = dartSdkResult.sdkPath;
 
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
@@ -466,7 +468,8 @@ export class SdkUtils {
 		);
 	}
 
-	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdkPath: string | undefined, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath"): Promise<void> {
+	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdk: SdkSearchResults, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath"): Promise<void> {
+		let foundSdkPath = foundSdk?.originalPath;
 		if (!configSdkPath || !foundSdkPath) return;
 
 		configSdkPath = path.normalize(path.normalize(configSdkPath).toLowerCase() + path.sep);
@@ -496,7 +499,7 @@ export class SdkUtils {
 	public searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): SdkSearchResults {
 		this.logger.info(`Searching for ${executableFilename}`);
 
-		let sdkPaths =
+		const rawSdkPaths =
 			paths
 				.filter((p) => p)
 				.map(resolvePaths)
@@ -506,21 +509,26 @@ export class SdkUtils {
 		// paths may come from places that don't already include it (for ex. the
 		// user config.sdkPath).
 		const isBinFolder = (f: string) => ["bin", "sbin"].indexOf(path.basename(f)) !== -1;
-		sdkPaths = flatMap(sdkPaths, (p) => isBinFolder(p) ? [p] : [p, path.join(p, "bin")]);
+		let sdkPaths = flatMap(
+			rawSdkPaths,
+			(p): SdkSearchResult[] => isBinFolder(p)
+				? [{ originalPath: p, sdkPath: p }]
+				: [{ originalPath: p, sdkPath: p }, { originalPath: p, sdkPath: path.join(p, "bin") }],
+		);
 
 		// TODO: Make the list unique, but preserve the order of the first occurrences. We currently
 		// have uniq() and unique(), so also consolidate them.
 
 		this.logger.info(`    Looking for ${executableFilename} in:`);
 		for (const p of sdkPaths)
-			this.logger.info(`        ${p}`);
+			this.logger.info(`        ${this.sdkDisplayString(p)}`);
 
 		// Restrict only to the paths that have the executable.
-		sdkPaths = sdkPaths.filter((p) => fs.existsSync(path.join(p, executableFilename)));
+		sdkPaths = sdkPaths.filter((p) => fs.existsSync(path.join(p.sdkPath, executableFilename)));
 
 		this.logger.info(`    Found at:`);
 		for (const p of sdkPaths)
-			this.logger.info(`        ${p}`);
+			this.logger.info(`        ${this.sdkDisplayString(p)}`);
 
 		// Keep track if we find something that looks like a package manager init script. These are
 		// symlinks like `flutter` that resolve to other binaries (like `snap` or `hermit`) and may need
@@ -528,14 +536,13 @@ export class SdkUtils {
 		let sdkInitScript: string | undefined;
 
 		// Convert all the paths to their resolved locations.
-		sdkPaths = sdkPaths.map((p) => {
-			const fullPath = path.join(p, executableFilename);
-
+		sdkPaths = sdkPaths.map((sdkPath): SdkSearchResult => {
 			// In order to handle symlinks on the binary (not folder), we need to add the executableName before calling realpath.
-			const realExecutableLocation = p && fs.realpathSync(fullPath);
+			const fullPath = path.join(sdkPath.sdkPath, executableFilename);
+			const realExecutableLocation = fs.realpathSync(fullPath);
 
 			if (realExecutableLocation.toLowerCase() !== fullPath.toLowerCase())
-				this.logger.info(`Following symlink: ${fullPath} ==> ${realExecutableLocation}`);
+				this.logger.info(`Following symlink: ${fullPath} -> ${realExecutableLocation}`);
 
 			// If the symlink resolves to a package manager binary, it's not a real SDK
 			// and we should return as-is rather than walk up two levels, as we
@@ -544,30 +551,35 @@ export class SdkUtils {
 			if (targetBaseName !== executableFilename) {
 				this.logger.info(`Target ${targetBaseName} is not ${executableFilename}, assuming ${fullPath} is a package manager init script`);
 				sdkInitScript = fullPath;
-				return fullPath;
+				return { originalPath: sdkPath.originalPath, sdkPath: fullPath };
 			}
 
 			// Then we need to take the executable name and /bin back off
-			return path.dirname(path.dirname(realExecutableLocation));
+			return { originalPath: sdkPath.originalPath, sdkPath: path.dirname(path.dirname(realExecutableLocation)) };
 		});
 
 		// Now apply any post-filters.
 		this.logger.info("    Candidate paths to be post-filtered:");
 		for (const p of sdkPaths)
-			this.logger.info(`        ${p}`);
-		const sdkPath = sdkPaths.find(postFilter || (() => true));
+			this.logger.info(`        ${this.sdkDisplayString(p)}`);
+		if (!postFilter)
+			postFilter = ((_: string) => true);
+		const sdkPath = sdkPaths.find((pathInfo) => postFilter!(pathInfo.sdkPath));
 
 		if (sdkPath)
-			this.logger.info(`    Found at ${sdkPath}`);
+			this.logger.info(`    Found at ${this.sdkDisplayString(sdkPath)}`);
 
-
-		this.logger.info(`    Returning SDK path ${sdkPath} for ${executableFilename}`);
+		this.logger.info(`    Returning SDK path ${sdkPath?.sdkPath} for ${executableFilename}`);
 
 		return {
-			candidatePaths: sdkPaths,
+			candidatePaths: sdkPaths.map((p) => p.sdkPath),
 			sdkInitScript,
-			sdkPath,
+			...sdkPath,
 		};
+	}
+
+	private sdkDisplayString(sdk: SdkSearchResult) {
+		return `${sdk.originalPath}${sdk.sdkPath !== sdk.originalPath ? ` -> ${sdk.sdkPath}` : ""}`;
 	}
 }
 

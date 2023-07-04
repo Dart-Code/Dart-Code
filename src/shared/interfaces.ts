@@ -8,9 +8,19 @@ import { UnknownResponse } from "./services/interfaces";
 import { WorkspaceContext } from "./workspace";
 
 export interface SdkSearchResults {
-	sdkPath: string | undefined;
+	// The fully resolved path to the SDK.
+	sdkPath?: string;
+	// The original path (before following symlinks) that led us to [sdkPath].
+	originalPath?: string;
 	candidatePaths: string[];
 	sdkInitScript: string | undefined;
+}
+
+export interface SdkSearchResult {
+	// The fully resolved path to the SDK.
+	sdkPath: string;
+	// The original path (before following symlinks) that led us to [sdkPath].
+	originalPath: string;
 }
 
 export interface Sdks {
