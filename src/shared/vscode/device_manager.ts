@@ -308,10 +308,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 					label: "Available Devices",
 				},
 				...supportedDevices.map((d) => ({
-					description: d.category || d.platform,
+					description: `${d.id} - ${d.category || d.platform || ""}`,
 					device: d,
 					label: this.labelForDevice(d, { withIcon: true }),
-				})),
+				} as PickableDevice)),
 			]);
 		}
 
