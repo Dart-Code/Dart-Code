@@ -89,6 +89,7 @@ import { DartRenameProvider } from "./providers/dart_rename_provider";
 import { DartSignatureHelpProvider } from "./providers/dart_signature_help_provider";
 import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
+import { DartDebugAdapterGlobalEvaluationContextFactory } from "./providers/debug_adapter_global_evaluation_context_factory";
 import { DartDebugAdapterHexViewFactory } from "./providers/debug_adapter_hex_view_factory";
 import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
@@ -561,6 +562,9 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
+	const globalEvaluationContext = new DartDebugAdapterGlobalEvaluationContextFactory(logger);
+	context.subscriptions.push(globalEvaluationContext);
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", globalEvaluationContext));
 	const hexFormatter = new DartDebugAdapterHexViewFactory(logger);
 	context.subscriptions.push(hexFormatter);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", hexFormatter));

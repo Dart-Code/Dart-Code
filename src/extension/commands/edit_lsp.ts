@@ -25,6 +25,7 @@ export class LspEditCommands implements vs.Disposable {
 		return vs.commands.executeCommand("editor.action.codeAction", { kind: action, apply: "ifSingle" });
 	}
 
+	// TODO(dantup): Is this wired up?!
 	private async completeStatement(): Promise<void> {
 		const editor = this.getActiveEditor();
 		if (!editor || !editor.selection)

@@ -1529,7 +1529,6 @@ export class DartDebugSession extends DebugSession {
 	protected restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments): void {
 		this.logDapRequest("restartFrameRequest", args);
 		const frameId = args.frameId;
-		// const context: string = args.context; // "watch", "repl", "hover"
 
 		if (!frameId) {
 			this.errorResponse(response, "unable to restart with no frame");
@@ -1565,7 +1564,7 @@ export class DartDebugSession extends DebugSession {
 
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId = args.frameId;
-		// const context: string = args.context; // "watch", "repl", "hover"
+		// const context: string = args.context; // "watch", "repl", "hover", file:///foo.dart
 
 		const data = frameId ? this.threadManager.getStoredData(frameId) : undefined;
 		const thread = data ? data.thread : this.threadManager.threads[0];
