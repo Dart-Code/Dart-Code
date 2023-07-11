@@ -21,8 +21,6 @@ export class AddSdkToPath {
 
 		let result = AddSdkToPathResult.failed;
 		try {
-
-
 			result = this.canAddPathAutomatically()
 				? isWin
 					? await this.addToPathWindows(sdkPath)
@@ -71,7 +69,7 @@ export class AddSdkToPath {
 		while (true) {
 			const action = didFailToAutomaticallyAdd
 				? await vs.window.showWarningMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, noThanksAction)
-				: await vs.window.showInformationMessage(unableToAddToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, noThanksAction);
+				: await vs.window.showInformationMessage(addSdkToPathPrompt, openInstructionsAction, copySdkPathToClipboardAction, noThanksAction);
 			if (action === openInstructionsAction) {
 				await envUtils.openInBrowser(addToPathInstructionsUrl);
 			} else if (action === copySdkPathToClipboardAction) {

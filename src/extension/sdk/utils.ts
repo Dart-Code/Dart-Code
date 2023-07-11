@@ -110,8 +110,7 @@ export class SdkUtils {
 	) {
 		const downloadAction = "Download SDK";
 		const locateAction = "Locate SDK";
-		let displayMessage = `Could not find a ${sdkType} SDK. ` +
-			`Please ensure ${sdkType.toLowerCase()} is installed and in your PATH (you may need to restart).`;
+		let displayMessage = `Could not find a ${sdkType} SDK. Please download, or if already downloaded click Locate`;
 		while (true) {
 			const ringLogContents = ringLog.toString();
 			const selectedItem = await window.showErrorMessage(displayMessage,
