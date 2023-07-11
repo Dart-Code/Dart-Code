@@ -13,7 +13,7 @@ $currDirs = (Get-Item -LiteralPath $regPath).GetValue('Path', '', 'DoNotExpandEn
 
 if ($LiteralPath -in $currDirs) {
 	Write-Host "Already present in the persistent user-level Path: $LiteralPath"
-	exit 1;
+	exit 12345;
 }
 
 $newValue = ($currDirs + $LiteralPath) -join ';'

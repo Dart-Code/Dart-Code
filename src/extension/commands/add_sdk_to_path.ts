@@ -94,13 +94,13 @@ export class AddSdkToPath {
 					"-NonInteractive",
 					"-WindowStyle", "Hidden",
 					"-ExecutionPolicy", "Bypass",
-					scriptPath,
+					"-File", scriptPath,
 					// If we don't re-quote this, spaces break, even though runToolProcess is doing it?
 					`"${sdkPath}"`,
 				],
 				undefined,
 			);
-			return result.exitCode === 1
+			return result.exitCode === 12345
 				? AddSdkToPathResult.alreadyExisted
 				: result.exitCode
 					? AddSdkToPathResult.failed
