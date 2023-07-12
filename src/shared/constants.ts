@@ -2,6 +2,8 @@ import * as fs from "fs";
 import { DevToolsPage } from "./interfaces";
 import { versionIsAtLeast } from "./utils";
 
+export type SdkTypeString = "Dart" | "Flutter";
+
 export const dartCodeExtensionIdentifier = "Dart-Code.dart-code";
 export const flutterExtensionIdentifier = "Dart-Code.flutter";
 export const debugAdapterPath = "out/dist/debug.js";
@@ -80,10 +82,10 @@ export const takeSurveyAction = "Take Survey";
 export const skipThisSurveyAction = "Skip This Survey";
 
 export const noSdkAvailablePrompt = "No SDK is available to add to PATH";
-export const sdkAlreadyOnPathPrompt = "The SDK is already in your PATH";
-export const addedToPathPrompt = "The SDK was added to your PATH";
-export const addSdkToPathPrompt = "Do you want to add the SDK to PATH so it's accessible in external terminals?";
-export const unableToAddToPathPrompt = "Unable to add SDK to PATH environment variable automatically. Show instructions to add manually?";
+export const sdkAlreadyOnPathPrompt = (sdkType: SdkTypeString) => `The ${sdkType} SDK is already in your PATH`;
+export const addedToPathPrompt = (sdkType: SdkTypeString) => `The ${sdkType} SDK was added to your PATH`;
+export const addSdkToPathPrompt = (sdkType: SdkTypeString) => `Do you want to add the ${sdkType} SDK to PATH so it's accessible in external terminals?`;
+export const unableToAddToPathPrompt = (sdkType: SdkTypeString) => `Unable to add the ${sdkType} SDK to PATH automatically. Show instructions to add manually?`;
 export const openInstructionsAction = "Open Instructions";
 export const copySdkPathToClipboardAction = "Copy SDK path to Clipboard";
 export const addSdkToPathAction = "Add SDK to PATH";

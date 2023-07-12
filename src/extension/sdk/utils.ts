@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, ProgressLocation, window, workspace } from "vscode";
-import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { ExtensionConfig, Logger, Sdks, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
@@ -102,7 +102,7 @@ export class SdkUtils {
 	}
 
 	public async showSdkActivationFailure(
-		sdkType: "Dart" | "Flutter",
+		sdkType: SdkTypeString,
 		search: (path: string[]) => SdkSearchResults,
 		downloadUrl: string,
 		saveSdkPath: (path: string) => Thenable<void>,
@@ -110,7 +110,7 @@ export class SdkUtils {
 	) {
 		const downloadAction = "Download SDK";
 		const locateAction = "Locate SDK";
-		let displayMessage = `Could not find a ${sdkType} SDK. Please download, or if already downloaded click Locate`;
+		let displayMessage = `Could not find a ${sdkType} SDK. Please download, or, if already downloaded, click '${locateAction}'.`;
 		while (true) {
 			const ringLogContents = ringLog.toString();
 			const selectedItem = await window.showErrorMessage(displayMessage,
@@ -186,7 +186,7 @@ export class SdkUtils {
 		await config.setGlobalFlutterSdkPath(flutterSdkFolder);
 		await initializeFlutterSdk(this.logger, path.join(flutterSdkFolder, flutterPath));
 
-		await new AddSdkToPath(this.logger, this.context, this.analytics).promptToAddToPath(flutterSdkFolder);
+		await new AddSdkToPath(this.logger, this.context, this.analytics).promptToAddToPath("Flutter", flutterSdkFolder);
 
 		await commands.executeCommand("_dart.reloadExtension");
 		if (commandToReRun)
