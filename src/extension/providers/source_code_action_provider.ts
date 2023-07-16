@@ -13,35 +13,33 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 
 		const actions = [];
 
-		if (!context
-			|| !context.only
-			|| context.only.contains(CodeActionKind.Source)
-			|| context.only.contains(CodeActionKind.SourceOrganizeImports)) {
-			actions.push({
-				command: {
-					arguments: [document],
-					command: "_dart.organizeImports",
-					title: "Organize Imports",
-				},
-				kind: CodeActionKind.SourceOrganizeImports,
-				title: "Organize Imports",
-			});
-		}
-
-		if (!context
-			|| !context.only
-			|| context.only.contains(CodeActionKind.Source)
-			|| context.only.contains(SourceSortMembersCodeActionKind)) {
-			actions.push({
-				command: {
-					arguments: [document],
-					command: "dart.sortMembers",
-					title: "Sort Members",
-				},
-				kind: SourceSortMembersCodeActionKind,
-				title: "Sort Members",
-			});
-		}
+		const organizeImportsCodeAction = {
+			command: {
+			  arguments: [document],
+			  command: "_dart.organizeImports",
+			  title: "Organize Imports",
+			},
+			kind: CodeActionKind.SourceOrganizeImports,
+			title: "Organize Imports",
+		  };
+		  
+		  const sortMembersCodeAction = {
+			command: {
+			  arguments: [document],
+			  command: "dart.sortMembers",
+			  title: "Sort Members",
+			},
+			kind: SourceSortMembersCodeActionKind,
+			title: "Sort Members",
+		  };
+		  
+		  if (!context || !context.only || context.only.contains(CodeActionKind.Source) || context.only.contains(CodeActionKind.SourceOrganizeImports)) {
+			actions.push(organizeImportsCodeAction);
+		  }
+		  
+		  if (!context || !context.only || context.only.contains(CodeActionKind.Source) || context.only.contains(SourceSortMembersCodeActionKind)) {
+			actions.push(sortMembersCodeAction);
+		  }
 
 		return actions;
 	}
