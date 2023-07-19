@@ -397,6 +397,7 @@ export class LspAnalyzer extends Analyzer {
 }
 
 function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
+	const converters = new LspUriConverters(!!config.normalizeFileCasing);
 	const clientOptions: ls.LanguageClientOptions = {
 		initializationOptions: {
 			allowOpenUri: true,
@@ -415,7 +416,11 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		middleware,
 		outputChannelName: "LSP",
 		revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
-		uriConverters: new LspUriConverters(!!config.normalizeFileCasing),
+		uriConverters: {
+			// Don't just use "converters" here becaues LSP doesn't bind "this".
+			code2Protocol: (uri) => converters.code2Protocol(uri),
+			protocol2Code: (file) => converters.protocol2Code(file),
+		},
 	};
 
 	const client = new LanguageClient(
