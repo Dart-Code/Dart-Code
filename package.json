@@ -2936,8 +2936,6 @@
 		"vscode-uri": "^3.0.7"
 	},
 	"devDependencies": {
-		"@types/glob": "^8.1.0",
-		"@types/minimatch": "^5.1.2",
 		"@types/mocha": "^10.0.1",
 		"@types/node": "^16.18.11",
 		"@types/semver": "^7.5.0",
