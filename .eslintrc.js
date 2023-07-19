@@ -187,14 +187,17 @@ module.exports = {
 				}
 			}
 		],
+		"@typescript-eslint/no-base-to-string": "off",
 		"@typescript-eslint/no-empty-function": "off",
 		"@typescript-eslint/no-empty-interface": "off",
 		"@typescript-eslint/no-namespace": "off",
 		"@typescript-eslint/no-explicit-any": "off",
+		"@typescript-eslint/no-redundant-type-constituents": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-assignment": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-call": "off",
+		"@typescript-eslint/no-unsafe-enum-comparison": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-member-access": "off",
 		// TODO: Re-enable this when fixed.

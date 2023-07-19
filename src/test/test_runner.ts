@@ -1,13 +1,13 @@
 console.log("Starting test runner...");
 
-import * as glob from "glob";
+import { glob } from "glob";
 import * as Mocha from "mocha";
 import * as path from "path";
 import { isCI } from "../shared/constants";
 import { MultiReporter } from "./mocha_multi_reporter";
 
 module.exports = {
-	run(testsRoot: string, cb: (error: any, failures?: number) => void): void {
+	async run(testsRoot: string, cb: (error: any, failures?: number) => void): Promise<void> {
 		// Create the mocha test
 		const mocha = new Mocha({
 			color: true,
@@ -37,20 +37,16 @@ module.exports = {
 			cb(error, failures);
 		};
 
-		glob("**/**.test.js", { cwd: testsRoot }, (err, files) => {
-			if (err) {
-				return callCallback(err);
-			}
+		try {
+			const files = await glob("**/**.test.js", { cwd: testsRoot });
 
 			// Add files to the test suite
 			files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
 
-			try {
-				// Run the mocha test
-				mocha.run((failures) => callCallback(null, failures));
-			} catch (err) {
-				callCallback(err);
-			}
-		});
+			// Run the mocha test
+			mocha.run((failures) => callCallback(null, failures));
+		} catch (err) {
+			return callCallback(err);
+		}
 	},
 };

@@ -422,7 +422,7 @@ export class VmServiceConnection {
 			uri = url.toString();
 		}
 		this.socket = new WebSocket(uri, { followRedirects: true });
-		this.socket.on("message", (data) => this.handleData(data.toString()));
+		this.socket.on("message", (data: Buffer) => this.handleData(data.toString()));
 	}
 
 	public onOpen(cb: () => void) {

@@ -939,8 +939,8 @@ function getSettingsThatRequireRestart() {
 		+ config.analyzerVmServicePort
 		+ config.analyzerInstrumentationLogFile
 		+ config.extensionLogFile
-		+ config.analyzerAdditionalArgs
-		+ config.analyzerVmAdditionalArgs
+		+ config.analyzerAdditionalArgs?.join(",")
+		+ config.analyzerVmAdditionalArgs?.join(",")
 		+ config.flutterSdkPath
 		+ config.flutterSdkPaths?.length
 		+ config.flutterSelectDeviceWhenConnected
