@@ -7,7 +7,7 @@ import { isCI } from "../shared/constants";
 import { MultiReporter } from "./mocha_multi_reporter";
 
 module.exports = {
-	async run(testsRoot: string, cb: (error: any, failures?: number) => void): Promise<void> {
+	async run(testsRoot: string): Promise<void> {
 		// Create the mocha test
 		const mocha = new Mocha({
 			color: true,
@@ -15,7 +15,6 @@ module.exports = {
 			reporter: MultiReporter,
 			reporterOptions: {
 				output: process.env.TEST_XML_OUTPUT,
-				summaryFile: process.env.TEST_CSV_SUMMARY,
 				testRunName: process.env.TEST_RUN_NAME,
 			},
 			retries: isCI ? 2 : 0,        // Retry failing tests to reduce flakes
@@ -28,25 +27,24 @@ module.exports = {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		require("source-map-support").install();
 
-		const callCallback = (error: any, failures?: number) => {
-			setTimeout(() => {
-				console.error(`Test process did not quit within 10 seconds!`);
-			}, 10000).unref();
+		return new Promise(async (resolve, reject) => {
+			try {
+				const files = await glob("**/**.test.js", { cwd: testsRoot });
 
-			console.log(`Test run is complete! Calling VS Code callback with (${error}, ${failures})`);
-			cb(error, failures);
-		};
+				// Add files to the test suite
+				files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
 
-		try {
-			const files = await glob("**/**.test.js", { cwd: testsRoot });
-
-			// Add files to the test suite
-			files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
-
-			// Run the mocha test
-			mocha.run((failures) => callCallback(null, failures));
-		} catch (err) {
-			return callCallback(err);
-		}
+				// Run the mocha test
+				mocha.run((failures) => {
+					if (failures > 0) {
+						reject(new Error(`${failures} tests failed.`));
+					} else {
+						resolve();
+					}
+				});
+			} catch (err) {
+				return reject(err);
+			}
+		});
 	},
 };

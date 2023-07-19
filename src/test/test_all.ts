@@ -18,7 +18,6 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	testEnv.DC_TEST_LOGS = logPath;
 	testEnv.COVERAGE_OUTPUT = path.join(cwd, ".nyc_output", `${testRunName}.json`);
 	testEnv.TEST_XML_OUTPUT = path.join(path.join(cwd, ".test_results"), `${testRunName}.xml`);
-	testEnv.TEST_CSV_SUMMARY = path.join(path.join(cwd, ".test_results"), `${testRunName}_summary.csv`);
 
 	if (!fs.existsSync(logPath))
 		fs.mkdirSync(logPath);
