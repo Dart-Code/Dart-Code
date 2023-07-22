@@ -22,7 +22,6 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 			kind: CodeActionKind.SourceOrganizeImports,
 			title: "Organize Imports",
 		  };
-		  
 		  const sortMembersCodeAction = {
 			command: {
 			  arguments: [document],
@@ -32,7 +31,6 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 			kind: SourceSortMembersCodeActionKind,
 			title: "Sort Members",
 		  };
-		  
 		  if (!context || !context.only || context.only.contains(CodeActionKind.Source) || context.only.contains(CodeActionKind.SourceOrganizeImports)) {
 			actions.push(organizeImportsCodeAction);
 		  }
