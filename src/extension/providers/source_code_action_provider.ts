@@ -34,7 +34,6 @@ export class SourceCodeActionProvider implements CodeActionProvider {
 		  if (!context || !context.only || context.only.contains(CodeActionKind.Source) || context.only.contains(CodeActionKind.SourceOrganizeImports)) {
 			actions.push(organizeImportsCodeAction);
 		  }
-		  
 		  if (!context || !context.only || context.only.contains(CodeActionKind.Source) || context.only.contains(SourceSortMembersCodeActionKind)) {
 			actions.push(sortMembersCodeAction);
 		  }
