@@ -14,7 +14,7 @@ export interface KnownExperiments {
 export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
 	return {
 		// example: new ExampleExperiment(logger, workspaceContext, context),
-		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 50),
+		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 75),
 		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 10),
 	};
 }
