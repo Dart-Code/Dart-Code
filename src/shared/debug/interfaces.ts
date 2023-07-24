@@ -2,6 +2,7 @@
 /// Launch arguments that are passed to (and understood by) the debug adapters.
 export interface DartLaunchArgs {
 	additionalProjectPaths?: string[];
+	allowAnsiColorOutput?: boolean;
 	args?: string[];
 	console?: "debugConsole" | "terminal" | "externalTerminal";
 	customTool?: string,
