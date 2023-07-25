@@ -417,7 +417,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 		outputChannelName: "LSP",
 		revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
 		uriConverters: {
-			// Don't just use "converters" here becaues LSP doesn't bind "this".
+			// Don't just use "converters" here because LSP doesn't bind "this".
 			code2Protocol: (uri) => converters.code2Protocol(uri),
 			protocol2Code: (file) => converters.protocol2Code(file),
 		},
