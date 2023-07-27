@@ -724,6 +724,13 @@ export class DartDebugSession extends DebugSession {
 			});
 		}
 
+		// We don't know for certain we have a connected DDS that supports custom streams, so wrap in try/catch
+		try {
+			await this.vmService.on("ToolEvent", (event: VMEvent) => this.handleToolEvent(event)).catch((e) => {
+				this.logger.info(errorString(e));
+			});
+		} catch (e) { }
+
 		if (this.subscribeToStdout) {
 			await this.vmService.on("Stdout", (event: VMWriteEvent) => this.handleStdoutEvent(event)).catch((e) => {
 				// Some embedders may not provide Stdout and it's not clear if they will throw, so
@@ -1803,6 +1810,15 @@ export class DartDebugSession extends DebugSession {
 		// and call stacks) so we must ensure each log is not processed until
 		// the previous one has been processed.
 		this.lastLoggingEvent = this.lastLoggingEvent.then(() => this.processLoggingEvent(event));
+	}
+
+	// ToolEvent
+	public async handleToolEvent(event: VMEvent) {
+		// Don't process any events while the debugger is still running init code.
+		await this.debuggerInit;
+
+		const data = event.extensionData;
+		this.sendEvent(new Event("dart.toolEvent", { kind: event.extensionKind, data }));
 	}
 
 	public handleStdoutEvent(event: VMWriteEvent): void {
