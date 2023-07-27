@@ -147,6 +147,7 @@ class Config {
 	get runPubGetOnNestedProjects(): "none" | "both" | "above" | "below" { return this.getConfig<"none" | "both" | "above" | "below">("runPubGetOnNestedProjects", "none"); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
+	get sdkSwitchingTarget(): "workspace" | "global" { return this.getConfig<"workspace" | "global">("sdkSwitchingTarget", "workspace"); }
 	get shareDevToolsWithFlutter(): boolean { return this.getConfig<boolean>("shareDevToolsWithFlutter", true); }
 	get showDartPadSampleCodeLens(): boolean { return this.getConfig<boolean>("showDartPadSampleCodeLens", true); }
 	get showDebuggerNumbersAsHex(): boolean { return this.getConfig<boolean>("showDebuggerNumbersAsHex", false); }
@@ -180,7 +181,7 @@ class Config {
 	public setFlutterCreateAndroidLanguage(value: "java" | "kotlin" | undefined): Promise<void> { return this.setConfig("flutterCreateAndroidLanguage", value, ConfigurationTarget.Global); }
 	public setFlutterCreateIOSLanguage(value: "objc" | "swift" | undefined): Promise<void> { return this.setConfig("flutterCreateIOSLanguage", value, ConfigurationTarget.Global); }
 	public setFlutterCreatePlatforms(value: string[] | undefined): Promise<void> { return this.setConfig("flutterCreatePlatforms", value, ConfigurationTarget.Global); }
-	public setFlutterSdkPath(value: string | undefined): Promise<void> { return this.setConfig("flutterSdkPath", value, ConfigurationTarget.Workspace); }
+	public setFlutterSdkPath(value: string | undefined, target: ConfigurationTarget): Promise<void> { return this.setConfig("flutterSdkPath", value, target); }
 	public setGlobalDartSdkPath(value: string): Promise<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Global); }
 	public setGlobalDebugSdkLibraries(value: boolean): Promise<void> { return this.setConfig("debugSdkLibraries", value, ConfigurationTarget.Global); }
 	public setGlobalDebugExternalPackageLibraries(value: boolean): Promise<void> { return this.setConfig("debugExternalPackageLibraries", value, ConfigurationTarget.Global); }
@@ -188,7 +189,7 @@ class Config {
 	public setOffline(value: boolean | undefined): Promise<void> { return this.setConfig("offline", value, ConfigurationTarget.Global); }
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Promise<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
 	public setShowInspectorNotificationsForWidgetErrors(value: boolean): Promise<void> { return this.setConfig("showInspectorNotificationsForWidgetErrors", value, ConfigurationTarget.Global); }
-	public setSdkPath(value: string | undefined): Promise<void> { return this.setConfig("sdkPath", value, ConfigurationTarget.Workspace); }
+	public setSdkPath(value: string | undefined, target: ConfigurationTarget): Promise<void> { return this.setConfig("sdkPath", value, target); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Promise<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 	public setWarnWhenEditingFilesInPubCache(value: boolean): Promise<void> { return this.setConfig("warnWhenEditingFilesInPubCache", value, ConfigurationTarget.Global); }
 

@@ -2420,6 +2420,19 @@
 						},
 						"scope": "machine-overridable"
 					},
+					"dart.sdkSwitchingTarget": {
+						"enum": [
+							"workspace",
+							"global"
+						],
+						"default": "workspace",
+						"enumDescriptions": [
+							"Save the SDK path in the current workspace settings",
+							"Save the SDK path in your global user settings and clear any workspace setting"
+						],
+						"description": "Where to save SDK selections when using fast SDK switching from the language status entry.",
+						"scope": "window"
+					},
 					"dart.addSdkToTerminalPath": {
 						"type": "boolean",
 						"default": true,

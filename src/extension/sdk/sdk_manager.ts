@@ -16,7 +16,8 @@ abstract class SdkManager {
 	protected abstract get configName(): string;
 	protected abstract get executablePath(): string;
 	protected abstract getLabel(version: string): string;
-	protected abstract setSdk(folder: string | undefined): void;
+	protected abstract clearWorkspaceSdk(): void;
+	protected abstract setSdk(folder: string | undefined, target: vs.ConfigurationTarget): void;
 
 	public changeSdk() {
 		if (this.sdkPaths)
@@ -72,7 +73,18 @@ abstract class SdkManager {
 		} as SdkPickItem].concat(sdkItems);
 
 		void vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
-			.then((sdk) => { if (sdk) this.setSdk(sdk.folder); });
+			.then((sdk) => {
+				if (!sdk)
+					return;
+
+				if (config.sdkSwitchingTarget === "global") {
+					// Clear any existing workspace setting first.
+					this.clearWorkspaceSdk();
+					this.setSdk(sdk.folder, vs.ConfigurationTarget.Global);
+				} else {
+					this.setSdk(sdk.folder, vs.ConfigurationTarget.Workspace);
+				}
+			});
 	}
 }
 
@@ -85,7 +97,13 @@ export class DartSdkManager extends SdkManager {
 	protected getLabel(version: string) {
 		return `Dart SDK ${version}`;
 	}
-	protected setSdk(folder: string | undefined) { void config.setSdkPath(folder); }
+	protected clearWorkspaceSdk() {
+		if (config.workspaceSdkPath)
+			void config.setSdkPath(undefined, vs.ConfigurationTarget.Workspace);
+	}
+	protected setSdk(folder: string | undefined, target: vs.ConfigurationTarget) {
+		void config.setSdkPath(folder, target);
+	}
 }
 
 export class FlutterSdkManager extends SdkManager {
@@ -97,7 +115,13 @@ export class FlutterSdkManager extends SdkManager {
 	protected getLabel(version: string) {
 		return `Flutter SDK ${version}`;
 	}
-	protected setSdk(folder: string | undefined) { void config.setFlutterSdkPath(folder); }
+	protected clearWorkspaceSdk() {
+		if (config.workspaceFlutterSdkPath)
+			void config.setFlutterSdkPath(undefined, vs.ConfigurationTarget.Workspace);
+	}
+	protected setSdk(folder: string | undefined, target: vs.ConfigurationTarget) {
+		void config.setFlutterSdkPath(folder, target);
+	}
 }
 
 interface SdkPickItem {
