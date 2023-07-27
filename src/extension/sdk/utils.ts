@@ -370,7 +370,7 @@ export class SdkUtils {
 			}
 
 			if (hasAnyFlutterProject) {
-				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkResult, "dart.flutterSdkPath");
+				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkResult, "dart.flutterSdkPath", !!config.workspaceFlutterSdkPath);
 			}
 
 			flutterSdkPath = flutterSdkResult.sdkPath;
@@ -416,7 +416,7 @@ export class SdkUtils {
 		const dartSdkResult = this.findDartSdk(dartSdkSearchPaths);
 
 		if (!hasAnyFlutterProject && !fuchsiaRoot && !firstFlutterMobileProject && !workspaceConfig.forceFlutterWorkspace) {
-			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath");
+			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath", !!config.workspaceSdkPath);
 		}
 
 		let dartSdkPath = dartSdkResult.sdkPath;
@@ -467,7 +467,7 @@ export class SdkUtils {
 		);
 	}
 
-	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdk: SdkSearchResults, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath"): Promise<void> {
+	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdk: SdkSearchResults, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath", isWorkspaceSetting: boolean): Promise<void> {
 		let foundSdkPath = foundSdk?.originalPath;
 		if (!configSdkPath || !foundSdkPath) return;
 
@@ -477,7 +477,7 @@ export class SdkUtils {
 		if (configSdkPath !== foundSdkPath) {
 			const action = await window.showWarningMessage(`The SDK configured in ${sdkConfigName} is not a valid SDK folder.`, openSettingsAction);
 			if (openSettingsAction === action) {
-				await commands.executeCommand("workbench.action.openSettingsJson");
+				await commands.executeCommand(isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson");
 			}
 		}
 	}
