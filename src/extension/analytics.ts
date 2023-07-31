@@ -427,6 +427,7 @@ export enum AddSdkToPathResult {
 }
 
 export enum CloneSdkResult {
+	cancelled,
 	noGit,
 	succeeded,
 	failed,

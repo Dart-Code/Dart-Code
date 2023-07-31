@@ -153,29 +153,37 @@ export class SdkUtils {
 	}
 
 	private async tryFlutterCloneIfGitAvailable(commandToReRun: string | undefined): Promise<boolean> {
-		const gitAvailable = await window.withProgress({
+		const gitAvailable: GitOperationResult = await window.withProgress({
 			cancellable: true,
 			location: ProgressLocation.Notification,
 			title: "Checking for git",
-		}, async (_, cancellationToken) => {
+		}, async (_, cancellationToken): Promise<GitOperationResult> => {
 			try {
 				const gitProc = await runToolProcess(this.logger, undefined, "git", ["--version"], undefined, cancellationToken);
+				if (cancellationToken.isCancellationRequested)
+					return "CANCEL";
 				if (gitProc.exitCode !== 0) {
-					this.logger.error(`Failed to run "git --version" to detect git, so skipping "clone Flutter SDK" workflow":\n`
+					this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow:\n`
 						+ `Exit code: ${gitProc.exitCode}\n`
 						+ `stdout: ${gitProc.stdout}\n`
 						+ `stderr: ${gitProc.stderr}\n`);
-					return false;
+					return "ERROR";
 				}
 			} catch (e) {
-				this.logger.error(`Failed to run "git --version" to detect git, so skipping "clone Flutter SDK" workflow": ${e}`);
-				return false;
+				if (cancellationToken.isCancellationRequested)
+					return "CANCEL";
+				this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow: ${e}`);
+				return "ERROR";
 			}
-			return true;
+			return "SUCCESS";
 		});
 
-		if (!gitAvailable) {
-			this.analytics.logGitCloneSdk(CloneSdkResult.noGit);
+		if (gitAvailable !== "SUCCESS") {
+			this.analytics.logGitCloneSdk(
+				gitAvailable === "CANCEL"
+					? CloneSdkResult.cancelled
+					: CloneSdkResult.noGit,
+			);
 			return false;
 		}
 
@@ -207,38 +215,52 @@ export class SdkUtils {
 			});
 		if (selectedFolders && selectedFolders.length === 1) {
 			const workingDirectory = fsPath(selectedFolders[0]);
-			const didClone = await this.cloneFlutterWithProgress(workingDirectory);
+			const cloneResult = await this.cloneFlutterWithProgress(workingDirectory);
+			const didClone = cloneResult === "SUCCESS";
 
-			const result = didClone ? CloneSdkResult.succeeded : CloneSdkResult.failed;
+			const result = cloneResult === "SUCCESS"
+				? CloneSdkResult.succeeded
+				: cloneResult === "CANCEL"
+					? CloneSdkResult.cancelled
+					: CloneSdkResult.failed;
 			this.analytics.logGitCloneSdk(result);
 
 			return didClone ? path.join(workingDirectory, "flutter") : undefined;
 		}
 	}
 
-	private async cloneFlutterWithProgress(workingDirectory: string): Promise<boolean> {
+	private async cloneFlutterWithProgress(workingDirectory: string): Promise<GitOperationResult> {
 		const gitUrl = "https://github.com/flutter/flutter.git";
 
 		return await window.withProgress({
 			cancellable: true,
 			location: ProgressLocation.Notification,
 			title: cloningFlutterMessage,
-		}, async (_, cancellationToken) => {
-			const gitProc = await runToolProcess(this.logger, workingDirectory, "git", ["clone", "-b", "stable", "--single-branch", gitUrl], undefined, cancellationToken);
+		}, async (_, cancellationToken): Promise<GitOperationResult> => {
+			try {
+				const gitProc = await runToolProcess(this.logger, workingDirectory, "git", ["clone", "-b", "stable", "--single-branch", gitUrl], undefined, cancellationToken);
+				if (cancellationToken.isCancellationRequested)
+					return "CANCEL";
 
-			if (gitProc.exitCode !== 0) {
-				this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow":\n`
-					+ `Exit code: ${gitProc.exitCode}\n`
-					+ `stdout: ${gitProc.stdout}\n`
-					+ `stderr: ${gitProc.stderr}\n`);
+				if (gitProc.exitCode !== 0) {
+					this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow:\n`
+						+ `Exit code: ${gitProc.exitCode}\n`
+						+ `stdout: ${gitProc.stdout}\n`
+						+ `stderr: ${gitProc.stderr}\n`);
 
-				if (!cancellationToken.isCancellationRequested)
-					void window.showErrorMessage(`Failed to clone Flutter: ${gitProc.stderr}`);
+					if (!cancellationToken.isCancellationRequested)
+						void window.showErrorMessage(`Failed to clone Flutter: ${gitProc.stderr}`);
 
-				return false;
+					return "ERROR";
+				}
+
+				return "SUCCESS";
+			} catch (e) {
+				if (cancellationToken.isCancellationRequested)
+					return "CANCEL";
+				this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow: ${e}`);
+				return "ERROR";
 			}
-
-			return true;
 		});
 	}
 
@@ -627,3 +649,5 @@ function findRootContaining(folder: string, childName: string, expect: "FILE" | 
 }
 
 export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
+
+type GitOperationResult = "SUCCESS" | "ERROR" | "CANCEL";
