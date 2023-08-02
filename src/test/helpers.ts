@@ -696,6 +696,21 @@ export function waitForDiagnosticChange(resource?: vs.Uri): Promise<void> {
 }
 
 export async function acceptFirstSuggestion(): Promise<void> {
+	// Ensure we are getting some results. This fixes a race where the server might've been
+	// starting up as the test got here.
+	const editor = currentEditor();
+	const doc = editor.document;
+	const pos = editor.selection.end;
+	let results: vs.CompletionList | undefined;
+	let remainingTries = 10;
+	while (!results || results.isIncomplete || results.items.length === 0) {
+		await delay(50);
+		results = await vs.commands.executeCommand<vs.CompletionList>("vscode.executeCompletionItemProvider", doc.uri, pos);
+		if (--remainingTries <= 0)
+			break;
+
+	}
+
 	// TODO: Can we make this better (we're essentially waiting to ensure resolve completed
 	// before we accept, so that we don't insert the standard label without the extra
 	// edits which are added in in resolve).
