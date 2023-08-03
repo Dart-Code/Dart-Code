@@ -19,8 +19,8 @@ export class InteractiveRefactors implements IAmDisposable {
 		return {
 			dispose() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
-				capabilities.experimental = capabilities.experimental ?? {};
-				capabilities.experimental.dartCodeAction = capabilities.experimental.dartCodeAction ?? {};
+				capabilities.experimental ??= {};
+				capabilities.experimental.dartCodeAction ??= {};
 				// Originally server expected a `bool` for `commandParameterSupport` so we can only send
 				// this object to new versions.
 				if (dartCapabilities.supportsCommandParameterSupportedKinds) {
@@ -67,7 +67,9 @@ export class InteractiveRefactors implements IAmDisposable {
 	/// Gets the parameters from the 'data' field of the CodeAction.
 	private getCommandParameters(action: CodeAction, argObject: Arguments): Parameter[] | undefined {
 		// 'data' is an LSP concept and not exposed in the VS Code type.
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const data = (action as any).data;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const parameters = data?.parameters;
 
 		// Check the parameters look sensible - a list with a length that matches the original

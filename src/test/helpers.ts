@@ -181,7 +181,7 @@ export async function activateWithoutAnalysis(): Promise<void> {
 	// TODO: Should we do this, or should we just check that it has been activated?
 	await ext.activate();
 	if (ext.exports) {
-		extApi = ext.exports[internalApiSymbol];
+		extApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
 		setupTestLogging();
 	} else
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
@@ -210,7 +210,7 @@ function setupTestLogging(): boolean {
 	if (!ext.isActive || !ext.exports)
 		return false;
 
-	extApi = ext.exports[internalApiSymbol];
+	extApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
 	const emittingLogger = extApi.logger;
 
 	if (fileSafeCurrentTestName) {
@@ -322,11 +322,11 @@ export function stubCreateInputBox(valueToReturn: string) {
 	const createInputBox = sb.stub(vs.window, "createInputBox");
 	createInputBox.callsFake(function (this: any, ...args) {
 		// Call the underlying VS Code method to create the input box.
-		const input = (createInputBox as any).wrappedMethod.apply(this, args);
+		const input = (createInputBox as any).wrappedMethod.apply(this, args) as vs.InputBox;
 
 		// Capture the onDidAccept method to capture the callback.
 		let acceptCallback: () => void;
-		sb.stub(input, "onDidAccept").callsFake((func) => acceptCallback = func);
+		sb.stub(input, "onDidAccept").callsFake((func: () => void) => acceptCallback = func);
 
 		// Capture the show method to then call that callback with our fake answer.
 		// Also stash the original value so we can check it was pre-populated correctly.
@@ -464,7 +464,7 @@ const deferredItems: DeferredFunction[] = [];
 const deferredToLastItems: DeferredFunction[] = [];
 afterEach("run deferred functions", async function () {
 	logger.info(`Running deferred functions!`);
-	let firstError: any;
+	let firstError: unknown;
 	for (const deferredFunction of [...deferredItems.reverse(), ...deferredToLastItems.reverse()]) {
 		const description = deferredFunction.description;
 		const callback = deferredFunction.callback;
@@ -1147,6 +1147,7 @@ export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<
 	const activeTestName = currentTestName;
 	// For convenience, this method might get wrapped around things that are not
 	// promises.
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const promiseAny = promise as any;
 	if (!promise || !promiseAny.then || !promiseAny.catch)
 		return Promise.resolve(promise);
@@ -1334,7 +1335,7 @@ export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | un
 		const iconUri = treeItem.iconPath instanceof vs.Uri
 			? treeItem.iconPath
 			: "dark" in (treeItem.iconPath as any)
-				? (treeItem.iconPath as any).dark
+				? (treeItem.iconPath as any).dark as string | vs.Uri
 				: undefined;
 		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("-dark", "") : "<unknown icon>";
 		buffer.push(`${" ".repeat(indent * 4)}${label}${description} (${iconFile})`);

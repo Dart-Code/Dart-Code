@@ -156,9 +156,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		let msg: any;
 		try {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			msg = JSON.parse(message);
 
 			if (this.messagesWrappedInBrackets && msg && msg.length === 1)
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				msg = msg[0];
 		} catch (e: any) {
 			if (this.treatHandlingErrorsAsUnhandledMessages) {
@@ -198,8 +200,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	protected isResponse(msg: any): boolean { return !!msg.id; }
 
 	private async processServerRequest(request: Request<any>) {
-		let result: any;
-		let error: any;
+		let result: unknown;
+		let error: unknown;
 		try {
 			result = await this.handleRequest(request.method, request.params);
 		} catch (e) {
@@ -224,6 +226,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			return;
 		}
 		const method: string = handler[2];
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const error = evt.error;
 
 		if (error && error.code === "SERVER_ERROR") {
@@ -301,6 +304,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 				process.kill(pid);
 			} catch (e: any) {
 				// TODO: Logger knows the category!
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				this.logger.error({ message: e.toString() });
 			}
 		}
@@ -318,6 +322,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			try {
 				return await d.dispose();
 			} catch (e: any) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				this.logger.error({ message: e.toString() });
 			}
 		});

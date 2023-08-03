@@ -84,10 +84,11 @@ export async function editSetting(setting: PickableSetting) {
 	const title = setting.label;
 	let placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const value = setting.currentValue;
 	switch (setting.settingKind) {
 		case "STRING":
-			const stringResult = await vs.window.showInputBox({ prompt, title, value });
+			const stringResult = await vs.window.showInputBox({ prompt, title, value: value as string | undefined });
 			if (stringResult !== undefined)
 				await setting.setValue(stringResult);
 			break;

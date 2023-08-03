@@ -1169,6 +1169,7 @@ void printSomething() {
 				}),
 			);
 
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "repl").catch((e) => e);
 			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the class 'DateTime'"), -1);
 
@@ -1185,6 +1186,7 @@ void printSomething() {
 				}),
 			);
 
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
 			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the class 'DateTime'." : "not available");
 
@@ -1289,6 +1291,7 @@ void printSomething() {
 
 			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
 
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "repl" }).catch((e) => e);
 			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the class 'DateTime'"), -1);
 
@@ -1306,6 +1309,7 @@ void printSomething() {
 
 			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
 
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
 			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the class 'DateTime'." : "not available");
 

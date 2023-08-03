@@ -4,11 +4,10 @@ import * as path from "path";
 
 let exitCode = 0;
 const cwd = process.cwd();
-const testEnv = Object.create(process.env);
+const testEnv = Object.create(process.env) as NodeJS.Dict<string>;
 
-async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: any): Promise<void> {
-	console.log(
-		`Running ${testFolder} tests folder in workspace ${workspaceFolder}`);
+async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
+	console.log(`Running ${testFolder} tests folder in workspace ${workspaceFolder}`);
 
 	const logsName = process.env.LOGS_NAME;
 	const testRunName = `${testFolder.replace("/", "_")}${logSuffix ? `_${logSuffix}` : ""}_${logsName}`;
@@ -81,8 +80,8 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 }
 
 async function runAllTests(): Promise<void> {
-	testEnv.DART_CODE_IS_TEST_RUN = true;
-	testEnv.MOCHA_FORBID_ONLY = true;
+	testEnv.DART_CODE_IS_TEST_RUN = "true";
+	testEnv.MOCHA_FORBID_ONLY = "true";
 
 	// Ensure any necessary folders exist.
 	if (!fs.existsSync(".nyc_output"))

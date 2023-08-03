@@ -36,6 +36,7 @@ export class LoggingReporter extends reporters.Base {
 				const logger = getLogger();
 				if (logger) {
 					logger.error(`Test ${test.fullTitle()} failed after ${test.duration}ms`, LogCategory.CI);
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const err = (test as any).err;
 					if (err) {
 						logger.error(err.message, LogCategory.CI);
