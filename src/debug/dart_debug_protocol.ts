@@ -401,7 +401,7 @@ export class RPCError {
 	}
 
 	public details(): string | undefined {
-		return this.data ? this.data.details : undefined;
+		return this.data ? this.data.details as string : undefined;
 	}
 
 	public toString(): string {

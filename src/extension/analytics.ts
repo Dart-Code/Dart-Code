@@ -282,7 +282,7 @@ export class Analytics implements IAmDisposable {
 		try {
 			// If there are multiple formatters for Dart, the user can select one, so check
 			// that first so we don't record their formatter being enabled as ours.
-			const otherDefaultFormatter = this.getAppliedConfig("editor", "defaultFormatter", false);
+			const otherDefaultFormatter = this.getAppliedConfig<string | undefined>("editor", "defaultFormatter", false);
 			if (otherDefaultFormatter && otherDefaultFormatter !== dartCodeExtensionIdentifier)
 				return otherDefaultFormatter;
 
@@ -300,10 +300,10 @@ export class Analytics implements IAmDisposable {
 		}
 	}
 
-	private getAppliedConfig(section: string, key: string, isResourceScoped = true) {
+	private getAppliedConfig<T>(section: string, key: string, isResourceScoped = true): T | undefined {
 		const dartValue = this.dartConfig ? this.dartConfig[`${section}.${key}`] : undefined;
 		return dartValue !== undefined && dartValue !== null
-			? dartValue
+			? dartValue as T
 			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
 	}
 
