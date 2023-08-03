@@ -118,8 +118,7 @@ module.exports = {
 		],
 		"prefer-const": "error",
 		"quote-props": [
-			// TODO: Set back to error when fixed.
-			"off",
+			"warn",
 			"consistent-as-needed"
 		],
 		"radix": "off",

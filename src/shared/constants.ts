@@ -224,14 +224,14 @@ export const dartRecommendedConfig = {
 
 export const defaultLaunchJson = JSON.stringify(
 	{
-		"configurations": [
+		configurations: [
 			{
-				"name": "Dart & Flutter",
-				"request": "launch",
-				"type": "dart",
+				name: "Dart & Flutter",
+				request: "launch",
+				type: "dart",
 			},
 		],
-		"version": "0.2.0",
+		version: "0.2.0",
 	},
 	undefined, "\t"
 );

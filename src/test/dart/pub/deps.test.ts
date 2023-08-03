@@ -10,14 +10,14 @@ describe("pub deps", () => {
 
 		const fakeRoot: PubDepsJson = {
 			packages: [
-				{ name: "my_package", version: "1.2.3", kind: "root", dependencies: ["direct_1", "direct_2", "direct_3", "dev_1"] },
-				{ name: "direct_1", version: "1.2.3", kind: "direct", dependencies: [] },
-				{ name: "direct_2", version: "1.2.3", kind: "direct", dependencies: ["transitive_1"] },
-				{ name: "direct_3", version: "1.2.3", kind: "direct", dependencies: ["transitive_2"] },
-				{ name: "dev_1", version: "1.2.3", kind: "dev", dependencies: [] },
-				{ name: "transitive_1", version: "1.2.3", kind: "transitive", dependencies: ["transitive_2"] },
-				{ name: "transitive_2", version: "1.2.3", kind: "transitive", dependencies: ["transitive_3"] },
-				{ name: "transitive_3", version: "1.2.3", kind: "transitive", dependencies: ["transitive_1"] },
+				{ name: "my_package", version: "1.2.3", kind: "root", dependencies: ["direct1", "direct2", "direct3", "dev1"] },
+				{ name: "direct1", version: "1.2.3", kind: "direct", dependencies: [] },
+				{ name: "direct2", version: "1.2.3", kind: "direct", dependencies: ["transitive1"] },
+				{ name: "direct3", version: "1.2.3", kind: "direct", dependencies: ["transitive2"] },
+				{ name: "dev1", version: "1.2.3", kind: "dev", dependencies: [] },
+				{ name: "transitive1", version: "1.2.3", kind: "transitive", dependencies: ["transitive2"] },
+				{ name: "transitive2", version: "1.2.3", kind: "transitive", dependencies: ["transitive3"] },
+				{ name: "transitive3", version: "1.2.3", kind: "transitive", dependencies: ["transitive1"] },
 			],
 			root: "my_package",
 		};
@@ -25,13 +25,13 @@ describe("pub deps", () => {
 		const packageMap = deps.getPackageMap(fakeRoot);
 		const shortestPaths = deps.computeShortestPaths(packageMap);
 		assert.deepEqual(shortestPaths, {
-			"dev_1": ["my_package", "dev_1"],
-			"direct_1": ["my_package", "direct_1"],
-			"direct_2": ["my_package", "direct_2"],
-			"direct_3": ["my_package", "direct_3"],
-			"transitive_1": ["my_package", "direct_2", "transitive_1"],
-			"transitive_2": ["my_package", "direct_3", "transitive_2"],
-			"transitive_3": ["my_package", "direct_3", "transitive_2", "transitive_3"],
+			dev1: ["my_package", "dev_1"],
+			direct1: ["my_package", "direct1"],
+			direct2: ["my_package", "direct2"],
+			direct3: ["my_package", "direct3"],
+			transitive1: ["my_package", "direct2", "transitive1"],
+			transitive2: ["my_package", "direct3", "transitive2"],
+			transitive3: ["my_package", "direct3", "transitive2", "transitive3"],
 		});
 	});
 
@@ -40,9 +40,9 @@ describe("pub deps", () => {
 
 		const fakeRoot: PubDepsJson = {
 			packages: [
-				{ name: "my_package", version: "1.2.3", kind: "root", dependencies: ["direct_1"] },
-				{ name: "direct_1", version: "1.2.3", kind: "direct", dependencies: ["transitive_1"] },
-				{ name: "transitive_1", version: "1.2.3", kind: "transitive", dependencies: ["direct_1"] },
+				{ name: "my_package", version: "1.2.3", kind: "root", dependencies: ["direct1"] },
+				{ name: "direct1", version: "1.2.3", kind: "direct", dependencies: ["transitive1"] },
+				{ name: "transitive1", version: "1.2.3", kind: "transitive", dependencies: ["direct1"] },
 			],
 			root: "my_package",
 		};
@@ -50,8 +50,8 @@ describe("pub deps", () => {
 		const packageMap = deps.getPackageMap(fakeRoot);
 		const shortestPaths = deps.computeShortestPaths(packageMap);
 		assert.deepEqual(shortestPaths, {
-			"direct_1": ["my_package", "direct_1"],
-			"transitive_1": ["my_package", "direct_1", "transitive_1"],
+			direct1: ["my_package", "direct1"],
+			transitive1: ["my_package", "direct1", "transitive1"],
 		});
 	});
 });

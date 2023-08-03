@@ -41,40 +41,40 @@ const testConfigs: TestConfig[] = [
 async function main() {
 	const debugAdapters = unique(flatMap(testConfigs, (t) => t.debugAdapters || []));
 	const launchConfig = {
-		"version": "0.1.0",
-		"configurations": [
+		version: "0.1.0",
+		configurations: [
 			getExtensionConfig(),
 			getDebuggableExtensionConfig(),
 			getGenerateLaunchConfigConfig(),
 			...debugAdapters.map((name) => getDebugServerConfig(name)),
 			...testConfigs.map(getTestsConfig),
 		],
-		"compounds": [
+		compounds: [
 			{
-				"name": "Extension (Debuggable) + DAs",
-				"configurations": [
+				name: "Extension (Debuggable) + DAs",
+				configurations: [
 					"Extension (Debuggable)",
 					...debugAdapters.map((name) => getDebugServerConfigName(name)),
 				],
-				"presentation": {
-					"order": 0,
+				presentation: {
+					order: 0,
 				},
-				"stopAll": true,
+				stopAll: true,
 			},
 			...testConfigs.map((test) => {
 				const testConfigName = getTestConfigName(test);
 				return {
-					"name": `${testConfigName} + DAs`,
-					"configurations": [
+					name: `${testConfigName} + DAs`,
+					configurations: [
 						`${testConfigName}`,
 						...debugAdapters
 							.filter((name) => test.debugAdapters?.find((da) => name === da))
 							.map((name) => getDebugServerConfigName(name)),
 					],
-					"presentation": {
-						"order": 3,
+					presentation: {
+						order: 3,
 					},
-					"stopAll": true,
+					stopAll: true,
 				};
 			}),
 		],
@@ -86,12 +86,12 @@ async function main() {
 }
 
 const template = {
-	"request": "launch",
-	"outFiles": [
+	request: "launch",
+	outFiles: [
 		"${workspaceFolder}/out/**/*.js",
 	],
-	"smartStep": true,
-	"skipFiles": [
+	smartStep: true,
+	skipFiles: [
 		"<node_internals>/**",
 		"**/app/out/vs/**",
 	],
@@ -122,46 +122,46 @@ function titleCase(input: string) {
 
 function getDebuggableExtensionConfig() {
 	return Object.assign({
-		"name": "Extension (Debuggable)",
-		"type": "extensionHost",
-		"runtimeExecutable": "${execPath}",
-		"args": [
+		name: "Extension (Debuggable)",
+		type: "extensionHost",
+		runtimeExecutable: "${execPath}",
+		args: [
 			"--extensionDevelopmentPath=${workspaceFolder}",
 		],
-		"env": {
-			"DART_CODE_USE_DEBUG_SERVERS": "true",
+		env: {
+			DART_CODE_USE_DEBUG_SERVERS: "true",
 		},
-		"preLaunchTask": "npm: watch",
-		"presentation": {
-			"hidden": true,
+		preLaunchTask: "npm: watch",
+		presentation: {
+			hidden: true,
 		},
 	}, template);
 }
 
 function getExtensionConfig() {
 	return Object.assign({
-		"name": "Extension",
-		"type": "extensionHost",
-		"runtimeExecutable": "${execPath}",
-		"args": [
+		name: "Extension",
+		type: "extensionHost",
+		runtimeExecutable: "${execPath}",
+		args: [
 			"--extensionDevelopmentPath=${workspaceFolder}",
 		],
-		"preLaunchTask": "npm: watch",
-		"presentation": {
-			"order": 0,
+		preLaunchTask: "npm: watch",
+		presentation: {
+			order: 0,
 		},
 	}, template);
 }
 
 function getGenerateLaunchConfigConfig() {
 	return Object.assign({
-		"name": "Generate launch.json",
-		"type": "node",
-		"cwd": "${workspaceFolder}",
-		"program": "${workspaceFolder}/src/tool/generate_launch_configs.ts",
-		"preLaunchTask": "npm: watch",
-		"presentation": {
-			"order": 2,
+		name: "Generate launch.json",
+		type: "node",
+		cwd: "${workspaceFolder}",
+		program: "${workspaceFolder}/src/tool/generate_launch_configs.ts",
+		preLaunchTask: "npm: watch",
+		presentation: {
+			order: 2,
 		},
 	}, template);
 }
@@ -169,17 +169,17 @@ function getGenerateLaunchConfigConfig() {
 function getDebugServerConfig(debugType: string) {
 	const port = getDebugAdapterPort(debugType);
 	return Object.assign({
-		"name": getDebugServerConfigName(debugType),
-		"type": "node",
-		"cwd": "${workspaceFolder}",
-		"program": `\${workspaceFolder}/${debuggerEntry}`,
-		"args": [
+		name: getDebugServerConfigName(debugType),
+		type: "node",
+		cwd: "${workspaceFolder}",
+		program: `\${workspaceFolder}/${debuggerEntry}`,
+		args: [
 			debugType,
 			`--server=${port}`,
 		],
-		"preLaunchTask": "npm: watch",
-		"presentation": {
-			"hidden": true,
+		preLaunchTask: "npm: watch",
+		presentation: {
+			hidden: true,
 		},
 	}, template);
 }
@@ -188,24 +188,24 @@ function getTestsConfig(test: TestConfig) {
 	const name = getTestConfigName(test);
 	return Object.assign({
 		name,
-		"type": "extensionHost",
-		"runtimeExecutable": "${execPath}",
-		"args": [
+		type: "extensionHost",
+		runtimeExecutable: "${execPath}",
+		args: [
 			test.project.startsWith("${env:") ? test.project : `\${workspaceFolder}/${testProjectsFolder}/${test.project}`,
 			"--extensionDevelopmentPath=${workspaceFolder}",
 			`--extensionTestsPath=\${workspaceFolder}/${testFolder}/${test.testFolder}`,
 			"--profile-temp",
 		],
-		"env": {
-			"DART_CODE_USE_DEBUG_SERVERS": "true",
-			"DART_CODE_IS_TEST_RUN": "true",
-			"DART_CODE_FORCE_LSP": test.lsp === undefined ? undefined : `${test.lsp}`,
-			"DART_CODE_FORCE_SDK_DAP": test.sdkDaps === undefined ? undefined : `${test.sdkDaps}`,
-			"FLUTTER_TEST_DEVICE_ID": test.chrome ? "chrome" : undefined,
+		env: {
+			DART_CODE_USE_DEBUG_SERVERS: "true",
+			DART_CODE_IS_TEST_RUN: "true",
+			DART_CODE_FORCE_LSP: test.lsp === undefined ? undefined : `${test.lsp}`,
+			DART_CODE_FORCE_SDK_DAP: test.sdkDaps === undefined ? undefined : `${test.sdkDaps}`,
+			FLUTTER_TEST_DEVICE_ID: test.chrome ? "chrome" : undefined,
 		},
-		"preLaunchTask": "npm: watch",
-		"presentation": {
-			"hidden": true,
+		preLaunchTask: "npm: watch",
+		presentation: {
+			hidden: true,
 		},
 	}, template);
 }

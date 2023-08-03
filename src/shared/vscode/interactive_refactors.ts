@@ -25,7 +25,7 @@ export class InteractiveRefactors implements IAmDisposable {
 				// this object to new versions.
 				if (dartCapabilities.supportsCommandParameterSupportedKinds) {
 					capabilities.experimental.dartCodeAction.commandParameterSupport = {
-						"supportedKinds": Object.values(SupportedParameterKind),
+						supportedKinds: Object.values(SupportedParameterKind),
 					};
 				}
 			},

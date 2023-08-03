@@ -121,12 +121,14 @@ const identifierPrefixRewrites: { [key: string]: string | undefined } = {
 const identifierExactRewrites: { [key: string]: string | undefined } = {
 	// See identifierExactRewrites in
 	// https://github.com/flutter/flutter/blob/master/dev/tools/update_icons.dart
-	"class": "class_",
-	"door_back": "door_back_door",
-	"door_front": "door_front_door",
-	"new": "new_",
-	"switch": "switch_",
-	"try": "try_sms_star",
+	class: "class_",
+	// eslint-disable-next-line camelcase
+	door_back: "door_back_door",
+	// eslint-disable-next-line camelcase
+	door_front: "door_front_door",
+	new: "new_",
+	switch: "switch_",
+	try: "try_sms_star",
 };
 
 function fixIcon(icon: string): string {

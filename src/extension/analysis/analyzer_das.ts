@@ -160,7 +160,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		});
 
 		void this.sendRequest("server.setClientCapabilities", {
-			"requests": ["openUrlRequest", "showMessageRequest"],
+			requests: ["openUrlRequest", "showMessageRequest"],
 		});
 	}
 
@@ -211,7 +211,7 @@ export class DasAnalyzerClient extends AnalyzerGen {
 		const actionStrings = params.actions.map((s) => s.label);
 		const userChoiceString = await vs.window.showInformationMessage(params.message, ...actionStrings);
 		return {
-			"action": userChoiceString,
+			action: userChoiceString,
 		};
 	}
 

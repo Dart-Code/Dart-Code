@@ -66,16 +66,18 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 			events: [{
 				name: data.event,
 				params: {
-					"addSdkToPathResult": data.addSdkToPathResult,
-					"cloneSdkResult": data.cloneSdkResult,
-					"debuggerAdapterType": data.debuggerAdapterType,
-					"debuggerExceptionBreakMode": data.debuggerExceptionBreakMode,
-					"debuggerPreference": data.debuggerPreference,
-					"debuggerRunType": data.debuggerRunType,
-					"debuggerType": data.debuggerType,
+					addSdkToPathResult: data.addSdkToPathResult,
+					cloneSdkResult: data.cloneSdkResult,
+					debuggerAdapterType: data.debuggerAdapterType,
+					debuggerExceptionBreakMode: data.debuggerExceptionBreakMode,
+					debuggerPreference: data.debuggerPreference,
+					debuggerRunType: data.debuggerRunType,
+					debuggerType: data.debuggerType,
 					// GA4 doesn't record any users unless there is non-zero engagement time.
-					"engagement_time_msec": new Date().getTime() - sessionStartMs,
-					"session_id": sessionId,
+					// eslint-disable-next-line camelcase
+					engagement_time_msec: new Date().getTime() - sessionStartMs,
+					// eslint-disable-next-line camelcase
+					session_id: sessionId,
 				},
 			}],
 			user_properties: this.buildUserProperties(data), // eslint-disable-line camelcase

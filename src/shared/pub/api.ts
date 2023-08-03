@@ -17,7 +17,7 @@ export class PubApi {
 
 	private async get<T>(url: string): Promise<T> {
 		const headers = {
-			Accept: "application/vnd.pub.v2+json",
+			"Accept": "application/vnd.pub.v2+json",
 			"Accept-Encoding": "gzip",
 		};
 		const response = await this.webClient.fetch(`${this.pubUrlBase}/api/${url}`, headers);
