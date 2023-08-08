@@ -593,10 +593,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	const numReloads = 1;
-	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it(`stops at a breakpoint after each reload (${numReloads})`, async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		const expectedLocation = {
@@ -1248,10 +1245,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async () => {
 		await setConfigForTest("dart", "evaluateGettersInDebugViews", false);
 
 		await openFile(flutterHelloWorldGettersFile);
