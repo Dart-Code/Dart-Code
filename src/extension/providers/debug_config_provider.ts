@@ -549,7 +549,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		debugConfig.toolEnv = getToolEnv();
-		debugConfig.sendLogsToClient = isLogging;
+		debugConfig.sendLogsToClient = isLogging || isDartCodeTestRun;
 		debugConfig.sendCustomProgressEvents = true;
 		debugConfig.allowAnsiColorOutput = true;
 		debugConfig.cwd = debugConfig.cwd || (folder && fsPath(folder.uri));
