@@ -25,7 +25,7 @@ describe("pub deps", () => {
 		const packageMap = deps.getPackageMap(fakeRoot);
 		const shortestPaths = deps.computeShortestPaths(packageMap);
 		assert.deepEqual(shortestPaths, {
-			dev1: ["my_package", "dev_1"],
+			dev1: ["my_package", "dev1"],
 			direct1: ["my_package", "direct1"],
 			direct2: ["my_package", "direct2"],
 			direct3: ["my_package", "direct3"],
