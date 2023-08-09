@@ -5,6 +5,7 @@ import { GroupNode, NodeDidChangeEvent, SuiteData, SuiteNode, TestEventListener,
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { isSetupOrTeardownTestName } from "../../shared/utils/test";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 import { formatForTerminal } from "../utils/vscode/terminals";
@@ -239,6 +240,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private idForNode(node: TreeNode) {
 		if (node instanceof SuiteNode)
 			return `SUITE:${node.suiteData.path}`;
+		// We use suiteData.path here because we want to treat (tearDownAll) from a shared
+		// file as a child of the suite node for the instances where it ran in that suite.
 		if (node instanceof GroupNode)
 			return `GROUP:${node.suiteData.path}:${node.name}`;
 		if (node instanceof TestNode)
@@ -265,7 +268,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const label = node instanceof SuiteNode
 			? this.labelForSuite(node)
 			: this.cleanLabel(node.label ?? "<unnamed>");
-		const uri = vs.Uri.file(node.suiteData.path);
+		// We use path here (and not suiteData.path) because we want to
+		// navigate to the source for setup/teardown which may be in a
+		// different file to the test.
+		const uri = vs.Uri.file(node.path);
 
 		const item = this.controller.createTestItem(id, label, uri);
 		this.updateFields(item, node);
@@ -297,7 +303,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const label = node.label;
 		if (!label)
 			return false;
-		if ((label.startsWith("(setUp") || label.startsWith("(tearDown")) && label.endsWith(")"))
+		if (isSetupOrTeardownTestName(label))
 			return false;
 		if (this.discoverer?.fileTracker.supportsPackageTest(node.suiteData.path) === false)
 			return false;

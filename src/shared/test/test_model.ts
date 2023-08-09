@@ -9,6 +9,7 @@ import { makeRegexForTests } from "../utils/test";
 
 export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
+	public abstract path: string;
 
 	public _isStale = false;
 	public testSource = TestSource.Outline;
@@ -84,10 +85,14 @@ export class SuiteNode extends TreeNode {
 	}
 
 	get parent(): undefined { return undefined; }
+
+	get path(): string {
+		return this.suiteData.path;
+	}
 }
 
 export class GroupNode extends TreeNode {
-	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
+	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -108,7 +113,7 @@ export class TestNode extends TreeNode {
 	public testStartTime: number | undefined;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string | undefined, public range: Range | undefined) {
+	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -312,6 +317,7 @@ export class TestModel {
 	}
 
 	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
+		groupPath ??= suitePath;
 		const suite = this.suites[suitePath];
 		const existingGroup = suite.reuseMatchingGroup(groupName);
 		const oldParent = existingGroup?.parent;
@@ -356,6 +362,7 @@ export class TestModel {
 	}
 
 	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
+		testPath ??= suitePath;
 		const suite = this.suites[suitePath];
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;

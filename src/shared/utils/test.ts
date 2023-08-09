@@ -167,3 +167,7 @@ export function extractTestNameFromOutline(elementName: string): string | undefi
 
 	return elementName;
 }
+
+export function isSetupOrTeardownTestName(testName: string | undefined): boolean {
+	return !!((testName?.startsWith("(setUp") || testName?.startsWith("(tearDown")) && testName?.endsWith(")"));
+}

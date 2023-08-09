@@ -1,10 +1,14 @@
 import "package:test/test.dart";
 
+import "utils.dart";
+
 // This comment is extracted by the test and compared to a text representation
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// test/tree_test.dart [4/11 passed] Failed
+// test/tree_test.dart [6/13 passed] Failed
+//     (setUpAll) Passed (utils.dart)
+//     (tearDownAll) Passed (utils.dart)
 //     failing group 1 [2/4 passed] Failed
 //         passing test 1 ${1 + 1} [1/1 passed] Passed
 //             passing test 1 2 Passed
@@ -28,6 +32,7 @@ import "package:test/test.dart";
 
 void main() {
   final foo = "some string";
+  setupTests();
   group("failing group 1", () {
     test("passing test 1 ${1 + 1}", () => expect(1, equals(1)));
     test("failing test 1 $foo", () => expect(1, equals(2)));

@@ -1301,6 +1301,11 @@ export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefin
 				nodeString += ` ${TestStatus[lastResultTestNode.status]}`;
 			else if (lastResult.children.length)
 				nodeString += ` ${TestStatus[lastResult.getHighestChildStatus(true)]}`;
+
+			// If this node has a different file to the parent, include that in the output.
+			if (lastResult.path && lastResult.parent?.path && lastResult.path !== lastResult.parent?.path)
+				nodeString += ` (${path.basename(lastResult.path)})`;
+
 			const isStale = lastResult.isStale;
 			const isFailure = lastResultTestNode.status === TestStatus.Failed;
 			if ((isStale && onlyActive) || (!isFailure && onlyFailures))

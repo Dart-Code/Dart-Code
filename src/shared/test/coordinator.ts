@@ -2,9 +2,10 @@ import { Outline } from "../analysis/lsp/custom_protocol";
 import { isWin } from "../constants";
 import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
-import { disposeAll, uriToFilePath } from "../utils";
+import { disposeAll, maybeUriToFilePath, uriToFilePath } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
 import { LspTestOutlineVisitor } from "../utils/outline_lsp";
+import { isSetupOrTeardownTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
 
 /// Handles results from a test debug session and provides them to the test model.
@@ -133,9 +134,15 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForTestID[evt.test.id] = suite;
 
-		const path = (evt.test.root_url || evt.test.url) ? uriToFilePath(evt.test.root_url || evt.test.url!) : undefined;
-		const line = evt.test.root_line || evt.test.line;
-		const character = evt.test.root_column || evt.test.column;
+		/// We prefer the root location (the location inside the executed test suite) for normal tests, but for
+		// setup/tearDown we want to consider them in their actual locations so that failures will be attributed
+		// to them correctly.
+		// https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
+		const useRootLocation = !isSetupOrTeardownTestName(evt.test.name) && !!evt.test.root_url && !!evt.test.root_line && !!evt.test.root_column;
+
+		const path = maybeUriToFilePath(useRootLocation ? evt.test.root_url : evt.test.url);
+		const line = useRootLocation ? evt.test.root_line : evt.test.line;
+		const character = useRootLocation ? evt.test.root_column : evt.test.column;
 
 		const range = this.getRangeForNode(suite, line, character);
 		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
