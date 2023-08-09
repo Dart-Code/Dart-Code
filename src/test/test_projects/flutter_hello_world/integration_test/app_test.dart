@@ -11,7 +11,7 @@ import 'package:integration_test/integration_test.dart';
 //     Counter App [2/2 passed] Passed
 //         starts at 0 Passed
 //         increments the counter Passed
-//     (tearDownAll) Passed
+//     (tearDownAll) Passed (integration_test.dart)
 // == /EXPECTED RESULTS ==
 
 void main() {
