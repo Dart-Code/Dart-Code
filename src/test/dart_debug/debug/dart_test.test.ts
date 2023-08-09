@@ -577,7 +577,9 @@ describe("dart test debugger", () => {
 				// Expected results differ from what's in the file not only because skipped tests are hidden, but because
 				// the counts on the containing nodes will also be reduced.
 				expectedResults = `
-test/tree_test.dart [4/6 passed] Failed
+test/tree_test.dart [6/8 passed] Failed
+    (setUpAll) Passed (utils.dart)
+    (tearDownAll) Passed (utils.dart)
     failing group 1 [2/3 passed] Failed
         passing test 1 \${1 + 1} [1/1 passed] Passed
             passing test 1 2 Passed
