@@ -99,7 +99,7 @@
 			"prefix": "class",
 			"description": "Insert a class definition.",
 			"body": [
-				"class ${1:Name} {",
+				"class ${1:${TM_FILENAME_BASE/(_|^|\\.)([a-z])/${2:/capitalize}/g}} {",
 				"  $0",
 				"}"
 			]

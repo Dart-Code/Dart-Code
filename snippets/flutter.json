@@ -4,7 +4,7 @@
 			"prefix": "stless",
 			"description": "Insert a StatelessWidget",
 			"body": [
-				"class $1 extends StatelessWidget {",
+				"class ${1:${TM_FILENAME_BASE/(_|^|\\.)([a-z])/${2:/capitalize}/g}} extends StatelessWidget {",
 				"  const $1({ Key? key }) : super(key: key);",
 				"",
 				"  @override",
@@ -18,7 +18,7 @@
 			"prefix": "stful",
 			"description": "Insert a StatefulWidget",
 			"body": [
-				"class $1 extends StatefulWidget {",
+				"class ${1:${TM_FILENAME_BASE/(_|^|\\.)([a-z])/${2:/capitalize}/g}} extends StatefulWidget {",
 				"  const $1({ Key? key }) : super(key: key);",
 				"",
 				"  @override",
@@ -37,7 +37,7 @@
 			"prefix": "stanim",
 			"description": "Insert a StatefulWidget with an AnimationController",
 			"body": [
-				"class $1 extends StatefulWidget {",
+				"class ${1:${TM_FILENAME_BASE/(_|^|\\.)([a-z])/${2:/capitalize}/g}} extends StatefulWidget {",
 				"  const $1({ Key? key }) : super(key: key);",
 				"",
 				"  @override",
