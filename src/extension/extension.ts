@@ -843,6 +843,8 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 	});
 	addToLogHeader(() => ``);
 	addToLogHeader(() => `App: ${vs.env.appName}`);
+	if (vs.env.appHost)
+		addToLogHeader(() => `App Host: ${vs.env.appHost}`);
 	if (vs.env.remoteName)
 		addToLogHeader(() => `Remote: ${vs.env.remoteName}`);
 	addToLogHeader(() => `Version: ${vs.version}`);
