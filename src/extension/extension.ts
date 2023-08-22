@@ -20,7 +20,7 @@ import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { createWatcher, envUtils, getDartWorkspaceFolders, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { createWatcher, envUtils, getDartWorkspaceFolders, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
@@ -847,6 +847,8 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 		addToLogHeader(() => `App Host: ${vs.env.appHost}`);
 	if (vs.env.remoteName)
 		addToLogHeader(() => `Remote: ${vs.env.remoteName}`);
+	if (hostKind)
+		addToLogHeader(() => `Host Kind: ${hostKind}`);
 	addToLogHeader(() => `Version: ${vs.version}`);
 	addToLogHeader(() => `Platform: ${platformDisplayName}`);
 	if (workspaceContext) {

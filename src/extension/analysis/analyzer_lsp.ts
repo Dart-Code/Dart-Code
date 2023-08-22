@@ -16,7 +16,7 @@ import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extensio
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { LspUriConverters } from "../../shared/vscode/lsp_uri_converters";
-import { envUtils } from "../../shared/vscode/utils";
+import { envUtils, hostKind } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
@@ -405,6 +405,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			closingLabels: config.closingLabels,
 			completionBudgetMilliseconds: config.completionBudgetMilliseconds,
 			flutterOutline: wsContext.hasAnyFlutterProjects,
+			hostKind,
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
 			remoteName: vs.env.remoteName,

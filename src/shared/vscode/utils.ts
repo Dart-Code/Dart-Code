@@ -17,6 +17,7 @@ import { isKnownCloudIde } from "./utils_cloud";
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
 
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
+export const hostKind = getHostKind();
 
 const projectFolderCache = new SimpleTimeBasedCache<string[]>();
 let inProgressProjectFolderSearch: Promise<string[]> | undefined;
@@ -304,4 +305,22 @@ export function createWatcher(pattern: string, emitter: EventEmitter<vs.Uri | vo
 	watcher.onDidCreate((uri) => emitter.fire(uri));
 	watcher.onDidDelete((uri) => emitter.fire(uri));
 	return watcher;
+}
+
+function getHostKind(): string | undefined {
+	let appHost: string | undefined = vs.env.appHost;
+	let remoteName: string | undefined = vs.env.remoteName;
+
+	// Handle any items that are reported badly.
+	if (remoteName?.endsWith(".cloudworkstations.dev"))
+		remoteName = "cloudworkstations.dev";
+	if (isKnownCloudIde && appHost === "desktop")
+		appHost = "web";
+
+	if (appHost && remoteName && appHost !== remoteName)
+		return `${appHost}-${remoteName}`;
+	else if (appHost)
+		return appHost;
+	else
+		return remoteName;
 }

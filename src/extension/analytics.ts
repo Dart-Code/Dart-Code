@@ -8,6 +8,7 @@ import { disposeAll } from "../shared/utils";
 import { getRandomInt } from "../shared/utils/fs";
 import { simplifyVersion } from "../shared/utils/workspace";
 import { hasFlutterExtension, isDevExtension, isPreReleaseExtension } from "../shared/vscode/extension_utils";
+import { hostKind } from "../shared/vscode/utils";
 import { WorkspaceContext } from "../shared/workspace";
 import { config } from "./config";
 
@@ -161,7 +162,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("formatter", data.formatter);
 		add("extensionKind", data.extensionKind);
 		add("platform", data.platform);
-		add("remoteName", dataMap["common.remotename"]);
+		add("hostKind", data.hostKind);
 		add("showTodos", data.showTodos);
 		add("userLanguage", data.language);
 		add("workspaceType", data.workspaceType);
@@ -268,6 +269,7 @@ export class Analytics implements IAmDisposable {
 			flutterUiGuides,
 			flutterVersion: this.flutterSdkVersion,
 			formatter: this.formatter,
+			hostKind,
 			language: env.language,
 			platform: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
 			showTodos: config.showTodos ? "On" : "Off",
@@ -374,6 +376,7 @@ interface AnalyticsData {
 	extensionKind: string,
 	platform: string,
 	appName: string | undefined,
+	hostKind: string | undefined,
 	workspaceType: string | undefined,
 	dartVersion: string | undefined,
 	flutterVersion: string | undefined,
