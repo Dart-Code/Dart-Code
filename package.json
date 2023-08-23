@@ -1413,7 +1413,13 @@
 				{
 					"id": "dartFlutterOutline",
 					"name": "Outline",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:showFlutterOutline"
+					"when": "dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"id": "dartFlutterSidebar",
+					"type": "webview",
+					"name": "Flutter Sidebar",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalFlutterSidebar"
 				}
 			]
 		},

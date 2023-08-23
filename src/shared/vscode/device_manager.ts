@@ -23,6 +23,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 	private readonly knownEmulatorNames: { [key: string]: string } = {};
 	protected readonly onCurrentDeviceChangedEmitter = new vs.EventEmitter<f.Device | undefined>();
 	public readonly onCurrentDeviceChanged = this.onCurrentDeviceChangedEmitter.event;
+	protected readonly onDevicesChangedEmitter = new vs.EventEmitter<void>();
+	public readonly onDevicesChanged = this.onDevicesChangedEmitter.event;
 
 	constructor(
 		private readonly logger: Logger,
@@ -114,10 +116,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 				this.setCurrentDevice(device);
 			}
 		}
+
+		this.onDevicesChangedEmitter.fire();
 	}
 
 	private setCurrentDevice(device: f.Device | undefined) {
 		this.currentDevice = device;
+		this.onCurrentDeviceChangedEmitter.fire(device);
 		this.updateStatusBar();
 	}
 
@@ -136,6 +141,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 			this.setCurrentDevice(nextDevice);
 		}
+
+		this.onDevicesChangedEmitter.fire();
 	}
 
 	public async showDevicePicker(supportedTypes?: f.PlatformType[]): Promise<f.Device | undefined> {
@@ -186,6 +193,18 @@ export class FlutterDeviceManager implements vs.Disposable {
 			return this.currentDevice;
 
 		return undefined;
+	}
+
+	public async selectDeviceById(id: string): Promise<boolean> {
+		const device = this.getDevice(id);
+		if (device) {
+			await this.selectDevice({
+				device,
+				label: this.labelForDevice(device, { withIcon: true }),
+			});
+			return true;
+		}
+		return false;
 	}
 
 	public async selectDevice(selection: PickableDevice) {
@@ -272,8 +291,16 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.devices.find((d) => d.id === id);
 	}
 
+	public getDevicesSortedByName(): f.Device[] {
+		return this.devices.sort(this.deviceSortComparer.bind(this));
+	}
+
+	public getDevicesSortedByCurrentAndName(): f.Device[] {
+		return this.devices.sort(this.deviceCurrentSortComparer.bind(this));
+	}
+
 	public async getValidDevicesForProject(projectFolder: string): Promise<f.Device[]> {
-		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
+		const sortedDevices = this.getDevicesSortedByCurrentAndName();
 		const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes
 			? (await this.tryGetSupportedPlatforms(projectFolder))?.platforms
 			: undefined;
@@ -295,7 +322,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Array<PickableDevice | DeviceSeparator> {
-		const sortedDevices = this.devices.sort(this.deviceSortComparer.bind(this));
+		const sortedDevices = this.getDevicesSortedByCurrentAndName();
 
 		let pickableItems: Array<PickableDevice | DeviceSeparator> = [];
 
@@ -309,6 +336,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				},
 				...supportedDevices.map((d) => ({
 					description: `${d.id} - ${d.category || d.platform || ""}`,
+					detail: d === this.currentDevice ? "Current Device" : undefined,
 					device: d,
 					label: this.labelForDevice(d, { withIcon: true }),
 				} as PickableDevice)),
@@ -407,11 +435,15 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return withIcon ? `${icon ?? ""}${name}` : name;
 	}
 
-	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
+	public deviceCurrentSortComparer(d1: f.Device, d2: f.Device): number {
 		// Always consider current device to be first.
 		if (d1 === this.currentDevice) return -1;
 		if (d2 === this.currentDevice) return 1;
 		// Otherwise, sort by name.
+		return d1.name.localeCompare(d2.name);
+	}
+
+	public deviceSortComparer(d1: f.Device, d2: f.Device): number {
 		return d1.name.localeCompare(d2.name);
 	}
 

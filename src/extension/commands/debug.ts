@@ -19,6 +19,9 @@ import { isDartFile, isValidEntryFile } from "../utils";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
+const debugSessionsChangedEmitter = new vs.EventEmitter<void>();
+export const debugSessionsChanged = debugSessionsChangedEmitter.event;
+
 const CURRENT_FILE_RUNNABLE = "dart-code:currentFileIsRunnable";
 
 // Workaround for https://github.com/microsoft/vscode/issues/100115
@@ -465,6 +468,7 @@ export class DebugCommands implements IAmDisposable {
 		if (debugSessions.length === 0)
 			this.vmServices.resetToDefaults();
 		debugSessions.push(session);
+		debugSessionsChangedEmitter.fire();
 
 		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.Web) {
 			// TODO(dantup): Can these use session.flutterMode in preference?
@@ -521,6 +525,7 @@ export class DebugCommands implements IAmDisposable {
 		const session = debugSessions[sessionIndex];
 		session.hasEnded = true;
 		debugSessions.splice(sessionIndex, 1);
+		debugSessionsChangedEmitter.fire();
 
 		// Close any in-progress progress notifications.
 		for (const progressId of Object.keys(session.progress))
@@ -690,6 +695,7 @@ export class DebugCommands implements IAmDisposable {
 			session.observatoryUri = body.observatoryUri;
 			session.vmServiceUri = body.vmServiceUri;
 			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
+			debugSessionsChangedEmitter.fire();
 
 			// Open or prompt for DevTools when appropriate.
 			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
@@ -788,6 +794,7 @@ export class DebugCommands implements IAmDisposable {
 			this.suppressFlutterWidgetErrors = false;
 		} else if (event === "flutter.appStarted") {
 			session.hasStarted = true;
+			debugSessionsChangedEmitter.fire();
 			// In noDebug mode, we won't see services registered but we can tell if Hot Reload
 			// is available.
 			if (session.supportsHotReload)
@@ -796,6 +803,7 @@ export class DebugCommands implements IAmDisposable {
 			session.flutterMode = body?.mode;
 			session.flutterDeviceId = body?.deviceId;
 			session.supportsHotReload = body?.supportsRestart;
+			debugSessionsChangedEmitter.fire();
 		}
 	}
 

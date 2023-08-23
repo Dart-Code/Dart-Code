@@ -62,6 +62,7 @@ class Config {
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
 	get completionBudgetMilliseconds(): number | undefined { return this.getConfig<number | undefined>("completionBudgetMilliseconds", undefined); }
 	get customDartDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customDartDapPath", null)); }
+	get customDevToolsUri(): undefined | string { return this.getConfig<undefined | string>("customDevToolsUri", undefined); }
 	get customDevTools(): undefined | CustomDevToolsConfig { return this.getConfig<null | CustomDevToolsConfig>("customDevTools", null); }
 	get customFlutterDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customFlutterDapPath", null)); }
 	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
@@ -82,6 +83,7 @@ class Config {
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): any { return this.getConfig<any>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
+	get experimentalFlutterSidebar(): boolean { return this.getConfig<boolean>("experimentalFlutterSidebar", false); }
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
 	get experimentalTestRunnerInSdk(): boolean { return this.getConfig<boolean>("experimentalTestRunnerInSdk", false); }

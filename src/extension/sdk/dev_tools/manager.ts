@@ -90,6 +90,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	public async urlFor(page: string): Promise<string | undefined> {
+		// TODO(dantup): Theme, etc.
 		const base = await this.devtoolsUrl;
 		if (!base) return base;
 
@@ -133,6 +134,11 @@ export class DevToolsManager implements vs.Disposable {
 					title: startingTitle,
 				}, async () => this.startServer());
 			}
+
+			// Allow us to override the URL for DevTools as a simple hack for running from a
+			// dev version without having to have the SDK set up.
+			if (config.customDevToolsUri)
+				this.devtoolsUrl = Promise.resolve(config.customDevToolsUri);
 		}
 
 		const url = await this.devtoolsUrl;
