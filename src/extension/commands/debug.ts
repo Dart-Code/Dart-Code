@@ -434,6 +434,7 @@ export class DebugCommands implements IAmDisposable {
 		debugSessions.push(session);
 
 		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.Web) {
+			// TODO(dantup): Can these use session.flutterMode in preference?
 			const isProfileMode = s.configuration.toolArgs?.includes("--profile");
 			const isReleaseMode = s.configuration.toolArgs?.includes("--release");
 
