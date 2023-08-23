@@ -7,7 +7,7 @@ import { activate, currentDoc, defer, emptyFile, ensureTestContent, extApi, hell
 describe("fix_code_action_provider", () => {
 	beforeEach("activate", () => activate());
 
-	it("modifies correct file when single edit is not in the original file", async function () {
+	it("modifies correct file when single edit is not in the original file", async () => {
 		await openFile(helloWorldCreateMethodClassBFile);
 		await waitForNextAnalysis(() => uncommentTestFile());
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("createNon||ExistentMethod"));
@@ -17,15 +17,10 @@ describe("fix_code_action_provider", () => {
 		const createMethodFix = fixResults.find((r) => r.title.indexOf("Create method 'createNonExistentMethod'") !== -1);
 		assert.ok(createMethodFix);
 
-		if (!createMethodFix.command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
-			this.skip();
-			return;
-		}
-
-		await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+		if (createMethodFix.edit)
+			await vs.workspace.applyEdit(createMethodFix.edit);
+		if (createMethodFix.command)
+			await (vs.commands.executeCommand(createMethodFix.command.command, ...createMethodFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		const fileA = await openFile(helloWorldCreateMethodClassAFile);
 		const fileB = await openFile(helloWorldCreateMethodClassBFile);
@@ -34,7 +29,7 @@ describe("fix_code_action_provider", () => {
 		assert.equal(fileB.document.getText().indexOf("void createNonExistentMethod()"), -1, "Edit unexpectedly appeared in file B");
 	});
 
-	it("can create", async function () {
+	it("can create", async () => {
 		defer("Remove missing file", () => tryDelete(missingFile));
 		await openFile(emptyFile);
 		await setTestContent("import 'missing.dart'");
@@ -45,15 +40,10 @@ describe("fix_code_action_provider", () => {
 		const createFileFix = fixResults.find((r) => r.title.indexOf("Create file 'missing.dart'") !== -1);
 		assert.ok(createFileFix, "Fix was not found");
 
-		if (!createFileFix.command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
-			this.skip();
-			return;
-		}
-
-		await (vs.commands.executeCommand(createFileFix.command.command, ...createFileFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+		if (createFileFix.edit)
+			await vs.workspace.applyEdit(createFileFix.edit);
+		if (createFileFix.command)
+			await (vs.commands.executeCommand(createFileFix.command.command, ...createFileFix.command.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
 		assert.ok(fs.existsSync(fsPath(missingFile)));
 	});

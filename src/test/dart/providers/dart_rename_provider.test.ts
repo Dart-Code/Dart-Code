@@ -16,7 +16,9 @@ describe("rename_provider", () => {
 				static int Danny = 2;
 			}
 			var a = new Danny();
-			print(Danny.myField);
+			void f() {
+				print(Danny.myField);
+			}
 		`);
 		const renameResult = await vs.commands.executeCommand<vs.WorkspaceEdit>("vscode.executeDocumentRenameProvider", doc.uri, positionOf("D^anny"), "NewDanny");
 		await vs.workspace.applyEdit(renameResult);
@@ -28,7 +30,9 @@ describe("rename_provider", () => {
 				static int Danny = 2;
 			}
 			var a = new NewDanny();
-			print(NewDanny.myField);
+			void f() {
+				print(NewDanny.myField);
+			}
 		`);
 	});
 
