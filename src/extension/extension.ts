@@ -594,7 +594,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			}
 
 			if (dasClient.capabilities.supportsGetDeclerations) {
-				context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, dasClient)));
+				context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, dasClient, dartCapabilities)));
 			} else {
 				context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(logger, dasClient)));
 			}

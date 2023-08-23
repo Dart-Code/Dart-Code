@@ -61,4 +61,5 @@ export class DartCapabilities {
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
 	get webSupportsHotReload() { return false; }
+	get workspaceSymbolSearchUsesFuzzy() { return versionIsAtLeast(this.version, "3.1.0"); }
 }

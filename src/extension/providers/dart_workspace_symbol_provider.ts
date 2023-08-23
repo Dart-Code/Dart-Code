@@ -1,19 +1,22 @@
 import { CancellationToken, Location, SymbolInformation, SymbolKind, Uri, workspace, WorkspaceSymbolProvider } from "vscode";
 import * as as from "../../shared/analysis_server_types";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { Logger } from "../../shared/interfaces";
 import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
 	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
-	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient) { }
+	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient, private readonly dartCapabilities: DartCapabilities) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
 		if (query.length === 0)
 			return undefined;
 
 		// Turn query into a case-insensitive fuzzy search.
-		const pattern = ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
+		const pattern = this.dartCapabilities.workspaceSymbolSearchUsesFuzzy
+			? query.replace(this.badChars, "")
+			: ".*" + query.replace(this.badChars, "").split("").map((c) => `[${c.toUpperCase()}${c.toLowerCase()}]`).join(".*") + ".*";
 		const results = await this.analyzer.searchGetElementDeclarations({ pattern, maxResults: 500 });
 
 		if (token && token.isCancellationRequested)
