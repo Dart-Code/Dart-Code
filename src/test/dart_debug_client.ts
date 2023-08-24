@@ -281,7 +281,7 @@ export class DartDebugClient extends DebugClient {
 		return withTimeout(
 			new Promise<DebugProtocol.OutputEvent>((resolve) => {
 				function handleOutput(event: DebugProtocol.OutputEvent) {
-					if (!category || event.body.category === category) {
+					if (!category || (event.body.category ?? "console" === category)) {
 						output += event.body.output;
 						if (output.indexOf(textLF) !== -1 || output.indexOf(textCRLF) !== -1) {
 							resolve(event);
