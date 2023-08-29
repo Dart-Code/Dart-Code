@@ -9,13 +9,17 @@ const clearAllExperiments = false;
 export interface KnownExperiments {
 	// example: Experiment,
 	dartSdkDaps: SdkDapExperiment,
+	// Used for >= 3.13
 	flutterSdkDaps: SdkDapExperiment,
+	// Used for < 3.13
+	flutterSdkDapsLegacy: SdkDapExperiment,
 }
 export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
 	return {
 		// example: new ExampleExperiment(logger, workspaceContext, context),
 		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 75),
-		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 10),
+		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 30),
+		flutterSdkDapsLegacy: new SdkDapExperiment(logger, workspaceContext, context, 10), // DO NOT CHANGE LEGACY.
 	};
 }
 

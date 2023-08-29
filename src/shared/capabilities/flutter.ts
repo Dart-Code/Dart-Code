@@ -10,6 +10,8 @@ export class FlutterCapabilities {
 	}
 
 	get canDefaultSdkDaps() { return versionIsAtLeast(this.version, "3.9.0-14"); }
+	/// Used to keep the percentage of DAP users on < 3.13 lower and increase only for newer.
+	get useLegacyDapExperiment() { return !versionIsAtLeast(this.version, "3.13.0"); }
 	get supportsCreateSkeleton() { return versionIsAtLeast(this.version, "2.5.0"); }
 	get supportsCreateEmpty() { return versionIsAtLeast(this.version, "3.6.0-3"); }
 	get supportsCreatingSamples() { return versionIsAtLeast(this.version, "1.0.0"); }

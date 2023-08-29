@@ -45,7 +45,9 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
 			canDefaultToSdkDap = this.flutterCapabilities.canDefaultSdkDaps;
 			isPreReleaseSdk = this.flutterCapabilities.version.includes("-");
-			isInSdkDapExperiment = this.experiments.flutterSdkDaps.applies;
+			isInSdkDapExperiment = this.flutterCapabilities.useLegacyDapExperiment
+				? this.experiments.flutterSdkDapsLegacy.applies
+				: this.experiments.flutterSdkDaps.applies;
 		}
 
 		const forceSdkDap = process.env.DART_CODE_FORCE_SDK_DAP === "true"
