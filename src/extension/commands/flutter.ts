@@ -208,39 +208,47 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 	}
 
-	private getFlutterTemplates(): Array<vs.QuickPickItem & { template: FlutterProjectTemplate }> {
-		const templates = [
+	private getFlutterTemplates(): Array<vs.QuickPickItem & { template?: FlutterProjectTemplate }> {
+		const templates: Array<vs.QuickPickItem & { template?: FlutterProjectTemplate }> = [
 			{
-				detail: "Generate a Flutter application with descriptive comments and tests.",
+				kind: vs.QuickPickItemKind.Separator,
+				label: "Applications",
+			},
+			{
+				detail: "A Flutter application with descriptive comments and tests.",
 				label: "Application",
 				template: { id: "app" },
 			},
 			{
 				condition: this.flutterCapabilities.supportsCreateEmpty,
-				detail: "Generate a Flutter application without descriptive comments or tests.",
-				label: "Application (empty)",
+				detail: "A Flutter application without descriptive comments or tests.",
+				label: "Empty Application",
 				template: { id: "app", empty: true },
 			},
 			{
-				detail: "Generate a project to add a Flutter module to an existing Android or iOS application.",
+				condition: this.flutterCapabilities.supportsCreateSkeleton,
+				detail: "A List View / Detail View Flutter application that follows community best practices.",
+				label: "Skeleton Application",
+				template: { id: "skeleton" },
+			},
+			{
+				kind: vs.QuickPickItemKind.Separator,
+				label: "Other Project Types",
+			},
+			{
+				detail: "A project to add a Flutter module to an existing Android or iOS application.",
 				label: "Module",
 				template: { id: "module" },
 			},
 			{
-				detail: "Generate a shareable Flutter project containing modular Dart code.",
+				detail: "A shareable Flutter project containing modular Dart code.",
 				label: "Package",
 				template: { id: "package" },
 			},
 			{
-				detail: "Generate a shareable Flutter project containing an API in Dart code with a platform-specific implementation for Android, for iOS code, or for both.",
+				detail: "A shareable Flutter project containing an API in Dart code with a platform-specific implementation for Android, for iOS code, or for both.",
 				label: "Plugin",
 				template: { id: "plugin" },
-			},
-			{
-				condition: this.flutterCapabilities.supportsCreateSkeleton,
-				detail: "Generate a List View / Detail View Flutter application that follows community best practices.",
-				label: "Skeleton",
-				template: { id: "skeleton" },
 			},
 		].filter((t) => t.condition !== false);
 
@@ -266,7 +274,7 @@ export class FlutterCommands extends BaseSdkCommands {
 			},
 		);
 
-		if (!selectedTemplate)
+		if (!selectedTemplate?.template)
 			return;
 
 		return this.createFlutterProjectForTemplate(selectedTemplate.template);
