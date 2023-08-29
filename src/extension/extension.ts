@@ -64,7 +64,7 @@ import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decoration
 import { FlutterUiGuideDecorationsDas } from "./decorations/flutter_ui_guides_decorations_das";
 import { FlutterUiGuideDecorationsLsp } from "./decorations/flutter_ui_guides_decorations_lsp";
 import { KnownExperiments, getExperiments } from "./experiments";
-import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
+import { setUpDaemonMessageHandler as setUpDaemon } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { DasFlutterOutlineProvider, FlutterOutlineProvider, FlutterWidgetItem, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
@@ -311,13 +311,13 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		}
 
 		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices, portFromLocalExtension);
-
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, extContext, runIfNoDevices, portFromLocalExtension);
-
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);
 
-		setUpDaemonMessageHandler(logger, context, flutterDaemon);
+		setUpDaemon(logger, context, flutterDaemon);
+		// Exposed for use in user-tasks.
+		context.subscriptions.push(vs.commands.registerCommand("flutter.getSelectedDeviceId", () => deviceManager?.currentDevice?.id));
 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
