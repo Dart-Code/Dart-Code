@@ -351,6 +351,11 @@ describe("dart test debugger", () => {
 						"dupe_name_test.dart",
 						"dynamic_test.dart",
 						"environment_test.dart",
+						// These excluded tests show up because we for testing they're
+						// directly inside the run folder. For the cases we care about (excluding
+						// nexted projects, etc.) this wouldn't happen.
+						"excluded_test.dart",
+						"excluded_test.dart",
 						"folder_test.dart",
 						"project_test.dart",
 						"rename_test.dart",
