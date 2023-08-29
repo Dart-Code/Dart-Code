@@ -77,7 +77,7 @@ export interface InternalExtensionApi {
 	};
 	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
-	testController: { controller: TestController; runTests(debug: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>; getLatestData(test: TestItem): TreeNode | undefined };
+	testController: { controller: TestController; runTests(debug: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>; getLatestData(test: TestItem): TreeNode | undefined, discoverer?: { ensureSuitesDiscovered(): Promise<void> } };
 	testCoordinator: TestSessionCoordinator;
 	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined } | undefined,
 	testModel: TestModel;

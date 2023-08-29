@@ -2,12 +2,13 @@
 	"files.insertFinalNewline": true,
 	"dart.maxLogLineLength": 20000,
 	"dart.doNotFormat": [
-		"**/excluded/**",
+		"**/excluded*/**",
 		"**/excluded_*.dart"
 	],
 	"dart.analysisExcludedFolders": [
-		"lib/excluded",
-		"nested_flutter_example"
+		"lib/excluded_by_setting",
+		"nested_flutter_example",
+		"test/excluded_by_setting",
 	],
 	"dart.showDartDeveloperLogs": true,
 	"dart.experimentalNewRefactors": true, // Old flag

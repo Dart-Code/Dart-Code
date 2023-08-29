@@ -1,0 +1,3 @@
+analyzer:
+  exclude:
+    - test/excluded_by_analysis_options/**

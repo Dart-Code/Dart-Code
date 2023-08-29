@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, delay, emptyFile, emptyFileInExcludedFolder, ensureError, extApi, openFile, setTestContent, waitForDiagnosticChange } from "../../helpers";
+import { activate, delay, emptyFile, emptyFileInExcludedBySettingFolder, ensureError, openFile, setTestContent, waitForDiagnosticChange } from "../../helpers";
 
 describe("diagnostics_provider", () => {
 
@@ -34,11 +34,8 @@ main() {
 		ensureError(errors, "Unterminated string literal");
 	});
 
-	it("does not return errors for an excluded file", async function () {
-		if (extApi.isLsp)
-			this.skip();
-
-		await openFile(emptyFileInExcludedFolder);
+	it("does not return errors for a file in settings", async () => {
+		await openFile(emptyFileInExcludedBySettingFolder);
 		await setTestContent(`
 main() {
   print("Hello, world!);
@@ -49,7 +46,7 @@ main() {
 		// to diagnostics because if things are working correctly we won't be getting any.
 		await delay(5000);
 
-		const errors = vs.languages.getDiagnostics(emptyFileInExcludedFolder);
+		const errors = vs.languages.getDiagnostics(emptyFileInExcludedBySettingFolder);
 		assert.equal(0, errors.length);
 	});
 });

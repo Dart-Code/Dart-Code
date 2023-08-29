@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { platformEol } from "../../../shared/constants";
-import { activate, currentDoc, currentEditor, delay, documentEol, emptyExcludedFile, emptyFileInExcludedFolder, extApi, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
+import { activate, currentDoc, currentEditor, delay, documentEol, emptyExcludedFile, emptyFileInExcludedBySettingFolder, extApi, openFile, positionOf, setConfigForTest, setTestContent } from "../../helpers";
 
 const formattingOptions: vs.FormattingOptions = { tabSize: 2, insertSpaces: true };
 
@@ -86,7 +86,7 @@ describe("dart_formatting_edit_provider", () => {
 		if (extApi.isLsp)
 			this.skip();
 
-		await openFile(emptyFileInExcludedFolder);
+		await openFile(emptyFileInExcludedBySettingFolder);
 		await setTestContent(unformattedContent);
 		await formatDocument(false);
 		assert.equal(currentDoc().getText(), unformattedContent);

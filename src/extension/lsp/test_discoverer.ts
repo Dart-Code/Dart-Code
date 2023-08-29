@@ -9,7 +9,7 @@ import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../shared/utils/fs";
 import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
-import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { getAllProjectFoldersAndExclusions } from "../../shared/vscode/utils";
 import { LspFileTracker } from "../analysis/file_tracker_lsp";
 import { config } from "../config";
 import { getExcludedFolders, isTestFile } from "../utils";
@@ -59,7 +59,7 @@ export class TestDiscoverer implements IAmDisposable {
 				vs.workspace.onDidRenameFiles(async (e) => {
 					e.files.forEach(async (file) => {
 						this.model.clearSuiteOrDirectory(fsPath(file.oldUri));
-						void this.discoverTestSuites(fsPath(file.newUri));
+						void this.discoverTestSuites(fsPath(file.newUri), undefined);
 					});
 				}),
 				vs.workspace.onDidDeleteFiles(async (e) => {
@@ -77,8 +77,10 @@ export class TestDiscoverer implements IAmDisposable {
 			},
 			async () => {
 				try {
-					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
-					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder)));
+					const projectFoldersAndExclusions = await getAllProjectFoldersAndExclusions(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+					const projectFolders = projectFoldersAndExclusions.projectFolders;
+					const excludedFolders = projectFoldersAndExclusions.excludedFolders;
+					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder, excludedFolders)));
 				} catch (e) {
 					this.logger.error(`Failed to discover tests: ${e}`);
 				}
@@ -86,7 +88,7 @@ export class TestDiscoverer implements IAmDisposable {
 		);
 	}
 
-	private async discoverTestSuites(fileOrDirectory: string, isDirectory?: boolean, level = 0) {
+	private async discoverTestSuites(fileOrDirectory: string, excludedFolders: Set<string> | undefined, isDirectory?: boolean, level = 0) {
 		if (level > 100) return; // Ensure we don't traverse too far or follow any cycles.
 
 		if (isTestFile(fileOrDirectory)) {
@@ -98,7 +100,9 @@ export class TestDiscoverer implements IAmDisposable {
 				const childPromises = children
 					.map((item) => ({ name: item[0], type: item[1] }))
 					.filter((item) => !item.name.startsWith("."))
-					.map((item) => this.discoverTestSuites(path.join(fileOrDirectory, item.name), item.type === vs.FileType.Directory, level + 1));
+					.map((item) => ({ name: item.name, type: item.type, path: path.join(fileOrDirectory, item.name) }))
+					.filter((item) => !excludedFolders?.has(item.path) ?? false)
+					.map((item) => this.discoverTestSuites(item.path, excludedFolders, item.type === vs.FileType.Directory, level + 1));
 
 				await Promise.all(childPromises);
 			} catch (e: any) {

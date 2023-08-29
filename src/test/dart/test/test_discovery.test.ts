@@ -87,4 +87,27 @@ test/rename_test.dart [0/1 passed] Unknown
 		assert.ok(timeTakenMs < 5000, `Took ${timeTakenMs}ms to discover tests`);
 	});
 
+	it("does not discover tests in folders excluded by settings", async function () {
+		if (!extApi.isLsp)
+			this.skip();
+
+		await extApi.testController?.discoverer?.ensureSuitesDiscovered();
+		const results = makeTestTextTree();
+		// Ensure results are valid.
+		assert.equal(!!results.find((suite) => suite.includes("basic_test")), true, "basic_test was missing from the test list");
+		// Ensure exclusion.
+		assert.equal(!!results.find((suite) => suite.includes("excluded_by_setting")), false, "excluded_by_setting was in the test list");
+	});
+
+	it("does not discover tests in folders excluded by analysis_options", async function () {
+		if (!extApi.isLsp)
+			this.skip();
+
+		await extApi.testController?.discoverer?.ensureSuitesDiscovered();
+		const results = makeTestTextTree();
+		// Ensure results are valid.
+		assert.equal(!!results.find((suite) => suite.includes("basic_test")), true);
+		// Ensure exclusion.
+		assert.equal(!!results.find((suite) => suite.includes("excluded_by_analysis_options")), false, "excluded_by_analysis_options was in the test list");
+	});
 });

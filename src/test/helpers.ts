@@ -66,7 +66,7 @@ export const helloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(helloWorl
 export const helloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "bin/main.dart"));
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
 export const missingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/missing.dart"));
-export const emptyFileInExcludedFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded/empty.dart"));
+export const emptyFileInExcludedBySettingFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_by_setting/empty.dart"));
 export const emptyExcludedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_empty.dart"));
 export const helloWorldCompletionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/completion.dart"));
 export const helloWorldDeferredScriptFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/deferred_script.dart"));
@@ -1270,7 +1270,7 @@ export function isTestDoneSuccessNotification(e: vs.DebugSessionCustomEvent) {
 	return notification.type === "testDone" && notification.result !== "error" && !notification.hidden;
 }
 
-export function makeTestTextTree(items: vs.TestItemCollection | vs.Uri | undefined, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {
+export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {
 	const collection = items instanceof vs.Uri
 		? extApi.testController.controller.items
 		: items ?? extApi.testController.controller.items;

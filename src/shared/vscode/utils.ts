@@ -9,7 +9,7 @@ import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchP
 import { EventEmitter } from "../events";
 import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
-import { flatMap, notUndefined } from "../utils";
+import { PromiseCompleter, flatMap, notUndefined } from "../utils";
 import { SimpleTimeBasedCache } from "../utils/cache";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath } from "../utils/fs";
 import { isKnownCloudIde } from "./utils_cloud";
@@ -19,8 +19,10 @@ export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sor
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
 export const hostKind = getHostKind();
 
-const projectFolderCache = new SimpleTimeBasedCache<string[]>();
-let inProgressProjectFolderSearch: Promise<string[]> | undefined;
+export interface ProjectFolderSearchResults { projectFolders: string[], excludedFolders: Set<string> };
+
+const projectFolderCache = new SimpleTimeBasedCache<ProjectFolderSearchResults>();
+let inProgressProjectFolderSearch: Promise<void> | undefined;
 
 // The extension kind is declared as Workspace, but VS Code will return UI in the
 // case that there is no remote extension host.
@@ -77,12 +79,21 @@ export async function getAllProjectFolders(
 	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
 	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, workspaceFolders?: WorkspaceFolder[], onlyWorkspaceRoots?: boolean },
 ) {
+	const results = await getAllProjectFoldersAndExclusions(logger, getExcludedFolders, options);
+	return results.projectFolders;
+}
+
+export async function getAllProjectFoldersAndExclusions(
+	logger: Logger,
+	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
+	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, workspaceFolders?: WorkspaceFolder[], onlyWorkspaceRoots?: boolean },
+): Promise<ProjectFolderSearchResults> {
 	const workspaceFolders = options.workspaceFolders ?? getDartWorkspaceFolders();
 
-	// If another search is in progress, use its Promise to avoid overlapping searches.
+	// If an existing search is in progress, wait because it might populate the cache with the results
+	// we want.
 	if (inProgressProjectFolderSearch) {
-		logger.info(`Returning cached Promise for in-progress project search`);
-		return inProgressProjectFolderSearch;
+		await inProgressProjectFolderSearch;
 	}
 
 	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}_${options.onlyWorkspaceRoots ? "true" : "false"}`;
@@ -92,54 +103,64 @@ export async function getAllProjectFolders(
 		return cachedFolders;
 	}
 
-	let startTimeMs = new Date().getTime();
-	const tokenSource = new vs.CancellationTokenSource();
-	let isComplete = false;
-
-	const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
-	const allExcludedFolders = getExcludedFolders ? flatMap(workspaceFolders, getExcludedFolders) : [];
-	const resultsPromise = findProjectFolders(logger, topLevelFolders, allExcludedFolders, options, tokenSource.token);
-	inProgressProjectFolderSearch = resultsPromise;
-
-	// After some time, if we still have not completed, show a progress notification that can be cancelled
-	// to stop the search, which automatically hides when `resultsPromise` resolves.
-	setTimeout(() => {
-		if (!isComplete) {
-			void vs.window.withProgress({
-				cancellable: true,
-				location: vs.ProgressLocation.Notification,
-				title: projectSearchProgressText,
-			}, (progress, token) => {
-				token.onCancellationRequested(() => {
-					tokenSource.cancel();
-					logger.info(`Project search was cancelled after ${new Date().getTime() - startTimeMs}ms (was searching ${options.searchDepth} levels)`);
-				});
-				return resultsPromise;
-			});
-		}
-	}, projectSearchProgressNotificationDelayInMs);
-
-	let results = await resultsPromise;
-	isComplete = true;
-	logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
-	startTimeMs = new Date().getTime();
-
-	// Filter out any folders excluded by analysis_options.
+	// Track this search so other searches can wait on it.
+	const completer = new PromiseCompleter<void>();
+	inProgressProjectFolderSearch = completer.promise;
 	try {
-		const excludedFolders = getAnalysisOptionsExcludedFolders(logger, results);
-		results = results.filter((p) => !excludedFolders.find((f) => p.startsWith(f)));
-		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
-	} catch (e) {
-		logger.error(`Failed to filter out analysis_options exclusions: ${e}`);
+		let startTimeMs = new Date().getTime();
+		const tokenSource = new vs.CancellationTokenSource();
+		let isComplete = false;
+
+		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
+		let allExcludedFolders = getExcludedFolders ? flatMap(workspaceFolders, getExcludedFolders) : [];
+		const resultsPromise = findProjectFolders(logger, topLevelFolders, allExcludedFolders, options, tokenSource.token);
+
+		// After some time, if we still have not completed, show a progress notification that can be cancelled
+		// to stop the search, which automatically hides when `resultsPromise` resolves.
+		setTimeout(() => {
+			if (!isComplete) {
+				void vs.window.withProgress({
+					cancellable: true,
+					location: vs.ProgressLocation.Notification,
+					title: projectSearchProgressText,
+				}, (progress, token) => {
+					token.onCancellationRequested(() => {
+						tokenSource.cancel();
+						logger.info(`Project search was cancelled after ${new Date().getTime() - startTimeMs}ms (was searching ${options.searchDepth} levels)`);
+					});
+					return resultsPromise;
+				});
+			}
+		}, projectSearchProgressNotificationDelayInMs);
+
+		let projectFolders = await resultsPromise;
+		isComplete = true;
+		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
+		startTimeMs = new Date().getTime();
+
+		// Filter out any folders excluded by analysis_options.
+		try {
+			const excludedFolders = getAnalysisOptionsExcludedFolders(logger, projectFolders);
+			projectFolders = projectFolders.filter((p) => !excludedFolders.find((f) => p.startsWith(f)));
+			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
+
+			allExcludedFolders = allExcludedFolders.concat(excludedFolders);
+		} catch (e) {
+			logger.error(`Failed to filter out analysis_options exclusions: ${e}`);
+		}
+
+		const result = { projectFolders, excludedFolders: new Set(allExcludedFolders) };
+
+		// Cache the results.
+		projectFolderCache.add(cacheKey, result, projectSearchCacheTimeInMs);
+
+		return result;
+	} finally {
+		// Clear the promise if it's still ours.
+		completer.resolve();
+		if (inProgressProjectFolderSearch === completer.promise)
+			inProgressProjectFolderSearch = undefined;
 	}
-
-	// Cache the results.
-	projectFolderCache.add(cacheKey, results, projectSearchCacheTimeInMs);
-
-	// Clear the promise if it's still ours.
-	if (inProgressProjectFolderSearch === resultsPromise)
-		inProgressProjectFolderSearch = undefined;
-	return results;
 }
 
 export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {
