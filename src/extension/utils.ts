@@ -6,7 +6,7 @@ import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { WorkspaceConfig } from "../shared/interfaces";
-import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder, isWithinPath, mkDirRecursive } from "../shared/utils/fs";
+import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder, mkDirRecursive } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
 import { ringLog } from "./extension";
@@ -43,15 +43,6 @@ export function resolvePaths<T extends string | undefined>(p: T): string | (unde
 		return path.join(os.homedir(), p.substr(2));
 	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)
 		return path.join(fsPath(workspace.workspaceFolders[0].uri), p);
-	return p;
-}
-
-/// Shortens a path to use ~ if it's inside the home directory.
-export function homeRelativePath(p?: string) {
-	if (!p) return undefined;
-	const homedir = os.homedir();
-	if (isWithinPath(p, homedir))
-		return path.join("~", path.relative(homedir, p));
 	return p;
 }
 

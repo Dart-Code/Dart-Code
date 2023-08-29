@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { dartVMPath, flutterPath } from "../../shared/constants";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
-import { getChildFolders, getSdkVersion } from "../../shared/utils/fs";
+import { getChildFolders, getSdkVersion, homeRelativePath } from "../../shared/utils/fs";
 import { config } from "../config";
 
 abstract class SdkManager {
@@ -53,7 +53,7 @@ abstract class SdkManager {
 			const version = getSdkVersion(this.logger, { sdkRoot: actualFolder });
 			return {
 				description: f === this.currentSdk && this.configuredSdk ? "Current setting" : "",
-				detail: f,
+				detail: homeRelativePath(f),
 				folder: f,
 				label: version ? this.getLabel(version) : "Unknown version",
 				version,
@@ -102,7 +102,7 @@ export class DartSdkManager extends SdkManager {
 			void config.setSdkPath(undefined, vs.ConfigurationTarget.Workspace);
 	}
 	protected setSdk(folder: string | undefined, target: vs.ConfigurationTarget) {
-		void config.setSdkPath(folder, target);
+		void config.setSdkPath(homeRelativePath(folder), target);
 	}
 }
 

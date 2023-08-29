@@ -41,6 +41,20 @@ export function forceWindowsDriveLetterToUppercase<T extends string | undefined>
 	return p;
 }
 
+/// Shortens a path to use ~ if it's inside the home directory and always
+// uses forward slashes in that case.
+export function homeRelativePath(p: string | undefined) {
+	if (!p) return undefined;
+	const homedir = os.homedir();
+	if (isWithinPath(p, homedir)) {
+		if (isWin)
+			return path.join("~", path.relative(homedir, p)).replace(/\\/g, "/");
+		else
+			return path.join("~", path.relative(homedir, p));
+	}
+	return p;
+}
+
 export function isWithinPath(file: string, folder: string) {
 	const relative = path.relative(folder.toLowerCase(), file.toLowerCase());
 	return !!relative && !relative.startsWith("..") && !path.isAbsolute(relative);

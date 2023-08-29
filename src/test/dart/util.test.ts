@@ -1,9 +1,11 @@
 import { strict as assert } from "assert";
+import * as os from "os";
 import * as path from "path";
+import { isWin } from "../../shared/constants";
 import { escapeDartString, generateTestNameFromFileName, isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
 import { arrayContainsArray } from "../../shared/utils/array";
 import { applyColor, red } from "../../shared/utils/colors";
-import { fsPath, isWithinPath, isWithinPathOrEqual } from "../../shared/utils/fs";
+import { fsPath, homeRelativePath, isWithinPath, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder } from "../helpers";
 
 describe("versionIsAtLeast", () => {
@@ -231,5 +233,19 @@ describe("arrayContainsArray", () => {
 		assert.equal(arrayContainsArray([], [1]), false);
 		assert.equal(arrayContainsArray([1], [1, 1]), false);
 		assert.equal(arrayContainsArray([0, 2, 3], [3, 2, 0]), false);
+	});
+});
+
+describe("homeRelativePath", () => {
+	it("handle non-home dir", () => {
+		if (isWin) {
+			assert.equal(homeRelativePath("C:\\foo\\bar"), "C:\\foo\\bar");
+		} else {
+			assert.equal(homeRelativePath("/foo/bar"), "/foo/bar");
+		}
+	});
+	it("handles home dir", () => {
+		// We always use forward slashes for home-dir-relative paths, even on Windows.
+		assert.equal(homeRelativePath(path.join(os.homedir(), "foo", "bar")), "~/foo/bar");
 	});
 });
