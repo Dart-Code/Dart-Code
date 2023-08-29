@@ -3,6 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as semver from "semver";
 import { URI } from "vscode-uri";
+import * as YAML from "yaml";
 import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE, isWin } from "../constants";
 import { Logger, MyCancellationToken } from "../interfaces";
 import { nullLogger } from "../logging";
@@ -133,14 +134,25 @@ export function isFlutterProjectFolder(folder?: string): boolean {
 
 export function projectReferencesFlutterSdk(folder?: string): boolean {
 	if (folder && hasPubspec(folder)) {
-		return pubspecContentReferencesFlutterSdk(fs.readFileSync(path.join(folder, "pubspec.yaml")).toString());
+		const pubspecPath = path.join(folder, "pubspec.yaml");
+		try {
+			const pubspecContent = fs.readFileSync(pubspecPath);
+			return pubspecContentReferencesFlutterSdk(pubspecContent.toString());
+		} catch (e: any) {
+			if (e?.code !== "ENOENT") // Don't warn for missing files.
+				console.warn(`Failed to read ${pubspecPath}: ${e}`);
+		}
 	}
 	return false;
 }
 
-export function pubspecContentReferencesFlutterSdk(content: string): boolean {
-	const regex = new RegExp("sdk\\s*:\\s*[\"']?flutter[\"']?", "i");
-	return regex.test(content);
+export function pubspecContentReferencesFlutterSdk(content: string) {
+	try {
+		const yaml = YAML.parse(content.toString());
+		return !!(yaml?.dependencies?.flutter) || !!(yaml?.dev_dependencies?.flutter);
+	} catch {
+		return false;
+	}
 }
 
 export function referencesBuildRunner(folder?: string): boolean {

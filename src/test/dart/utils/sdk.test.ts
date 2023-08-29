@@ -97,4 +97,19 @@ dependencies:
 		`);
 		assert.equal(isFlutter, true);
 	});
+
+	it("returns false if the dependency is commented out", () => {
+		const isFlutter = pubspecContentReferencesFlutterSdk(`
+name: my_project
+description: A new Flutter project.
+publish_to: 'none'
+version: 1.0.0+1
+
+dev_dependencies:
+  # flutter:
+  #   sdk: flutter
+  lints: ^2.0.0
+		`);
+		assert.equal(isFlutter, false);
+	});
 });
