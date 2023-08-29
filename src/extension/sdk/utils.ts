@@ -238,7 +238,7 @@ export class SdkUtils {
 			title: cloningFlutterMessage,
 		}, async (_, cancellationToken): Promise<GitOperationResult> => {
 			try {
-				const gitProc = await runToolProcess(this.logger, workingDirectory, "git", ["clone", "-b", "stable", "--single-branch", gitUrl], undefined, cancellationToken);
+				const gitProc = await runToolProcess(this.logger, workingDirectory, "git", ["clone", "-b", "stable", gitUrl], undefined, cancellationToken);
 				if (cancellationToken.isCancellationRequested)
 					return "CANCEL";
 
