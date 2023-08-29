@@ -164,13 +164,30 @@ export class DebugCommands implements IAmDisposable {
 		}));
 
 		// Misc custom debug commands.
-		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.touchBar", (args: any) => vs.commands.executeCommand("dart.hotReload", args)));
+		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.touchBar", (args: any) => vs.commands.executeCommand("_dart.hotReload.withSave", args)));
 		this.disposables.push(vs.commands.registerCommand("flutter.hotReload", (args: any) => vs.commands.executeCommand("dart.hotReload", args)));
+		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.withSave", async (args?: any) => {
+			try {
+				const hasDirtyFiles = !!vs.workspace.textDocuments.find((td) => td.isDirty);
+				if (hasDirtyFiles) {
+					// Trigger save, but don't wait more than 100ms because if the user has configured codeActionsOnSave this might
+					// take a while. A request for a better API is here:
+					//   https://github.com/microsoft/vscode/issues/191639
+					await Promise.race([
+						vs.workspace.saveAll(false),
+						new Promise((resolve) => setTimeout(resolve, 100)),
+					]);
+				}
+			} finally {
+				await vs.commands.executeCommand("dart.hotReload");
+			}
+		}));
 		this.disposables.push(vs.commands.registerCommand("dart.hotReload", async (args?: any) => {
 			if (!debugSessions.length)
 				return;
 			const onlyDart = !!args?.onlyDart;
 			const onlyFlutter = !!args?.onlyFlutter;
+
 			this.onWillHotReloadEmitter.fire();
 			await Promise.all(debugSessions.map(async (s) => {
 				const shouldReload = onlyDart

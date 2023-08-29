@@ -511,6 +511,15 @@
 				}
 			},
 			{
+				"command": "_dart.hotReload.withSave",
+				"title": "Save and Hot Reload",
+				"category": "Dart",
+				"icon": {
+					"dark": "media/commands/hot-reload.svg",
+					"light": "media/commands/hot-reload.svg"
+				}
+			},
+			{
 				"command": "dart.hotReload",
 				"title": "Hot Reload",
 				"category": "Dart",
@@ -937,6 +946,10 @@
 					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession"
 				},
 				{
+					"command": "_dart.hotReload.withSave",
+					"when": "false"
+				},
+				{
 					"command": "dart.copyVmServiceUri",
 					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
@@ -1039,7 +1052,7 @@
 			],
 			"debug/toolBar": [
 				{
-					"command": "dart.hotReload",
+					"command": "_dart.hotReload.withSave",
 					"group": "navigation@59",
 					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession"
 				},
