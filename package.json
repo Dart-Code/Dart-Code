@@ -353,7 +353,7 @@
 			},
 			{
 				"command": "dart.openObservatory",
-				"title": "Open Observatory",
+				"title": "Open Observatory (Deprecated, use DevTools)",
 				"category": "Dart"
 			},
 			{
