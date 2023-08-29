@@ -525,6 +525,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.copyVmServiceUri",
+				"title": "Copy VM Service URI to Clipboard",
+				"category": "Dart"
+			},
+			{
 				"command": "flutter.openDevTools",
 				"title": "Open DevTools",
 				"category": "Flutter"
@@ -930,6 +935,10 @@
 				{
 					"command": "dart.hotReload",
 					"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession"
+				},
+				{
+					"command": "dart.copyVmServiceUri",
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
 				{
 					"command": "dart.openDevTools",

@@ -111,6 +111,22 @@ export class DebugCommands implements IAmDisposable {
 				logger.warn("Cannot start Observatory for session without debug/observatoryUri");
 			}
 		}));
+		this.disposables.push(vs.commands.registerCommand("dart.copyVmServiceUri", async () => {
+			const session = await this.getDebugSession();
+			if (!session) {
+				await vs.window.showInformationMessage("No Dart/Flutter debug session available");
+				return;
+			}
+			const vmUri = session?.vmServiceUri;
+			if (!vmUri) {
+				if (session?.hasStarted)
+					await vs.window.showInformationMessage("This debug session does not have a VM Service");
+				else
+					await vs.window.showInformationMessage("This debug session is not ready yet");
+				return;
+			}
+			await vs.env.clipboard.writeText(vmUri.toString());
+		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
 		devToolsPages.forEach((page) => {
 			this.disposables.push(vs.commands.registerCommand(page.commandId, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
