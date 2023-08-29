@@ -539,6 +539,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "flutter.getSelectedDeviceId",
+				"title": "Get Selected Device ID",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.openDevTools",
 				"title": "Open DevTools",
 				"category": "Flutter"
@@ -960,6 +965,10 @@
 				{
 					"command": "flutter.openDevTools",
 					"when": "dart-code:anyProjectLoaded && dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "flutter.getSelectedDeviceId",
+					"when": "false"
 				},
 				{
 					"command": "dart.openDevToolsInspector",

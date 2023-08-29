@@ -56,6 +56,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 				}
 			}, 10000);
 		}
+
+		// Exposed for use in user-tasks.
+		this.subscriptions.push(vs.commands.registerCommand("flutter.getSelectedDeviceId", () => this.currentDevice?.id));
 	}
 
 	public dispose() {
