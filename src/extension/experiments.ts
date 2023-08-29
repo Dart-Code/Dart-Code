@@ -17,7 +17,7 @@ export interface KnownExperiments {
 export function getExperiments(logger: Logger, workspaceContext: WorkspaceContext, context: Context): KnownExperiments {
 	return {
 		// example: new ExampleExperiment(logger, workspaceContext, context),
-		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 75),
+		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 100), // TODO(dantup): Remove when happy we don't need to reduce.
 		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 30),
 		flutterSdkDapsLegacy: new SdkDapExperiment(logger, workspaceContext, context, 10), // DO NOT CHANGE LEGACY.
 	};
