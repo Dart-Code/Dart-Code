@@ -29,7 +29,7 @@ let inProgressProjectFolderSearch: Promise<void> | undefined;
 export const isRunningLocally =
 	// Some cloud IDEs mis-report the extension kind, so if we _know_ something is a cloud IDE,
 	// override that.
-	!isKnownCloudIde
+	!isKnownCloudIde(vs.env.appName)
 	&& (!dartExtension || dartExtension.extensionKind === ExtensionKind.UI);
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
@@ -329,19 +329,40 @@ export function createWatcher(pattern: string, emitter: EventEmitter<vs.Uri | vo
 }
 
 function getHostKind(): string | undefined {
-	let appHost: string | undefined = vs.env.appHost;
-	let remoteName: string | undefined = vs.env.remoteName;
+	return buildHostKind(vs.env);
+}
 
-	// Handle any items that are reported badly.
-	if (remoteName?.endsWith(".cloudworkstations.dev"))
-		remoteName = "cloudworkstations.dev";
-	if (isKnownCloudIde && appHost === "desktop")
+const domainRegex = new RegExp(".*\\.(.*\\..*)$");
+
+/// Builds a string for analytics/logging purposes that describes the environment that the extension is running in.
+///
+/// appName is passed only to detect cloud IDEs and is not part of the string, since that is reported separately.
+///
+/// The returned string is essentially `$appHost-$remoteName` but with some cleanup to avoid redundant or duplicated values, and to
+/// shorten domains to top-levels.
+export function buildHostKind({ appName, appHost, remoteName }: { appName?: string, appHost?: string, remoteName?: string }): string | undefined {
+	// Fix any known cloud IDEs incorrectly using the default "desktop" value.
+	if (isKnownCloudIde(appName) && appHost === "desktop")
 		appHost = "web";
+
+	// Assume desktop by default.
+	if (appHost === "desktop")
+		appHost = undefined;
+
+	// Handle anything that looks like a subdomain of a service. We only
+	// want the top level domain.
+	if (remoteName) {
+		const domainMatch = domainRegex.exec(remoteName);
+		if (domainMatch)
+			remoteName = domainMatch[1];
+	}
 
 	if (appHost && remoteName && appHost !== remoteName)
 		return `${appHost}-${remoteName}`;
 	else if (appHost)
 		return appHost;
-	else
+	else if (remoteName)
 		return remoteName;
+	else
+		return undefined;
 }

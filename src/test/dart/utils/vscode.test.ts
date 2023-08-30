@@ -1,7 +1,46 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { envUtils } from "../../../shared/vscode/utils";
+import { buildHostKind, envUtils } from "../../../shared/vscode/utils";
 import { sb } from "../../helpers";
+
+describe("buildHostKind", () => {
+	function verify(appName: string | undefined, appHost: string | undefined, remoteName: string | undefined, expected: string | undefined) {
+		assert.equal(buildHostKind({ appName, appHost, remoteName }), expected);
+	}
+
+	it("builds the correct standard Desktop string", () => {
+		verify("Visual Studio Code", "desktop", undefined, undefined);
+		verify("Visual Studio Code", "desktop", "", undefined);
+		verify("Visual Studio Code", "", "", undefined);
+	});
+
+	it("handles misreported 'desktop' cloud IDEs", () => {
+		verify("Theia", "desktop", "", "web");
+		verify("Cloud Shell", "desktop", "", "web");
+		verify("IDX", "desktop", "a", "web-a");
+	});
+
+	it("converts host remoteNames to top level domains", () => {
+		verify("Foo", "web", "cloudthing.dev", "web-cloudthing.dev");
+		verify("Foo", "web", "myapp.cloudthing.dev", "web-cloudthing.dev");
+		verify("Foo", "web", "myapp.me.cloudthing.dev", "web-cloudthing.dev");
+	});
+
+	it("handles only appName", () => {
+		verify("appName", "", "", undefined);
+		verify("appName", undefined, undefined, undefined);
+	});
+
+	it("handles only appHost", () => {
+		verify("", "appHost", "", "appHost");
+		verify(undefined, "appHost", undefined, "appHost");
+	});
+
+	it("handles only remoteName", () => {
+		verify("", "", "remoteName", "remoteName");
+		verify(undefined, undefined, "remoteName", "remoteName");
+	});
+});
 
 describe("exposeUrl", () => {
 	describe("when asExternalUri is a no-op", () => {
