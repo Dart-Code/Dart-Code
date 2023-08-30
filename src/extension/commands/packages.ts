@@ -58,7 +58,11 @@ export class PackageCommands extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
-		const additionalArgs = config.offline ? ["--offline"] : [];
+		const additionalArgs = [];
+		if (config.offline)
+			additionalArgs.push("--offline");
+		if (this.dartCapabilities.needsNoExampleForPubGet)
+			additionalArgs.push("--no-example");
 
 		if (util.isInsideFlutterProject(uri)) {
 			return this.runFlutter(["pub", "get", ...additionalArgs], uri);
