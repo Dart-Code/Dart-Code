@@ -60,6 +60,7 @@ export class DasAnalyzer extends Analyzer {
 		this.fileTracker = new DasFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client);
 		this.disposables.push(this.fileTracker);
+		this.disposables.push(this.statusItem);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
 			this.statusItem.detail = "Started";
