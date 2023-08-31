@@ -396,14 +396,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.debuggerReady(),
+			dc.waitForCustomEvent("flutter.appStarted"),
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
 		);
 
 		await watchPromise("hot_reloads_successfully->hotReload", dc.hotReload());
-		// This test flakes on Chrome sometimes.. attempted to see if it's due to terminating
-		// too fast after the hot reload...
-		await delay(300);
 
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
@@ -415,6 +413,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.debuggerReady(),
+			dc.waitForCustomEvent("flutter.appStarted"),
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
 		);
