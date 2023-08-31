@@ -297,7 +297,12 @@ export class DartDebugClient extends DebugClient {
 
 	public async debuggerReady(): Promise<void> {
 		await this.waitForCustomEvent("dart.debuggerUris");
-		await delay(500);
+		await delay(100);
+	}
+
+	public async flutterAppStarted(): Promise<void> {
+		await this.waitForCustomEvent("flutter.appStarted");
+		await delay(100);
 	}
 
 	public waitForCustomEvent<T>(type: string, filter?: (notification: T) => boolean): Promise<T> {
