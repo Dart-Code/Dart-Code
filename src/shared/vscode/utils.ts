@@ -332,7 +332,6 @@ function getHostKind(): string | undefined {
 	return buildHostKind(vs.env);
 }
 
-const domainRegex = new RegExp(".*\\.(.*\\..*)$");
 
 /// Builds a string for analytics/logging purposes that describes the environment that the extension is running in.
 ///
@@ -341,6 +340,8 @@ const domainRegex = new RegExp(".*\\.(.*\\..*)$");
 /// The returned string is essentially `$appHost-$remoteName` but with some cleanup to avoid redundant or duplicated values, and to
 /// shorten domains to top-levels.
 export function buildHostKind({ appName, appHost, remoteName }: { appName?: string, appHost?: string, remoteName?: string }): string | undefined {
+	const domainRegex = new RegExp(".*\\.(.*\\..*)$");
+
 	// Fix any known cloud IDEs incorrectly using the default "desktop" value.
 	if (isKnownCloudIde(appName) && appHost === "desktop")
 		appHost = "web";
