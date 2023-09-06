@@ -197,7 +197,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
 
 	// Record the Flutter SDK path so we can set FLUTTER_ROOT for spawned processes.
-	if (workspaceContext.sdks.flutter)
+	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter)
 		setFlutterRoot(workspaceContext.sdks.flutter);
 	setupToolEnv();
 
