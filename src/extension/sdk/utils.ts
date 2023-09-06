@@ -473,10 +473,20 @@ export class SdkUtils {
 			wc.disableSdkUpdateChecks = true;
 		}
 
+		const isDartFromFlutter = !!dartSdkPath && isDartSdkFromFlutter(dartSdkPath);
+
+		// Don't carry the Flutter SDK path through if we're not a Flutter workspace unless
+		// we're using the Dart SDK from a Flutter SDK. Otherwise, we could have mismatched
+		// Dart + Flutter SDKs.
+		if (!hasAnyFlutterProject && !isDartFromFlutter) {
+			this.logger.info(`Removing Flutter SDK because not a Flutter workspace and the Dart SDK is not from the Flutter SDK`);
+			flutterSdkPath = undefined;
+		}
+
 		return new WorkspaceContext(
 			{
 				dart: dartSdkPath,
-				dartSdkIsFromFlutter: !!dartSdkPath && isDartSdkFromFlutter(dartSdkPath),
+				dartSdkIsFromFlutter: isDartFromFlutter,
 				dartVersion: getSdkVersion(this.logger, { sdkRoot: dartSdkPath }),
 				flutter: flutterSdkPath,
 				flutterVersion: workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath }),

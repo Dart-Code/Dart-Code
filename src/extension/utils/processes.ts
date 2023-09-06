@@ -4,6 +4,7 @@ import { Logger, SpawnedProcess } from "../../shared/interfaces";
 import { RunProcessResult, runProcess, safeSpawn } from "../../shared/processes";
 
 // Environment used when spawning Dart and Flutter processes.
+let flutterRoot: string | undefined;
 let toolEnv: { [key: string]: string } = {};
 let globalFlutterArgs: string[] = [];
 
@@ -13,6 +14,10 @@ export function getToolEnv() {
 
 export function getGlobalFlutterArgs() {
 	return globalFlutterArgs;
+}
+
+export function setupFlutterRoot(root: string) {
+	flutterRoot = root;
 }
 
 export function setupToolEnv(envOverrides?: any) {
@@ -29,9 +34,10 @@ export function setupToolEnv(envOverrides?: any) {
 	// Add on any overrides.
 	if (envOverrides)
 		toolEnv = Object.assign(toolEnv, envOverrides);
+
+	if (!toolEnv.FLUTTER_ROOT && !process.env.FLUTTER_ROOT && flutterRoot)
+		toolEnv.FLUTTER_ROOT = flutterRoot;
 }
-// TODO: Should we move this to extension activate?
-setupToolEnv();
 
 export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): SpawnedProcess {
 	const env = Object.assign({}, toolEnv, envOverrides) as { [key: string]: string | undefined } | undefined;

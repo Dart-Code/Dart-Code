@@ -39,4 +39,10 @@ describe("extension", () => {
 		assert.equal(sdks.dartSdkIsFromFlutter, true);
 		assert.notEqual(sdks.dart.indexOf("flutter"), -1);
 	});
+	it("set FLUTTER_ROOT", async () => {
+		await activateWithoutAnalysis();
+		const toolEnv = extApi.getToolEnv() as any;
+		assert.ok(toolEnv?.FLUTTER_ROOT);
+		assert.ok(toolEnv?.FLUTTER_ROOT, extApi.workspaceContext.sdks.flutter);
+	});
 });

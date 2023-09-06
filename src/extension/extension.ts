@@ -111,7 +111,7 @@ import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
-import { safeToolSpawn } from "./utils/processes";
+import { getToolEnv, safeToolSpawn, setupFlutterRoot as setFlutterRoot, setupToolEnv } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
 
 const PROJECT_LOADED = "dart-code:anyProjectLoaded";
@@ -195,6 +195,11 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;
 	const sdks = workspaceContext.sdks;
 	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
+
+	// Record the Flutter SDK path so we can set FLUTTER_ROOT for spawned processes.
+	if (workspaceContext.sdks.flutter)
+		setFlutterRoot(workspaceContext.sdks.flutter);
+	setupToolEnv();
 
 	// Add the PATHs to the Terminal environment so if the user runs commands
 	// there they match the versions (and can be resolved, if not already on PATH).
@@ -807,6 +812,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
 			getLogHeader,
 			getOutputChannel,
+			getToolEnv,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			interactiveRefactors: lspAnalyzer?.refactors,
 			isLsp: isUsingLsp,
