@@ -287,9 +287,8 @@ export class SdkUtils {
 
 		// TODO: This has gotten very messy and needs tidying up...
 
-		let firstFlutterMobileProject: string | undefined;
+		let firstFlutterProject: string | undefined;
 		let hasAnyFlutterProject: boolean = false;
-		let hasAnyFlutterMobileProject: boolean = false;
 		let hasAnyWebProject: boolean = false;
 		let hasAnyStandardDartProject: boolean = false;
 
@@ -320,11 +319,10 @@ export class SdkUtils {
 			}
 
 			// Track the first Flutter Project so we can try finding the Flutter SDK from its packages file.
-			firstFlutterMobileProject = firstFlutterMobileProject || (isSomethingFlutter ? folder : undefined);
+			firstFlutterProject = firstFlutterProject || (isSomethingFlutter ? folder : undefined);
 
 			// Set some flags we'll use to construct the workspace, so we know what things we need to light up.
 			hasAnyFlutterProject = hasAnyFlutterProject || isSomethingFlutter;
-			hasAnyFlutterMobileProject = hasAnyFlutterMobileProject || refsFlutter || hasFlutterCreateProjectTriggerFile;
 			hasAnyWebProject = hasAnyWebProject || refsWeb;
 			hasAnyStandardDartProject = hasAnyStandardDartProject || (!isSomethingFlutter && hasPubspecFile);
 		}
@@ -359,7 +357,6 @@ export class SdkUtils {
 		let flutterSdkPath;
 		if (workspaceConfig.forceFlutterWorkspace) {
 			hasAnyFlutterProject = true;
-			hasAnyFlutterMobileProject = true;
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
 		} else {
 			const flutterSdkSearchPaths = [
@@ -367,10 +364,10 @@ export class SdkUtils {
 				// TODO: These could move into processFuchsiaWorkspace and be set on the config?
 				fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 				fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
-				firstFlutterMobileProject,
-				firstFlutterMobileProject && extractFlutterSdkPathFromPackagesFile(firstFlutterMobileProject),
-				firstFlutterMobileProject && path.join(firstFlutterMobileProject, ".flutter"),
-				firstFlutterMobileProject && path.join(firstFlutterMobileProject, "vendor/flutter"),
+				firstFlutterProject,
+				firstFlutterProject && extractFlutterSdkPathFromPackagesFile(firstFlutterProject),
+				firstFlutterProject && path.join(firstFlutterProject, ".flutter"),
+				firstFlutterProject && path.join(firstFlutterProject, "vendor/flutter"),
 				process.env.FLUTTER_ROOT,
 				isLinux ? "~/snap/flutter/common/flutter" : undefined,
 				"~/flutter-sdk",
@@ -421,7 +418,7 @@ export class SdkUtils {
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks/dart-sdk"),
 			fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart/tools/sdks", dartPlatformName, "dart-sdk"),
 			fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", dartPlatformName, "dart-sdk"),
-			firstFlutterMobileProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
+			firstFlutterProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
 			config.sdkPath,
 		].concat(paths)
 			// The above array only has the Flutter SDK	in the search path if we KNOW it's a flutter
@@ -437,7 +434,7 @@ export class SdkUtils {
 
 		const dartSdkResult = this.findDartSdk(dartSdkSearchPaths);
 
-		if (!hasAnyFlutterProject && !fuchsiaRoot && !firstFlutterMobileProject && !workspaceConfig.forceFlutterWorkspace) {
+		if (!hasAnyFlutterProject && !fuchsiaRoot && !firstFlutterProject && !workspaceConfig.forceFlutterWorkspace) {
 			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath", !!config.workspaceSdkPath);
 		}
 
@@ -492,7 +489,7 @@ export class SdkUtils {
 				flutterVersion: workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath }),
 			} as Sdks,
 			workspaceConfig,
-			hasAnyFlutterMobileProject,
+			hasAnyFlutterProject,
 			hasAnyWebProject,
 			hasAnyStandardDartProject,
 			!!fuchsiaRoot && hasAnyStandardDartProject,
