@@ -143,15 +143,15 @@ export async function isFlutterRepoAsync(folder: string): Promise<boolean> {
 }
 
 export function isFlutterProjectFolder(folder?: string): boolean {
-	return projectReferencesFlutterSdk(folder);
+	return projectReferencesFlutter(folder);
 }
 
-export function projectReferencesFlutterSdk(folder?: string): boolean {
+export function projectReferencesFlutter(folder?: string): boolean {
 	if (folder && hasPubspec(folder)) {
 		const pubspecPath = path.join(folder, "pubspec.yaml");
 		try {
 			const pubspecContent = fs.readFileSync(pubspecPath);
-			return pubspecContentReferencesFlutterSdk(pubspecContent.toString());
+			return pubspecContentReferencesFlutter(pubspecContent.toString());
 		} catch (e: any) {
 			if (e?.code !== "ENOENT") // Don't warn for missing files.
 				console.warn(`Failed to read ${pubspecPath}: ${e}`);
@@ -160,10 +160,19 @@ export function projectReferencesFlutterSdk(folder?: string): boolean {
 	return false;
 }
 
-export function pubspecContentReferencesFlutterSdk(content: string) {
+export function pubspecContentReferencesFlutter(content: string) {
 	try {
 		const yaml = YAML.parse(content.toString());
-		return !!(yaml?.dependencies?.flutter) || !!(yaml?.dev_dependencies?.flutter);
+		return !!(
+			yaml?.dependencies?.flutter
+			|| yaml?.dev_dependencies?.flutter
+			|| yaml?.dependencies?.sky_engine
+			|| yaml?.dev_dependencies?.sky_engine
+			|| yaml?.dependencies?.flutter_test
+			|| yaml?.dev_dependencies?.flutter_test
+			|| yaml?.dependencies?.flutter_goldens
+			|| yaml?.dev_dependencies?.flutter_goldens
+		);
 	} catch {
 		return false;
 	}

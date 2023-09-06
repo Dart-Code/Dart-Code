@@ -4,7 +4,7 @@ import { commands, ExtensionContext, ProgressLocation, window, workspace } from 
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { ExtensionConfig, Logger, Sdks, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutterSdk } from "../../shared/utils/fs";
+import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processDartSdkRepository, processFuchsiaWorkspace } from "../../shared/utils/workspace";
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
@@ -298,7 +298,7 @@ export class SdkUtils {
 		// Scan through them all to figure out what type of projects we have.
 		for (const folder of possibleProjects) {
 			const hasPubspecFile = hasPubspec(folder);
-			const refsFlutter = hasPubspecFile && projectReferencesFlutterSdk(folder);
+			const refsFlutter = hasPubspecFile && projectReferencesFlutter(folder);
 			const refsWeb = false; // hasPubspecFile && referencesWeb(folder);
 			const hasFlutterCreateProjectTriggerFile =
 				fs.existsSync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
