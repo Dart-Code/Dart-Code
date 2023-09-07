@@ -42,10 +42,15 @@ const logHeader: string[] = [];
 export function clearLogHeader() {
 	logHeader.length = 0;
 }
-export function getLogHeader() {
+export function getLogHeader(suppressHeaderFooter?: boolean) {
 	if (!logHeader.length)
 		return "";
-	return logHeader.join(platformEol) + platformEol + platformEol;
+
+	return [
+		...(suppressHeaderFooter ? [] : ["!! ⚠️ PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING ⚠️ !!"]),
+		...logHeader,
+		...(suppressHeaderFooter ? [] : [platformEol]),
+	].join(platformEol);
 }
 export function addToLogHeader(f: () => string) {
 	try {

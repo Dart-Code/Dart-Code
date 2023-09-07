@@ -63,6 +63,7 @@ import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decoration
 import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decorations_lsp";
 import { FlutterUiGuideDecorationsDas } from "./decorations/flutter_ui_guides_decorations_das";
 import { FlutterUiGuideDecorationsLsp } from "./decorations/flutter_ui_guides_decorations_lsp";
+import { DiagnosticReport } from "./diagnostic_report";
 import { KnownExperiments, getExperiments } from "./experiments";
 import { setUpDaemonMessageHandler as setUpDaemon } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
@@ -508,6 +509,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		new AnalyzerStatusReporter(logger, dasClient, workspaceContext, analytics);
 
 	context.subscriptions.push(new FileChangeWarnings());
+	context.subscriptions.push(new DiagnosticReport(logger, workspaceContext));
 
 	// Set up diagnostics.
 	if (!isUsingLsp && dasClient) {
@@ -840,8 +842,6 @@ function setupLog(logFile: string | undefined, category: LogCategory) {
 
 function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 	clearLogHeader();
-	addToLogHeader(() => `!! PLEASE REVIEW THIS LOG FOR SENSITIVE INFORMATION BEFORE SHARING !!`);
-	addToLogHeader(() => ``);
 	addToLogHeader(() => `Dart Code extension: ${extensionVersion}`);
 	addToLogHeader(() => {
 		const ext = vs.extensions.getExtension(flutterExtensionIdentifier)!;

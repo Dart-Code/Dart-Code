@@ -307,6 +307,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.generateDiagnosticReport",
+				"title": "Collect Diagnostic Information",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.startLogging",
 				"title": "Capture Logs",
 				"category": "Dart"
@@ -683,6 +688,9 @@
 				},
 				{
 					"command": "dart.createProject"
+				},
+				{
+					"command": "dart.generateDiagnosticReport"
 				},
 				{
 					"command": "dart.startLogging",
