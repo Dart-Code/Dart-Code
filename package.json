@@ -1706,8 +1706,10 @@
 						"scope": "resource"
 					},
 					"dart.documentation": {
-						"type": "string",
-						"default": "full",
+						"type": [
+							"null",
+							"string"
+						],
 						"enum": [
 							"full",
 							"summary",
@@ -1718,7 +1720,7 @@
 							"Show short documentatin summary",
 							"Do not show documentation"
 						],
-						"markdownDescription": "What level of documentation to show in Hovers and Code Completion details. This setting is only supported for Dart SDKs after v2.18.",
+						"markdownDescription": "What level of documentation to show in Hovers and Code Completion details. When `null`, defaults to 'full' when running locally and 'none' in remote workspaces. This setting is only supported for Dart SDKs after v2.18.",
 						"scope": "window"
 					},
 					"dart.doNotFormat": {
@@ -2153,9 +2155,11 @@
 						"scope": "window"
 					},
 					"dart.maxCompletionItems": {
-						"type": "number",
-						"default": 100000,
-						"description": "The maximum number of completion items to return from a code completion request. Updated results will be fetched as additional characters are typed. Lower numbers may improved performance. Only affects LSP for > Dart SDK 2.17.",
+						"type": [
+							"null",
+							"number"
+						],
+						"description": "The maximum number of completion items to return from a code completion request. Updated results will be fetched as additional characters are typed. Lower numbers may improved performance. Defaults to a lower value in remote workspaces. Only affects LSP for > Dart SDK 2.17.",
 						"scope": "window"
 					},
 					"dart.dartTestLogFile": {

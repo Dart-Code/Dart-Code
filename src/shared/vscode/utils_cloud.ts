@@ -1,4 +1,3 @@
-
 export function isTheia(appName: string | undefined) {
 	return appName?.includes("Theia");
 }

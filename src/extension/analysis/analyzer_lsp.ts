@@ -16,7 +16,7 @@ import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extensio
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { LspUriConverters } from "../../shared/vscode/lsp_uri_converters";
-import { envUtils, hostKind } from "../../shared/vscode/utils";
+import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
@@ -359,6 +359,16 @@ export class LspAnalyzer extends Analyzer {
 							// Flatten showTodos to a boolean if array not supported.
 							if (Array.isArray(result.showTodos) && !this.dartCapabilities.supportsShowTodoArray) {
 								result.showTodos = result.showTodos.length !== 0;
+							}
+
+							// Set default documentation and maxCompletionItems based on whether we're running locally or not.
+							// When running locally, payload size is less of an issue so we include full docs and a large list.
+							if (isRunningLocally) {
+								result.maxCompletionItems = result.maxCompletionItems ?? 100000;
+								result.documentation = result.documentation ?? "full";
+							} else {
+								result.maxCompletionItems = result.maxCompletionItems ?? 1000;
+								result.documentation = result.documentation ?? "none";
 							}
 						}
 					}
