@@ -855,21 +855,18 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 		addToLogHeader(() => `Remote: ${vs.env.remoteName}`);
 	if (hostKind)
 		addToLogHeader(() => `Host Kind: ${hostKind}`);
-	addToLogHeader(() => `Version: ${vs.version}`);
-	addToLogHeader(() => `Platform: ${platformDisplayName}`);
+	addToLogHeader(() => `Version: ${platformDisplayName} ${vs.version}`);
 	if (workspaceContext) {
 		addToLogHeader(() => ``);
-		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription}`);
-		addToLogHeader(() => `Analyzer type: ${workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP"}`);
-		addToLogHeader(() => `Multi-root?: ${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1}`);
+		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription} (${workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP"})${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1 ? " (Multiroot)" : ""}`);
 		const sdks = workspaceContext.sdks;
 		addToLogHeader(() => ``);
-		addToLogHeader(() => `Dart SDK:\n    Loc: ${sdks.dart}\n    Ver: ${sdks.dartVersion}`);
-		addToLogHeader(() => `Flutter SDK:\n    Loc: ${sdks.flutter}\n    Ver: ${sdks.flutterVersion}`);
+		addToLogHeader(() => `Dart (${sdks.dartVersion}): ${sdks.dart}`);
+		addToLogHeader(() => `Flutter (${sdks.flutterVersion}): ${sdks.flutter}`);
 	}
 	addToLogHeader(() => ``);
-	addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}`);
-	addToLogHeader(() => `NO_PROXY: ${process.env.NO_PROXY}`);
+	if (process.env.HTTP_PROXY || process.env.NO_PROXY)
+		addToLogHeader(() => `HTTP_PROXY: ${process.env.HTTP_PROXY}, NO_PROXY: ${process.env.NO_PROXY}`);
 
 	// Any time the log headers are rebuilt, we should re-log them.
 	logger?.info(getLogHeader());
