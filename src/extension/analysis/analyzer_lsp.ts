@@ -418,6 +418,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			hostKind,
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
+			previewSurveys: config.previewSurveys,
 			remoteName: vs.env.remoteName,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
 		},
