@@ -9,7 +9,7 @@ import { debugSessions, debugSessionsChanged } from "../commands/debug";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 import { VsCodeApi, VsCodeCapabilities, VsCodeDebugSession, VsCodeDebugSessionsEvent, VsCodeDevice, VsCodeDevicesEvent } from "./interface";
 
-const apiDebugMode = true;
+const apiDebugMode = false;
 
 export class DartApi implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];

@@ -75,11 +75,11 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 
 			if (event.origin == ${JSON.stringify(frameOrigin)}) {
 				// Messages from the frame go up to VS Code.
-				console.log(\`FRAME: Code <-- DevTools: \${JSON.stringify(message)}\`);
+				// console.log(\`FRAME: Code <-- DevTools: \${JSON.stringify(message)}\`);
 				vscode.postMessage(message);
 			} else {
 				// Messages not from the frame go to the frame.
-				console.log(\`FRAME: Code --> DevTools: \${JSON.stringify(message)}\`);
+				// console.log(\`FRAME: Code --> DevTools: \${JSON.stringify(message)}\`);
 				devToolsFrame.contentWindow.postMessage(message, ${JSON.stringify(frameOrigin)});
 			}
 		});
