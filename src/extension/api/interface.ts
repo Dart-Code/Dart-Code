@@ -15,6 +15,8 @@ export interface VsCodeApi {
 	executeCommand(command: string, args?: object[]): Promise<object | undefined>;
 	selectDevice(id: string): Promise<boolean>;
 	openDevToolsPage(debugSessionId: string, page: string): Promise<void>;
+	hotReload(debugSessionId: string): Promise<void>;
+	hotRestart(debugSessionId: string): Promise<void>;
 }
 
 export interface VsCodeDevice {
@@ -37,6 +39,8 @@ export interface VsCodeCapabilities {
 	executeCommand: boolean;
 	openDevToolsPage: boolean;
 	selectDevice: boolean;
+	hotReload: boolean;
+	hotRestart: boolean;
 }
 
 export interface VsCodeDebugSessionsEvent {

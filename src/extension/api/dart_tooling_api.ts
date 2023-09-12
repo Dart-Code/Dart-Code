@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { devToolsPages } from "../../shared/constants";
+import { devToolsPages, restartReasonManual } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IAmDisposable } from "../../shared/interfaces";
@@ -98,6 +98,10 @@ class VsCodeApiHandler extends ToolApi {
 			return this.api.selectDevice(params.id as string);
 		} else if (method === "openDevToolsPage") {
 			return this.api.openDevToolsPage(params.debugSessionId as string, params.page as string);
+		} else if (method === "hotReload") {
+			return this.api.hotReload(params.debugSessionId as string);
+		} else if (method === "hotRestart") {
+			return this.api.hotRestart(params.debugSessionId as string);
 		} else if (method === "executeCommand") {
 			return await this.api.executeCommand(params.command as string, params.arguments as object[] | undefined);
 		}
@@ -121,6 +125,8 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 
 	readonly capabilities: VsCodeCapabilities = {
 		executeCommand: true,
+		hotReload: true,
+		hotRestart: true,
 		openDevToolsPage: true,
 		selectDevice: true,
 	};
@@ -142,6 +148,22 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 
 	public async openDevToolsPage(debugSessionId: string, page: string): Promise<void> {
 		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, page: devToolsPages.find((p) => p.id === page) });
+	}
+
+	public async hotReload(debugSessionId: string): Promise<void> {
+		const session = debugSessions.find((s) => s.session.id === debugSessionId);
+		if (!session)
+			return;
+
+		await session.session.customRequest("hotReload", { reason: restartReasonManual });
+	}
+
+	public async hotRestart(debugSessionId: string): Promise<void> {
+		const session = debugSessions.find((s) => s.session.id === debugSessionId);
+		if (!session)
+			return;
+
+		await session.session.customRequest("hotRestart", { reason: restartReasonManual });
 	}
 
 	private onDevicesChanged(): any {
