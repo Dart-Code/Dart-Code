@@ -34,8 +34,10 @@ export class FlutterCommands extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		this.disposables.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
 		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.doctor.sidebar", this.flutterDoctor, this));
 		this.disposables.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
 		this.disposables.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.createProject.sidebar", this.createFlutterProject, this));
 		this.disposables.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
 		this.disposables.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate, this));
 		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));

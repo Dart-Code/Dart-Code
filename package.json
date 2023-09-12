@@ -115,6 +115,12 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.createProject.sidebar",
+				"title": "Create New Flutter Project",
+				"category": "Flutter",
+				"icon": "$(new-folder)"
+			},
+			{
 				"command": "dart.createProject",
 				"title": "New Project",
 				"category": "Dart"
@@ -423,6 +429,12 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.doctor.sidebar",
+				"title": "Run Flutter Doctor",
+				"category": "Flutter",
+				"icon": "$(tasklist)"
+			},
+			{
 				"command": "flutter.upgrade",
 				"title": "Run Flutter Upgrade",
 				"category": "Flutter"
@@ -687,6 +699,10 @@
 					"command": "flutter.createProject"
 				},
 				{
+					"command": "flutter.createProject.sidebar",
+					"when": "false"
+				},
+				{
 					"command": "dart.createProject"
 				},
 				{
@@ -894,6 +910,10 @@
 				},
 				{
 					"command": "flutter.doctor"
+				},
+				{
+					"command": "flutter.doctor.sidebar",
+					"when": "false"
 				},
 				{
 					"command": "flutter.upgrade"
@@ -1289,6 +1309,16 @@
 				}
 			],
 			"view/title": [
+				{
+					"when": "view == dartFlutterSidebar",
+					"group": "navigation@2",
+					"command": "flutter.doctor.sidebar"
+				},
+				{
+					"when": "view == dartFlutterSidebar",
+					"group": "navigation@1",
+					"command": "flutter.createProject.sidebar"
+				},
 				{
 					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.center",
 					"command": "_flutter.outline.refactor.flutter.wrap.center"
