@@ -7,6 +7,7 @@ import { DebugOption, DebuggerType, LogSeverity, VmService, VmServiceExtension, 
 import { DartWorkspaceContext, DevToolsPage, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
+import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -208,7 +209,11 @@ export class DebugCommands implements IAmDisposable {
 			this.onWillHotRestartEmitter.fire();
 			await Promise.all(debugSessions.map((s) => s.session.customRequest("hotRestart", args)));
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", async (resource: vs.Uri, launchTemplate: any | undefined) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startDebugging", async (arg: vs.Uri | { resource: vs.Uri, launchTemplate?: any | undefined }) => {
+			const resource = "resource" in arg ? arg.resource : arg;
+			let launchTemplate = "launchTemplate" in arg ? arg.launchTemplate : undefined;
+			launchTemplate ??= getLaunchConfigDefaultTemplate(resource, true);
+
 			const launchConfig = Object.assign(
 				{
 					name: dynamicDebugSessionName,
@@ -223,7 +228,11 @@ export class DebugCommands implements IAmDisposable {
 			);
 			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", async (resource: vs.Uri, launchTemplate: any | undefined) => {
+		this.disposables.push(vs.commands.registerCommand("dart.startWithoutDebugging", async (arg: vs.Uri | { resource: vs.Uri, launchTemplate?: any | undefined }) => {
+			const resource = "resource" in arg ? arg.resource : arg;
+			let launchTemplate = "launchTemplate" in arg ? arg.launchTemplate : undefined;
+			launchTemplate ??= getLaunchConfigDefaultTemplate(resource, false);
+
 			const launchConfig = Object.assign(
 				{
 					name: dynamicDebugSessionName,

@@ -5,7 +5,7 @@ import { fsPath, isWithinPathOrEqual } from "../utils/fs";
 
 const debugTypeTokenRegex = new RegExp(escapeRegExp("${debugType}"), "gi");
 
-/// Allows overriding the launch config used by Code Lens "Run"/"Debug" and runs through test runner.
+/// Allows overriding the launch config used by Code Lens "Run"/"Debug", test runner, editor launch buttons, explorer context menu.
 ///
 /// Tries to get the most specific config first (eg. using an explicit `noDebug` flag) and otherwise falls back to
 /// a generic (no `noDebug` specified) one, injecting the value of `debug` inverted as `noDebug`.

@@ -51,7 +51,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		return new CodeLens(
 			toRange(document, mainFunction.offset, mainFunction.length),
 			{
-				arguments: template ? [document.uri, template] : [document.uri],
+				arguments: [{ resource: document.uri, launchTemplate: template }],
 				command: debug ? "dart.startDebugging" : "dart.startWithoutDebugging",
 				title: name,
 			}
