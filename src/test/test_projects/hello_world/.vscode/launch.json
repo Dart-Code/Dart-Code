@@ -3,7 +3,7 @@
 		{
 			"name": "Dart",
 			"type": "dart",
-			"request": "launch",
+			"request": "launch"
 		},
 		{
 			"name": "Dart with Env Var",
@@ -12,7 +12,7 @@
 			"env": {
 				"LAUNCH_ENV_VAR": "default"
 			},
-			"templateFor": "",
+			"templateFor": ""
 		},
 		{
 			"name": "Dart with Env Var (Debug)",
@@ -22,7 +22,7 @@
 			"env": {
 				"LAUNCH_ENV_VAR": "noDebugExplicitlyFalse"
 			},
-			"templateFor": "",
+			"templateFor": ""
 		}
 	]
 }
