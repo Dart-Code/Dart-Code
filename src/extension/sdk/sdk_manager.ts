@@ -120,7 +120,7 @@ export class FlutterSdkManager extends SdkManager {
 			void config.setFlutterSdkPath(undefined, vs.ConfigurationTarget.Workspace);
 	}
 	protected setSdk(folder: string | undefined, target: vs.ConfigurationTarget) {
-		void config.setFlutterSdkPath(folder, target);
+		void config.setFlutterSdkPath(homeRelativePath(folder), target);
 	}
 }
 
