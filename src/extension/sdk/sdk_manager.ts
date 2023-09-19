@@ -77,12 +77,13 @@ abstract class SdkManager {
 				if (!sdk)
 					return;
 
+				const folder = homeRelativePath(sdk.folder);
 				if (config.sdkSwitchingTarget === "global") {
 					// Clear any existing workspace setting first.
 					this.clearWorkspaceSdk();
-					this.setSdk(sdk.folder, vs.ConfigurationTarget.Global);
+					this.setSdk(folder, vs.ConfigurationTarget.Global);
 				} else {
-					this.setSdk(sdk.folder, vs.ConfigurationTarget.Workspace);
+					this.setSdk(folder, vs.ConfigurationTarget.Workspace);
 				}
 			});
 	}
@@ -102,7 +103,7 @@ export class DartSdkManager extends SdkManager {
 			void config.setSdkPath(undefined, vs.ConfigurationTarget.Workspace);
 	}
 	protected setSdk(folder: string | undefined, target: vs.ConfigurationTarget) {
-		void config.setSdkPath(homeRelativePath(folder), target);
+		void config.setSdkPath(folder, target);
 	}
 }
 
@@ -120,7 +121,7 @@ export class FlutterSdkManager extends SdkManager {
 			void config.setFlutterSdkPath(undefined, vs.ConfigurationTarget.Workspace);
 	}
 	protected setSdk(folder: string | undefined, target: vs.ConfigurationTarget) {
-		void config.setFlutterSdkPath(homeRelativePath(folder), target);
+		void config.setFlutterSdkPath(folder, target);
 	}
 }
 
