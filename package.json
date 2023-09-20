@@ -566,6 +566,12 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.openDevTools.sidebar",
+				"title": "Open DevTools",
+				"category": "Flutter",
+				"icon": "$(tools)"
+			},
+			{
 				"command": "dart.openDevToolsInspector",
 				"title": "Open DevTools Widget Inspector Page",
 				"category": "Flutter",
@@ -995,6 +1001,10 @@
 					"when": "dart-code:anyProjectLoaded && dart-code:anyFlutterProjectLoaded"
 				},
 				{
+					"command": "flutter.openDevTools.sidebar",
+					"when": "false"
+				},
+				{
 					"command": "flutter.getSelectedDeviceId",
 					"when": "false"
 				},
@@ -1311,13 +1321,18 @@
 			"view/title": [
 				{
 					"when": "view == dartFlutterSidebar",
-					"group": "navigation@2",
-					"command": "flutter.doctor.sidebar"
+					"group": "navigation@1",
+					"command": "flutter.createProject.sidebar"
 				},
 				{
 					"when": "view == dartFlutterSidebar",
-					"group": "navigation@1",
-					"command": "flutter.createProject.sidebar"
+					"group": "navigation@2",
+					"command": "flutter.openDevTools.sidebar"
+				},
+				{
+					"when": "view == dartFlutterSidebar",
+					"group": "navigation@3",
+					"command": "flutter.doctor.sidebar"
 				},
 				{
 					"when": "view == dartFlutterOutline && dart-code:widgetSupports:refactor.flutter.wrap.center",

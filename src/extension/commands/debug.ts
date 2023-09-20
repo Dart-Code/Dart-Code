@@ -4,7 +4,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
 import { DebugOption, DebuggerType, LogSeverity, VmService, VmServiceExtension, debugOptionNames } from "../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
+import { DartWorkspaceContext, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
@@ -134,13 +134,14 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools")));
 		devToolsPages.forEach((page) => {
 			this.disposables.push(vs.commands.registerCommand(page.commandId, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
-				options = Object.assign({}, options, { page });
+				options = Object.assign({}, options, { pageId: page.id });
 				return vs.commands.executeCommand("dart.openDevTools", options);
 			}));
 		});
-		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> =>
+		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools.sidebar", () => vs.commands.executeCommand("flutter.openDevTools")));
+		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string }): Promise<{ url: string, dispose: () => void } | undefined> =>
 			vs.commands.executeCommand("dart.openDevTools", options)));
-		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, page?: DevToolsPage }): Promise<{ url: string, dispose: () => void } | undefined> => {
+		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length)
 				return this.devTools.spawnForNoSession();
 
@@ -152,10 +153,10 @@ export class DebugCommands implements IAmDisposable {
 
 			// Only show a notification if we were not triggered automatically.
 			const notify = !options || options.triggeredAutomatically !== true;
-			const page = options?.page;
+			const pageId = options?.pageId;
 
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, page });
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId });
 			} else if (session.session.configuration.noDebug) {
 				void vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {
@@ -711,9 +712,8 @@ export class DebugCommands implements IAmDisposable {
 			if (debuggerType === DebuggerType.Dart || debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.Web) {
 				if (session.session.configuration.openDevTools) {
 					const pageId = session.session.configuration.openDevTools;
-					const page = devToolsPages.find((p) => p.id === pageId);
 					if (pageId) {
-						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
+						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, pageId });
 					} else {
 						void vs.window.showWarningMessage(`Debug configuration contain an invalid DevTools page '${pageId}' in 'openDevTools'`);
 					}
@@ -723,7 +723,7 @@ export class DebugCommands implements IAmDisposable {
 						// If embedded DevTools is enabled and it's a Flutter app, assume the user wants the Widget inspector.
 						// Otherwise, DevTools will be launched externally (since it's not clear which page they may want).
 						const page = debuggerType === DebuggerType.Flutter ? widgetInspectorPage : null;
-						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, page });
+						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, pageId: page?.id });
 					}
 				} else if (debuggerType === DebuggerType.Flutter) {
 					void showDevToolsNotificationIfAppropriate(this.context).then((res) => {
@@ -793,7 +793,7 @@ export class DebugCommands implements IAmDisposable {
 					session as DartDebugSessionInformation & { vmServiceUri: string },
 					{
 						inspectorRef: data.inspectorReference,
-						page: widgetInspectorPage,
+						pageId: widgetInspectorPage.id,
 					},
 				);
 			} else if (choice === doNotAskAgainAction) {

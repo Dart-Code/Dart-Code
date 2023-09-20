@@ -187,14 +187,14 @@ export class DevToolsManager implements vs.Disposable {
 
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
-		if (options.location !== "external" && !options.page) {
-			const choice = options.page === null ? "EXTERNAL" : await this.promptForDevToolsPage();
+		if (options.location !== "external" && !options.pageId) {
+			const choice = options.pageId === null ? "EXTERNAL" : await this.promptForDevToolsPage();
 			if (!choice) // User cancelled
 				return;
 			else if (choice === "EXTERNAL")
 				options.location = "external";
 			else
-				options.page = choice.page;
+				options.pageId = choice.page.id;
 		}
 
 		try {
@@ -250,7 +250,6 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 
 		for (const pageId of Object.keys(this.devToolsEmbeddedViews)) {
-			const page = devToolsPages.find((p) => p.id === pageId);
 			const panels = this.devToolsEmbeddedViews[pageId];
 			if (!panels)
 				continue;
@@ -260,7 +259,7 @@ export class DevToolsManager implements vs.Disposable {
 			const reusablePanel = panels.find((p) => p.session.hasEnded);
 			if (reusablePanel) {
 				reusablePanel.session = session;
-				await this.launch(false, session, { location: "beside", page });
+				await this.launch(false, session, { location: "beside", pageId });
 			}
 		}
 	}
@@ -282,22 +281,28 @@ export class DevToolsManager implements vs.Disposable {
 
 		const queryParams: { [key: string]: string | undefined } = {
 			inspectorRef: options.inspectorRef,
-			theme: config.useDevToolsDarkTheme && options.location === "external" ? "dark" : undefined,
+			theme: config.useDevToolsDarkTheme && options.location === "external" ? "dark" : "light",
 		};
 
+		const pageId = options.pageId ?? this.getDefaultPage().id;
+		const page = devToolsPages.find((p) => p.id === pageId);
+		const routeId = page ? this.routeIdForPage(page) : pageId;
+
 		// Try to launch via service if allowed.
-		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: this.routeIdForPage(options.page ?? this.getDefaultPage()) }))
+		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: routeId }))
 			return true;
 
 		// Otherwise, fall back to embedded or launching manually.
-		if (options.page)
-			queryParams.page = this.routeIdForPage(options.page);
+		if (options.pageId)
+			queryParams.page = routeId;
 		if (options.location !== "external")
 			queryParams.embed = "true";
 		const fullUrl = await this.buildDevToolsUrl(queryParams, session.vmServiceUri, url);
-		if (options.location !== "external") {
+		// We currently only support embedded for pages we know about statically, although since we seem
+		// to only use that for a title, we may be able to relax that.
+		if (options.location !== "external" && page) {
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
-			this.launchInEmbeddedWebView(exposedUrl, session, options.page ?? devToolsPages[0], options.location);
+			this.launchInEmbeddedWebView(exposedUrl, session, page, options.location);
 		} else {
 			await envUtils.openInBrowser(fullUrl, this.logger);
 		}
@@ -540,6 +545,6 @@ interface DevToolsOptions {
 	location?: "beside" | "active" | "external";
 	reuseWindows?: boolean;
 	notify?: boolean;
-	page?: DevToolsPage | null; // undefined = unspecified (use default), null = force external so user can pick any
+	pageId?: string | null; // undefined = unspecified (use default), null = force external so user can pick any
 	inspectorRef?: string;
 }

@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { devToolsPages, restartReasonManual } from "../../shared/constants";
+import { restartReasonManual } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { IAmDisposable } from "../../shared/interfaces";
@@ -146,8 +146,8 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		return this.deviceManager?.selectDeviceById(id) ?? false;
 	}
 
-	public async openDevToolsPage(debugSessionId: string, page: string): Promise<void> {
-		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, page: devToolsPages.find((p) => p.id === page) });
+	public async openDevToolsPage(debugSessionId: string, pageId: string): Promise<void> {
+		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, pageId });
 	}
 
 	public async hotReload(debugSessionId: string): Promise<void> {

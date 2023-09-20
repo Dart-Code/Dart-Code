@@ -60,8 +60,8 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			switch (message.command) {
 				case "_dart-code.setUrl":
 					const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
-					const background = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
-					const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
+					const background = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
+					const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
 					const qsSep = message.url.includes("?") ? "&" : "?";
 					let url = \`\${message.url}\${qsSep}theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
 					const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
