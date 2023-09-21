@@ -101,6 +101,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			`;
 
 		this.api = new DartApi(
+			"sidebar",
 			webviewView.webview.onDidReceiveMessage,
 			(message) => webviewView.webview.postMessage(message),
 			this.deviceManager,

@@ -693,15 +693,20 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		flutterOutlineTreeProvider = dasAnalyzer ? new DasFlutterOutlineProvider(analytics, dasAnalyzer) : new LspFlutterOutlineProvider(analytics, lspAnalyzer!);
 		const tree = vs.window.createTreeView<FlutterWidgetItem>("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection(async (e) => {
+			if (!flutterOutlineTreeProvider!.isSelectingBecauseOfEditor)
+				analytics.logFlutterOutlineActivated();
 			// TODO: This should be in a tree, not the data provider.
-			await flutterOutlineTreeProvider!.setContexts(e.selection);
+			await flutterOutlineTreeProvider!.handleSelection(e.selection);
 		});
 
-		context.subscriptions.push(vs.window.onDidChangeTextEditorSelection((e) => {
+		context.subscriptions.push(vs.window.onDidChangeTextEditorSelection(async (e) => {
 			if (e.selections && e.selections.length) {
 				const node = flutterOutlineTreeProvider!.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
-				if (node && tree.visible)
-					void tree.reveal(node, { select: true, focus: false, expand: true });
+				if (node && tree.visible) {
+					flutterOutlineTreeProvider!.isSelectingBecauseOfEditor = true;
+					await tree.reveal(node, { select: true, focus: false, expand: true });
+					flutterOutlineTreeProvider!.isSelectingBecauseOfEditor = false;
+				}
 			}
 		}));
 		context.subscriptions.push(tree);

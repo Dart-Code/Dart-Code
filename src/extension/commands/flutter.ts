@@ -15,7 +15,7 @@ import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { Context } from "../../shared/vscode/workspace";
-import { Analytics, AnalyticsEvent } from "../analytics";
+import { Analytics } from "../analytics";
 import { config } from "../config";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { SdkUtils } from "../sdk/utils";
@@ -34,10 +34,10 @@ export class FlutterCommands extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		this.disposables.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
 		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
-		this.disposables.push(vs.commands.registerCommand("flutter.doctor.sidebar", this.flutterDoctor, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.doctor.sidebar", () => this.flutterDoctor({ commandSource: "sidebar" })));
 		this.disposables.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
 		this.disposables.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
-		this.disposables.push(vs.commands.registerCommand("flutter.createProject.sidebar", this.createFlutterProject, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.createProject.sidebar", () => this.createFlutterProject({ commandSource: "sidebar" })));
 		this.disposables.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
 		this.disposables.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate, this));
 		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
@@ -111,11 +111,14 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 	}
 
-	public flutterDoctor() {
+	public flutterDoctor(options?: { commandSource?: string }) {
 		if (!this.workspace.sdks.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("flutter.doctor");
 			return;
 		}
+
+		this.analytics.logFlutterDoctor(options?.commandSource);
+
 		const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 		if (!fs.existsSync(tempDir))
 			fs.mkdirSync(tempDir);
@@ -257,13 +260,13 @@ export class FlutterCommands extends BaseSdkCommands {
 		return templates;
 	}
 
-	private async createFlutterProject(): Promise<vs.Uri | undefined> {
+	private async createFlutterProject(options?: { commandSource?: string }): Promise<vs.Uri | undefined> {
 		if (!this.sdks || !this.sdks.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
 		}
 
-		this.analytics.log(AnalyticsEvent.Command_FlutterNewProject);
+		this.analytics.logFlutterNewProject(options?.commandSource);
 
 		const pickItems = this.getFlutterTemplates();
 

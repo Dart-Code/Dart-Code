@@ -138,12 +138,12 @@ export class DebugCommands implements IAmDisposable {
 				return vs.commands.executeCommand("dart.openDevTools", options);
 			}));
 		});
-		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools.sidebar", () => vs.commands.executeCommand("flutter.openDevTools")));
-		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string }): Promise<{ url: string, dispose: () => void } | undefined> =>
+		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools.sidebar", () => vs.commands.executeCommand("flutter.openDevTools", { commandSource: "sidebar" })));
+		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string, commandSource?: string }): Promise<{ url: string, dispose: () => void } | undefined> =>
 			vs.commands.executeCommand("dart.openDevTools", options)));
-		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
+		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string, commandSource?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			if (!debugSessions.length)
-				return this.devTools.spawnForNoSession();
+				return this.devTools.spawnForNoSession({ commandSource: options?.commandSource });
 
 			const session = options && options.debugSessionId
 				? debugSessions.find((s) => s.session.id === options.debugSessionId)
@@ -154,9 +154,10 @@ export class DebugCommands implements IAmDisposable {
 			// Only show a notification if we were not triggered automatically.
 			const notify = !options || options.triggeredAutomatically !== true;
 			const pageId = options?.pageId;
+			const commandSource = options?.commandSource;
 
 			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId });
+				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource });
 			} else if (session.session.configuration.noDebug) {
 				void vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {

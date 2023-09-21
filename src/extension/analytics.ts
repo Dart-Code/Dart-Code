@@ -43,6 +43,7 @@ export enum AnalyticsEvent {
 	Command_CloneSdk,
 	Command_DartNewProject,
 	Command_FlutterNewProject,
+	Command_FlutterDoctor,
 	Command_AddDependency,
 	Command_RestartAnalyzer,
 	Command_ForceReanalyze,
@@ -69,6 +70,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 				params: {
 					addSdkToPathResult: data.addSdkToPathResult,
 					cloneSdkResult: data.cloneSdkResult,
+					commandSource: data.commandSource,
 					debuggerAdapterType: data.debuggerAdapterType,
 					debuggerExceptionBreakMode: data.debuggerExceptionBreakMode,
 					debuggerPreference: data.debuggerPreference,
@@ -351,7 +353,10 @@ export class Analytics implements IAmDisposable {
 		};
 		this.event(AnalyticsEvent.Command_CloneSdk, customData);
 	}
-	public logDevToolsOpened() { this.event(AnalyticsEvent.DevTools_Opened); }
+	public logDevToolsOpened(commandSource: string | undefined) { this.event(AnalyticsEvent.DevTools_Opened, { commandSource }); }
+	public logFlutterDoctor(commandSource: string | undefined) { this.event(AnalyticsEvent.Command_FlutterDoctor, { commandSource }); }
+	public logFlutterNewProject(commandSource: string | undefined) { this.event(AnalyticsEvent.Command_FlutterNewProject, { commandSource }); }
+	public logDartNewProject(commandSource: string | undefined) { this.event(AnalyticsEvent.Command_DartNewProject, { commandSource }); }
 	public logFlutterSurveyShown() { this.event(AnalyticsEvent.FlutterSurvey_Shown); }
 	public logFlutterSurveyClicked() { this.event(AnalyticsEvent.FlutterSurvey_Clicked); }
 	public logFlutterSurveyDismissed() { this.event(AnalyticsEvent.FlutterSurvey_Dismissed); }
@@ -402,6 +407,9 @@ interface AnalyticsData {
 
 	// For "Download SDK" git-clone flow.
 	cloneSdkResult?: string,
+
+	// Source of commands, such as launching from sidebar vs command palette.
+	commandSource?: string,
 }
 
 export class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {

@@ -15,9 +15,9 @@ export class DartApi implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
 	private apis: { [key: string]: ToolApi } = {};
 
-	constructor(readonly onReceiveMessage: vs.Event<any>, private readonly post: (message: any) => void, private readonly deviceManager: FlutterDeviceManager | undefined) {
+	constructor(readonly commandSource: string, onReceiveMessage: vs.Event<any>, private readonly post: (message: any) => void, private readonly deviceManager: FlutterDeviceManager | undefined) {
 		const addApi = (api: ToolApi) => this.apis[api.apiName] = api;
-		addApi(new VsCodeApiHandler(this, deviceManager));
+		addApi(new VsCodeApiHandler(this, commandSource, deviceManager));
 
 		this.disposables.push(onReceiveMessage(this.handleMessage, this));
 	}
@@ -80,9 +80,9 @@ abstract class ToolApi {
 
 class VsCodeApiHandler extends ToolApi {
 	private readonly api: VsCodeApi;
-	constructor(dartApi: DartApi, deviceManager: FlutterDeviceManager | undefined) {
+	constructor(dartApi: DartApi, commandSource: string, deviceManager: FlutterDeviceManager | undefined) {
 		super(dartApi);
-		const api = this.api = new VsCodeApiImpl(deviceManager);
+		const api = this.api = new VsCodeApiImpl(commandSource, deviceManager);
 		this.disposables.push(api.devicesChanged((e) => this.sendEvent("devicesChanged", e)));
 		this.disposables.push(api.debugSessionsChanged((e) => this.sendEvent("debugSessionsChanged", e)));
 	}
@@ -115,7 +115,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	public readonly debugSessionsChanged = this.debugSessionsChangedEmitter.event;
 	protected readonly disposables: vs.Disposable[] = [];
 
-	constructor(private readonly deviceManager: FlutterDeviceManager | undefined) {
+	constructor(private readonly commandSource: string, private readonly deviceManager: FlutterDeviceManager | undefined) {
 		if (deviceManager) {
 			this.disposables.push(deviceManager?.onCurrentDeviceChanged(this.onDevicesChanged, this));
 			this.disposables.push(deviceManager?.onDevicesChanged(this.onDevicesChanged, this));
@@ -139,7 +139,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	}
 
 	public async executeCommand(command: string, args?: object[] | undefined): Promise<object | undefined> {
-		return await vs.commands.executeCommand(command, args);
+		return await vs.commands.executeCommand(command, { commandSource: this.commandSource, ...args });
 	}
 
 	public async selectDevice(id: string): Promise<boolean> {
@@ -147,7 +147,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	}
 
 	public async openDevToolsPage(debugSessionId: string, pageId: string): Promise<void> {
-		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, pageId });
+		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, pageId, commandSource: this.commandSource });
 	}
 
 	public async hotReload(debugSessionId: string): Promise<void> {

@@ -29,6 +29,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	protected onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	protected lastSelectedWidget: FlutterWidgetItem | undefined;
+	public isSelectingBecauseOfEditor = false;
 
 	constructor(private readonly analytics: Analytics) { }
 
@@ -58,11 +59,14 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 
 	protected abstract loadExistingOutline(): Promise<void>;
 
-	public async setContexts(selection: readonly FlutterWidgetItem[] | undefined) {
+	public async handleSelection(selection: readonly FlutterWidgetItem[] | undefined) {
 		// Unmark the old node as being selected.
 		if (this.lastSelectedWidget) {
-			this.lastSelectedWidget.contextValue = undefined;
-			this.refresh(this.lastSelectedWidget);
+			const widget = this.lastSelectedWidget;
+			widget.contextValue = undefined;
+			// If we refresh immediately, we may cause "actual command not found" for the
+			// navigation command.
+			setTimeout(() => this.refresh(widget), 200);
 		}
 
 		// Clear all contexts that enabled refactors.
@@ -87,8 +91,10 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 			// https://github.com/dart-lang/sdk/issues/32462) so we fetch when you select an item
 			// and then just support it if it's selected.
 			selection[0].contextValue = WIDGET_SELECTED_CONTEXT;
-			this.lastSelectedWidget = selection[0];
-			this.refresh(selection[0]);
+			const widget = this.lastSelectedWidget = selection[0];
+			// If we refresh immediately, we may cause "actual command not found" for the
+			// navigation command.
+			setTimeout(() => this.refresh(widget), 200);
 		}
 	}
 
@@ -122,7 +128,6 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	}
 
 	public getChildren(element?: FlutterWidgetItem): FlutterWidgetItem[] {
-		this.analytics.logFlutterOutlineActivated();
 		if (element)
 			return element.children;
 		if (this.rootNode)

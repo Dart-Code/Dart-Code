@@ -8,7 +8,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, nextAvailableFilename } from "../../shared/utils/fs";
 import { writeDartSdkSettingIntoProject } from "../../shared/utils/projects";
 import { Context } from "../../shared/vscode/workspace";
-import { Analytics, AnalyticsEvent } from "../analytics";
+import { Analytics } from "../analytics";
 import { config } from "../config";
 import { PubGlobal } from "../pub/global";
 import { DartCreate } from "../sdk/dart/dart_create";
@@ -37,7 +37,7 @@ export class DartCommands extends BaseSdkCommands {
 	}
 
 
-	private async createDartProject(): Promise<void> {
+	private async createDartProject(options?: { commandSource?: string }): Promise<void> {
 		const command = "dart.createProject";
 		const triggerFilename = DART_CREATE_PROJECT_TRIGGER_FILE;
 		const autoPickIfSingleItem = false;
@@ -52,7 +52,7 @@ export class DartCommands extends BaseSdkCommands {
 			return;
 		}
 
-		this.analytics.log(AnalyticsEvent.Command_DartNewProject);
+		this.analytics.logDartNewProject(options?.commandSource);
 
 		// Get the JSON for the available templates by calling 'dart create'.
 
