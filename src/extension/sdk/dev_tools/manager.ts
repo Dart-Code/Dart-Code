@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { cpuProfilerPage, dartVMPath, devToolsPages, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -61,6 +61,7 @@ export class DevToolsManager implements vs.Disposable {
 	private setNotStartedStatusBar() {
 		this.statusBarItem.detail = "Not Started";
 		this.statusBarItem.command = {
+			arguments: [{ commandSource: CommandSource.languageStatus }],
 			command: "dart.openDevTools",
 			title: "start & launch",
 			tooltip: "Start and Launch DevTools",
@@ -146,6 +147,7 @@ export class DevToolsManager implements vs.Disposable {
 		this.statusBarItem.text = "Dart DevTools";
 		this.statusBarItem.detail = "Started";
 		this.statusBarItem.command = {
+			arguments: [{ commandSource: CommandSource.languageStatus }],
 			command: "dart.openDevTools",
 			title: "launch",
 			tooltip: `DevTools is running at ${url}`,
@@ -156,11 +158,14 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open without a debug session.
 	public async spawnForNoSession(options?: { commandSource?: string }): Promise<{ url: string; dispose: () => void } | undefined> {
-		this.analytics.logDevToolsOpened(options?.commandSource);
+		const commandSource = options?.commandSource;
 
-		const url = await this.start();
+		let url = await this.start();
 		if (!url)
 			return;
+
+		this.analytics.logDevToolsOpened(commandSource);
+		url = await this.buildDevToolsUrl(url, { commandSource });
 
 		try {
 			await envUtils.openInBrowser(url.toString(), this.logger);
@@ -280,6 +285,7 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		const queryParams: { [key: string]: string | undefined } = {
+			ideFeature: options.commandSource,
 			inspectorRef: options.inspectorRef,
 			theme: config.useDevToolsDarkTheme && options.location === "external" ? "dark" : "light",
 		};
@@ -297,7 +303,7 @@ export class DevToolsManager implements vs.Disposable {
 			queryParams.page = routeId;
 		if (options.location !== "external")
 			queryParams.embed = "true";
-		const fullUrl = await this.buildDevToolsUrl(queryParams, session.vmServiceUri, url);
+		const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
 		// We currently only support embedded for pages we know about statically, although since we seem
 		// to only use that for a title, we may be able to relax that.
 		if (options.location !== "external" && page) {
@@ -308,14 +314,14 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
-	private async buildDevToolsUrl(queryParams: { [key: string]: string | undefined }, vmServiceUri: string, url: string) {
+	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string) {
 		queryParams.hide = "debugger";
 		queryParams.ide = "VSCode";
 
 		// Add the version to the querystring to avoid any caching of the index.html page.
 		let cacheBust = `dart-${this.dartCapabilities.version}-flutter-${this.flutterCapabilities.version}`;
 		// If using a custom version of DevTools, additionally bust at least every day.
-		if (!!config.customDevTools?.script) { // Don't jus check config.customDevTools as it's a VS Code Proxy object
+		if (!!config.customDevTools?.script) { // Don't just check config.customDevTools as it's a VS Code Proxy object
 			cacheBust += `-custom-${new Date().getTime()}`;
 		}
 		queryParams.cacheBust = cacheBust;
@@ -327,13 +333,17 @@ export class DevToolsManager implements vs.Disposable {
 			delete queryParams.page;
 		}
 
+		if (vmServiceUri) {
+			const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
+			queryParams.uri = exposedUrl;
+		}
+
 		const paramsString = Object.keys(queryParams)
 			.filter((key) => queryParams[key] !== undefined)
 			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] ?? "")}`)
 			.join("&");
-		const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
-		const urlPathSeperator = url.endsWith("/") ? "" : "/";
-		return `${url}${urlPathSeperator}${path}?uri=${encodeURIComponent(exposedUrl)}&${paramsString}`;
+		const urlPathSeperator = baseUrl.endsWith("/") ? "" : "/";
+		return `${baseUrl}${urlPathSeperator}${path}?${paramsString}`;
 	}
 
 	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: DevToolsPage, location: "beside" | "active" | undefined) {

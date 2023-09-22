@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
+import { CommandSource } from "../../shared/constants";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
@@ -101,7 +102,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			`;
 
 		this.api = new DartApi(
-			"sidebar",
+			CommandSource.sidebarContent,
 			webviewView.webview.onDidReceiveMessage,
 			(message) => webviewView.webview.postMessage(message),
 			this.deviceManager,

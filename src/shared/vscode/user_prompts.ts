@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { vsCodeVersion } from "../capabilities/vscode";
-import { alwaysOpenAction, doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { CommandSource, alwaysOpenAction, doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
 import { Analytics, FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
 import { isRunningLocally } from "./utils";
@@ -95,10 +95,10 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 		context.devToolsNotificationDoNotShow = true;
 		return { didOpen: false };
 	} else if (choice === alwaysOpenAction) {
-		void vs.commands.executeCommand("dart.openDevTools");
+		void vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.onDebugPrompt });
 		return { didOpen: true, shouldAlwaysOpen: true };
 	} else if (choice === openAction) {
-		void vs.commands.executeCommand("dart.openDevTools");
+		void vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.onDebugPrompt });
 		return { didOpen: true };
 	} else {
 		// No thanks.

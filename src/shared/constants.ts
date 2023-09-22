@@ -163,6 +163,20 @@ export const tryAgainAction = "Try Again";
 export const vmServiceListeningBannerPattern: RegExp = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
 export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
 
+/// Constants used in reporting of where commands are executed from.
+///
+/// Used in DevTools querystring, so do not change.
+export abstract class CommandSource {
+	static commandPalette = "command";
+	static sidebarContent = "sidebarContent";
+	static sidebarTitle = "sidebarToolbar";
+	static touchbar = "touchbar"; // MacOS touchbar button
+	static launchConfiguration = "launchConfiguration"; // Configured explicitly in launch configuration
+	static onDebugAutomatic = "onDebugAutomatic"; // Configured to always run on debug session start
+	static onDebugPrompt = "onDebugPrompt"; // Responded to prompt when running a debug session
+	static languageStatus = "languageStatus"; // Launched from the language status popout
+}
+
 export const runFlutterCreatePrompt = (platformType: string, platformNeedsGloballyEnabling: boolean) =>
 	platformNeedsGloballyEnabling
 		? `Enable the ${platformType} platform and add it to this project?`
