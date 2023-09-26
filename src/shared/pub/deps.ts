@@ -25,10 +25,19 @@ export class PubDeps {
 			return undefined;
 		}
 
+		let json = result.stdout;
 		try {
-			return JSON.parse(result.stdout) as PubDepsJson;
+			// If this is the first run of Flutter, it might output a banner ("Welcome to Flutter"). We can't use the
+			// usual JSON-parsing here, because it's not all on one line, so just trim anything before the first `{` which
+			// handle any additional output (as long as it doesn't include a brace itself).
+			let bracePosition: number;
+			if (!json.startsWith("{") && (bracePosition = json.indexOf("{")) !== -1) {
+				json = json.substring(bracePosition);
+			}
+
+			return JSON.parse(json) as PubDepsJson;
 		} catch (e) {
-			this.logger.error(`"pub deps --json" returned invalid JSON ${e}:\n${result.stdout}`);
+			this.logger.error(`"pub deps --json" returned invalid JSON ${e}:\n${json}`);
 			return undefined;
 		}
 	}
