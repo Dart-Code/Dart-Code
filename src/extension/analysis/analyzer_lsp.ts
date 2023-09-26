@@ -6,7 +6,7 @@ import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } 
 import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
+import { dartVMPath, validClassNameRegex, validMethodNameRegex, validVariableName } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -282,9 +282,9 @@ export class LspAnalyzer extends Analyzer {
 						const refactorFailedErrorCode = -32011;
 						const mapArgs = args[mapArgsIndex];
 						const refactorKind = isValidListArgs ? args[listArgsKindIndex] : mapArgs.kind;
-						// Intercept EXTRACT_METHOD and EXTRACT_WIDGET to prompt the user for a name, but first call the validation
+						// Intercept EXTRACT_METHOD, EXTRACT_WIDGET, EXTRACT_LOCAL_VARIABLE to prompt the user for a name, but first call the validation
 						// so we don't ask for a name if it will fail for a reason like a closure with an argument.
-						const willPrompt = refactorKind === "EXTRACT_METHOD" || refactorKind === "EXTRACT_WIDGET";
+						const willPrompt = refactorKind === "EXTRACT_METHOD" || refactorKind === "EXTRACT_WIDGET" || refactorKind === "EXTRACT_LOCAL_VARIABLE";
 						if (willPrompt) {
 							if (this.dartCapabilities.supportsRefactorValidate) {
 								try {
@@ -315,6 +315,15 @@ export class LspAnalyzer extends Analyzer {
 										prompt: "Enter a name for the widget",
 										validateInput: (s) => validClassNameRegex.test(s) ? undefined : "Enter a valid widget name",
 										value: "NewWidget",
+									});
+									if (!name)
+										return;
+									break;
+								case "EXTRACT_LOCAL_VARIABLE":
+									name = await vs.window.showInputBox({
+										prompt: "Enter a name for the variable",
+										validateInput: (s) => validVariableName.test(s) ? undefined : "Enter a valid variable name",
+										value: "myVariable",
 									});
 									if (!name)
 										return;
