@@ -7,6 +7,7 @@ import { DebugOption, DebuggerType, LogSeverity, VmService, VmServiceExtension, 
 import { DartWorkspaceContext, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
+import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
@@ -54,6 +55,7 @@ export class DebugCommands implements IAmDisposable {
 	private debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
 	private currentDebugOption = DebugOption.MyCode;
 	private debugMetrics = vs.window.createStatusBarItem("dartStatusDebugMetrics", vs.StatusBarAlignment.Right, 0);
+	private readonly debugSessionsStatusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.debugSessions", ANALYSIS_FILTERS);
 	private onWillHotReloadEmitter = new vs.EventEmitter<void>();
 	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
 	private onWillHotRestartEmitter = new vs.EventEmitter<void>();
@@ -73,6 +75,10 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(this.debugOptions);
 		this.debugMetrics.name = "Dart Debug Metrics";
 		this.disposables.push(this.debugMetrics);
+		this.debugSessionsStatusItem.name = "Dart Debug Sessions";
+		this.debugSessionsStatusItem.text = "Debug Sessions";
+		this.updateDebugSessionsStatus();
+		this.disposables.push(this.debugSessionsStatusItem);
 
 		this.disposables.push(vs.debug.onDidChangeBreakpoints((e) => this.handleBreakpointChange(e)));
 		this.disposables.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
@@ -469,6 +475,20 @@ export class DebugCommands implements IAmDisposable {
 		});
 	}
 
+	private updateDebugSessionsStatus(): void {
+		if (!debugSessions.length) {
+			this.debugSessionsStatusItem.detail = `No sessions`;
+			this.debugSessionsStatusItem.command = undefined;
+			return;
+		}
+
+		this.debugSessionsStatusItem.detail = `${debugSessions.length} session${debugSessions.length === 1 ? "" : "s"}`;
+		this.debugSessionsStatusItem.command = {
+			command: "dart.copyVmServiceUri",
+			title: "copy vm service",
+		};
+	}
+
 	public handleDebugSessionStart(s: vs.DebugSession): void {
 		if (s.type !== "dart")
 			return;
@@ -479,6 +499,7 @@ export class DebugCommands implements IAmDisposable {
 		if (debugSessions.length === 0)
 			this.vmServices.resetToDefaults();
 		debugSessions.push(session);
+		this.updateDebugSessionsStatus();
 		debugSessionsChangedEmitter.fire();
 
 		if (s.configuration.debuggerType === DebuggerType.Flutter || s.configuration.debuggerType === DebuggerType.Web) {
@@ -536,6 +557,7 @@ export class DebugCommands implements IAmDisposable {
 		const session = debugSessions[sessionIndex];
 		session.hasEnded = true;
 		debugSessions.splice(sessionIndex, 1);
+		this.updateDebugSessionsStatus();
 		debugSessionsChangedEmitter.fire();
 
 		// Close any in-progress progress notifications.
