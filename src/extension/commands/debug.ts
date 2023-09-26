@@ -76,7 +76,6 @@ export class DebugCommands implements IAmDisposable {
 		this.debugMetrics.name = "Dart Debug Metrics";
 		this.disposables.push(this.debugMetrics);
 		this.debugSessionsStatusItem.name = "Dart Debug Sessions";
-		this.debugSessionsStatusItem.text = "Debug Sessions";
 		this.updateDebugSessionsStatus();
 		this.disposables.push(this.debugSessionsStatusItem);
 
@@ -477,12 +476,12 @@ export class DebugCommands implements IAmDisposable {
 
 	private updateDebugSessionsStatus(): void {
 		if (!debugSessions.length) {
-			this.debugSessionsStatusItem.detail = `No sessions`;
+			this.debugSessionsStatusItem.text = "No Debug Sessions";
 			this.debugSessionsStatusItem.command = undefined;
 			return;
 		}
 
-		this.debugSessionsStatusItem.detail = `${debugSessions.length} session${debugSessions.length === 1 ? "" : "s"}`;
+		this.debugSessionsStatusItem.text = `${debugSessions.length} Debug Session${debugSessions.length === 1 ? "" : "s"}`;
 		this.debugSessionsStatusItem.command = {
 			command: "dart.copyVmServiceUri",
 			title: "copy vm service",

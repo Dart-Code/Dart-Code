@@ -50,8 +50,8 @@ export class DevToolsManager implements vs.Disposable {
 	public devtoolsUrl: Thenable<string> | undefined;
 
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
-		this.statusBarItem.text = "Dart DevTools";
 		this.statusBarItem.name = "Dart/Flutter DevTools";
+		this.statusBarItem.text = "Dart DevTools";
 		this.setNotStartedStatusBar();
 		this.disposables.push(this.statusBarItem);
 
@@ -59,12 +59,20 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private setNotStartedStatusBar() {
-		this.statusBarItem.detail = "Not Started";
 		this.statusBarItem.command = {
 			arguments: [{ commandSource: CommandSource.languageStatus }],
 			command: "dart.openDevTools",
 			title: "start & launch",
 			tooltip: "Start and Launch DevTools",
+		};
+	}
+
+	private setStartedStatusBar(url: string) {
+		this.statusBarItem.command = {
+			arguments: [{ commandSource: CommandSource.languageStatus }],
+			command: "dart.openDevTools",
+			title: "launch",
+			tooltip: `DevTools is running at ${url}`,
 		};
 	}
 
@@ -144,14 +152,7 @@ export class DevToolsManager implements vs.Disposable {
 
 		const url = await this.devtoolsUrl;
 
-		this.statusBarItem.text = "Dart DevTools";
-		this.statusBarItem.detail = "Started";
-		this.statusBarItem.command = {
-			arguments: [{ commandSource: CommandSource.languageStatus }],
-			command: "dart.openDevTools",
-			title: "launch",
-			tooltip: `DevTools is running at ${url}`,
-		};
+		this.setStartedStatusBar(url);
 
 		return url;
 	}

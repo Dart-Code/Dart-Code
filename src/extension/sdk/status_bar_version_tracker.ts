@@ -43,11 +43,11 @@ export class StatusBarVersionTracker implements vs.Disposable {
 		return version === MAX_VERSION ? "latest" : version;
 	}
 
-	private addStatusBarItem(id: string, text: string, detail: string, command: string | undefined) {
+	private addStatusBarItem(id: string, kind: string, versionNumber: string, command: string | undefined) {
 		const statusBarItem = vs.languages.createLanguageStatusItem(id, ANALYSIS_FILTERS);
-		statusBarItem.text = `${text} SDK`;
-		statusBarItem.name = statusBarItem.text;
-		statusBarItem.detail = detail;
+		statusBarItem.text = versionNumber;
+		statusBarItem.detail = `${kind} SDK`;
+		statusBarItem.name = `${kind} SDK`;
 		if (command)
 			statusBarItem.command = {
 				command,

@@ -63,7 +63,7 @@ export class DasAnalyzer extends Analyzer {
 		this.disposables.push(this.statusItem);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
-			this.statusItem.detail = "Started";
+			this.statusItem.text = "Dart Analysis Server";
 			this.onReadyCompleter.resolve();
 			connectedEvent.dispose();
 		});
@@ -78,8 +78,7 @@ export class DasAnalyzer extends Analyzer {
 
 	private setupStatusItem() {
 		const statusItem = this.statusItem;
-		statusItem.text = "Dart Analysis Server";
-		statusItem.detail = "Starting…";
+		statusItem.text = "Dart Analysis Server Starting…";
 
 		statusItem.command = {
 			command: "dart.restartAnalysisServer",

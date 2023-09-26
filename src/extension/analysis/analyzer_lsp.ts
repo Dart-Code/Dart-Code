@@ -51,7 +51,7 @@ export class LspAnalyzer extends Analyzer {
 		this.disposables.push(this.statusItem);
 
 		void this.client.start().then(() => {
-			this.statusItem.detail = "Started";
+			this.statusItem.text = "Dart Analysis Server";
 			// Reminder: These onNotification calls only hold ONE handler!
 			// https://github.com/microsoft/vscode-languageserver-node/issues/174
 			// TODO: Remove this once Dart/Flutter stable LSP servers are using $/progress.
@@ -79,8 +79,7 @@ export class LspAnalyzer extends Analyzer {
 
 	private setupStatusItem() {
 		const statusItem = this.statusItem;
-		statusItem.text = "Dart Language Server";
-		statusItem.detail = "Starting…";
+		statusItem.text = "Dart Language Server Starting…";
 
 		statusItem.command = {
 			command: "dart.restartAnalysisServer",
