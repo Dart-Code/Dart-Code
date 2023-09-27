@@ -83,7 +83,6 @@ class Config {
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): any { return this.getConfig<any>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
-	get experimentalFlutterSidebar(): boolean { return this.getConfig<boolean>("experimentalFlutterSidebar", false); }
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
 	get experimentalTestRunnerInSdk(): boolean { return this.getConfig<boolean>("experimentalTestRunnerInSdk", false); }

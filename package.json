@@ -1459,7 +1459,7 @@
 					"id": "dartFlutterSidebar",
 					"type": "webview",
 					"name": "Flutter Sidebar",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalFlutterSidebar && dart-code:flutterSidebarSupported"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:flutterSidebarSupported"
 				},
 				{
 					"id": "dartFlutterOutline",
