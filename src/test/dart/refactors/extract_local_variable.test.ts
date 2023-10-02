@@ -1,12 +1,15 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureTestContent, extApi, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, extApi, rangeOf, sb, setTestContent } from "../../helpers";
 
 describe("refactor", () => {
 
 	beforeEach("activate", () => activate());
 
 	it("can extract simple code into a local variable", async () => {
+		const showInputBox = sb.stub(vs.window, "showInputBox");
+		showInputBox.resolves("s");
+
 		await setTestContent(`
 String name() {
   return "Danny";
