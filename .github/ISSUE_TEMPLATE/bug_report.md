@@ -22,6 +22,9 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Please complete the following information:**
+
+You can run the **Dart: Collect Diagnostic Information** command from the VS Code command palette (`F1`) to easily capture this information or provide it manually.
+
  - Operating System and version:
  - VS Code version:
  - Dart extension version:
