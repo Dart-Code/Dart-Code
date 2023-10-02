@@ -18,7 +18,7 @@ export function getExperiments(logger: Logger, workspaceContext: WorkspaceContex
 	return {
 		// example: new ExampleExperiment(logger, workspaceContext, context),
 		dartSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 100), // TODO(dantup): Remove when happy we don't need to reduce.
-		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 30),
+		flutterSdkDaps: new SdkDapExperiment(logger, workspaceContext, context, 50),
 		flutterSdkDapsLegacy: new SdkDapExperiment(logger, workspaceContext, context, 10), // DO NOT CHANGE LEGACY.
 	};
 }
