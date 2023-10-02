@@ -203,6 +203,8 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		setFlutterRoot(workspaceContext.sdks.flutter);
 	setupToolEnv();
 
+	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
+
 	// Add the PATHs to the Terminal environment so if the user runs commands
 	// there they match the versions (and can be resolved, if not already on PATH).
 	if (config.addSdkToTerminalPath) {
@@ -267,7 +269,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	void vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
 
 	// Build log headers now we know analyzer type.
-	buildLogHeaders(logger, workspaceContextUnverified);
+	rebuildLogHeaders();
 
 	// Show the SDK version in the status bar.
 	if (sdks.dartVersion)
@@ -511,7 +513,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 		new AnalyzerStatusReporter(logger, dasClient, workspaceContext, analytics);
 
 	context.subscriptions.push(new FileChangeWarnings());
-	context.subscriptions.push(new DiagnosticReport(logger, workspaceContext));
+	context.subscriptions.push(new DiagnosticReport(logger, workspaceContext, rebuildLogHeaders));
 
 	// Set up diagnostics.
 	if (!isUsingLsp && dasClient) {
@@ -763,7 +765,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 			// to finish activating.
 			void flutterExtension.activate()
 				// Then rebuild log because it includes whether we activated Flutter.
-				.then(() => buildLogHeaders(logger, workspaceContextUnverified));
+				.then(() => rebuildLogHeaders());
 		}
 	}
 
@@ -871,7 +873,8 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 		const sdks = workspaceContext.sdks;
 		addToLogHeader(() => ``);
 		addToLogHeader(() => `Dart (${sdks.dartVersion}): ${sdks.dart}`);
-		addToLogHeader(() => `Flutter (${sdks.flutterVersion}): ${sdks.flutter}`);
+		const deviceInfo = deviceManager?.currentDevice ? `${deviceManager?.currentDevice?.name} (${deviceManager?.currentDevice?.platform}/${deviceManager?.currentDevice?.platformType})` : `No device`;
+		addToLogHeader(() => `Flutter (${sdks.flutterVersion}): ${sdks.flutter} (${deviceInfo})`);
 	}
 	addToLogHeader(() => ``);
 	if (process.env.HTTP_PROXY || process.env.NO_PROXY)

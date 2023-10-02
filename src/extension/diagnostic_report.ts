@@ -16,7 +16,7 @@ export class DiagnosticReport implements IAmDisposable {
 	private readonly emptyReporter = (message: string | undefined) => { };
 	private report = this.emptyReporter;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext) {
+	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly rebuildLogHeaders: () => void) {
 		this.disposables.push(vs.commands.registerCommand("dart.generateDiagnosticReport", () => this.generateDiagnosticReportWithProgress()));
 	}
 
@@ -41,6 +41,7 @@ export class DiagnosticReport implements IAmDisposable {
 	}
 
 	private async generateDiagnosticReport(progress: vs.Progress<{ message?: string; increment?: number }>, token: vs.CancellationToken) {
+		this.rebuildLogHeaders();
 		this.append("**!! ⚠️ PLEASE REVIEW THIS REPORT FOR SENSITIVE INFORMATION BEFORE SHARING ⚠️ !!**");
 		try {
 			this.append("<details>");
