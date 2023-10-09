@@ -64,7 +64,7 @@ export interface InternalExtensionApi {
 	flutterOutlineTreeProvider: TreeDataProvider<TreeNode> | undefined;
 	getLogHeader: () => string;
 	getOutputChannel: (name: string) => OutputChannel;
-	getToolEnv: () => unknown;
+	getToolEnv: () => any;
 	initialAnalysis: Promise<void>;
 	logger: EmittingLogger;
 	analyzer: Analyzer;

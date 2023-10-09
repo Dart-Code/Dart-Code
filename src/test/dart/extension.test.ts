@@ -44,7 +44,11 @@ describe("extension", () => {
 	});
 	it("did not set FLUTTER_ROOT", async () => {
 		await activateWithoutAnalysis();
-		const toolEnv = extApi.getToolEnv() as any;
+		const toolEnv = extApi.getToolEnv();
 		assert.equal(toolEnv?.FLUTTER_ROOT, undefined);
+	});
+	it("did read custom env", async () => {
+		await activateWithoutAnalysis();
+		assert.equal(extApi.getToolEnv().CUSTOM_DART_ENV, "x");
 	});
 });

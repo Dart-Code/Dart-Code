@@ -14,4 +14,7 @@
 	"dart.experimentalNewRefactors": true, // Old flag
 	"dart.experimentalRefactors": true, // New flag
 	"editor.wordBasedSuggestions": false, // Prevents us from using presence of completions to know we got Dart ones
+	"dart.env": {
+		"CUSTOM_DART_ENV": "x"
+	}
 }

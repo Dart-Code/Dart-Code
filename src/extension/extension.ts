@@ -113,7 +113,7 @@ import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
-import { getToolEnv, safeToolSpawn, setupFlutterRoot as setFlutterRoot, setupToolEnv } from "./utils/processes";
+import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
 
 const PROJECT_LOADED = "dart-code:anyProjectLoaded";
@@ -201,7 +201,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Record the Flutter SDK path so we can set FLUTTER_ROOT for spawned processes.
 	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter)
 		setFlutterRoot(workspaceContext.sdks.flutter);
-	setupToolEnv();
+	setupToolEnv(config.env);
 
 	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
 
