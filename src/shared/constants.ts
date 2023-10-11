@@ -185,7 +185,6 @@ export const runFlutterCreatePrompt = (platformType: string, platformNeedsGlobal
 
 export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
 export const validClassNameRegex = validMethodNameRegex;
-export const validVariableName = validMethodNameRegex;
 
 export const widgetInspectorPage: DevToolsPage = { id: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" };
 export const cpuProfilerPage: DevToolsPage = { id: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", title: "CPU Profiler" };
