@@ -32,9 +32,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
 			this.skip();
 
-		if (flutterTestDeviceIsWeb && !extApi.flutterCapabilities.supportsWebInSdkDAP)
-			this.skip();
-
 		if (extApi.debugSessions.length > 0) {
 			extApi.logger.warn(`Some debug sessions are already running before test started:`);
 			for (const debugSession of extApi.debugSessions) {
@@ -689,7 +686,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("steps into the SDK if debugSdkLibraries is true", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Web doesn't support setLibraryDebuggable
 
 		await openFile(flutterHelloWorldMainFile);
 		// Get location for `print`
@@ -722,7 +719,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("does not step into the SDK if debugSdkLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Web doesn't support setLibraryDebuggable
 
 		await openFile(flutterHelloWorldMainFile);
 		// Get location for `print`
@@ -748,7 +745,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("steps into an external library if debugExternalPackageLibraries is true", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Web doesn't support setLibraryDebuggable
 
 		await openFile(flutterHelloWorldHttpFile);
 		// Get location for `http.read(`
@@ -781,7 +778,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("does not step into an external library if debugExternalPackageLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Web doesn't support setLibraryDebuggable
 
 		await openFile(flutterHelloWorldHttpFile);
 		// Get location for `http.read(`
@@ -807,7 +804,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("steps into a local library even if debugExternalPackageLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Web doesn't support setLibraryDebuggable
 
 		await openFile(flutterHelloWorldLocalPackageFile);
 		// Get location for `printMyThing()`
@@ -846,7 +843,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Web doesn't have any SDK frames here.
 
 		await openFile(flutterHelloWorldThrowInSdkFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: false });
@@ -869,7 +866,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("correctly marks debuggable SDK frames when debugSdkLibraries is true", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Web doesn't support setLibraryDebuggable so doesn't break in the SDK.
 
 		await openFile(flutterHelloWorldThrowInSdkFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: true });
@@ -890,10 +887,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async () => {
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
 		await waitAllThrowIfTerminates(dc,
@@ -913,10 +907,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks debuggable external library frames when debugExternalPackageLibraries is true", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("correctly marks debuggable external library frames when debugExternalPackageLibraries is true", async () => {
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: true });
 		await waitAllThrowIfTerminates(dc,
@@ -936,10 +927,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks debuggable local library frames even when debugExternalPackageLibraries is false", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip();
-
+	it("correctly marks debuggable local library frames even when debugExternalPackageLibraries is false", async () => {
 		await openFile(flutterHelloWorldThrowInLocalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInLocalPackageFile, {
 			// Override this since it's not really open in the workspace.
@@ -1215,7 +1203,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("includes fields and getters in variables when stopped at a breakpoint", async function () {
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Requires https://dart-review.googlesource.com/c/sdk/+/330784
 
 		await openFile(flutterHelloWorldGettersFile);
 		const config = await startDebugger(dc, flutterHelloWorldGettersFile);
@@ -1498,9 +1486,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("stops on exception", async function () {
-		// Currently fails on web as it doesn't pause on the exception.
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // Currently fails on web as it doesn't pause on the exception.
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
@@ -1585,9 +1572,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("adds metadata for known files in call stacks", async function () {
-		// https://github.com/dart-lang/webdev/issues/949
 		if (flutterTestDeviceIsWeb)
-			return this.skip();
+			return this.skip(); // https://github.com/dart-lang/webdev/issues/949
 
 		await openFile(flutterHelloWorldBrokenFile);
 		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);

@@ -390,11 +390,7 @@ describe("flutter test debugger", () => {
 					dc.launch(config),
 				);
 
-				const expected = dc.isDartDap && extApi.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns
-					// Allow --no-dds temporarily while we're passing it due to requiresDdsDisabledForSdkDapTestRuns.
-					? ["test --machine --no-dds --start-paused", "test --machine --start-paused"]
-					: ["test --machine --start-paused"];
-				ensureHasRunWithArgsStarting(root, hasRunFile, ...expected);
+				ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --start-paused");
 			});
 
 			it("can replace all args using custom tool", async () => {
@@ -480,10 +476,7 @@ describe("flutter test debugger", () => {
 				);
 			});
 
-			it("can run test_driver tests", async function () {
-				if (dc.isDartDap && !extApi.flutterCapabilities.supportsEnvInSdkDAP)
-					this.skip();
-
+			it("can run test_driver tests", async () => {
 				// Start the instrumented app.
 				const appDc = createDebugClient(DebuggerType.Flutter);
 				const appConfig = await startDebugger(appDc, flutterTestDriverAppFile);

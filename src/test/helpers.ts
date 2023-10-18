@@ -1102,7 +1102,7 @@ export function ensureHasRunRecently(root: string, name: string, allowedModifica
 	assert.ok(modifiedSecondsAgo < allowedModificationSeconds, `File hasn't been modified for ${modifiedSecondsAgo} seconds`);
 }
 
-export function ensureHasRunWithArgsStarting(root: string, name: string, ...expectedArgs: string[]) {
+export function ensureHasRunWithArgsStarting(root: string, name: string, expectedArgs: string) {
 	ensureHasRunRecently(root, name);
 	const hasRunFile = path.isAbsolute(name)
 		? name
@@ -1113,11 +1113,8 @@ export function ensureHasRunWithArgsStarting(root: string, name: string, ...expe
 		// important for the test so strip them so we can use the same
 		// expectation across platforms.
 		.replace(/"/g, "").trim();
-	for (const expected of expectedArgs) {
-		if (contents.startsWith(expected.trim()))
-			return;
-	}
-	throw new Error(`Contents:\n${contents}\nExpected start:\n${expectedArgs.join("\n")}`);
+	if (!contents.startsWith(expectedArgs.trim()))
+		throw new Error(`Contents:\n${contents}\nExpected start:\n${expectedArgs}`);
 }
 
 export async function saveTrivialChangeToFile(uri: vs.Uri) {

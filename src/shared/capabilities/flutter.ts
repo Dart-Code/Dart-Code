@@ -31,8 +31,6 @@ export class FlutterCapabilities {
 	get supportsRunningIntegrationTests() { return versionIsAtLeast(this.version, "2.2.0-10"); }
 	get supportsRunTestsByLine() { return versionIsAtLeast(this.version, "3.10.0-0"); }
 	get supportsSdkDap() { return versionIsAtLeast(this.version, "2.13.0-0"); }
-	get supportsEnvInSdkDAP() { return versionIsAtLeast(this.version, "3.4.0-18"); }
-	get supportsWebInSdkDAP() { return versionIsAtLeast(this.version, "3.4.0-18"); }
 	get requiresDdsDisabledForSdkDapTestRuns() { return !versionIsAtLeast(this.version, "3.1.0"); }
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }

@@ -291,7 +291,7 @@ export async function killFlutterTester(): Promise<void> {
 }
 
 export function isSdkFrame(frame: DebugProtocol.StackFrame) {
-	return !frame.source || frame.source.name && frame.source.name.startsWith("dart:");
+	return frame.source && frame.source.name && frame.source.name.startsWith("dart:");
 }
 
 export function isExternalPackage(frame: DebugProtocol.StackFrame) {
