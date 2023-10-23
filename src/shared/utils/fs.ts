@@ -354,6 +354,22 @@ export function mkDirRecursive(folder: string) {
 		fs.mkdirSync(folder);
 }
 
+export function createFolderForFile(file?: string): string | undefined {
+	try {
+		if (!file || !path.isAbsolute(file))
+			return undefined;
+
+		const folder = path.dirname(file);
+		if (!fs.existsSync(folder))
+			mkDirRecursive(folder);
+
+		return file;
+	} catch {
+		console.warn(`Ignoring invalid file path ${file}`);
+		return undefined;
+	}
+}
+
 export function areSameFolder(folder1: string, folder2: string) {
 	// Trim any trailing path separators of either direction.
 	folder1 = folder1.replace(/[\\/]+$/, "");

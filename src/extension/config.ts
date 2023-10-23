@@ -1,7 +1,8 @@
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
 import { CustomDevToolsConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
-import { createFolderForFile, resolvePaths } from "./utils";
+import { createFolderForFile } from "../shared/utils/fs";
+import { resolvePaths } from "./utils";
 import { setupToolEnv } from "./utils/processes";
 
 class Config {
