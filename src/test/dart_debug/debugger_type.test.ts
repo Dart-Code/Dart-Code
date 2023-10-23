@@ -21,6 +21,7 @@ describe("dart debugger", () => {
 			"lib/temp1_test.dart": DebuggerType.Dart,
 			"lib/temp2_test.dart*": DebuggerType.DartTest, // Special case for allowTestsOutsideTestFolder
 			"test/temp_test.dart": DebuggerType.DartTest,
+			"test/tool/temp_tool_test.dart": DebuggerType.DartTest,
 			"tool/temp_tool.dart": DebuggerType.Dart,
 		};
 		for (let testPath of Object.keys(tests)) {

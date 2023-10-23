@@ -27,8 +27,7 @@ describe(`flutter debugger`, () => {
 			"lib/temp1_test.dart": DebuggerType.Flutter,
 			"lib/temp2_test.dart*": DebuggerType.FlutterTest, // Special case for allowTestsOutsideTestFolder
 			"test/temp_test.dart": DebuggerType.FlutterTest,
-			// TODO(dantup): This is broken. https://github.com/Dart-Code/Dart-Code/issues/4809
-			// "test/tool/temp_tool.dart": DebuggerType.FlutterTest,
+			"test/tool/temp_tool_test.dart": DebuggerType.FlutterTest,
 			"tool/temp_tool.dart": DebuggerType.Dart,
 		};
 		for (let testPath of Object.keys(tests)) {
