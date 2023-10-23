@@ -24,8 +24,8 @@ describe(`flutter debugger`, () => {
 			// All POSIX paths, Windows handled below.
 			"bin/temp_tool.dart": DebuggerType.Dart,
 			"lib/temp.dart": DebuggerType.Flutter,
-			"lib/temp_test.dart": DebuggerType.Flutter,
-			"lib/temp_test.dart*": DebuggerType.FlutterTest, // Special case for allowTestsOutsideTestFolder
+			"lib/temp1_test.dart": DebuggerType.Flutter,
+			"lib/temp2_test.dart*": DebuggerType.FlutterTest, // Special case for allowTestsOutsideTestFolder
 			"test/temp_test.dart": DebuggerType.FlutterTest,
 			// TODO(dantup): This is broken. https://github.com/Dart-Code/Dart-Code/issues/4809
 			// "test/tool/temp_tool.dart": DebuggerType.FlutterTest,
@@ -38,35 +38,38 @@ describe(`flutter debugger`, () => {
 			const absolutePath = path.join(fsPath(flutterHelloWorldFolder), testPath);
 			const expectedDebuggerType = isSpecialTestOutsideTest ? DebuggerType.FlutterTest : tests[testPath];
 
-			beforeEach(async () => {
-				createTempTestFile(absolutePath);
-				if (isSpecialTestOutsideTest)
-					await setConfigForTest("dart", "allowTestsOutsideTestFolder", true);
-			});
+			describe(`${testPath} ${isSpecialTestOutsideTest ? " (test outside of test folder)" : ""}`, async () => {
+				beforeEach(async () => {
+					createTempTestFile(absolutePath);
+					if (isSpecialTestOutsideTest) {
+						await setConfigForTest("dart", "allowTestsOutsideTestFolder", true);
+					}
+				});
 
-			it(`for absolute ${testPath}`, async () => {
-				const resolvedConfig = await getResolvedDebugConfiguration({
-					program: absolutePath,
-				})!;
-				assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-			});
-			it(`for POSIX relative ${testPath}`, async () => {
-				const resolvedConfig = await getResolvedDebugConfiguration({
-					cwd: fsPath(flutterHelloWorldFolder),
-					program: path.join(testPath),
-				})!;
-				assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-			});
-			if (isWin) {
-				const windowsTestPath = testPath.replace("\\", "/");
-				it(`for Windows relative ${windowsTestPath}`, async () => {
+				it("absolute", async () => {
 					const resolvedConfig = await getResolvedDebugConfiguration({
-						cwd: fsPath(flutterHelloWorldFolder),
-						program: path.join(windowsTestPath),
+						program: absolutePath,
 					})!;
 					assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
 				});
-			}
+				it("POSIX relative", async () => {
+					const resolvedConfig = await getResolvedDebugConfiguration({
+						cwd: fsPath(flutterHelloWorldFolder),
+						program: path.join(testPath),
+					})!;
+					assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
+				});
+				if (isWin) {
+					const windowsTestPath = testPath.replace("\\", "/");
+					it("Windows relative", async () => {
+						const resolvedConfig = await getResolvedDebugConfiguration({
+							cwd: fsPath(flutterHelloWorldFolder),
+							program: path.join(windowsTestPath),
+						})!;
+						assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
+					});
+				}
+			});
 		}
 	});
 });

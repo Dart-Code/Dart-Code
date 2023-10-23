@@ -18,8 +18,8 @@ describe("dart debugger", () => {
 			// All POSIX paths, Windows handled below.
 			"bin/temp.dart": DebuggerType.Dart,
 			"bin/temp_tool.dart": DebuggerType.Dart,
-			"lib/temp_test.dart": DebuggerType.Dart,
-			"lib/temp_test.dart*": DebuggerType.DartTest, // Special case for allowTestsOutsideTestFolder
+			"lib/temp1_test.dart": DebuggerType.Dart,
+			"lib/temp2_test.dart*": DebuggerType.DartTest, // Special case for allowTestsOutsideTestFolder
 			"test/temp_test.dart": DebuggerType.DartTest,
 			"tool/temp_tool.dart": DebuggerType.Dart,
 		};
@@ -30,35 +30,40 @@ describe("dart debugger", () => {
 			const absolutePath = path.join(fsPath(helloWorldFolder), testPath);
 			const expectedDebuggerType = isSpecialTestOutsideTest ? DebuggerType.DartTest : tests[testPath];
 
-			beforeEach(async () => {
-				createTempTestFile(absolutePath);
-				if (isSpecialTestOutsideTest)
-					await setConfigForTest("dart", "allowTestsOutsideTestFolder", true);
-			});
+			describe(`${testPath} ${isSpecialTestOutsideTest ? " (test outside of test folder)" : ""}`, async () => {
+				beforeEach(async () => {
+					createTempTestFile(absolutePath);
+					if (isSpecialTestOutsideTest) {
+						await setConfigForTest("dart", "allowTestsOutsideTestFolder", true);
+					}
+				});
 
-			it(`for absolute ${testPath}`, async () => {
-				const resolvedConfig = await getResolvedDebugConfiguration({
-					program: absolutePath,
-				})!;
-				assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-			});
-			it(`for POSIX relative ${testPath}`, async () => {
-				const resolvedConfig = await getResolvedDebugConfiguration({
-					cwd: fsPath(helloWorldFolder),
-					program: path.join(testPath),
-				})!;
-				assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-			});
-			if (isWin) {
-				const windowsTestPath = testPath.replace("\\", "/");
-				it(`for Windows relative ${windowsTestPath}`, async () => {
+				it("absolute", async () => {
+					console.log(`starting test`);
+					const resolvedConfig = await getResolvedDebugConfiguration({
+						program: absolutePath,
+					})!;
+					assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
+					console.log(`done with test!`);
+				});
+				it("POSIX relative", async () => {
 					const resolvedConfig = await getResolvedDebugConfiguration({
 						cwd: fsPath(helloWorldFolder),
-						program: path.join(windowsTestPath),
+						program: path.join(testPath),
 					})!;
 					assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
 				});
-			}
+				if (isWin) {
+					const windowsTestPath = testPath.replace("\\", "/");
+					it("Windows relative", async () => {
+						const resolvedConfig = await getResolvedDebugConfiguration({
+							cwd: fsPath(helloWorldFolder),
+							program: path.join(windowsTestPath),
+						})!;
+						assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
+					});
+				}
+			});
 		}
 	});
 });
