@@ -16,7 +16,7 @@ import { TestNode, TreeNode } from "../shared/test/test_model";
 import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
-import { fsPath, tryDeleteFile } from "../shared/utils/fs";
+import { createFolderForFile, fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -1344,4 +1344,10 @@ export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | un
 		await makeTextTreeUsingCustomTree(item, provider, { buffer, indent: indent + 1 });
 	}
 	return buffer;
+}
+
+export function createTempTestFile(absolutePath: string) {
+	createFolderForFile(absolutePath);
+	fs.writeFileSync(absolutePath, "");
+	defer("delete temp file", () => tryDeleteFile(absolutePath));
 }
