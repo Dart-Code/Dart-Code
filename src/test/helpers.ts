@@ -95,6 +95,11 @@ export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTes
 export const helloWorldTestNestedFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "folder", "folder_test.dart"));
 export const helloWorldProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "project_test.dart"));
 export const helloWorldExampleSubFolderProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "test", "project_test.dart"));
+// Go To Tests
+export const helloWorldGoToLibFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/goto/foo.dart"));
+export const helloWorldGoToLibSrcFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/src/goto/foo.dart"));
+export const helloWorldGoToTestFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/goto/foo_test.dart"));
+export const helloWorldGoToTestSrcFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/src/goto/foo_test.dart"));
 // Nested
 export const dartNestedFolder = vs.Uri.file(path.join(testProjectsFolder, "dart_nested"));
 export const dartNested1Folder = vs.Uri.file(path.join(fsPath(dartNestedFolder), "nested1"));

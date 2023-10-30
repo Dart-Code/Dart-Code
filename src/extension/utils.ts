@@ -89,7 +89,7 @@ export function isTestFileOrFolder(path: string | undefined): boolean {
 }
 
 export function isTestFile(file: string): boolean {
-	// To be a test, you must be _test.dart AND inside a test folder.
+	// To be a test, you must be _test.dart AND inside a test folder (unless allowTestsOutsideTestFolder).
 	// https://github.com/Dart-Code/Dart-Code/issues/1165
 	// https://github.com/Dart-Code/Dart-Code/issues/2021
 	// https://github.com/Dart-Code/Dart-Code/issues/2034

@@ -1,9 +1,9 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
-import { fsPath, tryDeleteFile } from "../../../shared/utils/fs";
+import { createFolderForFile, fsPath, tryDeleteFile } from "../../../shared/utils/fs";
 import { createTestFileAction, defaultDartTestFileContents } from "../../../shared/utils/test";
-import { activate, currentDoc, currentEditor, defer, emptyFile, extApi, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, sb, waitForResult } from "../../helpers";
+import { activate, currentDoc, currentEditor, defer, emptyFile, extApi, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, sb, tryDelete, waitForResult } from "../../helpers";
 import sinon = require("sinon");
 
 describe("go to test/implementation file", () => {
@@ -84,15 +84,84 @@ describe("go to test/implementation file", () => {
 		assert.ok(command.length);
 	});
 
-	it("can jump from implementation file to test file", async () => {
-		await openFile(helloWorldMainLibFile);
+	function setupTestFiles(files: {
+		libFile: boolean,
+		libSrcFile: boolean,
+		testFile: boolean,
+		testSrcFile: boolean,
+	}): void {
+		createFolderForFile(fsPath(helloWorldGoToLibFile));
+		createFolderForFile(fsPath(helloWorldGoToLibSrcFile));
+		createFolderForFile(fsPath(helloWorldGoToTestFile));
+		createFolderForFile(fsPath(helloWorldGoToTestSrcFile));
+		if (files.libFile)
+			fs.writeFileSync(fsPath(helloWorldGoToLibFile), "");
+		else
+			tryDelete(helloWorldGoToLibFile);
+		if (files.libSrcFile)
+			fs.writeFileSync(fsPath(helloWorldGoToLibSrcFile), "");
+		else
+			tryDelete(helloWorldGoToLibSrcFile);
+		if (files.testFile)
+			fs.writeFileSync(fsPath(helloWorldGoToTestFile), "");
+		else
+			tryDelete(helloWorldGoToTestFile);
+		if (files.testSrcFile)
+			fs.writeFileSync(fsPath(helloWorldGoToTestSrcFile), "");
+		else
+			tryDelete(helloWorldGoToTestSrcFile);
+	}
+
+	it("can jump from lib/ implementation file to test/ file", async () => {
+		setupTestFiles({
+			libFile: true,
+			libSrcFile: true,
+			testFile: true,
+			testSrcFile: true,
+		});
+		await openFile(helloWorldGoToLibFile);
 
 		// Allow some time to check, because of async stuff.
 		await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
 
 		await vs.commands.executeCommand("dart.goToTestOrImplementationFile");
 
-		assert.equal(currentDoc().uri.toString(), helloWorldTestMainFile.toString());
+		assert.equal(currentDoc().uri.toString(), helloWorldGoToTestFile.toString());
+	});
+
+	it("can jump from lib/src/ implementation file to test/src/ file", async () => {
+		setupTestFiles({
+			libFile: true,
+			libSrcFile: true,
+			testFile: true,
+			testSrcFile: true,
+		});
+		await openFile(helloWorldGoToLibSrcFile);
+
+		// Allow some time to check, because of async stuff.
+		await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+
+		await vs.commands.executeCommand("dart.goToTestOrImplementationFile");
+
+		assert.equal(currentDoc().uri.toString(), helloWorldGoToTestSrcFile.toString());
+	});
+
+	it("can jump from lib/src/ implementation file to test/ test file", async () => {
+		setupTestFiles({
+			libFile: true,
+			libSrcFile: true,
+			testFile: true,
+			testSrcFile: false,
+		});
+
+		await openFile(helloWorldGoToLibSrcFile);
+
+		// Allow some time to check, because of async stuff.
+		await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+
+		await vs.commands.executeCommand("dart.goToTestOrImplementationFile");
+
+		assert.equal(currentDoc().uri.toString(), helloWorldGoToTestFile.toString());
 	});
 
 	it("command is available when in a file with a matching implementation", async () => {
@@ -107,14 +176,54 @@ describe("go to test/implementation file", () => {
 		assert.ok(command.length);
 	});
 
-	it("can jump from test file to implementation file", async () => {
-		await openFile(helloWorldTestMainFile);
+	it("can jump from test/ file to lib/ implementation file", async () => {
+		setupTestFiles({
+			libFile: true,
+			libSrcFile: true,
+			testFile: true,
+			testSrcFile: true,
+		});
+		await openFile(helloWorldGoToTestFile);
 
 		// Allow some time to check, because of async stuff.
 		await waitForResult(() => extApi.isInTestFileThatHasImplementation === true && extApi.isInImplementationFileThatCanHaveTest === false);
 
 		await vs.commands.executeCommand("dart.goToTestOrImplementationFile");
 
-		assert.equal(currentDoc().uri.toString(), helloWorldMainLibFile.toString());
+		assert.equal(currentDoc().uri.toString(), helloWorldGoToLibFile.toString());
+	});
+
+	it("can jump from test/ file to lib/src/ implementation file", async () => {
+		setupTestFiles({
+			libFile: false,
+			libSrcFile: true,
+			testFile: true,
+			testSrcFile: true,
+		});
+		await openFile(helloWorldGoToTestFile);
+
+		// Allow some time to check, because of async stuff.
+		await waitForResult(() => extApi.isInTestFileThatHasImplementation === true && extApi.isInImplementationFileThatCanHaveTest === false);
+
+		await vs.commands.executeCommand("dart.goToTestOrImplementationFile");
+
+		assert.equal(currentDoc().uri.toString(), helloWorldGoToLibSrcFile.toString());
+	});
+
+	it("can jump from test/src file to lib/src implementation file", async () => {
+		setupTestFiles({
+			libFile: true,
+			libSrcFile: true,
+			testFile: true,
+			testSrcFile: true,
+		});
+		await openFile(helloWorldGoToTestSrcFile);
+
+		// Allow some time to check, because of async stuff.
+		await waitForResult(() => extApi.isInTestFileThatHasImplementation === true && extApi.isInImplementationFileThatCanHaveTest === false);
+
+		await vs.commands.executeCommand("dart.goToTestOrImplementationFile");
+
+		assert.equal(currentDoc().uri.toString(), helloWorldGoToLibSrcFile.toString());
 	});
 });
