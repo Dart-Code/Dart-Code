@@ -429,10 +429,14 @@ export class FlutterDeviceManager implements vs.Disposable {
 			case "desktop":
 				icon = "$(device-desktop) ";
 		}
-		const name = device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
+		const name = this.friendlyNameForDevice(device);
+		return withIcon ? `${icon ?? ""}${name}` : name;
+	}
+
+	public friendlyNameForDevice(device: f.Device) {
+		return device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
 			? this.knownEmulatorNames[device.emulatorId]
 			: device.name;
-		return withIcon ? `${icon ?? ""}${name}` : name;
 	}
 
 	public deviceCurrentSortComparer(d1: f.Device, d2: f.Device): number {

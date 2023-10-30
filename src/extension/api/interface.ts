@@ -22,6 +22,7 @@ export interface VsCodeApi {
 export interface VsCodeDevice {
 	id: string;
 	name: string;
+	rawDeviceName: string;
 	category: string | undefined;
 	emulator: boolean;
 	emulatorId: string | undefined;

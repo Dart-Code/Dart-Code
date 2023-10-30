@@ -190,9 +190,10 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 			emulatorId: nullToUndefined(device.emulatorId),
 			ephemeral: !!device.ephemeral,
 			id: device.id,
-			name: device.name,
+			name: this.deviceManager?.friendlyNameForDevice(device) ?? device.name,
 			platform: device.platform,
 			platformType: nullToUndefined(device.platformType),
+			rawDeviceName: device.name,
 		};
 	}
 
