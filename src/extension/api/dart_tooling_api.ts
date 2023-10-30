@@ -134,7 +134,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	public async initialize() {
 		// Trigger initial events to get the client the existing data from before they
 		// started listening.
-		this.onDevicesChanged();
+		void this.onDevicesChanged();
 		this.onDebugSessionsChanged();
 	}
 
@@ -166,10 +166,12 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		await session.session.customRequest("hotRestart", { reason: restartReasonManual });
 	}
 
-	private onDevicesChanged(): any {
+	private async onDevicesChanged(): Promise<void> {
+		const devices = (await this.deviceManager?.getValidDevicesSortedByName()) ?? [];
+
 		this.devicesChangedEmitter.fire(
 			{
-				devices: this.deviceManager?.getDevicesSortedByName().map((d) => this.asApiDevice(d)) ?? [],
+				devices: devices.map((d) => this.asApiDevice(d)),
 				selectedDeviceId: this.deviceManager?.currentDevice?.id,
 			},
 		);

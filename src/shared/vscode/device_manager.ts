@@ -260,7 +260,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 					const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
 					if (chosenAction === restartAction)
 						void vs.commands.executeCommand("_dart.reloadExtension");
-				}
+					else
+						this.onDevicesChangedEmitter.fire();
+				} else
+					this.onDevicesChangedEmitter.fire();
+
 
 				break;
 			case "device":
@@ -291,8 +295,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.devices.find((d) => d.id === id);
 	}
 
-	public getDevicesSortedByName(): f.Device[] {
-		return this.devices.sort(this.deviceSortComparer.bind(this));
+	public async getValidDevicesSortedByName(): Promise<f.Device[]> {
+		const supportedTypes = await this.getSupportedPlatformsForWorkspace();
+		return this.devices
+			.filter((d) => this.isSupported(supportedTypes, d))
+			.sort(this.deviceSortComparer.bind(this));
 	}
 
 	public getDevicesSortedByCurrentAndName(): f.Device[] {
