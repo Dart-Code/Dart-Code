@@ -553,10 +553,12 @@ export interface ServerStartedNotification {
 
 interface DevToolsOptions {
 	embed?: never;
-	location?: "beside" | "active" | "external";
+	location?: DevToolsLocation;
 	reuseWindows?: boolean;
 	notify?: boolean;
 	pageId?: string | null; // undefined = unspecified (use default), null = force external so user can pick any
 	inspectorRef?: string;
 	commandSource?: string;
 }
+
+export type DevToolsLocation = "beside" | "active" | "external";
