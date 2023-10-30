@@ -498,7 +498,12 @@ export class SdkUtils {
 		if (configSdkPath !== foundSdkPath) {
 			const action = await window.showWarningMessage(`The SDK configured in ${sdkConfigName} is not a valid SDK folder.`, openSettingsAction);
 			if (openSettingsAction === action) {
-				await commands.executeCommand(isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson");
+				await commands.executeCommand(
+					isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson",
+					{
+						revealSetting: { key: sdkConfigName },
+					}
+				);
 			}
 		}
 	}
