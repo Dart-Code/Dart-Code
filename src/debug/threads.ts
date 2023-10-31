@@ -7,7 +7,7 @@ import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
 import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef, VmExceptionMode } from "./dart_debug_protocol";
 
 export class ThreadManager {
-	public nextThreadId: number = 0;
+	public nextThreadId = 0;
 
 	public threads: ThreadInfo[] = [];
 	public bps: { [uri: string]: DebugProtocol.SourceBreakpoint[] } = {};
@@ -176,7 +176,7 @@ export class ThreadManager {
 		return completer.promise;
 	}
 
-	public nextDataId: number = 1;
+	public nextDataId = 1;
 	public storedData: { [id: number]: StoredData } = {};
 
 	public storeData(thread: ThreadInfo, data: StorableData): number {
@@ -225,13 +225,13 @@ class StoredData {
 
 export class ThreadInfo {
 	public scriptCompleters: { [key: string]: PromiseCompleter<VMScript> } = {};
-	public runnable: boolean = false;
+	public runnable = false;
 	public vmBps: { [uri: string]: VMBreakpoint[] } = {};
 	// TODO: Do we need both sets of breakpoints?
 	public breakpoints: { [key: string]: DebugProtocol.SourceBreakpoint } = {};
-	public atAsyncSuspension: boolean = false;
+	public atAsyncSuspension = false;
 	public exceptionReference = 0;
-	public paused: boolean = false;
+	public paused = false;
 	public pauseEvent: VMEvent | undefined;
 
 	constructor(

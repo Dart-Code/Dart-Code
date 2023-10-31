@@ -238,7 +238,7 @@ export class DartProcess {
 	public readonly vmServiceUri: Promise<string>;
 	public readonly exitCode: Promise<number | null>;
 	public get hasExited() { return this.exited; }
-	private exited: boolean = false;
+	private exited = false;
 
 	constructor(public readonly process: SpawnedProcess) {
 		this.vmServiceUri = new Promise((resolve, reject) => {

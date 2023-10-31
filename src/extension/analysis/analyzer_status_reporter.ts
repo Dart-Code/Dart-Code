@@ -99,7 +99,7 @@ export class AnalyzerStatusReporter {
 
 		// Offer to report the error.
 		if (config.notifyAnalyzerErrors && errorCount <= maxErrorReportCount) {
-			const showLog: string = "Show log";
+			const showLog = "Show log";
 			void window.showErrorMessage(`Exception from the Dart analysis server: ${error.message}`, showLog).then((res) => {
 				if (res === showLog)
 					void this.showErrorLog(error, method);

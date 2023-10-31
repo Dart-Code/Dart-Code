@@ -478,7 +478,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
-	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level: number = 0) {
+	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level = 0) {
 		if (node.style === DiagnosticsNodeStyle.Shallow)
 			return;
 

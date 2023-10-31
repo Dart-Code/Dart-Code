@@ -246,7 +246,7 @@ export function disposeAll(disposables: IAmDisposable[]) {
 	}
 }
 
-export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds: number = 360): Promise<T> {
+export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds = 360): Promise<T> {
 	return new Promise<T>((resolve, reject) => {
 		// Set a timeout to reject the promise after the timeout period.
 		const timeoutTimer = setTimeout(() => {

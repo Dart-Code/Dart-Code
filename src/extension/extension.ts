@@ -147,7 +147,7 @@ const logger = new EmittingLogger();
 // user when something crashed even if they don't have disk-logging enabled.
 export const ringLog: RingLog = new RingLog(200);
 
-export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
+export async function activate(context: vs.ExtensionContext, isRestart = false) {
 	// Ring logger is only set up once and presist over silent restarts.
 	if (!ringLogger)
 		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(500)));
@@ -973,7 +973,7 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterAdbConnectOnChromeOs;
 }
 
-export async function deactivate(isRestart: boolean = false): Promise<void> {
+export async function deactivate(isRestart = false): Promise<void> {
 	setCommandVisiblity(false);
 	void analyzer?.dispose();
 	await flutterDaemon?.shutdown();

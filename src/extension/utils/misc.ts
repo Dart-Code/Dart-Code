@@ -6,7 +6,7 @@ import { runToolProcess } from "./processes";
 
 let isShowingAnalyzerError = false;
 
-export function reportAnalyzerTerminatedWithError(duringStartup: boolean = false) {
+export function reportAnalyzerTerminatedWithError(duringStartup = false) {
 	if (isShowingAnalyzerError)
 		return;
 	isShowingAnalyzerError = true;

@@ -288,9 +288,9 @@ export class SdkUtils {
 		// TODO: This has gotten very messy and needs tidying up...
 
 		let firstFlutterProject: string | undefined;
-		let hasAnyFlutterProject: boolean = false;
-		let hasAnyWebProject: boolean = false;
-		let hasAnyStandardDartProject: boolean = false;
+		let hasAnyFlutterProject = false;
+		let hasAnyWebProject = false;
+		let hasAnyStandardDartProject = false;
 
 		const possibleProjects = await getAllProjectFolders(this.logger, getExcludedFolders, { searchDepth: config.projectSearchDepth });
 

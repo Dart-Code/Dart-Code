@@ -201,8 +201,7 @@ module.exports = {
 		"@typescript-eslint/no-unsafe-member-access": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-return": "off",
-		// TODO: Re-enable this when fixed.
-		"@typescript-eslint/no-inferrable-types": "off",
+		"@typescript-eslint/no-inferrable-types": "warn",
 		"@typescript-eslint/no-misused-promises": [
 			"error",
 			{

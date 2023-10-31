@@ -87,13 +87,13 @@ export class DartDebugSession extends DebugSession {
 	private vmServiceInfoFileCompleter?: PromiseCompleter<string>;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
-	protected sendStdOutToConsole: boolean = true;
-	protected supportsObservatoryWebApp: boolean = true;
-	protected parseVmServiceUriFromStdOut: boolean = true;
-	protected requiresProgram: boolean = true;
+	protected sendStdOutToConsole = true;
+	protected supportsObservatoryWebApp = true;
+	protected parseVmServiceUriFromStdOut = true;
+	protected requiresProgram = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 	protected processExit: Promise<{ code: number | null, signal: string | null }> = Promise.resolve({ code: 0, signal: null });
-	protected maxLogLineLength: number = 1000; // This should always be overriden in launch/attach requests but we have it here for narrower types.
+	protected maxLogLineLength = 1000; // This should always be overriden in launch/attach requests but we have it here for narrower types.
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both debuggers override it.
 	protected supportsRunInTerminalRequest = false;
@@ -821,7 +821,7 @@ export class DartDebugSession extends DebugSession {
 
 	// Run some code, but don't wait longer than a certain time period for the result
 	// as it may never come. Returns true if the operation completed.
-	private async raceIgnoringErrors(action: () => Promise<any>, timeoutMilliseconds: number = 250): Promise<boolean> {
+	private async raceIgnoringErrors(action: () => Promise<any>, timeoutMilliseconds = 250): Promise<boolean> {
 		try {
 			await this.withTimeout(action(), timeoutMilliseconds);
 			return true;
@@ -1443,7 +1443,7 @@ export class DartDebugSession extends DebugSession {
 		return kind === "String" || kind === "Bool" || kind === "Int" || kind === "Num" || kind === "Double" || kind === "Null" || kind === "Closure";
 	}
 
-	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false, suppressQuotesAroundStrings: boolean = false): Promise<string | undefined> {
+	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString = false, suppressQuotesAroundStrings = false): Promise<string | undefined> {
 		if (!this.vmService)
 			return;
 
@@ -1663,7 +1663,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private withTimeout<T>(promise: Promise<T>, milliseconds: number = 100000): Promise<T> {
+	private withTimeout<T>(promise: Promise<T>, milliseconds = 100000): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			// Set a timeout to reject the promise after the timeout period.
 			const timeoutTimer = setTimeout(() => {
@@ -1841,7 +1841,7 @@ export class DartDebugSession extends DebugSession {
 				const logPrefix = `[${name || "log"}] `;
 				let indent = " ".repeat(logPrefix.length);
 
-				const printLogRecord = async (event: VMEvent, instance: VMInstanceRef, logPrefix: string, indent: string, category: string = "console") => {
+				const printLogRecord = async (event: VMEvent, instance: VMInstanceRef, logPrefix: string, indent: string, category = "console") => {
 					const message = await this.fullValueAsString(event.isolate, instance, true);
 					if (message) {
 						const indentedMessage = `${faint(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;

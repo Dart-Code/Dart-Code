@@ -540,7 +540,7 @@ export class VmServiceConnection {
 		return this.callMethod("setLibraryDebuggable", { isolateId, libraryId, isDebuggable });
 	}
 
-	public nextId: number = 0;
+	public nextId = 0;
 
 	public callMethod(method: string, params?: any): Promise<DebuggerResult> {
 		const id = `${this.nextId++}`;

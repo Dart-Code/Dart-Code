@@ -433,7 +433,7 @@ export function deleteDirectoryRecursive(folder: string) {
 }
 
 export let currentTestName = "unknown";
-export let fileSafeCurrentTestName: string = "unknown";
+export let fileSafeCurrentTestName = "unknown";
 // eslint-disable-next-line prefer-arrow-callback
 beforeEach("stash current test name", function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
@@ -973,13 +973,13 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitForResult(action: () => boolean | Promise<boolean>, message?: string, milliseconds: number = 6000, throwOnFailure = true): Promise<void> {
+export async function waitForResult(action: () => boolean | Promise<boolean>, message?: string, milliseconds = 6000, throwOnFailure = true): Promise<void> {
 	const res = await waitFor(action, undefined, milliseconds);
 	if (throwOnFailure && !res)
 		throw new Error(`Action didn't return true within ${milliseconds}ms (${message})`);
 }
 
-export async function tryFor(action: () => Promise<void> | void, milliseconds: number = 3000): Promise<void> {
+export async function tryFor(action: () => Promise<void> | void, milliseconds = 3000): Promise<void> {
 	let timeRemaining = milliseconds;
 	while (timeRemaining > 0) {
 		try {

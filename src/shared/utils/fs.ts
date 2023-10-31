@@ -396,7 +396,7 @@ export function normalizeSlashes(p: string) {
  * @param prefix prefix of the directory/file
  * @param suffix suffix of the directory/file
  */
-export function nextAvailableFilename(folder: string, prefix: string, suffix: string = ""): string {
+export function nextAvailableFilename(folder: string, prefix: string, suffix = ""): string {
 	// Set an upper bound on how many attempts we should make in getting a non-existent name.
 	const maxSearchLimit = 128;
 
