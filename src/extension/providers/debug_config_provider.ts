@@ -312,9 +312,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
 
 		let debugType = DebuggerType.Dart;
-		if (debugConfig.cwd && debugConfig.program && isWithinPath(debugConfig.program, debugConfig.cwd)) {
-			const relativePath = path.relative(debugConfig.cwd, debugConfig.program);
-			const firstPathSegment = relativePath.split(path.sep)[0];
+		if (debugConfig.cwd && (!debugConfig.program || isWithinPath(debugConfig.program, debugConfig.cwd))) {
+			const relativePath = debugConfig.program ? path.relative(debugConfig.cwd, debugConfig.program) : undefined;
+			const firstPathSegment = relativePath?.split(path.sep)[0];
 			if (firstPathSegment !== "bin" && firstPathSegment !== "tool" && firstPathSegment !== ".dart_tool") {
 				// Check if we're a Flutter or Web project.
 				if (isFlutterProjectFolder(debugConfig.cwd) || this.wsContext.config.forceFlutterDebug) {
@@ -323,8 +323,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					debugType = DebuggerType.Web;
 				else
 					logger.info(`Program (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
-			}
-			logger.info(`Program is 'bin', 'tool' or '.dart_tool' so will use Dart debugger`);
+			} else
+				logger.info(`Program is 'bin', 'tool' or '.dart_tool' so will use Dart debugger`);
 		}
 		logger.info(`Detected launch project as ${DebuggerType[debugType]}`);
 
