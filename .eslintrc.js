@@ -196,7 +196,6 @@ module.exports = {
 		"@typescript-eslint/no-unsafe-assignment": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-call": "off",
-		"@typescript-eslint/no-unsafe-enum-comparison": "off",
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unsafe-member-access": "off",
 		// TODO: Re-enable this when fixed.
