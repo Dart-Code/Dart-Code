@@ -240,38 +240,48 @@ export class FlutterDeviceManager implements vs.Disposable {
 				break;
 			case "platform-enabler":
 				const platformType = selection.device.platformType;
-				const platformNeedsGloballyEnabling = await this.daemon.checkIfPlatformGloballyDisabled(platformType);
-				const action = await vs.window.showInformationMessage(
-					runFlutterCreatePrompt(platformType, platformNeedsGloballyEnabling),
-					yesAction,
-					cancelAction,
-				);
-				if (action !== yesAction)
+				if (!await this.enablePlatformType(platformType))
 					return false;
-
-				if (platformNeedsGloballyEnabling)
-					await this.daemon.enablePlatformGlobally(platformType);
-
-				const createArgs = { platform: selection.device.platformType } as FlutterCreateCommandArgs;
-				await vs.commands.executeCommand("_flutter.create", createArgs);
-
-				if (platformNeedsGloballyEnabling) {
-					const restartAction = "Reload";
-					const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
-					if (chosenAction === restartAction)
-						void vs.commands.executeCommand("_dart.reloadExtension");
-					else
-						this.onDevicesChangedEmitter.fire();
-				} else
-					this.onDevicesChangedEmitter.fire();
-
-
 				break;
 			case "device":
 				this.rememberDevice(selection.device);
 				this.setCurrentDevice(selection.device);
 				break;
 		}
+
+		return true;
+	}
+
+	public async enablePlatformType(platformType: string): Promise<boolean> {
+		const platformNeedsGloballyEnabling = await this.daemon.checkIfPlatformGloballyDisabled(platformType);
+		const action = await vs.window.showInformationMessage(
+			runFlutterCreatePrompt(platformType, platformNeedsGloballyEnabling),
+			yesAction,
+			cancelAction,
+		);
+		if (action !== yesAction)
+			return false;
+
+		if (platformNeedsGloballyEnabling)
+			await this.daemon.enablePlatformGlobally(platformType);
+
+		const createArgs = { platform: platformType } as FlutterCreateCommandArgs;
+		await vs.commands.executeCommand("_flutter.create", createArgs);
+
+		if (platformNeedsGloballyEnabling) {
+			const restartAction = "Reload";
+			const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
+			if (chosenAction === restartAction) {
+				void vs.commands.executeCommand("_dart.reloadExtension");
+				return true;
+			}
+		}
+
+		// Clear the cache before we fire the event, because otherwise we might
+		// send a cached set of devices that don't take the newly-enabled platform
+		// into account.
+		this.shortCacheForSupportedPlatforms = undefined;
+		this.onDevicesChangedEmitter.fire();
 
 		return true;
 	}
@@ -295,11 +305,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.devices.find((d) => d.id === id);
 	}
 
-	public async getValidDevicesSortedByName(): Promise<f.Device[]> {
-		const supportedTypes = await this.getSupportedPlatformsForWorkspace();
-		return this.devices
-			.filter((d) => this.isSupported(supportedTypes, d))
-			.sort(this.deviceSortComparer.bind(this));
+	public getDevicesSortedByName(): f.Device[] {
+		return this.devices.sort(this.deviceSortComparer.bind(this));
 	}
 
 	public getDevicesSortedByCurrentAndName(): f.Device[] {
@@ -394,7 +401,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return pickableItems;
 	}
 
-	private async getSupportedPlatformsForWorkspace(): Promise<f.PlatformType[]> {
+	public async getSupportedPlatformsForWorkspace(): Promise<f.PlatformType[]> {
 		// To avoid triggering this lots of times at startup when lots of devices "connect" at
 		// the same time, we cache the results for 10 seconds. Every time we set the cache, we
 		// set a timer to expire it in 10 seconds.

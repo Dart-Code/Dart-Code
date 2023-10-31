@@ -97,6 +97,8 @@ class VsCodeApiHandler extends ToolApi {
 			return await this.api.initialize();
 		} else if (method === "selectDevice") {
 			return this.api.selectDevice(params.id as string);
+		} else if (method === "enablePlatformType") {
+			return this.api.enablePlatformType(params.platformType as string);
 		} else if (method === "openDevToolsPage") {
 			return this.api.openDevToolsPage(params.debugSessionId as string, params.page as string | undefined, params.forceExternal as boolean | undefined);
 		} else if (method === "hotReload") {
@@ -148,6 +150,10 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		return this.deviceManager?.selectDeviceById(id) ?? false;
 	}
 
+	public async enablePlatformType(platformType: string): Promise<boolean> {
+		return this.deviceManager?.enablePlatformType(platformType) ?? false;
+	}
+
 	public async openDevToolsPage(debugSessionId: string, pageId: string | undefined, forceExternal: boolean | undefined): Promise<void> {
 		const location: DevToolsLocation | undefined = forceExternal ? "external" : undefined;
 		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, pageId, location, commandSource: this.commandSource });
@@ -170,12 +176,25 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	}
 
 	private async onDevicesChanged(): Promise<void> {
-		const devices = (await this.deviceManager?.getValidDevicesSortedByName()) ?? [];
+
+		let devices: Device[] = [];
+		let unsupportedDevices: Device[] = [];
+
+		const deviceManager = this.deviceManager;
+		if (deviceManager) {
+			const supportedTypes = await deviceManager.getSupportedPlatformsForWorkspace();
+			const allDevices = deviceManager.getDevicesSortedByName() ?? [];
+			const isSupported = (d: Device) => deviceManager.isSupported(supportedTypes, d);
+
+			devices = allDevices.filter((d) => isSupported(d));
+			unsupportedDevices = allDevices.filter((d) => !isSupported(d));
+		}
 
 		this.devicesChangedEmitter.fire(
 			{
 				devices: devices.map((d) => this.asApiDevice(d)),
 				selectedDeviceId: this.deviceManager?.currentDevice?.id,
+				unsupportedDevices: unsupportedDevices.map((d) => this.asApiDevice(d)),
 			},
 		);
 	}
