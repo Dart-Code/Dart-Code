@@ -63,7 +63,7 @@ export class GenerateLocalizationsOnSaveHandler implements IAmDisposable {
 
 	private isGeneratableFile(file: { uri: Uri, isUntitled?: boolean, languageId?: string }) {
 		// Never do anything for files inside .dart_tool folders.
-		if (fsPath(file.uri).indexOf(`${path.sep}.dart_tool${path.sep}`) !== -1)
+		if (fsPath(file.uri).includes(`${path.sep}.dart_tool${path.sep}`))
 			return false;
 
 		// Bail out if we're in an external file, or not Dart.

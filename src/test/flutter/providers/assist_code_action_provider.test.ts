@@ -31,7 +31,7 @@ class Danny extends StatelessWidget {
 		assert.ok(actionResults);
 		assert.ok(actionResults.length);
 
-		const wrapAction = actionResults.find((r) => r.title.indexOf("Wrap with widget") !== -1);
+		const wrapAction = actionResults.find((r) => r.title.includes("Wrap with widget"));
 		assert.ok(wrapAction, "Action was not found");
 
 		await vs.commands.executeCommand(wrapAction.command!.command, ...(wrapAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
@@ -66,7 +66,7 @@ Widget build() {
 		assert.ok(actionResults);
 		assert.ok(actionResults.length);
 
-		const wrapAction = actionResults.find((r) => r.title.indexOf("Wrap with Center") !== -1);
+		const wrapAction = actionResults.find((r) => r.title.includes("Wrap with Center"));
 		assert.ok(wrapAction, "Action was not found");
 
 		// Older servers have simple edit, but newer has snippets.

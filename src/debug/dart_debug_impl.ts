@@ -932,9 +932,9 @@ export class DartDebugSession extends DebugSession {
 
 		// If we're running in noDebug mode, we'll always set None.
 		if (!this.noDebug) {
-			if (filters.indexOf("Unhandled") !== -1)
+			if (filters.includes("Unhandled"))
 				mode = "Unhandled";
-			if (filters.indexOf("All") !== -1)
+			if (filters.includes("All"))
 				mode = "All";
 		}
 
@@ -1937,7 +1937,7 @@ export class DartDebugSession extends DebugSession {
 				// dummy unconditional breakpoints.
 				// TODO: Ensure that VM breakpoint state is reconciled with debugger breakpoint state before
 				// handling thread state so that this doesn't happen, and remove this check.
-				const hasUnknownBreakpoints = potentialBreakpoints.indexOf(undefined) !== -1;
+				const hasUnknownBreakpoints = potentialBreakpoints.includes(undefined);
 
 				if (!hasUnknownBreakpoints) {
 					// There can't be any undefined here because of the above, but the types don't know that
@@ -2099,7 +2099,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		// Split on the separators and return only the first and last two parts.
-		const sep = uri.indexOf("/") === -1 && uri.indexOf("\\") !== -1 ? "\\" : "/";
+		const sep = !uri.includes("/") && uri.includes("\\") ? "\\" : "/";
 		const parts = uri.split(sep);
 		if (parts.length > 3) {
 			return parts[0] === "org-dartlang-app"
@@ -2207,10 +2207,10 @@ export class DartDebugSession extends DebugSession {
 			return false;
 
 		// HACK: Take a guess at whether it's inside the pubcache (in which case we're considering it external).
-		return path.indexOf("/hosted/pub.") !== -1
-			|| path.indexOf("\\hosted\\pub.") !== -1
-			|| path.indexOf("/third_party/") !== -1
-			|| path.indexOf("\\third_party\\") !== -1;
+		return path.includes("/hosted/pub.")
+			|| path.includes("\\hosted\\pub.")
+			|| path.includes("/third_party/")
+			|| path.includes("\\third_party\\");
 	}
 
 	private resolveFileLocation(script: VMScript, tokenPos: number): FileLocation | undefined {
@@ -2302,7 +2302,7 @@ export class DartDebugSession extends DebugSession {
 
 		// If we get a multi-line message that contains an error/stack trace, process each
 		// line individually, so we can attach location metadata to individual lines.
-		const isMultiLine = message.trimRight().indexOf("\n") !== -1;
+		const isMultiLine = message.trimRight().includes("\n");
 		if (isMultiLine && mayContainStackFrame(message)) {
 			message.split("\n").forEach((line) => this.logToUser(`${line}\n`, category));
 			return;

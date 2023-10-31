@@ -67,7 +67,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public isSupported(types: f.PlatformType[] | undefined, device: { platformType?: f.PlatformType | null | undefined } | undefined) {
 		// types being `undefined` means we shouldn't filter, but being empty means we legit
 		// don't support any types.
-		return device && (!types || !device.platformType || types.indexOf(device.platformType) !== -1);
+		return device && (!types || !device.platformType || types.includes(device.platformType));
 	}
 
 	public isDevicePreferred(device: f.Device | undefined): boolean {
@@ -354,7 +354,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (emulatorDevices && emulatorDevices.length) {
 			// Fliter out any emulators we know are running.
 			const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
-			const emulatorDevicesNotRunning = emulatorDevices.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1);
+			const emulatorDevicesNotRunning = emulatorDevices.filter((e) => !emulatorIdsAlreadyRunning.includes(e.device.id));
 
 			if (emulatorDevicesNotRunning.length) {
 				pickableItems = pickableItems.concat([

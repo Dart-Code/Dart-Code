@@ -575,8 +575,8 @@ void printSomething() {
 				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source!.sourceReference! });
 				assert.ok(source.body.content);
 				assert.ok(
-					source.body.content.indexOf("void print(Object object) {") !== -1
-					|| source.body.content.indexOf("void print(Object? object) {") !== -1,
+					source.body.content.includes("void print(Object object) {")
+					|| source.body.content.includes("void print(Object? object) {"),
 				);
 				// Ensure comments are present (see #178).
 				assert.notEqual(source.body.content.indexOf("\n//"), -1);

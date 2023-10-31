@@ -98,7 +98,7 @@ describe("exposeUrl", () => {
 			sb.stub(vs.env, "asExternalUri").callsFake((uri: vs.Uri) => {
 				// VS Code doesn't map URIs if there isn't an explicit port
 				// so reproduce that here to ensure we account for it.
-				if (uri.authority.indexOf(":") === -1)
+				if (!uri.authority.includes(":"))
 					return uri;
 
 				return uri.with({

@@ -105,16 +105,16 @@ export function pubVersionIsAtLeast(inputVersion: string, requiredVersion: strin
 	// https://github.com/dart-lang/pub_semver/
 
 	// If only one of them has build metadata, it's newest.
-	if (inputVersion.indexOf("+") !== -1 && requiredVersion.indexOf("+") === -1)
+	if (inputVersion.includes("+") && !requiredVersion.includes("+"))
 		return true;
-	if (inputVersion.indexOf("+") === -1 && requiredVersion.indexOf("+") !== -1)
+	if (!inputVersion.includes("+") && requiredVersion.includes("+"))
 		return false;
 
 	// Otherwise, since they're both otherwise equal and both have build
 	// metadata we can treat the build metadata like pre-release by converting
 	// it to pre-release (with -) or appending it to existing pre-release.
-	inputVersion = inputVersion.replace("+", inputVersion.indexOf("-") === -1 ? "-" : ".");
-	requiredVersion = requiredVersion.replace("+", requiredVersion.indexOf("-") === -1 ? "-" : ".");
+	inputVersion = inputVersion.replace("+", !inputVersion.includes("-") ? "-" : ".");
+	requiredVersion = requiredVersion.replace("+", !requiredVersion.includes("-") ? "-" : ".");
 	return versionIsAtLeast(inputVersion, requiredVersion);
 }
 

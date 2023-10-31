@@ -30,7 +30,7 @@ export class FileChangeWarnings implements vs.Disposable {
 			&& !util.isWithinWorkspace(filePath)
 			&& !this.filesWarnedAbout.has(filePath)) {
 
-			const isInPubCache = filePath.indexOf(`${path.sep}hosted${path.sep}pub.dartlang.org${path.sep}`) !== -1;
+			const isInPubCache = filePath.includes(`${path.sep}hosted${path.sep}pub.dartlang.org${path.sep}`);
 			const shouldWarn = isInPubCache
 				? config.warnWhenEditingFilesInPubCache
 				: config.warnWhenEditingFilesOutsideWorkspace;

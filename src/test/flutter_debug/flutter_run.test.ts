@@ -602,7 +602,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const frames = stack.body.stackFrames;
 		// Web/Flutter have slightly different representations of this
 		// so allow either.
-		if (frames[0].name.indexOf(".") !== -1)
+		if (frames[0].name.includes("."))
 			assert.equal(frames[0].name, "MyHomePage.build");
 		else
 			assert.equal(frames[0].name, "build");
@@ -629,7 +629,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 						const frames = stack.body.stackFrames;
 						// Web/Flutter have slightly different representations of this
 						// so allow either.
-						if (frames[0].name.indexOf(".") !== -1)
+						if (frames[0].name.includes("."))
 							assert.equal(frames[0].name, "MyHomePage.build");
 						else
 							assert.equal(frames[0].name, "build");
@@ -1631,8 +1631,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			);
 
 			await waitForResult(
-				() => allOutput.toLowerCase().indexOf("exception caught by widgets library") !== -1
-					&& allOutput.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1,
+				() => allOutput.toLowerCase().includes("exception caught by widgets library")
+					&& allOutput.includes("════════════════════════════════════════════════════════════════════════════════"),
 				"Waiting for error output",
 				20000,
 			);
@@ -1648,10 +1648,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Grab online the lines that form our error.
 		let stdErrLines = allOutput.split("\n").map((l) => l.trim());
 		// Trim off stuff before our error.
-		const firstErrorLine = stdErrLines.findIndex((l) => l.toLowerCase().indexOf("exception caught by widgets library") !== -1);
+		const firstErrorLine = stdErrLines.findIndex((l) => l.toLowerCase().includes("exception caught by widgets library"));
 		stdErrLines = stdErrLines.slice(firstErrorLine);
 		// Trim off stuff after our error.
-		const lastErrorLine = stdErrLines.findIndex((l) => l.indexOf("════════════════════════════════════════════════════════════════════════════════") !== -1);
+		const lastErrorLine = stdErrLines.findIndex((l) => l.includes("════════════════════════════════════════════════════════════════════════════════"));
 		stdErrLines = stdErrLines.slice(0, lastErrorLine + 1);
 
 		// Because we run in verbose mode, there may be timings on the front, so trim them off.

@@ -226,7 +226,7 @@ function setupTestLogging(): boolean {
 		const logPath = path.join(logFolder, logFile);
 
 		// For debugger tests, the analyzer log is just noise, so we filter it out.
-		const excludeLogCategories = process.env.BOT && process.env.BOT.indexOf("debug") !== -1
+		const excludeLogCategories = process.env.BOT && process.env.BOT.includes("debug")
 			? [LogCategory.Analyzer]
 			: [];
 		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000, excludeLogCategories, true);
@@ -735,7 +735,7 @@ export function ensureInsertReplaceRanges(range: undefined | vs.Range | { insert
 }
 
 export function ensureError(errors: vs.Diagnostic[], text: string) {
-	const error = errors.find((e) => e.message.indexOf(text) !== -1);
+	const error = errors.find((e) => e.message.includes(text));
 	assert.ok(
 		error,
 		`Couldn't find error for ${text} in\n`

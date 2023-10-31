@@ -171,8 +171,8 @@ class Config {
 
 	// Helpers
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
-	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
-	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
+	get openTestViewOnFailure() { return this.openTestView.includes("testFailure"); }
+	get openTestViewOnStart() { return this.openTestView.includes("testRunStart"); }
 
 	get workspaceSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("sdkPath")); }
 	get workspaceFlutterSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("flutterSdkPath")); }

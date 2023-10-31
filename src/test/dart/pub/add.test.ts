@@ -95,7 +95,7 @@ describe("pub add", () => {
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
 
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
-		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies`) !== -1)!;
+		const addDependency = fixResults.find((r) => r.title.includes(`Add '${packageName}' to dependencies`))!;
 
 		await vs.commands.executeCommand(addDependency.command!.command, ...addDependency.command!.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 		await waitFor(() => pubspecContainsText(packageName));
@@ -108,7 +108,7 @@ describe("pub add", () => {
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
 
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
-		const addDependency = fixResults.find((r) => r.title.indexOf(`Add '${packageName}' to dependencies`) !== -1);
+		const addDependency = fixResults.find((r) => r.title.includes(`Add '${packageName}' to dependencies`));
 		assert.equal(!!addDependency, false);
 	});
 });

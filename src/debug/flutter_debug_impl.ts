@@ -163,11 +163,11 @@ export class FlutterDebugSession extends DartDebugSession {
 
 	private handleLogOutput(msg: string, forceErrorCategory = false) {
 		msg = `${msg.trimRight()}\n`;
-		if (msg.indexOf(flutterExceptionStartBannerPrefix) !== -1) {
+		if (msg.includes(flutterExceptionStartBannerPrefix)) {
 			// Change before logging.
 			this.outputCategory = "stderr";
 			this.logToUser(msg, this.outputCategory);
-		} else if (msg.indexOf(flutterExceptionEndBannerPrefix) !== -1) {
+		} else if (msg.includes(flutterExceptionEndBannerPrefix)) {
 			// Log before changing back.
 			this.logToUser(msg, this.outputCategory);
 			this.outputCategory = "stdout";
@@ -175,7 +175,7 @@ export class FlutterDebugSession extends DartDebugSession {
 			this.logToUser(msg, forceErrorCategory ? "stderr" : this.outputCategory);
 			// This text comes through as stdout and not Progress, so map it over
 			// to progress indicator.
-			if (msg.indexOf("Waiting for connection from") !== -1) {
+			if (msg.includes("Waiting for connection from")) {
 				const instructions = "Please click the Dart Debug extension button in the spawned browser window";
 				this.updateProgress(debugLaunchProgressId, instructions);
 				// Send this delayed, so it appears after the rest of the help text.

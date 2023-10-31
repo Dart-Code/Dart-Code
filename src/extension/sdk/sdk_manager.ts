@@ -35,7 +35,7 @@ abstract class SdkManager {
 		}
 
 		// Add in the current path if it's not there.
-		if (this.currentSdk && allPaths.indexOf(this.currentSdk) === -1)
+		if (this.currentSdk && !allPaths.includes(this.currentSdk))
 			allPaths.push(this.currentSdk);
 
 		const sdkFolders = allPaths

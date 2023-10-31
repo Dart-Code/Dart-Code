@@ -59,8 +59,8 @@ export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?
 	const extName = path.extname(fsPath(file.uri));
 	const extension = extName ? extName.substr(1) : undefined;
 
-	return (file.languageId && analyzableLanguages.indexOf(file.languageId) >= 0)
-		|| analyzableFilenames.indexOf(path.basename(fsPath(file.uri))) >= 0
+	return (file.languageId && analyzableLanguages.includes(file.languageId))
+		|| analyzableFilenames.includes(path.basename(fsPath(file.uri)))
 		|| (extension !== undefined && analyzableFileExtensions.includes(extension));
 }
 
@@ -144,7 +144,7 @@ export function isInsideFolderNamed(file: string | undefined, folderName: string
 	const relPath = path.relative(fsPath(ws.uri).toLowerCase(), file.toLowerCase());
 	const segments = relPath.split(path.sep);
 
-	return segments.indexOf(folderName.toLowerCase()) !== -1;
+	return segments.includes(folderName.toLowerCase());
 }
 
 export function hasTestFilter(args: string[]) {

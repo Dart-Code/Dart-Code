@@ -533,7 +533,7 @@ export class SdkUtils {
 		// Any that don't end with bin, add it on (as an extra path) since some of our
 		// paths may come from places that don't already include it (for ex. the
 		// user config.sdkPath).
-		const isBinFolder = (f: string) => ["bin", "sbin"].indexOf(path.basename(f)) !== -1;
+		const isBinFolder = (f: string) => ["bin", "sbin"].includes(path.basename(f));
 		let sdkPaths = flatMap(
 			rawSdkPaths,
 			(p): SdkSearchResult[] => isBinFolder(p)

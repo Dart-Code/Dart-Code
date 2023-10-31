@@ -110,7 +110,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Handle test_driver tests that can be pointed at an existing running instrumented app.
 		if (debugType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
-			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1);
+			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver));
 			if (runningInstrumentedApps.length === 0) {
 				return this.errorWithoutOpeningLaunchConfig("Could not find a running Flutter app that was instrumented with enableFlutterDriverExtension. Run your instrumented app before running driver tests.");
 			} else if (runningInstrumentedApps.length > 1) {

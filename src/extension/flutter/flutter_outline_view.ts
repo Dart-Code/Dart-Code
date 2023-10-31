@@ -78,7 +78,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 		if (this.activeEditor && selection && selection.length === 1 && isWidget(selection[0].outline)) {
 			const fixes = (await getFixes(this.activeEditor, selection[0].outline))
 				.filter((f): f is vs.CodeAction => f instanceof vs.CodeAction)
-				.filter((ca) => ca.kind && ca.kind.value && flutterOutlineCommands.indexOf(ca.kind.value) !== -1);
+				.filter((ca) => ca.kind && ca.kind.value && flutterOutlineCommands.includes(ca.kind.value));
 
 			// Stash the fixes, as we may need to call them later.
 			selection[0].fixes = fixes;

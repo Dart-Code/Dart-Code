@@ -488,7 +488,7 @@ describe("flutter test debugger", () => {
 				// Allow some time for the debug service to register its Driver extension so we can find it when
 				// looking for the app debug session later.
 				await waitFor(
-					() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1),
+					() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver)),
 					100, // checkEveryMilliseconds
 					30000, // tryForMilliseconds
 				);

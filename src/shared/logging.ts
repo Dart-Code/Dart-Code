@@ -126,8 +126,8 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 		// - The category filter includes this category; or
 		// - The log is WARN/ERROR (they get logged everywhere).
 		const shouldLog = (excludeLogCategories
-			? logCategories.indexOf(e.category) === -1
-			: logCategories.indexOf(e.category) !== -1)
+			? !logCategories.includes(e.category)
+			: logCategories.includes(e.category))
 			|| e.severity === LogSeverity.Warn
 			|| e.severity === LogSeverity.Error;
 		if (!shouldLog)

@@ -209,14 +209,11 @@ module.exports = {
 		],
 		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-non-null-assertion": "off",
-		"@typescript-eslint/no-parameter-properties": "off",
-		// TODO: Re-enable this when fixed.
 		"@typescript-eslint/no-unused-vars": "off",
 		"@typescript-eslint/no-use-before-define": "off",
 		"@typescript-eslint/prefer-for-of": "error",
 		"@typescript-eslint/prefer-function-type": "error",
-		// TODO: Re-enable this when fixed.
-		"@typescript-eslint/prefer-includes": "off",
+		"@typescript-eslint/prefer-includes": "warn",
 		// TODO: Enable this when fixed
 		"@typescript-eslint/restrict-template-expressions": "off",
 		// TODO: Re-enable this when fixed.

@@ -101,7 +101,7 @@ export class DartTestDebugSession extends DartDebugSession {
 		runner.registerForUnhandledMessages((msg) => {
 			// Hack: Would be better to have an event for this.
 			// https://github.com/dart-lang/test/issues/1216
-			if (msg.toLowerCase().indexOf("waiting for current test(s) to finish") !== -1)
+			if (msg.toLowerCase().includes("waiting for current test(s) to finish"))
 				this.updateProgress(debugTerminatingProgressId, `${msg.trim()}`);
 			this.logToUserIfAppropriate(msg, "stdout");
 		});

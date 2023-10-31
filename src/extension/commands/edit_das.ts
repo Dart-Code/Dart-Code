@@ -188,7 +188,7 @@ export class DasEditCommands implements vs.Disposable {
 			leg.positions.forEach((pos) => {
 				const defaultValue = documentText.substr(pos.offset, leg.length);
 				let choices = leg.suggestions ? leg.suggestions.map((s) => s.value) : undefined;
-				if (defaultValue && choices && choices.indexOf(defaultValue) === -1) {
+				if (defaultValue && choices && !choices.includes(defaultValue)) {
 					choices = [defaultValue, ...choices];
 				}
 				placeholders.push({ offset: pos.offset, length: leg.length, defaultValue, choices, placeholderNumber });
