@@ -5,6 +5,7 @@ on:
   pull_request:
   schedule:
      - cron: '0 6 * * 1-5'
+  workflow_dispatch:
 
 jobs:
 
@@ -23,7 +24,7 @@ jobs:
         run: echo "excludes=[]" >> $GITHUB_OUTPUT
       - id: exclude
         name: Exclude some builds if not running on schedule
-        if: github.event_name != 'schedule' && !startsWith(github.ref, 'refs/tags/')
+        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
         run: echo "excludes=[{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
 
 
