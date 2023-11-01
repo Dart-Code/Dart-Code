@@ -20,7 +20,7 @@ jobs:
     steps:
       - id: no_exclude
         name: Run all builds
-        if: github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
         run: echo "excludes=[]" >> $GITHUB_OUTPUT
       - id: exclude
         name: Exclude some builds if not running on schedule
