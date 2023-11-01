@@ -876,18 +876,25 @@ export async function getSnippetCompletionsAt(
 export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): vs.CompletionItem {
 	const kinds = Array.isArray(kind) ? kind : [kind];
 	const completion = items.find((item) =>
-		item.label === label
+		completionLabel(item) === label
 		&& (item.filterText === filterText || (item.filterText === undefined && filterText === label))
 		&& kinds.includes(item.kind!),
 	);
 	assert.ok(
 		completion,
 		`Couldn't find completion for ${label}/${filterText} in\n`
-		+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${item.label}/${item.filterText}`).join("\n"),
+		+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${completionLabel(item)}/${item.filterText}`).join("\n"),
 	);
 	if (documentation)
 		assert.equal((completion.documentation as any).value.trim(), documentation);
 	return completion;
+}
+
+export function completionLabel(completion: vs.CompletionItem): string {
+	const label = completion.label;
+	return typeof label === "string"
+		? label
+		: label.label;
 }
 
 export function ensureSnippet(items: vs.CompletionItem[], label: string, filterText: string, documentation?: string): void {
