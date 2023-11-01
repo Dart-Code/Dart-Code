@@ -30,21 +30,21 @@ describe("flutter", () => {
 		const moduleProjectFolder = fsPath(vs.workspace.workspaceFolders![2].uri);
 		const pubspecFile = path.join(moduleProjectFolder, "pubspec.yaml");
 
-		await projectFileContainsExpectedString(pubspecFile, "description: A new flutter module project");
+		await projectFileContainsExpectedString(pubspecFile, "A new Flutter module project");
 	});
 
 	it("created a package project", async () => {
 		const packageProjectFolder = fsPath(vs.workspace.workspaceFolders![3].uri);
 		const pubspecFile = path.join(packageProjectFolder, "pubspec.yaml");
 
-		await projectFileContainsExpectedString(pubspecFile, "description: A new Flutter package project");
+		await projectFileContainsExpectedString(pubspecFile, "A new Flutter package project");
 	});
 
 	it("created a plugin project", async () => {
 		const pluginProjectFolder = fsPath(vs.workspace.workspaceFolders![4].uri);
 		const pubspecFile = path.join(pluginProjectFolder, "pubspec.yaml");
 
-		await projectFileContainsExpectedString(pubspecFile, "description: A new flutter plugin project");
+		await projectFileContainsExpectedString(pubspecFile, "A new Flutter plugin project");
 	});
 
 	it("triggered Flutter mode", async () => {
