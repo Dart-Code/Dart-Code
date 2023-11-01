@@ -1658,37 +1658,50 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const timingRegex = new RegExp("\[[ \d]+\] ", "g");
 		stdErrLines = stdErrLines.map((line) => line.replace(timingRegex, ""));
 
-		// TODO: Change this when SDK DAPs produce improved output.
-		const expectedErrorLines = dc.isDartDap
+		const expectedErrorLines = dc.isDartDap && extApi.flutterCapabilities.hasSdkDapWithStructuredErrors
 			? [
-				`stderr: ══╡ exception caught by widgets library ╞═══════════════════════════════════════════════════════════`,
-				`stderr: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
-				`stderr: Exception: Oops`,
-				`stderr:`,
-				`stderr: The relevant error-causing widget was:`,
-				`stderr:   MyBrokenHomePage`,
-				`stderr:   MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
-				`stderr:`,
-				`stderr: When the exception was thrown, this was the stack:`,
-				`stderr: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
-				`stderr: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
-				// Don't check any more past this, since they can change with Flutter framework changes.
-			]
-			: [
 				`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
 				`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
 				`stderr: Exception: Oops`,
 				`stdout:`,
-				`stdout: The relevant error-causing widget was`,
-				`stdout: MyBrokenHomePage`,
-				`stdout: When the exception was thrown, this was the stack`,
-				`stdout: #0      MyBrokenHomePage._throwAnException`,
-				`stdout: #1      MyBrokenHomePage.build`,
-				`stdout: ${faint("#2      StatelessElement.build")}`,
-				`stdout: ${faint("#3      ComponentElement.performRebuild")}`,
-				`stdout: ${faint("#4      Element.rebuild")}`,
+				`The relevant error-causing widget was:`,
+				`MyBrokenHomePage MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
+				``,
+				`When the exception was thrown, this was the stack:`,
+				`stdout: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
+				`stdout: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
 				// Don't check any more past this, since they can change with Flutter framework changes.
-			];
+			]
+			: dc.isDartDap
+				? [
+					`stderr: ══╡ exception caught by widgets library ╞═══════════════════════════════════════════════════════════`,
+					`stderr: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
+					`stderr: Exception: Oops`,
+					`stderr:`,
+					`stderr: The relevant error-causing widget was:`,
+					`stderr:   MyBrokenHomePage`,
+					`stderr:   MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
+					`stderr:`,
+					`stderr: When the exception was thrown, this was the stack:`,
+					`stderr: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
+					`stderr: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
+					// Don't check any more past this, since they can change with Flutter framework changes.
+				]
+				: [
+					`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
+					`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
+					`stderr: Exception: Oops`,
+					`stdout:`,
+					`stdout: The relevant error-causing widget was`,
+					`stdout: MyBrokenHomePage`,
+					`stdout: When the exception was thrown, this was the stack`,
+					`stdout: #0      MyBrokenHomePage._throwAnException`,
+					`stdout: #1      MyBrokenHomePage.build`,
+					`stdout: ${faint("#2      StatelessElement.build")}`,
+					`stdout: ${faint("#3      ComponentElement.performRebuild")}`,
+					`stdout: ${faint("#4      Element.rebuild")}`,
+					// Don't check any more past this, since they can change with Flutter framework changes.
+				];
 
 		assert.deepStrictEqual(
 			// Only check top expectedErrorLines.length to avoid all the frames that are
