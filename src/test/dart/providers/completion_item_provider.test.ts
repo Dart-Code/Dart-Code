@@ -74,7 +74,7 @@ main() {
 				`);
 		const completions = await getCompletionsAt(`foo(fo^`);
 
-		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo: ", "foo: ");
+		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo:", "foo:");
 		if (extApi.isLsp)
 			assert.equal(comp.insertText, "foo: ");
 		else if (typeof comp.insertText === "string")
@@ -118,7 +118,6 @@ main() {
 			assert.equal(cl.command, undefined);
 		assert.equal(cl.commitCharacters, undefined); // TODO: ??
 		assert.equal(cl.detail, "(int i) → int"); // No auto import message here
-		assert.equal(cl.filterText, "methodWithArgsAndReturnValue");
 		if (extApi.isLsp) {
 			assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${0:i})");
 		} else {
@@ -126,8 +125,6 @@ main() {
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			assert.equal(cl.keepWhitespace, true);
 		}
-		assert.equal(cl.kind, vs.CompletionItemKind.Method);
-		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
 		assert.notEqual(cl.preselect, true);
 		ensureRanges(cl.range, "|ret|urn str", "|return| str");
 	});
@@ -206,13 +203,10 @@ main() {
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
-			assert.equal(completion.filterText ?? completionLabel(completion), "ProcessResult");
 			assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult");
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
-			assert.equal(completion.kind, vs.CompletionItemKind.Class);
-			assert.equal(completionLabel(completion), "ProcessResult");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Process|Res", "|ProcessRes|");
 		});
@@ -242,7 +236,6 @@ main() {
 			// 	else
 			// 		assert.equal(doc, "Methods for retrieving information about the current process.");
 			// }
-			assert.equal(completion.filterText ?? completionLabel(completion), "ProcessResult");
 			if (extApi.isLsp)
 				assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult(${1:pid}, ${2:exitCode}, ${3:stdout}, ${4:stderr})");
 			else
@@ -250,8 +243,6 @@ main() {
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
-			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
-			assert.equal(completionLabel(completion), "ProcessResult(…)");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|ProcessRe|s", "|ProcessRes|");
 		});
@@ -279,7 +270,6 @@ main() {
 				// 2022-10-11
 				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap<K, V>",
 			);
-			assert.equal(completion.filterText ?? completionLabel(completion), "HashMap");
 			if (extApi.isLsp) {
 				const insertText = snippetValue(completion.insertText) ?? (completion.label as string);
 				if (insertText.includes("${"))
@@ -292,8 +282,6 @@ main() {
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
-			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
-			assert.equal(completionLabel(completion), "HashMap(…)");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Hash|Ma", "|HashMa|");
 		});

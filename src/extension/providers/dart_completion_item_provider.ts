@@ -501,6 +501,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// If we have trailing commas (flutter) they look weird in the list, so trim the off (for display label only).
 		if (label.endsWith(","))
 			label = label.substr(0, label.length - 1).trim();
+		else
+			label = label.trim();
 
 		// If we didnt have a CompletionItemKind from our element, base it on the CompletionSuggestionKind.
 		// This covers things like Keywords that don't have elements.

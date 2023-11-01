@@ -873,18 +873,46 @@ export async function getSnippetCompletionsAt(
 	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
 }
 
-export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): vs.CompletionItem {
+export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, expectedLabel: string, expectedFilterText?: string, documentation?: string): vs.CompletionItem {
 	const kinds = Array.isArray(kind) ? kind : [kind];
-	const completion = items.find((item) =>
-		completionLabel(item) === label
-		&& (item.filterText === filterText || (item.filterText === undefined && filterText === label))
-		&& kinds.includes(item.kind!),
-	);
-	assert.ok(
-		completion,
-		`Couldn't find completion for ${label}/${filterText} in\n`
-		+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${completionLabel(item)}/${item.filterText}`).join("\n"),
-	);
+	// Sometimes our mismatch is just the details afterwards, so we'll try to match on labels with/without and then verify
+	// afterwards so we can get better errors ("expected `exit(...)` but got `exit`" instead of "can't find `exit(...)` in [big list]").
+	const expectedShortLabel = expectedLabel.split("(")[0];
+	const completionCandidates = items.filter((item) => {
+		const actualLabel = completionLabel(item);
+		const actualShortLabel = actualLabel.split("(")[0];
+		return expectedShortLabel === actualShortLabel && kinds.includes(item.kind!);
+	});
+	if (completionCandidates.length === 0) {
+		assert.fail(
+			`Couldn't find completion for ${expectedLabel} in\n`
+			+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${completionLabel(item)}`).join("\n"),
+		);
+	}
+	if (completionCandidates.length > 1) {
+		assert.fail(
+			`Found multiple completions for ${expectedLabel} in\n`
+			+ completionCandidates.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${completionLabel(item)}`).join("\n"),
+		);
+	}
+	const completion = completionCandidates[0];
+	const actualLabel = completionLabel(completion);
+	const actualLabelLong = completionLabelWithDetails(completion);
+
+	// Either we should have a single string label that matches expectedLabel, or we should be a non-string label
+	// where actualLabelLong starts with label.
+	if (typeof completion.label === "string")
+		assert.equal(actualLabel, expectedLabel);
+	else
+		// We use startsWith because the new long labels may have return values that
+		// the tests do not (`exit(…) → Never`).
+		// TODO(dantup): Once stable is using label details, change these tests to verify the whole new object.
+		assert.ok(actualLabelLong.startsWith(expectedLabel));
+
+	const expectedResolvedFilterText = expectedFilterText ?? expectedLabel;
+	const actualResolvedFilterText = completion.filterText ?? actualLabel;
+	assert.equal(actualResolvedFilterText, expectedResolvedFilterText);
+
 	if (documentation)
 		assert.equal((completion.documentation as any).value.trim(), documentation);
 	return completion;
@@ -895,6 +923,13 @@ export function completionLabel(completion: vs.CompletionItem): string {
 	return typeof label === "string"
 		? label
 		: label.label;
+}
+
+export function completionLabelWithDetails(completion: vs.CompletionItem): string {
+	const label = completion.label;
+	return typeof label === "string"
+		? label
+		: label.label + (label.detail ?? "");
 }
 
 export function ensureSnippet(items: vs.CompletionItem[], label: string, filterText: string, documentation?: string): void {
