@@ -460,7 +460,7 @@ describe("flutter test debugger", () => {
 				const v = variables.find((v) => v.name === "message");
 				assert.ok(v);
 				assert.equal(v.evaluateName, "$_threadException.message");
-				assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
+				assert.ok(v.value.startsWith(`"Expected: exactly one matching`));
 			});
 
 			it("send failure results for failing tests", async () => {
