@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -133,7 +133,7 @@ export class DevToolsManager implements vs.Disposable {
 
 			// Ignore silent flag if we're using a custom DevTools, because it could
 			// take much longer to start and won't be obvious why launching isn't working.
-			const isCustomDevTools = !!config.customDevTools?.script;
+			const isCustomDevTools = !!config.customDevTools?.path;
 			const startingTitle = isCustomDevTools ? "Starting Custom Dart DevTools…" : "Starting Dart DevTools…";
 			if (silent && !isCustomDevTools) {
 				this.devtoolsUrl = this.startServer();
@@ -321,8 +321,8 @@ export class DevToolsManager implements vs.Disposable {
 
 		// Add the version to the querystring to avoid any caching of the index.html page.
 		let cacheBust = `dart-${this.dartCapabilities.version}-flutter-${this.flutterCapabilities.version}`;
-		// If using a custom version of DevTools, additionally bust at least every day.
-		if (!!config.customDevTools?.script) { // Don't just check config.customDevTools as it's a VS Code Proxy object
+		// If using a custom version of DevTools, bust regardless of version.
+		if (!!config.customDevTools?.path) { // Don't just check config.customDevTools as it's a VS Code Proxy object
 			cacheBust += `-custom-${new Date().getTime()}`;
 		}
 		queryParams.cacheBust = cacheBust;
@@ -479,15 +479,15 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
 		const dartVm = path.join(workspaceContext.sdks.dart, dartVMPath);
-		const devToolsArgs = ["--machine", "--try-ports", "10", "--allow-embedding"];
+		const devToolsArgs = ["--machine", "--allow-embedding"];
 		const customDevTools = config.customDevTools;
 
-		const executionInfo = customDevTools?.script ?
+		const executionInfo = customDevTools?.path ?
 			{
-				args: [customDevTools.script],
-				cwd: customDevTools.cwd,
+				args: ["serve", "--machine"],
+				cwd: customDevTools.path,
 				env: customDevTools.env,
-				executable: dartVm,
+				executable: path.join(customDevTools.path, devToolsToolPath),
 
 			}
 			: dartCapabilities.supportsDartDevTools

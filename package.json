@@ -1698,22 +1698,18 @@
 					"dart.customDevTools": {
 						"type": "object",
 						"properties": {
-							"script": {
-								"type": "string",
-								"default": "/path/to/devtools/tool/build_e2e.dart",
-								"description": "The script or command that runs the DevTools server. This will be supplied to the `dart` executable (for example `dart devtools` or `dart /foo/devtools.dart`)."
-							},
-							"cwd": {
+							"path": {
 								"type": "string",
 								"default": "/path/to/devtools",
-								"description": "The working directory to spawn the command in."
+								"description": "The root directory containing a clone of the flutter/devtools repository."
 							},
 							"env": {
 								"type": "object",
 								"default": {
-									"LOCAL_DART_SDK": "/path/to/dart-sdk"
+									"LOCAL_DART_SDK": "/path/to/dart-sdk",
+									"FLUTTER_ROOT": "/path/to/devtools/tool/flutter-sdk"
 								},
-								"description": "Any environment variables to set when spawning the command."
+								"description": "Any environment variables to set when spawning the command. 'LOCAL_DART_SDK' should usually be set to your Dart SDK checkout and 'FLUTTER_ROOT' to the version of Flutter that DevTools is pinned to."
 							}
 						},
 						"description": "Custom settings for launching DevTools. This setting is intended for use by Dart DevTools developers.",
