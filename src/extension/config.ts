@@ -1,7 +1,8 @@
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
 import { CustomDevToolsConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
-import { createFolderForFile, resolvePaths } from "./utils";
+import { createFolderForFile } from "../shared/utils/fs";
+import { resolvePaths } from "./utils";
 import { setupToolEnv } from "./utils/processes";
 
 class Config {
@@ -142,7 +143,7 @@ class Config {
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
 	get previewSdkDaps(): undefined | boolean { return this.getConfig<null | boolean>("previewSdkDaps", null); }
-	get previewSurveys(): boolean { return this.getConfig<boolean>("previewSurveys", false); }
+	get previewSurveys(): boolean { return this.getConfig<boolean>("previewSurveys", true); }
 	get projectSearchDepth(): number { return this.getConfig<number>("projectSearchDepth", 5); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get renameFilesWithClasses(): "never" | "prompt" | "always" { return this.getConfig<"never" | "prompt" | "always">("renameFilesWithClasses", "never"); }
@@ -170,8 +171,8 @@ class Config {
 
 	// Helpers
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
-	get openTestViewOnFailure() { return this.openTestView.indexOf("testFailure") !== -1; }
-	get openTestViewOnStart() { return this.openTestView.indexOf("testRunStart") !== -1; }
+	get openTestViewOnFailure() { return this.openTestView.includes("testFailure"); }
+	get openTestViewOnStart() { return this.openTestView.includes("testRunStart"); }
 
 	get workspaceSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("sdkPath")); }
 	get workspaceFlutterSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("flutterSdkPath")); }

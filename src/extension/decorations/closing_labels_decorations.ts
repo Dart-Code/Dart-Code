@@ -51,7 +51,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 			const finalCharacterRange = new vs.Range(finalCharacterPosition.translate({ characterDelta: -1 }), finalCharacterPosition);
 			const finalCharacterText = this.activeEditor.document.getText(finalCharacterRange);
-			if (validLastCharacters.indexOf(finalCharacterText) === -1)
+			if (!validLastCharacters.includes(finalCharacterText))
 				return;
 
 			// Get the end of the line where we'll show the labels.

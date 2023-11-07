@@ -24,6 +24,6 @@ function findNode(outlines: as.Outline[] | undefined, offset: number, useReduced
 			|| (offset >= outlineStart && offset <= outline.element.location.offset + outline.element.location.length);
 
 		return findNode(outline.children, offset, useReducedRange, kinds)
-			|| (kinds.indexOf(outline.element.kind) !== -1 && isInReducedRange ? outline : undefined);
+			|| (kinds.includes(outline.element.kind) && isInReducedRange ? outline : undefined);
 	}
 }

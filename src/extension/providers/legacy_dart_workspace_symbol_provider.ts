@@ -45,7 +45,7 @@ export class LegacyDartWorkspaceSymbolProvider implements WorkspaceSymbolProvide
 		// Filter out special chars that will break regex.
 		// searchFindTopLevelDeclarations supports regex, but we build the pattern with the output of this.
 		// searchMemberDeclarations is not intended to support regex but does.
-		chars = chars.filter((c) => "[](){}\\|./<>?+".indexOf(c) === -1);
+		chars = chars.filter((c) => !"[](){}\\|./<>?+".includes(c));
 		return chars.join("");
 	}
 

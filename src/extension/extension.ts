@@ -113,7 +113,7 @@ import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
 import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
-import { getToolEnv, safeToolSpawn, setupFlutterRoot as setFlutterRoot, setupToolEnv } from "./utils/processes";
+import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
 
 const PROJECT_LOADED = "dart-code:anyProjectLoaded";
@@ -147,7 +147,7 @@ const logger = new EmittingLogger();
 // user when something crashed even if they don't have disk-logging enabled.
 export const ringLog: RingLog = new RingLog(200);
 
-export async function activate(context: vs.ExtensionContext, isRestart: boolean = false) {
+export async function activate(context: vs.ExtensionContext, isRestart = false) {
 	// Ring logger is only set up once and presist over silent restarts.
 	if (!ringLogger)
 		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(500)));
@@ -201,7 +201,7 @@ export async function activate(context: vs.ExtensionContext, isRestart: boolean 
 	// Record the Flutter SDK path so we can set FLUTTER_ROOT for spawned processes.
 	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter)
 		setFlutterRoot(workspaceContext.sdks.flutter);
-	setupToolEnv();
+	setupToolEnv(config.env);
 
 	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
 
@@ -973,7 +973,7 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterAdbConnectOnChromeOs;
 }
 
-export async function deactivate(isRestart: boolean = false): Promise<void> {
+export async function deactivate(isRestart = false): Promise<void> {
 	setCommandVisiblity(false);
 	void analyzer?.dispose();
 	await flutterDaemon?.shutdown();

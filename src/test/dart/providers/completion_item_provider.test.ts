@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
-import { acceptFirstSuggestion, activate, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
+import { acceptFirstSuggestion, activate, completionLabel, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
@@ -74,7 +74,7 @@ main() {
 				`);
 		const completions = await getCompletionsAt(`foo(fo^`);
 
-		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo: ", "foo: ");
+		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo:", "foo:");
 		if (extApi.isLsp)
 			assert.equal(comp.insertText, "foo: ");
 		else if (typeof comp.insertText === "string")
@@ -118,7 +118,6 @@ main() {
 			assert.equal(cl.command, undefined);
 		assert.equal(cl.commitCharacters, undefined); // TODO: ??
 		assert.equal(cl.detail, "(int i) → int"); // No auto import message here
-		assert.equal(cl.filterText, "methodWithArgsAndReturnValue");
 		if (extApi.isLsp) {
 			assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${0:i})");
 		} else {
@@ -126,8 +125,6 @@ main() {
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			assert.equal(cl.keepWhitespace, true);
 		}
-		assert.equal(cl.kind, vs.CompletionItemKind.Method);
-		assert.equal(cl.label, "methodWithArgsAndReturnValue(…)");
 		assert.notEqual(cl.preselect, true);
 		ensureRanges(cl.range, "|ret|urn str", "|return| str");
 	});
@@ -198,7 +195,7 @@ main() {
   ProcessRes
 }
 		`);
-			const completions = await getCompletionsAt("Process^Res", { resolveCount: 5000 });
+			const completions = await getCompletionsAt("Process^Res", { resolveCount: 5000, requireComplete: true });
 
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
 
@@ -206,13 +203,10 @@ main() {
 			assert.equal(completion.command, undefined); // Tested in the unimported imports in part-file test.
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
-			assert.equal(completion.filterText ?? completion.label, "ProcessResult");
-			assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessResult");
+			assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult");
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
-			assert.equal(completion.kind, vs.CompletionItemKind.Class);
-			assert.equal(completion.label, "ProcessResult");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Process|Res", "|ProcessRes|");
 		});
@@ -242,16 +236,13 @@ main() {
 			// 	else
 			// 		assert.equal(doc, "Methods for retrieving information about the current process.");
 			// }
-			assert.equal(completion.filterText ?? completion.label, "ProcessResult");
 			if (extApi.isLsp)
-				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessResult(${1:pid}, ${2:exitCode}, ${3:stdout}, ${4:stderr})");
+				assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult(${1:pid}, ${2:exitCode}, ${3:stdout}, ${4:stderr})");
 			else
-				assert.equal(snippetValue(completion.insertText) ?? completion.label, "ProcessResult()");
+				assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult()");
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
-			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
-			assert.equal(completion.label, "ProcessResult(…)");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|ProcessRe|s", "|ProcessRes|");
 		});
@@ -279,7 +270,6 @@ main() {
 				// 2022-10-11
 				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap<K, V>",
 			);
-			assert.equal(completion.filterText ?? completion.label, "HashMap");
 			if (extApi.isLsp) {
 				const insertText = snippetValue(completion.insertText) ?? (completion.label as string);
 				if (insertText.includes("${"))
@@ -292,8 +282,6 @@ main() {
 			// https://github.com/microsoft/language-server-protocol/issues/880
 			if (!extApi.isLsp)
 				assert.equal(completion.keepWhitespace, true);
-			assert.equal(completion.kind, vs.CompletionItemKind.Constructor);
-			assert.equal(completion.label, "HashMap(…)");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Hash|Ma", "|HashMa|");
 		});

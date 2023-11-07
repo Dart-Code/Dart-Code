@@ -1,15 +1,12 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureTestContent, extApi, rangeOf, sb, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, extApi, rangeOf, setTestContent } from "../../helpers";
 
 describe("refactor", () => {
 
 	beforeEach("activate", () => activate());
 
 	it("can extract simple code into a local variable", async () => {
-		const showInputBox = sb.stub(vs.window, "showInputBox");
-		showInputBox.resolves("s");
-
 		await setTestContent(`
 String name() {
   return "Danny";
@@ -20,7 +17,7 @@ String name() {
 		assert.ok(actions);
 		assert.ok(actions.length);
 
-		const extractLocalAction = actions.find((r) => r.title.indexOf("Extract Local Variable") !== -1);
+		const extractLocalAction = actions.find((r) => r.title.includes("Extract Local Variable"));
 		assert.ok(extractLocalAction, "Action was not found");
 
 		await (vs.commands.executeCommand(extractLocalAction.command!.command, ...extractLocalAction.command!.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument

@@ -16,7 +16,7 @@ export function getGlobalFlutterArgs() {
 	return globalFlutterArgs;
 }
 
-export function setupFlutterRoot(root: string) {
+export function setFlutterRoot(root: string) {
 	flutterRoot = root;
 }
 

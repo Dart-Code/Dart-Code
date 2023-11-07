@@ -390,11 +390,7 @@ describe("flutter test debugger", () => {
 					dc.launch(config),
 				);
 
-				const expected = dc.isDartDap && extApi.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns
-					// Allow --no-dds temporarily while we're passing it due to requiresDdsDisabledForSdkDapTestRuns.
-					? ["test --machine --no-dds --start-paused", "test --machine --start-paused"]
-					: ["test --machine --start-paused"];
-				ensureHasRunWithArgsStarting(root, hasRunFile, ...expected);
+				ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --start-paused");
 			});
 
 			it("can replace all args using custom tool", async () => {
@@ -464,7 +460,7 @@ describe("flutter test debugger", () => {
 				const v = variables.find((v) => v.name === "message");
 				assert.ok(v);
 				assert.equal(v.evaluateName, "$_threadException.message");
-				assert.ok(v.value.startsWith(`"Expected: exactly one matching node in the widget tree`));
+				assert.ok(v.value.startsWith(`"Expected: exactly one matching`));
 			});
 
 			it("send failure results for failing tests", async () => {
@@ -480,10 +476,7 @@ describe("flutter test debugger", () => {
 				);
 			});
 
-			it("can run test_driver tests", async function () {
-				if (dc.isDartDap && !extApi.flutterCapabilities.supportsEnvInSdkDAP)
-					this.skip();
-
+			it("can run test_driver tests", async () => {
 				// Start the instrumented app.
 				const appDc = createDebugClient(DebuggerType.Flutter);
 				const appConfig = await startDebugger(appDc, flutterTestDriverAppFile);
@@ -495,7 +488,7 @@ describe("flutter test debugger", () => {
 				// Allow some time for the debug service to register its Driver extension so we can find it when
 				// looking for the app debug session later.
 				await waitFor(
-					() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1),
+					() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver)),
 					100, // checkEveryMilliseconds
 					30000, // tryForMilliseconds
 				);

@@ -70,7 +70,7 @@ export function isTemplateOfType(config: TemplatedLaunchConfig, templateType: st
 	const template = config.codeLens?.for;
 	return !!template && (
 		(typeof template === "string" && template === templateType)
-		|| (Array.isArray(template) && template.indexOf(templateType) !== -1)
+		|| (Array.isArray(template) && template.includes(templateType))
 	);
 }
 

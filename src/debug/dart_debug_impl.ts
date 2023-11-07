@@ -87,13 +87,13 @@ export class DartDebugSession extends DebugSession {
 	private vmServiceInfoFileCompleter?: PromiseCompleter<string>;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
-	protected sendStdOutToConsole: boolean = true;
-	protected supportsObservatoryWebApp: boolean = true;
-	protected parseVmServiceUriFromStdOut: boolean = true;
-	protected requiresProgram: boolean = true;
+	protected sendStdOutToConsole = true;
+	protected supportsObservatoryWebApp = true;
+	protected parseVmServiceUriFromStdOut = true;
+	protected requiresProgram = true;
 	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 	protected processExit: Promise<{ code: number | null, signal: string | null }> = Promise.resolve({ code: 0, signal: null });
-	protected maxLogLineLength: number = 1000; // This should always be overriden in launch/attach requests but we have it here for narrower types.
+	protected maxLogLineLength = 1000; // This should always be overriden in launch/attach requests but we have it here for narrower types.
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both debuggers override it.
 	protected supportsRunInTerminalRequest = false;
@@ -821,7 +821,7 @@ export class DartDebugSession extends DebugSession {
 
 	// Run some code, but don't wait longer than a certain time period for the result
 	// as it may never come. Returns true if the operation completed.
-	private async raceIgnoringErrors(action: () => Promise<any>, timeoutMilliseconds: number = 250): Promise<boolean> {
+	private async raceIgnoringErrors(action: () => Promise<any>, timeoutMilliseconds = 250): Promise<boolean> {
 		try {
 			await this.withTimeout(action(), timeoutMilliseconds);
 			return true;
@@ -932,9 +932,9 @@ export class DartDebugSession extends DebugSession {
 
 		// If we're running in noDebug mode, we'll always set None.
 		if (!this.noDebug) {
-			if (filters.indexOf("Unhandled") !== -1)
+			if (filters.includes("Unhandled"))
 				mode = "Unhandled";
-			if (filters.indexOf("All") !== -1)
+			if (filters.includes("All"))
 				mode = "All";
 		}
 
@@ -1443,7 +1443,7 @@ export class DartDebugSession extends DebugSession {
 		return kind === "String" || kind === "Bool" || kind === "Int" || kind === "Num" || kind === "Double" || kind === "Null" || kind === "Closure";
 	}
 
-	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString: boolean = false, suppressQuotesAroundStrings: boolean = false): Promise<string | undefined> {
+	private async callToString(isolate: VMIsolateRef, instanceRef: VMInstanceRef, getFullString = false, suppressQuotesAroundStrings = false): Promise<string | undefined> {
 		if (!this.vmService)
 			return;
 
@@ -1663,7 +1663,7 @@ export class DartDebugSession extends DebugSession {
 		}
 	}
 
-	private withTimeout<T>(promise: Promise<T>, milliseconds: number = 100000): Promise<T> {
+	private withTimeout<T>(promise: Promise<T>, milliseconds = 100000): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			// Set a timeout to reject the promise after the timeout period.
 			const timeoutTimer = setTimeout(() => {
@@ -1841,7 +1841,7 @@ export class DartDebugSession extends DebugSession {
 				const logPrefix = `[${name || "log"}] `;
 				let indent = " ".repeat(logPrefix.length);
 
-				const printLogRecord = async (event: VMEvent, instance: VMInstanceRef, logPrefix: string, indent: string, category: string = "console") => {
+				const printLogRecord = async (event: VMEvent, instance: VMInstanceRef, logPrefix: string, indent: string, category = "console") => {
 					const message = await this.fullValueAsString(event.isolate, instance, true);
 					if (message) {
 						const indentedMessage = `${faint(logPrefix)}${message.split("\n").join(`\n${indent}`)}`;
@@ -1937,7 +1937,7 @@ export class DartDebugSession extends DebugSession {
 				// dummy unconditional breakpoints.
 				// TODO: Ensure that VM breakpoint state is reconciled with debugger breakpoint state before
 				// handling thread state so that this doesn't happen, and remove this check.
-				const hasUnknownBreakpoints = potentialBreakpoints.indexOf(undefined) !== -1;
+				const hasUnknownBreakpoints = potentialBreakpoints.includes(undefined);
 
 				if (!hasUnknownBreakpoints) {
 					// There can't be any undefined here because of the above, but the types don't know that
@@ -2099,7 +2099,7 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		// Split on the separators and return only the first and last two parts.
-		const sep = uri.indexOf("/") === -1 && uri.indexOf("\\") !== -1 ? "\\" : "/";
+		const sep = !uri.includes("/") && uri.includes("\\") ? "\\" : "/";
 		const parts = uri.split(sep);
 		if (parts.length > 3) {
 			return parts[0] === "org-dartlang-app"
@@ -2207,10 +2207,10 @@ export class DartDebugSession extends DebugSession {
 			return false;
 
 		// HACK: Take a guess at whether it's inside the pubcache (in which case we're considering it external).
-		return path.indexOf("/hosted/pub.") !== -1
-			|| path.indexOf("\\hosted\\pub.") !== -1
-			|| path.indexOf("/third_party/") !== -1
-			|| path.indexOf("\\third_party\\") !== -1;
+		return path.includes("/hosted/pub.")
+			|| path.includes("\\hosted\\pub.")
+			|| path.includes("/third_party/")
+			|| path.includes("\\third_party\\");
 	}
 
 	private resolveFileLocation(script: VMScript, tokenPos: number): FileLocation | undefined {
@@ -2302,7 +2302,7 @@ export class DartDebugSession extends DebugSession {
 
 		// If we get a multi-line message that contains an error/stack trace, process each
 		// line individually, so we can attach location metadata to individual lines.
-		const isMultiLine = message.trimRight().indexOf("\n") !== -1;
+		const isMultiLine = message.trimRight().includes("\n");
 		if (isMultiLine && mayContainStackFrame(message)) {
 			message.split("\n").forEach((line) => this.logToUser(`${line}\n`, category));
 			return;

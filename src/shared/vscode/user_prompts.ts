@@ -41,7 +41,7 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	if (lastShown && now - lastShown < longRepeatPromptThreshold)
 		return false;
 
-	const firstQsSep = surveyData.url.indexOf("?") !== -1 ? "&" : "?";
+	const firstQsSep = surveyData.url.includes("?") ? "&" : "?";
 	const surveyUrl = `${surveyData.url}${firstQsSep}Source=VSCode`;
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for

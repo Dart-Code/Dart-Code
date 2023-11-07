@@ -24,11 +24,13 @@ export const androidStudioExecutableNames = isWin ? ["studio64.exe"] : ["studio.
 export const executableNames = {
 	dart: isWin ? "dart.exe" : "dart",
 	dartdoc: isWin ? "dartdoc.bat" : "dartdoc",
+	devToolsTool: isWin ? "devtools_tool.bat" : "devtools_tool",
 	flutter: isWin ? "flutter.bat" : "flutter",
 	pub: isWin ? "pub.bat" : "pub",
 };
 export const getExecutableName = (cmd: string) => (executableNames as { [key: string]: string | undefined })[cmd] ?? cmd;
 export const dartVMPath = "bin/" + executableNames.dart;
+export const devToolsToolPath = "tool/bin/" + executableNames.devToolsTool;
 export const dartDocPath = "bin/" + executableNames.dartdoc;
 export const pubPath = "bin/" + executableNames.pub;
 export const flutterPath = "bin/" + executableNames.flutter;
@@ -161,8 +163,8 @@ export const showRecommendedSettingsAction = "Show Recommended Settings";
 export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-settings/";
 export const openSettingsAction = "Open Settings File";
 export const tryAgainAction = "Try Again";
-export const vmServiceListeningBannerPattern: RegExp = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
-export const vmServiceHttpLinkPattern: RegExp = new RegExp("(http://[\\d\\.:]+/)");
+export const vmServiceListeningBannerPattern = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
+export const vmServiceHttpLinkPattern = new RegExp("(http://[\\d\\.:]+/)");
 
 /// Constants used in reporting of where commands are executed from.
 ///
@@ -185,7 +187,6 @@ export const runFlutterCreatePrompt = (platformType: string, platformNeedsGlobal
 
 export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
 export const validClassNameRegex = validMethodNameRegex;
-export const validVariableName = validMethodNameRegex;
 
 export const widgetInspectorPage: DevToolsPage = { id: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" };
 export const cpuProfilerPage: DevToolsPage = { id: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", title: "CPU Profiler" };

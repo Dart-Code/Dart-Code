@@ -55,7 +55,7 @@ export class EditCommands implements vs.Disposable {
 		);
 
 		if (action === openSettingsAction)
-			await vs.commands.executeCommand("workbench.action.openSettingsJson");
+			await vs.commands.executeCommand("workbench.action.openSettingsJson", { revealSetting: { key: "[dart]" } });
 	}
 
 	private async printSelectionToTerminal() {

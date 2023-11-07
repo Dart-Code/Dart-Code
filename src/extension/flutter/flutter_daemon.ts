@@ -183,7 +183,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		const matches = FlutterDaemon.outOfDateWarning.exec(message);
 		if (matches && matches.length === 2)
 			upgradeMessage = `Your installation of Flutter is ${matches[1]} days old.`;
-		else if (message.indexOf(FlutterDaemon.newVersionMessage) !== -1)
+		else if (message.includes(FlutterDaemon.newVersionMessage))
 			upgradeMessage = "A new version of Flutter is available";
 
 		if (upgradeMessage) {

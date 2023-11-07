@@ -62,7 +62,7 @@ describe("capture logs command", () => {
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
 		const lastLine = lines[lines.length - 1];
 		assert.ok(lines.find((l) => l.endsWith("Log file started")), `Did not find 'Log file started' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a test")), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
 		assert.ok(lastLine.endsWith("Log file ended"), `Last line of log was '${lastLine}' instead of 'Log file ended'`);
 
 		// Ensure the log file was opened.
@@ -89,9 +89,9 @@ describe("capture logs command", () => {
 
 		assert.ok(fs.existsSync(logFilename));
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), `Did not find 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon event") === -1), `Found 'This is a flutter daemon event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a test")), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is an analyzer event")), `Did not find 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => !l.includes("This is a flutter daemon event")), `Found 'This is a flutter daemon event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 
 	it("only logs analyzer when using Analyzer logging", async () => {
@@ -105,9 +105,9 @@ describe("capture logs command", () => {
 
 		assert.ok(fs.existsSync(logFilename));
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") !== -1), `Did not find 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon event") === -1), `Found 'This is a flutter daemon event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a test")), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is an analyzer event")), `Did not find 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => !l.includes("This is a flutter daemon event")), `Found 'This is a flutter daemon event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 
 	it("only logs debugging when using Debugging logging", async () => {
@@ -122,10 +122,10 @@ describe("capture logs command", () => {
 
 		assert.ok(fs.existsSync(logFilename));
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is a vm service event") !== -1), `Did not find 'This is a vm service event' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is a dap event") !== -1), `Did not find 'This is a dap event' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") === -1), `Found 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a test")), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a vm service event")), `Did not find 'This is a vm service event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a dap event")), `Did not find 'This is a dap event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => !l.includes("This is an analyzer event")), `Found 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 
 	it("only logs extension when using ExtensionOnly logging", async () => {
@@ -139,9 +139,9 @@ describe("capture logs command", () => {
 
 		assert.ok(fs.existsSync(logFilename));
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is a devtools event") !== -1), `Did not find 'This is a devtools event' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is an analyzer event") === -1), `Found 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a test")), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a devtools event")), `Did not find 'This is a devtools event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => !l.includes("This is an analyzer event")), `Found 'This is an analyzer event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 
 	it("always logs WARN and ERROR log to General", async () => {
@@ -155,8 +155,8 @@ describe("capture logs command", () => {
 
 		assert.ok(fs.existsSync(logFilename));
 		const lines = fs.readFileSync(logFilename).toString().trim().split("\n").map((l) => l.trim());
-		assert.ok(lines.find((l) => l.indexOf("This is a test") !== -1), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
-		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon event") === -1), "Unexpectedly found 'This is a flutter daemon event' in the log");
-		assert.ok(lines.find((l) => l.indexOf("This is a flutter daemon ERROR event") !== -1), `Did not find 'This is a flutter daemon ERROR event' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => l.includes("This is a test")), `Did not find 'This is a test' in ${platformEol}${lines.join(platformEol)}`);
+		assert.ok(lines.find((l) => !l.includes("This is a flutter daemon event")), "Unexpectedly found 'This is a flutter daemon event' in the log");
+		assert.ok(lines.find((l) => l.includes("This is a flutter daemon ERROR event")), `Did not find 'This is a flutter daemon ERROR event' in ${platformEol}${lines.join(platformEol)}`);
 	});
 });

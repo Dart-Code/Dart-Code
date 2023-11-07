@@ -12,8 +12,8 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		logger: Logger,
 		private readonly urlExposer: (url: string) => Promise<{ url: string }>,
 		maxLogLineLength: number,
-		messagesWrappedInBrackets: boolean = false,
-		treatHandlingErrorsAsUnhandledMessages: boolean = false) {
+		messagesWrappedInBrackets = false,
+		treatHandlingErrorsAsUnhandledMessages = false) {
 		super(logger, maxLogLineLength, messagesWrappedInBrackets, treatHandlingErrorsAsUnhandledMessages, true, logFile);
 	}
 

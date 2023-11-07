@@ -3,16 +3,16 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { debugAnywayAction, showErrorsAction } from "../../../shared/constants";
-import { DartVsCodeLaunchArgs } from "../../../shared/debug/interfaces";
-import { DebuggerType } from "../../../shared/enums";
-import { versionIsAtLeast } from "../../../shared/utils";
-import { sortBy } from "../../../shared/utils/array";
-import { fsPath, getRandomInt } from "../../../shared/utils/fs";
-import { resolvedPromise } from "../../../shared/utils/promises";
-import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../../helpers";
+import { debugAnywayAction, showErrorsAction } from "../../shared/constants";
+import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
+import { DebuggerType } from "../../shared/enums";
+import { versionIsAtLeast } from "../../shared/utils";
+import { sortBy } from "../../shared/utils/array";
+import { fsPath, getRandomInt } from "../../shared/utils/fs";
+import { resolvedPromise } from "../../shared/utils/promises";
+import { DartDebugClient } from "../dart_debug_client";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { activate, breakpointFor, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -575,8 +575,8 @@ void printSomething() {
 				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source!.sourceReference! });
 				assert.ok(source.body.content);
 				assert.ok(
-					source.body.content.indexOf("void print(Object object) {") !== -1
-					|| source.body.content.indexOf("void print(Object? object) {") !== -1,
+					source.body.content.includes("void print(Object object) {")
+					|| source.body.content.includes("void print(Object? object) {"),
 				);
 				// Ensure comments are present (see #178).
 				assert.notEqual(source.body.content.indexOf("\n//"), -1);

@@ -67,7 +67,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public isSupported(types: f.PlatformType[] | undefined, device: { platformType?: f.PlatformType | null | undefined } | undefined) {
 		// types being `undefined` means we shouldn't filter, but being empty means we legit
 		// don't support any types.
-		return device && (!types || !device.platformType || types.indexOf(device.platformType) !== -1);
+		return device && (!types || !device.platformType || types.includes(device.platformType));
 	}
 
 	public isDevicePreferred(device: f.Device | undefined): boolean {
@@ -260,7 +260,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 					const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
 					if (chosenAction === restartAction)
 						void vs.commands.executeCommand("_dart.reloadExtension");
-				}
+					else
+						this.onDevicesChangedEmitter.fire();
+				} else
+					this.onDevicesChangedEmitter.fire();
+
 
 				break;
 			case "device":
@@ -291,8 +295,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return this.devices.find((d) => d.id === id);
 	}
 
-	public getDevicesSortedByName(): f.Device[] {
-		return this.devices.sort(this.deviceSortComparer.bind(this));
+	public async getValidDevicesSortedByName(): Promise<f.Device[]> {
+		const supportedTypes = await this.getSupportedPlatformsForWorkspace();
+		return this.devices
+			.filter((d) => this.isSupported(supportedTypes, d))
+			.sort(this.deviceSortComparer.bind(this));
 	}
 
 	public getDevicesSortedByCurrentAndName(): f.Device[] {
@@ -347,7 +354,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		if (emulatorDevices && emulatorDevices.length) {
 			// Fliter out any emulators we know are running.
 			const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
-			const emulatorDevicesNotRunning = emulatorDevices.filter((e) => emulatorIdsAlreadyRunning.indexOf(e.device.id) === -1);
+			const emulatorDevicesNotRunning = emulatorDevices.filter((e) => !emulatorIdsAlreadyRunning.includes(e.device.id));
 
 			if (emulatorDevicesNotRunning.length) {
 				pickableItems = pickableItems.concat([
@@ -429,10 +436,14 @@ export class FlutterDeviceManager implements vs.Disposable {
 			case "desktop":
 				icon = "$(device-desktop) ";
 		}
-		const name = device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
+		const name = this.friendlyNameForDevice(device);
+		return withIcon ? `${icon ?? ""}${name}` : name;
+	}
+
+	public friendlyNameForDevice(device: f.Device) {
+		return device.emulatorId && this.knownEmulatorNames[device.emulatorId] && device.platformType === "android"
 			? this.knownEmulatorNames[device.emulatorId]
 			: device.name;
-		return withIcon ? `${icon ?? ""}${name}` : name;
 	}
 
 	public deviceCurrentSortComparer(d1: f.Device, d2: f.Device): number {

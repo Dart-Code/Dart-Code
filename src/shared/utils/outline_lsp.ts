@@ -41,6 +41,9 @@ export abstract class LspOutlineVisitor {
 			case "ENUM_CONSTANT":
 				this.visitEnumConstant(outline);
 				break;
+			case "EXTENSION":
+				this.visitExtension(outline);
+				break;
 			case "FIELD":
 				this.visitField(outline);
 				break;
@@ -110,6 +113,7 @@ export abstract class LspOutlineVisitor {
 	protected visitContructorInvocation(outline: Outline): void { this.visitChildren(outline); }
 	protected visitEnum(outline: Outline): void { this.visitChildren(outline); }
 	protected visitEnumConstant(outline: Outline): void { this.visitChildren(outline); }
+	protected visitExtension(outline: Outline): void { this.visitChildren(outline); }
 	protected visitField(outline: Outline): void { this.visitChildren(outline); }
 	protected visitFile(outline: Outline): void { this.visitChildren(outline); }
 	protected visitFunction(outline: Outline): void { this.visitChildren(outline); }

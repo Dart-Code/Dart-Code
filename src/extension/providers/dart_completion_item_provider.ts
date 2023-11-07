@@ -418,7 +418,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// If element has parameters (METHOD/CONSTRUCTOR/FUNCTION), show its parameters.
 		if (suggestion.parameters && completionItemKind !== CompletionItemKind.Property && suggestion.kind !== "OVERRIDE"
 			// Don't ever show if there is already a paren! (#969).
-			&& label.indexOf("(") === -1
+			&& !label.includes("(")
 		) {
 			label += suggestion.parameters.length === 2 ? "()" : "(…)";
 			detail = suggestion.parameters;
@@ -501,6 +501,8 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 		// If we have trailing commas (flutter) they look weird in the list, so trim the off (for display label only).
 		if (label.endsWith(","))
 			label = label.substr(0, label.length - 1).trim();
+		else
+			label = label.trim();
 
 		// If we didnt have a CompletionItemKind from our element, base it on the CompletionSuggestionKind.
 		// This covers things like Keywords that don't have elements.
@@ -529,7 +531,7 @@ export class DartCompletionItemProvider implements CompletionItemProvider, IAmDi
 			completion.commitCharacters = this.getCommitCharacters(suggestion.kind);
 
 		const triggerCompletionsFor = ["import '';"];
-		if (triggerCompletionsFor.indexOf(label) !== -1)
+		if (triggerCompletionsFor.includes(label))
 			triggerCompletion = true;
 
 		// Handle folders in imports better.

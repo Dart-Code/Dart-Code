@@ -19,7 +19,7 @@ void f(String name) {
 		assert.ok(actionResults);
 		assert.ok(actionResults.length);
 
-		const assignVarAction = actionResults.find((r) => r.title.indexOf("Assign value to new local variable") !== -1);
+		const assignVarAction = actionResults.find((r) => r.title.includes("Assign value to new local variable"));
 		assert.ok(assignVarAction, "Action was not found");
 
 		// Older servers have simple edit, but newer has snippets.

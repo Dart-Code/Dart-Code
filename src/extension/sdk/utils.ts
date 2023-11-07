@@ -288,9 +288,9 @@ export class SdkUtils {
 		// TODO: This has gotten very messy and needs tidying up...
 
 		let firstFlutterProject: string | undefined;
-		let hasAnyFlutterProject: boolean = false;
-		let hasAnyWebProject: boolean = false;
-		let hasAnyStandardDartProject: boolean = false;
+		let hasAnyFlutterProject = false;
+		let hasAnyWebProject = false;
+		let hasAnyStandardDartProject = false;
 
 		const possibleProjects = await getAllProjectFolders(this.logger, getExcludedFolders, { searchDepth: config.projectSearchDepth });
 
@@ -498,7 +498,12 @@ export class SdkUtils {
 		if (configSdkPath !== foundSdkPath) {
 			const action = await window.showWarningMessage(`The SDK configured in ${sdkConfigName} is not a valid SDK folder.`, openSettingsAction);
 			if (openSettingsAction === action) {
-				await commands.executeCommand(isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson");
+				await commands.executeCommand(
+					isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson",
+					{
+						revealSetting: { key: sdkConfigName },
+					}
+				);
 			}
 		}
 	}
@@ -528,7 +533,7 @@ export class SdkUtils {
 		// Any that don't end with bin, add it on (as an extra path) since some of our
 		// paths may come from places that don't already include it (for ex. the
 		// user config.sdkPath).
-		const isBinFolder = (f: string) => ["bin", "sbin"].indexOf(path.basename(f)) !== -1;
+		const isBinFolder = (f: string) => ["bin", "sbin"].includes(path.basename(f));
 		let sdkPaths = flatMap(
 			rawSdkPaths,
 			(p): SdkSearchResult[] => isBinFolder(p)

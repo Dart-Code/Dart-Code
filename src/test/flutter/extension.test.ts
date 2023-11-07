@@ -41,7 +41,7 @@ describe("extension", () => {
 	});
 	it("set FLUTTER_ROOT", async () => {
 		await activateWithoutAnalysis();
-		const toolEnv = extApi.getToolEnv() as any;
+		const toolEnv = extApi.getToolEnv();
 		assert.ok(toolEnv?.FLUTTER_ROOT);
 		assert.ok(toolEnv?.FLUTTER_ROOT, extApi.workspaceContext.sdks.flutter);
 	});

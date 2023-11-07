@@ -14,7 +14,7 @@ describe("fix_code_action_provider", () => {
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
-		const createMethodFix = fixResults.find((r) => r.title.indexOf("Create method 'createNonExistentMethod'") !== -1);
+		const createMethodFix = fixResults.find((r) => r.title.includes("Create method 'createNonExistentMethod'"));
 		assert.ok(createMethodFix);
 
 		if (createMethodFix.edit)
@@ -37,7 +37,7 @@ describe("fix_code_action_provider", () => {
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
-		const createFileFix = fixResults.find((r) => r.title.indexOf("Create file 'missing.dart'") !== -1);
+		const createFileFix = fixResults.find((r) => r.title.includes("Create file 'missing.dart'"));
 		assert.ok(createFileFix, "Fix was not found");
 
 		if (createFileFix.edit)
@@ -63,7 +63,7 @@ main() {
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
 
-		const createFunctionFix = fixResults.find((r) => r.title.indexOf("Create function 'missing'") !== -1);
+		const createFunctionFix = fixResults.find((r) => r.title.includes("Create function 'missing'"));
 		assert.ok(createFunctionFix, "Fix was not found");
 
 		// Older servers have simple edit, but newer has snippets.

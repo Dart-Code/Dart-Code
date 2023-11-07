@@ -4,8 +4,7 @@ import { captureLogsMaxLineLength, DART_IS_CAPTURING_LOGS_CONTEXT } from "../../
 import { LogCategory } from "../../shared/enums";
 import { captureLogs, EmittingLogger } from "../../shared/logging";
 import { PromiseCompleter } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
-import { createFolderForFile } from "../utils";
+import { createFolderForFile, forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
 import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;

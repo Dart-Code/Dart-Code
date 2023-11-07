@@ -64,7 +64,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 					const background = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 					const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
 					const qsSep = message.url.includes("?") ? "&" : "?";
-					let url = \`\${message.url}\${qsSep}theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+					let url = \`\${message.url}\${qsSep}embed=true&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
 					const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
 					if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
 						url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;

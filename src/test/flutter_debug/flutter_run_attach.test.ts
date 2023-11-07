@@ -3,11 +3,11 @@ import { strict as assert } from "assert";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { DartVsCodeLaunchArgs } from "../../../shared/debug/interfaces";
-import { DebuggerType } from "../../../shared/enums";
-import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, deferUntilLast, delay, extApi, fileSafeCurrentTestName, flutterHelloWorldMainFile, getAttachConfiguration, logger, watchPromise } from "../../helpers";
+import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
+import { DebuggerType } from "../../shared/enums";
+import { DartDebugClient } from "../dart_debug_client";
+import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../debug_helpers";
+import { activate, deferUntilLast, delay, extApi, fileSafeCurrentTestName, flutterHelloWorldMainFile, getAttachConfiguration, logger, watchPromise } from "../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("Skip attach tests for web devices", function () {

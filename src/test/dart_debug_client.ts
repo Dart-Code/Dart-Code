@@ -283,7 +283,7 @@ export class DartDebugClient extends DebugClient {
 				function handleOutput(event: DebugProtocol.OutputEvent) {
 					if (!category || (event.body.category ?? "console" === category)) {
 						output += event.body.output;
-						if (output.indexOf(textLF) !== -1 || output.indexOf(textCRLF) !== -1) {
+						if (output.includes(textLF) || output.includes(textCRLF)) {
 							resolve(event);
 						}
 					}

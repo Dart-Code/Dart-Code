@@ -55,7 +55,10 @@ export class DiagnosticReport implements IAmDisposable {
 
 			await this.appendDartCommandOutput("dart info", ["info"]);
 			if (token.isCancellationRequested) return;
-			await this.appendFlutterCommandOutput("flutter doctor", ["doctor", "-v"]);
+
+			if (this.workspaceContext.hasAnyFlutterProjects) {
+				await this.appendFlutterCommandOutput("flutter doctor", ["doctor", "-v"]);
+			}
 		} catch (e) {
 			this.append(`Failed to generate log: ${e}`);
 		}

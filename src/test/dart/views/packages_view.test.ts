@@ -115,7 +115,7 @@ describe("packages tree", () => {
 			"zzz.txt",
 			"ZZZ_2.txt",
 		];
-		const actualNames = names.filter((n) => expectedNamesInOrder.indexOf(n) !== -1);
+		const actualNames = names.filter((n) => expectedNamesInOrder.includes(n));
 
 		assert.equal(actualNames.length, expectedNamesInOrder.length);
 		actualNames.forEach((name, index) => assert.equal(name, expectedNamesInOrder[index]));

@@ -254,49 +254,52 @@ export class TestCommands implements vs.Disposable {
 		const doc = resource
 			? await vs.workspace.openTextDocument(resource)
 			: getActiveRealFileEditor()?.document;
-		if (doc && isDartDocument(doc)) {
-			const filePath = fsPath(doc.uri);
-			const isTest = isTestFile(filePath);
-			const otherFile = isTest
-				? this.getImplementationFileForTest(filePath)
-				: this.getTestFileForImplementation(filePath);
+		if (!doc || !isDartDocument(doc))
+			return;
 
-			if (!otherFile || (isTest && !fs.existsSync(otherFile)))
+		const filePath = fsPath(doc.uri);
+		const isTest = isTestFile(filePath);
+		const candidateFiles = isTest
+			? this.getCandidateImplementationFiles(filePath)
+			: this.getCandidateTestFiles(filePath);
+
+		let otherExistingFile = candidateFiles.find(fs.existsSync);
+		const otherFile = otherExistingFile ?? (candidateFiles.length ? candidateFiles[0] : undefined);
+
+		let selectionOffset: number | undefined;
+		let selectionLength: number | undefined;
+
+		// Offer to create files.
+		if (!otherExistingFile && otherFile) {
+			// But not if we're a test... we can create test files, but not implementations.
+			if (isTest)
 				return;
 
-			let selectionOffset: number | undefined;
-			let selectionLength: number | undefined;
+			const relativePath = vs.workspace.asRelativePath(otherFile, false);
+			const yesAction = createTestFileAction(relativePath);
+			const response = await vs.window.showInformationMessage(
+				`Would you like to create a test file at ${relativePath}?`,
+				yesAction,
+				noAction,
+			);
 
-			// Offer to create test files.
-			if (!fs.existsSync(otherFile)) {
-				if (isTest)
-					return;
+			if (response !== yesAction)
+				return;
 
-				const relativePath = vs.workspace.asRelativePath(otherFile, false);
-				const yesAction = createTestFileAction(relativePath);
-				const response = await vs.window.showInformationMessage(
-					`Would you like to create a test file at ${relativePath}?`,
-					yesAction,
-					noAction,
-				);
+			otherExistingFile = otherFile;
+			mkDirRecursive(path.dirname(otherExistingFile));
+			const testFileInfo = defaultTestFileContents(this.wsContext.hasAnyFlutterProjects, escapeDartString(generateTestNameFromFileName(relativePath)));
+			fs.writeFileSync(otherExistingFile, testFileInfo.contents);
 
-				if (response !== yesAction)
-					return;
-
-				mkDirRecursive(path.dirname(otherFile));
-				const testFileInfo = defaultTestFileContents(this.wsContext.hasAnyFlutterProjects, escapeDartString(generateTestNameFromFileName(relativePath)));
-				fs.writeFileSync(otherFile, testFileInfo.contents);
-
-				selectionOffset = testFileInfo.selectionOffset;
-				selectionLength = testFileInfo.selectionLength;
-			}
-
-			const document = await vs.workspace.openTextDocument(otherFile);
-			const editor = await vs.window.showTextDocument(document);
-
-			if (selectionOffset && selectionLength)
-				editor.selection = new vs.Selection(document.positionAt(selectionOffset), document.positionAt(selectionOffset + selectionLength));
+			selectionOffset = testFileInfo.selectionOffset;
+			selectionLength = testFileInfo.selectionLength;
 		}
+
+		const document = await vs.workspace.openTextDocument(otherExistingFile!);
+		const editor = await vs.window.showTextDocument(document);
+
+		if (selectionOffset && selectionLength)
+			editor.selection = new vs.Selection(document.positionAt(selectionOffset), document.positionAt(selectionOffset + selectionLength));
 	}
 
 	private updateEditorContexts(e: vs.TextEditor | undefined): void {
@@ -307,43 +310,69 @@ export class TestCommands implements vs.Disposable {
 			const filePath = fsPath(e.document.uri);
 			if (isTestFile(filePath)) {
 				// Implementation files must exist.
-				const implementationFilePath = this.getImplementationFileForTest(filePath);
+				const implementationFilePath = this.getCandidateImplementationFiles(filePath).find(fs.existsSync);
 				isInTestFileThatHasImplementation = !!implementationFilePath && fs.existsSync(implementationFilePath);
 			} else {
-				isInImplementationFileThatCanHaveTest = !!this.getTestFileForImplementation(filePath);
+				isInImplementationFileThatCanHaveTest = this.getCandidateTestFiles(filePath).length > 0;
 			}
 		}
 
 		void vs.commands.executeCommand("setContext", CAN_JUMP_BETWEEN_TEST_IMPLEMENTATION, isInTestFileThatHasImplementation || isInImplementationFileThatCanHaveTest);
 	}
 
-	private getImplementationFileForTest(filePath: string) {
-		const pathSegments = filePath.split(path.sep);
+	private getCandidateImplementationFiles(filePath: string): string[] {
+		const candidates: string[] = [];
 
-		// Replace test folder with lib.
+		const pathSegments = filePath.split(path.sep);
 		const testFolderIndex = pathSegments.lastIndexOf("test");
-		if (testFolderIndex !== -1)
-			pathSegments[testFolderIndex] = "lib";
 
 		// Remove _test from the filename.
 		pathSegments[pathSegments.length - 1] = pathSegments[pathSegments.length - 1].replace(/_test\.dart/, ".dart");
 
-		return pathSegments.join(path.sep);
+		// Add a copy with test -> lib
+		if (testFolderIndex !== -1) {
+			const temp = [...pathSegments];
+			temp[testFolderIndex] = "lib";
+			candidates.push(temp.join(path.sep));
+
+			// Also add a copy with test -> lib/src to match what we do the other way
+			temp.splice(testFolderIndex + 1, 0, "src");
+			candidates.push(temp.join(path.sep));
+		}
+
+		// Add the original path to support files alongside.
+		candidates.push(pathSegments.join(path.sep));
+
+		return candidates;
 	}
 
-	private getTestFileForImplementation(filePath: string) {
-		const pathSegments = filePath.split(path.sep);
+	private getCandidateTestFiles(filePath: string): string[] {
+		const candidates: string[] = [];
 
-		// Replace lib folder with test.
+		const pathSegments = filePath.split(path.sep);
 		const libFolderIndex = pathSegments.lastIndexOf("lib");
-		if (libFolderIndex === -1)
-			return undefined;
-		pathSegments[libFolderIndex] = "test";
 
 		// Add _test to the filename.
 		pathSegments[pathSegments.length - 1] = pathSegments[pathSegments.length - 1].replace(/\.dart/, "_test.dart");
 
-		return pathSegments.join(path.sep);
+		// Add a copy with lib -> test
+		if (libFolderIndex !== -1) {
+			const temp = [...pathSegments];
+			temp[libFolderIndex] = "test";
+			candidates.push(temp.join(path.sep));
+
+			// If we're in lib/src, also add a copy in the corresponding test folder without
+			// the src/ since sometimes src/ is omitted in the test paths.
+			if (temp[libFolderIndex + 1] === "src") {
+				temp.splice(libFolderIndex + 1, 1);
+				candidates.push(temp.join(path.sep));
+			}
+		}
+
+		// Add the original path to support files alongside.
+		candidates.push(pathSegments.join(path.sep));
+
+		return candidates;
 	}
 
 	public dispose(): any {

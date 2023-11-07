@@ -16,7 +16,7 @@ import { TestNode, TreeNode } from "../shared/test/test_model";
 import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
-import { fsPath, tryDeleteFile } from "../shared/utils/fs";
+import { createFolderForFile, fsPath, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -95,6 +95,11 @@ export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTes
 export const helloWorldTestNestedFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "folder", "folder_test.dart"));
 export const helloWorldProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "project_test.dart"));
 export const helloWorldExampleSubFolderProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "test", "project_test.dart"));
+// Go To Tests
+export const helloWorldGoToLibFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/goto/foo.dart"));
+export const helloWorldGoToLibSrcFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/src/goto/foo.dart"));
+export const helloWorldGoToTestFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/goto/foo_test.dart"));
+export const helloWorldGoToTestSrcFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "test/src/goto/foo_test.dart"));
 // Nested
 export const dartNestedFolder = vs.Uri.file(path.join(testProjectsFolder, "dart_nested"));
 export const dartNested1Folder = vs.Uri.file(path.join(fsPath(dartNestedFolder), "nested1"));
@@ -221,7 +226,7 @@ function setupTestLogging(): boolean {
 		const logPath = path.join(logFolder, logFile);
 
 		// For debugger tests, the analyzer log is just noise, so we filter it out.
-		const excludeLogCategories = process.env.BOT && process.env.BOT.indexOf("debug") !== -1
+		const excludeLogCategories = process.env.BOT && process.env.BOT.includes("debug")
 			? [LogCategory.Analyzer]
 			: [];
 		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000, excludeLogCategories, true);
@@ -428,7 +433,7 @@ export function deleteDirectoryRecursive(folder: string) {
 }
 
 export let currentTestName = "unknown";
-export let fileSafeCurrentTestName: string = "unknown";
+export let fileSafeCurrentTestName = "unknown";
 // eslint-disable-next-line prefer-arrow-callback
 beforeEach("stash current test name", function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
@@ -730,7 +735,7 @@ export function ensureInsertReplaceRanges(range: undefined | vs.Range | { insert
 }
 
 export function ensureError(errors: vs.Diagnostic[], text: string) {
-	const error = errors.find((e) => e.message.indexOf(text) !== -1);
+	const error = errors.find((e) => e.message.includes(text));
 	assert.ok(
 		error,
 		`Couldn't find error for ${text} in\n`
@@ -868,21 +873,63 @@ export async function getSnippetCompletionsAt(
 	return completions.filter((c) => c.kind === vs.CompletionItemKind.Snippet);
 }
 
-export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, label: string, filterText?: string, documentation?: string): vs.CompletionItem {
+export function ensureCompletion(items: vs.CompletionItem[], kind: vs.CompletionItemKind, expectedLabel: string, expectedFilterText?: string, documentation?: string): vs.CompletionItem {
 	const kinds = Array.isArray(kind) ? kind : [kind];
-	const completion = items.find((item) =>
-		item.label === label
-		&& (item.filterText === filterText || (item.filterText === undefined && filterText === label))
-		&& kinds.includes(item.kind!),
-	);
-	assert.ok(
-		completion,
-		`Couldn't find completion for ${label}/${filterText} in\n`
-		+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${item.label}/${item.filterText}`).join("\n"),
-	);
+	// Sometimes our mismatch is just the details afterwards, so we'll try to match on labels with/without and then verify
+	// afterwards so we can get better errors ("expected `exit(...)` but got `exit`" instead of "can't find `exit(...)` in [big list]").
+	const expectedShortLabel = expectedLabel.split("(")[0];
+	const completionCandidates = items.filter((item) => {
+		const actualLabel = completionLabel(item);
+		const actualShortLabel = actualLabel.split("(")[0];
+		return expectedShortLabel === actualShortLabel && kinds.includes(item.kind!);
+	});
+	if (completionCandidates.length === 0) {
+		assert.fail(
+			`Couldn't find completion for ${expectedLabel} in\n`
+			+ items.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${completionLabel(item)}`).join("\n"),
+		);
+	}
+	if (completionCandidates.length > 1) {
+		assert.fail(
+			`Found multiple completions for ${expectedLabel} in\n`
+			+ completionCandidates.map((item) => `        ${item.kind && vs.CompletionItemKind[item.kind]}/${completionLabel(item)}`).join("\n"),
+		);
+	}
+	const completion = completionCandidates[0];
+	const actualLabel = completionLabel(completion);
+	const actualLabelLong = completionLabelWithDetails(completion);
+
+	// Either we should have a single string label that matches expectedLabel, or we should be a non-string label
+	// where actualLabelLong starts with label.
+	if (typeof completion.label === "string")
+		assert.equal(actualLabel, expectedLabel);
+	else
+		// We use startsWith because the new long labels may have return values that
+		// the tests do not (`exit(…) → Never`).
+		// TODO(dantup): Once stable is using label details, change these tests to verify the whole new object.
+		assert.ok(actualLabelLong.startsWith(expectedLabel));
+
+	const expectedResolvedFilterText = expectedFilterText ?? expectedLabel;
+	const actualResolvedFilterText = completion.filterText ?? actualLabel;
+	assert.equal(actualResolvedFilterText, expectedResolvedFilterText);
+
 	if (documentation)
 		assert.equal((completion.documentation as any).value.trim(), documentation);
 	return completion;
+}
+
+export function completionLabel(completion: vs.CompletionItem): string {
+	const label = completion.label;
+	return typeof label === "string"
+		? label
+		: label.label;
+}
+
+export function completionLabelWithDetails(completion: vs.CompletionItem): string {
+	const label = completion.label;
+	return typeof label === "string"
+		? label
+		: label.label + (label.detail ?? "");
 }
 
 export function ensureSnippet(items: vs.CompletionItem[], label: string, filterText: string, documentation?: string): void {
@@ -968,13 +1015,13 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
-export async function waitForResult(action: () => boolean | Promise<boolean>, message?: string, milliseconds: number = 6000, throwOnFailure = true): Promise<void> {
+export async function waitForResult(action: () => boolean | Promise<boolean>, message?: string, milliseconds = 6000, throwOnFailure = true): Promise<void> {
 	const res = await waitFor(action, undefined, milliseconds);
 	if (throwOnFailure && !res)
 		throw new Error(`Action didn't return true within ${milliseconds}ms (${message})`);
 }
 
-export async function tryFor(action: () => Promise<void> | void, milliseconds: number = 3000): Promise<void> {
+export async function tryFor(action: () => Promise<void> | void, milliseconds = 3000): Promise<void> {
 	let timeRemaining = milliseconds;
 	while (timeRemaining > 0) {
 		try {
@@ -1102,7 +1149,7 @@ export function ensureHasRunRecently(root: string, name: string, allowedModifica
 	assert.ok(modifiedSecondsAgo < allowedModificationSeconds, `File hasn't been modified for ${modifiedSecondsAgo} seconds`);
 }
 
-export function ensureHasRunWithArgsStarting(root: string, name: string, ...expectedArgs: string[]) {
+export function ensureHasRunWithArgsStarting(root: string, name: string, expectedArgs: string) {
 	ensureHasRunRecently(root, name);
 	const hasRunFile = path.isAbsolute(name)
 		? name
@@ -1113,11 +1160,8 @@ export function ensureHasRunWithArgsStarting(root: string, name: string, ...expe
 		// important for the test so strip them so we can use the same
 		// expectation across platforms.
 		.replace(/"/g, "").trim();
-	for (const expected of expectedArgs) {
-		if (contents.startsWith(expected.trim()))
-			return;
-	}
-	throw new Error(`Contents:\n${contents}\nExpected start:\n${expectedArgs.join("\n")}`);
+	if (!contents.startsWith(expectedArgs.trim()))
+		throw new Error(`Contents:\n${contents}\nExpected start:\n${expectedArgs}`);
 }
 
 export async function saveTrivialChangeToFile(uri: vs.Uri) {
@@ -1347,4 +1391,10 @@ export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | un
 		await makeTextTreeUsingCustomTree(item, provider, { buffer, indent: indent + 1 });
 	}
 	return buffer;
+}
+
+export function createTempTestFile(absolutePath: string) {
+	createFolderForFile(absolutePath);
+	fs.writeFileSync(absolutePath, "");
+	defer("delete temp file", () => tryDeleteFile(absolutePath));
 }

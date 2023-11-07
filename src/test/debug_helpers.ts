@@ -238,7 +238,7 @@ export class DartProcess {
 	public readonly vmServiceUri: Promise<string>;
 	public readonly exitCode: Promise<number | null>;
 	public get hasExited() { return this.exited; }
-	private exited: boolean = false;
+	private exited = false;
 
 	constructor(public readonly process: SpawnedProcess) {
 		this.vmServiceUri = new Promise((resolve, reject) => {
@@ -291,7 +291,7 @@ export async function killFlutterTester(): Promise<void> {
 }
 
 export function isSdkFrame(frame: DebugProtocol.StackFrame) {
-	return !frame.source || frame.source.name && frame.source.name.startsWith("dart:");
+	return frame.source && frame.source.name && frame.source.name.startsWith("dart:");
 }
 
 export function isExternalPackage(frame: DebugProtocol.StackFrame) {

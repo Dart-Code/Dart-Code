@@ -150,6 +150,7 @@ export class VmServiceExtensions {
 	}
 
 	private syncContextStates(id: string, value: any) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 		if (id === VmServiceExtension.InspectorSelectMode) {
 			/// Keep the context in sync so that the "Cancel Inspect Widget" command is enabled/disabled.
 			void vs.commands.executeCommand("setContext", IS_INSPECTING_WIDGET_CONTEXT, !!value);

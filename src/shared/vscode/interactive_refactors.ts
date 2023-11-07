@@ -161,6 +161,7 @@ interface SaveUriParameter extends Parameter {
 
 namespace SaveUriParameter {
 	export function is(parameter: Parameter): parameter is SaveUriParameter {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 		return parameter.kind === SupportedParameterKind.saveUri;
 	}
 }

@@ -55,7 +55,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		// Don't provide completions after comment markers. This isn't perfect since it'll
 		// suppress them for ex if // appears inside strings, but it's a reasonable
 		// approximation given we don't have a reliable way to tell that.
-		if (line.indexOf("//") !== -1)
+		if (line.includes("//"))
 			return false;
 
 		// Otherwise, allow through.

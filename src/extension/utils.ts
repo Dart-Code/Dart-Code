@@ -6,7 +6,7 @@ import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { WorkspaceConfig } from "../shared/interfaces";
-import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder, mkDirRecursive } from "../shared/utils/fs";
+import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
 import { ringLog } from "./extension";
@@ -46,22 +46,6 @@ export function resolvePaths<T extends string | undefined>(p: T): string | (unde
 	return p;
 }
 
-export function createFolderForFile(file?: string): string | undefined {
-	try {
-		if (!file || !path.isAbsolute(file))
-			return undefined;
-
-		const folder = path.dirname(file);
-		if (!fs.existsSync(folder))
-			mkDirRecursive(folder);
-
-		return file;
-	} catch {
-		console.warn(`Ignoring invalid file path ${file}`);
-		return undefined;
-	}
-}
-
 export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
 	if (file.isUntitled || !fsPath(file.uri) || file.uri.scheme !== "file")
 		return false;
@@ -75,8 +59,8 @@ export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?
 	const extName = path.extname(fsPath(file.uri));
 	const extension = extName ? extName.substr(1) : undefined;
 
-	return (file.languageId && analyzableLanguages.indexOf(file.languageId) >= 0)
-		|| analyzableFilenames.indexOf(path.basename(fsPath(file.uri))) >= 0
+	return (file.languageId && analyzableLanguages.includes(file.languageId))
+		|| analyzableFilenames.includes(path.basename(fsPath(file.uri)))
 		|| (extension !== undefined && analyzableFileExtensions.includes(extension));
 }
 
@@ -105,7 +89,7 @@ export function isTestFileOrFolder(path: string | undefined): boolean {
 }
 
 export function isTestFile(file: string): boolean {
-	// To be a test, you must be _test.dart AND inside a test folder.
+	// To be a test, you must be _test.dart AND inside a test folder (unless allowTestsOutsideTestFolder).
 	// https://github.com/Dart-Code/Dart-Code/issues/1165
 	// https://github.com/Dart-Code/Dart-Code/issues/2021
 	// https://github.com/Dart-Code/Dart-Code/issues/2034
@@ -160,7 +144,7 @@ export function isInsideFolderNamed(file: string | undefined, folderName: string
 	const relPath = path.relative(fsPath(ws.uri).toLowerCase(), file.toLowerCase());
 	const segments = relPath.split(path.sep);
 
-	return segments.indexOf(folderName.toLowerCase()) !== -1;
+	return segments.includes(folderName.toLowerCase());
 }
 
 export function hasTestFilter(args: string[]) {

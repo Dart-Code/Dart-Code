@@ -6,6 +6,7 @@ import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll, nullToUndefined } from "../../shared/utils";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { debugSessions, debugSessionsChanged } from "../commands/debug";
+import { DevToolsLocation } from "../sdk/dev_tools/manager";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 import { VsCodeApi, VsCodeCapabilities, VsCodeDebugSession, VsCodeDebugSessionsEvent, VsCodeDevice, VsCodeDevicesEvent } from "./interface";
 
@@ -97,7 +98,7 @@ class VsCodeApiHandler extends ToolApi {
 		} else if (method === "selectDevice") {
 			return this.api.selectDevice(params.id as string);
 		} else if (method === "openDevToolsPage") {
-			return this.api.openDevToolsPage(params.debugSessionId as string, params.page as string);
+			return this.api.openDevToolsPage(params.debugSessionId as string, params.page as string | undefined, params.forceExternal as boolean | undefined);
 		} else if (method === "hotReload") {
 			return this.api.hotReload(params.debugSessionId as string);
 		} else if (method === "hotRestart") {
@@ -127,6 +128,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		executeCommand: true,
 		hotReload: true,
 		hotRestart: true,
+		openDevToolsExternally: true,
 		openDevToolsPage: true,
 		selectDevice: true,
 	};
@@ -134,7 +136,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	public async initialize() {
 		// Trigger initial events to get the client the existing data from before they
 		// started listening.
-		this.onDevicesChanged();
+		void this.onDevicesChanged();
 		this.onDebugSessionsChanged();
 	}
 
@@ -146,8 +148,9 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		return this.deviceManager?.selectDeviceById(id) ?? false;
 	}
 
-	public async openDevToolsPage(debugSessionId: string, pageId: string): Promise<void> {
-		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, pageId, commandSource: this.commandSource });
+	public async openDevToolsPage(debugSessionId: string, pageId: string | undefined, forceExternal: boolean | undefined): Promise<void> {
+		const location: DevToolsLocation | undefined = forceExternal ? "external" : undefined;
+		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, pageId, location, commandSource: this.commandSource });
 	}
 
 	public async hotReload(debugSessionId: string): Promise<void> {
@@ -166,10 +169,12 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		await session.session.customRequest("hotRestart", { reason: restartReasonManual });
 	}
 
-	private onDevicesChanged(): any {
+	private async onDevicesChanged(): Promise<void> {
+		const devices = (await this.deviceManager?.getValidDevicesSortedByName()) ?? [];
+
 		this.devicesChangedEmitter.fire(
 			{
-				devices: this.deviceManager?.getDevicesSortedByName().map((d) => this.asApiDevice(d)) ?? [],
+				devices: devices.map((d) => this.asApiDevice(d)),
 				selectedDeviceId: this.deviceManager?.currentDevice?.id,
 			},
 		);
@@ -190,9 +195,10 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 			emulatorId: nullToUndefined(device.emulatorId),
 			ephemeral: !!device.ephemeral,
 			id: device.id,
-			name: device.name,
+			name: this.deviceManager?.friendlyNameForDevice(device) ?? device.name,
 			platform: device.platform,
 			platformType: nullToUndefined(device.platformType),
+			rawDeviceName: device.name,
 		};
 	}
 

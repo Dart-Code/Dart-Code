@@ -110,7 +110,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Handle test_driver tests that can be pointed at an existing running instrumented app.
 		if (debugType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
-			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.indexOf(VmServiceExtension.Driver) !== -1);
+			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver));
 			if (runningInstrumentedApps.length === 0) {
 				return this.errorWithoutOpeningLaunchConfig("Could not find a running Flutter app that was instrumented with enableFlutterDriverExtension. Run your instrumented app before running driver tests.");
 			} else if (runningInstrumentedApps.length > 1) {
@@ -312,19 +312,19 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
 
 		let debugType = DebuggerType.Dart;
-		if (debugConfig.cwd
-			// TODO: This isInsideFolderNamed often fails when we found a better project root above.
-			&& !isInsideFolderNamed(debugConfig.program, "bin")
-			&& !isInsideFolderNamed(debugConfig.program, "tool")
-			&& !isInsideFolderNamed(debugConfig.program, ".dart_tool")) {
-			// Check if we're a Flutter or Web project.
-			if (isFlutterProjectFolder(debugConfig.cwd) || this.wsContext.config.forceFlutterDebug) {
-				debugType = DebuggerType.Flutter;
-			} else if (isInsideFolderNamed(debugConfig.program, "web") && !isInsideFolderNamed(debugConfig.program, "test"))
-				debugType = DebuggerType.Web;
-
-			else
-				logger.info(`Project (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
+		let firstPathSegment: string | undefined;
+		if (debugConfig.cwd && debugConfig.program && isWithinPath(debugConfig.program, debugConfig.cwd)) {
+			const relativePath = debugConfig.program ? path.relative(debugConfig.cwd, debugConfig.program) : undefined;
+			firstPathSegment = relativePath?.split(path.sep)[0];
+		}
+		if (firstPathSegment === "bin" || firstPathSegment === "tool" || firstPathSegment === ".dart_tool") {
+			logger.info(`Program is 'bin', 'tool', '.dart_tool' so will use Dart debugger`);
+		} else if (isFlutterProjectFolder(debugConfig.cwd) || this.wsContext.config.forceFlutterDebug) {
+			debugType = DebuggerType.Flutter;
+		} else if (firstPathSegment === "web") {
+			debugType = DebuggerType.Web;
+		} else {
+			logger.info(`Program (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
 		}
 		logger.info(`Detected launch project as ${DebuggerType[debugType]}`);
 

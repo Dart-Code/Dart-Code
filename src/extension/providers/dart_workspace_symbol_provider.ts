@@ -6,7 +6,7 @@ import { toRange } from "../../shared/vscode/utils";
 import { DasAnalyzerClient, getSymbolKindForElementKind } from "../analysis/analyzer_das";
 
 export class DartWorkspaceSymbolProvider implements WorkspaceSymbolProvider {
-	private badChars: RegExp = new RegExp("[^0-9a-z\-]", "gi");
+	private badChars = new RegExp("[^0-9a-z\-]", "gi");
 	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient, private readonly dartCapabilities: DartCapabilities) { }
 
 	public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[] | undefined> {
