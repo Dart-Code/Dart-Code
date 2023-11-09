@@ -35,6 +35,10 @@ window.addEventListener('message', (event) => {
 		case "launchUrl":
 			vscode.postMessage({command: 'launchUrl', data: message.data});
 			break;
+		case "clipboard-write":
+			const copyData = message.data;
+			navigator.clipboard.writeText(copyData);
+			break;
 	}
 });
 window.addEventListener('keydown', (event) => {
@@ -74,7 +78,7 @@ export class DevToolsEmbeddedView {
 			<script nonce="${scriptNonce}">${pageScript}</script>
 			<style nonce="${cssNonce}">#devToolsFrame { ${frameCss} }</style>
 			</head>
-			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0"></iframe></body>
+			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write"></iframe></body>
 			</html>
 			`;
 
