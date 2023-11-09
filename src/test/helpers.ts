@@ -877,10 +877,10 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 	const kinds = Array.isArray(kind) ? kind : [kind];
 	// Sometimes our mismatch is just the details afterwards, so we'll try to match on labels with/without and then verify
 	// afterwards so we can get better errors ("expected `exit(...)` but got `exit`" instead of "can't find `exit(...)` in [big list]").
-	const expectedShortLabel = expectedLabel.split("(")[0];
+	const expectedShortLabel = expectedLabel.split("(")[0].trim();
 	const completionCandidates = items.filter((item) => {
 		const actualLabel = completionLabel(item);
-		const actualShortLabel = actualLabel.split("(")[0];
+		const actualShortLabel = actualLabel.split("(")[0].trim();
 		return expectedShortLabel === actualShortLabel && kinds.includes(item.kind!);
 	});
 	if (completionCandidates.length === 0) {
@@ -902,7 +902,7 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 	// Either we should have a single string label that matches expectedLabel, or we should be a non-string label
 	// where actualLabelLong starts with label.
 	if (typeof completion.label === "string")
-		assert.equal(actualLabel, expectedLabel);
+		assert.equal(actualLabel.trim(), expectedLabel.trim()); // For labels, trailing whitespace is not important.
 	else
 		// We use startsWith because the new long labels may have return values that
 		// the tests do not (`exit(…) → Never`).
@@ -911,7 +911,7 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 
 	const expectedResolvedFilterText = expectedFilterText ?? expectedLabel;
 	const actualResolvedFilterText = completion.filterText ?? actualLabel;
-	assert.equal(actualResolvedFilterText, expectedResolvedFilterText);
+	assert.equal(actualResolvedFilterText.trim(), expectedResolvedFilterText.trim());
 
 	if (documentation)
 		assert.equal((completion.documentation as any).value.trim(), documentation);
