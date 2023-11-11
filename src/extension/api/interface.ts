@@ -55,5 +55,6 @@ export interface VsCodeDebugSession {
 	flutterMode: string | undefined;
 	id: string;
 	name: string;
+	projectRootPath: string | undefined;
 	vmServiceUri: string | undefined;
 }

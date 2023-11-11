@@ -493,7 +493,7 @@ export class DebugCommands implements IAmDisposable {
 		if (s.type !== "dart")
 			return;
 
-		const session = new DartDebugSessionInformation(s, s.configuration.debuggerType as DebuggerType);
+		const session = new DartDebugSessionInformation(s, s.configuration);
 		// If we're the first fresh debug session, reset all settings to default.
 		// Subsequent launches will inherit the "current" values.
 		if (debugSessions.length === 0)

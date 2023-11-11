@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { DartVsCodeLaunchArgs } from "../../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { PromiseCompleter } from "../../../shared/utils";
 
@@ -13,7 +14,13 @@ export class DartDebugSessionInformation {
 	public hasEnded = false;
 	public progress: { [key: string]: ProgressMessage } = {};
 	public readonly loadedServiceExtensions: VmServiceExtension[] = [];
-	constructor(public readonly session: vs.DebugSession, public readonly debuggerType: DebuggerType) { }
+	public readonly debuggerType: DebuggerType;
+	public readonly projectRootPath: string | undefined;
+	constructor(public readonly session: vs.DebugSession, configuration: vs.DebugConfiguration) {
+		configuration = configuration as unknown as vs.DebugConfiguration & DartVsCodeLaunchArgs;
+		this.debuggerType = configuration.debuggerType as DebuggerType;
+		this.projectRootPath = configuration.projectRootPath;
+	}
 }
 
 export class ProgressMessage {

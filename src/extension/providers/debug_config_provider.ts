@@ -445,18 +445,20 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
+		// Compute a best project root and store it against the config. This can be used to pass to tools like
+		// DevTools to ensure we have the right root regardless of the actual cwd we end up using.
+		const bestProjectRoot = debugConfig.program ? locateBestProjectRoot(debugConfig.program) : undefined;
+		debugConfig.projectRootPath = bestProjectRoot;
+
 		// If we don't have a cwd then find the best one from the project root.
 		if (!debugConfig.cwd && defaultCwd) {
 			debugConfig.cwd = defaultCwd;
 			this.logger.info(`Using workspace as cwd: ${debugConfig.cwd}`);
 
 			// If we have an entry point, see if we can make this more specific by finding a project root.
-			if (debugConfig.program) {
-				const bestProjectRoot = locateBestProjectRoot(debugConfig.program);
-				if (bestProjectRoot && isWithinPath(bestProjectRoot, defaultCwd)) {
-					debugConfig.cwd = bestProjectRoot;
-					this.logger.info(`Found better project root to use as cwd: ${debugConfig.cwd}`);
-				}
+			if (bestProjectRoot && isWithinPath(bestProjectRoot, defaultCwd)) {
+				debugConfig.cwd = bestProjectRoot;
+				this.logger.info(`Found better project root to use as cwd: ${debugConfig.cwd}`);
 			}
 		}
 

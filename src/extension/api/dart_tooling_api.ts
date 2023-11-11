@@ -209,6 +209,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 			flutterMode: session.flutterMode,
 			id: session.session.id,
 			name: session.session.name,
+			projectRootPath: session.projectRootPath,
 			vmServiceUri: session.vmServiceUri,
 		};
 	}

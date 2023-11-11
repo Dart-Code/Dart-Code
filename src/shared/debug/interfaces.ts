@@ -45,11 +45,12 @@ export interface DartLaunchArgs {
 	webDaemonLogFile?: string;
 }
 
-/// Launch arguments that are valid in launch.json and map be mapped into
+/// Launch arguments that are valid in launch.json and may be mapped into
 /// DartLaunchArgs fields by the editor (in DebugConfigurationProvider).
 ///
 /// These are not understood by the debug adapters.
 export interface DartVsCodeLaunchArgs extends DartLaunchArgs {
+	projectRootPath?: string;
 	deviceId?: string;
 	deviceName?: string;
 	enableAsserts?: boolean;
