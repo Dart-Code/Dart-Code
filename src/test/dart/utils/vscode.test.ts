@@ -26,9 +26,17 @@ describe("buildHostKind", () => {
 		verify("Foo", "web", "myapp.me.cloudthing.dev", "web-cloudthing.dev");
 	});
 
-	it("removes port numbers", () => {
+	it("removes local hosts", () => {
+		verify("Foo", "server-distro", "danny.local", "server-distro");
+		verify("Foo", "server-distro", "localhost", "server-distro");
+		verify("Foo", "server-distro", "foo-danny.local", "server-distro");
+	});
+
+	it("removes port and version numbers", () => {
 		verify("Foo", "web", "cloudthing.dev:1234", "web-cloudthing.dev");
-		verify("Foo", "server", "distro-143.192:8080", "server-distro");
+		verify("Foo", "server-distro", "143.192:8080", "server-distro");
+		verify("Foo", "server-distro", "foo-143.192:8080", "server-distro-foo");
+		verify("Foo", "server-distro-1.2", "foo-143.192:8080", "server-distro-foo");
 	});
 
 	it("handles only appName", () => {

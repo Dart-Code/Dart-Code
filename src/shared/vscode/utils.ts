@@ -342,6 +342,7 @@ function getHostKind(): string | undefined {
 export function buildHostKind({ appName, appHost, remoteName }: { appName?: string, appHost?: string, remoteName?: string }): string | undefined {
 	const topLevelDomainRegex = new RegExp(".*\\.(.*\\..*)$");
 	const withoutNumbersRegex = new RegExp("(.*?)[\\d.\\-:]*$");
+	const regexes = [topLevelDomainRegex, withoutNumbersRegex];
 
 	// Fix any known cloud IDEs incorrectly using the default "desktop" value.
 	if (isKnownCloudIde(appName) && appHost === "desktop")
@@ -351,16 +352,27 @@ export function buildHostKind({ appName, appHost, remoteName }: { appName?: stri
 	if (appHost === "desktop")
 		appHost = undefined;
 
-	// Handle anything that looks like a subdomain of a service. We only
-	// want the top level domain.
-	if (remoteName) {
-		const topLevelDomainMatch = topLevelDomainRegex.exec(remoteName);
-		if (topLevelDomainMatch)
-			remoteName = topLevelDomainMatch[1];
-		const withoutNumbersMatch = withoutNumbersRegex.exec(remoteName);
-		if (withoutNumbersMatch)
-			remoteName = withoutNumbersMatch[1];
+	/// Clean up domains to only top level domains without ports and no
+	/// local domains.
+	function cleanString(input: string | undefined): string | undefined {
+		if (!input)
+			return input;
+
+		for (const regex of regexes) {
+			const match = regex.exec(input);
+			if (match)
+				input = match[1];
+		}
+
+		if (input.endsWith(".local") || input.endsWith("localhost")) {
+			input = undefined;
+		}
+
+		return input;
 	}
+
+	remoteName = cleanString(remoteName);
+	appHost = cleanString(appHost);
 
 	if (appHost && remoteName && appHost !== remoteName)
 		return `${appHost}-${remoteName}`;
