@@ -340,7 +340,8 @@ function getHostKind(): string | undefined {
 /// The returned string is essentially `$appHost-$remoteName` but with some cleanup to avoid redundant or duplicated values, and to
 /// shorten domains to top-levels.
 export function buildHostKind({ appName, appHost, remoteName }: { appName?: string, appHost?: string, remoteName?: string }): string | undefined {
-	const domainRegex = new RegExp(".*\\.(.*\\..*)$");
+	const topLevelDomainRegex = new RegExp(".*\\.(.*\\..*)$");
+	const withoutNumbersRegex = new RegExp("(.*?)[\\d.\\-:]*$");
 
 	// Fix any known cloud IDEs incorrectly using the default "desktop" value.
 	if (isKnownCloudIde(appName) && appHost === "desktop")
@@ -353,9 +354,12 @@ export function buildHostKind({ appName, appHost, remoteName }: { appName?: stri
 	// Handle anything that looks like a subdomain of a service. We only
 	// want the top level domain.
 	if (remoteName) {
-		const domainMatch = domainRegex.exec(remoteName);
-		if (domainMatch)
-			remoteName = domainMatch[1];
+		const topLevelDomainMatch = topLevelDomainRegex.exec(remoteName);
+		if (topLevelDomainMatch)
+			remoteName = topLevelDomainMatch[1];
+		const withoutNumbersMatch = withoutNumbersRegex.exec(remoteName);
+		if (withoutNumbersMatch)
+			remoteName = withoutNumbersMatch[1];
 	}
 
 	if (appHost && remoteName && appHost !== remoteName)

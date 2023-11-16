@@ -26,6 +26,11 @@ describe("buildHostKind", () => {
 		verify("Foo", "web", "myapp.me.cloudthing.dev", "web-cloudthing.dev");
 	});
 
+	it("removes port numbers", () => {
+		verify("Foo", "web", "cloudthing.dev:1234", "web-cloudthing.dev");
+		verify("Foo", "server", "distro-143.192:8080", "server-distro");
+	});
+
 	it("handles only appName", () => {
 		verify("appName", "", "", undefined);
 		verify("appName", undefined, undefined, undefined);
