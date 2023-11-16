@@ -302,15 +302,15 @@ export class DevToolsManager implements vs.Disposable {
 		// Otherwise, fall back to embedded or launching manually.
 		if (options.pageId)
 			queryParams.page = routeId;
-		if (options.location !== "external")
-			queryParams.embed = "true";
-		const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
 		// We currently only support embedded for pages we know about statically, although since we seem
 		// to only use that for a title, we may be able to relax that.
 		if (options.location !== "external" && page) {
+			queryParams.embed = "true";
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
 			this.launchInEmbeddedWebView(exposedUrl, session, page, options.location);
 		} else {
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
 			await envUtils.openInBrowser(fullUrl, this.logger);
 		}
 	}
