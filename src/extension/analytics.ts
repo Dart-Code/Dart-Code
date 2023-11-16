@@ -201,13 +201,20 @@ export class Analytics implements IAmDisposable {
 		this.disposables.push(debug.registerDebugAdapterTrackerFactory("dart", this.exceptionBreakTrackerFactory));
 
 		// If the API isn't supported (Theia) then we'll just not set anything up.
-		if (!env.createTelemetryLogger)
+		if (!env.createTelemetryLogger) {
+			this.logger.info(`createTelemetryLogger is unsupported`);
 			return;
+		}
 
 		// Similarly, if the user has opted out of Dart/Flutter's telemetry, we should assume they might
 		// (reasonably) expect that covers this extension, so don't set anything up in that case either.
 		if (this.isOptedOutOfDartToolingTelemetry())
 			return;
+
+		if (!env.isTelemetryEnabled) {
+			this.logger.info(`VS Code telemetry is disabled, analytics events will not be sent unless re-enabled`);
+			// Don't return, as we check this on each event.
+		}
 
 		const googleAnalyticsTelemetrySender = new GoogleAnalyticsTelemetrySender(logger, (e) => this.handleError(e));
 		this.telemetryLogger = env.createTelemetryLogger(googleAnalyticsTelemetrySender);
