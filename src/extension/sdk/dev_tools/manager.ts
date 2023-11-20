@@ -512,7 +512,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		portToBind = config.devToolsPort  // Always config first
 			|| portToBind;                // Then try the last port we bound this session
 
-		if (portToBind) {
+		if (portToBind && !customDevTools?.path) {
 			binArgs.push("--port");
 			binArgs.push(portToBind.toString());
 		}
