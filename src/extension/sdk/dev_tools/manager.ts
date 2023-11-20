@@ -454,6 +454,10 @@ export class DevToolsManager implements vs.Disposable {
 						void service.vmRegister({ uri: session.vmServiceUri });
 				}
 
+				// Finally, trigger a check of extensions
+				if (service.capabilities.supportsVsCodeExtensions)
+					setTimeout(() => this.checkForExtensionRecommendations(), twentySecondsInMs);
+
 				portToBind = n.port;
 				resolve(`http://${n.host}:${n.port}/`);
 			});
@@ -484,6 +488,35 @@ export class DevToolsManager implements vs.Disposable {
 				}
 			});
 		});
+	}
+
+
+	private async checkForExtensionRecommendations(): Promise<void> {
+		const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !this.context.workspaceContext.config.forceFlutterWorkspace, searchDepth: config.projectSearchDepth, onlyWorkspaceRoots: this.context.workspaceContext.config.forceFlutterWorkspace });
+		const results = await this.service?.discoverExtensions(projectFolders);
+		if (!results)
+			return;
+
+		const ignoredExtensions = this.context.getIgnoredExtensionRecommendationIdentifiers();
+		const installedExtension = vs.extensions.all.map((e) => e.id);
+		const promotableExtensions = Object.keys(results).flatMap((projectRoot) => results[projectRoot]?.extensions ?? [])
+			.filter((e) => ignoredExtensions.find((ignored) => ignored.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined)
+			.filter((e) => installedExtension.find((installed) => installed.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined);
+		// If there are multiple we'll just pick the first. The user will either install or ignore
+		// and then next time we'd pick the next.
+		const promotableExtension = promotableExtensions?.at(0);
+		if (promotableExtension)
+			void this.promoteExtension(promotableExtension);
+	}
+
+	private async promoteExtension(extension: ExtensionResult) {
+		const installPackage = `Install ${extension.extension}`;
+		const action = await vs.window.showInformationMessage(`A third-party extension is available for package:${extension.packageName}`, installPackage, noThanksAction);
+		if (action === installPackage) {
+			await vs.commands.executeCommand("workbench.extensions.installExtension", extension.extension);
+		} else {
+			this.context.ignoreExtensionRecommendation(extension.extension);
+		}
 	}
 
 	public dispose(): any {
@@ -569,6 +602,12 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	public vmRegister(request: { uri: string }): Thenable<any> {
 		return this.sendRequest("vm.register", request);
 	}
+
+	public async discoverExtensions(projectRoots: string[]): Promise<{ [key: string]: ProjectExtensionResults }> {
+		return this.sendRequest("vscode.extensions.discover", {
+			rootPaths: projectRoots,
+		});
+	}
 }
 
 export interface ServerStartedNotification {
@@ -586,6 +625,16 @@ interface DevToolsOptions {
 	pageId?: string | null; // undefined = unspecified (use default), null = force external so user can pick any
 	inspectorRef?: string;
 	commandSource?: string;
+}
+
+interface ProjectExtensionResults {
+	extensions: ExtensionResult[];
+	parseErrors: Array<{ packageName: string, error: any }>;
+}
+
+interface ExtensionResult {
+	packageName: string;
+	extension: string;
 }
 
 export type DevToolsLocation = "beside" | "active" | "external";
