@@ -484,7 +484,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		const executionInfo = customDevTools?.path ?
 			{
-				args: ["serve", "--machine"],
+				args: ["serve", "--machine", ...(customDevTools.args ?? [])],
 				cwd: customDevTools.path,
 				env: customDevTools.env,
 				executable: path.join(customDevTools.path, devToolsToolPath),

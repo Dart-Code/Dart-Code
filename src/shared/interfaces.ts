@@ -267,6 +267,7 @@ export interface MyCancellationToken {
 }
 
 export interface CustomDevToolsConfig {
+	args?: string[];
 	path?: string;
 	env?: { [key: string]: string };
 }
