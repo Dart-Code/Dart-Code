@@ -36,6 +36,9 @@ export class Context {
 	public getPackageLastCheckedForUpdates(packageID: string): number | undefined { return this.context.globalState.get(`packageLastCheckedForUpdates:${packageID}`) as number; }
 	public setPackageLastCheckedForUpdates(packageID: string, value: number | undefined) { void this.context.globalState.update(`packageLastCheckedForUpdates:${packageID}`, value); }
 
+	public getIgnoredExtensionRecommendationIdentifiers(): string[] { return this.context.globalState.get(`ignoredExtensionRecommendations`) ?? []; }
+	public ignoreExtensionRecommendation(extension: string) { void this.context.globalState.update(`ignoredExtensionRecommendations`, [...this.getIgnoredExtensionRecommendationIdentifiers(), extension]); }
+
 	public update(key: string, value: any): any {
 		return this.context.globalState.update(key, value);
 	}
