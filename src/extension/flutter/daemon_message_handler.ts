@@ -16,6 +16,7 @@ export function setUpDaemonMessageHandler(logger: Logger, context: ExtensionCont
 		const knownErrorStrings = [
 			"Android emulator stderr",
 			"Address these issues and try again",
+			"requires hardware acceleration",
 			// If we ever need to add to this list, consider updating Flutter to pass
 			// some flag to separate errors that should be shown to users from those
 			// that are normal (for example adb errors are printed normally during
