@@ -1,10 +1,11 @@
 import { ExtensionContext, Uri } from "vscode";
+import { DartWorkspaceContext } from "../interfaces";
 
 export class Context {
-	private constructor(private readonly context: ExtensionContext) { }
+	private constructor(private readonly context: ExtensionContext, public readonly workspaceContext: DartWorkspaceContext) { }
 
-	public static for(context: ExtensionContext): Context {
-		return new Context(context);
+	public static for(context: ExtensionContext, workspaceContext: DartWorkspaceContext): Context {
+		return new Context(context, workspaceContext);
 	}
 
 	get extensionStorageUri(): Uri {

@@ -4,9 +4,10 @@ import * as path from "path";
 import * as vs from "vscode";
 import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
+import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtools_server";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, noThanksAction, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -17,11 +18,13 @@ import { disposeAll, usingCustomScript } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
-import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
+import { envUtils, getAllProjectFolders, isRunningLocally } from "../../../shared/vscode/utils";
+import { Context } from "../../../shared/vscode/workspace";
 import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
 import { config } from "../../config";
 import { PubGlobal } from "../../pub/global";
+import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 import { DevToolsEmbeddedView } from "./embedded_view";
@@ -49,13 +52,13 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
+	constructor(private readonly logger: Logger, private readonly context: Context, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
 		this.statusBarItem.name = "Dart/Flutter DevTools";
 		this.statusBarItem.text = "Dart DevTools";
 		this.setNotStartedStatusBar();
 		this.disposables.push(this.statusBarItem);
 
-		void this.handleEagerActivationAndStartup(workspaceContext);
+		void this.handleEagerActivationAndStartup(context.workspaceContext);
 	}
 
 	private setNotStartedStatusBar() {
@@ -411,7 +414,7 @@ export class DevToolsManager implements vs.Disposable {
 					this.logger.error(e);
 				}
 			}
-			this.service = new DevToolsService(this.logger, this.workspaceContext, this.dartCapabilities);
+			this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.dartCapabilities);
 			const service = this.service;
 			this.disposables.push(service);
 
@@ -475,6 +478,8 @@ export class DevToolsManager implements vs.Disposable {
 ///
 /// This is not used for internal workspaces (see startDevToolsFromDaemon).
 class DevToolsService extends StdIOService<UnknownNotification> {
+	public readonly capabilities = DevToolsServerCapabilities.empty;
+
 	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
@@ -512,7 +517,11 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 			binArgs.push(portToBind.toString());
 		}
 
-		this.registerForServerStarted((n) => this.additionalPidsToTerminate.push(n.pid));
+		this.registerForServerStarted((n) => {
+			if (n.protocolVersion)
+				this.capabilities.version = n.protocolVersion;
+			this.additionalPidsToTerminate.push(n.pid);
+		});
 
 		this.createProcess(binCwd, binPath, binArgs, { toolEnv: getToolEnv(), envOverrides: binEnv });
 	}
@@ -549,6 +558,7 @@ export interface ServerStartedNotification {
 	host: string;
 	port: number;
 	pid: number;
+	protocolVersion: string | undefined
 }
 
 interface DevToolsOptions {

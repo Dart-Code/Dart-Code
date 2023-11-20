@@ -159,7 +159,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	buildLogHeaders();
 	setupLog(getExtensionLogPath(), LogCategory.General);
 
-	const extContext = Context.for(context);
 	const webClient = new WebClient(extensionVersion);
 
 	util.logTime("Code called activate");
@@ -195,6 +194,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;
+	const extContext = Context.for(context, workspaceContext);
 	const sdks = workspaceContext.sdks;
 	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
 
@@ -487,7 +487,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
-	const devTools = new DevToolsManager(logger, workspaceContext, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
+	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
 	context.subscriptions.push(devTools);
 
 	// Debug commands.
