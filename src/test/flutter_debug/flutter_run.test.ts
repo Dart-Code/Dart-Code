@@ -1233,8 +1233,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async () => {
+	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false+showGettersInDebugViews=false", async () => {
 		await setConfigForTest("dart", "evaluateGettersInDebugViews", false);
+		await setConfigForTest("dart", "showGettersInDebugViews", false);
 
 		await openFile(flutterHelloWorldGettersFile);
 		const config = await startDebugger(dc, flutterHelloWorldGettersFile);

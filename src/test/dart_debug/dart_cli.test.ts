@@ -964,8 +964,9 @@ void printSomething() {
 		await dc.terminateRequest();
 	});
 
-	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false", async () => {
+	it("includes fields but not getters in variables when evaluateGettersInDebugViews=false+showGettersInDebugViews=false", async () => {
 		await setConfigForTest("dart", "evaluateGettersInDebugViews", false);
+		await setConfigForTest("dart", "showGettersInDebugViews", false);
 
 		await openFile(helloWorldGettersFile);
 		const config = await startDebugger(dc, helloWorldGettersFile);
