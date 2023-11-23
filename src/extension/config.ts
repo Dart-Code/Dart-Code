@@ -257,6 +257,7 @@ export class ResourceConfig {
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
 	get showDartDeveloperLogs(): boolean { return this.getConfig<boolean>("showDartDeveloperLogs", true); }
+	get showGettersInDebugViews(): boolean { return this.getConfig<boolean>("showGettersInDebugViews", true); }
 	get suppressTestTimeouts(): "never" | "debug" | "always" { return this.getConfig<"never" | "debug" | "always">("suppressTestTimeouts", "never"); }
 	get testAdditionalArgs(): string[] { return this.getConfig<string[]>("testAdditionalArgs", []); }
 	get vmAdditionalArgs(): string[] { return this.getConfig<string[]>("vmAdditionalArgs", []); }

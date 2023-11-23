@@ -16,6 +16,7 @@ export interface DartLaunchArgs {
 	deleteServiceInfoFile?: boolean;
 	env?: { [key: string]: string | undefined };
 	evaluateGettersInDebugViews: boolean;
+	showGettersInDebugViews: boolean;
 	evaluateToStringInDebugViews: boolean;
 	expectSingleTest?: boolean;
 	flutterRunLogFile?: string;

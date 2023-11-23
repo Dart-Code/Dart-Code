@@ -2358,6 +2358,12 @@
 						"description": "Whether to evaluate getters in order to display them in debug views (such as the Variables, Watch and Hovers views).",
 						"scope": "resource"
 					},
+					"dart.showGettersInDebugViews": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "Whether to show getters in order to display them in debug views (such as the Variables, Watch and Hovers views). If `evaluateGettersInDebugViews` is `true` getters will be eagerly evaluated, otherwise they will require clicking to evaluate.",
+						"scope": "resource"
+					},
 					"dart.evaluateToStringInDebugViews": {
 						"type": "boolean",
 						"default": true,

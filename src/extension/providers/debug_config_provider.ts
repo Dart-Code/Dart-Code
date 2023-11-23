@@ -573,6 +573,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			: config.debugExternalPackageLibraries;
 		debugConfig.showDartDeveloperLogs = conf.showDartDeveloperLogs;
 		debugConfig.evaluateGettersInDebugViews = debugConfig.evaluateGettersInDebugViews || conf.evaluateGettersInDebugViews;
+		debugConfig.showGettersInDebugViews = debugConfig.showGettersInDebugViews || conf.showGettersInDebugViews;
 		debugConfig.evaluateToStringInDebugViews = debugConfig.evaluateToStringInDebugViews || config.evaluateToStringInDebugViews;
 		debugConfig.daemonPort = config.daemonPort;
 
