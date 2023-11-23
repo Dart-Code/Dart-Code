@@ -40,7 +40,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.statusBarItem.tooltip = "Flutter";
 		this.statusBarItem.command = "flutter.selectDevice";
 		this.statusBarItem.show();
-		this.updateStatusBar();
+		void this.updateStatusBar();
 
 		// Force a request for emulators to stash their names, so we can display
 		// the better name if the automatically-selected device happens to be an
@@ -117,13 +117,14 @@ export class FlutterDeviceManager implements vs.Disposable {
 			}
 		}
 
+		void this.updateStatusBar();
 		this.onDevicesChangedEmitter.fire();
 	}
 
 	private setCurrentDevice(device: f.Device | undefined) {
 		this.currentDevice = device;
 		this.onCurrentDeviceChangedEmitter.fire(device);
-		this.updateStatusBar();
+		void this.updateStatusBar();
 	}
 
 	public async deviceRemoved(dev: f.Device) {
@@ -142,6 +143,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			this.setCurrentDevice(nextDevice);
 		}
 
+		void this.updateStatusBar();
 		this.onDevicesChangedEmitter.fire();
 	}
 
@@ -217,7 +219,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				this.statusBarItem.text = `Creating ${emulatorTypeLabel}...`;
 				this.rememberNextAddedDevice = true;
 				await this.createEmulator();
-				this.updateStatusBar();
+				void this.updateStatusBar();
 				break;
 			case "emulator":
 				// Clear the current device so we can wait for the new one
@@ -227,7 +229,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				this.rememberNextAddedDevice = true;
 				const coldBoot = selection.coldBoot ?? false;
 				await this.launchEmulator(selection.device, coldBoot);
-				this.updateStatusBar();
+				void this.updateStatusBar();
 				break;
 			case "custom-emulator":
 				// Clear the current device so we can wait for the new one
@@ -236,7 +238,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				this.statusBarItem.text = `Launching ${emulatorTypeLabel}...`;
 				this.rememberNextAddedDevice = true;
 				await this.launchCustomEmulator(selection.device);
-				this.updateStatusBar();
+				void this.updateStatusBar();
 				break;
 			case "platform-enabler":
 				const platformType = selection.device.platformType;
@@ -465,7 +467,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return d1.name.localeCompare(d2.name);
 	}
 
-	public updateStatusBar(): void {
+	public async updateStatusBar(): Promise<void> {
 		if (this.currentDevice) {
 			const emulatorLabel = this.currentDevice.emulator ? this.emulatorLabel(this.currentDevice.platformType) : "";
 			const platformLabel = `${this.currentDevice.platform} ${emulatorLabel}`.trim();
@@ -474,10 +476,19 @@ export class FlutterDeviceManager implements vs.Disposable {
 			this.statusBarItem.text = "No Device";
 		}
 
+		const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
+		const supportedDevices = this.devices.filter((d) => this.isSupported(supportedPlatforms, d));
+
+		const suffix = supportedDevices.length === this.devices.length
+			? ""
+			: supportedDevices.length === 1
+				? " (1 supported for workspace)"
+				: ` (${supportedDevices.length} supported for workspace)`;
+
 		if (this.devices.length > 1) {
-			this.statusBarItem.tooltip = `${this.devices.length} Devices Connected`;
+			this.statusBarItem.tooltip = `${this.devices.length} Devices Connected${suffix}`;
 		} else if (this.devices.length === 1) {
-			this.statusBarItem.tooltip = `1 Device Connected`;
+			this.statusBarItem.tooltip = `1 Device Connected${suffix}`;
 		} else {
 			this.statusBarItem.tooltip = undefined;
 		}
