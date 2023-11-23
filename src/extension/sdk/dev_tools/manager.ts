@@ -7,7 +7,7 @@ import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtools_server";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, noThanksAction, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -18,13 +18,12 @@ import { disposeAll, usingCustomScript } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
-import { envUtils, getAllProjectFolders, isRunningLocally } from "../../../shared/vscode/utils";
+import { envUtils, isRunningLocally } from "../../../shared/vscode/utils";
 import { Context } from "../../../shared/vscode/workspace";
 import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
 import { config } from "../../config";
 import { PubGlobal } from "../../pub/global";
-import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 import { DevToolsEmbeddedView } from "./embedded_view";
@@ -102,12 +101,11 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	public async urlFor(page: string): Promise<string | undefined> {
-		// TODO(dantup): Theme, etc.
 		const base = await this.devtoolsUrl;
 		if (!base) return base;
 
 		const separator = base.endsWith("/") ? "" : "/";
-		return `${base}${separator}${page}`;
+		return `${base}${separator}${page}?cacheBust=${this.getCacheBust()}`;
 	}
 
 	public async start(silent = false): Promise<string | undefined> {
@@ -318,17 +316,21 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
-	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string) {
-		queryParams.hide = "debugger";
-		queryParams.ide = "VSCode";
-
+	private getCacheBust(): string {
 		// Add the version to the querystring to avoid any caching of the index.html page.
 		let cacheBust = `dart-${this.dartCapabilities.version}-flutter-${this.flutterCapabilities.version}`;
 		// If using a custom version of DevTools, bust regardless of version.
 		if (!!config.customDevTools?.path) { // Don't just check config.customDevTools as it's a VS Code Proxy object
 			cacheBust += `-custom-${new Date().getTime()}`;
 		}
-		queryParams.cacheBust = cacheBust;
+
+		return cacheBust;
+	}
+
+	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string) {
+		queryParams.hide = "debugger";
+		queryParams.ide = "VSCode";
+		queryParams.cacheBust = this.getCacheBust();
 
 		// Handle new Path URL DevTools.
 		let path = "";
