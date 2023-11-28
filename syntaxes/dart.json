@@ -1,6 +1,6 @@
 {
 	"name": "Dart",
-	"version": "1.2.3",
+	"version": "1.2.5",
 	"fileTypes": [
 		"dart"
 	],
@@ -93,15 +93,7 @@
 					"end": "```"
 				},
 				{
-					"match": "(`.*?`)",
-					"captures": {
-						"0": {
-							"name": "variable.other.source.dart"
-						}
-					}
-				},
-				{
-					"match": "(`.*?`)",
+					"match": "(`[^`]+?`)",
 					"captures": {
 						"0": {
 							"name": "variable.other.source.dart"
@@ -399,6 +391,7 @@
 		"string-interp": {
 			"patterns": [
 				{
+					"name": "string.interpolated.expression.dart",
 					"match": "\\$([a-zA-Z0-9_]+)",
 					"captures": {
 						"1": {
@@ -412,8 +405,7 @@
 					"end": "\\}",
 					"patterns": [
 						{
-							"include": "#constants-and-special-vars",
-							"name": "variable.parameter.dart"
+							"include": "#constants-and-special-vars"
 						},
 						{
 							"include": "#strings"
