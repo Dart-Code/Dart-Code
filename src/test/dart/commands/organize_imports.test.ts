@@ -1,6 +1,13 @@
 import { activate, ensureTestContent, executeOrganizeImportsCodeAction, setTestContent } from "../../helpers";
 
 describe("organize imports", () => {
+	beforeEach("activate", function () {
+		if (process.env.BUILD_VERSION === "beta" && new Date().getFullYear() === 2023) {
+			// Temporary skip while until this issue is fixed/explained.
+			// https://github.com/microsoft/vscode/issues/199548
+			this.skip();
+		}
+	});
 	beforeEach("activate", () => activate());
 
 	it("sorts imports", async () => {
