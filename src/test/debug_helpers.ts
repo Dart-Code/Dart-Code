@@ -49,7 +49,7 @@ export function createDebugClient(debugType: DebuggerType) {
 	if (!dc)
 		throw Error(`Unknown debug descriptor type ${descriptor}`);
 
-	dc.defaultTimeout = 60000;
+	dc.defaultTimeout = 120000;
 	const thisDc = dc;
 	defer("Terminate and clean up debug client/adapter", async () => {
 		if (!thisDc.hasStarted) {
