@@ -105,7 +105,8 @@ export class DevToolsManager implements vs.Disposable {
 		if (!base) return base;
 
 		const separator = base.endsWith("/") ? "" : "/";
-		return `${base}${separator}${page}?cacheBust=${this.getCacheBust()}`;
+		// TODO(dantup): Remove duplication between this and sidebar
+		return `${base}${separator}${page}?ide=VSCode&cacheBust=${this.getCacheBust()}`;
 	}
 
 	public async start(silent = false): Promise<string | undefined> {
@@ -287,6 +288,8 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		const queryParams: { [key: string]: string | undefined } = {
+			// TODO(dantup): Remove duplication of this.
+			ide: "VSCode",
 			ideFeature: options.commandSource,
 			inspectorRef: options.inspectorRef,
 			theme: config.useDevToolsDarkTheme && options.location === "external" ? "dark" : "light",
@@ -329,6 +332,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string) {
 		queryParams.hide = "debugger";
+		// TODO(dantup): Remove duplication between this and sidebar
 		queryParams.ide = "VSCode";
 		queryParams.cacheBust = this.getCacheBust();
 
