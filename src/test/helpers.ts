@@ -578,7 +578,7 @@ export async function getCodeActions({ kind, title, requireExactlyOne = false }:
 	matchingActions ??= [];
 
 	if (requireExactlyOne && matchingActions.length !== 1)
-		throw new Error(`Expected to find "${kind}/${title}", but found ${codeActions.map((ca) => `"${ca.kind}/${ca.title}"`).join(", ")}`);
+		throw new Error(`Expected to find "${kind?.value}/${title}", but found ${codeActions.map((ca) => `"${ca.kind}/${ca.title}"`).join(", ")}`);
 
 	return matchingActions;
 }
