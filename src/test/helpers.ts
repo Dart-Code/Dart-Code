@@ -568,9 +568,14 @@ export async function executeSortMembersCodeAction() {
 }
 
 export async function getCodeActions({ kind, title, requireExactlyOne = false }: { kind?: vs.CodeActionKind, title?: string, requireExactlyOne?: boolean }, range: vs.Range) {
-	const codeActions = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, range);
-	const matchingActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!))
-		&& (!title || ca.title === title));
+	let codeActions: vs.CodeAction[] = [];
+	let matchingActions = await waitFor(async () => {
+		codeActions = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, range);
+		const matchingActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!)) && (!title || ca.title === title));
+		return matchingActions.length ? matchingActions : undefined;
+	});
+
+	matchingActions ??= [];
 
 	if (requireExactlyOne && matchingActions.length !== 1)
 		throw new Error(`Expected to find "${kind}/${title}", but found ${codeActions.map((ca) => `"${ca.kind}/${ca.title}"`).join(", ")}`);
