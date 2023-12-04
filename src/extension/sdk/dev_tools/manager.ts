@@ -104,9 +104,9 @@ export class DevToolsManager implements vs.Disposable {
 		const base = await this.devtoolsUrl;
 		if (!base) return base;
 
+		const queryString = this.buildQueryString(this.getDefaultQueryParams());
 		const separator = base.endsWith("/") ? "" : "/";
-		// TODO(dantup): Remove duplication between this and sidebar
-		return `${base}${separator}${page}?ide=VSCode&cacheBust=${this.getCacheBust()}`;
+		return `${base}${separator}${page}?${queryString}`;
 	}
 
 	public async start(silent = false): Promise<string | undefined> {
@@ -168,7 +168,7 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 
 		this.analytics.logDevToolsOpened(commandSource);
-		url = await this.buildDevToolsUrl(url, { commandSource });
+		url = await this.buildDevToolsUrl(url, { ideFeature: commandSource });
 
 		try {
 			await envUtils.openInBrowser(url.toString(), this.logger);
@@ -288,11 +288,10 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		const queryParams: { [key: string]: string | undefined } = {
-			// TODO(dantup): Remove duplication of this.
-			ide: "VSCode",
+			...this.getDefaultQueryParams(),
 			ideFeature: options.commandSource,
 			inspectorRef: options.inspectorRef,
-			theme: config.useDevToolsDarkTheme && options.location === "external" ? "dark" : "light",
+			theme: config.useDevToolsDarkTheme && options.location === "external" ? "dark" : undefined,
 		};
 
 		const pageId = options.pageId ?? this.getDefaultPage().id;
@@ -330,11 +329,26 @@ export class DevToolsManager implements vs.Disposable {
 		return cacheBust;
 	}
 
+	private getDefaultQueryParams(): { [key: string]: string | undefined } {
+		return {
+			cacheBust: this.getCacheBust(),
+			hide: "debugger",
+			ide: "VSCode",
+		};
+	}
+
+	private buildQueryString(queryParams: { [key: string]: string | undefined }): string {
+		return Object.keys(queryParams)
+			.filter((key) => queryParams[key] !== undefined)
+			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] ?? "")}`)
+			.join("&");
+	}
+
 	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string) {
-		queryParams.hide = "debugger";
-		// TODO(dantup): Remove duplication between this and sidebar
-		queryParams.ide = "VSCode";
-		queryParams.cacheBust = this.getCacheBust();
+		queryParams = {
+			...this.getDefaultQueryParams(),
+			...queryParams,
+		};
 
 		// Handle new Path URL DevTools.
 		let path = "";
@@ -348,10 +362,7 @@ export class DevToolsManager implements vs.Disposable {
 			queryParams.uri = exposedUrl;
 		}
 
-		const paramsString = Object.keys(queryParams)
-			.filter((key) => queryParams[key] !== undefined)
-			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] ?? "")}`)
-			.join("&");
+		const paramsString = this.buildQueryString(queryParams);
 		const urlPathSeperator = baseUrl.endsWith("/") ? "" : "/";
 		return `${baseUrl}${urlPathSeperator}${path}?${paramsString}`;
 	}
