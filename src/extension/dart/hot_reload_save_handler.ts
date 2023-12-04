@@ -11,8 +11,8 @@ import { isWithinWorkspace, shouldHotReloadFor } from "../utils";
 
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
-	private flutterHotReloadDelayTimer: NodeJS.Timer | undefined;
-	private dartHotReloadDelayTimer: NodeJS.Timer | undefined;
+	private flutterHotReloadDelayTimer: NodeJS.Timeout | undefined;
+	private dartHotReloadDelayTimer: NodeJS.Timeout | undefined;
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
 	private lastSaveReason: TextDocumentSaveReason | undefined;

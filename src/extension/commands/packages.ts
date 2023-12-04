@@ -14,7 +14,7 @@ import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands, commandState } from "./sdk";
 
 let isFetchingPackages = false;
-let runPubGetDelayTimer: NodeJS.Timer | undefined;
+let runPubGetDelayTimer: NodeJS.Timeout | undefined;
 let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 
 export class PackageCommands extends BaseSdkCommands {

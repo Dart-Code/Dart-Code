@@ -81,7 +81,7 @@ export class DartDebugSession extends DebugSession {
 	public readonly vmServiceCapabilities = VmServiceCapabilities.empty;
 	private useWriteServiceInfo = false;
 	protected vmServiceInfoFile?: string;
-	private serviceInfoPollTimer?: NodeJS.Timer;
+	private serviceInfoPollTimer?: NodeJS.Timeout;
 	protected deleteServiceFileAfterRead = false;
 	private remoteEditorTerminalLaunched?: Promise<RemoteEditorTerminalProcess>;
 	private vmServiceInfoFileCompleter?: PromiseCompleter<string>;

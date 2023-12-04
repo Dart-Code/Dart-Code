@@ -9,7 +9,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private closingLabels: { [key: string]: ClosingLabelsParams } = {};
 	private editors: { [key: string]: vs.TextEditor } = {};
-	private updateTimeout?: NodeJS.Timer;
+	private updateTimeout?: NodeJS.Timeout;
 
 	private readonly decorationType = vs.window.createTextEditorDecorationType({
 		after: {

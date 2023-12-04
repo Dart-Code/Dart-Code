@@ -25,7 +25,7 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	protected abstract flutterOutline: unknown;
 	protected rootNode: FlutterWidgetItem | undefined;
 	protected treeNodesByLine: { [key: number]: FlutterWidgetItem[]; } = [];
-	protected updateTimeout: NodeJS.Timer | undefined;
+	protected updateTimeout: NodeJS.Timeout | undefined;
 	protected onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	protected lastSelectedWidget: FlutterWidgetItem | undefined;

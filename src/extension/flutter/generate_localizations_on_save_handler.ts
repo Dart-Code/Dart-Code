@@ -8,7 +8,7 @@ import { isInsideFlutterProject, isWithinWorkspace } from "../utils";
 
 export class GenerateLocalizationsOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
-	private debounceDelayTimer: NodeJS.Timer | undefined;
+	private debounceDelayTimer: NodeJS.Timeout | undefined;
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
 	private lastSaveReason: TextDocumentSaveReason | undefined;
