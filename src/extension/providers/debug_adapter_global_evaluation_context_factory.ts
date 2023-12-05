@@ -7,8 +7,6 @@ export class DartDebugAdapterGlobalEvaluationContextFactory implements vs.DebugA
 	protected readonly disposables: IAmDisposable[] = [];
 	public readonly trackers = new Set<DartDebugAdapterGlobalEvaluationContext>();
 
-	public supportsFormatting = false;
-
 	constructor(private readonly logger: Logger) { }
 
 	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker {
