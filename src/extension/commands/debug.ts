@@ -3,6 +3,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CommandSource, debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext, widgetInspectorPage } from "../../shared/constants";
+import { ToolEventHandler } from "../../shared/debug/tool_event_handler";
 import { DebugOption, DebuggerType, LogSeverity, VmService, VmServiceExtension, debugOptionNames } from "../../shared/enums";
 import { DartWorkspaceContext, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter, disposeAll } from "../../shared/utils";
@@ -65,8 +66,7 @@ export class DebugCommands implements IAmDisposable {
 	public readonly vmServices: VmServiceExtensions;
 	private suppressFlutterWidgetErrors = false;
 
-	public isInspectingWidget = false;
-	private autoCancelNextInspectWidgetMode = false;
+	public readonly toolEventHandler: ToolEventHandler;
 
 	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker | undefined, private context: Context, private workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly devTools: DevToolsManager) {
 		this.vmServices = new VmServiceExtensions(logger, this, workspaceContext);
@@ -78,6 +78,13 @@ export class DebugCommands implements IAmDisposable {
 		this.debugSessionsStatusItem.name = "Dart Debug Sessions";
 		this.updateDebugSessionsStatus();
 		this.disposables.push(this.debugSessionsStatusItem);
+		this.toolEventHandler = new ToolEventHandler(
+			logger,
+			config.devToolsLocation,
+			(uri, line, col, inOtherEditorColumn) => void vs.commands.executeCommand("_dart.jumpToLineColInUri", uri, line, col, inOtherEditorColumn),
+			() => vs.commands.executeCommand("flutter.cancelInspectWidget"),
+		);
+		this.disposables.push(this.toolEventHandler);
 
 		this.disposables.push(vs.debug.onDidChangeBreakpoints((e) => this.handleBreakpointChange(e)));
 		this.disposables.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
@@ -100,15 +107,15 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("flutter.togglePaintBaselines", () => this.vmServices.toggle(VmServiceExtension.PaintBaselines)));
 		this.disposables.push(vs.commands.registerCommand("flutter.toggleSlowAnimations", () => this.vmServices.toggle(VmServiceExtension.SlowAnimations, timeDilationNormal, timeDilationSlow)));
 		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget", () => {
-			this.autoCancelNextInspectWidgetMode = false;
+			this.toolEventHandler.autoCancelNextInspectWidgetMode = false;
 			void this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
 		}));
 		this.disposables.push(vs.commands.registerCommand("flutter.inspectWidget.autoCancel", () => {
-			this.autoCancelNextInspectWidgetMode = true;
+			this.toolEventHandler.autoCancelNextInspectWidgetMode = true;
 			void this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, true, true);
 		}));
 		this.disposables.push(vs.commands.registerCommand("flutter.cancelInspectWidget", () => {
-			this.autoCancelNextInspectWidgetMode = false;
+			this.toolEventHandler.autoCancelNextInspectWidgetMode = false;
 			void this.vmServices.toggle(VmServiceExtension.InspectorSelectMode, false, false);
 		}));
 
@@ -619,36 +626,14 @@ export class DebugCommands implements IAmDisposable {
 			this.debugMetrics.tooltip = "This is the amount of memory being consumed by your applications heaps (out of what has been allocated).\n\nNote: memory usage shown in debug builds may not be indicative of usage in release builds. Use profile builds for more accurate figures when testing memory usage.";
 			this.debugMetrics.show();
 		} else if (event === "dart.toolEvent") {
-			const kind = body.kind;
-			const data = body.data;
-			switch (kind) {
-				case "navigate":
-					const uri: string | undefined = data.resolvedFileUri ?? data.resolvedUri ?? data.fileUri ?? data.uri ?? data.file;
-					const line: string | undefined = data.line;
-					const col: string | undefined = data.column;
-					const isFlutterInspectorNavigation = data.source === "flutter.inspector";
-					if (uri && uri.startsWith("file://") && line && col) {
-						// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
-						const navigate = !isFlutterInspectorNavigation || config.devToolsLocation !== "active";
-						if (navigate)
-							void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(uri), line, col, true);
-						if (isFlutterInspectorNavigation && this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
-							// Add a short delay because this will remove the visible selection.
-							setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
-						}
-					}
-					break;
-				default:
-					return false;
-			}
-
+			return this.toolEventHandler.handle(e.body);
 		} else if (event === "dart.navigate") {
 			if (body.file && body.line && body.column) {
 				// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
 				const navigate = !body.fromInspector || config.devToolsLocation !== "active";
 				if (navigate)
 					void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(body.file as string), body.line, body.column, body.inOtherEditorColumn);
-				if (this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
+				if (this.toolEventHandler.isInspectingWidget && this.toolEventHandler.autoCancelNextInspectWidgetMode) {
 					// Add a short delay because this will remove the visible selection.
 					setTimeout(() => vs.commands.executeCommand("flutter.cancelInspectWidget"), 1000);
 				}
@@ -726,9 +711,12 @@ export class DebugCommands implements IAmDisposable {
 			void session.session.customRequest("flutter.sendForwardedRequestResponse", { id, result, error });
 		} else if (event === "dart.debuggerUris") {
 			session.observatoryUri = body.observatoryUri;
-			session.vmServiceUri = body.vmServiceUri;
+			const vmServiceUri = body.vmServiceUri;
+			session.vmServiceUri = vmServiceUri;
 			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
 			debugSessionsChangedEmitter.fire();
+			if (typeof vmServiceUri === "string")
+				void this.toolEventHandler.connect(session.session.configuration, vmServiceUri);
 
 			// Open or prompt for DevTools when appropriate.
 			const debuggerType: DebuggerType = session.session.configuration.debuggerType;
