@@ -44,6 +44,7 @@ export interface DartLaunchArgs {
 	vmServicePort?: number;
 	vmServiceUri?: string;
 	webDaemonLogFile?: string;
+	forceEnableDebugging?: boolean; // Workaround for no VM Service. Check references to this field for info.
 }
 
 /// Launch arguments that are valid in launch.json and may be mapped into

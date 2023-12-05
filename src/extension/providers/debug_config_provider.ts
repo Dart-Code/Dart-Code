@@ -550,6 +550,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			debugConfig.deviceName = `${deviceLabel} (${device.platform})`;
 		}
 
+		if (isFlutter && !isTest && !isAttach && debugConfig.noDebug && this.flutterCapabilities.requiresForcedDebugModeForNoDebug) {
+			// Force debug mode in the adapter to get a VM Service connection.
+			debugConfig.forceEnableDebugging = true;
+		}
+
 		debugConfig.toolEnv = getToolEnv();
 		debugConfig.sendLogsToClient = isLogging || isDartCodeTestRun;
 		debugConfig.sendCustomProgressEvents = true;
