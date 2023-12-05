@@ -16,6 +16,8 @@ export class Context {
 	set devToolsNotificationLastShown(value: number | undefined) { void this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }
 	set devToolsNotificationDoNotShow(value: boolean | undefined) { void this.context.globalState.update("devToolsNotificationDoNotShowAgain", value); }
+	get rerunInDebugModeForInspectorNavigationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("rerunInDebugModeForInspectorNavigationDoNotShow"); }
+	set rerunInDebugModeForInspectorNavigationDoNotShow(value: boolean | undefined) { void this.context.globalState.update("rerunInDebugModeForInspectorNavigationDoNotShow", value); }
 	get breakpointInNonDebuggableFileDoNotShowAgain(): boolean | undefined { return !!this.context.globalState.get("breakpointInNonDebuggableFileDoNotShowAgain"); }
 	set breakpointInNonDebuggableFileDoNotShowAgain(value: boolean | undefined) { void this.context.globalState.update("breakpointInNonDebuggableFileDoNotShowAgain", value); }
 	public getFlutterSurveyNotificationLastShown(id: string): number | undefined { return this.context.globalState.get(`flutterSurvey${id}NotificationLastShown`) as number; }

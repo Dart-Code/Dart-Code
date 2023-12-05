@@ -7,7 +7,7 @@ import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtools_server";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, doNotAskAgainAction, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -280,6 +280,7 @@ export class DevToolsManager implements vs.Disposable {
 				: cpuProfilerPage;
 	}
 
+	private hasShownInspectorNoDebugWarningThisSession = false;
 	private async launch(allowLaunchThroughService: boolean, session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions) {
 		const url = await this.devtoolsUrl;
 		if (!url) {
@@ -297,6 +298,33 @@ export class DevToolsManager implements vs.Disposable {
 		const pageId = options.pageId ?? this.getDefaultPage().id;
 		const page = devToolsPages.find((p) => p.id === pageId);
 		const routeId = page ? this.routeIdForPage(page) : pageId;
+
+		// Handle notifying the user about using Debug mode if opening the inspector.
+		if (page === widgetInspectorPage && session.session.configuration.noDebug && !this.hasShownInspectorNoDebugWarningThisSession && !this.context.rerunInDebugModeForInspectorNavigationDoNotShow) {
+			const reRunInDebugModeAction = "Re-run with Debugging";
+			void vs.window.showInformationMessage(
+				"Run your application with Debugging to allow the Widget Inspector to navigate your code as you select widgets",
+				reRunInDebugModeAction,
+				doNotAskAgainAction
+			).then(async (action) => {
+				if (action === reRunInDebugModeAction) {
+					await session.session.customRequest("terminate");
+					await vs.debug.startDebugging(
+						session.session.workspaceFolder,
+						{
+							...session.session.configuration,
+							noDebug: false,
+						},
+						session.session.parentSession,
+					);
+				} else if (action === doNotAskAgainAction) {
+					this.context.rerunInDebugModeForInspectorNavigationDoNotShow = true;
+				} else {
+					this.hasShownInspectorNoDebugWarningThisSession = true;
+				}
+			});
+
+		}
 
 		// Try to launch via service if allowed.
 		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: routeId }))
