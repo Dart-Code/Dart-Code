@@ -3,6 +3,7 @@ import { DebugProtocol } from "@vscode/debugprotocol";
 import * as path from "path";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, flutterPath, restartReasonManual } from "../shared/constants";
+import { VMEvent } from "../shared/debug/dart_debug_protocol";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
@@ -10,7 +11,6 @@ import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, Diagnostic
 import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
 import { errorString, isWebDevice, usingCustomScript } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
-import { VMEvent } from "./dart_debug_protocol";
 import { FlutterRun } from "./flutter_run";
 import { DebugAdapterLogger } from "./logging";
 import { RunDaemonBase, RunMode } from "./run_daemon_base";

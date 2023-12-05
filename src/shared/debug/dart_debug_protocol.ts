@@ -1,6 +1,6 @@
 /* eslint-disable id-blacklist */
 import * as WebSocket from "ws";
-import { PromiseCompleter } from "../shared/utils";
+import { PromiseCompleter } from "../utils";
 
 export class DebuggerResult {
 	public result: VMResponse;

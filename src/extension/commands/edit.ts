@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
 import { firstEditorColumn, showCode } from "../../shared/vscode/utils";
 import { getActiveRealFileEditor } from "../editors";
@@ -18,7 +19,7 @@ export class EditCommands implements vs.Disposable {
 		);
 	}
 
-	private async jumpToLineColInUri(uri: vs.Uri, lineNumber?: number, columnNumber?: number, inOtherEditorColumn?: boolean) {
+	private async jumpToLineColInUri(uri: vs.Uri | URI, lineNumber?: number, columnNumber?: number, inOtherEditorColumn?: boolean) {
 		if (!uri || uri.scheme !== "file")
 			return;
 

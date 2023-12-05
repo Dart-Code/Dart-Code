@@ -1,10 +1,10 @@
 import { Thread, ThreadEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
+import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef, VmExceptionMode } from "../shared/debug/dart_debug_protocol";
 import { LogCategory } from "../shared/enums";
 import { Logger } from "../shared/interfaces";
 import { PromiseCompleter, errorString } from "../shared/utils";
 import { DartDebugSession, InstanceWithEvaluateName } from "./dart_debug_impl";
-import { DebuggerResult, VMBreakpoint, VMEvent, VMIsolate, VMIsolateRef, VMLibraryRef, VMResponse, VMScript, VMScriptRef, VmExceptionMode } from "./dart_debug_protocol";
 
 export class ThreadManager {
 	public nextThreadId = 0;
