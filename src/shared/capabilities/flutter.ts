@@ -33,6 +33,7 @@ export class FlutterCapabilities {
 	get supportsRunTestsByLine() { return versionIsAtLeast(this.version, "3.10.0-0"); }
 	get supportsSdkDap() { return versionIsAtLeast(this.version, "2.13.0-0"); }
 	get requiresDdsDisabledForSdkDapTestRuns() { return !versionIsAtLeast(this.version, "3.1.0"); }
+	get requiresForcedDebugModeForNoDebug() { return versionIsAtLeast(this.version, "3.13.0-0"); } // TODO(dantup): Add upper bound when we don't need this.
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
