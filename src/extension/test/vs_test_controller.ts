@@ -55,7 +55,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.testRuns[dartCodeDebugSessionID] = { run, shouldEndWithSession };
 	}
 
-	private handleDebugSessionEnd(e: vs.DebugSession): any {
+	public handleDebugSessionEnd(e: vs.DebugSession): void {
 		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
 		if (run?.shouldEndWithSession)
 			run.run.end();

@@ -11,7 +11,7 @@ import { getRandomInt } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
-import { delay, logger, watchPromise } from "./helpers";
+import { delay, extApi, logger, watchPromise } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl", "flutter.appStart", "flutter.appStarted"];
 
@@ -171,7 +171,10 @@ export class DartDebugClient extends DebugClient {
 
 		this.debugCommands.handleDebugSessionStart(currentSession);
 		this.waitForEvent("terminated", "for handleDebugSessionEnd", tenMinutesInMs)
-			.then(() => this.debugCommands.handleDebugSessionEnd(currentSession))
+			.then(() => {
+				this.debugCommands.handleDebugSessionEnd(currentSession);
+				extApi.testController.handleDebugSessionEnd(currentSession);
+			})
 			.catch((e) => console.error(`Error while waiting for termination: ${e}`));
 
 		// We override the base method to swap for attachRequest when required, so that
