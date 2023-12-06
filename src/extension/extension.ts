@@ -572,6 +572,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(logger, workspaceContext, pubGlobal, testModel, flutterDaemon, deviceManager, devTools, flutterCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
+
+	// Debug trackers
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
 	const globalEvaluationContext = new DartDebugAdapterGlobalEvaluationContextFactory(logger);
@@ -580,7 +582,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const hexFormatter = new DartDebugAdapterHexViewFactory(logger);
 	context.subscriptions.push(hexFormatter);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", hexFormatter));
-	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", new DartDebugForcedDebugModeFactory()));
+	const forcedDebugMode = new DartDebugForcedDebugModeFactory();
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", forcedDebugMode));
+	const trackerFactories = [debugLogger, hexFormatter, forcedDebugMode];
+
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
 	// Also the providers for the initial configs.
@@ -841,7 +846,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			testCoordinator,
 			testDiscoverer,
 			testModel,
-			trackerFactories: [debugLogger, hexFormatter],
+			trackerFactories,
 			webClient,
 			workspaceContext,
 		} as InternalExtensionApi,

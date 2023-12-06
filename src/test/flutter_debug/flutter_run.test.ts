@@ -10,7 +10,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
+import { activate, closeAllOpenFiles, currentEditor, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -230,6 +230,39 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
 		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
+	});
+
+	describe("inspector can navigate", () => {
+		it("in debug mode", async () => {
+			await closeAllOpenFiles();
+			await openFile(flutterHelloWorldNavigateFromFile);
+			const config = await startDebugger(dc, flutterHelloWorldNavigateFromFile);
+			await waitAllThrowIfTerminates(dc,
+				dc.flutterAppStarted(),
+				dc.configurationSequence(),
+				dc.launch(config),
+			);
+
+			await waitFor(() => vs.window.activeTextEditor?.document.uri.scheme === "file", 250, 30000);
+			assert.equal(currentEditor().document.uri.toString(), flutterHelloWorldNavigateToFile.toString());
+		});
+
+		it("in noDebug mode", async () => {
+			await closeAllOpenFiles();
+			await openFile(flutterHelloWorldNavigateFromFile);
+			const config = await startDebugger(dc, flutterHelloWorldNavigateFromFile, { noDebug: true });
+			await waitAllThrowIfTerminates(dc,
+				dc.flutterAppStarted(),
+				dc.configurationSequence(),
+				dc.launch(config),
+			);
+
+			await waitForResult(
+				() => vs.window.activeTextEditor?.document.uri.toString() === flutterHelloWorldNavigateToFile.toString(),
+				"Did not navigate to expected file",
+				25000,
+			);
+		});
 	});
 
 	it("can override platform", async () => {
@@ -1029,7 +1062,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			if (expectation === resolvedPromise)
 				waitAfterLaunch = 10000;
 
-			await waitAllThrowIfTerminates(dc,
+			await waitAllThrowIfTerminates(
+				dc,
 				dc.waitForEvent("initialized")
 					.then(() => dc.setBreakpointsRequest({
 						// positionOf is 0-based, but seems to want 1-based
@@ -1041,8 +1075,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 					}))
 					.then(() => dc.configurationDoneRequest()),
 				expectation,
-				dc.launch(config)).then(() => delay(waitAfterLaunch),
-			);
+				dc.launch(config)
+			)
+				.then(() => delay(waitAfterLaunch));
 
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),
