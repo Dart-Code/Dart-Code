@@ -13,7 +13,7 @@ import { DebugCommandHandler } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
 import { delay, logger, watchPromise } from "./helpers";
 
-const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl", "flutter.appStart", "flutter.appStarted"];
+const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl", "flutter.appStart", "flutter.appStarted", "dart.toolEvent"];
 
 type DebugClientArgs = { runtime: string, executable: string, args: string[], port?: undefined } | { runtime?: undefined, executable?: undefined, args?: undefined, port: number };
 
@@ -157,10 +157,12 @@ export class DartDebugClient extends DebugClient {
 
 		// Set up logging.
 		for (const trackerFactory of this.debugTrackerFactories) {
-			const tracker = (await trackerFactory.createDebugAdapterTracker(currentSession))!;
-			this.currentTrackers.push(tracker);
-			if (tracker.onWillStartSession)
-				tracker.onWillStartSession();
+			const tracker = await trackerFactory.createDebugAdapterTracker(currentSession);
+			if (tracker) {
+				this.currentTrackers.push(tracker);
+				if (tracker.onWillStartSession)
+					tracker.onWillStartSession();
+			}
 		}
 		this.on("terminated", (e: DebugProtocol.TerminatedEvent) => {
 			for (const tracker of this.currentTrackers) {
