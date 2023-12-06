@@ -44,6 +44,7 @@ class Config {
 	get addSdkToTerminalPath(): boolean { return this.getConfig<boolean>("addSdkToTerminalPath", true); }
 	get additionalAnalyzerFileExtensions(): string[] { return this.getConfig<string[]>("additionalAnalyzerFileExtensions", []); }
 	get allowAnalytics(): boolean { return this.getConfig<boolean>("allowAnalytics", true); }
+	get allowFlutterForcedDebugMode(): boolean { return this.getConfig<boolean>("allowFlutterForcedDebugMode", true); }
 	get allowTestsOutsideTestFolder(): boolean { return this.getConfig<boolean>("allowTestsOutsideTestFolder", false); }
 	get analysisServerFolding(): boolean { return this.getConfig<boolean>("analysisServerFolding", true); }
 	get analyzeAngularTemplates(): boolean { return this.getConfig<boolean>("analyzeAngularTemplates", true); }
