@@ -26,6 +26,7 @@ export enum VmServiceExtension {
 	Driver = "ext.flutter.driver",
 	PaintBaselines = "ext.flutter.debugPaintBaselinesEnabled",
 	InspectorSelectMode = "ext.flutter.inspector.show",
+	InspectorAddPubRootDirectories = "ext.flutter.inspector.addPubRootDirectories",
 	InspectorSetPubRootDirectories = "ext.flutter.inspector.setPubRootDirectories",
 	BrightnessOverride = "ext.flutter.brightnessOverride",
 	RepaintRainbow = "ext.flutter.repaintRainbow",

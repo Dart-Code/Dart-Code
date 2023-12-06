@@ -69,7 +69,7 @@ export class DebugCommands implements IAmDisposable {
 	private autoCancelNextInspectWidgetMode = false;
 
 	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker | undefined, private context: Context, private workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly devTools: DevToolsManager) {
-		this.vmServices = new VmServiceExtensions(logger, this, workspaceContext);
+		this.vmServices = new VmServiceExtensions(logger, this, workspaceContext, flutterCapabilities);
 		this.devTools.debugCommands = this;
 		this.debugOptions.name = "Dart Debug Options";
 		this.disposables.push(this.debugOptions);

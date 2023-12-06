@@ -27,6 +27,7 @@ export class FlutterCapabilities {
 	get supportsRestartDebounce() { return versionIsAtLeast(this.version, "1.21.0-0"); }
 	get supportsRunSkippedTests() { return versionIsAtLeast(this.version, "2.1.0-11"); }
 	get supportsShowWebServerDevice() { return versionIsAtLeast(this.version, "1.26.0-0"); }
+	get supportsAddPubRootDirectories() { return versionIsAtLeast(this.version, "3.10.0"); }
 	get supportsWebRendererOption() { return versionIsAtLeast(this.version, "1.25.0-0"); }
 	get supportsDevToolsServerAddress() { return versionIsAtLeast(this.version, "1.26.0-12"); }
 	get supportsRunningIntegrationTests() { return versionIsAtLeast(this.version, "2.2.0-10"); }

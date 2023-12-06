@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { isWin } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
@@ -48,7 +49,12 @@ export class VmServiceExtensions {
 	/// remove it from here.
 	private currentExtensionValues: { [key: string]: any } = {};
 
-	constructor(private readonly logger: Logger, private readonly debugCommands: DebugCommands, private readonly workspaceContext: WorkspaceContext) {
+	constructor(
+		private readonly logger: Logger,
+		private readonly debugCommands: DebugCommands,
+		private readonly workspaceContext: WorkspaceContext,
+		private readonly flutterCapabilities: FlutterCapabilities,
+	) {
 		this.debugCommands.onWillHotRestart(() => this.markAllServiceExtensionsUnloaded());
 	}
 
@@ -57,8 +63,13 @@ export class VmServiceExtensions {
 		if (e.event === "dart.serviceExtensionAdded") {
 			this.handleServiceExtensionLoaded(session, e.body.extensionRPC as VmServiceExtension, e.body.isolateId as string | null | undefined);
 
+			const useAddPubRootDirectories = this.flutterCapabilities.supportsAddPubRootDirectories;
+			const pubRootDirectoriesService = useAddPubRootDirectories
+				? VmServiceExtension.InspectorAddPubRootDirectories
+				: VmServiceExtension.InspectorSetPubRootDirectories;
+
 			try {
-				if (e.body.extensionRPC === VmServiceExtension.InspectorSetPubRootDirectories) {
+				if (e.body.extensionRPC === pubRootDirectoriesService) {
 					// TODO(helin24): Check if all of the places that call `getAllProjectFolders` need similar settings; we could potentially simplify the arguments.
 					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !this.workspaceContext.config.forceFlutterWorkspace, searchDepth: config.projectSearchDepth, onlyWorkspaceRoots: this.workspaceContext.config.forceFlutterWorkspace });
 
@@ -72,7 +83,7 @@ export class VmServiceExtensions {
 						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
 					}
 
-					await this.callServiceExtension(e.session, VmServiceExtension.InspectorSetPubRootDirectories, params);
+					await this.callServiceExtension(e.session, pubRootDirectoriesService, params);
 				}
 			} catch (e) {
 				this.logger.error(e);
