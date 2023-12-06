@@ -233,6 +233,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	describe("inspector can navigate", () => {
+		beforeEach(function () {
+			// These tests only work for the new DAP because they rely on the mapping of
+			// package URIs into file URIs that we didn't support in the legacy DAPs.
+			if (!dc.isDartDap)
+				this.skip();
+		});
+
 		it("in debug mode", async () => {
 			await closeAllOpenFiles();
 			await openFile(flutterHelloWorldNavigateFromFile);
