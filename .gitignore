@@ -1,9 +1,9 @@
 .crash_dumps/
-.DS_Store
-.dart_code_test_logs/
 .dart_code_test_data_dir/
-.dcud/
+.dart_code_test_logs/
 .dart_tool/
+.dcud/
+.DS_Store
 .flutter-plugins/
 .nyc_output/
 .packages
@@ -12,11 +12,13 @@
 .vscode-test/
 .vscode/.browse.VC.db*
 *.log
+**/test_projects/**/.flutter-plugins*
+**/test_projects/**/windows/
 build/
 coverage/
+Generated.xcconfig
 ios/.generated/
 logs/
 node_modules/
 out/
 pubspec.lock
-Generated.xcconfig
