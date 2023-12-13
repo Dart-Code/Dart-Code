@@ -1,3 +1,7 @@
 analyzer:
   exclude:
     - test/excluded_by_analysis_options/**
+
+linter:
+  rules:
+    - depend_on_referenced_packages

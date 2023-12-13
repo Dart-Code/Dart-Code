@@ -90,14 +90,18 @@ describe("pub add", () => {
 	});
 
 	it("can add from a quick fix if not listed in pubspec.yaml", async () => {
+		// Because we've enabled the depend_on_referenced_packages lint, we'll get two diagnostics
+		// for this, but expect only one fix.
 		const packageName = "built_value";
 		assert.equal(pubspecContainsPackage(packageName), false);
-		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
+		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart';`));
 
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
-		const addDependency = fixResults.find((r) => r.title.includes(`Add '${packageName}' to dependencies`))!;
+		const addDependencyFixes = fixResults.filter((r) => r.title.includes(`Add '${packageName}' to dependencies`));
+		assert.equal(addDependencyFixes.length, 1);
+		const addDependencyFix = addDependencyFixes[0];
 
-		await vs.commands.executeCommand(addDependency.command!.command, ...addDependency.command!.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+		await vs.commands.executeCommand(addDependencyFix.command!.command, ...addDependencyFix.command!.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 		await waitFor(() => pubspecContainsText(packageName));
 		assert.equal(pubspecContainsPackage(packageName), true);
 	});
@@ -105,10 +109,10 @@ describe("pub add", () => {
 	it("cannot add from a quick fix if already listed in pubspec.yaml", async () => {
 		const packageName = "convert";
 		assert.equal(pubspecContainsPackage(packageName), true);
-		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart'`));
+		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart';`));
 
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
-		const addDependency = fixResults.find((r) => r.title.includes(`Add '${packageName}' to dependencies`));
-		assert.equal(!!addDependency, false);
+		const addDependencyFixes = fixResults.filter((r) => r.title.includes(`Add '${packageName}' to dependencies`));
+		assert.equal(addDependencyFixes.length, 0);
 	});
 });

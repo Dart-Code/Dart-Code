@@ -54,6 +54,23 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		diagnosticsWithPackageNames = diagnosticsWithPackageNames
 			.filter((obj) => obj.packageName && !pubspecContent.includes(`  ${obj.packageName}`));
 
+		// Next, remove any diagnostics that have the same package name and overlap with the same range.
+		// https://github.com/Dart-Code/Dart-Code/issues/4896
+		for (let i = 0; i < diagnosticsWithPackageNames.length; i++) {
+			const packageName = diagnosticsWithPackageNames[i].packageName;
+			const range = diagnosticsWithPackageNames[i].diagnostic.range;
+
+			for (let j = i + 1; j < diagnosticsWithPackageNames.length; j++) {
+				const packageName2 = diagnosticsWithPackageNames[i].packageName;
+				const range2 = diagnosticsWithPackageNames[i].diagnostic.range;
+
+				if (packageName === packageName2 && !range.intersection(range2)?.isEmpty) {
+					diagnosticsWithPackageNames.splice(j, 1);
+					j--;
+				}
+			}
+		}
+
 		if (!diagnosticsWithPackageNames.length)
 			return;
 
