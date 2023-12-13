@@ -29,6 +29,30 @@ describe.only(`debugger type`, () => {
 		{ program: "test/temp_test.dart", debugger: DebuggerType.FlutterTest },
 		{ program: "test/tool/temp_tool_test.dart", debugger: DebuggerType.FlutterTest },
 		{ program: "tool/temp_tool.dart", debugger: DebuggerType.Dart },
+		// CWD here, but Program in another Flutter project.
+		{
+			// CWD defaults to this project.
+			debugger: DebuggerType.Flutter,
+			program: "../dart_nested_flutter/nested_flutter_example/lib/temp.dart",
+		},
+		// CWD in another Flutter project, but tool here.
+		{
+			cwd: "../dart_nested_flutter/nested_flutter_example",
+			debugger: DebuggerType.Dart,
+			program: "../../flutter_hello_world/tool/temp_tool.dart",
+		},
+		// CWD here, but Program in another Dart project.
+		{
+			// CWD defaults to this project.
+			debugger: DebuggerType.Dart,
+			program: "../hello_world/bin/temp.dart",
+		},
+		// CWD in another Dart project, but app here.
+		{
+			cwd: "../hello_world",
+			debugger: DebuggerType.Flutter,
+			program: "../flutter_hello_world/lib/temp.dart",
+		},
 	];
 	for (const test of tests) {
 		let program = test.program;

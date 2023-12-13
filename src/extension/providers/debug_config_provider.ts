@@ -313,13 +313,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		let debugType = DebuggerType.Dart;
 		let firstPathSegment: string | undefined;
-		if (debugConfig.cwd && debugConfig.program && isWithinPath(debugConfig.program, debugConfig.cwd)) {
-			const relativePath = debugConfig.program ? path.relative(debugConfig.cwd, debugConfig.program) : undefined;
+		const projectRoot: string | undefined = debugConfig.projectRootPath ?? debugConfig.cwd;
+		if (projectRoot && debugConfig.program && isWithinPath(debugConfig.program, projectRoot)) {
+			const relativePath = debugConfig.program ? path.relative(projectRoot, debugConfig.program) : undefined;
 			firstPathSegment = relativePath?.split(path.sep)[0];
 		}
 		if (firstPathSegment === "bin" || firstPathSegment === "tool" || firstPathSegment === ".dart_tool") {
 			logger.info(`Program is 'bin', 'tool', '.dart_tool' so will use Dart debugger`);
-		} else if (isFlutterProjectFolder(debugConfig.cwd) || this.wsContext.config.forceFlutterDebug) {
+		} else if (isFlutterProjectFolder(projectRoot) || this.wsContext.config.forceFlutterDebug) {
 			debugType = DebuggerType.Flutter;
 		} else if (firstPathSegment === "web") {
 			debugType = DebuggerType.Web;
@@ -330,7 +331,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (isTest)
 			logger.info(`Detected launch project as a Test project`);
-		const canUsePackageTest = isTest && debugConfig.cwd && projectCanUsePackageTest(debugConfig.cwd, this.wsContext.config);
+		const canUsePackageTest = isTest && projectRoot && projectCanUsePackageTest(projectRoot, this.wsContext.config);
 		if (isTest && !canUsePackageTest)
 			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
 		if (isTest) {
@@ -447,7 +448,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Compute a best project root and store it against the config. This can be used to pass to tools like
 		// DevTools to ensure we have the right root regardless of the actual cwd we end up using.
-		const bestProjectRoot = debugConfig.program ? locateBestProjectRoot(debugConfig.program) : undefined;
+		// We allow this to be outside of the project to support some use cases of spawning utility scripts from outside
+		// this project (https://github.com/Dart-Code/Dart-Code/issues/4867).
+		const bestProjectRoot = debugConfig.program ? locateBestProjectRoot(debugConfig.program, true) : undefined;
 		debugConfig.projectRootPath = bestProjectRoot;
 
 		// If we don't have a cwd then find the best one from the project root.
