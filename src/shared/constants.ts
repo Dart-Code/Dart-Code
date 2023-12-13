@@ -234,10 +234,10 @@ export const dartRecommendedConfig = {
 	"editor.tabCompletion": "onlySnippets",
 
 	// By default, VS Code will populate code completion with words found in the
-	// current file when a language service does not provide its own completions.
+	// matching documents when a language service does not provide its own completions.
 	// This results in code completion suggesting words when editing comments and
 	// strings. This setting will prevent that.
-	"editor.wordBasedSuggestions": false,
+	"editor.wordBasedSuggestions": "off",
 };
 
 export const defaultLaunchJson = JSON.stringify(
