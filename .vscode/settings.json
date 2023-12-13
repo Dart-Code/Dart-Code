@@ -11,7 +11,7 @@
 	"files.insertFinalNewline": true,
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"editor.codeActionsOnSave": {
-		"source.organizeImports": true
+		"source.organizeImports": "explicit"
 	},
 	"dart.extensionLogFile": "logs/extension.txt",
 	"dart.analyzerLogFile": "logs/analyzer.txt",
