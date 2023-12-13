@@ -16,7 +16,7 @@ import { TestNode, TreeNode } from "../shared/test/test_model";
 import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
-import { createFolderForFile, fsPath, tryDeleteFile } from "../shared/utils/fs";
+import { createFolderForFile, fsPath, getRandomInt, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -440,6 +440,9 @@ export let fileSafeCurrentTestName = "unknown";
 beforeEach("stash current test name", function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
 	fileSafeCurrentTestName = filenameSafe(currentTestName);
+	if (fileSafeCurrentTestName.length >= 100) {
+		fileSafeCurrentTestName = fileSafeCurrentTestName.substring(0, 100) + getRandomInt(1000, 10000);
+	}
 
 	deferUntilLast("Reset current test name", () => fileSafeCurrentTestName = "unknown");
 });
@@ -1063,7 +1066,7 @@ export async function waitForNextAnalysis(action: () => void | Thenable<void>, t
 	await withTimeout(nextAnalysis, "Analysis did not complete within specified timeout", timeoutSeconds);
 }
 
-export async function getResolvedDebugConfiguration(extraConfiguration?: { [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
+export async function getResolvedDebugConfiguration(extraConfiguration?: { program: string | undefined, [key: string]: any }): Promise<(vs.DebugConfiguration & DartLaunchArgs)> {
 	const debugConfig: vs.DebugConfiguration = Object.assign({}, {
 		name: `Dart & Flutter (${currentTestName})`,
 		request: "launch",
@@ -1083,6 +1086,7 @@ export async function getLaunchConfiguration(script?: URI | string, extraConfigu
 
 export async function getAttachConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	const attachConfig = Object.assign({}, {
+		program: undefined,
 		request: "attach",
 	}, extraConfiguration);
 	return await getResolvedDebugConfiguration(attachConfig);

@@ -7,7 +7,7 @@ import { waitFor } from "../../shared/utils/promises";
 import { flutterTestDeviceId, flutterTestDeviceIsWeb } from "../debug_helpers";
 import { activate, createTempTestFile, extApi, flutterHelloWorldFolder, getResolvedDebugConfiguration, setConfigForTest } from "../helpers";
 
-describe(`flutter debugger`, () => {
+describe.only(`debugger type`, () => {
 	beforeEach("activate", () => activate(null));
 
 	beforeEach("Wait for device to be available", async () => {
@@ -19,56 +19,73 @@ describe(`flutter debugger`, () => {
 			await waitFor(() => extApi.deviceManager!.getDevice(flutterTestDeviceId));
 	});
 
-	describe("picks the correct debugger", async () => {
-		const tests: { [key: string]: DebuggerType } = {
-			// All POSIX paths, Windows handled below.
-			"bin/temp_tool.dart": DebuggerType.Dart,
-			"lib/temp.dart": DebuggerType.Flutter,
-			"lib/temp1_test.dart": DebuggerType.Flutter,
-			"lib/temp2_test.dart*": DebuggerType.FlutterTest, // Special case for allowTestsOutsideTestFolder
-			"test/temp_test.dart": DebuggerType.FlutterTest,
-			"test/tool/temp_tool_test.dart": DebuggerType.FlutterTest,
-			"tool/temp_tool.dart": DebuggerType.Dart,
-		};
-		for (let testPath of Object.keys(tests)) {
-			const isSpecialTestOutsideTest = testPath.endsWith("*");
-			testPath = isSpecialTestOutsideTest ? testPath.substring(0, testPath.length - 1) : testPath;
+	const tests: Array<{ program: string, cwd?: string, debugger: DebuggerType }> = [
+		// All POSIX paths, Windows handled below.
+		// These files should not exist, they are created as part of the test.
+		{ program: "bin/temp_tool.dart", debugger: DebuggerType.Dart },
+		{ program: "lib/temp.dart", debugger: DebuggerType.Flutter },
+		{ program: "lib/temp1_test.dart", debugger: DebuggerType.Flutter },
+		{ program: "lib/temp2_test.dart*", debugger: DebuggerType.FlutterTest }, // Special case for allowTestsOutsideTestFolder
+		{ program: "test/temp_test.dart", debugger: DebuggerType.FlutterTest },
+		{ program: "test/tool/temp_tool_test.dart", debugger: DebuggerType.FlutterTest },
+		{ program: "tool/temp_tool.dart", debugger: DebuggerType.Dart },
+	];
+	for (const test of tests) {
+		let program = test.program;
+		const { cwd, debugger: expectedDebuggerType } = test;
 
-			const absolutePath = path.join(fsPath(flutterHelloWorldFolder), testPath);
-			const expectedDebuggerType = isSpecialTestOutsideTest ? DebuggerType.FlutterTest : tests[testPath];
+		describe(program, async () => {
+			const isSpecialTestOutsideTest = program.endsWith("*");
+			program = program.endsWith("*") ? program.substring(0, program.length - 1) : program;
 
-			describe(`${testPath} ${isSpecialTestOutsideTest ? " (test outside of test folder)" : ""}`, async () => {
-				beforeEach(async () => {
-					createTempTestFile(absolutePath);
-					if (isSpecialTestOutsideTest) {
-						await setConfigForTest("dart", "allowTestsOutsideTestFolder", true);
-					}
-				});
+			let absoluteCwd =
+				cwd && !path.isAbsolute(cwd)
+					? path.normalize(path.join(fsPath(flutterHelloWorldFolder), cwd))
+					: cwd;
+			const absolutePath = path.normalize(path.join(absoluteCwd ?? fsPath(flutterHelloWorldFolder), program));
 
-				it("absolute", async () => {
-					const resolvedConfig = await getResolvedDebugConfiguration({
-						program: absolutePath,
-					})!;
-					assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-				});
-				it("POSIX relative", async () => {
-					const resolvedConfig = await getResolvedDebugConfiguration({
-						cwd: fsPath(flutterHelloWorldFolder),
-						program: path.join(testPath),
-					})!;
-					assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-				});
-				if (isWin) {
-					const windowsTestPath = testPath.replace("\\", "/");
-					it("Windows relative", async () => {
-						const resolvedConfig = await getResolvedDebugConfiguration({
-							cwd: fsPath(flutterHelloWorldFolder),
-							program: path.join(windowsTestPath),
-						})!;
-						assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-					});
+			beforeEach(async () => {
+				createTempTestFile(absolutePath);
+				if (isSpecialTestOutsideTest) {
+					await setConfigForTest("dart", "allowTestsOutsideTestFolder", true);
 				}
 			});
-		}
-	});
+
+			it(`absolute: ${absolutePath} (cwd: ${absoluteCwd})`, async () => {
+				const resolvedConfig = await getResolvedDebugConfiguration({
+					cwd: absoluteCwd,
+					program: absolutePath,
+				})!;
+				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
+			});
+			if (!absoluteCwd) {
+				absoluteCwd = fsPath(flutterHelloWorldFolder);
+				it(`absolute: ${absolutePath} (cwd: ${absoluteCwd})`, async () => {
+					const resolvedConfig = await getResolvedDebugConfiguration({
+						cwd: absoluteCwd,
+						program: absolutePath,
+					})!;
+					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
+				});
+			}
+			it(`POSIX relative: ${program} (cwd: ${cwd})`, async () => {
+				const resolvedConfig = await getResolvedDebugConfiguration({
+					cwd,
+					program,
+				})!;
+				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
+			});
+			if (isWin) {
+				const windowsProgram = program.replace(/\//g, "\\");
+				const windowsCwd = cwd?.replace(/\//g, "\\");
+				it(`Windows relative: ${windowsProgram} (cwd: ${windowsCwd})`, async () => {
+					const resolvedConfig = await getResolvedDebugConfiguration({
+						cwd: windowsCwd,
+						program: windowsProgram,
+					})!;
+					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
+				});
+			}
+		});
+	}
 });

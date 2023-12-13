@@ -8,7 +8,7 @@ import { fsPath } from "./fs";
 import { TestOutlineInfo } from "./outline_das";
 
 
-export function getLaunchConfig(noDebug: boolean, path: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests?: boolean, template?: any | undefined): BasicDebugConfiguration {
+export function getLaunchConfig(noDebug: boolean, path: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests?: boolean, template?: any | undefined): { program: string } & BasicDebugConfiguration {
 	let programString = path;
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)

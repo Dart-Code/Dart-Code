@@ -98,7 +98,7 @@ const template = {
 };
 
 function getConfigName(input: string) {
-	return input.replace("/", "_/_").split("_").map(titleCase).join(" ");
+	return input.replace(/\//g, "_/_").split("_").map(titleCase).join(" ");
 }
 
 function getDebugServerConfigName(debugType: string) {

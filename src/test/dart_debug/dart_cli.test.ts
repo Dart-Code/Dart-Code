@@ -29,7 +29,7 @@ describe("dart cli debugger", () => {
 		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
-	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
+	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { program: string | undefined, [key: string]: any }): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
 		const config = await getAttachConfiguration(Object.assign({ vmServiceUri }, extraConfiguration));
 		if (!config)
 			throw new Error(`Could not get launch configuration (got ${config})`);
@@ -52,7 +52,7 @@ describe("dart cli debugger", () => {
 
 		it("using open file", async () => {
 			await openFile(helloWorldMainFile);
-			const resolvedConfig = await getResolvedDebugConfiguration({})!;
+			const resolvedConfig = await getResolvedDebugConfiguration({ program: undefined })!;
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
@@ -1551,7 +1551,7 @@ insp=<inspected variable>
 			];
 			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 
-			const config = await attachDebugger(undefined, { vmServiceInfoFile: tempVmServiceInfoFile });
+			const config = await attachDebugger(undefined, { program: undefined, vmServiceInfoFile: tempVmServiceInfoFile });
 			await waitAllThrowIfTerminates(dc,
 				dc.configurationSequence(),
 				dc.waitForEvent("terminated"),
