@@ -7,7 +7,7 @@ import { waitFor } from "../../shared/utils/promises";
 import { flutterTestDeviceId, flutterTestDeviceIsWeb } from "../debug_helpers";
 import { activate, createTempTestFile, extApi, flutterHelloWorldFolder, getResolvedDebugConfiguration, setConfigForTest } from "../helpers";
 
-describe.only(`debugger type`, () => {
+describe(`debugger type`, () => {
 	beforeEach("activate", () => activate(null));
 
 	beforeEach("Wait for device to be available", async () => {
