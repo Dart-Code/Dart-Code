@@ -1,11 +1,9 @@
-import { strict as assert } from "assert";
-import * as path from "path";
 import { isWin } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
-import { fsPath } from "../../shared/utils/fs";
-import { activate, createTempTestFile, extApi, getResolvedDebugConfiguration, helloWorldFolder, setConfigForTest } from "../helpers";
+import { activate, extApi, helloWorldFolder } from "../helpers";
+import { runDebuggerTypeTests } from "../shared/debugger_types";
 
-describe("debugger type", () => {
+describe("dart debugger type", async () => {
 	beforeEach("activate", () => activate(null));
 
 	beforeEach(function () {
@@ -13,56 +11,17 @@ describe("debugger type", () => {
 			this.skip();
 	});
 
-	const tests: { [key: string]: DebuggerType } = {
+	const tests: Array<{ program: string, cwd?: string, debugger: DebuggerType }> = [
 		// All POSIX paths, Windows handled below.
-		"bin/temp.dart": DebuggerType.Dart,
-		"bin/temp_tool.dart": DebuggerType.Dart,
-		"lib/temp1_test.dart": DebuggerType.Dart,
-		"lib/temp2_test.dart*": DebuggerType.DartTest, // Special case for allowTestsOutsideTestFolder
-		"test/temp_test.dart": DebuggerType.DartTest,
-		"test/tool/temp_tool_test.dart": DebuggerType.DartTest,
-		"tool/temp_tool.dart": DebuggerType.Dart,
-	};
-	for (let testPath of Object.keys(tests)) {
-		const isSpecialTestOutsideTest = testPath.endsWith("*");
-		testPath = testPath.endsWith("*") ? testPath.substring(0, testPath.length - 1) : testPath;
+		// These files should not exist, they are created as part of the test.
+		{ program: "bin/temp.dart", debugger: DebuggerType.Dart },
+		{ program: "bin/temp_tool.dart", debugger: DebuggerType.Dart },
+		{ program: "lib/temp1_test.dart", debugger: DebuggerType.Dart },
+		{ program: "lib/temp2_test.dart*", debugger: DebuggerType.DartTest }, // Special case for allowTestsOutsideTestFolder
+		{ program: "test/temp_test.dart", debugger: DebuggerType.DartTest },
+		{ program: "test/tool/temp_tool_test.dart", debugger: DebuggerType.DartTest },
+		{ program: "tool/temp_tool.dart", debugger: DebuggerType.Dart },
+	];
 
-		const absolutePath = path.join(fsPath(helloWorldFolder), testPath);
-		const expectedDebuggerType = tests[testPath];
-
-		describe(`${testPath} ${isSpecialTestOutsideTest ? " (test outside of test folder)" : ""}`, async () => {
-			beforeEach(async () => {
-				createTempTestFile(absolutePath);
-				if (isSpecialTestOutsideTest) {
-					await setConfigForTest("dart", "allowTestsOutsideTestFolder", true);
-				}
-			});
-
-			it("absolute", async () => {
-				console.log(`starting test`);
-				const resolvedConfig = await getResolvedDebugConfiguration({
-					program: absolutePath,
-				})!;
-				assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-				console.log(`done with test!`);
-			});
-			it("POSIX relative", async () => {
-				const resolvedConfig = await getResolvedDebugConfiguration({
-					cwd: fsPath(helloWorldFolder),
-					program: path.join(testPath),
-				})!;
-				assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-			});
-			if (isWin) {
-				const windowsTestPath = testPath.replace("\\", "/");
-				it("Windows relative", async () => {
-					const resolvedConfig = await getResolvedDebugConfiguration({
-						cwd: fsPath(helloWorldFolder),
-						program: path.join(windowsTestPath),
-					})!;
-					assert.equal(resolvedConfig.debuggerType, expectedDebuggerType);
-				});
-			}
-		});
-	}
+	await runDebuggerTypeTests(tests, helloWorldFolder);
 });
