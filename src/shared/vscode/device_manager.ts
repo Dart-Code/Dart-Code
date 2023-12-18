@@ -328,7 +328,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	/// having exited) or there is no response within 5 seconds.
 	public async tryGetSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse | undefined> {
 		return withTimeout(
-			this.daemon.getSupportedPlatforms(projectRoot),
+			this.daemon.daemonStarted.then(() => this.daemon.getSupportedPlatforms(projectRoot)),
 			"The daemon did not respond to getSupportedPlatforms",
 			this.unresponsiveTimeoutPeriodSeconds,
 		).then(
@@ -417,13 +417,20 @@ export class FlutterDeviceManager implements vs.Disposable {
 			const projectFolders = this.workspaceContext.config.forceFlutterWorkspace ? [""] : await getAllProjectFolders(this.logger, undefined, { requirePubspec: true, searchDepth: this.config.projectSearchDepth });
 			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
-			const getPlatformPromises = projectFolders.map((folder) => this.daemon.getSupportedPlatforms(folder));
-			const resps = await Promise.all(getPlatformPromises).catch((e): f.SupportedPlatformsResponse[] => {
-				this.logger.error(e);
-				return [];
-			});
 
-			const supportedTypes = unique(flatMap(resps, (r) => r.platforms));
+			const tryGet = (folder: string) => this.tryGetSupportedPlatforms(folder);
+			const getPlatformPromises = projectFolders.map(async (folder: string): Promise<f.PlatformType[]> => {
+				try {
+					const platforms = await tryGet(folder);
+					return platforms?.platforms ?? [];
+				} catch (e) {
+					this.logger.error(e);
+					return [];
+				}
+			});
+			const resps = await Promise.all(getPlatformPromises);
+
+			const supportedTypes = unique(flatMap(resps, (r) => r));
 			this.logger.info(`Supported platforms for the workspace are ${supportedTypes.join(", ")}`);
 
 			resolve(supportedTypes);
