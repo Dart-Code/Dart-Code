@@ -122,20 +122,24 @@ async function promptToInstallFlutterExtension(): Promise<boolean> {
 		installExtension,
 	);
 	if (res === installExtension) {
-		await vs.window.withProgress({ location: vs.ProgressLocation.Notification },
-			(progress) => {
-				progress.report({ message: "Installing Flutter extension" });
-
-				return new Promise<void>((resolve) => {
-					vs.extensions.onDidChange((e) => resolve());
-					void vs.commands.executeCommand("workbench.extensions.installExtension", flutterExtensionIdentifier);
-				});
-			},
-		);
+		await installExtensionWithProgress("Installing Flutter extension", flutterExtensionIdentifier);
 		void promptToReloadExtension();
 	}
 
 	return false;
+}
+
+export async function installExtensionWithProgress(message: string, extensionIdentifier: string): Promise<void> {
+	await vs.window.withProgress({ location: vs.ProgressLocation.Notification },
+		(progress) => {
+			progress.report({ message });
+
+			return new Promise<void>((resolve) => {
+				vs.extensions.onDidChange((e) => resolve());
+				void vs.commands.executeCommand("workbench.extensions.installExtension", extensionIdentifier);
+			});
+		},
+	);
 }
 
 async function promptToShowReleaseNotes(versionDisplay: string, versionLink: string): Promise<boolean> {

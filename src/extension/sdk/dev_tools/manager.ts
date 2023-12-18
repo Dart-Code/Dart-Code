@@ -24,6 +24,7 @@ import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
 import { config } from "../../config";
 import { PubGlobal } from "../../pub/global";
+import { installExtensionWithProgress } from "../../user_prompts";
 import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
@@ -42,9 +43,7 @@ let portToBind: number | undefined;
 export class DevToolsManager implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
 	private readonly statusBarItem = vs.languages.createLanguageStatusItem("dart.devTools", ANALYSIS_FILTERS);
-	private devToolsActivationPromise: Promise<void> | undefined;
 	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
-	public get devToolsActivation() { return this.devToolsActivationPromise; }
 	private service?: DevToolsService;
 	public debugCommands: DebugCommands | undefined;
 
@@ -111,8 +110,6 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	public async start(silent = false): Promise<string | undefined> {
-		// If we're mid-silent-activation, wait until that's finished.
-		await this.devToolsActivationPromise;
 
 		if (!this.devtoolsUrl) {
 			this.setNotStartedStatusBar();
@@ -432,8 +429,7 @@ export class DevToolsManager implements vs.Disposable {
 					this.logger.error(e);
 				}
 			}
-			this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.dartCapabilities);
-			const service = this.service;
+			const service = this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.dartCapabilities);
 			this.disposables.push(service);
 
 			service.registerForServerStarted((n) => {
@@ -456,8 +452,15 @@ export class DevToolsManager implements vs.Disposable {
 				}
 
 				// Finally, trigger a check of extensions
-				if (service.capabilities.supportsVsCodeExtensions)
-					setTimeout(() => this.checkForExtensionRecommendations(), twentySecondsInMs);
+				// For initial testing, extension recommendations are allow-list. This comes from config so it can be overridden
+				// by the user to allow testing the whole flow before being shipped in the list.
+				//
+				// Adding "*" to the list allows all extension identifiers, useful for testing.
+				const defaultAllowList: string[] = [
+					// "myPublisher.myExtension",
+				];
+				const effectiveAllowList = config.extensionRecommendationAllowList ?? defaultAllowList;
+				setTimeout(() => this.promptForExtensionRecommendations(effectiveAllowList), twentySecondsInMs);
 
 				portToBind = n.port;
 				resolve(`http://${n.host}:${n.port}/`);
@@ -492,17 +495,37 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 
-	private async checkForExtensionRecommendations(): Promise<void> {
+	public async promptForExtensionRecommendations(extensionAllowList: string[]): Promise<void> {
+		if (!config.showExtensionRecommendations)
+			return;
+
+		if (!this.service)
+			return;
+
+		// Need a server that has the new API for getting extensions.
+		if (!this.service.capabilities.supportsVsCodeExtensions)
+			return;
+
+		// Need an SDK that includes a version of devtools_shared with all desired fixes.
+		if (!this.dartCapabilities.supportsDevToolsVsCodeExtensions)
+			return;
+
+
 		const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !this.context.workspaceContext.config.forceFlutterWorkspace, searchDepth: config.projectSearchDepth, onlyWorkspaceRoots: this.context.workspaceContext.config.forceFlutterWorkspace });
 		const results = await this.service?.discoverExtensions(projectFolders);
 		if (!results)
 			return;
 
+		const allowAllExtensions = !!extensionAllowList.includes("*");
+
 		const ignoredExtensions = this.context.getIgnoredExtensionRecommendationIdentifiers();
 		const installedExtension = vs.extensions.all.map((e) => e.id);
 		const promotableExtensions = Object.keys(results).flatMap((projectRoot) => results[projectRoot]?.extensions ?? [])
+			// Remove user-ignored extensions.
 			.filter((e) => ignoredExtensions.find((ignored) => ignored.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined)
-			.filter((e) => installedExtension.find((installed) => installed.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined);
+			// Remove already-installed extensions.
+			.filter((e) => installedExtension.find((installed) => installed.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined)
+			.filter((e) => allowAllExtensions || extensionAllowList.find((installed) => installed.trim().toLowerCase() === e.extension.trim().toLowerCase()) !== undefined);
 		// If there are multiple we'll just pick the first. The user will either install or ignore
 		// and then next time we'd pick the next.
 		const promotableExtension = promotableExtensions?.at(0);
@@ -514,7 +537,7 @@ export class DevToolsManager implements vs.Disposable {
 		const installPackage = `Install ${extension.extension}`;
 		const action = await vs.window.showInformationMessage(`A third-party extension is available for package:${extension.packageName}`, installPackage, noThanksAction);
 		if (action === installPackage) {
-			await vs.commands.executeCommand("workbench.extensions.installExtension", extension.extension);
+			await installExtensionWithProgress(`Installing ${extension.extension}`, extension.extension);
 		} else {
 			this.context.ignoreExtensionRecommendation(extension.extension);
 		}

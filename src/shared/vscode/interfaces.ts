@@ -45,7 +45,9 @@ export interface InternalExtensionApi {
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;
 	devTools: {
+		start(): Promise<string | undefined>;
 		devtoolsUrl: Thenable<string> | undefined;
+		promptForExtensionRecommendations(allowList: string[]): Promise<void>;
 	};
 	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
