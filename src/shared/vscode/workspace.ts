@@ -4,6 +4,26 @@ import { DartWorkspaceContext } from "../interfaces";
 export class Context {
 	private constructor(private readonly context: ExtensionContext, public readonly workspaceContext: DartWorkspaceContext) { }
 
+	// Helper we can manually call in the constructor when testing.
+	public clear(): void {
+		const clearableKeys = [
+			"devToolsNotificationLastShown",
+			"devToolsNotificationDoNotShowAgain",
+			"breakpointInNonDebuggableFileDoNotShowAgain",
+			"hasWarnedAboutFormatterSyntaxLimitation",
+			"hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation",
+			"hasNotifiedAboutProfileModeDefaultConfiguration",
+			"lastSeenVersion",
+			"lastUsedNewProjectPath",
+			"ignoredExtensionRecommendations",
+			"workspaceLastFlutterDeviceId",
+		];
+		for (const clearableKey of clearableKeys) {
+			void this.context.globalState.update(clearableKey, undefined);
+			void this.context.workspaceState.update(clearableKey, undefined);
+		}
+	}
+
 	public static for(context: ExtensionContext, workspaceContext: DartWorkspaceContext): Context {
 		return new Context(context, workspaceContext);
 	}
