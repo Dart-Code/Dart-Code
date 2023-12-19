@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import { renameSync } from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
@@ -213,6 +214,17 @@ describe("dart cli debugger", () => {
 		await closeAllOpenFiles();
 		const config = await getLaunchConfiguration(undefined);
 		assert.equal(config!.program, fsPath(helloWorldMainFile));
+	});
+
+	it("resolves program as bin/(project_name).dart if no file is open/provided", async () => {
+		// Rename bin/main to bin/hello_world to similate what 'dart create' does.
+		const helloWorldHelloWorldFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/hello_world.dart"));
+		renameSync(fsPath(helloWorldMainFile), fsPath(helloWorldHelloWorldFile));
+		defer("Restore main file", () => renameSync(fsPath(helloWorldHelloWorldFile), fsPath(helloWorldMainFile)));
+
+		await closeAllOpenFiles();
+		const config = await getLaunchConfiguration(undefined);
+		assert.equal(config!.program, fsPath(helloWorldHelloWorldFile));
 	});
 
 	it("uses the launch config program regardless of what's open", async () => {

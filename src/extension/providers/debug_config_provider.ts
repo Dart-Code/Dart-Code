@@ -499,9 +499,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Use the open file as a clue to find the best project root, then search from there.
 		const projectRoot = (openFile && locateBestProjectRoot(openFile)) || folder;
 		if (projectRoot) {
+			const projectFolderName = path.basename(projectRoot);
 			const commonLaunchPaths = [
 				path.join(projectRoot, "lib", "main.dart"),
 				path.join(projectRoot, "bin", "main.dart"),
+				path.join(projectRoot, "bin", `${projectFolderName}.dart`),
 			];
 			for (const launchPath of commonLaunchPaths) {
 				if (fs.existsSync(launchPath)) {
