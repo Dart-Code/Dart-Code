@@ -103,6 +103,7 @@ import { RefactorCodeActionProvider } from "./providers/refactor_code_action_pro
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
 import { PubGlobal } from "./pub/global";
+import { ExtensionRecommentations } from "./recommendations/recommendations";
 import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
@@ -488,7 +489,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
-	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartCapabilities, flutterCapabilities, flutterDaemon);
+	const extensionRecommendations = new ExtensionRecommentations(extContext);
+
+	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);
 
 	// Debug commands.
@@ -747,7 +750,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		void showUserPrompts(logger, extContext, webClient, analytics, workspaceContext);
+		void showUserPrompts(logger, extContext, webClient, analytics, workspaceContext, extensionRecommendations);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);

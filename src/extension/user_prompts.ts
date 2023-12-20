@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, flutterExtensionIdentifier, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
@@ -12,9 +12,9 @@ import { envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
-import { promptToReloadExtension } from "./utils";
+import { ExtensionRecommentations } from "./recommendations/recommendations";
 
-export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext): Promise<void> {
+export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext, extensionRecommendations: ExtensionRecommentations): Promise<void> {
 	if (workspaceContext.config.disableStartupPrompts)
 		return;
 
@@ -37,7 +37,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		// have the Flutter extension, and then show the prompt.
 		await new Promise((resolve) => setTimeout(resolve, 20000));
 		if (!checkHasFlutterExtension())
-			return showPrompt(installFlutterExtensionPromptKey, promptToInstallFlutterExtension);
+			return showPrompt(installFlutterExtensionPromptKey, () => extensionRecommendations.promptToInstallFlutterExtension());
 	}
 
 	// Check the user hasn't installed Flutter in a forbidden location that will cause issues.
@@ -113,33 +113,6 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 		await envUtils.openInBrowser(recommendedSettingsUrl);
 	}
 	return true;
-}
-
-async function promptToInstallFlutterExtension(): Promise<boolean> {
-	const installExtension = "Install Flutter Extension";
-	const res = await vs.window.showInformationMessage(
-		"The Flutter extension is required to work with Flutter projects.",
-		installExtension,
-	);
-	if (res === installExtension) {
-		await installExtensionWithProgress("Installing Flutter extension", flutterExtensionIdentifier);
-		void promptToReloadExtension();
-	}
-
-	return false;
-}
-
-export async function installExtensionWithProgress(message: string, extensionIdentifier: string): Promise<void> {
-	await vs.window.withProgress({ location: vs.ProgressLocation.Notification },
-		(progress) => {
-			progress.report({ message });
-
-			return new Promise<void>((resolve) => {
-				vs.extensions.onDidChange((e) => resolve());
-				void vs.commands.executeCommand("workbench.extensions.installExtension", extensionIdentifier);
-			});
-		},
-	);
 }
 
 async function promptToShowReleaseNotes(versionDisplay: string, versionLink: string): Promise<boolean> {

@@ -2,7 +2,8 @@ import { ExtensionContext, Uri } from "vscode";
 import { DartWorkspaceContext } from "../interfaces";
 
 export class Context {
-	private constructor(private readonly context: ExtensionContext, public readonly workspaceContext: DartWorkspaceContext) { }
+	private constructor(public readonly context: ExtensionContext, public readonly workspaceContext: DartWorkspaceContext) {
+	}
 
 	// Helper we can manually call in the constructor when testing.
 	public clear(): void {

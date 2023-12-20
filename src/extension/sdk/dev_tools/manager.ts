@@ -7,9 +7,9 @@ import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtools_server";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, noThanksAction, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, IFlutterDaemon, Logger } from "../../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
 import { getPubExecutionInfo } from "../../../shared/processes";
 import { UnknownNotification } from "../../../shared/services/interfaces";
@@ -24,7 +24,7 @@ import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
 import { config } from "../../config";
 import { PubGlobal } from "../../pub/global";
-import { installExtensionWithProgress } from "../../user_prompts";
+import { ExtensionRecommentations } from "../../recommendations/recommendations";
 import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
@@ -51,7 +51,7 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly context: Context, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly flutterDaemon: IFlutterDaemon | undefined) {
+	constructor(private readonly logger: Logger, private readonly context: Context, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly extensionRecommentations: ExtensionRecommentations) {
 		this.statusBarItem.name = "Dart/Flutter DevTools";
 		this.statusBarItem.text = "Dart DevTools";
 		this.setNotStartedStatusBar();
@@ -529,17 +529,11 @@ export class DevToolsManager implements vs.Disposable {
 		// If there are multiple we'll just pick the first. The user will either install or ignore
 		// and then next time we'd pick the next.
 		const promotableExtension = promotableExtensions?.at(0);
-		if (promotableExtension)
-			void this.promoteExtension(promotableExtension);
-	}
-
-	private async promoteExtension(extension: ExtensionResult) {
-		const installPackage = `Install ${extension.extension}`;
-		const action = await vs.window.showInformationMessage(`A third-party extension is available for package:${extension.packageName}`, installPackage, noThanksAction);
-		if (action === installPackage) {
-			await installExtensionWithProgress(`Installing ${extension.extension}`, extension.extension);
-		} else {
-			this.context.ignoreExtensionRecommendation(extension.extension);
+		if (promotableExtension) {
+			void this.extensionRecommentations.promoteExtension({
+				identifier: promotableExtension.extension,
+				message: `A third-party extension is available for package:${promotableExtension.packageName}`,
+			});
 		}
 	}
 
