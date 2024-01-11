@@ -615,7 +615,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			customTool: path.join(root, `scripts/custom_flutter.${customScriptExt}`),
 			customToolReplacesArgs: 999999,
 			// These differ to the usual ones so we can detect they replaced them.
-			toolArgs: ["run", "--flavor", "fake-flavor", "--start-paused", "--machine"],
+			toolArgs: ["run", "--ignore-deprecation", "--start-paused", "--machine"],
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
@@ -629,7 +629,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.terminateRequest(),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "run --flavor fake-flavor --start-paused --machine");
+		ensureHasRunWithArgsStarting(root, hasRunFile, "run --ignore-deprecation --start-paused --machine");
 	});
 
 	const numReloads = 1;
@@ -1227,7 +1227,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async () => {
+	it("excludes type args from local variables when stopped at a breakpoint in a generic method", async function () {
+		// https://github.com/dart-lang/webdev/issues/2340
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
 		await openFile(flutterHelloWorldMainFile);
 		const debugConfig = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
