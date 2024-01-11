@@ -10,5 +10,7 @@
 	"settings": {
 		"files.insertFinalNewline": true,
 		"dart.maxLogLineLength": 20000,
+		// GH Actions can be slow so set budget slightly higher.
+		"dart.completionBudgetMilliseconds": 1000,
 	}
 }
