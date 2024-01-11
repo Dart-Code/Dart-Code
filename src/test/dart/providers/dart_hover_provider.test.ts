@@ -47,7 +47,9 @@ describe("dart_hover_provider", () => {
 	}
 
 	function getExpectedSignature(method: string, returnType: string): string {
-		return `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`;
+		return extApi.dartCapabilities.omitsVoidForSetters && method.startsWith("set ") && returnType === "void"
+			? method
+			: `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`;
 	}
 
 	function getExpectedDoc(packagePath: string, doc: string): string {
