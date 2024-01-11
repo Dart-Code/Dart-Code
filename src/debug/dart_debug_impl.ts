@@ -2284,6 +2284,7 @@ export class DartDebugSession extends DebugSession {
 	///    [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
 	///    [5:01:50 PM] [General] [Info] [stderr] Dart Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
 	protected logToUserBuffered(message: string, category: string) {
+		this.logBufferFlushes[category]?.unref();
 		this.logBuffer[category] = this.logBuffer[category] || "";
 		this.logBuffer[category] += message;
 
@@ -2292,9 +2293,21 @@ export class DartDebugSession extends DebugSession {
 			const processString = this.logBuffer[category].substr(0, lastNewLine + 1);
 			this.logBuffer[category] = this.logBuffer[category].substr(lastNewLine + 1);
 			this.logToUser(processString, category);
+		} else {
+			// If we don't get another message we need to ensure the buffer is flushed after some
+			// small period.
+			this.logBufferFlushes[category] = setTimeout(() => this.flushLogBuffer(category), 50);
 		}
 	}
 	private logBuffer: { [key: string]: string } = {};
+	private logBufferFlushes: { [key: string]: NodeJS.Timer } = {};
+
+	private flushLogBuffer(category: string) {
+		const processString = this.logBuffer[category];
+		delete this.logBuffer[category];
+		if (processString)
+			this.logToUser(processString, category);
+	}
 
 	// Logs a message back to the editor. Does not add its own newlines, you must
 	// provide them!
