@@ -40,7 +40,7 @@ export class DartCapabilities {
 	get supportsNoServeDevTools() { return versionIsAtLeast(this.version, "2.14.0-172.0"); }
 	get supportsPubUpgradeMajorVersions() { return versionIsAtLeast(this.version, "2.12.0"); }
 	get needsNoExampleForPubGet() { return versionIsAtLeast(this.version, "3.1.0"); }
-	get omitsVoidForSetters() { return versionIsAtLeast(this.version, "3.3.0"); }
+	get omitsVoidForSetters() { return versionIsAtLeast(this.version, "3.3.0-0"); }
 	get supportsPubOutdated() { return versionIsAtLeast(this.version, "2.8.0-a"); }
 	get supportsFlutterSidebar() { return versionIsAtLeast(this.version, "3.2.0-201"); }
 	get supportsPubDepsJson() { return versionIsAtLeast(this.version, "2.14.0-0"); }
