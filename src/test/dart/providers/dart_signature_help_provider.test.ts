@@ -36,7 +36,14 @@ main() {
 		assert.equal(sig.parameters.length, 1);
 		assert.equal(sig.parameters[0].label, (sig.parameters[0].label as string).includes("?") ? "Object? object" : "Object object");
 		assert.equal(sig.parameters[0].documentation, undefined);
-		assert.equal((sig.documentation as vs.MarkdownString).value, "Prints a string representation of the object to the console.");
+		const docString = (sig.documentation as vs.MarkdownString).value;
+		if (docString.startsWith("Prints a string representation")) {
+			assert.equal(docString, "Prints a string representation of the object to the console.");
+		} else {
+			// Text changed in newer versions to be much longer.
+			assert.ok(docString.startsWith("Prints an object to the console."));
+			assert.ok(docString.endsWith("Calls to `print` can be intercepted by [Zone.print]."));
+		}
 	});
 
 	it("displays optional params correctly", async () => {
