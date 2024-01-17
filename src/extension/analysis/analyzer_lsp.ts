@@ -12,6 +12,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { fsPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
+import { DartTextDocumentContentProviderFeature } from "../../shared/vscode/dart_text_document_content_provider";
 import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extension_utils";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
@@ -30,6 +31,7 @@ export class LspAnalyzer extends Analyzer {
 	public readonly fileTracker: LspFileTracker;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
+	public readonly dartTextDocumentContentProvider: DartTextDocumentContentProviderFeature | undefined;
 	private readonly statusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
@@ -40,6 +42,12 @@ export class LspAnalyzer extends Analyzer {
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
 		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
+		if (config.experimentalMacroSupport) {
+			// Just because it's enabled doesn't mean the server actually supports it.
+			this.dartTextDocumentContentProvider = new DartTextDocumentContentProviderFeature(logger, this.client, dartCapabilities);
+			this.client.registerFeature(this.dartTextDocumentContentProvider.feature);
+			this.disposables.push(this.dartTextDocumentContentProvider);
+		}
 		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);

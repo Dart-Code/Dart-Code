@@ -7,13 +7,13 @@ export class LspUriConverters implements LspConverters {
 	constructor(private readonly normalizeFileCasing: boolean) { }
 
 	public code2Protocol(uri: vs.Uri): string {
-		// VS Code lowercases drive letters in Uri.file().toString() so we need to replace in the outbound URI too until the
+		// VS Code lowercases drive letters in Uris (even if they're not file scheme!) so we need to replace in the outbound URI too until the
 		// server is case-insensitive for drive letters.
-		if (uri.scheme === "file") {
-			const fileUri = vs.Uri.file(fsPath(uri, { useRealCasing: this.normalizeFileCasing })).toString();
-			return fileUri.replace(/^file:\/\/\/(\w)(:|%3A)\//, (match, driveLetter, colon) => `file:///${driveLetter.toUpperCase()}${colon}/`);
-		}
-		return uri.toString();
+		if (uri.scheme === "file")
+			uri = vs.Uri.file(fsPath(uri, { useRealCasing: this.normalizeFileCasing }));
+
+		const uriString = uri.toString();
+		return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (match, scheme, authority, driveLetter, colon) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
 	}
 
 	public protocol2Code(file: string): vs.Uri {
