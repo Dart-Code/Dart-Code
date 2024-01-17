@@ -81,7 +81,7 @@
 		],
 		"resourceLabelFormatters": [
 			{
-				"scheme": "dart-macro-file",
+				"scheme": "dart-macro+file",
 				"formatting": {
 					"label": "${scheme}://${path}",
 					"separator": "/"
