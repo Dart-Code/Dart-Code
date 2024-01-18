@@ -13,7 +13,7 @@ export class DartDebugForcedDebugModeFactory implements vs.DebugAdapterTrackerFa
 		// Only set up the forced debug mode if this magic flag was set (in debug_config_provider).
 		// Checking capabilities etc. is done there, not here.
 		if ((session.configuration as DartLaunchArgs).forceEnableDebugging) {
-			return new DartDebugForcedDebugMode(this, session);
+			return new DartDebugForcedDebugMode();
 		}
 
 		return undefined;
@@ -28,9 +28,6 @@ export class DartDebugForcedDebugModeFactory implements vs.DebugAdapterTrackerFa
  * See https://github.com/Dart-Code/Dart-Code/issues/4878.
  */
 class DartDebugForcedDebugMode implements vs.DebugAdapterTracker {
-	constructor(private readonly factory: DartDebugForcedDebugModeFactory, private readonly session: vs.DebugSession) {
-	}
-
 	onWillReceiveMessage(message: any): void {
 		if (message.command === "launch") {
 			message.arguments.noDebug = undefined;

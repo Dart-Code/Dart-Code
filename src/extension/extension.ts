@@ -579,8 +579,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Debug trackers
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
-	const globalEvaluationContext = new DartDebugAdapterGlobalEvaluationContextFactory(logger);
-	context.subscriptions.push(globalEvaluationContext);
+	const globalEvaluationContext = new DartDebugAdapterGlobalEvaluationContextFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", globalEvaluationContext));
 	const hexFormatter = new DartDebugAdapterHexViewFactory(logger);
 	context.subscriptions.push(hexFormatter);
