@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
-import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, env, TelemetryLogger, TelemetrySender, Uri, workspace } from "vscode";
+import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, env, TelemetryLogger, TelemetrySender } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { disposeAll } from "../shared/utils";
@@ -179,9 +179,6 @@ export class Analytics implements IAmDisposable {
 	public sdkVersion?: string;
 	public flutterSdkVersion?: string | undefined;
 	private readonly formatter: string;
-	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
-	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
 
 	// If analytics fail or we see an opt-out for Dart/Flutter, disable for the rest of this session.
 	private disableAnalyticsForSession = false;
@@ -293,7 +290,7 @@ export class Analytics implements IAmDisposable {
 		try {
 			// If there are multiple formatters for Dart, the user can select one, so check
 			// that first so we don't record their formatter being enabled as ours.
-			const otherDefaultFormatter = this.getAppliedConfig<string | undefined>("editor", "defaultFormatter", false);
+			const otherDefaultFormatter = config.resolved.getAppliedConfig<string | undefined>("editor", "defaultFormatter", false);
 			if (otherDefaultFormatter && otherDefaultFormatter !== dartCodeExtensionIdentifier)
 				return otherDefaultFormatter;
 
@@ -303,19 +300,12 @@ export class Analytics implements IAmDisposable {
 				return "Disabled";
 
 			// Otherwise record as enabled (and whether on-save).
-			return this.getAppliedConfig("editor", "formatOnSave")
+			return config.resolved.getAppliedConfig("editor", "formatOnSave")
 				? "Enabled on Save"
 				: "Enabled";
 		} catch {
 			return "Unknown";
 		}
-	}
-
-	private getAppliedConfig<T>(section: string, key: string, isResourceScoped = true): T | undefined {
-		const dartValue = this.dartConfig ? this.dartConfig[`${section}.${key}`] : undefined;
-		return dartValue !== undefined && dartValue !== null
-			? dartValue as T
-			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
 	}
 
 	private handleError(e: unknown) {

@@ -202,8 +202,24 @@ class Config {
 	// Experiments that aren't in package.json.
 	get experimentalMacroSupport(): boolean { return this.getConfig<boolean>("experimentalMacroSupport", false); }
 
+	public readonly resolved = new ResolvedConfig();
+
 	public for(uri?: Uri): ResourceConfig {
 		return new ResourceConfig(uri);
+	}
+}
+
+class ResolvedConfig {
+	private readonly dummyDartFile = Uri.parse("untitled:foo.dart");
+
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+	private readonly dartConfig = workspace.getConfiguration("", this.dummyDartFile).get("[dart]") as any;
+
+	public getAppliedConfig<T>(section: string, key: string, isResourceScoped = true): T | undefined {
+		const dartValue = this.dartConfig ? this.dartConfig[`${section}.${key}`] : undefined;
+		return dartValue !== undefined && dartValue !== null
+			? dartValue as T
+			: workspace.getConfiguration(section, isResourceScoped ? this.dummyDartFile : undefined).get(key);
 	}
 }
 
