@@ -1256,6 +1256,11 @@
 				{
 					"when": "resourceExtname == .arb && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.task.genl10n"
+				},
+				{
+					"when": "resourceExtname == .dart",
+					"command": "dart.goToSuper",
+					"group": "navigation@9"
 				}
 			],
 			"explorer/context": [
