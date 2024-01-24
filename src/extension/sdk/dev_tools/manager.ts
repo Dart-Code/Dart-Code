@@ -457,7 +457,7 @@ export class DevToolsManager implements vs.Disposable {
 				//
 				// Adding "*" to the list allows all extension identifiers, useful for testing.
 				const defaultAllowList: string[] = [
-					// "myPublisher.myExtension",
+					"serverpod.serverpod",
 				];
 				const effectiveAllowList = config.extensionRecommendationAllowList ?? defaultAllowList;
 				setTimeout(() => this.promptForExtensionRecommendations(effectiveAllowList), twentySecondsInMs);
