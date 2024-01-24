@@ -2,13 +2,14 @@ import * as vs from "vscode";
 import { flutterExtensionIdentifier, noThanksAction } from "../../shared/constants";
 import { Context } from "../../shared/vscode/workspace";
 
+import { Analytics, AnalyticsEvent } from "../analytics";
 import { promptToReloadExtension } from "../utils";
 import { ArbExtensionRecommentation } from "./arb";
 
 export class ExtensionRecommentations {
 	private readonly arb: ArbExtensionRecommentation;
 
-	constructor(private readonly context: Context) {
+	constructor(private readonly analytics: Analytics, private readonly context: Context) {
 		this.arb = new ArbExtensionRecommentation(this, context);
 	}
 
@@ -29,10 +30,13 @@ export class ExtensionRecommentations {
 	public async promoteExtension(extension: { identifier: string, message: string }) {
 		const identifier = extension.identifier;
 		const installPackage = `Install ${identifier}`;
+		this.analytics.logExtensionPromotion(AnalyticsEvent.ExtensionRecommendation_Shown, identifier);
 		const action = await vs.window.showInformationMessage(extension.message, installPackage, noThanksAction);
 		if (action === installPackage) {
+			this.analytics.logExtensionPromotion(AnalyticsEvent.ExtensionRecommendation_Accepted, identifier);
 			await this.installExtensionWithProgress(`Installing ${identifier}`, identifier);
 		} else {
+			this.analytics.logExtensionPromotion(AnalyticsEvent.ExtensionRecommendation_Rejected, identifier);
 			this.context.ignoreExtensionRecommendation(extension.identifier);
 		}
 	}

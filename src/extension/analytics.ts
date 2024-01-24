@@ -40,6 +40,9 @@ export enum AnalyticsEvent {
 	FlutterSurvey_Dismissed,
 	FlutterOutline_Activated,
 	Command_AddSdkToPath,
+	ExtensionRecommendation_Shown,
+	ExtensionRecommendation_Accepted,
+	ExtensionRecommendation_Rejected,
 	Command_CloneSdk,
 	Command_DartNewProject,
 	Command_FlutterNewProject,
@@ -71,6 +74,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 					addSdkToPathResult: data.addSdkToPathResult,
 					cloneSdkResult: data.cloneSdkResult,
 					commandSource: data.commandSource,
+					data: data.data,
 					debuggerAdapterType: data.debuggerAdapterType,
 					debuggerExceptionBreakMode: data.debuggerExceptionBreakMode,
 					debuggerPreference: data.debuggerPreference,
@@ -350,6 +354,15 @@ export class Analytics implements IAmDisposable {
 		};
 		this.event(AnalyticsEvent.Command_CloneSdk, customData);
 	}
+	public logExtensionPromotion(
+		kind: AnalyticsEvent.ExtensionRecommendation_Shown | AnalyticsEvent.ExtensionRecommendation_Accepted | AnalyticsEvent.ExtensionRecommendation_Rejected,
+		extension: string,
+	) {
+		const customData: Partial<AnalyticsData> = {
+			data: extension,
+		};
+		this.event(kind, customData);
+	}
 	public logDevToolsOpened(commandSource: string | undefined) { this.event(AnalyticsEvent.DevTools_Opened, { commandSource }); }
 	public logFlutterDoctor(commandSource: string | undefined) { this.event(AnalyticsEvent.Command_FlutterDoctor, { commandSource }); }
 	public logFlutterNewProject(commandSource: string | undefined) { this.event(AnalyticsEvent.Command_FlutterNewProject, { commandSource }); }
@@ -404,6 +417,9 @@ interface AnalyticsData {
 
 	// For "Download SDK" git-clone flow.
 	cloneSdkResult?: string,
+
+	// Generic string data for an event, such as extension ID of promoted extension.
+	data?: string,
 
 	// Source of commands, such as launching from sidebar vs command palette.
 	commandSource?: string,

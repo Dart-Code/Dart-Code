@@ -490,7 +490,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
-	const extensionRecommendations = new ExtensionRecommentations(extContext);
+	const extensionRecommendations = new ExtensionRecommentations(analytics, extContext);
 
 	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);

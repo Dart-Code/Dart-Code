@@ -21,6 +21,15 @@
 			"Command_CloneSdk": {
 				"cloneSdkResult":             { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the request to clone the SDK using Git was successful" }
 			},
+			"ExtensionRecommendation_Shown": {
+				"data":                       { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The identifier of the extension that was promoted" }
+			},
+			"ExtensionRecommendation_Accepted": {
+				"data":                       { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The identifier of the extension that was installed from the promotion notification" }
+			},
+			"ExtensionRecommendation_Rejected": {
+				"data":                       { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The identifier of the extension that was rejected from the promotion notification" }
+			},
 			"Command_DartNewProject": { },
 			"Command_FlutterNewProject": { },
 			"Command_AddDependency": { },
