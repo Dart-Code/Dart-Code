@@ -1,6 +1,6 @@
 {
 	"name": "Dart",
-	"version": "1.2.5",
+	"version": "1.2.6",
 	"fileTypes": [
 		"dart"
 	],
@@ -328,7 +328,7 @@
 				},
 				{
 					"name": "keyword.declaration.dart",
-					"match": "(?<!\\$)\\b(abstract|sealed|base|interface|class|enum|extends|extension type|extension|external|factory|implements|get(?!\\()|mixin|native|operator|set(?!\\()|typedef|with|covariant)\\b(?!\\$)"
+					"match": "(?<!\\$)\\b(abstract|sealed|base|interface|class|enum|extends|extension type|extension|external|factory|implements|get(?![(<])|mixin|native|operator|set(?![(<])|typedef|with|covariant)\\b(?!\\$)"
 				},
 				{
 					"name": "storage.modifier.dart",
