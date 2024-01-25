@@ -629,7 +629,7 @@ export class DebugCommands implements IAmDisposable {
 					const isFlutterInspectorNavigation = data.source === "flutter.inspector";
 					if (uri && uri.startsWith("file://") && line && col) {
 						// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
-						const navigate = !isFlutterInspectorNavigation || config.devToolsLocation !== "active";
+						const navigate = !isFlutterInspectorNavigation || this.devTools.getDevToolsLocation(widgetInspectorPage.id) !== "active";
 						if (navigate)
 							void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(uri), line, col, true);
 						if (isFlutterInspectorNavigation && this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {
@@ -645,7 +645,7 @@ export class DebugCommands implements IAmDisposable {
 		} else if (event === "dart.navigate") {
 			if (body.file && body.line && body.column) {
 				// Only navigate if it's not from inspector, or is from inspector but we're not in full-width mode.
-				const navigate = !body.fromInspector || config.devToolsLocation !== "active";
+				const navigate = !body.fromInspector || this.devTools.getDevToolsLocation(widgetInspectorPage.id) !== "active";
 				if (navigate)
 					void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.parse(body.file as string), body.line, body.column, body.inOtherEditorColumn);
 				if (this.isInspectingWidget && this.autoCancelNextInspectWidgetMode) {

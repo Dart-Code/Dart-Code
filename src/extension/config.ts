@@ -2,6 +2,7 @@ import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vsc
 import { CustomDevToolsConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
 import { createFolderForFile } from "../shared/utils/fs";
+import { DevToolsLocation, DevToolsLocations } from "./sdk/dev_tools/manager";
 import { resolvePaths } from "./utils";
 import { setupToolEnv } from "./utils/processes";
 
@@ -74,7 +75,22 @@ class Config {
 	get debugExternalPackageLibraries(): boolean { return this.getConfig<boolean>("debugExternalPackageLibraries", false); }
 	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
 	get devToolsBrowser(): "chrome" | "default" { return this.getConfig<"chrome" | "default">("devToolsBrowser", "chrome"); }
-	get devToolsLocation(): "beside" | "active" | "external" { return this.getConfig<"beside" | "active" | "external">("devToolsLocation", "beside"); }
+	get devToolsLocation(): DevToolsLocations & { default: DevToolsLocation } {
+		const defaultValue: DevToolsLocations = { default: "beside" };
+		const configValue = this.getConfig<DevToolsLocations | "beside" | "active" | "external">("devToolsLocation", defaultValue);
+		if (!defaultValue)
+			return defaultValue;
+
+		// Legacy string value.
+		if (typeof configValue === "string")
+			return { default: configValue };
+
+		// Otherwise, user defined (but force default value).
+		return {
+			default: "beside", // Ensure default if not user-supplied.
+			...configValue,
+		};
+	}
 	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
 	get devToolsPort(): undefined | number { return this.getConfig<null | number>("devToolsPort", null); }
 	get devToolsReuseWindows(): boolean { return this.getConfig<boolean>("devToolsReuseWindows", true); }

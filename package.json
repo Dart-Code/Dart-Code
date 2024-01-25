@@ -1677,18 +1677,109 @@
 						"scope": "window"
 					},
 					"dart.devToolsLocation": {
-						"enum": [
-							"beside",
-							"active",
-							"external"
-						],
-						"enumDescriptions": [
-							"Open DevTools in beside the active editor",
-							"Open DevTools over the top of the active editor",
-							"Open DevTools externally in its own browser window"
-						],
-						"default": "beside",
-						"markdownDescription": "Which editor/column to open [Dart DevTools](https://dart.dev/tools/dart-devtools) in.",
+						"type": "object",
+						"properties": {
+							"inspector": {
+								"enum": [
+									"beside",
+									"active",
+									"external"
+								],
+								"enumDescriptions": [
+									"Open DevTools in beside the active editor",
+									"Open DevTools over the top of the active editor",
+									"Open DevTools externally in its own browser window"
+								]
+							},
+							"cpu-profiler": {
+								"enum": [
+									"beside",
+									"active",
+									"external"
+								],
+								"enumDescriptions": [
+									"Open DevTools in beside the active editor",
+									"Open DevTools over the top of the active editor",
+									"Open DevTools externally in its own browser window"
+								]
+							},
+							"memory": {
+								"enum": [
+									"beside",
+									"active",
+									"external"
+								],
+								"enumDescriptions": [
+									"Open DevTools in beside the active editor",
+									"Open DevTools over the top of the active editor",
+									"Open DevTools externally in its own browser window"
+								]
+							},
+							"performance": {
+								"enum": [
+									"beside",
+									"active",
+									"external"
+								],
+								"enumDescriptions": [
+									"Open DevTools in beside the active editor",
+									"Open DevTools over the top of the active editor",
+									"Open DevTools externally in its own browser window"
+								]
+							},
+							"network": {
+								"enum": [
+									"beside",
+									"active",
+									"external"
+								],
+								"enumDescriptions": [
+									"Open DevTools in beside the active editor",
+									"Open DevTools over the top of the active editor",
+									"Open DevTools externally in its own browser window"
+								]
+							},
+							"logging": {
+								"enum": [
+									"beside",
+									"active",
+									"external"
+								],
+								"enumDescriptions": [
+									"Open DevTools in beside the active editor",
+									"Open DevTools over the top of the active editor",
+									"Open DevTools externally in its own browser window"
+								]
+							},
+							"default": {
+								"enum": [
+									"beside",
+									"active",
+									"external"
+								],
+								"enumDescriptions": [
+									"Open DevTools in beside the active editor",
+									"Open DevTools over the top of the active editor",
+									"Open DevTools externally in its own browser window"
+								]
+							}
+						},
+						"additionalProperties": {
+							"enum": [
+								"beside",
+								"active",
+								"external"
+							],
+							"enumDescriptions": [
+								"Open DevTools in beside the active editor",
+								"Open DevTools over the top of the active editor",
+								"Open DevTools externally in its own browser window"
+							]
+						},
+						"default": {
+							"default": "beside"
+						},
+						"markdownDescription": "Which editor/column to open [Dart DevTools](https://dart.dev/tools/dart-devtools) pages in.",
 						"scope": "window"
 					},
 					"dart.openDevTools": {
@@ -2472,7 +2563,6 @@
 							"type": "string"
 						}
 					},
-
 					"dart.customDartDapPath": {
 						"type": [
 							"null",

@@ -175,6 +175,15 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
+	public getDevToolsLocation(pageId: string | undefined | null): DevToolsLocation {
+		if (pageId === null)
+			return "external";
+		else if (pageId === undefined)
+			return "beside";
+		const locations = config.devToolsLocation;
+		return locations[pageId] ?? locations.default ?? "beside";
+	}
+
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
 	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
@@ -185,7 +194,7 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 
 		if (options.location === undefined)
-			options.location = config.devToolsLocation;
+			options.location = this.getDevToolsLocation(options.pageId);
 		if (!vsCodeVersion.supportsEmbeddedDevTools)
 			options.location = "external";
 		if (options.reuseWindows === undefined)
@@ -194,7 +203,7 @@ export class DevToolsManager implements vs.Disposable {
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
 		if (options.location !== "external" && !options.pageId) {
-			const choice = options.pageId === null ? "EXTERNAL" : await this.promptForDevToolsPage();
+			const choice = await this.promptForDevToolsPage();
 			if (!choice) // User cancelled
 				return;
 			else if (choice === "EXTERNAL")
@@ -656,3 +665,7 @@ interface ExtensionResult {
 }
 
 export type DevToolsLocation = "beside" | "active" | "external";
+
+export interface DevToolsLocations {
+	[key: string]: DevToolsLocation | undefined
+}
