@@ -233,9 +233,11 @@ export interface OpenedFileInformation {
 
 export interface DevToolsPage {
 	id: string;
-	commandId: string;
+	commandSuffix: string;
 	routeId?: (flutterVersion: string | undefined) => string;
 	title: string;
+	requiresFlutter?: boolean;
+	requiredDartSdkVersion?: string;
 }
 
 export interface WidgetErrorInspectData {

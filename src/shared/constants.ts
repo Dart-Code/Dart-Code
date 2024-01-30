@@ -189,11 +189,12 @@ export const runFlutterCreatePrompt = (platformType: string, platformNeedsGlobal
 export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
 export const validClassNameRegex = validMethodNameRegex;
 
-export const widgetInspectorPage: DevToolsPage = { id: "inspector", commandId: "dart.openDevToolsInspector", title: "Widget Inspector" };
-export const cpuProfilerPage: DevToolsPage = { id: "cpu-profiler", commandId: "dart.openDevToolsCpuProfiler", title: "CPU Profiler" };
+export const widgetInspectorPage: DevToolsPage = { id: "inspector", commandSuffix: "Inspector", title: "Widget Inspector", requiresFlutter: true };
+export const cpuProfilerPage: DevToolsPage = { id: "cpu-profiler", commandSuffix: "CpuProfiler", title: "CPU Profiler" };
 export const performancePage: DevToolsPage = {
-	commandId: "dart.openDevToolsPerformance",
+	commandSuffix: "Performance",
 	id: "performance",
+	requiresFlutter: true,
 	routeId: (flutterVersion) => !flutterVersion || versionIsAtLeast(flutterVersion, "2.3.1" /* 2.3.0-16.0? */) ? "performance" : "legacy-performance",
 	title: "Performance",
 };
@@ -201,10 +202,11 @@ export const devToolsPages: DevToolsPage[] = [
 	// First entry is the default page.
 	widgetInspectorPage,
 	cpuProfilerPage,
-	{ id: "memory", commandId: "dart.openDevToolsMemory", title: "Memory" },
+	{ id: "memory", commandSuffix: "Memory", title: "Memory" },
 	performancePage,
-	{ id: "network", commandId: "dart.openDevToolsNetwork", title: "Network" },
-	{ id: "logging", commandId: "dart.openDevToolsLogging", title: "Logging" },
+	{ id: "network", commandSuffix: "Network", title: "Network" },
+	{ id: "logging", commandSuffix: "Logging", title: "Logging" },
+	{ id: "deep-links", commandSuffix: "DeepLinks", title: "Deep Links", requiresFlutter: true, requiredDartSdkVersion: "3.3.0-277" },
 ];
 
 export const dartRecommendedConfig = {

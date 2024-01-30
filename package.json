@@ -617,6 +617,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.openDevToolsDeepLinks",
+				"title": "Open DevTools Deep Links Page",
+				"category": "Dart"
+			},
+			{
 				"command": "_dart.openDevTools.touchBar",
 				"title": "DevTools",
 				"category": "Dart"
@@ -1022,27 +1027,31 @@
 				},
 				{
 					"command": "dart.openDevToolsInspector",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsInspector"
 				},
 				{
 					"command": "dart.openDevToolsPerformance",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsPerformance"
 				},
 				{
 					"command": "dart.openDevToolsMemory",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsMemory"
 				},
 				{
 					"command": "dart.openDevToolsCpuProfiler",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsCpuProfiler"
 				},
 				{
 					"command": "dart.openDevToolsNetwork",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsNetwork"
 				},
 				{
 					"command": "dart.openDevToolsLogging",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsLogging"
+				},
+				{
+					"command": "dart.openDevToolsDeepLinks",
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsDeepLinks"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",

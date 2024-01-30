@@ -138,7 +138,8 @@ export class DebugCommands implements IAmDisposable {
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.touchbar })));
 		devToolsPages.forEach((page) => {
-			this.disposables.push(vs.commands.registerCommand(page.commandId, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
+			void vs.commands.executeCommand("setContext", `dart-code:devToolsSupports${page.commandSuffix}`, this.devTools.isPageAvailable(page));
+			this.disposables.push(vs.commands.registerCommand(`dart.openDevTools${page.commandSuffix}`, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
 				options = Object.assign({}, options, { pageId: page.id });
 				return vs.commands.executeCommand("dart.openDevTools", options);
 			}));

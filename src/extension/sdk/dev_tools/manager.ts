@@ -14,7 +14,7 @@ import { CategoryLogger } from "../../../shared/logging";
 import { getPubExecutionInfo } from "../../../shared/processes";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
-import { disposeAll, usingCustomScript } from "../../../shared/utils";
+import { disposeAll, usingCustomScript, versionIsAtLeast } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
@@ -88,6 +88,15 @@ export class DevToolsManager implements vs.Disposable {
 				void vs.window.showErrorMessage(`Failed to start DevTools: ${e}`);
 			}
 		}
+	}
+
+	public isPageAvailable(page: DevToolsPage) {
+		if (page.requiresFlutter && !this.context.workspaceContext.hasAnyFlutterProjects)
+			return false;
+		if (page.requiredDartSdkVersion && this.context.workspaceContext.sdks.dartVersion && !versionIsAtLeast(this.context.workspaceContext.sdks.dartVersion, page.requiredDartSdkVersion))
+			return false;
+
+		return true;
 	}
 
 	private routeIdForPage(page: DevToolsPage | undefined | null): string | undefined {
@@ -236,10 +245,12 @@ export class DevToolsManager implements vs.Disposable {
 
 	private async promptForDevToolsPage(): Promise<{ page: DevToolsPage } | "EXTERNAL" | undefined> {
 		const choices: Array<vs.QuickPickItem & { page?: DevToolsPage; isExternal?: boolean }> = [
-			...devToolsPages.map((page) => ({
-				label: `Open ${page.title} Page`,
-				page,
-			})),
+			...devToolsPages
+				.filter((page) => this.isPageAvailable(page))
+				.map((page) => ({
+					label: `Open ${page.title} Page`,
+					page,
+				})),
 			{ label: `Open DevTools in Web Browser`, isExternal: true },
 		];
 		const choice = await vs.window.showQuickPick(choices, { placeHolder: "Which DevTools page?" });
