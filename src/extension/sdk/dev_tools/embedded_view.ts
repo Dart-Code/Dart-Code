@@ -1,6 +1,5 @@
 import * as vs from "vscode";
 import { Event, EventEmitter } from "../../../shared/events";
-import { DevToolsPage } from "../../../shared/interfaces";
 import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 
@@ -60,11 +59,11 @@ export class DevToolsEmbeddedView {
 	private messageDisposable: vs.Disposable;
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
 
-	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: string, readonly page: DevToolsPage, location: "beside" | "active" | undefined) {
+	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: string, readonly pageTitle: string, location: "beside" | "active" | undefined) {
 		const column = location === "active"
 			? vs.ViewColumn.Active
 			: (firstNonEditorColumn() ?? vs.ViewColumn.Beside);
-		this.panel = vs.window.createWebviewPanel("dartDevTools", page.title, column, {
+		this.panel = vs.window.createWebviewPanel("dartDevTools", pageTitle, column, {
 			enableScripts: true,
 			localResourceRoots: [],
 			retainContextWhenHidden: true,

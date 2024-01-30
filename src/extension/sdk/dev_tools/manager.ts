@@ -319,15 +319,17 @@ export class DevToolsManager implements vs.Disposable {
 			return true;
 
 		// Otherwise, fall back to embedded or launching manually.
-		if (options.pageId)
+		if (pageId)
 			queryParams.page = routeId;
 		// We currently only support embedded for pages we know about statically, although since we seem
 		// to only use that for a title, we may be able to relax that.
-		if (options.location !== "external" && page) {
+		if (options.location !== "external") {
 			queryParams.embed = "true";
 			const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
-			this.launchInEmbeddedWebView(exposedUrl, session, page, options.location);
+
+			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
+			this.launchInEmbeddedWebView(exposedUrl, session, pageInfo, options.location);
 		} else {
 			const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
 			await envUtils.openInBrowser(fullUrl, this.logger);
@@ -383,8 +385,10 @@ export class DevToolsManager implements vs.Disposable {
 		return `${baseUrl}${urlPathSeperator}${path}?${paramsString}`;
 	}
 
-	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: DevToolsPage, location: "beside" | "active" | undefined) {
+	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: { id: string, title: string }, location: "beside" | "active" | undefined) {
 		const pageId = page.id;
+		const pageTitle = page.title;
+
 		if (!this.devToolsEmbeddedViews[pageId]) {
 			this.devToolsEmbeddedViews[pageId] = [];
 		}
@@ -392,7 +396,7 @@ export class DevToolsManager implements vs.Disposable {
 		// are for a session that has been stopped.
 		let frame = this.devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || dtev.session.hasEnded);
 		if (!frame) {
-			frame = new DevToolsEmbeddedView(session, uri, page, location);
+			frame = new DevToolsEmbeddedView(session, uri, pageTitle, location);
 			frame.onDispose(() => delete this.devToolsEmbeddedViews[pageId]);
 			this.devToolsEmbeddedViews[pageId]?.push(frame);
 		}
