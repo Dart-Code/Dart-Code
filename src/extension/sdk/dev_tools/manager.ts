@@ -187,10 +187,8 @@ export class DevToolsManager implements vs.Disposable {
 	public getDevToolsLocation(pageId: string | undefined | null): DevToolsLocation {
 		if (pageId === null)
 			return "external";
-		else if (pageId === undefined)
-			return "beside";
 		const locations = config.devToolsLocation;
-		return locations[pageId] ?? locations.default ?? "beside";
+		return locations[pageId ?? ""] ?? locations.default ?? "beside";
 	}
 
 	/// Spawns DevTools and returns the full URL to open for that session
