@@ -2767,13 +2767,13 @@
 						"markdownDescription": "Whether to perform hot reload on save based on a filesystem watcher for Dart files rather than using VS Code's `onDidSave` event. This allows reloads to trigger when external tools modify Dart source files.",
 						"scope": "window"
 					},
-					"dart.previewSdkDaps": {
+					"dart.useLegacyDebugAdapters": {
 						"type": [
 							"null",
 							"boolean"
 						],
 						"default": null,
-						"markdownDescription": "PREVIEW: Whether to use the new debug adapters shipped in the Dart and Flutter SDKs. This setting will only apply if your SDK is new enough to include an appropriate version of the DAP server. Setting the value to `true` will opt-in to the new DAPs. Setting to `false` will opt-out. Leaving as `null` will allow the extension to decide when to enable the SDK DAPs as part of a progressive rollout.",
+						"markdownDescription": "Whether to use the legacy debug adapters even if the new debug adapters are available in the current Dart/Flutter SDKs contain. Setting the value to `true` will force use of the legacay adapters. Setting to `false` will force use of the SDK adapters. Leaving as `null` will allow the extension to decide which debug adapters to use depending on the SDK version and rollout progress.",
 						"scope": "window"
 					},
 					"dart.experimentalRefactors": {

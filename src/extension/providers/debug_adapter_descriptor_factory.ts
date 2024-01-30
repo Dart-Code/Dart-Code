@@ -67,9 +67,9 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			} else if (this.workspaceContext.config.forceFlutterWorkspace) {
 				useSdkDap = true;
 				sdkDapReason = "workspaceContext.config.forceFlutterWorkspace";
-			} else if (config.previewSdkDaps !== undefined) {
-				useSdkDap = config.previewSdkDaps;
-				sdkDapReason = "config.previewSdkDaps";
+			} else if (config.useLegacyDebugAdapters !== undefined) {
+				useSdkDap = !config.useLegacyDebugAdapters;
+				sdkDapReason = "config.useLegacyDebugAdapters";
 			} else if (canDefaultToSdkDap && isPreReleaseSdk) {
 				useSdkDap = true;
 				sdkDapReason = "canDefaultToSdkDap and using pre-release SDK";
