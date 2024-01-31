@@ -206,7 +206,7 @@ export const devToolsPages: DevToolsPage[] = [
 	performancePage,
 	{ id: "network", commandSuffix: "Network", title: "Network" },
 	{ id: "logging", commandSuffix: "Logging", title: "Logging" },
-	{ id: "deep-links", commandSuffix: "DeepLinks", title: "Deep Links", requiresFlutter: true, requiredDartSdkVersion: "3.3.0-277" },
+	{ id: "deep-links", commandSuffix: "DeepLinks", title: "Deep Links", requiresFlutter: true, requiredDartSdkVersion: "3.3.0-277", isStaticTool: true },
 ];
 
 export const dartRecommendedConfig = {

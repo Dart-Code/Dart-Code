@@ -238,6 +238,8 @@ export interface DevToolsPage {
 	title: string;
 	requiresFlutter?: boolean;
 	requiredDartSdkVersion?: string;
+	// Page can be opened without a VM Service.
+	isStaticTool?: boolean;
 }
 
 export interface WidgetErrorInspectData {

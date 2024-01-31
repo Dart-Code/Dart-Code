@@ -90,10 +90,12 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
-	public isPageAvailable(page: DevToolsPage) {
+	public isPageAvailable(hasSession: boolean, page: DevToolsPage) {
 		if (page.requiresFlutter && !this.context.workspaceContext.hasAnyFlutterProjects)
 			return false;
 		if (page.requiredDartSdkVersion && this.context.workspaceContext.sdks.dartVersion && !versionIsAtLeast(this.context.workspaceContext.sdks.dartVersion, page.requiredDartSdkVersion))
+			return false;
+		if (!page.isStaticTool && !hasSession)
 			return false;
 
 		return true;
@@ -166,24 +168,6 @@ export class DevToolsManager implements vs.Disposable {
 		return url;
 	}
 
-	/// Spawns DevTools and returns the full URL to open without a debug session.
-	public async spawnForNoSession(options?: { commandSource?: string }): Promise<{ url: string; dispose: () => void } | undefined> {
-		const commandSource = options?.commandSource;
-
-		let url = await this.start();
-		if (!url)
-			return;
-
-		this.analytics.logDevToolsOpened(commandSource);
-		url = await this.buildDevToolsUrl(url, { ideFeature: commandSource });
-
-		try {
-			await envUtils.openInBrowser(url.toString(), this.logger);
-		} catch (e) {
-			this.showError(e);
-		}
-	}
-
 	public getDevToolsLocation(pageId: string | undefined | null): DevToolsLocation {
 		if (pageId === null)
 			return "external";
@@ -193,7 +177,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Spawns DevTools and returns the full URL to open for that session
 	///   eg. http://127.0.0.1:8123/?port=8543
-	public async spawnForSession(session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
+	public async spawn(session: (DartDebugSessionInformation & { vmServiceUri: string }) | undefined, options: DevToolsOptions): Promise<{ url: string; dispose: () => void } | undefined> {
 		this.analytics.logDevToolsOpened(options?.commandSource);
 
 		const url = await this.start();
@@ -210,7 +194,7 @@ export class DevToolsManager implements vs.Disposable {
 		// When we're running embedded and were asked to open without a page, we should prompt for a page (plus give an option
 		// to open non-embedded view).
 		if (options.location !== "external" && !options.pageId) {
-			const choice = await this.promptForDevToolsPage();
+			const choice = await this.promptForDevToolsPage(!!session);
 			if (!choice) // User cancelled
 				return;
 			else if (choice === "EXTERNAL")
@@ -226,6 +210,7 @@ export class DevToolsManager implements vs.Disposable {
 			}, async () => {
 				const debugCommands = this.debugCommands;
 				const canLaunchDevToolsThroughService = isRunningLocally
+					&& session
 					&& debugCommands
 					&& options.location === "external"
 					&& !isDartCodeTestRun
@@ -241,17 +226,21 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
-	private async promptForDevToolsPage(): Promise<{ page: DevToolsPage } | "EXTERNAL" | undefined> {
+	private async promptForDevToolsPage(hasSession: boolean): Promise<{ page: DevToolsPage } | "EXTERNAL" | undefined> {
 		const choices: Array<vs.QuickPickItem & { page?: DevToolsPage; isExternal?: boolean }> = [
 			...devToolsPages
-				.filter((page) => this.isPageAvailable(page))
+				.filter((page) => this.isPageAvailable(hasSession, page))
 				.map((page) => ({
 					label: `Open ${page.title} Page`,
 					page,
 				})),
 			{ label: `Open DevTools in Web Browser`, isExternal: true },
 		];
-		const choice = await vs.window.showQuickPick(choices, { placeHolder: "Which DevTools page?" });
+		const choice = !choices.length
+			? undefined
+			: choices.length === 1
+				? choices[0]
+				: await vs.window.showQuickPick(choices, { placeHolder: "Which DevTools page?" });
 		if (!choice)
 			return undefined;
 		else if (choice.isExternal)
@@ -280,7 +269,7 @@ export class DevToolsManager implements vs.Disposable {
 
 			// If there are disconnected panels for this page, trigger a launch
 			// of the page to reuse it.
-			const reusablePanel = panels.find((p) => p.session.hasEnded);
+			const reusablePanel = panels.find((p) => p.session && p.session.hasEnded);
 			if (reusablePanel) {
 				reusablePanel.session = session;
 				await this.launch(false, session, { location: "beside", pageId });
@@ -296,7 +285,7 @@ export class DevToolsManager implements vs.Disposable {
 				: cpuProfilerPage;
 	}
 
-	private async launch(allowLaunchThroughService: boolean, session: DartDebugSessionInformation & { vmServiceUri: string }, options: DevToolsOptions) {
+	private async launch(allowLaunchThroughService: boolean, session: DartDebugSessionInformation & { vmServiceUri: string } | undefined, options: DevToolsOptions) {
 		const url = await this.devtoolsUrl;
 		if (!url) {
 			this.showError(`DevTools URL not available`);
@@ -315,23 +304,24 @@ export class DevToolsManager implements vs.Disposable {
 		const routeId = page ? this.routeIdForPage(page) : pageId;
 
 		// Try to launch via service if allowed.
-		if (allowLaunchThroughService && await this.launchThroughService(session, { ...options, queryParams, page: routeId }))
+		if (allowLaunchThroughService && session && await this.launchThroughService(session, { ...options, queryParams, page: routeId }))
 			return true;
 
 		// Otherwise, fall back to embedded or launching manually.
 		if (pageId)
 			queryParams.page = routeId;
+		const vmServiceUri = page?.isStaticTool ? undefined : session?.vmServiceUri;
 		// We currently only support embedded for pages we know about statically, although since we seem
 		// to only use that for a title, we may be able to relax that.
 		if (options.location !== "external") {
 			queryParams.embed = "true";
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri);
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
 
 			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
 			this.launchInEmbeddedWebView(exposedUrl, session, pageInfo, options.location);
 		} else {
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, session.vmServiceUri);
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri);
 			await envUtils.openInBrowser(fullUrl, this.logger);
 		}
 	}
@@ -385,7 +375,7 @@ export class DevToolsManager implements vs.Disposable {
 		return `${baseUrl}${urlPathSeperator}${path}?${paramsString}`;
 	}
 
-	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation, page: { id: string, title: string }, location: "beside" | "active" | undefined) {
+	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | undefined) {
 		const pageId = page.id;
 		const pageTitle = page.title;
 
@@ -394,7 +384,7 @@ export class DevToolsManager implements vs.Disposable {
 		}
 		// Look through any open DevTools frames for this page, to see if any are already our session, or
 		// are for a session that has been stopped.
-		let frame = this.devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || dtev.session.hasEnded);
+		let frame = this.devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || (dtev.session && dtev.session.hasEnded));
 		if (!frame) {
 			frame = new DevToolsEmbeddedView(session, uri, pageTitle, location);
 			frame.onDispose(() => delete this.devToolsEmbeddedViews[pageId]);

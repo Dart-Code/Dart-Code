@@ -59,7 +59,7 @@ export class DevToolsEmbeddedView {
 	private messageDisposable: vs.Disposable;
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
 
-	constructor(public session: DartDebugSessionInformation, readonly devToolsUri: string, readonly pageTitle: string, location: "beside" | "active" | undefined) {
+	constructor(public session: DartDebugSessionInformation | undefined, readonly devToolsUri: string, readonly pageTitle: string, location: "beside" | "active" | undefined) {
 		const column = location === "active"
 			? vs.ViewColumn.Active
 			: (firstNonEditorColumn() ?? vs.ViewColumn.Beside);
@@ -90,7 +90,7 @@ export class DevToolsEmbeddedView {
 		);
 	}
 
-	public load(session: DartDebugSessionInformation, uri: string): void {
+	public load(session: DartDebugSessionInformation | undefined, uri: string): void {
 		this.session = session;
 		void this.panel.webview.postMessage({ command: "setUrl", url: uri });
 		this.panel.reveal();

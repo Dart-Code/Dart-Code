@@ -138,7 +138,7 @@ export class DebugCommands implements IAmDisposable {
 		}));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.touchbar })));
 		devToolsPages.forEach((page) => {
-			void vs.commands.executeCommand("setContext", `dart-code:devToolsSupports${page.commandSuffix}`, this.devTools.isPageAvailable(page));
+			void vs.commands.executeCommand("setContext", `dart-code:devToolsSupports${page.commandSuffix}`, this.devTools.isPageAvailable(true, page));
 			this.disposables.push(vs.commands.registerCommand(`dart.openDevTools${page.commandSuffix}`, async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
 				options = Object.assign({}, options, { pageId: page.id });
 				return vs.commands.executeCommand("dart.openDevTools", options);
@@ -149,22 +149,27 @@ export class DebugCommands implements IAmDisposable {
 			vs.commands.executeCommand("dart.openDevTools", options)));
 		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string, location?: DevToolsLocation, commandSource?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			const commandSource = options?.commandSource ?? CommandSource.commandPalette;
-			if (!debugSessions.length)
-				return this.devTools.spawnForNoSession({ commandSource });
-
-			const session = options && options.debugSessionId
-				? debugSessions.find((s) => s.session.id === options.debugSessionId)
-				: await this.getDebugSession();
-			if (!session)
-				return; // User cancelled or specified session was gone
-
-			// Only show a notification if we were not triggered automatically.
-			const notify = !options || options.triggeredAutomatically !== true;
 			const pageId = options?.pageId;
 			const location = options?.location;
 
-			if (session.vmServiceUri) {
-				return this.devTools.spawnForSession(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource, location });
+			// Check whether we'll need a VM Service to open this page.
+			const page = devToolsPages.find((p) => p.id === pageId);
+			const requiresVmService = page && !page.isStaticTool;
+
+			let session: DartDebugSessionInformation | undefined;
+			if (requiresVmService || debugSessions.length) {
+				session = options && options.debugSessionId
+					? debugSessions.find((s) => s.session.id === options.debugSessionId)
+					: await this.getDebugSession();
+				if (!session)
+					return; // User cancelled or specified session was gone
+			}
+
+			// Only show a notification if we were not triggered automatically.
+			const notify = !options || options.triggeredAutomatically !== true;
+
+			if (!session || session?.vmServiceUri) {
+				return this.devTools.spawn(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource, location });
 			} else if (session.session.configuration.noDebug) {
 				void vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {
@@ -813,7 +818,7 @@ export class DebugCommands implements IAmDisposable {
 			const inspectAction = `Inspect Widget`;
 			const choice = await vs.window.showWarningMessage(data.errorDescription, inspectAction, doNotAskAgainAction);
 			if (choice === inspectAction && session.vmServiceUri) {
-				void this.devTools.spawnForSession(
+				void this.devTools.spawn(
 					session as DartDebugSessionInformation & { vmServiceUri: string },
 					{
 						inspectorRef: data.inspectorReference,

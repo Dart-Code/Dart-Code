@@ -1051,7 +1051,7 @@
 				},
 				{
 					"command": "dart.openDevToolsDeepLinks",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:devToolsSupportsDeepLinks"
+					"when": "dart-code:anyProjectLoaded && dart-code:devToolsSupportsDeepLinks"
 				},
 				{
 					"command": "_dart.openDevTools.touchBar",
