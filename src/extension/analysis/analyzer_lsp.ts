@@ -425,7 +425,10 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			hostKind,
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
 			outline: true,
-			previewSurveys: config.previewSurveys,
+			// For legacy SDKs, removed from server in https://dart-review.googlesource.com/c/sdk/+/349742
+			// Can be removed in future when the SDKs that needed the flag is a small enough portion that
+			// it's ok for them to not get the surveys.
+			previewSurveys: true,
 			remoteName: vs.env.remoteName,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
 		},
