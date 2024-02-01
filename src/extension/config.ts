@@ -160,7 +160,6 @@ class Config {
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
-	get previewSurveys(): boolean { return this.getConfig<boolean>("previewSurveys", true); }
 	get projectSearchDepth(): number { return this.getConfig<number>("projectSearchDepth", 5); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get renameFilesWithClasses(): "never" | "prompt" | "always" { return this.getConfig<"never" | "prompt" | "always">("renameFilesWithClasses", "never"); }
