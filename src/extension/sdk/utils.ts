@@ -137,12 +137,23 @@ export class SdkUtils {
 				}
 			} else if (selectedItem === downloadAction) {
 				if (sdkType === "Flutter") {
-					if (await this.tryFlutterCloneIfGitAvailable(commandToReRun)) {
-						break;
+					const cloneResult = await this.tryFlutterCloneIfGitAvailable(commandToReRun);
+					switch (cloneResult) {
+						case CloneSdkResult.succeeded:
+						case CloneSdkResult.cancelled:
+							break;
+						case CloneSdkResult.noGit:
+							if (await window.showErrorMessage("Unable to clone Flutter because Git was not found. Please clone or download the Flutter SDK manually.", "Setup Instructions"))
+								await envUtils.openInBrowser(downloadUrl);
+						case CloneSdkResult.failed:
+							if (await window.showErrorMessage("Failed to clone Flutter using Git. Please clone or download the Flutter SDK manually.", "Setup Instructions"))
+								await envUtils.openInBrowser(downloadUrl);
+							break;
 					}
+				} else {
+					await envUtils.openInBrowser(downloadUrl);
+					break;
 				}
-				await envUtils.openInBrowser(downloadUrl);
-				break;
 			} else if (selectedItem === showLogAction) {
 				void openLogContents(undefined, ringLogContents);
 				break;
@@ -152,7 +163,7 @@ export class SdkUtils {
 		}
 	}
 
-	private async tryFlutterCloneIfGitAvailable(commandToReRun: string | undefined): Promise<boolean> {
+	private async tryFlutterCloneIfGitAvailable(commandToReRun: string | undefined): Promise<CloneSdkResult> {
 		let gitExecutable = "git";
 
 		const gitAvailable: GitOperationResult = await window.withProgress({
@@ -179,35 +190,35 @@ export class SdkUtils {
 
 				const gitProc = await runToolProcess(this.logger, undefined, gitExecutable, ["--version"], undefined, cancellationToken);
 				if (cancellationToken.isCancellationRequested)
-					return "CANCEL";
+					return GitOperationResult.cancelled;
 				if (gitProc.exitCode !== 0) {
 					this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow:\n`
 						+ `Exit code: ${gitProc.exitCode}\n`
 						+ `stdout: ${gitProc.stdout}\n`
 						+ `stderr: ${gitProc.stderr}\n`);
-					return "ERROR";
+					return GitOperationResult.error;
 				}
 			} catch (e) {
 				if (cancellationToken.isCancellationRequested)
-					return "CANCEL";
+					return GitOperationResult.cancelled;
 				this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow: ${e}`);
-				return "ERROR";
+				return GitOperationResult.error;
 			}
-			return "SUCCESS";
+			return GitOperationResult.success;
 		});
 
-		if (gitAvailable !== "SUCCESS") {
-			this.analytics.logGitCloneSdk(
-				gitAvailable === "CANCEL"
-					? CloneSdkResult.cancelled
-					: CloneSdkResult.noGit,
-			);
-			return false;
+		if (gitAvailable !== GitOperationResult.success) {
+			const result = gitAvailable === GitOperationResult.cancelled
+				? CloneSdkResult.cancelled
+				: CloneSdkResult.noGit;
+			this.analytics.logGitCloneSdk(result);
+			return result;
 		}
 
-		const flutterSdkFolder = await this.promptForFlutterClone(gitExecutable);
+		const cloneResult = await this.promptForFlutterClone(gitExecutable);
+		const flutterSdkFolder = cloneResult.folder;
 		if (!flutterSdkFolder)
-			return false;
+			return cloneResult.result;
 
 		await config.setGlobalFlutterSdkPath(flutterSdkFolder);
 		await initializeFlutterSdk(this.logger, path.join(flutterSdkFolder, flutterPath));
@@ -218,11 +229,11 @@ export class SdkUtils {
 		if (commandToReRun)
 			void commands.executeCommand(commandToReRun);
 
-		return true;
+		return CloneSdkResult.succeeded;
 
 	}
 
-	private async promptForFlutterClone(gitExecutable: string): Promise<string | undefined> {
+	private async promptForFlutterClone(gitExecutable: string): Promise<{ folder?: string, result: CloneSdkResult }> {
 		const selectedFolders =
 			await window.showOpenDialog({
 				canSelectFiles: false,
@@ -234,17 +245,19 @@ export class SdkUtils {
 		if (selectedFolders && selectedFolders.length === 1) {
 			const workingDirectory = fsPath(selectedFolders[0]);
 			const cloneResult = await this.cloneFlutterWithProgress(gitExecutable, workingDirectory);
-			const didClone = cloneResult === "SUCCESS";
+			const didClone = cloneResult === GitOperationResult.success;
 
-			const result = cloneResult === "SUCCESS"
+			const result = cloneResult === GitOperationResult.success
 				? CloneSdkResult.succeeded
-				: cloneResult === "CANCEL"
+				: cloneResult === GitOperationResult.cancelled
 					? CloneSdkResult.cancelled
 					: CloneSdkResult.failed;
 			this.analytics.logGitCloneSdk(result);
 
-			return didClone ? path.join(workingDirectory, "flutter") : undefined;
+			return { result, folder: didClone ? path.join(workingDirectory, "flutter") : undefined };
 		}
+
+		return { result: CloneSdkResult.cancelled };
 	}
 
 	private async cloneFlutterWithProgress(gitExecutable: string, workingDirectory: string): Promise<GitOperationResult> {
@@ -258,7 +271,7 @@ export class SdkUtils {
 			try {
 				const gitProc = await runToolProcess(this.logger, workingDirectory, gitExecutable, ["clone", "-b", "stable", gitUrl], undefined, cancellationToken);
 				if (cancellationToken.isCancellationRequested)
-					return "CANCEL";
+					return GitOperationResult.cancelled;
 
 				if (gitProc.exitCode !== 0) {
 					this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow:\n`
@@ -269,15 +282,15 @@ export class SdkUtils {
 					if (!cancellationToken.isCancellationRequested)
 						void window.showErrorMessage(`Failed to clone Flutter: ${gitProc.stderr}`);
 
-					return "ERROR";
+					return GitOperationResult.error;
 				}
 
-				return "SUCCESS";
+				return GitOperationResult.success;
 			} catch (e) {
 				if (cancellationToken.isCancellationRequested)
-					return "CANCEL";
+					return GitOperationResult.cancelled;
 				this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow: ${e}`);
-				return "ERROR";
+				return GitOperationResult.error;
 			}
 		});
 	}
@@ -672,4 +685,4 @@ function findRootContaining(folder: string, childName: string, expect: "FILE" | 
 
 export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
 
-type GitOperationResult = "SUCCESS" | "ERROR" | "CANCEL";
+enum GitOperationResult { success, error, cancelled };
