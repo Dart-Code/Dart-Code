@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { commands, ExtensionContext, ProgressLocation, window, workspace } from "vscode";
+import { commands, ExtensionContext, extensions, ProgressLocation, window, workspace } from "vscode";
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { ExtensionConfig, Logger, Sdks, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
@@ -153,13 +153,31 @@ export class SdkUtils {
 	}
 
 	private async tryFlutterCloneIfGitAvailable(commandToReRun: string | undefined): Promise<boolean> {
+		let gitExecutable = "git";
+
 		const gitAvailable: GitOperationResult = await window.withProgress({
 			cancellable: true,
 			location: ProgressLocation.Notification,
 			title: "Checking for git",
 		}, async (_, cancellationToken): Promise<GitOperationResult> => {
 			try {
-				const gitProc = await runToolProcess(this.logger, undefined, "git", ["--version"], undefined, cancellationToken);
+				// First try to find git from VS Code. It searches both PATH and some other well-known
+				// locations.
+				try {
+					const gitExtension = extensions.getExtension("vscode.git");
+					// If the extension isn't already activated, probably it's disabled or the user isn't
+					// using it.
+					if (gitExtension && gitExtension.isActive) {
+						const gitApi = gitExtension.exports.getAPI(1);
+						const gitApiPath = gitApi?.git.path;
+						if (gitApiPath)
+							gitExecutable = gitApiPath;
+					}
+				} catch (e) {
+					// Could be that Git extension is disabled or "git.enabled" setting is false.
+				}
+
+				const gitProc = await runToolProcess(this.logger, undefined, gitExecutable, ["--version"], undefined, cancellationToken);
 				if (cancellationToken.isCancellationRequested)
 					return "CANCEL";
 				if (gitProc.exitCode !== 0) {
@@ -187,7 +205,7 @@ export class SdkUtils {
 			return false;
 		}
 
-		const flutterSdkFolder = await this.promptForFlutterClone();
+		const flutterSdkFolder = await this.promptForFlutterClone(gitExecutable);
 		if (!flutterSdkFolder)
 			return false;
 
@@ -204,7 +222,7 @@ export class SdkUtils {
 
 	}
 
-	private async promptForFlutterClone(): Promise<string | undefined> {
+	private async promptForFlutterClone(gitExecutable: string): Promise<string | undefined> {
 		const selectedFolders =
 			await window.showOpenDialog({
 				canSelectFiles: false,
@@ -215,7 +233,7 @@ export class SdkUtils {
 			});
 		if (selectedFolders && selectedFolders.length === 1) {
 			const workingDirectory = fsPath(selectedFolders[0]);
-			const cloneResult = await this.cloneFlutterWithProgress(workingDirectory);
+			const cloneResult = await this.cloneFlutterWithProgress(gitExecutable, workingDirectory);
 			const didClone = cloneResult === "SUCCESS";
 
 			const result = cloneResult === "SUCCESS"
@@ -229,7 +247,7 @@ export class SdkUtils {
 		}
 	}
 
-	private async cloneFlutterWithProgress(workingDirectory: string): Promise<GitOperationResult> {
+	private async cloneFlutterWithProgress(gitExecutable: string, workingDirectory: string): Promise<GitOperationResult> {
 		const gitUrl = "https://github.com/flutter/flutter.git";
 
 		return await window.withProgress({
@@ -238,7 +256,7 @@ export class SdkUtils {
 			title: cloningFlutterMessage,
 		}, async (_, cancellationToken): Promise<GitOperationResult> => {
 			try {
-				const gitProc = await runToolProcess(this.logger, workingDirectory, "git", ["clone", "-b", "stable", gitUrl], undefined, cancellationToken);
+				const gitProc = await runToolProcess(this.logger, workingDirectory, gitExecutable, ["clone", "-b", "stable", gitUrl], undefined, cancellationToken);
 				if (cancellationToken.isCancellationRequested)
 					return "CANCEL";
 
@@ -508,11 +526,11 @@ export class SdkUtils {
 		}
 	}
 
-	private findDartSdk(folders: string[]) {
+	private findDartSdk(folders: string[]): SdkSearchResults {
 		return this.searchPaths(folders, executableNames.dart, (p) => this.hasExecutable(p, dartVMPath) && hasDartAnalysisServer(p));
 	}
 
-	private findFlutterSdk(folders: string[]) {
+	private findFlutterSdk(folders: string[]): SdkSearchResults {
 		return this.searchPaths(folders, executableNames.flutter, (p) => this.hasExecutable(p, flutterPath));
 	}
 
