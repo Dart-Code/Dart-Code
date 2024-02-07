@@ -3,12 +3,11 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { isWin } from "../../shared/constants";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
-import { getAllProjectFolders } from "../../shared/vscode/utils";
+import { fsPath } from "../../shared/utils/fs";
+import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { DebugCommands, debugSessions } from "../commands/debug";
-import { config } from "../config";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
-import { getExcludedFolders } from "../utils";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
@@ -70,17 +69,14 @@ export class VmServiceExtensions {
 
 			try {
 				if (e.body.extensionRPC === pubRootDirectoriesService) {
-					// TODO(helin24): Check if all of the places that call `getAllProjectFolders` need similar settings; we could potentially simplify the arguments.
-					const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: !this.workspaceContext.config.forceFlutterWorkspace, searchDepth: config.projectSearchDepth, onlyWorkspaceRoots: this.workspaceContext.config.forceFlutterWorkspace });
-
 					const params: { [key: string]: string } = {
 						// TODO: Is this OK???
 						isolateId: e.body.isolateId,
 					};
 
 					let argNum = 0;
-					for (const projectFolder of projectFolders) {
-						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(projectFolder);
+					for (const workspaceFolder of getDartWorkspaceFolders()) {
+						params[`arg${argNum++}`] = this.formatPathForPubRootDirectories(fsPath(workspaceFolder.uri));
 					}
 
 					await this.callServiceExtension(e.session, pubRootDirectoriesService, params);
