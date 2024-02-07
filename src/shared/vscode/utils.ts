@@ -374,6 +374,12 @@ export function buildHostKind({ appName, appHost, remoteName }: { appName?: stri
 	remoteName = cleanString(remoteName);
 	appHost = cleanString(appHost);
 
+	// There are a lot of uses of "server-distro" that have domains suffixed.
+	// We don't care too much about the specific domains for these, we should
+	// just group them all as "server-distro".
+	if (appHost?.startsWith("server-distro") || remoteName?.startsWith("server-distro"))
+		return "server-distro";
+
 	if (appHost && remoteName && appHost !== remoteName)
 		return `${appHost}-${remoteName}`;
 	else if (appHost)

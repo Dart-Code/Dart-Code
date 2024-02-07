@@ -26,17 +26,25 @@ describe("buildHostKind", () => {
 		verify("Foo", "web", "myapp.me.cloudthing.dev", "web-cloudthing.dev");
 	});
 
+	it("removes server-distro hostnames", () => {
+		verify("Foo", "server-distro", "my-ide.foo", "server-distro");
+		verify("Foo", "server-distro-my-ide.foo", "bar", "server-distro");
+		verify("Foo", "server-distro-my-ide.foo", "", "server-distro");
+		verify("Foo", "server-distro-my-ide.foo", undefined, "server-distro");
+		verify("Foo", "server-distro-my-ide.foo", "my-ide.foo", "server-distro");
+	});
+
 	it("removes local hosts", () => {
-		verify("Foo", "server-distro", "danny.local", "server-distro");
-		verify("Foo", "server-distro", "localhost", "server-distro");
-		verify("Foo", "server-distro", "foo-danny.local", "server-distro");
+		verify("Foo", "my-cloud-ide", "danny.local", "my-cloud-ide");
+		verify("Foo", "my-cloud-ide", "localhost", "my-cloud-ide");
+		verify("Foo", "my-cloud-ide", "foo-danny.local", "my-cloud-ide");
 	});
 
 	it("removes port and version numbers", () => {
 		verify("Foo", "web", "cloudthing.dev:1234", "web-cloudthing.dev");
-		verify("Foo", "server-distro", "143.192:8080", "server-distro");
-		verify("Foo", "server-distro", "foo-143.192:8080", "server-distro-foo");
-		verify("Foo", "server-distro-1.2", "foo-143.192:8080", "server-distro-foo");
+		verify("Foo", "my-cloud-ide", "143.192:8080", "my-cloud-ide");
+		verify("Foo", "my-cloud-ide", "foo-143.192:8080", "my-cloud-ide-foo");
+		verify("Foo", "my-cloud-ide-1.2", "foo-143.192:8080", "my-cloud-ide-foo");
 	});
 
 	it("handles only appName", () => {
