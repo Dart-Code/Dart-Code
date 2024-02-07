@@ -96,6 +96,7 @@ import { DartDebugAdapterGlobalEvaluationContextFactory } from "./providers/debu
 import { DartDebugAdapterHexViewFactory } from "./providers/debug_adapter_hex_view_factory";
 import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_factory";
 import { DartDebugAdapterRemoveErrorShowUserFactory } from "./providers/debug_adapter_remove_error_showUser_factory";
+import { DartDebugAdapterSupportsUrisFactory } from "./providers/debug_adapter_support_uris_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
 import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
 import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
@@ -578,8 +579,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", debugProvider));
 
 	// Debug trackers
-	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
-	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
 	const globalEvaluationContext = new DartDebugAdapterGlobalEvaluationContextFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", globalEvaluationContext));
 	const hexFormatter = new DartDebugAdapterHexViewFactory(logger);
@@ -589,7 +588,12 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", forcedDebugMode));
 	const removeErrorShowUser = new DartDebugAdapterRemoveErrorShowUserFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", removeErrorShowUser));
-	const trackerFactories = [debugLogger, hexFormatter, forcedDebugMode, removeErrorShowUser];
+	const supportUris = new DartDebugAdapterSupportsUrisFactory();
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", supportUris));
+	// Logger goes last, so it logs any mutations made by the above.
+	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
+	const trackerFactories = [debugLogger, hexFormatter, forcedDebugMode, removeErrorShowUser, supportUris];
 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
