@@ -450,8 +450,8 @@ export class DebugCommands implements IAmDisposable {
 		if (hasPromptedAboutDebugSettings || this.context.breakpointInNonDebuggableFileDoNotShowAgain || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
 			return;
 
-		// Don't consider non-Dart files.
-		if (!fsPath(e.location.uri).toLocaleLowerCase().endsWith(".dart"))
+		// Don't consider non-files or non-Dart files.
+		if (e.location.uri.scheme !== "file" || !fsPath(e.location.uri).toLocaleLowerCase().endsWith(".dart"))
 			return;
 
 		// If it's inside the workspace we don't want to prompt.
