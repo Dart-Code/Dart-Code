@@ -7,7 +7,7 @@ import { CategoryLogger } from "../logging";
 import { PromiseCompleter, disposeAll } from "../utils";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
-import { DtdRequest, DtdResponse, DtdResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, Service, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult } from "./tooling_daemon_services";
+import { DtdRequest, DtdResponse, DtdResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, ReadFileAsStringParams, ReadFileAsStringResult, Service, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
@@ -86,6 +86,7 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	public send(service: Service.setIDEWorkspaceRoots, params: SetIDEWorkspaceRootsParams): Promise<SetIDEWorkspaceRootsResult>;
 	public send(service: Service.getIDEWorkspaceRoots, params: GetIDEWorkspaceRootsParams): Promise<GetIDEWorkspaceRootsResult>;
+	public send(service: Service.readFileAsString, params: ReadFileAsStringParams): Promise<ReadFileAsStringResult>;
 	public async send(service: Service, params: any): Promise<DtdResult> {
 		if (!this.connection)
 			return Promise.reject("DTD connection is unavailable");

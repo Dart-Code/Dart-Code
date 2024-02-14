@@ -17,6 +17,7 @@ export interface DtdRequest {
 export enum Service {
 	setIDEWorkspaceRoots = "FileSystem.setIDEWorkspaceRoots",
 	getIDEWorkspaceRoots = "FileSystem.getIDEWorkspaceRoots",
+	readFileAsString = "FileSystem.readFileAsString",
 }
 
 export interface SetIDEWorkspaceRootsParams {
@@ -29,4 +30,12 @@ export type GetIDEWorkspaceRootsParams = void;
 export interface GetIDEWorkspaceRootsResult {
 	type: "IDEWorkspaceRoots",
 	ideWorkspaceRoots: string[];
+}
+
+export interface ReadFileAsStringParams {
+	uri: string;
+}
+export interface ReadFileAsStringResult {
+	type: "FileContent",
+	content: string;
 }
