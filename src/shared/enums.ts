@@ -62,6 +62,7 @@ export enum LogCategory {
 	FlutterTest,
 	VmService,
 	WebDaemon,
+	DartToolingDaemon,
 }
 
 export enum LogSeverity {

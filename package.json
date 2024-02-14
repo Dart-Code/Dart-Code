@@ -2272,6 +2272,15 @@
 						"description": "The path to a log file for communication between Dart Code and the Analysis Server.",
 						"scope": "machine-overridable"
 					},
+					"dart.toolingDaemonLogFile": {
+						"type": [
+							"null",
+							"string"
+						],
+						"default": null,
+						"markdownDescription": "The path to a log file for the `dart tooling-daemon` service, which coordinates between various Dart and Flutter tools and extensions.",
+						"scope": "machine-overridable"
+					},
 					"dart.dapLogFile": {
 						"type": [
 							"null",

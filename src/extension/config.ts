@@ -113,6 +113,7 @@ class Config {
 	get flutterCreatePlatforms(): string[] | undefined { return this.getConfig<string[] | undefined>("flutterCreatePlatforms", undefined); }
 	get flutterCustomEmulators(): Array<{ id: string, name: string, executable: string, args?: string[] }> { return this.getConfig<Array<{ id: string, name: string, executable: string, args?: string[] }>>("flutterCustomEmulators", []); }
 	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
+	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null))); }
 	get flutterGenerateLocalizationsOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" { return this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty">("flutterGenerateLocalizationsOnSave", "never"); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
 	get flutterHotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
@@ -216,6 +217,7 @@ class Config {
 
 	// Experiments that aren't in package.json.
 	get experimentalMacroSupport(): boolean { return this.getConfig<boolean>("experimentalMacroSupport", false); }
+	get experimentalToolingDaemon(): boolean { return this.getConfig<boolean>("experimentalToolingDaemon", false); }
 
 	public readonly resolved = new ResolvedConfig();
 

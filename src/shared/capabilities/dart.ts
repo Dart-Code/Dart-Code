@@ -61,6 +61,8 @@ export class DartCapabilities {
 	get sdkDapProvidesExceptionText() { return versionIsAtLeast(this.version, "2.18.0-265"); }
 	get supportsSetIsolatePauseModeForWeb() { return versionIsAtLeast(this.version, "2.19.0"); }
 	get supportsDevToolsVsCodeExtensions() { return versionIsAtLeast(this.version, "3.3.0-247"); }
+	// TODO(dantup): Confirm!
+	get supportsToolingDaemon() { return versionIsAtLeast(this.version, "3.4.0-139"); }
 	// TODO: Update these (along with Flutter) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
