@@ -61,7 +61,6 @@ export class DartCapabilities {
 	get sdkDapProvidesExceptionText() { return versionIsAtLeast(this.version, "2.18.0-265"); }
 	get supportsSetIsolatePauseModeForWeb() { return versionIsAtLeast(this.version, "2.19.0"); }
 	get supportsDevToolsVsCodeExtensions() { return versionIsAtLeast(this.version, "3.3.0-247"); }
-	// TODO(dantup): Confirm!
 	get supportsToolingDaemon() { return versionIsAtLeast(this.version, "3.4.0-139"); }
 	// TODO(dantup): This is not really SDK related, just remove the
 	//  check when https://github.com/flutter/devtools/pull/7191 is merged
