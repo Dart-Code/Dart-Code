@@ -5,7 +5,6 @@ import * as vs from "vscode";
 import { isLinux } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, extApi, logger } from "../helpers";
-import sinon = require("sinon");
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {

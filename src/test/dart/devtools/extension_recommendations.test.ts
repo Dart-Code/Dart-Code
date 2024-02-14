@@ -1,8 +1,8 @@
 import { strict as assert } from "assert";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { noThanksAction } from "../../../shared/constants";
 import { activate, extApi, sb } from "../../helpers";
-import sinon = require("sinon");
 
 describe("devtools extensions recommendations", () => {
 	beforeEach("activate", () => activate());

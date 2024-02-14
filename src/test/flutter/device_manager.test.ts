@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import * as sinon from "sinon";
 import { commands, window } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
 import { runFlutterCreatePrompt, yesAction } from "../../shared/constants";
@@ -8,7 +9,6 @@ import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
 import { activateWithoutAnalysis, delay, extApi, logger, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../services/fake_stdio_service";
-import sinon = require("sinon");
 
 describe("device_manager", () => {
 	let dm: FlutterDeviceManager;

@@ -7,7 +7,6 @@ import { internalApiSymbol } from "../../shared/symbols";
 import { fsPath } from "../../shared/utils/fs";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
 import { waitForResult } from "../helpers";
-import sinon = require("sinon");
 
 describe("dart", () => {
 	it("created a templated project", async () => {
