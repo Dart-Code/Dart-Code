@@ -2,6 +2,7 @@ import { ExtensionContext, languages, workspace } from "vscode";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
+import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { promptToReloadExtension } from "../utils";
 import { getToolEnv } from "../utils/processes";
@@ -38,7 +39,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	private sendWorkspaceRootsToDaemon() {
-		const workspaceFolderRootUris = workspace.workspaceFolders?.map((wf) => wf.uri.toString()) ?? [];
+		const workspaceFolderRootUris = getDartWorkspaceFolders().map((wf) => wf.uri.toString());
 		void this.sendWorkspaceFolders(workspaceFolderRootUris);
 	}
 }
