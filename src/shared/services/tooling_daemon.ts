@@ -81,11 +81,12 @@ export class DartToolingDaemon implements IAmDisposable {
 			if ("error" in json)
 				completer.reject(json.error);
 			else
-				completer.resolve(json);
+				completer.resolve(json.result);
 		}
 	}
 
 	public send(service: Service.setIDEWorkspaceRoots, params: SetIDEWorkspaceRootsParams): Promise<SetIDEWorkspaceRootsResult>;
+	public send(service: Service.getIDEWorkspaceRoots, params: GetIDEWorkspaceRootsParams): Promise<GetIDEWorkspaceRootsResult>;
 	public async send(service: Service, params: any): Promise<DtdResult> {
 		if (!this.connection)
 			return Promise.reject("DTD connection is unavailable");
@@ -98,7 +99,7 @@ export class DartToolingDaemon implements IAmDisposable {
 			id,
 			jsonrpc: "2.0",
 			method: service,
-			params: params || {},
+			params: params ?? {},
 		};
 		const str = JSON.stringify(json);
 		this.logTraffic(`==> ${str}\n`);

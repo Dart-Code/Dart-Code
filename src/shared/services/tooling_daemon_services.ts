@@ -1,13 +1,11 @@
 export interface DtdResult { type: string }
 export interface DtdError {
-	error: {
-		code: number,
-		message: string,
-		data: any,
-	};
+	code: number,
+	message: string,
+	data: any,
 }
 export type DtdSuccess = DtdResult & { type: "Success" };
-export type DtdResponse = { id: string } & (DtdResult | DtdError);
+export type DtdResponse = { id: string } & ({ result: DtdResult } | { error: DtdError });
 
 export interface DtdRequest {
 	jsonrpc: "2.0",
@@ -18,11 +16,17 @@ export interface DtdRequest {
 
 export enum Service {
 	setIDEWorkspaceRoots = "FileSystem.setIDEWorkspaceRoots",
+	getIDEWorkspaceRoots = "FileSystem.getIDEWorkspaceRoots",
 }
 
 export interface SetIDEWorkspaceRootsParams {
 	secret: string;
 	roots: string[];
 }
-
 export type SetIDEWorkspaceRootsResult = DtdSuccess;
+
+export type GetIDEWorkspaceRootsParams = void;
+export interface GetIDEWorkspaceRootsResult {
+	type: "IDEWorkspaceRoots",
+	ideWorkspaceRoots: string[];
+}
