@@ -9,7 +9,6 @@ import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
 import { DtdRequest, DtdResponse, DtdResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, Service, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult } from "./tooling_daemon_services";
 
-
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
 	private readonly logger: CategoryLogger;
@@ -63,7 +62,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.connectedCompleter.resolve(this.connection!);
 	}
 
-	public async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
+	protected async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
 		const connection = await this.connected;
 		const secret = connection.dtdSecret;
 		await this.send(Service.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
