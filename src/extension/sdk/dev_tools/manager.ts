@@ -23,6 +23,7 @@ import { Context } from "../../../shared/vscode/workspace";
 import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
 import { config } from "../../config";
+import { DartToolingDaemon } from "../../dart/tooling_daemon";
 import { PubGlobal } from "../../pub/global";
 import { ExtensionRecommentations } from "../../recommendations/recommendations";
 import { getExcludedFolders } from "../../utils";
@@ -51,7 +52,16 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly context: Context, private readonly analytics: Analytics, private readonly pubGlobal: PubGlobal, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly extensionRecommentations: ExtensionRecommentations) {
+	constructor(
+		private readonly logger: Logger,
+		private readonly context: Context,
+		private readonly analytics: Analytics,
+		private readonly pubGlobal: PubGlobal,
+		private readonly toolingDaemon: DartToolingDaemon | undefined,
+		private readonly dartCapabilities: DartCapabilities,
+		private readonly flutterCapabilities: FlutterCapabilities,
+		private readonly extensionRecommentations: ExtensionRecommentations,
+	) {
 		this.statusBarItem.name = "Dart/Flutter DevTools";
 		this.statusBarItem.text = "Dart DevTools";
 		this.setNotStartedStatusBar();
@@ -441,7 +451,7 @@ export class DevToolsManager implements vs.Disposable {
 					this.logger.error(e);
 				}
 			}
-			const service = this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.dartCapabilities);
+			const service = this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.toolingDaemon, this.dartCapabilities);
 			this.disposables.push(service);
 
 			service.registerForServerStarted((n) => {
@@ -560,16 +570,45 @@ export class DevToolsManager implements vs.Disposable {
 class DevToolsService extends StdIOService<UnknownNotification> {
 	public readonly capabilities = DevToolsServerCapabilities.empty;
 
-	constructor(logger: Logger, workspaceContext: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
+	constructor(
+		logger: Logger,
+		private readonly workspaceContext: DartWorkspaceContext,
+		private readonly toolingDaemon: DartToolingDaemon | undefined,
+		private readonly dartCapabilities: DartCapabilities,
+	) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
 
+		void this.connect();
+	}
+
+	private async connect(): Promise<void> {
+		const workspaceContext = this.workspaceContext;
+		const toolingDaemon = this.toolingDaemon;
+		const dartCapabilities = this.dartCapabilities;
+
 		const dartVm = path.join(workspaceContext.sdks.dart, dartVMPath);
-		const devToolsArgs = ["--machine", "--allow-embedding"];
 		const customDevTools = config.customDevTools;
+
+		// Used for both `'dart devtools' and custom devtools
+		const devToolsArgs = [
+			"--machine",
+			"--allow-embedding",
+		];
+
+		if (toolingDaemon) {
+			// 'dart devtools' got support before 'devtools_tool serve'.
+			const supportsDtdUri = customDevTools?.path
+				? dartCapabilities.supportsDtdUriInDevToolsToolServe
+				: true; // We don't have a toolingDaemon unless 'dart devtools's supports --dtd-uri.
+			if (supportsDtdUri) {
+				devToolsArgs.push("--dtd-uri");
+				devToolsArgs.push(await toolingDaemon.dtdUri);
+			}
+		}
 
 		const executionInfo = customDevTools?.path ?
 			{
-				args: ["serve", "--machine", ...(customDevTools.args ?? [])],
+				args: ["serve", ...(customDevTools.args ?? [])],
 				cwd: customDevTools.path,
 				env: customDevTools.env,
 				executable: path.join(customDevTools.path, devToolsToolPath),

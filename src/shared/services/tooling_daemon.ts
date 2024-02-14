@@ -1,37 +1,47 @@
 import * as path from "path";
-import { workspace } from "vscode";
 import * as ws from "ws";
-import { dartVMPath, tenMinutesInMs } from "../../shared/constants";
-import { LogCategory } from "../../shared/enums";
-import { DartSdks, IAmDisposable, Logger } from "../../shared/interfaces";
-import { CategoryLogger } from "../../shared/logging";
-import { UnknownNotification } from "../../shared/services/interfaces";
-import { StdIOService } from "../../shared/services/stdio_service";
-import { PromiseCompleter, disposeAll } from "../../shared/utils";
-import { config } from "../config";
-import { promptToReloadExtension } from "../utils";
-import { getToolEnv } from "../utils/processes";
-import { DtdRequest, DtdResponse, DtdResult, Service, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult } from "./tooling_daemon_services";
+import { dartVMPath, tenMinutesInMs } from "../constants";
+import { LogCategory } from "../enums";
+import { DartSdks, IAmDisposable, Logger } from "../interfaces";
+import { CategoryLogger } from "../logging";
+import { PromiseCompleter, disposeAll } from "../utils";
+import { UnknownNotification } from "./interfaces";
+import { StdIOService } from "./stdio_service";
+import { DtdRequest, DtdResponse, DtdResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, Service, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult } from "./tooling_daemon_services";
+
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
 	private readonly logger: CategoryLogger;
 
 	private readonly dtdProcess: DartToolingDaemonProcess;
-	private connection: { socket: ws.WebSocket; dtdUri: string, dtdSecret: string } | undefined;
+	private connection: ConnectionInfo | undefined;
 	private nextId = 1;
 	private completers: { [key: string]: PromiseCompleter<DtdResult> } = {};
 
 	private hasShownTerminatedError = false;
 	private isShuttingDown = false;
 
-	constructor(logger: Logger, private readonly sdks: DartSdks) {
+	private connectedCompleter = new PromiseCompleter<ConnectionInfo>();
+	public get connected() { return this.connectedCompleter.promise; }
+
+	constructor(
+		logger: Logger,
+		sdks: DartSdks,
+		maxLogLineLength: number | undefined,
+		getToolEnv: () => any,
+		private readonly promptToReloadExtension: (prompt?: string, buttonText?: string, offerLog?: boolean) => Promise<void>,
+	) {
 		this.logger = new CategoryLogger(logger, LogCategory.DartToolingDaemon);
-		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks);
+		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, maxLogLineLength, getToolEnv);
 		this.disposables.push(this.dtdProcess);
 
 		void this.dtdProcess.dtdUri.then(() => this.connect());
 		void this.dtdProcess.processExit.then(() => this.handleClose());
+	}
+
+	public get dtdUri(): Promise<string> {
+		return this.dtdProcess.dtdUri;
 	}
 
 	private async connect() {
@@ -50,18 +60,13 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	private handleOpen() {
 		this.logger.info(`Connected to DTD`);
-
-		workspace.onDidChangeWorkspaceFolders(() => this.sendWorkspaceFolders());
-		this.sendWorkspaceFolders(); // Send initial.
+		this.connectedCompleter.resolve(this.connection!);
 	}
 
-	private sendWorkspaceFolders() {
-		if (!this.connection)
-			return;
-
-		const secret = this.connection.dtdSecret;
-		const roots = workspace.workspaceFolders?.map((wf) => wf.uri.toString()) ?? [];
-		void this.send(Service.setIDEWorkspaceRoots, { secret, roots });
+	public async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
+		const connection = await this.connected;
+		const secret = connection.dtdSecret;
+		await this.send(Service.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
 	}
 
 	private handleData(data: string) {
@@ -134,7 +139,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		// here can override hasShownTerminationError, for example to show the error when
 		// something tries to interact with the API (`notifyRequestAfterExit`).
 		this.hasShownTerminatedError = true;
-		void promptToReloadExtension(`The Dart Tooling Daemon ${which} ${message}.`, undefined, true);
+		void this.promptToReloadExtension(`The Dart Tooling Daemon ${which} ${message}.`, undefined, true);
 	}
 
 	public dispose(): any {
@@ -169,8 +174,8 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return this.processExitCompleter.promise;
 	}
 
-	constructor(logger: Logger, private readonly sdks: DartSdks) {
-		super(logger, config.maxLogLineLength, true, true);
+	constructor(logger: Logger, private readonly sdks: DartSdks, maxLogLineLength: number | undefined, getToolEnv: () => any) {
+		super(logger, maxLogLineLength, true, true);
 
 		const executable = path.join(this.sdks.dart, dartVMPath);
 		const daemonArgs = [
@@ -213,3 +218,4 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 	}
 }
 
+interface ConnectionInfo { socket: ws.WebSocket; dtdUri: string, dtdSecret: string }

@@ -4,12 +4,13 @@ import { Analyzer } from "../shared/analyzer";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { vsCodeVersion } from "../shared/capabilities/vscode";
-import { FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PUB_OUTDATED_SUPPORTED_CONTEXT, dartPlatformName, flutterExtensionIdentifier, isMac, isWin, platformDisplayName } from "../shared/constants";
+import { FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PUB_OUTDATED_SUPPORTED_CONTEXT, dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
+import { DartSdks, DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
 import { EmittingLogger, RingLog, captureLogs, logToConsole } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
+import { DartToolingDaemon } from "../shared/services/tooling_daemon";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
@@ -58,7 +59,6 @@ import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
 import { HotReloadOnSaveHandler } from "./dart/hot_reload_save_handler";
-import { DartToolingDaemon } from "./dart/tooling_daemon";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decorations_das";
 import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decorations_lsp";
@@ -288,11 +288,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	void vs.commands.executeCommand("setContext", FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, dartCapabilities.supportsFlutterSidebar);
 
 	// Dart Tooling Daemon.
-	const dartToolingDaemon = config.experimentalToolingDaemon && dartCapabilities.supportsToolingDaemon
-		? new DartToolingDaemon(logger, sdks)
-		: undefined;
-	if (dartToolingDaemon)
-		context.subscriptions.push(dartToolingDaemon);
+	const dartToolingDaemon = setupToolingDaemon(context, sdks);
+	function sendWorkspaceRootsToDaemon() {
+		if (!dartToolingDaemon) return;
+
+		const workspaceFolderRootUris = vs.workspace.workspaceFolders?.map((wf) => wf.uri.toString()) ?? [];
+		void dartToolingDaemon?.sendWorkspaceFolders(workspaceFolderRootUris);
+	}
+	sendWorkspaceRootsToDaemon(); // Send initial.
 
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
@@ -499,7 +502,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	const extensionRecommendations = new ExtensionRecommentations(analytics, extContext);
 
-	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartCapabilities, flutterCapabilities, extensionRecommendations);
+	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);
 
 	// Debug commands.
@@ -815,6 +818,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		if (!isUsingLsp)
 			recalculateDasAnalysisRoots();
 		checkForPackages();
+		sendWorkspaceRootsToDaemon();
 	}));
 
 	context.subscriptions.push(createWatcher("**/.packages", workspaceContext.events.onPackageMapChange));
@@ -865,6 +869,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 				testCoordinator,
 				testDiscoverer,
 				testModel,
+				toolingDaemon: dartToolingDaemon,
 				trackerFactories,
 				webClient,
 				workspaceContext,
@@ -1022,4 +1027,15 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContex
 	void vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyStandardDartProjects);
 	void vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
 	void vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);
+}
+
+function setupToolingDaemon(context: vs.ExtensionContext, sdks: DartSdks): DartToolingDaemon | undefined {
+	// Dart Tooling Daemon.
+	const dartToolingDaemon = config.experimentalToolingDaemon && dartCapabilities.supportsToolingDaemon
+		? new DartToolingDaemon(logger, sdks, config.maxLogLineLength, getToolEnv, promptToReloadExtension)
+		: undefined;
+	if (dartToolingDaemon)
+		context.subscriptions.push(dartToolingDaemon);
+
+	return dartToolingDaemon;
 }
