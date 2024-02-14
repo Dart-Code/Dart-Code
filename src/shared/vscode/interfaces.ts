@@ -8,6 +8,7 @@ import { DebuggerType, VersionStatus, VmService, VmServiceExtension } from "../e
 import { WebClient } from "../fetch";
 import { CustomScript, DartWorkspaceContext, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
+import { DartToolingDaemon } from "../services/tooling_daemon";
 import { TestSessionCoordinator } from "../test/coordinator";
 import { TestModel, TreeNode } from "../test/test_model";
 import { FlutterDeviceManager } from "./device_manager";
@@ -90,6 +91,7 @@ export interface InternalExtensionApi {
 	testCoordinator: TestSessionCoordinator;
 	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined } | undefined,
 	testModel: TestModel;
+	toolingDaemon: DartToolingDaemon;
 	webClient: WebClient;
 	workspaceContext: DartWorkspaceContext;
 }
