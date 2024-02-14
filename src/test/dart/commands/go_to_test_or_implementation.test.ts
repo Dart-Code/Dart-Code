@@ -1,10 +1,10 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { createFolderForFile, fsPath, tryDeleteFile } from "../../../shared/utils/fs";
 import { createTestFileAction, defaultDartTestFileContents } from "../../../shared/utils/test";
 import { activate, currentDoc, currentEditor, defer, emptyFile, extApi, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, sb, tryDelete, waitForResult } from "../../helpers";
-import sinon = require("sinon");
 
 describe("go to test/implementation file", () => {
 
