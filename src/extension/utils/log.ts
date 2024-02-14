@@ -15,6 +15,7 @@ export const userSelectableLogCategories: { [key: string]: LogCategory } = {
 	"Analysis Server Timings": LogCategory.AnalyzerTiming,
 	"Command Processes": LogCategory.CommandProcesses,
 	"Dart Test": LogCategory.DartTest,
+	"Dart Tooling Daemon": LogCategory.DartToolingDaemon,
 	"Debugger DAP Protocol": LogCategory.DAP,
 	"Debugger VM Service": LogCategory.VmService,
 	"DevTools": LogCategory.DevTools,

@@ -58,6 +58,7 @@ import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
 import { HotReloadOnSaveHandler } from "./dart/hot_reload_save_handler";
+import { DartToolingDaemon } from "./dart/tooling_daemon";
 import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
 import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decorations_das";
 import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decorations_lsp";
@@ -140,7 +141,6 @@ let analytics: Analytics;
 let showTodos: boolean | string[] | undefined;
 let previousSettings: string;
 
-let analyzerShutdown: Promise<void> | undefined;
 let experiments: KnownExperiments;
 
 const loggers: IAmDisposable[] = [];
@@ -189,6 +189,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Set up log files.
 	setupLog(config.analyzerLogFile, LogCategory.Analyzer);
 	setupLog(config.flutterDaemonLogFile, LogCategory.FlutterDaemon);
+	setupLog(config.toolingDaemonLogFile, LogCategory.DartToolingDaemon);
 	setupLog(config.dapLogFile, LogCategory.DAP);
 	setupLog(config.devToolsLogFile, LogCategory.DevTools);
 
@@ -286,6 +287,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	void vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 	void vs.commands.executeCommand("setContext", FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, dartCapabilities.supportsFlutterSidebar);
 
+	// Dart Tooling Daemon.
+	const dartToolingDaemon = config.experimentalToolingDaemon && dartCapabilities.supportsToolingDaemon
+		? new DartToolingDaemon(logger, sdks)
+		: undefined;
+	if (dartToolingDaemon)
+		context.subscriptions.push(dartToolingDaemon);
+
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
 		let runIfNoDevices;
@@ -363,8 +371,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		await handleNewProjects(logger, extContext);
 
 	// Fire up the analyzer process.
-	const analyzerStartTime = new Date();
-
 	analyzer = isUsingLsp
 		? new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext)
 		: new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
