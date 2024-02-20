@@ -441,7 +441,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Starts the devtools server and returns the URL of the running app.
 	private startServer(hasReinstalled = false): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
+		return new Promise<string>(async (resolve, reject) => {
 			if (this.service) {
 				try {
 					this.service.dispose();
@@ -453,6 +453,7 @@ export class DevToolsManager implements vs.Disposable {
 			}
 			const service = this.service = new DevToolsService(this.logger, this.context.workspaceContext, this.toolingDaemon, this.dartCapabilities);
 			this.disposables.push(service);
+			await service.connect();
 
 			service.registerForServerStarted((n) => {
 				// When a new debug session starts, we need to wait for its VM
@@ -577,11 +578,9 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		private readonly dartCapabilities: DartCapabilities,
 	) {
 		super(new CategoryLogger(logger, LogCategory.DevTools), config.maxLogLineLength);
-
-		void this.connect();
 	}
 
-	private async connect(): Promise<void> {
+	public async connect(): Promise<void> {
 		const workspaceContext = this.workspaceContext;
 		const toolingDaemon = this.toolingDaemon;
 		const dartCapabilities = this.dartCapabilities;
@@ -596,14 +595,8 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		];
 
 		if (toolingDaemon) {
-			// 'dart devtools' got support before 'devtools_tool serve'.
-			const supportsDtdUri = customDevTools?.path
-				? dartCapabilities.supportsDtdUriInDevToolsToolServe
-				: true; // We don't have a toolingDaemon unless 'dart devtools's supports --dtd-uri.
-			if (supportsDtdUri) {
-				devToolsArgs.push("--dtd-uri");
-				devToolsArgs.push(await toolingDaemon.dtdUri);
-			}
+			devToolsArgs.push("--dtd-uri");
+			devToolsArgs.push(await toolingDaemon.dtdUri);
 		}
 
 		const executionInfo = customDevTools?.path ?
