@@ -158,7 +158,7 @@
 		"comments-doc": {
 			"patterns": [
 				{
-					"name": "comment.block.documentation.dart",
+					"name": "meta.embedded.markdown comment.block.documentation.dart",
 					"begin": "///",
 					"while": "^\\s*///",
 					"patterns": [
