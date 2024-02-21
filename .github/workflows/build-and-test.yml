@@ -83,9 +83,9 @@ jobs:
 
       - name: Setup Dart ${{ matrix.build-version }}
         if: startsWith(matrix.bot, 'dart') || matrix.bot == 'misc'
-        uses: DanTup/gh-actions/setup-dart@v2.0.0
+        uses: dart-lang/setup-dart@v1
         with:
-          channel: ${{ matrix.build-version }}
+          sdk: ${{ matrix.build-version }}
 
       - run: sudo snap install flutter --classic
         if: matrix.bot == 'flutter_snap'
