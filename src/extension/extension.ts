@@ -95,6 +95,7 @@ import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_des
 import { DartDebugForcedDebugModeFactory } from "./providers/debug_adapter_forced_debug_mode_factory";
 import { DartDebugAdapterGlobalEvaluationContextFactory } from "./providers/debug_adapter_global_evaluation_context_factory";
 import { DartDebugAdapterHexViewFactory } from "./providers/debug_adapter_hex_view_factory";
+import { DartDebugAdapterLaunchStatusFactory } from "./providers/debug_adapter_launch_status_factory";
 import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_factory";
 import { DartDebugAdapterRemoveErrorShowUserFactory } from "./providers/debug_adapter_remove_error_showUser_factory";
 import { DartDebugAdapterSupportsUrisFactory } from "./providers/debug_adapter_support_uris_factory";
@@ -594,10 +595,12 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", removeErrorShowUser));
 	const supportUris = new DartDebugAdapterSupportsUrisFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", supportUris));
+	const launchStatus = new DartDebugAdapterLaunchStatusFactory();
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", launchStatus));
 	// Logger goes last, so it logs any mutations made by the above.
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
-	const trackerFactories = [debugLogger, hexFormatter, forcedDebugMode, removeErrorShowUser, supportUris];
+	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, removeErrorShowUser, supportUris, launchStatus, debugLogger];
 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
