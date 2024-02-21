@@ -72,6 +72,9 @@
 		"dartdoc": {
 			"patterns": [
 				{
+					"include": "text.html.markdown"
+				},
+				{
 					"match": "(\\[.*?\\])",
 					"captures": {
 						"0": {
