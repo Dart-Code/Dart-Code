@@ -51,6 +51,7 @@ export class DartCapabilities {
 	get supportsDartDevTools() { return versionIsAtLeast(this.version, "2.15.0"); }
 	get supportsDartDevToolsPathUrls() { return versionIsAtLeast(this.version, "2.18.0-0"); }
 	get supportsDartRunTest() { return versionIsAtLeast(this.version, "2.12.0-0"); }
+	get supportsLegacyAnalyzerProtocol() { return !versionIsAtLeast(this.version, "3.3.0"); }
 	get supportsMoveTopLevelToFile() { return versionIsAtLeast(this.version, "2.19.0-283"); }
 	get supportsNonFileSchemeWorkspaces() { return versionIsAtLeast(this.version, "2.13.0-28"); }
 	get supportsCommandParameterSupportedKinds() { return versionIsAtLeast(this.version, "2.19.0-283"); }

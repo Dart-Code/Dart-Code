@@ -25,8 +25,7 @@ jobs:
       - id: exclude
         name: Exclude some builds if not running on schedule
         if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
-        run: echo "excludes=[{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
-        # run: echo "excludes=[{\"build-version\":\"legacy\"},{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
+        run: echo "excludes=[{\"build-version\":\"legacy\"},{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
 
 
   build:

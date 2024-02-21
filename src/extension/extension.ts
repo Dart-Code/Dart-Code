@@ -268,7 +268,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		if (isVirtualWorkspace)
 			return true;
 
-		return !config.useLegacyAnalyzerProtocol;
+		return !(config.useLegacyAnalyzerProtocol && dartCapabilities.supportsLegacyAnalyzerProtocol);
 	}
 	const isUsingLsp = shouldUseLsp();
 	writableConfig.useLegacyProtocol = !isUsingLsp;
