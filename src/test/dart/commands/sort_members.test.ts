@@ -1,13 +1,6 @@
 import { activate, ensureTestContent, executeSortMembersCodeAction, setTestContent } from "../../helpers";
 
 describe("sort members", () => {
-	beforeEach("activate", function () {
-		if (process.env.BUILD_VERSION === "beta" && new Date().getFullYear() === 2023) {
-			// Temporary skip while until this issue is fixed/explained.
-			// https://github.com/microsoft/vscode/issues/199548
-			this.skip();
-		}
-	});
 	beforeEach("activate", () => activate());
 
 	it("sorts members", async () => {

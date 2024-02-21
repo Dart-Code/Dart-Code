@@ -26,6 +26,7 @@ jobs:
         name: Exclude some builds if not running on schedule
         if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
         run: echo "excludes=[{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
+        # run: echo "excludes=[{\"build-version\":\"legacy\"},{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
 
 
   build:
@@ -42,7 +43,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         node-version: [18]
-        build-version: [stable, beta]
+        # legacy = last Dart SDK we'll support legacy protocol with
+        build-version: [legacy, stable, beta]
         bot: [flutter_debug, flutter_debug_chrome, flutter_debug_sdk_dap, flutter_debug_chrome_sdk_dap, flutter_test_debug, flutter_test_debug_sdk_dap, dart_web_debug, flutter_repo, dart_debug, dart_debug_sdk_dap, dart, dart_lsp, flutter, flutter_lsp, misc]
         include:
           - os: ubuntu-latest
@@ -79,13 +81,13 @@ jobs:
         if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
         uses: DanTup/gh-actions/setup-flutter@v2.0.0
         with:
-          channel: ${{ matrix.build-version }}
+          channel: ${{ matrix.build-version == 'legacy' && '3.16.0' || matrix.build-version }}
 
       - name: Setup Dart ${{ matrix.build-version }}
         if: startsWith(matrix.bot, 'dart') || matrix.bot == 'misc'
         uses: dart-lang/setup-dart@v1
         with:
-          sdk: ${{ matrix.build-version }}
+          sdk: ${{ matrix.build-version == 'legacy' && '3.2.0' || matrix.build-version }}
 
       - run: sudo snap install flutter --classic
         if: matrix.bot == 'flutter_snap'
