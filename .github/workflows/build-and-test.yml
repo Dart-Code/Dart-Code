@@ -219,36 +219,68 @@ jobs:
         run: ps -x
 
       - name: Store logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-logs-${{ matrix.os }}
+          name: test-logs-${{ matrix.os }}-${{ matrix.bot }}
           path: .dart_code_test_logs
           if-no-files-found: ignore
 
       - name: Store test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-${{ matrix.os }}
+          name: test-results-${{ matrix.os }}-${{ matrix.bot }}
           path: .test_results
           if-no-files-found: ignore
 
       - name: Store coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: success() && matrix.build-version == 'stable'
         with:
-          name: coverage-${{ matrix.os }}
+          name: coverage-${{ matrix.os }}-${{ matrix.bot }}
           path: coverage
           if-no-files-found: ignore
 
       - name: Store crash dumps
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: crash-dumps-${{ matrix.os }}-${{ matrix.bot }}
+          path: .crash_dumps
+          if-no-files-found: ignore
+
+      - name: Merge logs
+        uses: actions/upload-artifact/merge@v4
+        if: always()
+        with:
+          name: test-logs-${{ matrix.os }}
+          pattern: test-logs-${{ matrix.os }}-*
+          delete-merged: true
+
+      - name: Merge test results
+        uses: actions/upload-artifact/merge@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          pattern: test-results-${{ matrix.os }}-*
+          delete-merged: true
+
+      - name: Merge coverage
+        uses: actions/upload-artifact/merge@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.os }}
+          pattern: coverage-${{ matrix.os }}-*
+          delete-merged: true
+
+      - name: Merge crash dumps
+        uses: actions/upload-artifact/merge@v4
         if: always()
         with:
           name: crash-dumps-${{ matrix.os }}
-          path: .crash_dumps
-          if-no-files-found: ignore
+          pattern: crash-dumps-${{ matrix.os }}-*
+          delete-merged: true
 
   upload_coverage:
 
@@ -262,7 +294,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fetch Linux coverage
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: coverage-ubuntu-latest
           path: coverage/linux
