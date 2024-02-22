@@ -250,6 +250,15 @@ jobs:
           path: .crash_dumps
           if-no-files-found: ignore
 
+  merge_artifacts:
+
+    name: Merge Artifacts
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+
       - name: Merge logs
         uses: actions/upload-artifact/merge@v4
         if: always()
@@ -289,7 +298,7 @@ jobs:
   upload_coverage:
 
     name: Send Coverage to CodeClimate
-    needs: build
+    needs: merge_artifacts
     if: always() && github.event_name == 'push'
     runs-on: ubuntu-latest
 
