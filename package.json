@@ -563,6 +563,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.openDevTools.external",
+				"title": "Open DevTools in Browser",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.copyVmServiceUri",
 				"title": "Copy VM Service URI to Clipboard",
 				"category": "Dart"
@@ -1011,6 +1016,10 @@
 				},
 				{
 					"command": "dart.openDevTools",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
+					"command": "dart.openDevTools.external",
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{

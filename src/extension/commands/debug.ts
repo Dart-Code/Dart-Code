@@ -136,6 +136,7 @@ export class DebugCommands implements IAmDisposable {
 			}
 			await vs.env.clipboard.writeText(vmUri.toString());
 		}));
+		this.disposables.push(vs.commands.registerCommand("dart.openDevTools.external", () => vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.commandPalette, location: "external" as DevToolsLocation })));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.touchbar })));
 		devToolsPages.forEach((page) => {
 			void vs.commands.executeCommand("setContext", `dart-code:devToolsSupports${page.commandSuffix}`, this.devTools.isPageAvailable(true, page));
