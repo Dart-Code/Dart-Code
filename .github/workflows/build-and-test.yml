@@ -279,7 +279,7 @@ jobs:
 
       - name: Merge coverage
         uses: actions/upload-artifact/merge@v4
-        if: success() && matrix.build-version == 'stable'
+        if: success()
         with:
           name: coverage-${{ matrix.os }}
           pattern: coverage-${{ matrix.os }}-*
