@@ -257,6 +257,7 @@ jobs:
           name: test-logs-${{ matrix.os }}
           pattern: test-logs-${{ matrix.os }}-*
           delete-merged: true
+        continue-on-error: true # fails if empty
 
       - name: Merge test results
         uses: actions/upload-artifact/merge@v4
@@ -265,6 +266,7 @@ jobs:
           name: test-results-${{ matrix.os }}
           pattern: test-results-${{ matrix.os }}-*
           delete-merged: true
+        continue-on-error: true # fails if empty
 
       - name: Merge coverage
         uses: actions/upload-artifact/merge@v4
@@ -273,6 +275,7 @@ jobs:
           name: coverage-${{ matrix.os }}
           pattern: coverage-${{ matrix.os }}-*
           delete-merged: true
+        continue-on-error: true # fails if empty
 
       - name: Merge crash dumps
         uses: actions/upload-artifact/merge@v4
@@ -281,6 +284,7 @@ jobs:
           name: crash-dumps-${{ matrix.os }}
           pattern: crash-dumps-${{ matrix.os }}-*
           delete-merged: true
+        continue-on-error: true # fails if empty
 
   upload_coverage:
 
