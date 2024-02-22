@@ -263,8 +263,9 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         if: always()
         with:
-          name: test-logs-${{ matrix.os }}
-          pattern: test-logs-${{ matrix.os }}-*
+          name: test-logs
+          pattern: test-logs-*
+          separate-directories: true
           delete-merged: true
         continue-on-error: true # fails if empty
 
@@ -272,8 +273,9 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         if: always()
         with:
-          name: test-results-${{ matrix.os }}
-          pattern: test-results-${{ matrix.os }}-*
+          name: test-results
+          pattern: test-results-*
+          separate-directories: true
           delete-merged: true
         continue-on-error: true # fails if empty
 
@@ -281,8 +283,8 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         if: success()
         with:
-          name: coverage-${{ matrix.os }}
-          pattern: coverage-${{ matrix.os }}-*
+          name: coverage
+          pattern: coverage-*
           delete-merged: true
         continue-on-error: true # fails if empty
 
@@ -290,8 +292,9 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         if: always()
         with:
-          name: crash-dumps-${{ matrix.os }}
-          pattern: crash-dumps-${{ matrix.os }}-*
+          name: crash-dumps
+          pattern: crash-dumps-*
+          separate-directories: true
           delete-merged: true
         continue-on-error: true # fails if empty
 
@@ -309,7 +312,7 @@ jobs:
       - name: Fetch Linux coverage
         uses: actions/download-artifact@v4
         with:
-          name: coverage-ubuntu-latest
+          name: coverage
           path: coverage/linux
 
       - name: Upload to CodeClimate
