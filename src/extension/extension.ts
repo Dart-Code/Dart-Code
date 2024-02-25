@@ -822,57 +822,59 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(createWatcher("**/.dart_tool/package_config.json", workspaceContext.events.onPackageMapChange));
 	workspaceContext.events.onPackageMapChange.fire();
 
-	if (!isDartCodeTestRun) {
-		return new DartExtensionApi();
-	} else {
-
-		return {
-			...new DartExtensionApi(),
-			[internalApiSymbol]: {
-				addDependencyCommand,
-				analyzer,
-				analyzerCapabilities: dasClient && dasClient.capabilities,
-				cancelAllAnalysisRequests: () => dasClient && dasClient.cancelAllRequests(),
-				completionItemProvider,
-				context: extContext,
-				currentAnalysis: () => analyzer.onCurrentAnalysisComplete,
-				daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
-				dartCapabilities,
-				debugAdapterDescriptorFactory,
-				debugCommands,
-				debugProvider,
-				debugSessions,
-				devTools,
-				deviceManager,
-				envUtils,
-				fileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : (lspAnalyzer ? lspAnalyzer.fileTracker : undefined),
-				flutterCapabilities,
-				flutterOutlineTreeProvider,
-				get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
-				get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
-				getLogHeader,
-				getOutputChannel,
-				getToolEnv,
-				initialAnalysis: analyzer.onInitialAnalysis,
-				interactiveRefactors: lspAnalyzer?.refactors,
-				isLsp: isUsingLsp,
-				logger,
-				nextAnalysis: () => analyzer.onNextAnalysisComplete,
-				packagesTreeProvider: dartPackagesProvider,
-				pubGlobal,
-				renameProvider,
-				safeToolSpawn,
-				testController: vsCodeTestController,
-				testCoordinator,
-				testDiscoverer,
-				testModel,
-				toolingDaemon: dartToolingDaemon,
-				trackerFactories,
-				webClient,
-				workspaceContext,
-			} as InternalExtensionApi,
-		};
-	}
+	// TODO(dantup): We should only expose the private API required for testing when in test runs, however
+	//  some extensions are currently using this for access to the analyzer. We should provide a replacement
+	//  before removing this to avoid breaking them.
+	// if (!isDartCodeTestRun) {
+	// 	return new DartExtensionApi();
+	// } else {
+	return {
+		...new DartExtensionApi(),
+		[internalApiSymbol]: {
+			addDependencyCommand,
+			analyzer,
+			analyzerCapabilities: dasClient && dasClient.capabilities,
+			cancelAllAnalysisRequests: () => dasClient && dasClient.cancelAllRequests(),
+			completionItemProvider,
+			context: extContext,
+			currentAnalysis: () => analyzer.onCurrentAnalysisComplete,
+			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
+			dartCapabilities,
+			debugAdapterDescriptorFactory,
+			debugCommands,
+			debugProvider,
+			debugSessions,
+			devTools,
+			deviceManager,
+			envUtils,
+			fileTracker: dasAnalyzer ? dasAnalyzer.fileTracker : (lspAnalyzer ? lspAnalyzer.fileTracker : undefined),
+			flutterCapabilities,
+			flutterOutlineTreeProvider,
+			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
+			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
+			getLogHeader,
+			getOutputChannel,
+			getToolEnv,
+			initialAnalysis: analyzer.onInitialAnalysis,
+			interactiveRefactors: lspAnalyzer?.refactors,
+			isLsp: isUsingLsp,
+			logger,
+			nextAnalysis: () => analyzer.onNextAnalysisComplete,
+			packagesTreeProvider: dartPackagesProvider,
+			pubGlobal,
+			renameProvider,
+			safeToolSpawn,
+			testController: vsCodeTestController,
+			testCoordinator,
+			testDiscoverer,
+			testModel,
+			toolingDaemon: isDartCodeTestRun ? dartToolingDaemon : undefined,
+			trackerFactories,
+			webClient,
+			workspaceContext,
+		} as InternalExtensionApi,
+	};
+	// }
 }
 
 function setupLog(logFile: string | undefined, category: LogCategory) {
