@@ -21,7 +21,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	if (!fs.existsSync(logPath))
 		fs.mkdirSync(logPath);
 
-	const codeVersion = (!process.env.BUILD_VERSION || process.env.BUILD_VERSION === "stable" || process.env.BUILD_VERSION === "legacy") ? "stable" : "insiders";
+	const codeVersion = "stable";
 
 	// The VS Code download is often flaky on GH Actions, so we want to retry
 	// if required - however we don't want to re-run tests if they fail, so do
