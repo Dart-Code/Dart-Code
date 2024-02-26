@@ -12,7 +12,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	// This is static because we're not allowed to dispose/re-create them during a silent extension restart because
 	// we'll generate errors (https://github.com/microsoft/vscode/issues/193443).
 	// This is NOT added to the disposables, because it would be disposed during a silent restart.
-	private readonly statusBarItem = languages.createLanguageStatusItem("dart.toolingDaemon", ANALYSIS_FILTERS);
+	private static readonly statusBarItem = languages.createLanguageStatusItem("dart.toolingDaemon", ANALYSIS_FILTERS);
 
 	constructor(
 		context: ExtensionContext,
@@ -22,11 +22,12 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		super(logger, sdks, config.maxLogLineLength, getToolEnv, promptToReloadExtension);
 		context.subscriptions.push(this);
 
-		this.statusBarItem.name = "Dart Tooling Daemon";
-		this.statusBarItem.text = "Dart Tooling Daemon Starting…";
+		const statusBarItem = VsCodeDartToolingDaemon.statusBarItem;
+		statusBarItem.name = "Dart Tooling Daemon";
+		statusBarItem.text = "Dart Tooling Daemon Starting…";
 		void this.connected.then(() => {
-			this.statusBarItem.text = "Dart Tooling Daemon";
-			this.statusBarItem.command = {
+			statusBarItem.text = "Dart Tooling Daemon";
+			statusBarItem.command = {
 				command: "_dart.reloadExtension",
 				title: "restart",
 				tooltip: "Restarts the Dart Tooling Daemon",
