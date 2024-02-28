@@ -57,6 +57,7 @@ export const PUB_OUTDATED_SUPPORTED_CONTEXT = "dart-code:pubOutdatedSupported";
 export const FLUTTER_SIDEBAR_SUPPORTED_CONTEXT = "dart-code:flutterSidebarSupported";
 export const SUPPORTS_DEBUG_VALUE_FORMAT = "dart-code:supportsDebugValueFormat";
 export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
+export const DTD_AVAILABLE = "dart-code:dtdAvailable";
 
 export const stopLoggingAction = "Stop Logging";
 export const showLogAction = "Show Log";

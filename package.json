@@ -573,6 +573,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.copyDtdUri",
+				"title": "Copy DTD URI to Clipboard",
+				"category": "Dart"
+			},
+			{
 				"command": "flutter.getSelectedDeviceId",
 				"title": "Get Selected Device ID",
 				"category": "Flutter"
@@ -1013,6 +1018,10 @@
 				{
 					"command": "dart.copyVmServiceUri",
 					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
+				},
+				{
+					"command": "dart.copyDtdUri",
+					"when": "dart-code:dtdAvailable"
 				},
 				{
 					"command": "dart.openDevTools",
