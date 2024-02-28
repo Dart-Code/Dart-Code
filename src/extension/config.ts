@@ -217,7 +217,6 @@ class Config {
 
 	// Experiments that aren't in package.json.
 	get experimentalMacroSupport(): boolean { return this.getConfig<boolean>("experimentalMacroSupport", false); }
-	get experimentalToolingDaemon(): boolean { return this.getConfig<boolean>("experimentalToolingDaemon", false); }
 
 	public readonly resolved = new ResolvedConfig();
 

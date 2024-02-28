@@ -19,5 +19,4 @@
 	"dart.env": {
 		"CUSTOM_DART_ENV": "x"
 	},
-	"dart.experimentalToolingDaemon": true,
 }
