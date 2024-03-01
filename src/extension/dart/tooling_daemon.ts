@@ -55,6 +55,17 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		});
 	}
 
+	protected handleClose() {
+		// If we failed to start up, overwrite the "Starting..." label and provide a restart option.
+		const statusBarItem = VsCodeDartToolingDaemon.statusBarItem;
+		statusBarItem.text = "Dart Tooling Daemon Terminated";
+		statusBarItem.command = {
+			command: "_dart.reloadExtension",
+			title: "restart",
+		};
+		super.handleClose();
+	}
+
 	private sendWorkspaceRootsToDaemon() {
 		const workspaceFolderRootUris = getDartWorkspaceFolders().map((wf) => wf.uri.toString());
 		void this.sendWorkspaceFolders(workspaceFolderRootUris);

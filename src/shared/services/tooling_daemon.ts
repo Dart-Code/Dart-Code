@@ -109,7 +109,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	}
 
 
-	private handleClose() {
+	protected handleClose() {
 		this.logger.info(`DTD connection closed`);
 		if (!this.isShuttingDown && !this.hasShownTerminatedError) {
 			const which = this.dtdProcess.hasTerminated ? "process" : "connection";
