@@ -57,6 +57,8 @@ export interface WritableWorkspaceConfig {
 	startDevToolsFromDaemon?: boolean;
 	disableAnalytics?: boolean;
 	disableAutomaticPackageGet?: boolean;
+	/// Whether to disable DTD for this workspace.
+	disableDartToolingDaemon?: boolean;
 	disableSdkUpdateChecks?: boolean;
 	disableStartupPrompts?: boolean;
 	flutterDaemonScript?: CustomScript;

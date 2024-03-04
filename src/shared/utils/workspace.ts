@@ -13,11 +13,13 @@ export function processDartSdkRepository(logger: Logger, config: WritableWorkspa
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string, extensionConfig: ExtensionConfig) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
+	config.disableDartToolingDaemon = true;
 }
 
 export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string, extensionConfig: ExtensionConfig) {
 	config.disableAutomaticPackageGet = true;
 	config.disableSdkUpdateChecks = true;
+	config.disableDartToolingDaemon = true;
 
 	tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
 }

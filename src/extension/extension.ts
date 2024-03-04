@@ -289,7 +289,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	void vs.commands.executeCommand("setContext", FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, dartCapabilities.supportsFlutterSidebar);
 
 	// Dart Tooling Daemon.
-	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon
+	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
 		? new VsCodeDartToolingDaemon(context, logger, sdks)
 		: undefined;
 

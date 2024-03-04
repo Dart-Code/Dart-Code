@@ -1,4 +1,4 @@
-import { ExtensionContext, commands, env, languages, workspace } from "vscode";
+import { ExtensionContext, LanguageStatusItem, commands, env, languages, workspace } from "vscode";
 import { DTD_AVAILABLE } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
@@ -13,7 +13,15 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	// This is static because we're not allowed to dispose/re-create them during a silent extension restart because
 	// we'll generate errors (https://github.com/microsoft/vscode/issues/193443).
 	// This is NOT added to the disposables, because it would be disposed during a silent restart.
-	private static readonly statusBarItem = languages.createLanguageStatusItem("dart.toolingDaemon", ANALYSIS_FILTERS);
+	private static _statusBarItem: LanguageStatusItem;
+
+	private static get statusBarItem() {
+		// Create this lazily because if we create it in the static field initializer it'll run
+		// even if we never create an instance of this class.
+		if (!this._statusBarItem)
+			this._statusBarItem = languages.createLanguageStatusItem("dart.toolingDaemon", ANALYSIS_FILTERS);
+		return this._statusBarItem;
+	}
 
 	constructor(
 		context: ExtensionContext,
