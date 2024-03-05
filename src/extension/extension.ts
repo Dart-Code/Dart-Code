@@ -15,7 +15,7 @@ import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq, withTimeout } from "../shared/utils";
 import { fsPath, isWithinPath } from "../shared/utils/fs";
-import { DART_MODE, HTML_MODE } from "../shared/vscode/constants";
+import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -407,7 +407,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const completionItemProvider = isUsingLsp || !dasClient ? undefined : new DartCompletionItemProvider(logger, dasClient);
 	const referenceProvider = isUsingLsp || !dasClient || !dasAnalyzer ? undefined : new DartReferenceProvider(dasClient, dasAnalyzer.fileTracker);
 
-	const activeFileFilters: vs.DocumentFilter[] = [DART_MODE];
+	const activeFileFilters: vs.DocumentFilter[] = [...DART_MODE];
 
 	// Analyze Angular2 templates, requires the angular_analyzer_plugin.
 	if (config.analyzeAngularTemplates) {
@@ -513,7 +513,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(isUsingLsp, dartCapabilities, "snippets/dart.json", () => true)));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(isUsingLsp, dartCapabilities, "snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri))));
 
-	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_MODE.language, new DartLanguageConfiguration()));
+	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_LANGUAGE, new DartLanguageConfiguration()));
 
 	// TODO: Push the differences into the Analyzer classes so we can have one reporter.
 	if (lspClient)
