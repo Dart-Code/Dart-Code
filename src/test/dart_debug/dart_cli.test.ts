@@ -561,44 +561,6 @@ void printSomething() {
 		await dc.terminateRequest();
 	});
 
-	it("downloads SDK source code from the VM", async function () {
-		if (!extApi.dartCapabilities.includesSourceForSdkLibs || dc.isDartDap) {
-			this.skip();
-			return;
-		}
-
-		await openFile(helloWorldMainFile);
-		// Get location for `print`
-		const printCall = positionOf("pri^nt(");
-		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: true });
-		await dc.hitBreakpoint(config, {
-			line: printCall.line + 1,
-			path: fsPath(helloWorldMainFile),
-		});
-		await waitAllThrowIfTerminates(dc,
-			dc.assertStoppedLocation("step", {
-				// SDK source will have no filename, because we download it
-				path: undefined,
-			}).then(async (response) => {
-				// Ensure the top stack frame matches
-				const frame = response.body.stackFrames[0];
-				assert.equal(frame.source!.path, undefined);
-				assert.equal(frame.source!.name, "dart:core/print.dart");
-				const source = await dc.sourceRequest({ source: frame.source, sourceReference: frame.source!.sourceReference! });
-				assert.ok(source.body.content);
-				assert.ok(
-					source.body.content.includes("void print(Object object) {")
-					|| source.body.content.includes("void print(Object? object) {"),
-				);
-				// Ensure comments are present (see #178).
-				assert.notEqual(source.body.content.indexOf("\n//"), -1);
-			}),
-			dc.stepIn(),
-		);
-
-		await dc.terminateRequest();
-	});
-
 	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async () => {
 		await openFile(helloWorldThrowInSdkFile);
 		const config = await startDebugger(dc, helloWorldThrowInSdkFile, { debugSdkLibraries: false });
@@ -1099,7 +1061,7 @@ void printSomething() {
 			await dc.terminateRequest();
 		});
 
-		it("complex expression expressions", async () => {
+		it("complex expressions", async () => {
 			await openFile(helloWorldMainFile);
 			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
@@ -1136,7 +1098,7 @@ void printSomething() {
 			await dc.terminateRequest();
 		});
 
-		it("complex expression expressions when in a top level function", async () => {
+		it("complex expressions when in a top level function", async () => {
 			await openFile(helloWorldMainFile);
 			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
@@ -1232,7 +1194,7 @@ void printSomething() {
 			await dc.terminateRequest();
 		});
 
-		it("complex expression expressions", async () => {
+		it("complex expressions", async () => {
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,

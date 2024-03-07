@@ -73,9 +73,8 @@ describe("dart_hover_provider", () => {
 	it("returns expected information for a field", async () => {
 		const hover = await getHoverAt("num? my^TestNumField");
 		assert.equal(hover.displayText, "num? myTestNumField");
-		const separator = extApi.dartCapabilities.hasHoverNewlineFix4120 ? "\n\n" : "\n";
 		if (hover.documentation?.includes("Type:"))
-			assert.equal(hover.documentation, `Type: \`num?\`${separator}` + getExpectedDoc("package:hello_world/everything.dart", "This is my num field."));
+			assert.equal(hover.documentation, `Type: \`num?\`\n\n` + getExpectedDoc("package:hello_world/everything.dart", "This is my num field."));
 		else
 			assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my num field."));
 		assert.deepStrictEqual(hover.range, rangeOf("num? |myTestNumField|"));
@@ -102,27 +101,11 @@ describe("dart_hover_provider", () => {
 		assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|()"));
 	});
 
-	it("returns expected information for a named constructor", async function () {
-		if (extApi.dartCapabilities.hasHoverNamedConstructorIssue)
-			this.skip();
-		if (extApi.dartCapabilities.hasHoverNamedConstructorFix) {
-			for (const hover of [await getHoverAt("My^TestClass.myTestNamed()"), await getHoverAt("MyTestClass.myTestN^amed()")]) {
-				assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
-				assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
-				assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass.myTestNamed|()"));
-			}
-		} else {
-			// Dart 2.18 and earlier returned two different ranges for
-			// MyTestClass and named.
-			let hover = await getHoverAt("My^TestClass.myTestNamed()");
+	it("returns expected information for a named constructor", async () => {
+		for (const hover of [await getHoverAt("My^TestClass.myTestNamed()"), await getHoverAt("MyTestClass.myTestN^amed()")]) {
 			assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
 			assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
-			assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|.myTestNamed()"));
-			// Check second part... ideally this would be rolled into above.
-			hover = await getHoverAt("MyTestClass.myTestN^amed()");
-			assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
-			assert.equal(hover.documentation, getExpectedDoc("package:hello_world/everything.dart", "This is my class named constructor."));
-			assert.deepStrictEqual(hover.range, rangeOf("MyTestClass.|myTestNamed|()"));
+			assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass.myTestNamed|()"));
 		}
 	});
 
@@ -151,9 +134,8 @@ describe("dart_hover_provider", () => {
 		const hover = await getHoverAt("methodTakingString(String ^a");
 		assert.equal(hover.displayText, "String a");
 		// Method args can't have their own docs so return the methods dartdoc.
-		const separator = extApi.dartCapabilities.hasHoverNewlineFix4120 ? "\n\n" : "\n";
 		if (hover.documentation?.includes("Type:"))
-			assert.equal(hover.documentation, `Type: \`String\`${separator}This is my method taking a string.`);
+			assert.equal(hover.documentation, `Type: \`String\`\n\nThis is my method taking a string.`);
 		else
 			assert.equal(hover.documentation, "This is my method taking a string.");
 		assert.deepStrictEqual(hover.range, rangeOf("methodTakingString(String |a|)"));

@@ -282,7 +282,7 @@ describe("web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		it("complex expression expressions", async () => {
+		it("complex expressions", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -315,14 +315,14 @@ describe("web debugger", () => {
 			assert.ok(evaluateResult.variablesReference);
 		});
 
-		it("complex expression expressions when in a top level function", async () => {
+		it("complex expressions when in a top level function", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line,
 					path: fsPath(webHelloWorldMainFile),
-				}),
+				}, {}),
 			);
 
 			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);

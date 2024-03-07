@@ -20,22 +20,12 @@ export class DartCapabilities {
 		else
 			return versionIsAtLeast(this.version, "2.18.0-0");
 	}
-	// This is also missing in v2.10, but assume it will be back in v2.11.
-	// https://github.com/dart-lang/sdk/issues/43207
-	get includesSourceForSdkLibs() { return versionIsAtLeast(this.version, "2.2.1") && !this.version.startsWith("2.10."); }
 	get hasLspInsertTextModeSupport() { return versionIsAtLeast(this.version, "2.13.0-0"); }
 	get supportsSnippetTextEdits() { return versionIsAtLeast(this.version, "2.13.0-150"); }
 	get supportsRefactorValidate() { return versionIsAtLeast(this.version, "2.17.0"); }
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
 	get supportsDartCreate() { return versionIsAtLeast(this.version, "2.10.0"); }
 	get supportsDebugInternalLibraries() { return versionIsAtLeast(this.version, "2.9.0-a"); }
-	get supportsDisableDartDev() { return versionIsAtLeast(this.version, "2.12.0-0"); }
-	get hasDdsTimingFix() { return versionIsAtLeast(this.version, "2.13.0-117"); }
-	get hasZeroParamNoTabStopFix() { return versionIsAtLeast(this.version, "2.17.0-117"); }
-	get hasDapShutdownFix() { return versionIsAtLeast(this.version, "2.19.0-0"); }
-	get hasHoverNamedConstructorIssue() { return versionIsAtLeast(this.version, "2.19.0-0") && !versionIsAtLeast(this.version, "2.19.0-300"); }
-	get hasHoverNamedConstructorFix() { return versionIsAtLeast(this.version, "2.19.0-300"); }
-	get hasHoverNewlineFix4120() { return versionIsAtLeast(this.version, "2.19.0-173"); }
 	get supportsLanguageServerCommand() { return versionIsAtLeast(this.version, "2.14.4"); }
 	get supportsNoServeDevTools() { return versionIsAtLeast(this.version, "2.14.0-172.0"); }
 	get supportsPubUpgradeMajorVersions() { return versionIsAtLeast(this.version, "2.12.0"); }

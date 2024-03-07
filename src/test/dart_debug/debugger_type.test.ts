@@ -1,15 +1,9 @@
-import { isWin } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
-import { activate, extApi, helloWorldFolder } from "../helpers";
+import { activate, helloWorldFolder } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
 describe("dart debugger type", async () => {
 	beforeEach("activate", () => activate(null));
-
-	beforeEach(function () {
-		if (isWin && !extApi.dartCapabilities.hasDdsTimingFix)
-			this.skip();
-	});
 
 	const tests: Array<{ program: string, cwd?: string, debugger: DebuggerType }> = [
 		// All POSIX paths, Windows handled below.

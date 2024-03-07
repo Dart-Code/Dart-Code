@@ -1406,7 +1406,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			);
 		});
 
-		it("complex expression expressions", async () => {
+		it("complex expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
@@ -1449,7 +1449,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			);
 		});
 
-		it("complex expression expressions when in a top level function", async () => {
+		it("complex expressions when in a top level function", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
@@ -1498,7 +1498,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			);
 		});
 
-		it("complex expression expressions", async () => {
+		it("complex expressions", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,

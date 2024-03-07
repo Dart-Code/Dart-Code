@@ -4,7 +4,6 @@ import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { Outline as lspOutline } from "../../shared/analysis/lsp/custom_protocol";
 import { Outline as asOutline } from "../../shared/analysis_server_types";
-import { isWin } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
@@ -21,11 +20,6 @@ describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate(null));
-
-	beforeEach(function () {
-		if (isWin && !extApi.dartCapabilities.hasDdsTimingFix)
-			this.skip();
-	});
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;

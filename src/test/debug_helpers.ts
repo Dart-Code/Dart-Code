@@ -188,8 +188,6 @@ export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string
 		"--enable-vm-service=0",
 		"--pause_isolates_on_start=true",
 	];
-	if (extApi.dartCapabilities.supportsDisableDartDev && !extApi.dartCapabilities.hasDdsTimingFix)
-		debugArgs.push("--disable-dart-dev");
 	const allArgs = [
 		...debugArgs,
 		...vmArgs,
