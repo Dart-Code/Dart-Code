@@ -1,13 +1,13 @@
 import 'dart:html';
 
-void main() {
-  genericMethod<bool, double, int, String>();
+Future<void> main() async {
   // TODO: Remove this delay when breakpoints in startup code work
   // https://github.com/dart-lang/webdev/issues/830
-  Future.delayed(const Duration(seconds: 1)).then((_) {
-    querySelector('#output')!.text = 'Your Dart app is running.';
-    // BREAKPOINT1^
-  });
+  await Future.delayed(const Duration(seconds: 1));
+
+  genericMethod<bool, double, int, String>();
+  querySelector('#output')!.text = 'Your Dart app is running.';
+  // BREAKPOINT1^
 }
 
 void genericMethod<TBool, TDouble, TInt, TString>() {
@@ -17,5 +17,4 @@ void genericMethod<TBool, TDouble, TInt, TString>() {
   print('TDouble: ' + TDouble.toString());
   print('TInt: ' + TInt.toString());
   print('TString: ' + TString.toString());
-} ////
-//dd
+}

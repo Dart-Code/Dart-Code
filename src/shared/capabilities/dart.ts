@@ -68,8 +68,6 @@ export class DartCapabilities {
 	 */
 	get supportsToolingDaemon() { return versionIsAtLeast(this.version, "3.4.0-139"); }
 	// TODO: Update these (along with Flutter) when supported.
-	get webSupportsEvaluation() { return false; }
-	get webSupportsDebugging() { return true; }
 	get webSupportsHotReload() { return false; }
 	get workspaceSymbolSearchUsesFuzzy() { return versionIsAtLeast(this.version, "3.1.0"); }
 }
