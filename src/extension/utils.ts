@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as https from "https";
+import { minimatch } from "minimatch";
 import * as os from "os";
 import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
@@ -65,15 +66,18 @@ export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?
 }
 
 export function shouldHotReloadFor(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
-	if (file.isUntitled || !fsPath(file.uri) || file.uri.scheme !== "file")
+	if (file.isUntitled || file.uri.scheme !== "file")
 		return false;
 
+	const filePath = fsPath(file.uri);
+	const extension = path.extname(filePath).substr(1);
+
 	const reloadableFileExtensions = ["dart", "htm", "html", "css", "frag"];
+	if (reloadableFileExtensions.includes(extension))
+		return true;
 
-	const extName = path.extname(fsPath(file.uri));
-	const extension = extName ? extName.substr(1) : undefined;
-
-	return extension !== undefined && reloadableFileExtensions.includes(extension);
+	const resourceConf = config.for(file.uri);
+	return !!resourceConf.hotReloadPatterns.find((p) => minimatch(filePath, p, { dot: true }));
 }
 
 export function isAnalyzableAndInWorkspace(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {

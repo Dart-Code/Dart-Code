@@ -280,6 +280,7 @@ export class ResourceConfig {
 	get flutterTestAdditionalArgs(): string[] { return this.getConfig<string[]>("flutterTestAdditionalArgs", []); }
 	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
 	get flutterTrackWidgetCreation(): boolean { return this.getConfig<boolean>("flutterTrackWidgetCreation", true); }
+	get hotReloadPatterns(): string[] { return this.getConfig<string[]>("hotReloadPatterns", []); }
 	get insertArgumentPlaceholders(): boolean { return this.getConfig<boolean>("insertArgumentPlaceholders", true); }
 	get lineLength(): number { return this.getConfig<number>("lineLength", 80); }
 	get promptToGetPackages(): boolean { return this.getConfig<boolean>("promptToGetPackages", true); }

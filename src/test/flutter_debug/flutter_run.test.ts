@@ -10,7 +10,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
+import { activate, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -476,6 +476,27 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForHotReload(),
 			saveTrivialChangeToFile(flutterHelloWorldMainFile),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
+	it("hot reloads on save of custom glob", async () => {
+		await setConfigForTest("dart", "hotReloadPatterns", ["**/*.md"]);
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.flutterAppStarted(),
+			dc.configurationSequence(),
+			dc.launch(config),
+		);
+
+		await delayBeforeRestart();
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForHotReload(),
+			saveTrivialChangeToFile(flutterHelloWorldReadmeFile),
 		);
 
 		await waitAllThrowIfTerminates(dc,

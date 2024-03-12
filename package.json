@@ -1928,6 +1928,15 @@
 						},
 						"scope": "resource"
 					},
+					"dart.hotReloadPatterns": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "An array of glob patterns that should trigger Hot Reload when saved. The pattern is matched against the absolute path of the file. Use `**/assets/**` to trigger reloading for everything in the assets directory.",
+						"items": {
+							"type": "string"
+						},
+						"scope": "resource"
+					},
 					"dart.enableCompletionCommitCharacters": {
 						"type": "boolean",
 						"default": false,

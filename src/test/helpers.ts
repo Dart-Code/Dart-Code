@@ -109,6 +109,7 @@ export const dartNested2Folder = vs.Uri.file(path.join(fsPath(dartNested1Folder)
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(testProjectsFolder, "flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
+export const flutterHelloWorldReadmeFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "readme.md"));
 export const flutterHelloWorldNavigateFromFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/navigate_from.dart"));
 export const flutterHelloWorldNavigateToFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/navigate_to.dart"));
 export const flutterHelloWorldPubspec = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "pubspec.yaml"));
