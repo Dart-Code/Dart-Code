@@ -753,7 +753,8 @@ export class DebugCommands implements IAmDisposable {
 						// If embedded DevTools is enabled and it's a Flutter app, assume the user wants the Widget inspector.
 						// Otherwise, DevTools will be launched externally (since it's not clear which page they may want).
 						const page = debuggerType === DebuggerType.Flutter ? widgetInspectorPage : null;
-						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, pageId: page?.id, commandSource: CommandSource.onDebugAutomatic });
+						const location = page ? undefined : "external";
+						void vs.commands.executeCommand("dart.openDevTools", { debugSessionId: session.session.id, triggeredAutomatically: true, pageId: page?.id, location, commandSource: CommandSource.onDebugAutomatic });
 					}
 				} else if (debuggerType === DebuggerType.Flutter) {
 					void showDevToolsNotificationIfAppropriate(this.context).then((res) => {
