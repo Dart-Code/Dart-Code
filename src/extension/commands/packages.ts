@@ -139,10 +139,11 @@ export class PackageCommands extends BaseSdkCommands {
 
 	private setupPubspecWatcher() {
 		this.disposables.push(vs.workspace.onWillSaveTextDocument((e) => {
-			if (path.basename(fsPath(e.document.uri)).toLowerCase() === "pubspec.yaml")
+			const name = path.basename(fsPath(e.document.uri)).toLowerCase();
+			if (name === "pubspec.yaml" || name === "pubspec_overrides.yaml")
 				lastPubspecSaveReason = e.reason;
 		}));
-		const watcher = vs.workspace.createFileSystemWatcher("**/pubspec.yaml");
+		const watcher = vs.workspace.createFileSystemWatcher("**/pubspec{,_overrides}.yaml");
 		this.disposables.push(watcher);
 		watcher.onDidChange(this.handlePubspecChange, this);
 		watcher.onDidCreate(this.handlePubspecChange, this);
