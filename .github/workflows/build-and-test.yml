@@ -222,7 +222,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-logs-${{ matrix.os }}-${{ matrix.bot }}
+          name: test-logs-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .dart_code_test_logs
           if-no-files-found: ignore
 
@@ -230,7 +230,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-${{ matrix.os }}-${{ matrix.bot }}
+          name: test-results-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .test_results
           if-no-files-found: ignore
 
@@ -238,7 +238,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: success() && matrix.build-version == 'stable'
         with:
-          name: coverage-${{ matrix.os }}-${{ matrix.bot }}
+          name: coverage-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: coverage
           if-no-files-found: ignore
 
@@ -246,7 +246,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: crash-dumps-${{ matrix.os }}-${{ matrix.bot }}
+          name: crash-dumps-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .crash_dumps
           if-no-files-found: ignore
 
