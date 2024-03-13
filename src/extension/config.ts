@@ -217,6 +217,7 @@ class Config {
 
 	// Experiments that aren't in package.json.
 	get experimentalMacroSupport(): boolean { return this.getConfig<boolean>("experimentalMacroSupport", false); }
+	get experimentalInEditorDartFix(): boolean { return this.getConfig<boolean>("experimentalInEditorDartFix", false); }
 
 	public readonly resolved = new ResolvedConfig();
 

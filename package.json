@@ -325,6 +325,16 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.edit.fixAllInWorkspace",
+				"title": "Apply Fix All in Workspace",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.edit.fixAllInWorkspace.preview",
+				"title": "Preview Fix All in Workspace",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.generateDiagnosticReport",
 				"title": "Collect Diagnostic Information",
 				"category": "Dart"
@@ -1082,6 +1092,14 @@
 				{
 					"command": "flutter.launchEmulator",
 					"when": "dart-code:anyFlutterProjectLoaded && dart-code:isRunningLocally && config.dart.flutterShowEmulators == local || dart-code:anyFlutterProjectLoaded && config.dart.flutterShowEmulators == always"
+				},
+				{
+					"command": "dart.edit.fixAllInWorkspace",
+					"when": "dart-code:anyProjectLoaded && config.dart.experimentalInEditorDartFix && dart-code:lsp.command.dart.edit.fixAllInWorkspace"
+				},
+				{
+					"command": "dart.edit.fixAllInWorkspace.preview",
+					"when": "dart-code:anyProjectLoaded && config.dart.experimentalInEditorDartFix && dart-code:lsp.command.dart.edit.fixAllInWorkspace.preview"
 				},
 				{
 					"when": "false",

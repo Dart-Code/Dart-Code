@@ -58,6 +58,7 @@ export const FLUTTER_SIDEBAR_SUPPORTED_CONTEXT = "dart-code:flutterSidebarSuppor
 export const SUPPORTS_DEBUG_VALUE_FORMAT = "dart-code:supportsDebugValueFormat";
 export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
 export const DTD_AVAILABLE = "dart-code:dtdAvailable";
+export const LSP_COMMAND_CONTEXT_PREFIX = "dart-code:lsp.command.";
 
 export const stopLoggingAction = "Stop Logging";
 export const showLogAction = "Show Log";

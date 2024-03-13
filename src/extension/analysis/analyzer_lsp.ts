@@ -431,6 +431,7 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			previewSurveys: true,
 			remoteName: vs.env.remoteName,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
+			useInEditorDartFixPrompt: config.experimentalInEditorDartFix,
 		},
 		markdown: {
 			supportHtml: true,

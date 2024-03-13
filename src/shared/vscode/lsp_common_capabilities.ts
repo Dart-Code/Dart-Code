@@ -1,4 +1,6 @@
-import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
+import { commands } from "vscode";
+import { ClientCapabilities, FeatureState, ServerCapabilities, StaticFeature } from "vscode-languageclient";
+import { LSP_COMMAND_CONTEXT_PREFIX } from "../constants";
 
 
 export class CommonCapabilitiesFeature {
@@ -15,7 +17,28 @@ export class CommonCapabilitiesFeature {
 			getState(): FeatureState {
 				return { kind: "static" };
 			},
-			initialize() { },
+			initialize(capabilities: ServerCapabilities) {
+				// Track known commands (that we might care about) so we can
+				// clear the contexts when we re-initialize so if you switch to an
+				// older SDK we handle it correctly.
+				const knownCommands = [
+					"dart.edit.sortMembers",
+					"dart.edit.organizeImports",
+					"dart.edit.fixAll",
+					"dart.edit.fixAllInWorkspace.preview",
+					"dart.edit.fixAllInWorkspace",
+					"dart.edit.sendWorkspaceEdit",
+				];
+				const supportedCommands = capabilities.executeCommandProvider?.commands;
+				if (supportedCommands) {
+					const supportedCommandsSet = new Set<string>(supportedCommands);
+					for (const command of knownCommands) {
+						void commands.executeCommand("setContext", `${LSP_COMMAND_CONTEXT_PREFIX}${command}`, supportedCommandsSet.has(command));
+					}
+				}
+			},
 		};
 	}
 }
+
+
