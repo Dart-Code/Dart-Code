@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, extensions, ProgressLocation, window, workspace } from "vscode";
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
-import { ExtensionConfig, Logger, Sdks, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
+import { ExtensionConfig, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
@@ -313,7 +313,8 @@ export class SdkUtils {
 				dart: config.sdkPath,
 				dartSdkIsFromFlutter: false,
 				flutter: undefined,
-			} as Sdks, {}, false, false, false, false);
+				isPreReleaseSdk: false,
+			}, {}, false, false, false, false);
 		}
 
 		// TODO: This has gotten very messy and needs tidying up...
@@ -502,15 +503,20 @@ export class SdkUtils {
 		}
 
 		const isDartFromFlutter = !!dartSdkPath && isDartSdkFromFlutter(dartSdkPath);
+		const dartVersion = getSdkVersion(this.logger, { sdkRoot: dartSdkPath });
+		const flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath });
+		const relevantSdkVersion = hasAnyFlutterProject ? flutterVersion : dartVersion;
+		const isPreReleaseSdk = !!relevantSdkVersion?.includes("-");
 
 		return new WorkspaceContext(
 			{
 				dart: dartSdkPath,
 				dartSdkIsFromFlutter: isDartFromFlutter,
-				dartVersion: getSdkVersion(this.logger, { sdkRoot: dartSdkPath }),
+				dartVersion,
 				flutter: flutterSdkPath,
-				flutterVersion: workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath }),
-			} as Sdks,
+				flutterVersion,
+				isPreReleaseSdk,
+			},
 			workspaceConfig,
 			hasAnyFlutterProject,
 			hasAnyWebProject,

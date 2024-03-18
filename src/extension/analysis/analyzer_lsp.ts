@@ -431,7 +431,10 @@ function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapa
 			previewSurveys: true,
 			remoteName: vs.env.remoteName,
 			suggestFromUnimportedLibraries: config.autoImportCompletions,
-			useInEditorDartFixPrompt: config.experimentalInEditorDartFix,
+			// TODO(dantup): When removing this flag, also remove the conditions on the
+			//  "dart.edit.fixAllInWorkspace" and "dart.edit.fixAllInWorkspace.preview"
+			//  commands in `package.json`.
+			useInEditorDartFixPrompt: sdks.isPreReleaseSdk,
 		},
 		markdown: {
 			supportHtml: true,

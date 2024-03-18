@@ -29,6 +29,7 @@ export interface Sdks {
 	readonly flutter?: string;
 	readonly flutterVersion?: string;
 	readonly dartSdkIsFromFlutter: boolean;
+	readonly isPreReleaseSdk: boolean;
 }
 
 export interface DartSdks extends Sdks {

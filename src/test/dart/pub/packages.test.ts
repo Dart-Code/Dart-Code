@@ -15,6 +15,7 @@ describe("pub package status", () => {
 		return {
 			dartSdkIsFromFlutter: false,
 			dartVersion: v,
+			isPreReleaseSdk: false,
 		};
 	}
 

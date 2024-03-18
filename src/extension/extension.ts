@@ -5,7 +5,7 @@ import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { vsCodeVersion } from "../shared/capabilities/vscode";
 import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
-import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
+import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -200,6 +200,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter)
 		setFlutterRoot(workspaceContext.sdks.flutter);
 	setupToolEnv(config.env);
+	void vs.commands.executeCommand("setContext", SDK_IS_PRE_RELEASE, sdks.isPreReleaseSdk);
 
 	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
 
