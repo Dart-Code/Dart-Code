@@ -4,7 +4,8 @@ import { Analyzer } from "../shared/analyzer";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { vsCodeVersion } from "../shared/capabilities/vscode";
-import { FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PUB_OUTDATED_SUPPORTED_CONTEXT, dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
+import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
+import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -121,15 +122,6 @@ import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
-
-const PROJECT_LOADED = "dart-code:anyProjectLoaded";
-const DART_PROJECT_LOADED = "dart-code:anyStandardDartProjectLoaded";
-const FLUTTER_PROJECT_LOADED = "dart-code:anyFlutterProjectLoaded";
-const WEB_PROJECT_LOADED = "dart-code:WebProjectLoaded";
-export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
-const DART_PLATFORM_NAME = "dart-code:dartPlatformName";
-export const SERVICE_EXTENSION_CONTEXT_PREFIX = "dart-code:serviceExtension.";
-export const SERVICE_CONTEXT_PREFIX = "dart-code:service.";
 
 let analyzer: Analyzer;
 let flutterDaemon: IFlutterDaemon | undefined;

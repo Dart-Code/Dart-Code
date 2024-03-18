@@ -1,6 +1,6 @@
 import { commands } from "vscode";
 import { ClientCapabilities, FeatureState, ServerCapabilities, StaticFeature } from "vscode-languageclient";
-import { LSP_COMMAND_CONTEXT_PREFIX } from "../constants";
+import { LSP_COMMAND_CONTEXT_PREFIX } from "../constants.contexts";
 
 
 export class CommonCapabilitiesFeature {

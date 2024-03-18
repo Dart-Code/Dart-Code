@@ -1,13 +1,13 @@
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { isWin } from "../../shared/constants";
+import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../../shared/constants.contexts";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { DebugCommands, debugSessions } from "../commands/debug";
-import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../extension";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";

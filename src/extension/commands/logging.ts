@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
-import { captureLogsMaxLineLength, DART_IS_CAPTURING_LOGS_CONTEXT } from "../../shared/constants";
+import { captureLogsMaxLineLength } from "../../shared/constants";
+import { DART_IS_CAPTURING_LOGS_CONTEXT } from "../../shared/constants.contexts";
 import { LogCategory } from "../../shared/enums";
 import { captureLogs, EmittingLogger } from "../../shared/logging";
 import { PromiseCompleter } from "../../shared/utils";

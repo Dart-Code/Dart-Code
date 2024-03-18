@@ -1,5 +1,5 @@
 import { ExtensionContext, LanguageStatusItem, commands, env, languages, workspace } from "vscode";
-import { DTD_AVAILABLE } from "../../shared/constants";
+import { DTD_AVAILABLE } from "../../shared/constants.contexts";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";

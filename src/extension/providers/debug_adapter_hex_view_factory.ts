@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { SUPPORTS_DEBUG_VALUE_FORMAT } from "../../shared/constants";
+import { SUPPORTS_DEBUG_VALUE_FORMAT } from "../../shared/constants.contexts";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { config } from "../config";

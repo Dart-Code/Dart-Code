@@ -40,26 +40,6 @@ export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/"
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.dev/setup/";
 
-export const IS_LSP_CONTEXT = "dart-code:isLsp";
-
-export const DART_DEP_PROJECT_NODE_CONTEXT = "dart-code:depProjectNode";
-export const DART_DEP_DEPENDENCIES_NODE_CONTEXT = "dart-code:depDependenciesNode";
-export const DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT = "dart-code:depDevDependenciesNode";
-export const DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT = "dart-code:depTransitiveDependenciesNode";
-export const DART_DEP_PACKAGE_NODE_CONTEXT = "dart-code:depPackageNode";
-export const DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT = "dart-code:depDependencyPackageNode";
-export const DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT = "dart-code:depDevDependencyPackageNode";
-export const DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT = "dart-code:depTransitiveDependencyPackageNode";
-export const DART_DEP_FOLDER_NODE_CONTEXT = "dart-code:depFolderNode";
-export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
-export const DART_IS_CAPTURING_LOGS_CONTEXT = "dart-code:isCapturingLogs";
-export const PUB_OUTDATED_SUPPORTED_CONTEXT = "dart-code:pubOutdatedSupported";
-export const FLUTTER_SIDEBAR_SUPPORTED_CONTEXT = "dart-code:flutterSidebarSupported";
-export const SUPPORTS_DEBUG_VALUE_FORMAT = "dart-code:supportsDebugValueFormat";
-export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
-export const DTD_AVAILABLE = "dart-code:dtdAvailable";
-export const LSP_COMMAND_CONTEXT_PREFIX = "dart-code:lsp.command.";
-
 export const stopLoggingAction = "Stop Logging";
 export const showLogAction = "Show Log";
 export const captureLogsMaxLineLength = 999999999;
@@ -145,12 +125,6 @@ export const flutterCreateTemplatesSupportingPlatforms = ["app", "plugin", "plug
 export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
 export const REFACTOR_ANYWAY = "Refactor Anyway";
 
-export const HAS_LAST_DEBUG_CONFIG = "dart-code:hasLastDebugConfig";
-export const HAS_LAST_TEST_DEBUG_CONFIG = "dart-code:hasLastTestDebugConfig";
-export const isInDartDebugSessionContext = "dart-code:isInDartDebugSession";
-export const isInFlutterDebugModeDebugSessionContext = "dart-code:isInFlutterDebugModeDebugSession";
-export const isInFlutterProfileModeDebugSessionContext = "dart-code:isInFlutterProfileModeDebugSession";
-export const isInFlutterReleaseModeDebugSessionContext = "dart-code:isInFlutterReleaseModeDebugSession";
 export const showErrorsAction = "Show Errors";
 export const debugAnywayAction = "Debug Anyway";
 
