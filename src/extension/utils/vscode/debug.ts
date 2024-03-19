@@ -6,6 +6,7 @@ import { PromiseCompleter } from "../../../shared/utils";
 export class DartDebugSessionInformation {
 	public observatoryUri?: string;
 	public vmServiceUri?: string;
+	public clientVmServiceUri?: string;
 	public readonly sessionStart: Date = new Date();
 	public hasStarted = false;
 	public flutterMode: string | undefined;

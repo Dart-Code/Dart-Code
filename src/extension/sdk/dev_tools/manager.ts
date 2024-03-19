@@ -325,13 +325,13 @@ export class DevToolsManager implements vs.Disposable {
 		// to only use that for a title, we may be able to relax that.
 		if (options.location !== "external") {
 			queryParams.embed = "true";
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri);
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
 
 			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
 			this.launchInEmbeddedWebView(exposedUrl, session, pageInfo, options.location);
 		} else {
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri);
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
 			await envUtils.openInBrowser(fullUrl, this.logger);
 		}
 	}
@@ -362,7 +362,7 @@ export class DevToolsManager implements vs.Disposable {
 			.join("&");
 	}
 
-	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string) {
+	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string, clientVmServiceUri?: string) {
 		queryParams = {
 			...this.getDefaultQueryParams(),
 			...queryParams,
@@ -376,8 +376,13 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		if (vmServiceUri) {
-			const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
-			queryParams.uri = exposedUrl;
+			// Skip using a port forwarded URL if we know the URI is already accessible from the client.
+			if (clientVmServiceUri) {
+				queryParams.uri = clientVmServiceUri;
+			} else {
+				const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
+				queryParams.uri = exposedUrl;
+			}
 		}
 
 		const paramsString = this.buildQueryString(queryParams);
