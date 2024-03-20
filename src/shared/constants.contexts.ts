@@ -17,6 +17,7 @@ export const FLUTTER_SIDEBAR_SUPPORTED_CONTEXT = "dart-code:flutterSidebarSuppor
 export const SUPPORTS_DEBUG_VALUE_FORMAT = "dart-code:supportsDebugValueFormat";
 export const DTD_AVAILABLE = "dart-code:dtdAvailable";
 export const LSP_COMMAND_CONTEXT_PREFIX = "dart-code:lsp.command.";
+export const LSP_REQUEST_CONTEXT_PREFIX = "dart-code:lsp.request.";
 export const FLUTTER_SUPPORTS_ATTACH = "dart-code:flutterSupportsAttach";
 
 // Debug session related.

@@ -3,7 +3,7 @@ import * as stream from "stream";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
-import { AnalyzerStatusNotification, CompleteStatementRequest, DiagnosticServerRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { AnalyzerStatusNotification, AugmentationRequest, AugmentedRequest, CompleteStatementRequest, DiagnosticServerRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
@@ -401,6 +401,20 @@ export class LspAnalyzer extends Analyzer {
 	public async getSuper(params: ls.TextDocumentPositionParams): Promise<ls.Location | null> {
 		return this.client.sendRequest(
 			SuperRequest.type,
+			params,
+		);
+	}
+
+	public async getAugmented(params: ls.TextDocumentPositionParams): Promise<ls.Location | null> {
+		return this.client.sendRequest(
+			AugmentedRequest.type,
+			params,
+		);
+	}
+
+	public async getAugmentation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null> {
+		return this.client.sendRequest(
+			AugmentationRequest.type,
 			params,
 		);
 	}

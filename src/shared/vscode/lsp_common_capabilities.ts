@@ -1,6 +1,6 @@
 import { commands } from "vscode";
 import { ClientCapabilities, FeatureState, ServerCapabilities, StaticFeature } from "vscode-languageclient";
-import { LSP_COMMAND_CONTEXT_PREFIX } from "../constants.contexts";
+import { LSP_COMMAND_CONTEXT_PREFIX, LSP_REQUEST_CONTEXT_PREFIX } from "../constants.contexts";
 
 
 export class CommonCapabilitiesFeature {
@@ -34,6 +34,15 @@ export class CommonCapabilitiesFeature {
 					const supportedCommandsSet = new Set<string>(supportedCommands);
 					for (const command of knownCommands) {
 						void commands.executeCommand("setContext", `${LSP_COMMAND_CONTEXT_PREFIX}${command}`, supportedCommandsSet.has(command));
+					}
+				}
+
+				// Track known requests.
+				const textDocumentRequests = capabilities.experimental?.textDocument as unknown;
+				if (textDocumentRequests) {
+					// TODO(dantup): These might not be unset if you downgrade to an old SDK and we silent-restart.
+					for (const requestName of Object.keys(textDocumentRequests)) {
+						void commands.executeCommand("setContext", `${LSP_REQUEST_CONTEXT_PREFIX}dart.textDocument.${requestName}`, true);
 					}
 				}
 			},

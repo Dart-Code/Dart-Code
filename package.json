@@ -264,7 +264,17 @@
 			},
 			{
 				"command": "dart.goToSuper",
-				"title": "Go to Super Class/Method",
+				"title": "Go to Super Class/Member",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.goToAugmented",
+				"title": "Go to Augmented Class/Member/Function",
+				"category": "Dart"
+			},
+			{
+				"command": "dart.goToAugmentation",
+				"title": "Go to Class/Member/Function Augmentation",
 				"category": "Dart"
 			},
 			{
@@ -882,6 +892,14 @@
 				{
 					"command": "dart.goToSuper",
 					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.goToAugmented",
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart && dart-code:lsp.request.dart.textDocument.augmented"
+				},
+				{
+					"command": "dart.goToAugmentation",
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart && dart-code:lsp.request.dart.textDocument.augmentation"
 				},
 				{
 					"command": "dart.attach",

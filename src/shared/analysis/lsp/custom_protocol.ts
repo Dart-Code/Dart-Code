@@ -32,6 +32,14 @@ export class SuperRequest {
 	public static type = new RequestType<TextDocumentPositionParams, Location | null, void>("dart/textDocument/super");
 }
 
+export class AugmentedRequest {
+	public static type = new RequestType<TextDocumentPositionParams, Location | null, void>("dart/textDocument/augmented");
+}
+
+export class AugmentationRequest {
+	public static type = new RequestType<TextDocumentPositionParams, Location | null, void>("dart/textDocument/augmentation");
+}
+
 export class DiagnosticServerRequest {
 	public static type = new RequestType0<{ port: number }, void>("dart/diagnosticServer");
 }
