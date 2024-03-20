@@ -4,10 +4,10 @@ import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
 import { activate, currentDoc, currentEditor, ensureIsRange, extApi, helloWorldFolder, positionOf, rangeOf, waitForResult } from "../../helpers";
 
-const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super_method/super.dart"));
-const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super_method/derived.dart"));
+const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/super.dart"));
+const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/derived.dart"));
 
-describe("go_to_super_method", () => {
+describe("go_to_super", () => {
 	beforeEach("activate and wait for outline", async () => {
 		await activate(derivedFile);
 		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(derivedFile));
