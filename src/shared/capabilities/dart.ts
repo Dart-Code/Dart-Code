@@ -31,6 +31,10 @@ export class DartCapabilities {
 	get supportsPubUpgradeMajorVersions() { return versionIsAtLeast(this.version, "2.12.0"); }
 	get needsNoExampleForPubGet() { return versionIsAtLeast(this.version, "3.1.0"); }
 	get omitsVoidForSetters() { return versionIsAtLeast(this.version, "3.3.0-0"); }
+	// TODO(dantup): Set this when LSP changes have landed.
+	// Will also need to find a solution to pubspec.yaml SDK version that doesn't break
+	// the legacy bot.
+	get supportsAugmentations() { return versionIsAtLeast(this.version, "3.4.0"); }
 	get supportsPubOutdated() { return versionIsAtLeast(this.version, "2.8.0-a"); }
 	get supportsFlutterSidebar() { return versionIsAtLeast(this.version, "3.2.0-201"); }
 	get supportsPubDepsJson() { return versionIsAtLeast(this.version, "2.14.0-0"); }

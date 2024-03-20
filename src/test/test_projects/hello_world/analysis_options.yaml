@@ -2,6 +2,9 @@ analyzer:
   exclude:
     - test/excluded_by_analysis_options/**
 
+  enable-experiment:
+    - macros
+
 linter:
   rules:
     - depend_on_referenced_packages

@@ -3,6 +3,9 @@ publish_to: none
 
 environment:
   sdk: '>=2.12.0 <4.0.0'
+  # TODO(dantup): Find a way to set this when running on > 3.3.0 SDKs but not for legacy bots
+  # (which can happily just fail to parse the augmentation files).
+  # sdk: '>=3.3.0'
 
 dependencies:
   http:
