@@ -735,7 +735,6 @@ export class DebugCommands implements IAmDisposable {
 		} else if (event === "dart.debuggerUris") {
 			session.observatoryUri = body.observatoryUri;
 			session.vmServiceUri = body.vmServiceUri;
-			session.clientVmServiceUri = body.clientVmServiceUri;
 			this.onDebugSessionVmServiceAvailableEmitter.fire(session);
 			debugSessionsChangedEmitter.fire();
 

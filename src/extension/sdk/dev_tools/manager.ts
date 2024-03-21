@@ -325,13 +325,13 @@ export class DevToolsManager implements vs.Disposable {
 		// to only use that for a title, we may be able to relax that.
 		if (options.location !== "external") {
 			queryParams.embed = "true";
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri);
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
 
 			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
 			this.launchInEmbeddedWebView(exposedUrl, session, pageInfo, options.location);
 		} else {
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
+			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri);
 			await envUtils.openInBrowser(fullUrl, this.logger);
 		}
 	}
@@ -362,7 +362,7 @@ export class DevToolsManager implements vs.Disposable {
 			.join("&");
 	}
 
-	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string, clientVmServiceUri?: string) {
+	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string) {
 		queryParams = {
 			...this.getDefaultQueryParams(),
 			...queryParams,
@@ -376,9 +376,18 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		if (vmServiceUri) {
-			// Skip using a port forwarded URL if we know the URI is already accessible from the client.
-			if (clientVmServiceUri) {
-				queryParams.uri = clientVmServiceUri;
+			/**
+			 * In some environments (for ex. g3), the VM Service/DDS could be running on
+			 * the end user machine (eg. Mac) while the extension host is an SSH remote
+			 * (eg. Linux).
+			 *
+			 * `vmServiceUri` is a URI accessible to the end user machine but if we ask VS
+			 * Code to forward a port from the end user machine to it, it will be a
+			 * forward from M -> L which will be inaccessible from DevTools, which opens
+			 * on the end user machine.
+			 */
+			if (this.context.workspaceContext.config.forceFlutterWorkspace) {
+				queryParams.uri = vmServiceUri;
 			} else {
 				const exposedUrl = await envUtils.exposeUrl(vmServiceUri, this.logger);
 				queryParams.uri = exposedUrl;
