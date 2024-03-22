@@ -95,6 +95,9 @@
 				"path": "./syntaxes/dart.json",
 				"tokenTypes": {
 					"string.interpolated.expression.dart": "other"
+				},
+				"embeddedLanguages": {
+					"meta.embedded.markdown": "markdown"
 				}
 			}
 		],
