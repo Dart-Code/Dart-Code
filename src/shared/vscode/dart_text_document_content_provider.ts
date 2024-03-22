@@ -23,8 +23,9 @@ export class DartTextDocumentContentProviderFeature implements IAmDisposable {
 			},
 			fillClientCapabilities(capabilities: ClientCapabilities) {
 				capabilities.experimental ??= {};
-				// This key must match the server for it to enable this. If the API changes, we need
-				// to change this key. We will remove the suffix when shipping.
+				capabilities.experimental.supportsDartTextDocumentContentProvider = true;
+				// TODO(dantup): Remove this legacy flag sometime after April 2024 as it was
+				//  just for during dev in case the API needed to change (it did not).
 				capabilities.experimental.supportsDartTextDocumentContentProviderEXP1 = true;
 			},
 			getState(): FeatureState {
