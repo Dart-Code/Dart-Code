@@ -75,7 +75,7 @@ import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizat
 import { FlutterSidebar } from "./flutter/sidebar";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
-import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToSuperCommand } from "./lsp/go_to";
+import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
 import { AddDependencyCodeActionProvider } from "./providers/add_dependency_code_action_provider";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
@@ -672,9 +672,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(new TestCommands(logger, testModel, workspaceContext, vsCodeTestController, dartCapabilities, flutterCapabilities));
 
 	if (lspClient && lspAnalyzer) {
-		// TODO: LSP equivs of the others...
-		// Refactors
-		// TypeHierarchyCommand
+		context.subscriptions.push(new LspGoToLocationCommand(lspAnalyzer));
 		context.subscriptions.push(new LspGoToSuperCommand(lspAnalyzer));
 		context.subscriptions.push(new LspGoToAugmentedCommand(lspAnalyzer));
 		context.subscriptions.push(new LspGoToAugmentationCommand(lspAnalyzer));
