@@ -376,7 +376,18 @@ export class DevToolsManager implements vs.Disposable {
 		}
 
 		if (vmServiceUri) {
-			// Skip using a port forwarded URL if we know the URI is already accessible from the client.
+			/**
+			 * In some environments (for ex. g3), the VM Service/DDS could be running on
+			 * the end user machine (eg. Mac) while the extension host is an SSH remote
+			 * (eg. Linux).
+			 *
+			 * `clientVmServiceUri` indicates a URI that is already accessible on the end
+			 * user machine without forwarding. `vmServiceUri` indicates a URI that is
+			 * accessible to the extension host.
+			 *
+			 * If a `clientVmServiceUri` exists, use it directly instead of trying to
+			 * forward a URI from the extension host.
+			 */
 			if (clientVmServiceUri) {
 				queryParams.uri = clientVmServiceUri;
 			} else {
