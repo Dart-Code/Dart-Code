@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { activate, closeAllOpenFiles, currentEditor, helloWorldMainFile } from "../../helpers";
 
-describe.only("go_to_location", () => {
+describe("go_to_location", () => {
 	beforeEach("activate", () => activate());
 
 	async function testCommand(targetLocation: vs.Location | ls.Location) {
