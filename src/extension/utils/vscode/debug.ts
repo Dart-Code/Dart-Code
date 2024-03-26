@@ -5,6 +5,16 @@ import { PromiseCompleter } from "../../../shared/utils";
 
 export class DartDebugSessionInformation {
 	public observatoryUri?: string;
+
+	/*
+	* In some environments (for ex. g3), the VM Service/DDS could be running on
+	* the end user machine (eg. Mac) while the extension host is an SSH remote
+	* (eg. Linux).
+	*
+	* `vmServiceUri` indicates a URI that is accessible to the extension host.
+	* `clientVmServiceUri` indicates a URI that is already accessible on the end
+	* user machine without forwarding.
+	*/
 	public vmServiceUri?: string;
 	public clientVmServiceUri?: string;
 	public readonly sessionStart: Date = new Date();

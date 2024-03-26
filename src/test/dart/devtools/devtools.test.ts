@@ -72,10 +72,7 @@ describe("DevTools", async () => {
 		// Verify an attempt was made to open the correct URI.
 		assert.equal(openBrowserCommand.calledOnce, true);
 		const openedUri = openBrowserCommand.args[0][0] as string; // First invocation, first arg.
-		assert.ok(
-			openedUri.includes(debuggerUrisEvent.clientVmServiceUri),
-			`URI did not contain expected VM Service!\nOpened: ${openedUri}\nExpected to contain: ${debuggerUrisEvent.clientVmServiceUri}`,
-		);
+		assertDevToolsUriWithVmService(openedUri, debuggerUrisEvent.clientVmServiceUri);
 	});
 });
 
