@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, extApi, sb } from "../../helpers";
+import { activate, defer, extApi, sb } from "../../helpers";
 
 describe("DevTools", async () => {
 	beforeEach("activate", () => activate());
@@ -17,6 +17,8 @@ describe("DevTools", async () => {
 			type: "dart",
 		} as vs.DebugSession;
 		extApi.debugCommands.handleDebugSessionStart(debugSession);
+		defer("Remove fake debug session", () => extApi.debugCommands.handleDebugSessionEnd(debugSession));
+
 		return debugSession;
 	}
 
