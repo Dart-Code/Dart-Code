@@ -13,6 +13,9 @@ export class CommonCapabilitiesFeature {
 				// because there's no existing capability for this (yet) and some client do not support it.
 				// https://github.com/microsoft/language-server-protocol/issues/1635
 				capabilities.experimental.supportsWindowShowMessageRequest = true;
+				capabilities.experimental.commands = [
+					"dart.goToLocation",
+				];
 			},
 			getState(): FeatureState {
 				return { kind: "static" };

@@ -10,6 +10,23 @@ abstract class LspGoToCommand implements vs.Disposable {
 
 	constructor(protected readonly analyzer: LspAnalyzer) { }
 
+	protected async goToLocation(location: ls.Location): Promise<void> {
+		const codeLocation = this.analyzer.client.protocol2CodeConverter.asLocation(location);
+		const elementDocument = await vs.workspace.openTextDocument(codeLocation.uri);
+		const elementEditor = await vs.window.showTextDocument(elementDocument);
+		showCode(elementEditor, codeLocation.range, codeLocation.range, codeLocation.range);
+	}
+
+	public dispose(): any {
+		disposeAll(this.disposables);
+	}
+}
+
+abstract class LspGoToRequestCommand extends LspGoToCommand {
+	constructor(protected readonly analyzer: LspAnalyzer) {
+		super(analyzer);
+	}
+
 	protected async goTo(): Promise<void> {
 		const editor = editors.getActiveDartEditor();
 		if (!editor) {
@@ -27,10 +44,7 @@ abstract class LspGoToCommand implements vs.Disposable {
 		if (!location)
 			return;
 
-		const codeLocation = this.analyzer.client.protocol2CodeConverter.asLocation(location);
-		const elementDocument = await vs.workspace.openTextDocument(codeLocation.uri);
-		const elementEditor = await vs.window.showTextDocument(elementDocument);
-		showCode(elementEditor, codeLocation.range, codeLocation.range, codeLocation.range);
+		await this.goToLocation(location);
 	}
 
 	abstract getLocation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null>;
@@ -40,7 +54,7 @@ abstract class LspGoToCommand implements vs.Disposable {
 	}
 }
 
-export class LspGoToSuperCommand extends LspGoToCommand {
+export class LspGoToSuperCommand extends LspGoToRequestCommand {
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToSuper", this.goTo, this));
@@ -51,7 +65,7 @@ export class LspGoToSuperCommand extends LspGoToCommand {
 	}
 }
 
-export class LspGoToAugmentedCommand extends LspGoToCommand {
+export class LspGoToAugmentedCommand extends LspGoToRequestCommand {
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToAugmented", this.goTo, this));
@@ -62,7 +76,7 @@ export class LspGoToAugmentedCommand extends LspGoToCommand {
 	}
 }
 
-export class LspGoToAugmentationCommand extends LspGoToCommand {
+export class LspGoToAugmentationCommand extends LspGoToRequestCommand {
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToAugmentation", this.goTo, this));
@@ -70,5 +84,15 @@ export class LspGoToAugmentationCommand extends LspGoToCommand {
 
 	getLocation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null> {
 		return this.analyzer.getAugmentation(params);
+	}
+}
+
+/**
+ * Supports the dart.goToLocation command that the LSP server may use.
+ */
+export class LspGoToLocationCommand extends LspGoToCommand {
+	constructor(analyzer: LspAnalyzer) {
+		super(analyzer);
+		this.disposables.push(vs.commands.registerCommand("dart.goToLocation", this.goToLocation, this));
 	}
 }
