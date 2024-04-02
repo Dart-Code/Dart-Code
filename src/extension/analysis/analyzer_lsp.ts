@@ -17,6 +17,7 @@ import { cleanDartdoc, createMarkdownString } from "../../shared/vscode/extensio
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { LspUriConverters } from "../../shared/vscode/lsp_uri_converters";
+import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
@@ -32,7 +33,7 @@ export class LspAnalyzer extends Analyzer {
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
 	public readonly dartTextDocumentContentProvider: DartTextDocumentContentProviderFeature | undefined;
-	private readonly statusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
+	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
@@ -56,7 +57,6 @@ export class LspAnalyzer extends Analyzer {
 		this.disposables.push(this.fileTracker);
 		this.disposables.push(this.snippetTextEdits);
 		this.disposables.push(this.refactors);
-		this.disposables.push(this.statusItem);
 
 		void this.client.start().then(() => {
 			this.statusItem.text = "Dart Analysis Server";

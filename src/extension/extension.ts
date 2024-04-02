@@ -1011,6 +1011,10 @@ export async function deactivate(isRestart = false): Promise<void> {
 		void vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
 		void ringLogger?.dispose();
 		logger.dispose();
+	} else {
+		// If we are starting, add an additional delay just to make it more likely other services
+		// have shut down before we try to restart them.
+		await new Promise((resolve) => setTimeout(resolve, 500));
 	}
 }
 

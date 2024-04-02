@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import { MAX_VERSION } from "../../shared/constants";
 import { disposeAll } from "../../shared/utils";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
+import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 
@@ -44,16 +45,16 @@ export class StatusBarVersionTracker implements vs.Disposable {
 	}
 
 	private addStatusBarItem(id: string, kind: string, versionNumber: string, command: string | undefined) {
-		const statusBarItem = vs.languages.createLanguageStatusItem(id, ANALYSIS_FILTERS);
+		const statusBarItem = getLanguageStatusItem(id, ANALYSIS_FILTERS);
 		statusBarItem.text = versionNumber;
 		statusBarItem.detail = `${kind} SDK`;
 		statusBarItem.name = `${kind} SDK`;
-		if (command)
+		if (command) {
 			statusBarItem.command = {
 				command,
 				title: "change",
 			};
-		this.disposables.push(statusBarItem);
+		}
 	}
 
 	public dispose() {

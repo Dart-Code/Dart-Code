@@ -19,6 +19,7 @@ import { disposeAll, usingCustomScript, versionIsAtLeast } from "../../../shared
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
+import { getLanguageStatusItem } from "../../../shared/vscode/status_bar";
 import { envUtils, getAllProjectFolders, isRunningLocally } from "../../../shared/vscode/utils";
 import { Context } from "../../../shared/vscode/workspace";
 import { Analytics } from "../../analytics";
@@ -43,7 +44,7 @@ let portToBind: number | undefined;
 /// Handles launching DevTools in the browser and managing the underlying service.
 export class DevToolsManager implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
-	private readonly statusBarItem = vs.languages.createLanguageStatusItem("dart.devTools", ANALYSIS_FILTERS);
+	private readonly statusBarItem = getLanguageStatusItem("dart.devTools", ANALYSIS_FILTERS);
 	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
 	private service?: DevToolsService;
 	public debugCommands: DebugCommands | undefined;
@@ -65,7 +66,6 @@ export class DevToolsManager implements vs.Disposable {
 		this.statusBarItem.name = "Dart/Flutter DevTools";
 		this.statusBarItem.text = "Dart DevTools";
 		this.setNotStartedStatusBar();
-		this.disposables.push(this.statusBarItem);
 
 		void this.handleEagerActivationAndStartup(context.workspaceContext);
 	}

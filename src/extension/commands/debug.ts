@@ -10,6 +10,7 @@ import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
+import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -56,7 +57,7 @@ export class DebugCommands implements IAmDisposable {
 	private debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
 	private currentDebugOption = DebugOption.MyCode;
 	private debugMetrics = vs.window.createStatusBarItem("dartStatusDebugMetrics", vs.StatusBarAlignment.Right, 0);
-	private readonly debugSessionsStatusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.debugSessions", ANALYSIS_FILTERS);
+	private readonly debugSessionsStatusItem = getLanguageStatusItem("dart.debugSessions", ANALYSIS_FILTERS);
 	private onWillHotReloadEmitter = new vs.EventEmitter<void>();
 	public readonly onWillHotReload = this.onWillHotReloadEmitter.event;
 	private onWillHotRestartEmitter = new vs.EventEmitter<void>();
@@ -78,7 +79,6 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(this.debugMetrics);
 		this.debugSessionsStatusItem.name = "Dart Debug Sessions";
 		this.updateDebugSessionsStatus();
-		this.disposables.push(this.debugSessionsStatusItem);
 
 		this.disposables.push(vs.debug.onDidChangeBreakpoints((e) => this.handleBreakpointChange(e)));
 		this.disposables.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));

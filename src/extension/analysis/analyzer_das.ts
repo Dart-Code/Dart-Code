@@ -10,6 +10,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { PromiseCompleter, versionIsAtLeast } from "../../shared/utils";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
+import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -49,7 +50,7 @@ export class DasAnalyzer extends Analyzer {
 	public readonly client: DasAnalyzerClient;
 	public readonly fileTracker: DasFileTracker;
 
-	private readonly statusItem: vs.LanguageStatusItem = vs.languages.createLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
+	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
 	constructor(logger: Logger, analytics: Analytics, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
@@ -60,7 +61,6 @@ export class DasAnalyzer extends Analyzer {
 		this.fileTracker = new DasFileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.client);
 		this.disposables.push(this.fileTracker);
-		this.disposables.push(this.statusItem);
 
 		const connectedEvent = this.client.registerForServerConnected((sc) => {
 			this.statusItem.text = "Dart Analysis Server";
