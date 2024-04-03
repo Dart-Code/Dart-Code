@@ -10,20 +10,20 @@ import { nullToUndefined } from "./utils";
 const simpleCommandRegex = new RegExp("^[\\w\\-.]+$");
 
 export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: { [key: string]: string | undefined } | undefined): SpawnedProcess {
-	// Skip shell when we know it's not required, such as .exe on Windows.
-	//
-	// TODO(dantup): Relax this after the next release when there's more time for pre-release testing.
-	const skipShell = args.includes("tooling-daemon");
-
 	const customEnv = Object.assign({}, process.env, env);
-	if (skipShell) {
-		return child_process.spawn(binPath, args, { cwd: workingDirectory, env: customEnv }) as SpawnedProcess;
+
+	// On Windows we need to use shell-execute for running `.bat` files.
+	// Try to limit when we use this, because terminating a shell might not terminate
+	// the spawned process, so not using shell-execute may improve reliability of
+	// terminating processes.
+	if (isWin && binPath.endsWith(".bat")) {
+		const quotedArgs = args.map(quoteAndEscapeArg);
+		// Putting quotes around something like "git" will cause it to fail, so don't do it if binPath is just a single identifier.
+		binPath = simpleCommandRegex.test(binPath) ? binPath : `"${binPath}"`;
+		return child_process.spawn(binPath, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true }) as SpawnedProcess;
 	}
 
-	const quotedArgs = args.map(quoteAndEscapeArg);
-	// Putting quotes around something like "git" will cause it to fail, so don't do it if binPath is just a single identifier.
-	binPath = simpleCommandRegex.test(binPath) ? binPath : `"${binPath}"`;
-	return child_process.spawn(binPath, quotedArgs, { cwd: workingDirectory, env: customEnv, shell: true }) as SpawnedProcess;
+	return child_process.spawn(binPath, args, { cwd: workingDirectory, env: customEnv }) as SpawnedProcess;
 }
 
 function quoteAndEscapeArg(arg: string) {

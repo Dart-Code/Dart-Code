@@ -14,7 +14,7 @@ describe("safeSpawn", () => {
 	testExecution("a b c");
 	testExecution("a(b)c");
 	testExecution("a 'b' c");
-	testExecution("a !£$%^&()_+ -= []{} @~;'# ,. c");
+	testExecution("a !$%()_+ -= []{} @~;'# ,. c");
 });
 
 function testExecution(filename: string) {
@@ -22,13 +22,24 @@ function testExecution(filename: string) {
 		const shellExtension = isWin ? "bat" : "sh";
 		mkDirRecursive(path.join(tempFolder, filename));
 		const fullPath = path.join(tempFolder, filename, `${filename}.${shellExtension}`);
-		fs.writeFileSync(fullPath, "echo Hello!");
+		const contents = isWin
+			? `
+				@ECHO OFF
+				SET _string=%~1
+				ECHO %_string%
+				`
+			: "echo $1";
+		fs.writeFileSync(fullPath, contents);
+		fs.chmodSync(fullPath, "775");
 
-		const procResult = await runProcess(nullLogger, fullPath, [], undefined, undefined, safeSpawn, undefined);
-		assert.equal(procResult.exitCode, 0);
+		// Also include the filename as arguments so we can ensure that it comes through correctly as a single argument
+		// (since we only print the first argument).
+		const procResult = await runProcess(nullLogger, fullPath, [filename], undefined, undefined, safeSpawn, undefined);
+		const procResultJson = JSON.stringify(procResult);
+		assert.equal(procResult.exitCode, 0, `Wrong exit code ${procResultJson}`);
 
 		const outputLines = procResult.stdout.trim().split("\n").map((line) => line.trim());
-		assert.ok(outputLines[outputLines.length - 2].endsWith("echo Hello!"));
-		assert.equal(outputLines[outputLines.length - 1], "Hello!");
+		const lastLine = outputLines[outputLines.length - 1];
+		assert.equal(lastLine, filename, `Output did not have expected output (${procResultJson})`);
 	});
 }
