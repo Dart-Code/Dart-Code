@@ -93,8 +93,7 @@ export class AddSdkToPath {
 					"-WindowStyle", "Hidden",
 					"-ExecutionPolicy", "Bypass",
 					"-File", scriptPath,
-					// If we don't re-quote this, spaces break, even though runToolProcess is doing it?
-					`"${sdkPath}"`,
+					sdkPath,
 				],
 				undefined,
 			);
