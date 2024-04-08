@@ -398,17 +398,17 @@ export async function closeFile(file: vs.Uri): Promise<void> {
 	}
 }
 
-export async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
+export async function openFile(file: vs.Uri, column?: vs.ViewColumn): Promise<vs.TextEditor> {
 	logger.info(`Opening ${fsPath(file)}`);
 	const doc = await vs.workspace.openTextDocument(file);
 	documentEol = doc.eol === vs.EndOfLine.CRLF ? "\r\n" : "\n";
 	logger.info(`Showing ${fsPath(file)}`);
 	try {
-		return await vs.window.showTextDocument(doc);
+		return await vs.window.showTextDocument(doc, { viewColumn: column, preview: false });
 	} catch (e) {
 		logger.warn(`Failed to show ${fsPath(file)} on first attempt, trying again...`, LogCategory.CI);
 		logger.warn(e, LogCategory.CI);
-		return await vs.window.showTextDocument(doc);
+		return await vs.window.showTextDocument(doc, { viewColumn: column, preview: false });
 	} finally {
 		await delay(100);
 	}

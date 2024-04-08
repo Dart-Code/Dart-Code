@@ -41,6 +41,24 @@ export function forceWindowsDriveLetterToUppercase<T extends string | undefined>
 	return p;
 }
 
+/**
+ * Returns a string for comparing URIs. For file (and dart-macro+file) URIs this will
+ * be `fsPath()` (including for fake paths for generated files) with a `file:` or `dart-macro+file`
+ * prefix (this will NOT be a valid URI).
+ * For other URIs, it is the toString().
+ *
+ * This string is ONLY for comparising URIs to see if they are "the same document".
+ */
+export function uriComparisonString(uri: URI): string {
+	if (uri.scheme === "file") {
+		return `file:${fsPath(uri)}`;
+	} else if (uri.scheme.endsWith("+file")) {
+		return `${uri.scheme}:${fsPath(uri.with({ scheme: "file" }))}`;
+	} else {
+		return uri.toString();
+	}
+}
+
 /// Shortens a path to use ~ if it's inside the home directory and always
 // uses forward slashes in that case.
 export function homeRelativePath(p: string | undefined) {

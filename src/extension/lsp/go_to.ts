@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { disposeAll } from "../../shared/utils";
+import { uriComparisonString } from "../../shared/utils/fs";
 import { showCode } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import * as editors from "../editors";
@@ -12,8 +13,16 @@ abstract class LspGoToCommand implements vs.Disposable {
 
 	protected async goToLocation(location: ls.Location): Promise<void> {
 		const codeLocation = this.analyzer.client.protocol2CodeConverter.asLocation(location);
-		const elementDocument = await vs.workspace.openTextDocument(codeLocation.uri);
-		const elementEditor = await vs.window.showTextDocument(elementDocument);
+		const uri = codeLocation.uri;
+		const elementDocument = await vs.workspace.openTextDocument(uri);
+
+		const sourceUriString = uriComparisonString(uri);
+		const existingTab = vs.window.tabGroups.all
+			.flatMap((group) => group.tabs)
+			.find((tab) => tab.input instanceof vs.TabInputText && uriComparisonString(tab.input.uri) === sourceUriString);
+		const tabGroup = existingTab?.group.viewColumn;
+
+		const elementEditor = await vs.window.showTextDocument(elementDocument, tabGroup);
 		showCode(elementEditor, codeLocation.range, codeLocation.range, codeLocation.range);
 	}
 

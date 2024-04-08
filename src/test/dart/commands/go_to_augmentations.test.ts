@@ -31,7 +31,7 @@ describe("go to", () => {
 	});
 
 	beforeEach("write files", () => {
-		fs.writeFileSync(fsPath(helloWorldPubspec), fs.readFileSync(fsPath(helloWorldPubspec)).toString().replace("sdk: '>=2.12.0 <4.0.0'", "sdk: '>=3.3.0 <4.0.0'"));
+		fs.writeFileSync(fsPath(helloWorldPubspec), fs.readFileSync(fsPath(helloWorldPubspec)).toString().replace("sdk: '>=2.12.0 <4.0.0'", "sdk: '>=3.5.0-0 <4.0.0'"));
 		mkDirRecursive(path.dirname(fsPath(libFile)));
 		fs.writeFileSync(fsPath(libFile), libContent);
 		fs.writeFileSync(fsPath(augmentationFile), augmentationContent);
@@ -55,6 +55,38 @@ describe("go to", () => {
 			ensureIsRange(
 				editor.selection,
 				rangeOf("augment class |A| {}"),
+			);
+		});
+
+		it("navigates to augmented class that was open in another column", async () => {
+			// Open target file in another column with another file over it.
+			await openFile(augmentationFile, vs.ViewColumn.Two);
+			await openFile(helloWorldPubspec, vs.ViewColumn.Two);
+			await openFile(libFile, vs.ViewColumn.One);
+
+
+			let editor = currentEditor();
+			const e = rangeOf("class |A|");
+			editor.selection = new vs.Selection(e.start, e.end);
+			await vs.commands.executeCommand("dart.goToAugmentation");
+
+			// Check correct editor has focus.
+			editor = currentEditor();
+			assert.equal(fsPath(editor.document.uri), fsPath(augmentationFile));
+			ensureIsRange(
+				editor.selection,
+				rangeOf("augment class |A| {}"),
+			);
+
+			// Check active file in each group is as expected.
+			const activeFiles = vs.window.tabGroups.all
+				.map((group) => group.tabs.find((tab) => tab.isActive && tab.input instanceof vs.TabInputText))
+				.map((tab) => (tab?.input as vs.TabInputText)?.uri?.toString());
+			assert.deepStrictEqual(activeFiles,
+				[
+					libFile.toString(),
+					augmentationFile.toString(),
+				],
 			);
 		});
 	});
