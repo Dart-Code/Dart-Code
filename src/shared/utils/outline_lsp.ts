@@ -214,6 +214,7 @@ export class LspClassOutlineVisitor extends LspOutlineVisitor {
 		this.classes.push({
 			className: outline.element.name,
 			codeRange: outline.codeRange,
+			elementKind: outline.element.kind,
 			range: outline.range,
 		});
 	}
@@ -221,6 +222,7 @@ export class LspClassOutlineVisitor extends LspOutlineVisitor {
 
 export interface LspClassInfo {
 	className: string;
+	elementKind: string;
 	range: Range;
 	codeRange: Range;
 }
