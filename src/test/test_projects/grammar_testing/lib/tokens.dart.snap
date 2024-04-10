@@ -224,8 +224,8 @@
 #       ^ source.dart
 #        ^ source.dart string.interpolated.single.dart
 #         ^ source.dart string.interpolated.single.dart
-#          ^ source.dart string.interpolated.single.dart string.interpolated.expression.dart
-#           ^^^ source.dart string.interpolated.single.dart string.interpolated.expression.dart variable.parameter.dart
+#          ^ source.dart string.interpolated.single.dart meta.embedded.expression.dart
+#           ^^^ source.dart string.interpolated.single.dart meta.embedded.expression.dart variable.parameter.dart
 #              ^^^ source.dart string.interpolated.single.dart
 #                 ^ source.dart string.interpolated.single.dart
 #                  ^ source.dart
