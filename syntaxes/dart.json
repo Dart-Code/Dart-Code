@@ -1,6 +1,6 @@
 {
 	"name": "Dart",
-	"version": "1.2.7",
+	"version": "1.2.8",
 	"fileTypes": [
 		"dart"
 	],
@@ -392,10 +392,33 @@
 				}
 			]
 		},
+		"expression": {
+			"patterns": [
+				{
+					"include": "#constants-and-special-vars"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"name": "variable.parameter.dart",
+					"match": "[a-zA-Z0-9_]+"
+				},
+				{
+					"begin": "\\{",
+					"end": "\\}",
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				}
+			]
+		},
 		"string-interp": {
 			"patterns": [
 				{
-					"name": "string.interpolated.expression.dart",
+					"name": "meta.embedded.expression.dart",
 					"match": "\\$([a-zA-Z0-9_]+)",
 					"captures": {
 						"1": {
@@ -404,19 +427,12 @@
 					}
 				},
 				{
-					"name": "string.interpolated.expression.dart",
+					"name": "meta.embedded.expression.dart",
 					"begin": "\\$\\{",
 					"end": "\\}",
 					"patterns": [
 						{
-							"include": "#constants-and-special-vars"
-						},
-						{
-							"include": "#strings"
-						},
-						{
-							"name": "variable.parameter.dart",
-							"match": "[a-zA-Z0-9_]+"
+							"include": "#expression"
 						}
 					]
 				},

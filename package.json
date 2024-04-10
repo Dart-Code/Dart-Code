@@ -92,10 +92,7 @@
 			{
 				"language": "dart",
 				"scopeName": "source.dart",
-				"path": "./syntaxes/dart.json",
-				"tokenTypes": {
-					"string.interpolated.expression.dart": "other"
-				}
+				"path": "./syntaxes/dart.json"
 			}
 		],
 		"colors": [
