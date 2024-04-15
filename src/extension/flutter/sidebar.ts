@@ -52,6 +52,24 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		const sidebarUri = URI.parse(sidebarUrl);
 		const frameOrigin = `${sidebarUri.scheme}://${sidebarUri.authority}`;
 		const pageScript = `
+		let currentBackgroundColor;
+		let currentBaseUrl;
+
+		function setIframeSrc() {
+			const devToolsFrame = document.getElementById('devToolsFrame');
+			const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
+			const background = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
+			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
+			const qsSep = currentBaseUrl.includes("?") ? "&" : "?";
+			let url = \`\${currentBaseUrl}\${qsSep}embed=true&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
+			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
+				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
+			}
+			if (devToolsFrame.src !== url)
+				devToolsFrame.src = url;
+		}
+
 		const vscode = acquireVsCodeApi();
 		window.addEventListener('message', (event) => {
 			const devToolsFrame = document.getElementById('devToolsFrame');
@@ -60,17 +78,8 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			// Handle any special commands first.
 			switch (message.command) {
 				case "_dart-code.setUrl":
-					const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
-					const background = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
-					const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
-					const qsSep = message.url.includes("?") ? "&" : "?";
-					let url = \`\${message.url}\${qsSep}embed=true&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
-					const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
-					if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
-						url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
-					}
-					if (devToolsFrame.src !== url)
-						devToolsFrame.src = url;
+					currentBaseUrl = message.url;
+					setIframeSrc();
 					return;
 			}
 
@@ -83,6 +92,20 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 				// console.log(\`FRAME: Code --> DevTools: \${JSON.stringify(message)}\`);
 				devToolsFrame.contentWindow.postMessage(message, ${JSON.stringify(frameOrigin)});
 			}
+		});
+
+		document.addEventListener('DOMContentLoaded', function () {
+			lastBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
+			new MutationObserver((mutationList) => {
+				for (const mutation of mutationList) {
+					if (mutation.type === "attributes" && mutation.attributeName == "class") {
+						let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
+						if (newBackgroundColor !== currentBackgroundColor) {
+							setIframeSrc();
+						}
+					}
+				}
+			}).observe(document.body, { attributeFilter : ['class'], attributeOldValue: true });
 		});
 		`;
 
