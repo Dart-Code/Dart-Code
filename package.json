@@ -305,6 +305,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.findTestOrImplementationFile",
+				"title": "Find Test/Implementation File",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.goToTests",
 				"title": "Go to Tests",
 				"category": "Dart"
@@ -873,6 +878,10 @@
 				{
 					"command": "dart.goToTestOrImplementationFile",
 					"when": "dart-code:anyProjectLoaded && dart-code:canGoToTestOrImplementationFile"
+				},
+				{
+					"command": "dart.findTestOrImplementationFile",
+					"when": "dart-code:anyProjectLoaded"
 				},
 				{
 					"command": "dart.goToTests",

@@ -40,6 +40,7 @@ export class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, testRun, isRunningAll)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
+			vs.commands.registerCommand("dart.findTestOrImplementationFile", () => this.findTestOrImplementationFile(), this),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
 		);
 
@@ -251,6 +252,14 @@ export class TestCommands implements vs.Disposable {
 	}
 
 	private async goToTestOrImplementationFile(resource?: vs.Uri): Promise<void> {
+		return this.locateTestOrImplementationFile(resource);
+	}
+
+	private async findTestOrImplementationFile(): Promise<void> {
+		return this.locateTestOrImplementationFile(undefined, { showFindDialogIfNoMatches: true });
+	}
+
+	private async locateTestOrImplementationFile(resource?: vs.Uri, { showFindDialogIfNoMatches }: { showFindDialogIfNoMatches?: boolean } = {}): Promise<void> {
 		const doc = resource
 			? await vs.workspace.openTextDocument(resource)
 			: getActiveRealFileEditor()?.document;
@@ -265,6 +274,10 @@ export class TestCommands implements vs.Disposable {
 
 		let otherExistingFile = candidateFiles.find(fs.existsSync);
 		const otherFile = otherExistingFile ?? (candidateFiles.length ? candidateFiles[0] : undefined);
+
+		// If no match and we want to search, search...
+		if (!otherExistingFile && showFindDialogIfNoMatches)
+			return this.showSearchResults(filePath, isTest);
 
 		let selectionOffset: number | undefined;
 		let selectionLength: number | undefined;
@@ -300,6 +313,14 @@ export class TestCommands implements vs.Disposable {
 
 		if (selectionOffset && selectionLength)
 			editor.selection = new vs.Selection(document.positionAt(selectionOffset), document.positionAt(selectionOffset + selectionLength));
+	}
+
+	private showSearchResults(filePath: string, isTest: boolean) {
+		const sourceFileBaseName = path.parse(filePath).name;
+		const targetFileBaseName = isTest
+			? (sourceFileBaseName.endsWith("_test") ? sourceFileBaseName.substring(0, sourceFileBaseName.length - "_test".length) : sourceFileBaseName)
+			: `${sourceFileBaseName}_test`;
+		void vs.commands.executeCommand("workbench.action.quickOpen", `${targetFileBaseName}.dart`);
 	}
 
 	private updateEditorContexts(e: vs.TextEditor | undefined): void {
