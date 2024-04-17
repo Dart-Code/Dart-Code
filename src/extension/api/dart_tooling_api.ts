@@ -100,7 +100,7 @@ class VsCodeApiHandler extends ToolApi {
 		} else if (method === "enablePlatformType") {
 			return this.api.enablePlatformType(params.platformType as string);
 		} else if (method === "openDevToolsPage") {
-			return this.api.openDevToolsPage(params.debugSessionId as string, params.page as string | undefined, params.forceExternal as boolean | undefined);
+			return this.api.openDevToolsPage(params.debugSessionId as string | undefined, params.page as string | undefined, params.forceExternal as boolean | undefined);
 		} else if (method === "hotReload") {
 			return this.api.hotReload(params.debugSessionId as string);
 		} else if (method === "hotRestart") {
@@ -154,7 +154,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		return this.deviceManager?.enablePlatformType(platformType) ?? false;
 	}
 
-	public async openDevToolsPage(debugSessionId: string, pageId: string | undefined, forceExternal: boolean | undefined): Promise<void> {
+	public async openDevToolsPage(debugSessionId: string | undefined, pageId: string | undefined, forceExternal: boolean | undefined): Promise<void> {
 		const location: DevToolsLocation | undefined = forceExternal ? "external" : undefined;
 		return vs.commands.executeCommand("dart.openDevTools", { debugSessionId, pageId, location, commandSource: this.commandSource });
 	}
