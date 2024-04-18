@@ -38,6 +38,13 @@ class Config {
 		return undefined as NullAsUndefined<T>;
 	}
 
+	private hasExplicitSetting(key: string): boolean {
+		const result = this.config.inspect(key);
+		return result?.globalValue !== undefined
+			|| result?.workspaceValue !== undefined
+			|| result?.workspaceValue !== undefined;
+	}
+
 	private async setConfig<T>(key: string, value: T, target: ConfigurationTarget): Promise<void> {
 		await this.config.update(key, value, target);
 	}
@@ -196,6 +203,10 @@ class Config {
 	get workspaceSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("sdkPath")); }
 	get workspaceFlutterSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("flutterSdkPath")); }
 
+	get hasExplicitShowTodosSetting(): boolean {
+		return this.hasExplicitSetting("showTodos");
+	}
+
 	// Options that can be set programatically.
 	public setShowDebuggerNumbersAsHex(value: true | undefined): Promise<void> { return this.setConfig("showDebuggerNumbersAsHex", value, ConfigurationTarget.Global); }
 	public setCheckForSdkUpdates(value: boolean): Promise<void> { return this.setConfig("checkForSdkUpdates", value, ConfigurationTarget.Global); }
@@ -211,6 +222,7 @@ class Config {
 	public setOffline(value: boolean | undefined): Promise<void> { return this.setConfig("offline", value, ConfigurationTarget.Global); }
 	public setOpenDevTools(value: "never" | "flutter" | "always" | undefined): Promise<void> { return this.setConfig("openDevTools", value, ConfigurationTarget.Global); }
 	public setShowInspectorNotificationsForWidgetErrors(value: boolean): Promise<void> { return this.setConfig("showInspectorNotificationsForWidgetErrors", value, ConfigurationTarget.Global); }
+	public setShowTodos(value: boolean, target: ConfigurationTarget): Promise<void> { return this.setConfig("showTodos", value, target); }
 	public setSdkPath(value: string | undefined, target: ConfigurationTarget): Promise<void> { return this.setConfig("sdkPath", value, target); }
 	public setWarnWhenEditingFilesOutsideWorkspace(value: boolean): Promise<void> { return this.setConfig("warnWhenEditingFilesOutsideWorkspace", value, ConfigurationTarget.Global); }
 	public setWarnWhenEditingFilesInPubCache(value: boolean): Promise<void> { return this.setConfig("warnWhenEditingFilesInPubCache", value, ConfigurationTarget.Global); }

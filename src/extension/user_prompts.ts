@@ -12,6 +12,7 @@ import { envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { markProjectCreationEnded, markProjectCreationStarted } from "./commands/sdk";
+import { config } from "./config";
 import { ExtensionRecommentations } from "./recommendations/recommendations";
 
 export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext, extensionRecommendations: ExtensionRecommentations): Promise<void> {
@@ -224,6 +225,56 @@ function handleDartWelcome(workspaceFolder: vs.WorkspaceFolder, template: DartPr
 	const entryFile = path.join(workspacePath, template.entrypoint.replace("__projectName__", projectName));
 	openFile(entryFile);
 	void vs.window.showInformationMessage(`${template.label} project ready!`);
+}
+
+
+let checkForLargeNumberOfTodosHasPromptedAboutManyTodosThisSession = false;
+
+/**
+ * Checks if there are a large number of TODO diagnostics in the workspace and if so, prompts
+ * to turn them off.
+ *
+ * Does nothing if there is already an explicit setting or we've asked this session. If they choose
+ * "Keep Enabled" when we'll write an explicit true into the settings which effectively suppresses.
+ */
+export async function checkForLargeNumberOfTodos(diagnostics: vs.DiagnosticCollection | undefined) {
+	if (config.hasExplicitShowTodosSetting)
+		return;
+
+	if (checkForLargeNumberOfTodosHasPromptedAboutManyTodosThisSession)
+		return;
+
+	const threshold = 100;
+	let numTodos = 0;
+	diagnostics?.forEach((uri, diagnostics) => {
+		if (numTodos >= threshold)
+			return;
+		for (const diagnostic of diagnostics) {
+			if (diagnostic.code === "todo") {
+				numTodos++;
+				if (numTodos >= threshold)
+					return;
+			}
+		}
+	});
+	if (numTodos >= threshold) {
+		checkForLargeNumberOfTodosHasPromptedAboutManyTodosThisSession = true;
+		const disableInWorkspace = "Disable for Workspace";
+		const disableGlobally = "Disable Everywhere";
+		const keepEnabled = "Keep Enabled";
+		const action = await vs.window.showInformationMessage(`Workspace has over ${threshold} TODO comments. Disable showing TODOs as diagnostics?`, disableInWorkspace, disableGlobally, keepEnabled);
+		switch (action) {
+			case disableGlobally:
+				void config.setShowTodos(false, vs.ConfigurationTarget.Global);
+				break;
+			case disableInWorkspace:
+				void config.setShowTodos(false, vs.ConfigurationTarget.Workspace);
+				break;
+			case keepEnabled:
+				void config.setShowTodos(true, vs.ConfigurationTarget.Global);
+				break;
+		}
+	}
 }
 
 /// Opens a file, but does it in a setTimeout to work around VS Code reveal bug

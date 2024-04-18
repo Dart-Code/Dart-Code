@@ -21,6 +21,7 @@ import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
+import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getAnalyzerArgs } from "./analyzer";
@@ -170,15 +171,22 @@ export class LspAnalyzer extends Analyzer {
 			};
 		};
 
+		let isFirstAnalysisCompletion = true;
 		return {
 			handleWorkDoneProgress: (token: ls.ProgressToken, params: ls.WorkDoneProgressBegin | ls.WorkDoneProgressReport | ls.WorkDoneProgressEnd, next: ls.HandleWorkDoneProgressSignature) => {
 				// TODO: Handle nested/overlapped progresses.
-				if (params.kind === "begin") {
-					this.statusItem.busy = true;
-					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: true, suppressProgress: true });
-				} else if (params.kind === "end") {
-					this.statusItem.busy = false;
-					this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
+				if (token === "ANALYZING") {
+					if (params.kind === "begin") {
+						this.statusItem.busy = true;
+						this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: true, suppressProgress: true });
+					} else if (params.kind === "end") {
+						if (isFirstAnalysisCompletion) {
+							isFirstAnalysisCompletion = false;
+							void checkForLargeNumberOfTodos(this.client.diagnostics);
+						}
+						this.statusItem.busy = false;
+						this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: false, suppressProgress: true });
+					}
 				}
 
 				next(token, params);
