@@ -507,7 +507,16 @@ export class FlutterDeviceManager implements vs.Disposable {
 			const emus = await this.daemon.getEmulators();
 
 			const allEmulatorsByID: { [key: string]: Emulator } = {};
+			loop1:
 			for (const e of emus) {
+				// Exclude any bogus-looking emulators until a Flutter fix ships.
+				for (const field of [e.name, e.id]) {
+					const mayBeBogusEmulator = field?.includes("|")
+						&& (field?.startsWith("INFO") || field?.startsWith("WARN") || field?.startsWith("ERR"));
+					if (mayBeBogusEmulator)
+						continue loop1;
+				}
+
 				allEmulatorsByID[e.id] = {
 					category: e.category,
 					id: e.id,

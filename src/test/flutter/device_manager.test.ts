@@ -81,6 +81,22 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.labelForDevice(dm.currentDevice, { withIcon: true }), "$(device-mobile) " + androidEmulator.name);
 	});
 
+	it("does not include bogus emulators", async () => {
+		const rawEmulatorLabels = (await daemon.getEmulators()).map((e) => e.name);
+		const emulatorLabels = (await dm.getPickableEmulators(false)).map((e) => e.label);
+		assert.deepStrictEqual(rawEmulatorLabels, [
+			androidEmulator.name,
+			androidBogusEmulatorId.name,
+			androidBogusEmulatorName.name,
+			androidEmulatorToOverride.name,
+		]);
+		assert.deepStrictEqual(emulatorLabels, [
+			androidEmulator.name,
+			customEmulator2.name,
+			customEmulator1.name,
+		]);
+	});
+
 	it("uses the standard device name for iOS simulator devices", async () => {
 		assert.equal(dm.currentDevice, undefined);
 
@@ -308,7 +324,7 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		throw new Error("Method not implemented.");
 	}
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
-		return [androidEmulator, androidEmulatorToOverride];
+		return [androidEmulator, androidBogusEmulatorId, androidBogusEmulatorName, androidEmulatorToOverride];
 	}
 	public launchEmulator(emulatorId: string): Thenable<void> {
 		throw new Error("Method not implemented.");
@@ -420,6 +436,20 @@ const androidEmulatorToOverride: f.FlutterEmulator = {
 	category: "mobile",
 	id: "my_emulator_id_to_override",
 	name: "WILL BE OVERRIDEN EMULATOR",
+	platformType: "android",
+};
+
+const androidBogusEmulatorName: f.FlutterEmulator = {
+	category: "mobile",
+	id: "my_bogus_emulator",
+	name: "INFO     | my error message https://github.com/Dart-Code/Dart-Code/issues/5052",
+	platformType: "android",
+};
+
+const androidBogusEmulatorId: f.FlutterEmulator = {
+	category: "mobile",
+	id: "INFO     | my_bogus_emulator",
+	name: "My bogus emulator",
 	platformType: "android",
 };
 
