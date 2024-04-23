@@ -12,7 +12,9 @@ class DartDebugAdapterGlobalEvaluationContext implements vs.DebugAdapterTracker 
 		if (message.command === "evaluate" && message.arguments?.context === "repl") {
 			const doc = getActiveRealFileEditor()?.document;
 			if (doc && isDartDocument(doc)) {
-				message.arguments.context = doc?.uri.toString();
+				// Don't escape colons in drive letters, as the shipped DAP code here
+				// will call `lookupPackageUris` on this URI and it won't match.
+				message.arguments.context = doc?.uri.toString(true);
 			}
 		}
 	}
