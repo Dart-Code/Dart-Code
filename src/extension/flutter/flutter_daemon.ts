@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { flutterPath, isChromeOS, isDartCodeTestRun, tenMinutesInMs } from "../../shared/constants";
+import { flutterPath, isChromeOS, isDartCodeTestRun, tenMinutesInMs, twentySecondsInMs } from "../../shared/constants";
 import { FLUTTER_SUPPORTS_ATTACH } from "../../shared/constants.contexts";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
@@ -13,6 +13,7 @@ import { UnknownNotification, UnknownResponse } from "../../shared/services/inte
 import { StdIOService } from "../../shared/services/stdio_service";
 import { PromiseCompleter, usingCustomScript, withTimeout } from "../../shared/utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
+import { Analytics } from "../analytics";
 import { config } from "../config";
 import { promptToReloadExtension } from "../utils";
 import { getFlutterConfigValue } from "../utils/misc";
@@ -21,6 +22,7 @@ import { getGlobalFlutterArgs, getToolEnv, runToolProcess, safeToolSpawn } from 
 export class FlutterDaemon extends StdIOService<UnknownNotification> implements IFlutterDaemon {
 	private hasStarted = false;
 	private hasShownTerminatedError = false;
+	private hasLoggedDaemonTimeout = false;
 	private isShuttingDown = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
 	private daemonStartedCompleter = new PromiseCompleter<void>();
@@ -28,7 +30,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private pingIntervalId?: NodeJS.Timeout;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
+	constructor(logger: Logger, private readonly analytics: Analytics, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
 
 		const folder = workspaceContext.sdks.flutter;
@@ -280,7 +282,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public getEmulators(): Thenable<f.FlutterEmulator[]> {
-		return this.sendRequest("emulator.getEmulators");
+		return this.withRecordedTimeout(this.sendRequest("emulator.getEmulators"));
 	}
 
 	public launchEmulator(emulatorId: string, coldBoot: boolean): Thenable<void> {
@@ -292,7 +294,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse> {
-		return this.sendRequest("daemon.getSupportedPlatforms", { projectRoot });
+		return this.withRecordedTimeout(this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }));
 	}
 
 	public serveDevTools(): Thenable<f.ServeDevToolsResponse> {
@@ -301,6 +303,33 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public shutdown(): Thenable<void> {
 		return this.hasStarted && !this.hasShownTerminatedError ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
+	}
+
+	private async withRecordedTimeout<T>(promise: Thenable<T>): Promise<T> {
+		if (this.hasLoggedDaemonTimeout)
+			return promise;
+
+		return new Promise<T>((resolve, reject) => {
+			// Set a timer to record if the request doesn't respond fast enough.
+			const timeoutTimer = setTimeout(() => {
+				if (!this.isShuttingDown && !this.processExited && !this.hasLoggedDaemonTimeout) {
+					this.analytics.logErrorFlutterDaemonTimeout();
+					this.hasLoggedDaemonTimeout = true;
+				}
+			}, twentySecondsInMs);
+
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
+			promise.then(
+				(result) => {
+					clearTimeout(timeoutTimer);
+					resolve(result);
+				},
+				(e) => {
+					clearTimeout(timeoutTimer);
+					reject(e);
+				},
+			);
+		});
 	}
 
 	// Subscription methods.

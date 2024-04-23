@@ -324,7 +324,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			}
 		}
 
-		flutterDaemon = new FlutterDaemon(logger, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices, portFromLocalExtension);
+		flutterDaemon = new FlutterDaemon(logger, analytics, workspaceContext as FlutterWorkspaceContext, flutterCapabilities, runIfNoDevices, portFromLocalExtension);
 		deviceManager = new FlutterDeviceManager(logger, flutterDaemon, config, workspaceContext, extContext, runIfNoDevices, portFromLocalExtension);
 		context.subscriptions.push(deviceManager);
 		context.subscriptions.push(flutterDaemon);

@@ -50,6 +50,7 @@ export enum AnalyticsEvent {
 	Command_AddDependency,
 	Command_RestartAnalyzer,
 	Command_ForceReanalyze,
+	Error_FlutterDaemonTimeout,
 }
 
 class GoogleAnalyticsTelemetrySender implements TelemetrySender {
@@ -331,6 +332,7 @@ export class Analytics implements IAmDisposable {
 	// All events below should be included in telemetry.json.
 	public logExtensionActivated() { this.event(AnalyticsEvent.Extension_Activated); }
 	public logExtensionRestart() { this.event(AnalyticsEvent.Extension_Restart); }
+	public logErrorFlutterDaemonTimeout() { this.event(AnalyticsEvent.Error_FlutterDaemonTimeout); }
 	public logSdkDetectionFailure() { this.event(AnalyticsEvent.SdkDetectionFailure); }
 	public logDebuggerStart(debuggerType: string, debuggerRunType: string, sdkDap: boolean) {
 		const customData: Partial<AnalyticsData> = {

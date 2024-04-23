@@ -34,7 +34,8 @@
 			"Command_FlutterNewProject": { },
 			"Command_AddDependency": { },
 			"Command_RestartAnalyzer": { },
-			"Command_ForceReanalyze": { }
+			"Command_ForceReanalyze": { },
+			"Error_FlutterDaemonTimeout": { }
 		},
 		"commonProperties": {
 			"common.vscodemachineid": { "classification": "EndUserPseudonymizedInformation", "purpose": "FeatureInsight", "comment": "An identifier provided by VS Code to relate coding sessions from the same installation together" },

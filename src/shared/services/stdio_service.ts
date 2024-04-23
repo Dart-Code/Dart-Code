@@ -15,7 +15,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
 	private readonly requestErrorSubscriptions: Array<(notification: any) => void> = [];
-	private processExited = false;
+	protected processExited = false;
 	private description: string | undefined;
 
 	constructor(
