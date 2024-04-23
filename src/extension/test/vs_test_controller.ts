@@ -313,7 +313,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private getOrCreateTestRun(sessionID: string) {
 		let run = this.testRuns[sessionID]?.run;
 		if (!run) {
-			run = this.controller.createTestRun(new vs.TestRunRequest(), undefined, true);
+			const request = new vs.TestRunRequest();
+			(request as any).preserveFocus = false; // TODO(dantup): Remove this when we crank VS Code min version in future.
+			run = this.controller.createTestRun(request, undefined, true);
 			this.registerTestRun(sessionID, run, true);
 		}
 		return run;
