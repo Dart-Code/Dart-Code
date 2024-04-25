@@ -165,6 +165,8 @@ export const runFlutterCreatePrompt = (platformType: string, platformNeedsGlobal
 export const validMethodNameRegex = new RegExp("^[a-zA-Z_][a-zA-Z0-9_]*$");
 export const validClassNameRegex = validMethodNameRegex;
 
+// This isn't included in [devToolsPages] because we only use it as a default.
+export const devToolsHomePage = { id: "home", commandSuffix: "Home", title: "DevTools Home", requiredDartSdkVersion: "3.3.0-0" };
 export const widgetInspectorPage: DevToolsPage = { id: "inspector", commandSuffix: "Inspector", title: "Widget Inspector", requiresFlutter: true };
 export const cpuProfilerPage: DevToolsPage = { id: "cpu-profiler", commandSuffix: "CpuProfiler", title: "CPU Profiler" };
 export const performancePage: DevToolsPage = {
@@ -175,7 +177,6 @@ export const performancePage: DevToolsPage = {
 	title: "Performance",
 };
 export const devToolsPages: DevToolsPage[] = [
-	// First entry is the default page.
 	widgetInspectorPage,
 	cpuProfilerPage,
 	{ id: "memory", commandSuffix: "Memory", title: "Memory" },

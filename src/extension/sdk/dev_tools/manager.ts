@@ -7,7 +7,7 @@ import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtools_server";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../../shared/capabilities/vscode";
-import { CommandSource, cpuProfilerPage, dartVMPath, devToolsPages, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsHomePage, devToolsPages, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -238,13 +238,13 @@ export class DevToolsManager implements vs.Disposable {
 
 	private async promptForDevToolsPage(hasSession: boolean): Promise<{ page: DevToolsPage } | "EXTERNAL" | undefined> {
 		const choices: Array<vs.QuickPickItem & { page?: DevToolsPage; isExternal?: boolean }> = [
+			{ label: `Open DevTools in Web Browser`, isExternal: true },
 			...devToolsPages
 				.filter((page) => this.isPageAvailable(hasSession, page))
 				.map((page) => ({
 					label: `Open ${page.title} Page`,
 					page,
 				})),
-			{ label: `Open DevTools in Web Browser`, isExternal: true },
 		];
 		const choice = !choices.length
 			? undefined
@@ -288,11 +288,15 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	private getDefaultPage(): DevToolsPage {
-		return isInFlutterDebugModeDebugSession
-			? widgetInspectorPage
-			: isInFlutterProfileModeDebugSession
-				? performancePage
-				: cpuProfilerPage;
+		// use true for hasSession here, because this page is available with or without if it
+		// meets the version requirements.
+		return this.isPageAvailable(true, devToolsHomePage)
+			? devToolsHomePage
+			: isInFlutterDebugModeDebugSession
+				? widgetInspectorPage
+				: isInFlutterProfileModeDebugSession
+					? performancePage
+					: cpuProfilerPage;
 	}
 
 	private async launch(allowLaunchThroughService: boolean, session: DartDebugSessionInformation & { vmServiceUri: string } | undefined, options: DevToolsOptions) {
