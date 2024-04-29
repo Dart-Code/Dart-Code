@@ -306,13 +306,18 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	private async withRecordedTimeout<T>(promise: Thenable<T>): Promise<T> {
-		if (this.hasLoggedDaemonTimeout)
-			return promise;
+		// Don't use timeout unless we haven't shown the message before and we know
+		// we have fully started up (so we don't false trigger during slow startups
+		// caused by SDK upgrades, etc.).
+		const recordTimeouts = this.hasStarted && !this.hasLoggedDaemonTimeout && !this.isShuttingDown && !this.processExited;
+		if (!recordTimeouts)
+			return promise; // Short-cut creating the timer.
 
 		return new Promise<T>((resolve, reject) => {
 			// Set a timer to record if the request doesn't respond fast enough.
 			const timeoutTimer = setTimeout(() => {
-				if (!this.isShuttingDown && !this.processExited && !this.hasLoggedDaemonTimeout) {
+				const recordTimeouts = this.hasStarted && !this.hasLoggedDaemonTimeout && !this.isShuttingDown && !this.processExited;
+				if (recordTimeouts) {
 					this.analytics.logErrorFlutterDaemonTimeout();
 					this.hasLoggedDaemonTimeout = true;
 				}
