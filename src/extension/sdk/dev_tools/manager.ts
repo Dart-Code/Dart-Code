@@ -329,6 +329,7 @@ export class DevToolsManager implements vs.Disposable {
 		// to only use that for a title, we may be able to relax that.
 		if (options.location !== "external") {
 			queryParams.embed = "true";
+			queryParams.embedMode = "one";
 			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
 

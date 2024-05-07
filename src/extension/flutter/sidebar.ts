@@ -26,7 +26,6 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 
 	public webviewView: vs.WebviewView | undefined;
 	private api: DartApi | undefined;
-	private isExternalMode = false;
 	constructor(private readonly devTools: DevToolsManager, private readonly deviceManager: FlutterDeviceManager | undefined) { }
 
 	public dispose(): any {
@@ -61,7 +60,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			const background = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
 			const qsSep = currentBaseUrl.includes("?") ? "&" : "?";
-			let url = \`\${currentBaseUrl}\${qsSep}embed=true&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+			let url = \`\${currentBaseUrl}\${qsSep}embed=true&embedMode=one&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
 			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
 			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
 				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
