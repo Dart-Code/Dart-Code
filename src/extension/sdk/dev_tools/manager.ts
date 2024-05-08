@@ -328,7 +328,8 @@ export class DevToolsManager implements vs.Disposable {
 		// We currently only support embedded for pages we know about statically, although since we seem
 		// to only use that for a title, we may be able to relax that.
 		if (options.location !== "external") {
-			queryParams.embed = "true";
+			if (this.dartCapabilities.requiresDevToolsEmbedFlag)
+				queryParams.embed = "true";
 			queryParams.embedMode = "one";
 			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);

@@ -736,7 +736,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
-	context.subscriptions.push(new FlutterSidebar(devTools, deviceManager));
+	context.subscriptions.push(new FlutterSidebar(devTools, deviceManager, dartCapabilities));
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath: string) => {
 		if (!filePath) return;

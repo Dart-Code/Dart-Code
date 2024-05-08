@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { CommandSource } from "../../shared/constants";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
@@ -10,8 +11,12 @@ import { DevToolsManager } from "../sdk/dev_tools/manager";
 export class FlutterSidebar implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
 
-	constructor(readonly devTools: DevToolsManager, readonly deviceManager: FlutterDeviceManager | undefined) {
-		const webViewProvider = new MyWebViewProvider(devTools, deviceManager);
+	constructor(
+		readonly devTools: DevToolsManager,
+		readonly deviceManager: FlutterDeviceManager | undefined,
+		dartCapabilities: DartCapabilities,
+	) {
+		const webViewProvider = new MyWebViewProvider(devTools, deviceManager, dartCapabilities);
 		this.disposables.push(webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider("dartFlutterSidebar", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
@@ -26,7 +31,11 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 
 	public webviewView: vs.WebviewView | undefined;
 	private api: DartApi | undefined;
-	constructor(private readonly devTools: DevToolsManager, private readonly deviceManager: FlutterDeviceManager | undefined) { }
+	constructor(
+		private readonly devTools: DevToolsManager,
+		private readonly deviceManager: FlutterDeviceManager | undefined,
+		private readonly dartCapabilities: DartCapabilities,
+	) { }
 
 	public dispose(): any {
 		this.api?.dispose();
@@ -50,6 +59,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 
 		const sidebarUri = URI.parse(sidebarUrl);
 		const frameOrigin = `${sidebarUri.scheme}://${sidebarUri.authority}`;
+		const embedFlags = this.dartCapabilities.requiresDevToolsEmbedFlag ? "embed=true&embedMode=one" : "embedMode=one";
 		const pageScript = `
 		let currentBackgroundColor;
 		let currentBaseUrl;
@@ -60,7 +70,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			const background = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
 			const qsSep = currentBaseUrl.includes("?") ? "&" : "?";
-			let url = \`\${currentBaseUrl}\${qsSep}embed=true&embedMode=one&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+			let url = \`\${currentBaseUrl}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
 			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
 			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
 				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
