@@ -44,7 +44,7 @@ describe("dart cli debugger", () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				cwd: "/foo",
 				program: fsPath(helloWorldMainFile),
-			})!;
+			});
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.cwd, "/foo");
@@ -53,7 +53,7 @@ describe("dart cli debugger", () => {
 
 		it("using open file", async () => {
 			await openFile(helloWorldMainFile);
-			const resolvedConfig = await getResolvedDebugConfiguration({ program: undefined })!;
+			const resolvedConfig = await getResolvedDebugConfiguration({ program: undefined });
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
@@ -64,7 +64,7 @@ describe("dart cli debugger", () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldMainFile),
 				toolArgs: ["--fake-flag"],
-			})!;
+			});
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, fsPath(helloWorldMainFile));
@@ -76,7 +76,7 @@ describe("dart cli debugger", () => {
 			await setConfigForTest("dart", "cliAdditionalArgs", ["--my-vm-flag"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--my-vm-flag"]);
 		});

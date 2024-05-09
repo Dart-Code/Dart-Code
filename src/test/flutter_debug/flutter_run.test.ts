@@ -58,7 +58,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				args: ["--foo"],
 				deviceId: flutterTestDeviceId,
 				program: fsPath(flutterHelloWorldMainFile),
-			})!;
+			});
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, fsPath(flutterHelloWorldMainFile));
@@ -72,7 +72,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				deviceId: "web-server",
 				program: fsPath(flutterHelloWorldMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-server-debug-protocol", "ws"]);
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-server-debug-injected-client-protocol", "ws"]);
@@ -83,7 +83,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				deviceId: "web-server",
 				program: fsPath(flutterHelloWorldMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-renderer", "html"]);
 		});
@@ -93,7 +93,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				deviceId: flutterTestDeviceId,
 				flutterMode: "release",
 				program: fsPath(flutterHelloWorldMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--release"]);
 		});
@@ -103,7 +103,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				deviceId: flutterTestDeviceId,
 				flutterPlatform: "android-arm",
 				program: fsPath(flutterHelloWorldMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--target-platform", "android-arm"]);
 		});
@@ -112,7 +112,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await setConfigForTest("dart", "flutterRunAdditionalArgs", ["--no-sound-null-safety"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(flutterHelloWorldMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--no-sound-null-safety"]);
 		});

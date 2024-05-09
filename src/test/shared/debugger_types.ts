@@ -32,7 +32,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 				const resolvedConfig = await getResolvedDebugConfiguration({
 					cwd: absoluteCwd,
 					program: absolutePath,
-				})!;
+				});
 				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 			});
 			if (!absoluteCwd) {
@@ -41,7 +41,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 					const resolvedConfig = await getResolvedDebugConfiguration({
 						cwd: absoluteCwd,
 						program: absolutePath,
-					})!;
+					});
 					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 				});
 			}
@@ -49,7 +49,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 				const resolvedConfig = await getResolvedDebugConfiguration({
 					cwd,
 					program,
-				})!;
+				});
 				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 			});
 			if (isWin) {
@@ -59,7 +59,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 					const resolvedConfig = await getResolvedDebugConfiguration({
 						cwd: windowsCwd,
 						program: windowsProgram,
-					})!;
+					});
 					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 				});
 			}

@@ -32,7 +32,7 @@ describe("flutter test debugger", () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				args: ["--foo"],
 				program: fsPath(flutterTestMainFile),
-			})!;
+			});
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, fsPath(flutterTestMainFile));
@@ -44,7 +44,7 @@ describe("flutter test debugger", () => {
 			await setConfigForTest("dart", "flutterTestAdditionalArgs", ["--no-sound-null-safety"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(flutterTestMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--no-sound-null-safety"]);
 		});
@@ -53,7 +53,7 @@ describe("flutter test debugger", () => {
 			await setConfigForTest("dart", "suppressTestTimeouts", "always");
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(flutterTestMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--timeout"]);
 		});

@@ -1341,15 +1341,14 @@ export class DartDebugSession extends DebugSession {
 								});
 							}
 						} else if (instance.fields) {
-
-							let fieldAndGetterPromises: Array<Promise<DebugProtocol.Variable>> = [];
+							const fieldAndGetterPromises: Array<Promise<DebugProtocol.Variable>> = [];
 
 							const fields = sortBy(instance.fields, (f) => f.decl?.name ?? f.name);
 							const fieldPromises = fields.map(async (field, i) => {
 								const name = field.decl?.name ?? (typeof field.name === "number" ? `\$${field.name}` : field.name);
 								return this.instanceRefToVariable(thread, canEvaluate, `${instanceRef.evaluateName}.${name}`, name, field.value, i <= maxValuesToCallToString);
 							});
-							fieldAndGetterPromises = fieldAndGetterPromises.concat(fieldPromises);
+							fieldAndGetterPromises.push(...fieldPromises);
 
 							// Add getters
 							if (this.evaluateGettersInDebugViews && instance.class) {
@@ -1383,7 +1382,7 @@ export class DartDebugSession extends DebugSession {
 										return { name: getterName, value: this.errorAsDisplayValue(e), variablesReference: 0 };
 									}
 								});
-								fieldAndGetterPromises = fieldAndGetterPromises.concat(getterPromises);
+								fieldAndGetterPromises.push(...getterPromises);
 							}
 
 							const fieldAndGetterVariables = await Promise.all(fieldAndGetterPromises);

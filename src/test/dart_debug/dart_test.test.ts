@@ -47,7 +47,7 @@ describe("dart test debugger", () => {
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldTestMainFile),
 				toolArgs: ["--fake-flag"],
-			})!;
+			});
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, fsPath(helloWorldTestMainFile));
@@ -59,7 +59,7 @@ describe("dart test debugger", () => {
 			await setConfigForTest("dart", "testAdditionalArgs", ["--my-test-flag"]);
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldTestMainFile),
-			})!;
+			});
 
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--my-test-flag"]);
 		});
@@ -68,7 +68,7 @@ describe("dart test debugger", () => {
 			await setConfigForTest("dart", "suppressTestTimeouts", "always");
 			const resolvedConfig = await getResolvedDebugConfiguration({
 				program: fsPath(helloWorldTestMainFile),
-			})!;
+			});
 
 			const testCapabilities = await getPackageTestCapabilities(extApi.logger, extApi.workspaceContext, resolvedConfig.cwd!);
 			if (testCapabilities.supportsIgnoreTimeouts)

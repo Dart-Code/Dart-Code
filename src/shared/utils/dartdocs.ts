@@ -135,7 +135,7 @@ function fixIcon(icon: string): string {
 	// Things starting with numbers are textual in their names too.
 	const prefixMatch = identifierPrefixRewritePattern.exec(icon);
 	if (prefixMatch) {
-		const prefix = prefixMatch[0]!;
+		const prefix = prefixMatch[0];
 		const newPrefix = identifierPrefixRewrites[prefix];
 		if (newPrefix)
 			return `${newPrefix}${icon.slice(prefix.length)}`;

@@ -38,7 +38,7 @@ describe(`flutter run debugger`, () => {
 				deviceId: flutterTestDeviceId,
 				program: "//foo/bar",
 				suppressPrompts: true, // Don't prompt if there are errors because we can't resolve package:flutter.
-			})!;
+			});
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, "//foo/bar");
@@ -52,7 +52,7 @@ describe(`flutter run debugger`, () => {
 				deviceId: flutterTestDeviceId,
 				program: "lib/main.dart",
 				suppressPrompts: true, // Don't prompt if there are errors because we can't resolve package:flutter.
-			})!;
+			});
 
 			assert.ok(resolvedConfig);
 			assert.equal(resolvedConfig.program, fsPath(flutterBazelHelloWorldMainFile));

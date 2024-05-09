@@ -626,7 +626,7 @@ export class SdkUtils {
 			this.logger.info(`        ${this.sdkDisplayString(p)}`);
 		if (!postFilter)
 			postFilter = ((_: string) => true);
-		const sdkPath = sdkPaths.find((pathInfo) => postFilter!(pathInfo.sdkPath));
+		const sdkPath = sdkPaths.find((pathInfo) => postFilter(pathInfo.sdkPath));
 
 		if (sdkPath)
 			this.logger.info(`    Found at ${this.sdkDisplayString(sdkPath)}`);

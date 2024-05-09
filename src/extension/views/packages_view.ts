@@ -71,9 +71,9 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 				return allPackages;
 
 			// Split the packages into groups.
-			const directPackages = allPackages.filter((p) => packages![p.packageName]?.kind === "direct");
-			const devPackages = allPackages.filter((p) => packages![p.packageName]?.kind === "dev");
-			const transitivePackages = allPackages.filter((p) => packages![p.packageName]?.kind === "transitive");
+			const directPackages = allPackages.filter((p) => packages[p.packageName]?.kind === "direct");
+			const devPackages = allPackages.filter((p) => packages[p.packageName]?.kind === "dev");
+			const transitivePackages = allPackages.filter((p) => packages[p.packageName]?.kind === "transitive");
 
 			for (const p of directPackages)
 				p.contextValue = DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT;

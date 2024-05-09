@@ -56,7 +56,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 				const resolvedConfig = await getResolvedDebugConfiguration({
 					cwd: absoluteCwd,
 					program,
-				})!;
+				});
 				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 			});
 			if (!absoluteCwd) {
@@ -65,7 +65,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 					const resolvedConfig = await getResolvedDebugConfiguration({
 						cwd: absoluteCwd,
 						program,
-					})!;
+					});
 					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 				});
 			}
