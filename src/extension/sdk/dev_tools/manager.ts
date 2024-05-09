@@ -68,6 +68,26 @@ export class DevToolsManager implements vs.Disposable {
 		this.setNotStartedStatusBar();
 
 		void this.handleEagerActivationAndStartup(context.workspaceContext);
+
+		this.disposables.push(vs.debug.onDidTerminateDebugSession((session) => {
+			if (config.closeDevTools === "never")
+				return;
+
+			for (const pageId of Object.keys(this.devToolsEmbeddedViews)) {
+				const panels = this.devToolsEmbeddedViews[pageId];
+				if (!panels)
+					continue;
+
+				// If there are disconnected panels for this page, trigger a launch
+				// of the page to reuse it.
+				const closablePanels = panels
+					.filter((p) => p.session?.session.id === session.id)
+					.filter((p) => p.openedAutomatically || config.closeDevTools === "always");
+				for (const panel of closablePanels) {
+					panel.dispose();
+				}
+			}
+		}));
 	}
 
 	private setNotStartedStatusBar() {
@@ -335,7 +355,7 @@ export class DevToolsManager implements vs.Disposable {
 			const exposedUrl = await envUtils.exposeUrl(fullUrl);
 
 			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
-			this.launchInEmbeddedWebView(exposedUrl, session, pageInfo, options.location);
+			this.launchInEmbeddedWebView(exposedUrl, session, pageInfo, options.location, options.triggeredAutomatically);
 		} else {
 			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
 			await envUtils.openInBrowser(fullUrl, this.logger);
@@ -407,7 +427,7 @@ export class DevToolsManager implements vs.Disposable {
 		return `${baseUrl}${urlPathSeperator}${path}?${paramsString}`;
 	}
 
-	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | undefined) {
+	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | undefined, triggeredAutomatically: boolean | undefined) {
 		const pageId = page.id;
 		const pageTitle = page.title;
 
@@ -422,7 +442,8 @@ export class DevToolsManager implements vs.Disposable {
 			frame.onDispose(() => delete this.devToolsEmbeddedViews[pageId]);
 			this.devToolsEmbeddedViews[pageId]?.push(frame);
 		}
-		frame?.load(session, uri);
+		frame.openedAutomatically = !!triggeredAutomatically;
+		frame.load(session, uri);
 	}
 
 	private async launchThroughService(
@@ -709,6 +730,7 @@ interface DevToolsOptions {
 	pageId?: string | null; // undefined = unspecified (use default), null = force external so user can pick any
 	inspectorRef?: string;
 	commandSource?: string;
+	triggeredAutomatically?: boolean;
 }
 
 interface ProjectExtensionResults {

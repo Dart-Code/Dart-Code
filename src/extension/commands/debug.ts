@@ -153,6 +153,7 @@ export class DebugCommands implements IAmDisposable {
 			const commandSource = options?.commandSource ?? CommandSource.commandPalette;
 			const pageId = options?.pageId;
 			const location = options?.location;
+			const triggeredAutomatically = options?.triggeredAutomatically;
 
 			// Check whether we'll need a VM Service to open this page.
 			const page = devToolsPages.find((p) => p.id === pageId);
@@ -168,10 +169,10 @@ export class DebugCommands implements IAmDisposable {
 			}
 
 			// Only show a notification if we were not triggered automatically.
-			const notify = !options || options.triggeredAutomatically !== true;
+			const notify = !options || triggeredAutomatically !== true;
 
 			if (!session || session?.vmServiceUri) {
-				return this.devTools.spawn(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource, location });
+				return this.devTools.spawn(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource, location, triggeredAutomatically });
 			} else if (session.session.configuration.noDebug) {
 				void vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {

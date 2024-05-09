@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { Event, EventEmitter } from "../../../shared/events";
+import { IAmDisposable } from "../../../shared/interfaces";
 import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 
@@ -53,11 +54,12 @@ const scriptNonce = Buffer.from(pageScript).toString("base64");
 const frameCss = "position: absolute; top: 0; left: 0; width: 100%; height: 100%";
 const cssNonce = Buffer.from(frameCss).toString("base64");
 
-export class DevToolsEmbeddedView {
+export class DevToolsEmbeddedView implements IAmDisposable {
 	private readonly panel: vs.WebviewPanel;
 	private onDisposeEmitter: EventEmitter<void> = new EventEmitter<void>();
 	private messageDisposable: vs.Disposable;
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
+	public openedAutomatically = false;
 
 	constructor(public session: DartDebugSessionInformation | undefined, readonly devToolsUri: string, readonly pageTitle: string, location: "beside" | "active" | undefined) {
 		const column = location === "active"
@@ -96,7 +98,7 @@ export class DevToolsEmbeddedView {
 		this.panel.reveal();
 	}
 
-	private dispose(panelDisposed = false): void {
+	public dispose(panelDisposed = false): void {
 		if (!panelDisposed)
 			this.panel.dispose();
 		this.onDisposeEmitter.fire();

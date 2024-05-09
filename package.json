@@ -1866,6 +1866,21 @@
 						"description": "Whether to automatically open DevTools at the start of a debug session. If embedded DevTools is enabled, this will launch the Widget Inspector embedded for Flutter projects, or launch DevTools externally in a browser for Dart projects.",
 						"scope": "window"
 					},
+					"dart.closeDevTools": {
+						"enum": [
+							"never",
+							"ifOpened",
+							"always"
+						],
+						"enumDescriptions": [
+							"Do not automatically close embedded DevTools when the debug session ends",
+							"Automatically close embedded DevTools the debug session ends if it was automatically opened when the session started",
+							"Always automatically close embedded DevTools when the debug session ends"
+						],
+						"default": "never",
+						"description": "Whether to automatically close embedded DevTools tabs when the last debug session ends.",
+						"scope": "window"
+					},
 					"dart.shareDevToolsWithFlutter": {
 						"type": "boolean",
 						"default": true,
