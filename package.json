@@ -1878,7 +1878,7 @@
 							"Always automatically close embedded DevTools when the debug session ends"
 						],
 						"default": "never",
-						"description": "Whether to automatically close embedded DevTools tabs when the last debug session ends.",
+						"description": "Whether to automatically close embedded DevTools tabs when a debug session ends.",
 						"scope": "window"
 					},
 					"dart.shareDevToolsWithFlutter": {
