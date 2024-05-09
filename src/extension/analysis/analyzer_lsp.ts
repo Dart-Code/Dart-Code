@@ -43,7 +43,7 @@ export class LspAnalyzer extends Analyzer {
 
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
 		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
-		this.client = createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
+		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		if (config.experimentalMacroSupport) {
 			// Just because it's enabled doesn't mean the server actually supports it.
 			this.dartTextDocumentContentProvider = new DartTextDocumentContentProviderFeature(logger, this.client, dartCapabilities);
@@ -433,162 +433,165 @@ export class LspAnalyzer extends Analyzer {
 			params,
 		);
 	}
-}
 
-function createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
-	const converters = new LspUriConverters(!!config.normalizeFileCasing);
-	const clientOptions: ls.LanguageClientOptions = {
-		initializationOptions: {
-			allowOpenUri: true,
-			appHost: vs.env.appHost,
-			closingLabels: config.closingLabels,
-			completionBudgetMilliseconds: config.completionBudgetMilliseconds,
-			flutterOutline: wsContext.hasAnyFlutterProjects,
-			hostKind,
-			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
-			outline: true,
-			// For legacy SDKs, removed from server in https://dart-review.googlesource.com/c/sdk/+/349742
-			// Can be removed in future when the SDKs that needed the flag is a small enough portion that
-			// it's ok for them to not get the surveys.
-			previewSurveys: true,
-			remoteName: vs.env.remoteName,
-			suggestFromUnimportedLibraries: config.autoImportCompletions,
-			// TODO(dantup): When removing this flag, also remove the conditions on the
-			//  "dart.edit.fixAllInWorkspace" and "dart.edit.fixAllInWorkspace.preview"
-			//  commands in `package.json`.
-			useInEditorDartFixPrompt: sdks.isPreReleaseSdk,
-		},
-		markdown: {
-			supportHtml: true,
-		},
-		middleware,
-		outputChannelName: "LSP",
-		revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
-		uriConverters: {
-			// Don't just use "converters" here because LSP doesn't bind "this".
-			code2Protocol: (uri) => converters.code2Protocol(uri),
-			protocol2Code: (file) => converters.protocol2Code(file),
-		},
-	};
+	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
+		const converters = new LspUriConverters(!!config.normalizeFileCasing);
+		const clientOptions: ls.LanguageClientOptions = {
+			initializationOptions: {
+				allowOpenUri: true,
+				appHost: vs.env.appHost,
+				closingLabels: config.closingLabels,
+				completionBudgetMilliseconds: config.completionBudgetMilliseconds,
+				flutterOutline: wsContext.hasAnyFlutterProjects,
+				hostKind,
+				onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
+				outline: true,
+				// For legacy SDKs, removed from server in https://dart-review.googlesource.com/c/sdk/+/349742
+				// Can be removed in future when the SDKs that needed the flag is a small enough portion that
+				// it's ok for them to not get the surveys.
+				previewSurveys: true,
+				remoteName: vs.env.remoteName,
+				suggestFromUnimportedLibraries: config.autoImportCompletions,
+				// TODO(dantup): When removing this flag, also remove the conditions on the
+				//  "dart.edit.fixAllInWorkspace" and "dart.edit.fixAllInWorkspace.preview"
+				//  commands in `package.json`.
+				useInEditorDartFixPrompt: sdks.isPreReleaseSdk,
+			},
+			markdown: {
+				supportHtml: true,
+			},
+			middleware,
+			outputChannelName: "LSP",
+			revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
+			uriConverters: {
+				// Don't just use "converters" here because LSP doesn't bind "this".
+				code2Protocol: (uri) => converters.code2Protocol(uri),
+				protocol2Code: (file) => converters.protocol2Code(file),
+			},
+		};
 
-	const client = new LanguageClient(
-		"dartAnalysisLSP",
-		"Dart Analysis Server",
-		async () => {
-			const streamInfo = await spawnServer(logger, sdks, dartCapabilities);
-			const jsonEncoder = ls.RAL().applicationJson.encoder;
+		const client = new LanguageClient(
+			"dartAnalysisLSP",
+			"Dart Analysis Server",
+			async () => {
+				const streamInfo = await this.spawnServer(logger, sdks, dartCapabilities);
+				const jsonEncoder = ls.RAL().applicationJson.encoder;
 
-			return {
-				detached: streamInfo.detached,
-				reader: new StreamMessageReader(streamInfo.reader),
-				writer: new StreamMessageWriter(streamInfo.writer, {
-					contentTypeEncoder: {
-						encode: (msg, options) => {
-							(msg as any).clientRequestTime = Date.now();
-							return jsonEncoder.encode(msg, options);
+				return {
+					detached: streamInfo.detached,
+					reader: new StreamMessageReader(streamInfo.reader),
+					writer: new StreamMessageWriter(streamInfo.writer, {
+						contentTypeEncoder: {
+							encode: (msg, options) => {
+								(msg as any).clientRequestTime = Date.now();
+								return jsonEncoder.encode(msg, options);
+							},
+							name: "withTiming",
 						},
-						name: "withTiming",
-					},
-				}),
-			};
-		},
-		clientOptions,
-	);
+					}),
+				};
+			},
+			clientOptions,
+		);
 
-	// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
-	//       insertTextFormat from the protocol through to the middleware to handle snippets.
-	//       This can be removed when we have a better way to do this.
-	//       https://github.com/microsoft/vscode-languageserver-node/issues/1000
-	const p2c = (client as any)._p2c; // eslint-disable-line no-underscore-dangle
-	const originalAsWorkspaceEdit = p2c.asWorkspaceEdit as Function; // eslint-disable-line @typescript-eslint/ban-types
-	const originalAsCodeAction = p2c.asCodeAction as Function; // eslint-disable-line @typescript-eslint/ban-types
+		// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
+		//       insertTextFormat from the protocol through to the middleware to handle snippets.
+		//       This can be removed when we have a better way to do this.
+		//       https://github.com/microsoft/vscode-languageserver-node/issues/1000
+		const p2c = (client as any)._p2c; // eslint-disable-line no-underscore-dangle
+		const originalAsWorkspaceEdit = p2c.asWorkspaceEdit as Function; // eslint-disable-line @typescript-eslint/ban-types
+		const originalAsCodeAction = p2c.asCodeAction as Function; // eslint-disable-line @typescript-eslint/ban-types
 
-	async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
-		const result = (await originalAsWorkspaceEdit(item, token)) as vs.WorkspaceEdit | undefined;
-		if (!result) return;
+		async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
+			const result = (await originalAsWorkspaceEdit(item, token)) as vs.WorkspaceEdit | undefined;
+			if (!result) return;
 
-		const snippetTypes = new Set<string>();
-		// Figure out which are Snippets.
-		for (const change of item?.documentChanges ?? []) {
-			if (ls.TextDocumentEdit.is(change)) {
-				const uri = vs.Uri.parse(change.textDocument.uri);
-				for (const edit of change.edits) {
+			const snippetTypes = new Set<string>();
+			// Figure out which are Snippets.
+			for (const change of item?.documentChanges ?? []) {
+				if (ls.TextDocumentEdit.is(change)) {
+					const uri = vs.Uri.parse(change.textDocument.uri);
+					for (const edit of change.edits) {
+						if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
+							snippetTypes.add(`${fsPath(uri)}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
+						}
+					}
+				}
+			}
+			for (const uriString of Object.keys(item?.changes ?? {})) {
+				const uri = vs.Uri.parse(uriString);
+				for (const edit of item!.changes![uriString]) {
 					if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
 						snippetTypes.add(`${fsPath(uri)}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
 					}
 				}
 			}
-		}
-		for (const uriString of Object.keys(item?.changes ?? {})) {
-			const uri = vs.Uri.parse(uriString);
-			for (const edit of item!.changes![uriString]) {
-				if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
-					snippetTypes.add(`${fsPath(uri)}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
-				}
-			}
-		}
 
-		if (snippetTypes.size > 0) {
-			for (const changeset of result.entries()) {
-				const uri = changeset[0];
-				const changes = changeset[1];
-				for (const change of changes) {
-					if (snippetTypes.has(`${fsPath(uri)}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
-						(change as any).insertTextFormat = ls.InsertTextFormat.Snippet;
+			if (snippetTypes.size > 0) {
+				for (const changeset of result.entries()) {
+					const uri = changeset[0];
+					const changes = changeset[1];
+					for (const change of changes) {
+						if (snippetTypes.has(`${fsPath(uri)}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
+							(change as any).insertTextFormat = ls.InsertTextFormat.Snippet;
+						}
 					}
 				}
 			}
+
+			return result;
 		}
 
-		return result;
-	}
-
-	async function asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
-		const result = (await originalAsCodeAction(item, token)) as vs.CodeAction | undefined;
-		if (item?.edit !== undefined) {
-			(result as any).edit = await asWorkspaceEdit(item.edit, token);
-		}
-		return result;
-	}
-
-	function asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>> {
-		return Promise.all(items.map(async (item) => {
-			if (ls.Command.is(item)) {
-				return p2c.asCommand(item);
-			} else {
-				return asCodeAction(item, token);
+		async function asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
+			const result = (await originalAsCodeAction(item, token)) as vs.CodeAction | undefined;
+			if (item?.edit !== undefined) {
+				(result as any).edit = await asWorkspaceEdit(item.edit, token);
 			}
-		}));
+			return result;
+		}
+
+		function asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>> {
+			return Promise.all(items.map(async (item) => {
+				if (ls.Command.is(item)) {
+					return p2c.asCommand(item);
+				} else {
+					return asCodeAction(item, token);
+				}
+			}));
+		}
+
+		p2c.asWorkspaceEdit = asWorkspaceEdit;
+		p2c.asCodeAction = asCodeAction;
+		p2c.asCodeActionResult = asCodeActionResult;
+
+		return client;
 	}
 
-	p2c.asWorkspaceEdit = asWorkspaceEdit;
-	p2c.asCodeAction = asCodeAction;
-	p2c.asCodeActionResult = asCodeActionResult;
+	private spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities): Promise<StreamInfo> {
+		// TODO: Replace with constructing an Analyzer that passes LSP flag (but still reads config
+		// from paths etc) and provide it's process.
+		const vmPath = path.join(sdks.dart, dartVMPath);
+		const args = getAnalyzerArgs(logger, sdks, dartCapabilities, true);
 
-	return client;
-}
+		logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
+		const process = safeToolSpawn(undefined, vmPath, args);
+		// Ensure we terminate the process when shutting down even if the graceful shutdown
+		// doesn't work. Wait a short period to give the graceful shutdown change.
+		this.disposables.push({ dispose: () => { setTimeout(() => process.kill(), 100); } });
+		logger.info(`    PID: ${process.pid}`);
 
-function spawnServer(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities): Promise<StreamInfo> {
-	// TODO: Replace with constructing an Analyzer that passes LSP flag (but still reads config
-	// from paths etc) and provide it's process.
-	const vmPath = path.join(sdks.dart, dartVMPath);
-	const args = getAnalyzerArgs(logger, sdks, dartCapabilities, true);
+		const reader = process.stdout.pipe(new LoggingTransform(logger, "<=="));
+		const writer = new LoggingTransform(logger, "==>");
+		writer.pipe(process.stdin);
 
-	logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
-	const process = safeToolSpawn(undefined, vmPath, args);
-	logger.info(`    PID: ${process.pid}`);
+		process.stderr.on("data", (data) => logger.error(data.toString()));
+		process.on("exit", (code, signal) => {
+			if (code)
+				reportAnalyzerTerminatedWithError();
+		});
 
-	const reader = process.stdout.pipe(new LoggingTransform(logger, "<=="));
-	const writer = new LoggingTransform(logger, "==>");
-	writer.pipe(process.stdin);
-
-	process.stderr.on("data", (data) => logger.error(data.toString()));
-	process.on("exit", (code, signal) => {
-		if (code)
-			reportAnalyzerTerminatedWithError();
-	});
-
-	return Promise.resolve({ reader, writer });
+		return Promise.resolve({ reader, writer });
+	}
 }
 
 class LoggingTransform extends stream.Transform {
