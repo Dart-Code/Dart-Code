@@ -1119,11 +1119,11 @@
 				},
 				{
 					"command": "dart.edit.fixAllInWorkspace",
-					"when": "dart-code:anyProjectLoaded && dart-code:isPreReleaseSdk && dart-code:lsp.command.dart.edit.fixAllInWorkspace"
+					"when": "dart-code:anyProjectLoaded && dart-code:lsp.command.dart.edit.fixAllInWorkspace"
 				},
 				{
 					"command": "dart.edit.fixAllInWorkspace.preview",
-					"when": "dart-code:anyProjectLoaded && dart-code:isPreReleaseSdk && dart-code:lsp.command.dart.edit.fixAllInWorkspace.preview"
+					"when": "dart-code:anyProjectLoaded && dart-code:lsp.command.dart.edit.fixAllInWorkspace.preview"
 				},
 				{
 					"when": "false",
