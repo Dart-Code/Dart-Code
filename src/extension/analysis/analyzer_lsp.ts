@@ -44,7 +44,7 @@ export class LspAnalyzer extends Analyzer {
 		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
 		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
-		if (config.experimentalMacroSupport) {
+		if (this.dartCapabilities.supportsMacroGeneratedFiles) {
 			// Just because it's enabled doesn't mean the server actually supports it.
 			this.dartTextDocumentContentProvider = new DartTextDocumentContentProviderFeature(logger, this.client, dartCapabilities);
 			this.client.registerFeature(this.dartTextDocumentContentProvider.feature);

@@ -586,7 +586,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", forcedDebugMode));
 	const removeErrorShowUser = new DartDebugAdapterRemoveErrorShowUserFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", removeErrorShowUser));
-	const supportUris = new DartDebugAdapterSupportsUrisFactory();
+	const supportUris = new DartDebugAdapterSupportsUrisFactory(dartCapabilities);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", supportUris));
 	const launchStatus = new DartDebugAdapterLaunchStatusFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", launchStatus));

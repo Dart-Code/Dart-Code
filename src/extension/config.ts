@@ -229,7 +229,7 @@ class Config {
 	public setWarnWhenEditingFilesInPubCache(value: boolean): Promise<void> { return this.setConfig("warnWhenEditingFilesInPubCache", value, ConfigurationTarget.Global); }
 
 	// Experiments that aren't in package.json.
-	get experimentalMacroSupport(): boolean { return this.getConfig<boolean>("experimentalMacroSupport", false); }
+	// get experimentalMacroSupport(): boolean { return this.getConfig<boolean>("experimentalMacroSupport", false); }
 
 	public readonly resolved = new ResolvedConfig();
 
