@@ -41,11 +41,13 @@ const devtoolsPackageName = "Dart DevTools";
 // still valid.
 let portToBind: number | undefined;
 
+// This is static because we want to track embedded views across restarts of DevToolsManager.
+const devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
+
 /// Handles launching DevTools in the browser and managing the underlying service.
 export class DevToolsManager implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
 	private readonly statusBarItem = getLanguageStatusItem("dart.devTools", ANALYSIS_FILTERS);
-	private devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
 	private service?: DevToolsService;
 	public debugCommands: DebugCommands | undefined;
 
@@ -73,8 +75,8 @@ export class DevToolsManager implements vs.Disposable {
 			if (config.closeDevTools === "never")
 				return;
 
-			for (const pageId of Object.keys(this.devToolsEmbeddedViews)) {
-				const panels = this.devToolsEmbeddedViews[pageId];
+			for (const pageId of Object.keys(devToolsEmbeddedViews)) {
+				const panels = devToolsEmbeddedViews[pageId];
 				if (!panels)
 					continue;
 
@@ -189,6 +191,9 @@ export class DevToolsManager implements vs.Disposable {
 			// dev version without having to have the SDK set up.
 			if (config.customDevToolsUri)
 				this.devtoolsUrl = Promise.resolve(config.customDevToolsUri);
+
+			// Trigger a reload of any existing embedded windows.
+			this.reloadEmbeddedViews();
 		}
 
 		const url = await this.devtoolsUrl;
@@ -292,8 +297,8 @@ export class DevToolsManager implements vs.Disposable {
 		if (!this.devtoolsUrl)
 			return;
 
-		for (const pageId of Object.keys(this.devToolsEmbeddedViews)) {
-			const panels = this.devToolsEmbeddedViews[pageId];
+		for (const pageId of Object.keys(devToolsEmbeddedViews)) {
+			const panels = devToolsEmbeddedViews[pageId];
 			if (!panels)
 				continue;
 
@@ -303,6 +308,25 @@ export class DevToolsManager implements vs.Disposable {
 			if (reusablePanel) {
 				reusablePanel.session = session;
 				await this.launch(false, session, { location: "beside", pageId });
+			}
+		}
+	}
+
+	/// If the DevTools server is restarted, we'll need to reload any DevTools windows that might have stale
+	/// server/DTD connections.
+	public reloadEmbeddedViews(): void {
+		if (!this.devtoolsUrl)
+			return;
+
+		for (const pageId of Object.keys(devToolsEmbeddedViews)) {
+			const panels = devToolsEmbeddedViews[pageId];
+			if (!panels)
+				continue;
+
+			// We'll only reload panels that are either connected, or don't have a session (static tools).
+			const connectedPanels = panels.filter((p) => !p.session || !p.session.hasEnded);
+			for (const panel of connectedPanels) {
+				panel.reload();
 			}
 		}
 	}
@@ -431,16 +455,16 @@ export class DevToolsManager implements vs.Disposable {
 		const pageId = page.id;
 		const pageTitle = page.title;
 
-		if (!this.devToolsEmbeddedViews[pageId]) {
-			this.devToolsEmbeddedViews[pageId] = [];
+		if (!devToolsEmbeddedViews[pageId]) {
+			devToolsEmbeddedViews[pageId] = [];
 		}
 		// Look through any open DevTools frames for this page, to see if any are already our session, or
 		// are for a session that has been stopped.
-		let frame = this.devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || (dtev.session && dtev.session.hasEnded));
+		let frame = devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || (dtev.session && dtev.session.hasEnded));
 		if (!frame) {
 			frame = new DevToolsEmbeddedView(session, uri, pageTitle, location);
-			frame.onDispose(() => delete this.devToolsEmbeddedViews[pageId]);
-			this.devToolsEmbeddedViews[pageId]?.push(frame);
+			frame.onDispose(() => delete devToolsEmbeddedViews[pageId]);
+			devToolsEmbeddedViews[pageId]?.push(frame);
 		}
 		frame.openedAutomatically = !!triggeredAutomatically;
 		frame.load(session, uri);

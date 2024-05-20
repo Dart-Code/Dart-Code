@@ -22,6 +22,9 @@ window.addEventListener('message', (event) => {
 			if (devToolsFrame.src !== url)
 				devToolsFrame.src = url;
 			break;
+		case "refresh":
+			devToolsFrame.src += '';
+			break;
 		case "keydown":
 			const data = message.data;
 			// Forward keypresses up to VS Code so you can access the palette etc.
@@ -96,6 +99,10 @@ export class DevToolsEmbeddedView implements IAmDisposable {
 		this.session = session;
 		void this.panel.webview.postMessage({ command: "setUrl", url: uri });
 		this.panel.reveal();
+	}
+
+	public reload(): void {
+		void this.panel.webview.postMessage({ command: "refresh" });
 	}
 
 	public dispose(panelDisposed = false): void {
