@@ -6,6 +6,16 @@ import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 
 const pageScript = `
 const vscode = acquireVsCodeApi();
+const originalState = vscode.getState();
+const originalFrameUrl = originalState?.frameUrl;
+window.addEventListener('load', (event) => {
+	// Restore previous frame if we had one.
+	const devToolsFrame = document.getElementById('devToolsFrame');
+	if (originalFrameUrl && (devToolsFrame.src === "about:blank" || devToolsFrame.src === "")) {
+		console.log(\`Restoring DevTools frame \${originalFrameUrl}\`);
+		devToolsFrame.src = originalFrameUrl;
+	}
+});
 window.addEventListener('message', (event) => {
 	const message = event.data;
 	const devToolsFrame = document.getElementById('devToolsFrame');
@@ -19,8 +29,10 @@ window.addEventListener('message', (event) => {
 			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
 				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
 			}
-			if (devToolsFrame.src !== url)
+			if (devToolsFrame.src !== url) {
 				devToolsFrame.src = url;
+				vscode.setState({ frameUrl: url });
+			}
 			break;
 		case "refresh":
 			devToolsFrame.src += '';
