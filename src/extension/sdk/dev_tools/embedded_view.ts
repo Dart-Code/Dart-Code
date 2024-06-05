@@ -94,7 +94,7 @@ export class DevToolsEmbeddedView implements IAmDisposable {
 			<script nonce="${scriptNonce}">${pageScript}</script>
 			<style nonce="${cssNonce}">#devToolsFrame { ${frameCss} }</style>
 			</head>
-			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write"></iframe></body>
+			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated"></iframe></body>
 			</html>
 			`;
 
