@@ -78,6 +78,15 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-server-debug-injected-client-protocol", "ws"]);
 		});
 
+		it("when web renderer is not set", async () => {
+			const resolvedConfig = await getResolvedDebugConfiguration({
+				deviceId: "web-server",
+				program: fsPath(flutterHelloWorldMainFile),
+			});
+
+			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-renderer", "canvaskit"]);
+		});
+
 		it("when web renderer is set", async () => {
 			await setConfigForTest("dart", "flutterWebRenderer", "html");
 			const resolvedConfig = await getResolvedDebugConfiguration({
