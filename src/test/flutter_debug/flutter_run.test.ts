@@ -87,7 +87,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 			assert.ok(
 				!resolvedConfig.toolArgs!.includes("--web-renderer"),
-				'By default, the `--web-renderer` argument should not be set',
+				"By default, the `--web-renderer` argument should not be set",
 			);
 		});
 
