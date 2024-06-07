@@ -145,7 +145,7 @@ class Config {
 	get flutterShowEmulators(): "local" | "always" | "never" { return this.getConfig<"local" | "always" | "never">("flutterShowEmulators", "local"); }
 	get flutterShowWebServerDevice(): "remote" | "always" { return this.getConfig<"remote" | "always">("flutterShowWebServerDevice", "remote"); }
 	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
-	get flutterWebRenderer(): "auto" | "html" | "canvaskit" { return this.getConfig<"auto" | "html" | "canvaskit">("flutterWebRenderer", "auto"); }
+	get flutterWebRenderer(): "flutter-default" | "canvaskit" | "html" | "auto" { return this.getConfig<"flutter-default" | "canvaskit" | "html" | "auto">("flutterWebRenderer", "flutter-default"); }
 	get hotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
 		const value = this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" | "always">("hotReloadOnSave", "never");
 		if (value === "always")

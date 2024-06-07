@@ -2319,16 +2319,18 @@
 					},
 					"dart.flutterWebRenderer": {
 						"enum": [
-							"auto",
+							"flutter-default",
+							"canvaskit",
 							"html",
-							"canvaskit"
+							"auto"
 						],
 						"enumDescriptions": [
-							"Allow Flutter to pick the best renderer based on the users device",
+							"Use the default renderer for Flutter Web apps",
+							"Always use the CanvasKit renderer",
 							"Always use the HTML renderer",
-							"Always use the CanvasKit renderer"
+							"Use Flutter's \"auto\" renderer option to pick the best renderer based on the users device"
 						],
-						"default": "auto",
+						"default": "flutter-default",
 						"markdownDescription": "Sets the [Web renderer](https://flutter.dev/docs/development/tools/web-renderers) used for Flutter web apps.",
 						"scope": "window"
 					}
