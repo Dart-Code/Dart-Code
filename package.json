@@ -1576,15 +1576,6 @@
 				"title": "Analyzer",
 				"order": 1,
 				"properties": {
-					"dart.additionalAnalyzerFileExtensions": {
-						"type": "array",
-						"default": [],
-						"description": "Additional file extensions that should be analyzed (usually used in combination with analyzer plugins).",
-						"items": {
-							"type": "string"
-						},
-						"scope": "window"
-					},
 					"dart.analysisExcludedFolders": {
 						"type": "array",
 						"default": [],
@@ -1593,12 +1584,6 @@
 							"type": "string"
 						},
 						"scope": "resource"
-					},
-					"dart.analyzeAngularTemplates": {
-						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to enable analysis for AngularDart templates (requires the Angular analyzer plugin to be enabled in `analysis_options.yaml`).",
-						"scope": "window"
 					},
 					"dart.analyzerAdditionalArgs": {
 						"type": "array",
@@ -1689,12 +1674,6 @@
 						"default": true,
 						"description": "Whether to show recommendations for other VS Code extensions based on the packages you're using.",
 						"scope": "window"
-					},
-					"dart.useLegacyAnalyzerProtocol": {
-						"type": "boolean",
-						"default": false,
-						"markdownDescription": "Whether to use the Dart Analyzer's original protocol instead of LSP. Some features are not supported when using the legacy protocol and support for it will eventually be removed. Please file issues on GitHub in the Dart Code repo if you find yourself needing to enable this setting.",
-						"scope": "window"
 					}
 				}
 			},
@@ -1702,12 +1681,6 @@
 				"title": "DevTools",
 				"order": 1,
 				"properties": {
-					"dart.updateDevTools": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to update DevTools if you are not using the latest version. This only applies to SDKs prior to Dart v2.15, since DevTools is included in the SDK since v2.15.",
-						"scope": "window"
-					},
 					"dart.devToolsBrowser": {
 						"enum": [
 							"chrome",
@@ -1919,12 +1892,6 @@
 				"title": "Editor",
 				"order": 1,
 				"properties": {
-					"dart.analysisServerFolding": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether to use folding data from the Dart Analysis Server instead of the built-in VS Code indent-based folding.",
-						"scope": "window"
-					},
 					"dart.autoImportCompletions": {
 						"type": "boolean",
 						"default": true,
@@ -1976,14 +1943,11 @@
 						"markdownDescription": "What level of documentation to show in Hovers and Code Completion details. When `null`, defaults to 'full' when running locally and 'none' in remote workspaces. This setting is only supported for Dart SDKs after v2.18.",
 						"scope": "window"
 					},
-					"dart.doNotFormat": {
-						"type": "array",
-						"default": [],
-						"markdownDescription": "An array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use `**/test/**` to skip formatting for all test directories.",
-						"items": {
-							"type": "string"
-						},
-						"scope": "resource"
+					"dart.enableServerSnippets": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "Whether to use code snippets from the Dart Analysis Server instead of those included in the extension. Server snippets are context and language-version aware and should be preferred.",
+						"scope": "window"
 					},
 					"dart.hotReloadPatterns": {
 						"type": "array",
@@ -2310,12 +2274,6 @@
 						"items": {
 							"type": "string"
 						}
-					},
-					"dart.flutterTrackWidgetCreation": {
-						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to pass `--track-widget-creation` to Flutter apps (required to support 'Inspect Widget'). This setting is always ignored when running in Profile or Release mode.",
-						"scope": "resource"
 					},
 					"dart.flutterWebRenderer": {
 						"enum": [
@@ -2817,12 +2775,6 @@
 				"title": "Experimental",
 				"order": 3,
 				"properties": {
-					"dart.enableServerSnippets": {
-						"type": "boolean",
-						"default": true,
-						"markdownDescription": "Whether to use code snippets from the Dart Analysis Server instead of those included in the extension. Server snippets are context and language-version aware and should be preferred.",
-						"scope": "window"
-					},
 					"dart.normalizeFileCasing": {
 						"type": "boolean",
 						"default": false,
@@ -2862,20 +2814,74 @@
 						"markdownDescription": "Whether to perform hot reload on save based on a filesystem watcher for Dart files rather than using VS Code's `onDidSave` event. This allows reloads to trigger when external tools modify Dart source files.",
 						"scope": "window"
 					},
+					"dart.experimentalRefactors": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) refactors on the lightbulb menu. This setting is intended for use by Dart Analysis Server developers or users that want to try out and provide feedback on in-progress refactors.",
+						"scope": "window"
+					}
+				}
+			},
+			{
+				"title": "Legacy",
+				"order": 4,
+				"properties": {
+					"dart.analyzeAngularTemplates": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "**LEGACY SETTING: The angular plugin is no longer supported.**\n\nWhether to enable analysis for AngularDart templates (requires the Angular analyzer plugin to be enabled in `analysis_options.yaml`).",
+						"scope": "window"
+					},
+					"dart.additionalAnalyzerFileExtensions": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "**LEGACY SETTING: Only applies to legacy analysis server protocol.**\n\nAdditional file extensions that should be analyzed (usually used in combination with analyzer plugins).",
+						"items": {
+							"type": "string"
+						},
+						"scope": "window"
+					},
+					"dart.analysisServerFolding": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "**LEGACY SETTING: Only applies to legacy analysis server protocol.**\n\nWhether to use folding data from the Dart Analysis Server instead of the built-in VS Code indent-based folding.",
+						"scope": "window"
+					},
+					"dart.doNotFormat": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "**LEGACY SETTING: Only applies to legacy analysis server protocol.**\n\nAn array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use `**/test/**` to skip formatting for all test directories.",
+						"items": {
+							"type": "string"
+						},
+						"scope": "resource"
+					},
+					"dart.useLegacyAnalyzerProtocol": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "**LEGACY SETTING: Only applies to Dart SDKs before v3.3 and is generally not recommended since v2.12.**\n\n Whether to use the Dart Analyzer's original protocol instead of LSP. Some features are not supported when using the legacy protocol and support for it will eventually be removed. Please file issues on GitHub in the Dart Code repo if you find yourself needing to enable this setting.",
+						"scope": "window"
+					},
 					"dart.useLegacyDebugAdapters": {
 						"type": [
 							"null",
 							"boolean"
 						],
 						"default": null,
-						"markdownDescription": "Whether to use the legacy debug adapters even if the new debug adapters are available in the current Dart/Flutter SDKs contain. Setting the value to `true` will force use of the legacay adapters. Setting to `false` will force use of the SDK adapters. Leaving as `null` will allow the extension to decide which debug adapters to use depending on the SDK version and rollout progress.",
+						"markdownDescription": "**LEGACY SETTING: Legacy debug adapters are not recommended since Dart v3.4.**\n\nWhether to use the legacy debug adapters even if the new debug adapters are available in the current Dart/Flutter SDKs contain. Setting the value to `true` will force use of the legacay adapters. Setting to `false` will force use of the SDK adapters. Leaving as `null` will allow the extension to decide which debug adapters to use depending on the SDK version and rollout progress.",
 						"scope": "window"
 					},
-					"dart.experimentalRefactors": {
+					"dart.updateDevTools": {
 						"type": "boolean",
-						"default": false,
-						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) refactors on the lightbulb menu. This setting is intended for use by Dart Analysis Server developers or users that want to try out and provide feedback on in-progress refactors.",
+						"default": true,
+						"markdownDescription": "**LEGACY SETTING: Only applies to Dart SDKs before v2.15 since DevTools now ships in the SDK.**\n\nWhether to update DevTools if you are not using the latest version.",
 						"scope": "window"
+					},
+					"dart.flutterTrackWidgetCreation": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "**LEGACY SETTING: Disabling this may break functionality on modern SDKs.**\n\nWhether to pass `--track-widget-creation` to Flutter apps (required to support 'Inspect Widget'). This setting is always ignored when running in Profile or Release mode.",
+						"scope": "resource"
 					}
 				}
 			}
