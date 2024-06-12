@@ -45,7 +45,7 @@ export class RunProcessResult {
 }
 
 export function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: { [key: string]: string | undefined } | undefined, spawn: SpawnFunction, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(env)}`);
 		const proc = spawn(workingDirectory, binPath, args, env);
 		cancellationToken?.onCancellationRequested(() => proc.kill());
@@ -58,6 +58,8 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 		proc.on("exit", (code) => {
 			resolve(new RunProcessResult(nullToUndefined(code), out.join(""), err.join("")));
 		});
+		// Handle things like ENOENT which are async and come via error, but mean exit will never fire.
+		proc.on("error", (e) => reject(e));
 	});
 }
 

@@ -93,6 +93,7 @@ export function logProcess(logger: Logger, category: LogCategory, process: Spawn
 	process.stdout.on("data", (data) => logger.info(`${prefix} ${data}`, category));
 	process.stderr.on("data", (data) => logger.info(`${prefix} ${data}`, category));
 	process.on("close", (code, signal) => logger.info(`${prefix} closed (${code}, ${signal})`, category));
+	process.on("error", (e) => logger.info(`${prefix} errored (${e})`, category));
 	process.on("exit", (code, signal) => logger.info(`${prefix} exited (${code}, ${signal})`, category));
 }
 
