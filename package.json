@@ -2085,7 +2085,7 @@
 							"swift"
 						],
 						"default": "swift",
-						"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: New Project' command.",
+						"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: New Project' command. This is only supported up until Flutter 3.22 after which it will be ignored.",
 						"scope": "window"
 					},
 					"dart.flutterCreatePlatforms": {

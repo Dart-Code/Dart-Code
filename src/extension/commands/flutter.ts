@@ -173,7 +173,7 @@ export class FlutterCommands extends BaseSdkCommands {
 			args.push("--org");
 			args.push(config.flutterCreateOrganization);
 		}
-		if (config.flutterCreateIOSLanguage && config.flutterCreateIOSLanguage !== "swift") {
+		if (config.flutterCreateIOSLanguage && config.flutterCreateIOSLanguage !== "swift" && this.flutterCapabilities.supportsIOSLanguage) {
 			args.push("--ios-language");
 			args.push(config.flutterCreateIOSLanguage);
 		}
@@ -444,7 +444,7 @@ function getCurrentFlutterCreateSettings(): PickableSetting[] {
 		{
 			currentValue: config.flutterCreateIOSLanguage || "swift",
 			description: config.flutterCreateIOSLanguage || "swift",
-			detail: "The language to use for iOS-specific code, either ObjectiveC (legacy) or Swift (recommended).",
+			detail: "The language to use for iOS-specific code (Flutter <= 3.22 only), either ObjectiveC (legacy) or Swift (recommended).",
 			enumValues: ["swift", "objc"],
 			label: "iOS Language",
 			setValue: (newValue: "swift" | "objc" | undefined) => config.setFlutterCreateIOSLanguage(newValue),
