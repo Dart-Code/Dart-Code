@@ -149,19 +149,21 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools.sidebar", () => vs.commands.executeCommand("flutter.openDevTools", { commandSource: CommandSource.sidebarTitle })));
 		this.disposables.push(vs.commands.registerCommand("flutter.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string, commandSource?: string }): Promise<{ url: string, dispose: () => void } | undefined> =>
 			vs.commands.executeCommand("dart.openDevTools", options)));
-		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string, location?: DevToolsLocation, commandSource?: string }): Promise<{ url: string, dispose: () => void } | undefined> => {
+		this.disposables.push(vs.commands.registerCommand("dart.openDevTools", async (options?: { debugSessionId?: string, triggeredAutomatically?: boolean, pageId?: string, location?: DevToolsLocation, commandSource?: string, requiresDebugSession?: boolean }): Promise<{ url: string, dispose: () => void } | undefined> => {
 			const commandSource = options?.commandSource ?? CommandSource.commandPalette;
 			const pageId = options?.pageId;
 			const location = options?.location;
 			const triggeredAutomatically = options?.triggeredAutomatically;
+			let requiresDebugSession = options?.requiresDebugSession;
 
-			// Check whether we'll need a VM Service to open this page.
+			// Check whether we'll need a Debug Session to open this page.
 			const page = devToolsPages.find((p) => p.id === pageId);
-			const requiresVmService = page && !page.isStaticTool;
+			const isKnownStaticPage = page && page.isStaticTool;
+			requiresDebugSession = requiresDebugSession ?? !isKnownStaticPage;
 
 			let session: DartDebugSessionInformation | undefined;
-			if (requiresVmService || debugSessions.length) {
-				session = options && options.debugSessionId
+			if (requiresDebugSession) {
+				session = options?.debugSessionId
 					? debugSessions.find((s) => s.session.id === options.debugSessionId)
 					: await this.getDebugSession();
 				if (!session)

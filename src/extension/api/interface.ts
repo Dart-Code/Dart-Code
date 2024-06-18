@@ -15,7 +15,7 @@ export interface VsCodeApi {
 	executeCommand(command: string, args?: object[]): Promise<object | undefined>;
 	selectDevice(id: string): Promise<boolean>;
 	enablePlatformType(platformType: string): Promise<boolean>;
-	openDevToolsPage(debugSessionId: string | undefined, pageId: string | undefined, forceExternal: boolean | undefined): Promise<void>;
+	openDevToolsPage(debugSessionId: string | undefined, pageId: string | undefined, forceExternal: boolean | undefined, requiresDebugSession: boolean | undefined): Promise<void>;
 	hotReload(debugSessionId: string): Promise<void>;
 	hotRestart(debugSessionId: string): Promise<void>;
 }
@@ -42,6 +42,7 @@ export interface VsCodeCapabilities {
 	executeCommand: boolean;
 	openDevToolsPage: boolean;
 	openDevToolsExternally: boolean;
+	openDevToolsWithRequiresDebugSessionFlag: boolean;
 	selectDevice: boolean;
 	hotReload: boolean;
 	hotRestart: boolean;
