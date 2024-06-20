@@ -2289,7 +2289,7 @@
 							"Use Flutter's \"auto\" renderer option to pick the best renderer based on the users device"
 						],
 						"default": "flutter-default",
-						"markdownDescription": "Sets the [Web renderer](https://flutter.dev/docs/development/tools/web-renderers) used for Flutter web apps.",
+						"markdownDescription": "Sets the [Web renderer](https://flutter.dev/to/web-renderers) used for Flutter web apps.",
 						"scope": "window"
 					}
 				}

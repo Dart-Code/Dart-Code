@@ -75,11 +75,11 @@ export const openInstructionsAction = "Open Instructions";
 export const copySdkPathToClipboardAction = "Copy SDK path to Clipboard";
 export const addSdkToPathAction = "Add SDK to PATH";
 export const addToPathInstructionsUrl = isWin
-	? "https://docs.flutter.dev/get-started/install/windows#update-your-path"
+	? "https://flutter.dev/to/update-windows-path"
 	: isMac
-		? "https://docs.flutter.dev/get-started/install/macos#update-your-path"
+		? "https://flutter.dev/to/update-macos-path"
 		: isLinux && !isChromeOS
-			? "https://docs.flutter.dev/get-started/install/linux#update-your-path"
+			? "https://flutter.dev/to/update-linux-path"
 			: undefined;
 
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
