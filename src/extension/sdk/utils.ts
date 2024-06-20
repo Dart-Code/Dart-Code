@@ -502,7 +502,7 @@ export class SdkUtils {
 			wc.disableSdkUpdateChecks = true;
 		}
 
-		const isDartFromFlutter = !!dartSdkPath && isDartSdkFromFlutter(dartSdkPath);
+		const isDartFromFlutter = (!!dartSdkResult.originalPath && isDartSdkFromFlutter(dartSdkResult.originalPath)) || (!!dartSdkPath && isDartSdkFromFlutter(dartSdkPath));
 		const dartVersion = getSdkVersion(this.logger, { sdkRoot: dartSdkPath });
 		const flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath });
 		const relevantSdkVersion = hasAnyFlutterProject ? flutterVersion : dartVersion;
