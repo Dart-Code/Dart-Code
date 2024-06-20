@@ -55,6 +55,8 @@ export class DevToolsManager implements vs.Disposable {
 	/// concurrent launches can wait on the same promise.
 	public devtoolsUrl: Thenable<string> | undefined;
 
+	private isShuttingDown = false;
+
 	constructor(
 		private readonly logger: Logger,
 		private readonly context: Context,
@@ -559,7 +561,7 @@ export class DevToolsManager implements vs.Disposable {
 			service.process?.on("close", async (code) => {
 				this.devtoolsUrl = undefined;
 				this.setNotStartedStatusBar();
-				if (code && code !== 0) {
+				if (code && code !== 0 && !this.isShuttingDown) {
 					// Reset the port to 0 on error in case it was from us trying to reuse the previous port.
 					portToBind = 0;
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}.`;
@@ -628,6 +630,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	public dispose(): any {
+		this.isShuttingDown = true;
 		disposeAll(this.disposables);
 	}
 }
