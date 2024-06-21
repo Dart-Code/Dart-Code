@@ -472,7 +472,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		if (debugConfig.program && path.isAbsolute(debugConfig.program) && !this.wsContext.config.omitTargetFlag) {
 			if (!fs.existsSync(debugConfig.program)) {
-				this.logger.warn(`Launch config references non-existant file ${debugConfig.program}`);
+				this.logger.warn(`Launch config references non-existent file ${debugConfig.program}`);
 				void window.showWarningMessage(`Your launch config references a program that does not exist. If you have problems launching, check the "program" field in your ".vscode/launch.json" file.`);
 			}
 		}

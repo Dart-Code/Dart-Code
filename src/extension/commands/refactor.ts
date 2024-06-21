@@ -194,8 +194,8 @@ export class RefactorCommands implements vs.Disposable {
 				continue;
 
 			if (hasOverlappingEdits(editResult.change)) {
-				void vs.window.showErrorMessage("Unable to update references; edits contain ambigious positions.");
-				this.logger.error(`Unable to apply MOVE_FILE edits due to ambigious edits:\n\n${JSON.stringify(editResult.change, undefined, 4)}`);
+				void vs.window.showErrorMessage("Unable to update references; edits contain ambiguous positions.");
+				this.logger.error(`Unable to apply MOVE_FILE edits due to ambiguous edits:\n\n${JSON.stringify(editResult.change, undefined, 4)}`);
 				return;
 			}
 
