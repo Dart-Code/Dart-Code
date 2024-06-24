@@ -158,9 +158,13 @@ export class DebugCommands implements IAmDisposable {
 			const prefersDebugSession = options?.prefersDebugSession;
 
 			// Check whether we'll need a Debug Session to open this page.
+			// If we weren't given an explicit `requiresDebugSession` then require it only if we have a page ID
+			// _and_ we are not known to be a static page (that is, we're a page we don't recognise or a page
+			// we know to _not_ be static).
+			// Ideally we'll never fall into this, because the call will always have a requiresDebugSession
 			const page = devToolsPages.find((p) => p.id === pageId);
 			const isKnownStaticPage = page && page.isStaticTool;
-			requiresDebugSession = requiresDebugSession ?? !isKnownStaticPage;
+			requiresDebugSession = requiresDebugSession ?? (!!pageId && !isKnownStaticPage);
 
 			let session: DartDebugSessionInformation | undefined;
 			if (requiresDebugSession || (prefersDebugSession && debugSessions.length)) {
