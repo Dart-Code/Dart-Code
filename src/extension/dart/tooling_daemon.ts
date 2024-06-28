@@ -4,7 +4,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
-import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { config } from "../config";
 import { promptToReloadExtension } from "../utils";
 import { getToolEnv } from "../utils/processes";
@@ -17,7 +17,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		logger: Logger,
 		sdks: DartSdks,
 	) {
-		super(logger, sdks, config.maxLogLineLength, getToolEnv, envUtils.exposeUrl, promptToReloadExtension);
+		super(logger, sdks, config.maxLogLineLength, getToolEnv, promptToReloadExtension);
 		context.subscriptions.push(this);
 
 		this.setUpStatusBarAndCommand(context);
@@ -35,8 +35,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		};
 
 		context.subscriptions.push(commands.registerCommand("dart.copyDtdUri", async () => {
-			// TODO(dantup): Determine if raw or public DTD URI is most useful here.
-			await env.clipboard.writeText(await this.rawDtdUri);
+			await env.clipboard.writeText(await this.dtdUri);
 
 			const statusBarItem = this.statusBarItem;
 			statusBarItem.command = { ...copyUriCommand, title: "copied!" };

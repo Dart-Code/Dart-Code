@@ -29,35 +29,22 @@ export class DartToolingDaemon implements IAmDisposable {
 		sdks: DartSdks,
 		maxLogLineLength: number | undefined,
 		getToolEnv: () => any,
-		exposeUrl: (url: string) => Promise<string>,
 		private readonly promptToReloadExtension: (prompt?: string, buttonText?: string, offerLog?: boolean) => Promise<void>,
 	) {
 		this.logger = new CategoryLogger(logger, LogCategory.DartToolingDaemon);
-		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, maxLogLineLength, getToolEnv, exposeUrl);
+		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, maxLogLineLength, getToolEnv);
 		this.disposables.push(this.dtdProcess);
 
-		void this.dtdProcess.rawDtdUri.then(() => this.connect());
+		void this.dtdProcess.dtdUri.then(() => this.connect());
 		void this.dtdProcess.processExit.then(() => this.handleClose());
 	}
 
-	/**
-	 * This is the raw/original DTD URL. It is accessible from the extension host, but not necessarily
-	 * from the client.
-	 */
-	public get rawDtdUri(): Promise<string> {
-		return this.dtdProcess.rawDtdUri;
-	}
-
-	/**
-	 * This is the an exposed version of the DTD URL that is accessible from the client, but not necessarily the
-	 * extension host.
-	 */
-	public get publicDtdUri(): Promise<string> {
-		return this.dtdProcess.publicDtdUri;
+	public get dtdUri(): Promise<string> {
+		return this.dtdProcess.dtdUri;
 	}
 
 	private async connect() {
-		const dtdUri = await this.dtdProcess.rawDtdUri;
+		const dtdUri = await this.dtdProcess.dtdUri;
 		const dtdSecret = await this.dtdProcess.dtdSecret;
 
 		this.logger.info(`Connecting to DTD at ${dtdUri}...`);
@@ -170,27 +157,14 @@ export class DartToolingDaemon implements IAmDisposable {
 class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 	public hasReceivedConnectionInfo = false;
 
-	private rawDtdUriCompleter = new PromiseCompleter<string>();
-	private publicDtdUriCompleter = new PromiseCompleter<string>();
+	private dtdUriCompleter = new PromiseCompleter<string>();
 	private dtdSecretCompleter = new PromiseCompleter<string>();
 	private processExitCompleter = new PromiseCompleter<void>();
 
 	public hasTerminated = false;
 
-	/**
-	 * This is the raw/original DTD URL. It is accessible from the extension host, but not necessarily
-	 * from the client.
-	 */
-	public get rawDtdUri(): Promise<string> {
-		return this.rawDtdUriCompleter.promise;
-	}
-
-	/**
-	 * This is the an exposed version of the DTD URL that is accessible from the client, but not necessarily the
-	 * extension host.
-	 */
-	public get publicDtdUri(): Promise<string> {
-		return this.publicDtdUriCompleter.promise;
+	public get dtdUri(): Promise<string> {
+		return this.dtdUriCompleter.promise;
 	}
 
 	public get dtdSecret(): Promise<string> {
@@ -201,13 +175,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return this.processExitCompleter.promise;
 	}
 
-	constructor(
-		logger: Logger,
-		private readonly sdks: DartSdks,
-		maxLogLineLength: number | undefined,
-		getToolEnv: () => any,
-		private readonly exposeUrl: (url: string) => Promise<string>,
-	) {
+	constructor(logger: Logger, private readonly sdks: DartSdks, maxLogLineLength: number | undefined, getToolEnv: () => any) {
 		super(logger, maxLogLineLength, true, true);
 
 		const executable = path.join(this.sdks.dart, dartVMPath);
@@ -242,9 +210,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 			try {
 				const json = JSON.parse(message);
 				if (json?.tooling_daemon_details?.uri && json?.tooling_daemon_details?.trusted_client_secret) {
-					const dtdUri = json?.tooling_daemon_details?.uri as string;
-					this.rawDtdUriCompleter.resolve(dtdUri);
-					this.publicDtdUriCompleter.resolve(this.exposeUrl(dtdUri));
+					this.dtdUriCompleter.resolve(json?.tooling_daemon_details?.uri as string);
 					this.dtdSecretCompleter.resolve(json?.tooling_daemon_details?.trusted_client_secret as string);
 					this.hasReceivedConnectionInfo = true;
 				}
