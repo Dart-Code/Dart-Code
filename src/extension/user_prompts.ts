@@ -85,8 +85,6 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
 		return;
 	}
-
-	// (though, there are no other notifications right now...)
 }
 
 function hasAnyExistingDartSettings(): boolean {
@@ -109,7 +107,7 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 		showRecommendedSettingsAction,
 	);
 	if (action === yesAction) {
-		await vs.commands.executeCommand("dart.writeRecommendedSettings");
+		await vs.commands.executeCommand("dart.writeRecommendedSettings", { showNotification: true });
 	} else if (action === showRecommendedSettingsAction) {
 		await envUtils.openInBrowser(recommendedSettingsUrl);
 	}

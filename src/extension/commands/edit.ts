@@ -42,20 +42,22 @@ export class EditCommands implements vs.Disposable {
 		}
 	}
 
-	private async writeRecommendedSettings() {
+	private async writeRecommendedSettings(options?: { showNotification?: boolean }) {
 		const topLevelConfig = vs.workspace.getConfiguration("", null);
 		const dartLanguageConfig = topLevelConfig.inspect("[dart]");
 		const existingConfig = dartLanguageConfig ? dartLanguageConfig.globalValue : undefined;
 		const newValues = Object.assign({}, dartRecommendedConfig, existingConfig);
 		await topLevelConfig.update("[dart]", newValues, vs.ConfigurationTarget.Global);
 
-		const action = await vs.window.showInformationMessage(
-			"Recommended settings were written to the [dart] section of your global settings file",
-			openSettingsAction,
-		);
+		if (options?.showNotification) {
+			const action = await vs.window.showInformationMessage(
+				"Recommended settings were written to the [dart] section of your global settings file",
+				openSettingsAction,
+			);
 
-		if (action === openSettingsAction)
-			await vs.commands.executeCommand("workbench.action.openSettingsJson", { revealSetting: { key: "[dart]" } });
+			if (action === openSettingsAction)
+				await vs.commands.executeCommand("workbench.action.openSettingsJson", { revealSetting: { key: "[dart]" } });
+		}
 	}
 
 	private async printSelectionToTerminal() {
