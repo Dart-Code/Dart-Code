@@ -5,6 +5,7 @@ import { CommandSource } from "../../shared/constants";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
+import { envUtils } from "../../shared/vscode/utils";
 import { DartApi } from "../api/dart_tooling_api";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
 
@@ -47,7 +48,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		this.api?.dispose();
 
 		await this.devTools.start();
-		const sidebarUrl = await this.devTools.urlFor("vsCodeFlutterPanel");
+		let sidebarUrl = await this.devTools.urlFor("vsCodeFlutterPanel");
 		if (!sidebarUrl) {
 			webviewView.webview.html = `
 			<html>
@@ -57,6 +58,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			return;
 		}
 
+		sidebarUrl = await envUtils.exposeUrl(sidebarUrl);
 		const sidebarUri = URI.parse(sidebarUrl);
 		const frameOrigin = `${sidebarUri.scheme}://${sidebarUri.authority}`;
 		const embedFlags = this.dartCapabilities.requiresDevToolsEmbedFlag ? "embed=true&embedMode=one" : "embedMode=one";
