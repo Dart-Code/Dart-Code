@@ -666,7 +666,10 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		if (toolingDaemon) {
 			devToolsArgs.push("--dtd-uri");
-			devToolsArgs.push(await toolingDaemon.dtdUri);
+			// TODO(dantup): Verify if DevTools server or any other non-client
+			//  tools may use this. If so, we should have DevTools server accept
+			//  two URIs.
+			devToolsArgs.push(await toolingDaemon.publicDtdUri);
 		}
 
 		const executionInfo = customDevTools?.path ?
