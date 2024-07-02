@@ -18,6 +18,7 @@ import assert = require('assert');
 import net = require('net');
 import { ProtocolClient } from '@vscode/debugadapter-testsupport/lib/protocolClient';
 import { DebugProtocol } from '@vscode/debugprotocol';
+import { URI } from 'vscode-uri';
 import { currentTestName } from './helpers';
 
 export interface ILocation {
@@ -315,15 +316,20 @@ export class DebugClient extends ProtocolClient {
 	 * Returns a promise that will resolve if an event with a specific type was received within some specified time.
 	 * The promise will be rejected if a timeout occurs.
 	 */
-	public waitForEvent(eventType: string, description?: string, timeout?: number): Promise<DebugProtocol.Event> {
+	public waitForEvent(eventType: string, description?: string, timeout?: number, match?: (event: DebugProtocol.Event) => boolean): Promise<DebugProtocol.Event> {
 		let timeoutHandler: any;
 		const startingTestName = currentTestName;
 
 		return new Promise((resolve, reject) => {
-			this.once(eventType, event => {
-				clearTimeout(timeoutHandler);
-				resolve(event);
-			});
+			const handler = (event: DebugProtocol.Event) => {
+				if (!match || match(event)) {
+					this.removeListener(eventType, handler);
+					clearTimeout(timeoutHandler);
+					resolve(event);
+				}
+			};
+
+			this.on(eventType, handler);
 			if (!this._socket) {	// no timeouts if debugging the tests
 				timeoutHandler = setTimeout(() => {
 					reject(new Error(`no event '${eventType}' received after ${timeout || this.defaultTimeout} ms (${startingTestName}: ${description})`));
@@ -371,27 +377,33 @@ export class DebugClient extends ProtocolClient {
 	 * The promise will be rejected if a timeout occurs, the assertions fail, or if the 'stackTrace' request fails.
 	 */
 	public assertStoppedLocation(reason: string, expected: { path?: string | RegExp, line?: number, column?: number, text?: string }): Promise<DebugProtocol.StackTraceResponse> {
-
-		return this.waitForEvent('stopped', 'assertStoppedLocation').then(event => {
-			assert.equal(event.body.reason, reason);
-			if (expected.text)
-				assert.equal(event.body.text, expected.text);
-			return this.stackTraceRequest({
-				threadId: event.body.threadId
+		return this.waitForEvent(
+			'stopped',
+			'assertStoppedLocation',
+			undefined,
+			// Skip entry stops because they always occur.
+			reason !== "entry" ? (e) => e.body?.reason !== "entry" : undefined,
+		)
+			.then(event => {
+				assert.equal(event.body.reason, reason);
+				if (expected.text)
+					assert.equal(event.body.text, expected.text);
+				return this.stackTraceRequest({
+					threadId: event.body.threadId
+				});
+			}).then(response => {
+				const frame = response.body.stackFrames[0];
+				if (typeof expected.path === 'string' || expected.path instanceof RegExp) {
+					this.assertPath(frame.source!.path!, expected.path, `stopped location: path mismatch\n  expected: ${expected.path}\n  actual: ${frame.source!.path!}`);
+				}
+				if (typeof expected.line === 'number') {
+					assert.equal(frame.line, expected.line, `stopped location: line mismatch\n  expected: ${expected.line}\n  actual: ${frame.line}`);
+				}
+				if (typeof expected.column === 'number') {
+					assert.equal(frame.column, expected.column, `stopped location: column mismatch\n  expected: ${expected.column}\n  actual: ${frame.column}`);
+				}
+				return response;
 			});
-		}).then(response => {
-			const frame = response.body.stackFrames[0];
-			if (typeof expected.path === 'string' || expected.path instanceof RegExp) {
-				this.assertPath(frame.source!.path!, expected.path, `stopped location: path mismatch\n  expected: ${expected.path}\n  actual: ${frame.source!.path!}`);
-			}
-			if (typeof expected.line === 'number') {
-				assert.equal(frame.line, expected.line, `stopped location: line mismatch\n  expected: ${expected.line}\n  actual: ${frame.line}`);
-			}
-			if (typeof expected.column === 'number') {
-				assert.equal(frame.column, expected.column, `stopped location: column mismatch\n  expected: ${expected.column}\n  actual: ${frame.column}`);
-			}
-			return response;
-		});
 	}
 
 	private assertPartialLocationsEqual(locA: IPartialLocation, locB: IPartialLocation): void {
@@ -437,9 +449,10 @@ export class DebugClient extends ProtocolClient {
 		});
 	}
 
-	public assertPath(path: string, expected: string | RegExp, message?: string) {
-
-		if (expected instanceof RegExp) {
+	public assertPath(path: string | undefined, expected: string | RegExp | undefined, message?: string) {
+		if (!expected || !path) {
+			assert.equal(path, expected);
+		} else if (expected instanceof RegExp) {
 			assert.ok((<RegExp>expected).test(path), message);
 		} else {
 			if (DebugClient.CASE_INSENSITIVE_FILESYSTEM) {
@@ -450,6 +463,15 @@ export class DebugClient extends ProtocolClient {
 					expected = (<string>expected).toLowerCase();
 				}
 			}
+
+			// For URIs, use VS Code's toString() to ensure encoding is consistent.
+			if (typeof path === 'string' && path.includes(":///")) {
+				path = URI.parse(path).toString();
+			}
+			if (typeof expected === 'string' && expected.includes(":///")) {
+				expected = URI.parse(expected).toString();
+			}
+
 			assert.equal(path, expected, message);
 		}
 	}
