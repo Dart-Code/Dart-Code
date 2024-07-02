@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { isWin } from "../../shared/constants";
+import { isDartCodeTestRun, isWin } from "../../shared/constants";
 import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../../shared/constants.contexts";
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
@@ -81,14 +81,20 @@ export class VmServiceExtensions {
 
 					await this.callServiceExtension(e.session, pubRootDirectoriesService, params);
 				}
-			} catch (e) {
-				this.logger.error(e);
+			} catch (e: any) {
+				if (!this.shouldSilenceError(e)) {
+					this.logger.error(e);
+				}
 			}
 		} else if (e.event === "dart.serviceRegistered") {
 			this.handleServiceRegistered(e.body.service as VmService, e.body.method as string);
 		} else if (e.event === "flutter.serviceExtensionStateChanged") {
 			this.handleRemoteValueUpdate(e.body.extension as string, e.body.value);
 		}
+	}
+
+	private shouldSilenceError(e: any) {
+		return isDartCodeTestRun && "message" in e && typeof e.message === "string" && e.message.includes("Service connection disposed");
 	}
 
 	private formatPathForPubRootDirectories(path: string): string {
@@ -220,8 +226,13 @@ export class VmServiceExtensions {
 		const value = this.currentExtensionValues[extensionRPC];
 		const hasValue = value !== undefined;
 
-		if (isTogglableService && hasValue)
-			this.sendExtensionValue(session.session, extensionRPC, value).catch((e) => this.logger.error(e));
+		if (isTogglableService && hasValue) {
+			this.sendExtensionValue(session.session, extensionRPC, value).catch((e) => {
+				if (!this.shouldSilenceError(e)) {
+					this.logger.error(e);
+				}
+			});
+		}
 	}
 
 	/// Marks all services as not-loaded (happens after session ends).

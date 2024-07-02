@@ -2,6 +2,7 @@ import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import { Writable } from "stream";
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSessionCustomEvent, window } from "vscode";
+import { DartCapabilities } from "../shared/capabilities/dart";
 import { tenMinutesInMs } from "../shared/constants";
 import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
@@ -24,10 +25,12 @@ export class DartDebugClient extends DebugClient {
 	public hasStarted = false;
 	public hasTerminated = false;
 	public readonly isDartDap: boolean;
+	public readonly isUsingUris: boolean;
 
-	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[]) {
+	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
 		super(args.runtime, args.executable, args.args, "dart", { shell: args.runtime?.endsWith(".sh") ? true : undefined }, true);
 		this.isDartDap = args.runtime !== undefined && args.runtime !== "node";
+		this.isUsingUris = this.isDartDap && this.dartCapabitilies.supportsMacroGeneratedFiles;
 		this.port = args.port;
 
 		// HACK to handle incoming requests..
