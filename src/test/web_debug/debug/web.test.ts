@@ -222,7 +222,7 @@ describe("web debugger", () => {
 		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		const expectedLocation = {
 			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(webHelloWorldMainFile),
+			path: dc.isUsingUris ? webHelloWorldMainFile.toString() : fsPath(webHelloWorldMainFile),
 		};
 		// TODO: Remove the last parameter here (and the other things below) when we are mapping breakpoints in org-dartland-app
 		// URIs back to the correct file system paths.
@@ -272,7 +272,7 @@ describe("web debugger", () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: fsPath(webHelloWorldMainFile),
+					path: dc.isUsingUris ? webHelloWorldMainFile.toString() : fsPath(webHelloWorldMainFile),
 				}, {}),
 			);
 
@@ -288,7 +288,7 @@ describe("web debugger", () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: fsPath(webHelloWorldMainFile),
+					path: dc.isUsingUris ? webHelloWorldMainFile.toString() : fsPath(webHelloWorldMainFile),
 				}, {}),
 			);
 
@@ -304,7 +304,7 @@ describe("web debugger", () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: fsPath(webHelloWorldMainFile),
+					path: dc.isUsingUris ? webHelloWorldMainFile.toString() : fsPath(webHelloWorldMainFile),
 				}, {}),
 			);
 
@@ -321,7 +321,7 @@ describe("web debugger", () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line,
-					path: fsPath(webHelloWorldMainFile),
+					path: dc.isUsingUris ? webHelloWorldMainFile.toString() : fsPath(webHelloWorldMainFile),
 				}, {}),
 			);
 
@@ -342,7 +342,7 @@ describe("web debugger", () => {
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^Oops").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(webBrokenMainFile),
+				path: dc.isUsingUris ? webBrokenMainFile.toString() : fsPath(webBrokenMainFile),
 			}),
 			dc.launch(config),
 		);
@@ -358,7 +358,7 @@ describe("web debugger", () => {
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^Oops").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(webBrokenMainFile),
+				path: dc.isUsingUris ? webBrokenMainFile.toString() : fsPath(webBrokenMainFile),
 			}),
 			dc.launch(config),
 		);
