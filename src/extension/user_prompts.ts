@@ -107,7 +107,7 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 		showRecommendedSettingsAction,
 	);
 	if (action === yesAction) {
-		await vs.commands.executeCommand("dart.writeRecommendedSettings", { showNotification: true });
+		await vs.commands.executeCommand("dart.writeRecommendedSettings");
 	} else if (action === showRecommendedSettingsAction) {
 		await envUtils.openInBrowser(recommendedSettingsUrl);
 	}

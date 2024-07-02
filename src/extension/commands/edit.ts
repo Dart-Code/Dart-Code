@@ -49,7 +49,7 @@ export class EditCommands implements vs.Disposable {
 		const newValues = Object.assign({}, dartRecommendedConfig, existingConfig);
 		await topLevelConfig.update("[dart]", newValues, vs.ConfigurationTarget.Global);
 
-		if (options?.showNotification) {
+		if (options?.showNotification !== false) {
 			const action = await vs.window.showInformationMessage(
 				"Recommended settings were written to the [dart] section of your global settings file",
 				openSettingsAction,
