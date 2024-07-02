@@ -323,7 +323,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "main");
-		assert.equal(frames[0].source!.path, fsPath(helloWorldMainFile));
+		dc.assertPath(frames[0].source!.path, fsPath(helloWorldMainFile));
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 
 		await dc.terminateRequest();
@@ -352,7 +352,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "do_print");
-		assert.equal(frames[0].source!.path, fsPath(helloWorldPartFile));
+		dc.assertPath(frames[0].source!.path, fsPath(helloWorldPartFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/part.dart");
 
 		await dc.terminateRequest();
@@ -368,7 +368,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "do_print");
-		assert.equal(frames[0].source!.path, fsPath(helloWorldDeferredScriptFile));
+		dc.assertPath(frames[0].source!.path, fsPath(helloWorldDeferredScriptFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/deferred_script.dart");
 
 		await dc.terminateRequest();
@@ -384,7 +384,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "print");
-		assert.equal(frames[0].source!.path, fsPath(uriFor(def)));
+		dc.assertPath(frames[0].source!.path, fsPath(uriFor(def)));
 		assert.equal(frames[0].source!.name, "dart:core/print.dart");
 	});
 
@@ -397,7 +397,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "read");
-		assert.equal(frames[0].source!.path, fsPath(uriFor(def)));
+		dc.assertPath(frames[0].source!.path, fsPath(uriFor(def)));
 		assert.equal(frames[0].source!.name, "package:http/http.dart");
 
 		await dc.terminateRequest();
@@ -1443,7 +1443,7 @@ insp=<inspected variable>
 				dc.assertOutputContains("stderr", "#0      main")
 					.then((event) => {
 						assert.equal(event.body.source!.name, path.join("bin", "broken.dart"));
-						assert.equal(event.body.source!.path, fsPath(helloWorldBrokenFile));
+						dc.assertPath(event.body.source!.path, fsPath(helloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 3);
 					}),

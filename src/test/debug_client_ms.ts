@@ -371,18 +371,25 @@ export class DebugClient extends ProtocolClient {
 		}
 	}
 
+	public waitForStop(reason?: string, description?: string): Promise<DebugProtocol.Event> {
+		return this.waitForEvent(
+			'stopped',
+			description,
+			undefined,
+			// Skip entry stops because they always occur.
+			reason !== "entry" ? (e) => e.body?.reason !== "entry" : undefined,
+		);
+	}
+
 	/*
 	 * Returns a promise that will resolve if a 'stopped' event was received within some specified time
 	 * and the event's reason and line number was asserted.
 	 * The promise will be rejected if a timeout occurs, the assertions fail, or if the 'stackTrace' request fails.
 	 */
 	public assertStoppedLocation(reason: string, expected: { path?: string | RegExp, line?: number, column?: number, text?: string }): Promise<DebugProtocol.StackTraceResponse> {
-		return this.waitForEvent(
-			'stopped',
+		return this.waitForStop(
+			reason,
 			'assertStoppedLocation',
-			undefined,
-			// Skip entry stops because they always occur.
-			reason !== "entry" ? (e) => e.body?.reason !== "entry" : undefined,
 		)
 			.then(event => {
 				assert.equal(event.body.reason, reason);

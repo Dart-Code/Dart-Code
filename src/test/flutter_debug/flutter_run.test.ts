@@ -690,7 +690,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.equal(frames[0].name, "MyHomePage.build");
 		else
 			assert.equal(frames[0].name, "build");
-		assert.equal(frames[0].source!.path, expectedLocation.path);
+		dc.assertPath(frames[0].source!.path, expectedLocation.path);
 		assert.equal(frames[0].source!.name, "package:flutter_hello_world/main.dart");
 
 		await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
@@ -717,7 +717,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 							assert.equal(frames[0].name, "MyHomePage.build");
 						else
 							assert.equal(frames[0].name, "build");
-						assert.equal(frames[0].source!.path, expectedLocation.path);
+						dc.assertPath(frames[0].source!.path, expectedLocation.path);
 						assert.equal(frames[0].source!.name, "package:flutter_hello_world/main.dart");
 					})
 					.then(() => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
@@ -835,6 +835,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
+		const expectedHttpReadDefinitionPath = dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef));
 		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1,
@@ -843,12 +844,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
-				path: dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef)),
+				path: expectedHttpReadDefinitionPath,
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "read");
-				dc.assertPath(frame.source!.path, fsPath(uriFor(httpReadDef)));
+				dc.assertPath(frame.source!.path, expectedHttpReadDefinitionPath);
 				assert.equal(frame.source!.name, "package:http/http.dart");
 			}),
 			dc.stepIn(),
@@ -894,6 +895,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
+		const expectedPrintThingDefinitionPath = dc.isUsingUris ? uriFor(printMyThingDef).toString() : fsPath(uriFor(printMyThingDef));
 		const config = await startDebugger(dc, flutterHelloWorldLocalPackageFile, {
 			// Override this since it's not really open in the workspace.
 			additionalProjectPaths: [fsPath(myPackageFolder)],
@@ -906,12 +908,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
-				path: dc.isUsingUris ? uriFor(printMyThingDef).toString() : fsPath(uriFor(printMyThingDef)),
+				path: expectedPrintThingDefinitionPath,
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "printMyThing");
-				dc.assertPath(frame.source!.path, fsPath(uriFor(printMyThingDef)));
+				dc.assertPath(frame.source!.path, expectedPrintThingDefinitionPath);
 				assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
 			}),
 			dc.stepIn(),
@@ -1093,7 +1095,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 			let didStop = false;
 
-			dc.waitForEvent("stopped")
+			dc.waitForStop()
 				.then(() => didStop = true)
 				.catch(() => {
 					// Swallow errors, as we don't care if this times out, we're only using it
@@ -1102,7 +1104,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)
-				expectation = expectation.then(() => dc.waitForEvent("stopped"));
+				expectation = expectation.then(() => dc.waitForStop("stopped"));
 
 			if (expectedError)
 				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));
@@ -1153,7 +1155,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		let didStop = false;
 
-		dc.waitForEvent("stopped")
+		dc.waitForStop()
 			.then(() => didStop = true)
 			.catch(() => {
 				// Swallow errors, as we don't care if this times out, we're only using it
@@ -1679,7 +1681,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				dc.assertOutputContains(undefined, "_throwAnException")
 					.then((event) => {
 						assert.equal(event.body.source!.name, "package:flutter_hello_world/broken.dart");
-						assert.equal(event.body.source!.path, fsPath(flutterHelloWorldBrokenFile));
+						dc.assertPath(event.body.source!.path, dc.isUsingUris ? flutterHelloWorldBrokenFile.toString() : fsPath(flutterHelloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),
@@ -1755,10 +1757,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
 				`stderr: Exception: Oops`,
 				`stdout:`,
-				`The relevant error-causing widget was:`,
-				`MyBrokenHomePage MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
-				``,
-				`When the exception was thrown, this was the stack:`,
+				`stdout: The relevant error-causing widget was:`,
+				`stdout:     MyBrokenHomePage MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
+				`stdout:`,
+				`stdout: When the exception was thrown, this was the stack:`,
 				`stdout: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
 				`stdout: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
 				// Don't check any more past this, since they can change with Flutter framework changes.

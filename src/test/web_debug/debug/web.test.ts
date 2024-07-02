@@ -231,7 +231,7 @@ describe("web debugger", () => {
 		// const stack = await dc.getStack();
 		// const frames = stack.body.stackFrames;
 		// assert.equal(frames[0].name, "main");
-		// assert.equal(frames[0].source!.path, expectedLocation.path);
+		// dc.assertPath(frames[0].source!.path, expectedLocation.path);
 		// assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 
 		await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
@@ -256,7 +256,7 @@ describe("web debugger", () => {
 						// const stack = await watchPromise(`stops_at_a_breakpoint->reload:${i}->getStack`, dc.getStack());
 						// const frames = stack.body.stackFrames;
 						// assert.equal(frames[0].name, "MyHomePage.build");
-						// assert.equal(frames[0].source!.path, expectedLocation.path);
+						// dc.assertPath(frames[0].source!.path, expectedLocation.path);
 						// assert.equal(frames[0].source!.name, "package:hello_world/main.dart");
 					})
 					.then(() => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
@@ -411,7 +411,7 @@ describe("web debugger", () => {
 					.then((event) => {
 						assert.equal(event.body.output.indexOf("package:broken/main.dart"), -1);
 						assert.equal(event.body.source!.name, "package:broken/main.dart");
-						assert.equal(event.body.source!.path, fsPath(webBrokenMainFile));
+						dc.assertPath(event.body.source!.path, fsPath(webBrokenMainFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),
