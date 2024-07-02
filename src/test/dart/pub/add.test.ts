@@ -62,7 +62,12 @@ describe("pub add", () => {
 		assert.equal(pubspecContainsPackage("collection"), true);
 	});
 
-	it("can add a dependency by URL by pasting", async () => {
+	it("can add a dependency by URL by pasting", async function () {
+		// We don't support setting specific versions here and the latest versions of the packages
+		// we're testing don't work on the legacy SDK versions, so skip this test for legacy bots.
+		if (process.env.BUILD_VERSION === "legacy")
+			this.skip();
+
 		assert.equal(pubspecContainsPackage("timing"), false);
 		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("https://github.com/dart-lang/timing");
 		sb.stub(extApi.addDependencyCommand, "promptForPackageName").resolves("timing");
@@ -75,7 +80,12 @@ describe("pub add", () => {
 		assert.equal(pubspecContainsText("git: https://github.com/dart-lang/timing"), true);
 	});
 
-	it("can add a dependency by URL by selecting the GIT option", async () => {
+	it("can add a dependency by URL by selecting the GIT option", async function () {
+		// We don't support setting specific versions here and the latest versions of the packages
+		// we're testing don't work on the legacy SDK versions, so skip this test for legacy bots.
+		if (process.env.BUILD_VERSION === "legacy")
+			this.skip();
+
 		assert.equal(pubspecContainsPackage("timing"), false);
 		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves({ marker: "GIT" });
 		sb.stub(extApi.addDependencyCommand, "promptForGitUrl").resolves("https://github.com/dart-lang/timing");

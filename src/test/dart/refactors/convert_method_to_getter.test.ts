@@ -2,7 +2,6 @@ import * as vs from "vscode";
 import { activate, currentDoc, ensureTestContent, extApi, rangeOf, setTestContent } from "../../helpers";
 
 describe("refactor", () => {
-
 	beforeEach("activate", () => activate());
 	beforeEach("skip for LSP", async function () {
 		if (extApi.isLsp)
