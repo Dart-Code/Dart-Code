@@ -15,7 +15,7 @@ import augment 'lib_augmentation.dart';
 class A {}
 `;
 const augmentationContent = `
-library augment  'lib.dart';
+augment library 'lib.dart';
 
 augment class A {}
 `;
