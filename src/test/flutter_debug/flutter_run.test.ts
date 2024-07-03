@@ -1710,7 +1710,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Collect all output.
 		let allOutput = "";
 		const handleOutput = (event: DebugProtocol.OutputEvent) => {
-			allOutput += `${event.body.category}: ${event.body.output}`;
+			// We might have trailing newlines on events, so when we split to add prefixes, we should not
+			// add one to the end of the string.
+			const endsWithNewline = event.body.output.endsWith("\n");
+			allOutput += event.body.output.trimEnd().split("\n").map((l) => `${event.body.category}: ${l}`).join("\n");
+			if (endsWithNewline)
+				allOutput += "\n";
 		};
 		dc.on("output", handleOutput);
 		try {
