@@ -299,8 +299,10 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	public dispose() {
+		this.logTraffic(`Process ${this.description} is being disposed`);
 		for (const pid of this.additionalPidsToTerminate) {
 			try {
+				this.logTraffic(`Process ${this.description} is terminating process ${pid}`);
 				process.kill(pid);
 			} catch (e: any) {
 				// TODO: Logger knows the category!
@@ -310,8 +312,20 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 		this.additionalPidsToTerminate.length = 0;
 		try {
-			if (!this.processExited && this.process && !this.process.killed)
+			if (!this.processExited && this.process && !this.process.killed) {
+				this.logTraffic(`Process ${this.description} is terminating the main process`);
 				this.process.kill();
+			} else {
+				if (this.processExited) {
+					this.logTraffic(`Process ${this.description} skipped terminating because it had already exited`);
+				} else if (!this.process) {
+					this.logTraffic(`Process ${this.description} skipped terminating because there is no process`);
+				} else if (this.process?.killed) {
+					this.logTraffic(`Process ${this.description} skipped terminating because it was already killed`);
+				} else {
+					this.logTraffic(`Process ${this.description} skipped terminating because 🤷‍♂️`);
+				}
+			}
 		} catch (e) {
 			// This tends to throw a lot because the shell process quit when we terminated the related
 			// process above, so just swallow the error.
