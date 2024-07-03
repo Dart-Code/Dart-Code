@@ -21,7 +21,9 @@ jobs:
       - id: no_exclude
         name: Run all builds
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-        run: echo "excludes=[]" >> $GITHUB_OUTPUT
+        # Exclude the non-LSP bots because we don't support legacy protocol for current stable or later, they will only be tested
+        # as part of the legacy build bots.
+        run: echo "excludes=[{\"build-version\":\"stable\",\"bot\":\"dart\"},{\"build-version\":\"stable\",\"bot\":\"flutter\"},{\"build-version\":\"beta\",\"bot\":\"dart\"},{\"build-version\":\"beta\",\"bot\":\"flutter\"}]" >> $GITHUB_OUTPUT
       - id: exclude
         name: Exclude some builds if not running on schedule
         if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
