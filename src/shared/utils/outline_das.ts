@@ -196,6 +196,7 @@ export class ClassOutlineVisitor extends OutlineVisitor {
 			className: outline.element.name,
 			codeLength: outline.codeLength,
 			codeOffset: outline.codeOffset,
+			elementKind: outline.element.kind,
 			length: outline.length,
 			offset: outline.offset,
 		});
@@ -204,6 +205,7 @@ export class ClassOutlineVisitor extends OutlineVisitor {
 
 export interface ClassInfo {
 	className: string;
+	elementKind: string;
 	offset: number;
 	length: number;
 	codeOffset: number;

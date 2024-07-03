@@ -67,7 +67,7 @@ describe("test_flutter_dartpad_samples", () => {
 		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
 		await vs.commands.executeCommand(codeLens.command.command, ...codeLens.command.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 		assert.ok(openBrowserCommand.calledOnce);
-		assert.ok(openBrowserCommand.calledWith(p.expectedUrl));
+		assert.equal(openBrowserCommand.args[0][0], p.expectedUrl);
 	}
 });
 
