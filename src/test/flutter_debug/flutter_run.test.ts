@@ -1104,7 +1104,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)
-				expectation = expectation.then(() => dc.waitForStop("stopped"));
+				expectation = expectation.then(() => dc.waitForStop());
 
 			if (expectedError)
 				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));

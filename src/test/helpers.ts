@@ -680,13 +680,6 @@ export async function getDefinition(position: vs.Position): Promise<vs.Location 
 	return defs[0];
 }
 
-export function breakpointFor(def: vs.Location | vs.DefinitionLink) {
-	return {
-		line: rangeFor(def).start.line + 1,
-		path: fsPath(uriFor(def)),
-	};
-}
-
 export function uriFor(def: vs.Location | vs.DefinitionLink) {
 	return "uri" in def ? def.uri : def.targetUri;
 }

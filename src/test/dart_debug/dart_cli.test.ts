@@ -4,6 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { debugAnywayAction, showErrorsAction } from "../../shared/constants";
 import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType } from "../../shared/enums";
@@ -13,7 +14,7 @@ import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, breakpointFor, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
+import { activate, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, rangeFor, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -280,6 +281,9 @@ void printSomething() {
 		await setTestContent(editor.document.getText().replace("ORIGINAL CONTENT", "NEW CONTENT"));
 		await editor.document.save();
 
+		// Wait before the hot reload because the change needs to be flushed to disk and the above
+		// await doesn't seem to be enough.
+		await delay(100);
 		await vs.commands.executeCommand("dart.hotReload");
 		await dc.assertOutputContains("stdout", "NEW CONTENT");
 
@@ -323,7 +327,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "main");
-		dc.assertPath(frames[0].source!.path, fsPath(helloWorldMainFile));
+		dc.assertPath(frames[0].source!.path, dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile));
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 
 		await dc.terminateRequest();
@@ -352,7 +356,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "do_print");
-		dc.assertPath(frames[0].source!.path, fsPath(helloWorldPartFile));
+		dc.assertPath(frames[0].source!.path, dc.isUsingUris ? helloWorldPartFile.toString() : fsPath(helloWorldPartFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/part.dart");
 
 		await dc.terminateRequest();
@@ -368,7 +372,7 @@ void printSomething() {
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "do_print");
-		dc.assertPath(frames[0].source!.path, fsPath(helloWorldDeferredScriptFile));
+		dc.assertPath(frames[0].source!.path, dc.isUsingUris ? helloWorldDeferredScriptFile.toString() : fsPath(helloWorldDeferredScriptFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/deferred_script.dart");
 
 		await dc.terminateRequest();
@@ -379,12 +383,16 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const def = await getDefinition(positionOf("pri^nt("));
+		const defPath = dc.isUsingUris ? uriFor(def).toString() : fsPath(uriFor(def));
 		const config = await startDebugger(dc, helloWorldMainFile);
-		await dc.hitBreakpoint(config, breakpointFor(def));
+		await dc.hitBreakpoint(config, {
+			line: rangeFor(def).start.line + 1,
+			path: defPath,
+		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "print");
-		dc.assertPath(frames[0].source!.path, fsPath(uriFor(def)));
+		dc.assertPath(frames[0].source!.path, defPath);
 		assert.equal(frames[0].source!.name, "dart:core/print.dart");
 	});
 
@@ -392,12 +400,16 @@ void printSomething() {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read`
 		const def = await getDefinition(positionOf("http.re^ad"));
+		const defPath = dc.isUsingUris ? uriFor(def).toString() : fsPath(uriFor(def));
 		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: true });
-		await dc.hitBreakpoint(config, breakpointFor(def));
+		await dc.hitBreakpoint(config, {
+			line: rangeFor(def).start.line + 1,
+			path: defPath,
+		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "read");
-		dc.assertPath(frames[0].source!.path, fsPath(uriFor(def)));
+		dc.assertPath(frames[0].source!.path, defPath);
 		assert.equal(frames[0].source!.name, "package:http/http.dart");
 
 		await dc.terminateRequest();
@@ -407,6 +419,11 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
+		const expectedDefPath = dc.isDartDap
+			? dc.isUsingUris
+				? URI.file(sdkPathForSdkDap(dc, "lib/core/print.dart")!).toString()
+				: sdkPathForSdkDap(dc, "lib/core/print.dart")
+			: undefined;
 		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
@@ -417,7 +434,7 @@ void printSomething() {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
-				dc.assertPath(frame.source!.path, sdkPathForSdkDap(dc, "lib/core/print.dart"));
+				dc.assertPath(frame.source!.path, expectedDefPath);
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -430,6 +447,11 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
+		const expectedPrintDefPath = dc.isDartDap
+			? dc.isUsingUris
+				? URI.file(sdkPathForSdkDap(dc, "lib/core/print.dart")!).toString()
+				: sdkPathForSdkDap(dc, "lib/core/print.dart")
+			: undefined;
 		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
@@ -442,7 +464,7 @@ void printSomething() {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "print");
-				dc.assertPath(frame.source!.path, sdkPathForSdkDap(dc, "lib/core/print.dart"));
+				dc.assertPath(frame.source!.path, expectedPrintDefPath);
 				assert.equal(frame.source!.name, "dart:core/print.dart");
 			}),
 			dc.stepIn(),
@@ -476,6 +498,7 @@ void printSomething() {
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
+		const expectedHttpReadDefinitionPath = dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef));
 		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1,
@@ -484,12 +507,12 @@ void printSomething() {
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
-				path: fsPath(uriFor(httpReadDef)),
+				path: expectedHttpReadDefinitionPath,
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "read");
-				dc.assertPath(frame.source!.path, fsPath(uriFor(httpReadDef)));
+				dc.assertPath(frame.source!.path, expectedHttpReadDefinitionPath);
 				assert.equal(frame.source!.name, "package:http/http.dart");
 			}),
 			dc.stepIn(),
@@ -531,6 +554,7 @@ void printSomething() {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
+		const expectedPrintThingDefinitionPath = dc.isUsingUris ? uriFor(printMyThingDef).toString() : fsPath(uriFor(printMyThingDef));
 		const config = await startDebugger(
 			dc,
 			helloWorldLocalPackageFile,
@@ -547,12 +571,12 @@ void printSomething() {
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stepped into the external file
-				path: fsPath(uriFor(printMyThingDef)),
+				path: expectedPrintThingDefinitionPath,
 			}).then((response) => {
 				// Ensure the top stack frame matches
 				const frame = response.body.stackFrames[0];
 				assert.equal(frame.name, "printMyThing");
-				dc.assertPath(frame.source!.path, fsPath(uriFor(printMyThingDef)));
+				dc.assertPath(frame.source!.path, expectedPrintThingDefinitionPath);
 				assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
 			}),
 			dc.stepIn(),
@@ -566,7 +590,7 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldThrowInSdkFile, { debugSdkLibraries: false });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -581,7 +605,7 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldThrowInSdkFile, { debugSdkLibraries: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -604,7 +628,7 @@ void printSomething() {
 		);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -627,7 +651,7 @@ void printSomething() {
 		);
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -649,7 +673,7 @@ void printSomething() {
 			});
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -716,7 +740,7 @@ void printSomething() {
 
 			let didStop = false;
 
-			dc.waitForEvent("stopped")
+			dc.waitForStop()
 				.then((e) => {
 					if (e.body?.reason === "breakpoint")
 						didStop = true;
@@ -727,7 +751,7 @@ void printSomething() {
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)
-				expectation = expectation.then(() => dc.waitForEvent("stopped")).then(() => dc.terminateRequest());
+				expectation = expectation.then(() => dc.waitForStop()).then(() => dc.terminateRequest());
 
 			if (expectedError)
 				expectation = expectation.then(() => dc.assertOutputContains("console", expectedError));
@@ -1443,7 +1467,7 @@ insp=<inspected variable>
 				dc.assertOutputContains("stderr", "#0      main")
 					.then((event) => {
 						assert.equal(event.body.source!.name, path.join("bin", "broken.dart"));
-						dc.assertPath(event.body.source!.path, fsPath(helloWorldBrokenFile));
+						dc.assertPath(event.body.source!.path, dc.isUsingUris ? helloWorldBrokenFile.toString() : fsPath(helloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 3);
 					}),
@@ -1469,7 +1493,7 @@ insp=<inspected variable>
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-vm-service=0 --pause_isolates_on_start");
+		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-vm-service=0");
 	});
 
 	it("can replace all args using custom tool", async () => {
