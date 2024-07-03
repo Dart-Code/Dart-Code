@@ -411,7 +411,7 @@ describe("web debugger", () => {
 					.then((event) => {
 						assert.equal(event.body.output.indexOf("package:broken/main.dart"), -1);
 						assert.equal(event.body.source!.name, "package:broken/main.dart");
-						dc.assertPath(event.body.source!.path, fsPath(webBrokenMainFile));
+						dc.assertPath(event.body.source!.path, dc.isUsingUris ? webBrokenMainFile.toString() : fsPath(webBrokenMainFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),
