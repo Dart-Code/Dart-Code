@@ -107,7 +107,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 		const suiteData = this.data.suiteDiscovered(dartCodeDebugSessionID, evt.suite.path);
 
-		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForID[evt.suite.id] = suiteData;
+		this.debugSessionLookups[dartCodeDebugSessionID].suiteForID[evt.suite.id] = suiteData;
 
 		// Also capture the test nodes from the outline so that we can look up the full range for a test (instead of online its line/col)
 		// to provide to VS Code to better support "run test at cursor".
