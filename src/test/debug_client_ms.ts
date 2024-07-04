@@ -203,7 +203,9 @@ export class DebugClient extends ProtocolClient {
 	}
 
 	public setBreakpointsRequest(args: DebugProtocol.SetBreakpointsArguments): Promise<DebugProtocol.SetBreakpointsResponse> {
-		return this.send('setBreakpoints', args);
+		// After upgrading to TS 5.5, the return type doesn't appear to be picked up correctly from the overload so we need this
+		// cast 🤷‍♂️
+		return this.send('setBreakpoints', args) as Promise<DebugProtocol.SetBreakpointsResponse>;
 	}
 
 	public setFunctionBreakpointsRequest(args: DebugProtocol.SetFunctionBreakpointsArguments): Promise<DebugProtocol.SetFunctionBreakpointsResponse> {
@@ -215,7 +217,9 @@ export class DebugClient extends ProtocolClient {
 	}
 
 	public dataBreakpointInfoRequest(args: DebugProtocol.DataBreakpointInfoArguments): Promise<DebugProtocol.DataBreakpointInfoResponse> {
-		return this.send('dataBreakpointInfo', args);
+		// After upgrading to TS 5.5, the return type doesn't appear to be picked up correctly from the overload so we need this
+		// cast 🤷‍♂️
+		return this.send('dataBreakpointInfo', args) as Promise<DebugProtocol.DataBreakpointInfoResponse>;
 	}
 
 	public setDataBreakpointsRequest(args: DebugProtocol.SetDataBreakpointsArguments): Promise<DebugProtocol.SetDataBreakpointsResponse> {
