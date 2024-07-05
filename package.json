@@ -190,6 +190,15 @@
 				}
 			},
 			{
+				"command": "pub.getFromAllProjects",
+				"title": "Get Packages From All Projects",
+				"category": "Pub",
+				"icon": {
+					"light": "./media/commands/get.svg",
+					"dark": "./media/commands/get-inverse.svg"
+				}
+			},
+			{
 				"command": "dart.task.dartdoc",
 				"title": "Generate Documentation",
 				"category": "Dart",
@@ -419,6 +428,15 @@
 			{
 				"command": "flutter.packages.get",
 				"title": "Get Packages",
+				"category": "Flutter",
+				"icon": {
+					"light": "./media/commands/get.svg",
+					"dark": "./media/commands/get-inverse.svg"
+				}
+			},
+			{
+				"command": "flutter.packages.getFromAllProjects",
+				"title": "Get Packages From All Projects",
 				"category": "Flutter",
 				"icon": {
 					"light": "./media/commands/get.svg",

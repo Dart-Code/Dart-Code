@@ -10,6 +10,7 @@ import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 import * as util from "../utils";
+import { getExcludedFolders } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { BaseSdkCommands, commandState } from "./sdk";
 
@@ -21,18 +22,21 @@ export class PackageCommands extends BaseSdkCommands {
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
 		super(logger, context, workspace, dartCapabilities);
 		this.disposables.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
+		this.disposables.push(vs.commands.registerCommand("dart.getPackagesFromAllProjects", this.getPackagesFromAllProjects, this));
 		this.disposables.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
 		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
 		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages.majorVersions", this.upgradePackagesMajorVersions, this));
 
 		// Pub commands.
 		this.disposables.push(vs.commands.registerCommand("pub.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("pub.getFromAllProjects", (selection) => vs.commands.executeCommand("dart.getPackagesFromAllProjects", selection)));
 		this.disposables.push(vs.commands.registerCommand("pub.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
 		this.disposables.push(vs.commands.registerCommand("pub.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
 		this.disposables.push(vs.commands.registerCommand("pub.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
 
 		// Flutter commands.
 		this.disposables.push(vs.commands.registerCommand("flutter.packages.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
+		this.disposables.push(vs.commands.registerCommand("flutter.packages.getFromAllProjects", (selection) => vs.commands.executeCommand("dart.getPackagesFromAllProjects", selection)));
 		this.disposables.push(vs.commands.registerCommand("flutter.packages.upgrade", (selection) => vs.commands.executeCommand("dart.upgradePackages", selection)));
 		this.disposables.push(vs.commands.registerCommand("flutter.packages.upgrade.majorVersions", (selection) => vs.commands.executeCommand("dart.upgradePackages.majorVersions", selection)));
 		this.disposables.push(vs.commands.registerCommand("flutter.packages.outdated", (selection) => vs.commands.executeCommand("dart.listOutdatedPackages", selection)));
@@ -69,6 +73,12 @@ export class PackageCommands extends BaseSdkCommands {
 		} else {
 			return this.runPub(["get", ...additionalArgs], uri);
 		}
+	}
+
+	private async getPackagesFromAllProjects() {
+		const allFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
+		const uriFolders = allFolders.map((f) => vs.Uri.file(f));
+		await vs.commands.executeCommand("dart.getPackages", uriFolders);
 	}
 
 	private async listOutdatedPackages(uri: string | vs.Uri | undefined) {
