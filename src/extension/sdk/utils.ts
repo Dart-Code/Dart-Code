@@ -546,15 +546,24 @@ export class SdkUtils {
 	}
 
 	private findDartSdk(folders: string[]): SdkSearchResults {
-		return this.searchPaths(folders, executableNames.dart, (p) => this.hasExecutable(p, dartVMPath) && hasDartAnalysisServer(p));
+		return this.searchPaths(folders, executableNames.dart, (p) => this.containsFile(p, dartVMPath) && this.containsFile(p, analyzerSnapshotPath));
 	}
 
 	private findFlutterSdk(folders: string[]): SdkSearchResults {
-		return this.searchPaths(folders, executableNames.flutter, (p) => this.hasExecutable(p, flutterPath));
+		return this.searchPaths(
+			folders,
+			executableNames.flutter,
+			// Also check for some additional files so we won't detect `/usr/bin/flutter` as a Flutter SDK at `/usr`.
+			(p) => this.containsFile(p, flutterPath) && (
+				this.containsFile(p, "analysis_options.yaml")
+				|| this.containsFile(p, "bin/flutter.bat") // Exists on non-Windows clones of Git and is an obvious sign of the SDK.
+				|| this.containsFile(p, "bin/internal/engine.version")
+			),
+		);
 	}
 
-	private hasExecutable(folder: string, executablePath: string) {
-		const fullPath = path.join(folder, executablePath);
+	private containsFile(folder: string, filePath: string) {
+		const fullPath = path.join(folder, filePath);
 		return fs.existsSync(fullPath) && fs.statSync(fullPath).isFile();
 	}
 
@@ -688,7 +697,5 @@ function findRootContaining(folder: string, childName: string, expect: "FILE" | 
 
 	return undefined;
 }
-
-export const hasDartAnalysisServer = (folder: string) => fs.existsSync(path.join(folder, analyzerSnapshotPath));
 
 enum GitOperationResult { success, error, cancelled };
