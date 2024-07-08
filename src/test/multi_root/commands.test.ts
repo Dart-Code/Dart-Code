@@ -33,4 +33,18 @@ describe("dart.getPackages", () => {
 		// Verify the package config now exists.
 		await waitForResult(() => fs.existsSync(packageFile), ".dart_tool/package_config.json did not exist", 10000);
 	}).timeout(fiveMinutesInMs);
+
+	it("successfully fetches packages for all projects", async () => {
+		const packageFiles = [
+			fsPath(helloWorldPackageConfigFile),
+			fsPath(flutterHelloWorldPackageConfigFile),
+		];
+		packageFiles.forEach(deleteFileIfExists);
+
+		await activate();
+		await vs.commands.executeCommand("dart.getPackages.all");
+
+		// Verify the package config now exists.
+		await Promise.all(packageFiles.map((f) => waitForResult(() => fs.existsSync(f), `${f} did not exist`, 10000)));
+	}).timeout(fiveMinutesInMs);
 });

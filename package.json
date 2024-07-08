@@ -191,7 +191,7 @@
 			},
 			{
 				"command": "pub.get.all",
-				"title": "Get Packages for all Projects",
+				"title": "Get Packages for All Projects",
 				"category": "Pub",
 				"icon": {
 					"light": "./media/commands/get.svg",
@@ -436,7 +436,7 @@
 			},
 			{
 				"command": "flutter.packages.get.all",
-				"title": "Get Packages for all Projects",
+				"title": "Get Packages for All Projects",
 				"category": "Flutter",
 				"icon": {
 					"light": "./media/commands/get.svg",
