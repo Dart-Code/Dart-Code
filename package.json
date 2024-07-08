@@ -190,8 +190,8 @@
 				}
 			},
 			{
-				"command": "pub.getFromAllProjects",
-				"title": "Get Packages From All Projects",
+				"command": "pub.get.all",
+				"title": "Get Packages for all Projects",
 				"category": "Pub",
 				"icon": {
 					"light": "./media/commands/get.svg",
@@ -435,8 +435,8 @@
 				}
 			},
 			{
-				"command": "flutter.packages.getFromAllProjects",
-				"title": "Get Packages From All Projects",
+				"command": "flutter.packages.get.all",
+				"title": "Get Packages for all Projects",
 				"category": "Flutter",
 				"icon": {
 					"light": "./media/commands/get.svg",
@@ -814,6 +814,10 @@
 					"when": "dart-code:anyProjectLoaded"
 				},
 				{
+					"command": "pub.get.all",
+					"when": "dart-code:anyProjectLoaded"
+				},
+				{
 					"command": "dart.task.dartdoc",
 					"when": "dart-code:anyProjectLoaded"
 				},
@@ -975,6 +979,10 @@
 				},
 				{
 					"command": "flutter.packages.get",
+					"when": "dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "flutter.packages.get.all",
 					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{
