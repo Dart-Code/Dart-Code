@@ -894,6 +894,7 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 	if (workspaceContext) {
 		addToLogHeader(() => ``);
 		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription} (${workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP"})${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1 ? " (Multiroot)" : ""}`);
+		addToLogHeader(() => `Workspace name: ${vs.workspace.name}`);
 		const sdks = workspaceContext.sdks;
 		addToLogHeader(() => ``);
 		addToLogHeader(() => `Dart (${sdks.dartVersion}): ${sdks.dart}`);

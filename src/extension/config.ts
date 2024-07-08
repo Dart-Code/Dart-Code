@@ -3,7 +3,7 @@ import { CustomDevToolsConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
 import { createFolderForFile } from "../shared/utils/fs";
 import { DevToolsLocation, DevToolsLocations } from "./sdk/dev_tools/manager";
-import { resolvePaths } from "./utils";
+import { insertWorkspaceName, resolvePaths } from "./utils";
 import { setupToolEnv } from "./utils/processes";
 
 class Config {
@@ -58,8 +58,8 @@ class Config {
 	get analyzeAngularTemplates(): boolean { return this.getConfig<boolean>("analyzeAngularTemplates", true); }
 	get analyzerAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerAdditionalArgs", []); }
 	get analyzerDiagnosticsPort(): undefined | number { return this.getConfig<null | number>("analyzerDiagnosticsPort", null); }
-	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null))); }
-	get analyzerLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null))); }
+	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null)))); }
+	get analyzerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null)))); }
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get analyzerSshHost(): undefined | string { return this.getConfig<null | string>("analyzerSshHost", null); }
 	get analyzerVmAdditionalArgs(): string[] { return this.getConfig<string[]>("analyzerVmAdditionalArgs", []); }
@@ -69,14 +69,15 @@ class Config {
 	get buildRunnerAdditionalArgs(): string[] { return this.getConfig<string[]>("buildRunnerAdditionalArgs", []); }
 	get checkForSdkUpdates(): boolean { return this.getConfig<boolean>("checkForSdkUpdates", true); }
 	get cliConsole(): "debugConsole" | "terminal" | "externalTerminal" { return this.getConfig<"debugConsole" | "terminal" | "externalTerminal">("cliConsole", "debugConsole"); }
+	get closeDevTools(): "never" | "ifOpened" | "always" { return this.getConfig<"never" | "ifOpened" | "always">("closeDevTools", "never"); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
 	get completionBudgetMilliseconds(): number | undefined { return this.getConfig<number | undefined>("completionBudgetMilliseconds", undefined); }
 	get customDartDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customDartDapPath", null)); }
 	get customDevToolsUri(): undefined | string { return this.getConfig<undefined | string>("customDevToolsUri", undefined); }
 	get customDevTools(): undefined | CustomDevToolsConfig { return this.getConfig<null | CustomDevToolsConfig>("customDevTools", null); }
 	get customFlutterDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customFlutterDapPath", null)); }
-	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
-	get dartTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null))); }
+	get dapLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("dapLogFile", null)))); }
+	get dartTestLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null)))); }
 	get daemonPort(): undefined | number { return this.getConfig<null | number>("daemonPort", null); }
 	get debugExtensionBackendProtocol(): "sse" | "ws" { return this.getConfig<"sse" | "ws">("debugExtensionBackendProtocol", "ws"); }
 	get debugExternalPackageLibraries(): boolean { return this.getConfig<boolean>("debugExternalPackageLibraries", false); }
@@ -98,20 +99,19 @@ class Config {
 			...configValue,
 		};
 	}
-	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
+	get devToolsLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null)))); }
 	get devToolsPort(): undefined | number { return this.getConfig<null | number>("devToolsPort", null); }
 	get devToolsReuseWindows(): boolean { return this.getConfig<boolean>("devToolsReuseWindows", true); }
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
-	get documentation(): string | undefined { return this.getConfig<string | undefined>("documentation", undefined); }
+	get documentation(): undefined | string { return this.getConfig<null | string>("documentation", null); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get enableServerSnippets(): boolean { return this.getConfig<boolean>("enableServerSnippets", true); }
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
-	get env(): any { return this.getConfig<any>("env", {}); }
+	get env(): object { return this.getConfig<object>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionRecommendationAllowList(): string[] | undefined { return this.getConfig<string[] | null>("extensionRecommendationAllowList", null); }
-	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
-	get experimentalTestRunnerInSdk(): boolean { return this.getConfig<boolean>("experimentalTestRunnerInSdk", false); }
+	get extensionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("extensionLogFile", null)))); }
 	get flutterAdbConnectOnChromeOs(): boolean { return this.getConfig<boolean>("flutterAdbConnectOnChromeOs", false); }
 	get flutterCreateAndroidLanguage(): "java" | "kotlin" { return this.getConfig<"java" | "kotlin">("flutterCreateAndroidLanguage", "kotlin"); }
 	get flutterCreateIOSLanguage(): "objc" | "swift" { return this.getConfig<"objc" | "swift">("flutterCreateIOSLanguage", "swift"); }
@@ -119,8 +119,7 @@ class Config {
 	get flutterCreateOrganization(): undefined | string { return this.getConfig<null | string>("flutterCreateOrganization", null); }
 	get flutterCreatePlatforms(): string[] | undefined { return this.getConfig<string[] | undefined>("flutterCreatePlatforms", undefined); }
 	get flutterCustomEmulators(): Array<{ id: string, name: string, executable: string, args?: string[] }> { return this.getConfig<Array<{ id: string, name: string, executable: string, args?: string[] }>>("flutterCustomEmulators", []); }
-	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
-	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null))); }
+	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null)))); }
 	get flutterGenerateLocalizationsOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" { return this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty">("flutterGenerateLocalizationsOnSave", "never"); }
 	get flutterGutterIcons(): boolean { return this.getConfig<boolean>("flutterGutterIcons", true); }
 	get flutterHotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
@@ -137,14 +136,14 @@ class Config {
 	}
 	get flutterOutline(): boolean { return this.getConfig<boolean>("flutterOutline", true); }
 	get flutterRememberSelectedDevice(): boolean { return this.getConfig<boolean>("flutterRememberSelectedDevice", true); }
-	get flutterRunLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterRunLogFile", null))); }
+	get flutterRunLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterRunLogFile", null)))); }
 	get flutterScreenshotPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterScreenshotPath", null)); }
 	get flutterSdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterSdkPath", null)); }
 	get flutterSdkPaths(): string[] { return this.getConfig<string[]>("flutterSdkPaths", []).map(resolvePaths); }
 	get flutterSelectDeviceWhenConnected(): boolean { return this.getConfig<boolean>("flutterSelectDeviceWhenConnected", true); }
 	get flutterShowEmulators(): "local" | "always" | "never" { return this.getConfig<"local" | "always" | "never">("flutterShowEmulators", "local"); }
 	get flutterShowWebServerDevice(): "remote" | "always" { return this.getConfig<"remote" | "always">("flutterShowWebServerDevice", "remote"); }
-	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
+	get flutterTestLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null)))); }
 	get flutterWebRenderer(): "flutter-default" | "canvaskit" | "html" | "auto" { return this.getConfig<"flutter-default" | "canvaskit" | "html" | "auto">("flutterWebRenderer", "flutter-default"); }
 	get hotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
 		const value = this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" | "always">("hotReloadOnSave", "never");
@@ -156,14 +155,13 @@ class Config {
 	get hotReloadProgress(): "notification" | "statusBar" { return this.getConfig<"notification" | "statusBar">("hotReloadProgress", "notification"); }
 	get includeDependenciesInWorkspaceSymbols(): boolean { return this.getConfig<boolean>("includeDependenciesInWorkspaceSymbols", true); }
 	get lspSnippetTextEdits(): boolean { return this.getConfig<boolean>("lspSnippetTextEdits", true); }
-	get maxCompletionItems(): number | undefined { return this.getConfig<number | undefined>("maxCompletionItems", undefined); }
+	get maxCompletionItems(): undefined | number { return this.getConfig<null | number>("maxCompletionItems", null); }
 	get maxLogLineLength(): number { return this.getConfig<number>("maxLogLineLength", 2000); }
 	get normalizeFileCasing(): boolean { return this.getConfig<boolean>("normalizeFileCasing", false); }
 	get notifyAnalyzerErrors(): boolean { return this.getConfig<boolean>("notifyAnalyzerErrors", true); }
 	get offline(): boolean { return this.getConfig<boolean>("offline", false); }
 	get onlyAnalyzeProjectsWithOpenFiles(): boolean { return this.getConfig<boolean>("onlyAnalyzeProjectsWithOpenFiles", false); }
 	get openDevTools(): "never" | "flutter" | "always" { return this.getConfig<"never" | "flutter" | "always">("openDevTools", "never"); }
-	get closeDevTools(): "never" | "ifOpened" | "always" { return this.getConfig<"never" | "ifOpened" | "always">("closeDevTools", "never"); }
 	get openTestView(): Array<"testRunStart" | "testFailure"> { return this.getConfig<Array<"testRunStart" | "testFailure">>("openTestView", ["testRunStart"]); }
 	get previewCommitCharacters(): boolean { return this.getConfig<boolean>("previewCommitCharacters", false); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
@@ -180,21 +178,22 @@ class Config {
 	get showDartPadSampleCodeLens(): boolean { return this.getConfig<boolean>("showDartPadSampleCodeLens", true); }
 	get showDebuggerNumbersAsHex(): boolean { return this.getConfig<boolean>("showDebuggerNumbersAsHex", false); }
 	get showDevToolsDebugToolBarButtons(): boolean { return this.getConfig<boolean>("showDevToolsDebugToolBarButtons", true); }
+	get showExtensionRecommendations(): boolean { return this.getConfig<boolean>("showExtensionRecommendations", true); }
 	get showInspectorNotificationsForWidgetErrors(): boolean { return this.getConfig<boolean>("showInspectorNotificationsForWidgetErrors", true); }
 	get showMainCodeLens(): boolean { return this.getConfig<boolean>("showMainCodeLens", true); }
 	get showSkippedTests(): boolean { return this.getConfig<boolean>("showSkippedTests", true); }
 	get showTestCodeLens(): boolean { return this.getConfig<boolean>("showTestCodeLens", true); }
 	get showTodos(): boolean | string[] { return this.getConfig<boolean | string[]>("showTodos", true); }
-	get showExtensionRecommendations(): boolean { return this.getConfig<boolean>("showExtensionRecommendations", true); }
 	get testInvocationMode(): "name" | "line" { return this.getConfig<"name" | "line">("testInvocationMode", "name"); }
+	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null)))); }
 	get updateDevTools(): boolean { return this.getConfig<boolean>("updateDevTools", true); }
 	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
 	get useLegacyAnalyzerProtocol(): boolean { return this.getConfig<boolean>("useLegacyAnalyzerProtocol", false); }
 	get useLegacyDebugAdapters(): undefined | boolean { return this.getConfig<null | boolean>("useLegacyDebugAdapters", null); }
-	get vmServiceLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null))); }
+	get vmServiceLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null)))); }
 	get warnWhenEditingFilesInPubCache(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesInPubCache", true); }
 	get warnWhenEditingFilesOutsideWorkspace(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesOutsideWorkspace", true); }
-	get webDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("webDaemonLogFile", null))); }
+	get webDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("webDaemonLogFile", null)))); }
 
 	// Helpers
 	get useDevToolsDarkTheme() { return this.devToolsTheme === "dark"; }
@@ -266,8 +265,8 @@ export class ResourceConfig {
 	}
 
 	get analysisExcludedFolders(): string[] { return this.getConfig<string[]>("analysisExcludedFolders", []); }
-	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null))); }
-	get analyzerLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null))); }
+	get analyzerInstrumentationLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerInstrumentationLogFile", null)))); }
+	get analyzerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("analyzerLogFile", null)))); }
 	get analyzerPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("analyzerPath", null)); }
 	get cliAdditionalArgs(): string[] { return this.getConfig<string[]>("cliAdditionalArgs", []); }
 	get completeFunctionCalls(): boolean { return this.getConfig<boolean>("completeFunctionCalls", true); }
@@ -275,23 +274,23 @@ export class ResourceConfig {
 	get customDevTools(): undefined | CustomDevToolsConfig { return this.getConfig<null | CustomDevToolsConfig>("customDevTools", null); }
 	get customFlutterDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customFlutterDapPath", null)); }
 	get daemonPort(): undefined | number { return this.getConfig<null | number>("daemonPort", null); }
-	get dapLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dapLogFile", null))); }
-	get dartTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null))); }
-	get devToolsLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null))); }
+	get dapLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("dapLogFile", null)))); }
+	get dartTestLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("dartTestLogFile", null)))); }
+	get devToolsLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("devToolsLogFile", null)))); }
 	get doNotFormat(): string[] { return this.getConfig<string[]>("doNotFormat", []); }
 	get enableCompletionCommitCharacters(): boolean { return this.getConfig<boolean>("enableCompletionCommitCharacters", false); }
 	get evaluateGettersInDebugViews(): boolean { return this.getConfig<boolean>("evaluateGettersInDebugViews", true); }
-	get extensionLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("extensionLogFile", null))); }
+	get extensionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("extensionLogFile", null)))); }
 	get flutterAdditionalArgs(): string[] { return this.getConfig<string[]>("flutterAdditionalArgs", []); }
 	get flutterAttachAdditionalArgs(): string[] { return this.getConfig<string[]>("flutterAttachAdditionalArgs", []); }
-	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null))); }
+	get flutterDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterDaemonLogFile", null)))); }
 	get flutterRunAdditionalArgs(): string[] { return this.getConfig<string[]>("flutterRunAdditionalArgs", []); }
-	get flutterRunLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterRunLogFile", null))); }
+	get flutterRunLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterRunLogFile", null)))); }
 	get flutterScreenshotPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterScreenshotPath", null)); }
 	get flutterSdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterSdkPath", null)); }
 	get flutterSdkPaths(): string[] { return this.getConfig<string[]>("flutterSdkPaths", []).map(resolvePaths); }
 	get flutterTestAdditionalArgs(): string[] { return this.getConfig<string[]>("flutterTestAdditionalArgs", []); }
-	get flutterTestLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null))); }
+	get flutterTestLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null)))); }
 	get flutterTrackWidgetCreation(): boolean { return this.getConfig<boolean>("flutterTrackWidgetCreation", true); }
 	get hotReloadPatterns(): string[] { return this.getConfig<string[]>("hotReloadPatterns", []); }
 	get insertArgumentPlaceholders(): boolean { return this.getConfig<boolean>("insertArgumentPlaceholders", true); }
@@ -312,9 +311,10 @@ export class ResourceConfig {
 	get showGettersInDebugViews(): boolean { return this.getConfig<boolean>("showGettersInDebugViews", true); }
 	get suppressTestTimeouts(): "never" | "debug" | "always" { return this.getConfig<"never" | "debug" | "always">("suppressTestTimeouts", "never"); }
 	get testAdditionalArgs(): string[] { return this.getConfig<string[]>("testAdditionalArgs", []); }
+	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null)))); }
 	get vmAdditionalArgs(): string[] { return this.getConfig<string[]>("vmAdditionalArgs", []); }
-	get vmServiceLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null))); }
-	get webDaemonLogFile(): undefined | string { return createFolderForFile(resolvePaths(this.getConfig<null | string>("webDaemonLogFile", null))); }
+	get vmServiceLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null)))); }
+	get webDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("webDaemonLogFile", null)))); }
 }
 
 export const config = new Config();

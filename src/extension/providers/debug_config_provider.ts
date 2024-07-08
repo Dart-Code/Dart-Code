@@ -778,7 +778,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	private insertSessionName(args: { name: string }, logPath: string | undefined) {
 		return logPath
-			? logPath.replace(/\${name}/, filenameSafe(args.name || "unnamed-session"))
+			? logPath.replace(/\${name}/ig, filenameSafe(args.name || "unnamed-session"))
 			: logPath;
 	}
 }

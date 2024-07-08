@@ -22,7 +22,7 @@ export async function flatMapAsync<T1, T2>(input: T1[], f: (input: T1) => Promis
 }
 
 export function filenameSafe(input: string) {
-	return input.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+	return input.replace(/[^a-z0-9]+/gi, "_").replace(/_{2,}/g, "_").replace(/_$/g, "").toLowerCase();
 }
 
 export function escapeRegExp(input: string): string {

@@ -7,6 +7,7 @@ import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { WorkspaceConfig } from "../shared/interfaces";
+import { filenameSafe } from "../shared/utils";
 import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
@@ -45,6 +46,13 @@ export function resolvePaths<T extends string | undefined>(p: T): string | (unde
 	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)
 		return path.join(fsPath(workspace.workspaceFolders[0].uri), p);
 	return p;
+}
+
+export function insertWorkspaceName<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
+	if (typeof p !== "string")
+		return undefined as (undefined extends T ? undefined : never);
+
+	return p.replace(/\${workspaceName}/ig, filenameSafe(workspace.name ?? "unnamed-workspace"));
 }
 
 export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
