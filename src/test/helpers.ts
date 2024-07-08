@@ -41,8 +41,11 @@ if (!ext) {
 const testFolder = path.join(ext.extensionPath, "src/test");
 export const testProjectsFolder = path.join(testFolder, "test_projects");
 
+const packageConfigPath = ".dart_tool/package_config.json";
+
 // Dart
 export const helloWorldFolder = vs.Uri.file(path.join(testProjectsFolder, "hello_world"));
+export const helloWorldPackageConfigFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), packageConfigPath));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
 export const helloWorldInspectionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/inspect.dart"));
 export const helloWorldLongRunningFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/long_running.dart"));
@@ -108,6 +111,7 @@ export const dartNested2Folder = vs.Uri.file(path.join(fsPath(dartNested1Folder)
 // Flutter
 export const flutterHelloWorldFolder = vs.Uri.file(path.join(testProjectsFolder, "flutter_hello_world"));
 export const flutterEmptyFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/empty.dart"));
+export const flutterHelloWorldPackageConfigFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), packageConfigPath));
 export const flutterHelloWorldMainFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/main.dart"));
 export const flutterHelloWorldReadmeFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "README.md"));
 export const flutterHelloWorldNavigateFromFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/navigate_from.dart"));
