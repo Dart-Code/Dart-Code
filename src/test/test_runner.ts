@@ -1,7 +1,7 @@
 console.log("Starting test runner...");
 
 import { glob } from "glob";
-import * as Mocha from "mocha";
+import { default as Mocha } from "mocha";
 import * as path from "path";
 import { isCI } from "../shared/constants";
 import { MultiReporter } from "./mocha_multi_reporter";

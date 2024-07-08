@@ -1,5 +1,4 @@
-/* eslint-disable id-blacklist */
-import * as WebSocket from "ws";
+import { default as WebSocket } from "ws";
 import { PromiseCompleter } from "../shared/utils";
 
 export class DebuggerResult {
@@ -67,7 +66,7 @@ export interface VMIsolateRef extends VMResponse {
 }
 
 export interface VMIsolate extends VMResponse, VMIsolateRef {
-	number: string;
+	number: string; // eslint-disable-line id-blacklist
 	runnable: boolean;
 	pauseEvent: VMEvent;
 	libraries: VMLibraryRef[];

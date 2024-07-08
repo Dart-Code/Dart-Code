@@ -1,11 +1,12 @@
 {
 	// Try to keep synced with Flutter extension!
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es6",
+		"module": "Node16",
+		"moduleResolution": "Node16",
+		"target": "ES2022",
 		"outDir": "out/src",
 		"lib": [
-			"es6"
+			"ES2022"
 		],
 		"sourceMap": true,
 		"rootDir": "src",
