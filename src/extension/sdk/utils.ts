@@ -297,9 +297,19 @@ export class SdkUtils {
 
 	public async scanWorkspace(): Promise<WorkspaceContext> {
 		this.logger.info("Searching for SDKs...");
+
 		const pathOverride = (process.env.DART_PATH_OVERRIDE as string) || "";
 		const normalPath = (process.env.PATH as string) || "";
 		const paths = (pathOverride + path.delimiter + normalPath).split(path.delimiter).filter((p) => p);
+
+		// Some paths to search after PATH as a final resort.
+		const fallbackSdkSearchPaths = [
+			process.env.FLUTTER_ROOT,
+			isLinux ? "~/snap/flutter/common/flutter" : undefined,
+			"~/flutter-sdk",
+			"/google/flutter",
+			"/opt/flutter", // https://github.com/Dart-Code/Dart-Code/issues/5174
+		];
 
 		this.logger.info("Environment PATH:");
 		for (const p of paths)
@@ -400,11 +410,9 @@ export class SdkUtils {
 				firstFlutterProject && extractFlutterSdkPathFromPackagesFile(firstFlutterProject),
 				firstFlutterProject && path.join(firstFlutterProject, ".flutter"),
 				firstFlutterProject && path.join(firstFlutterProject, "vendor/flutter"),
-				process.env.FLUTTER_ROOT,
-				isLinux ? "~/snap/flutter/common/flutter" : undefined,
-				"~/flutter-sdk",
-				"/google/flutter",
-			].concat(paths).filter(notUndefined);
+				...paths,
+				...fallbackSdkSearchPaths,
+			].filter(notUndefined);
 
 			let flutterSdkResult = this.findFlutterSdk(flutterSdkSearchPaths);
 			const sdkInitScript = flutterSdkResult.sdkInitScript;
