@@ -13,7 +13,7 @@ export interface VsCodeApi {
 	devicesChanged: Event<VsCodeDevicesEvent>;
 	debugSessionsChanged: Event<VsCodeDebugSessionsEvent>;
 	executeCommand(command: string, args?: object[]): Promise<object | undefined>;
-	selectDevice(id: string): Promise<boolean>;
+	selectDevice(id: string | undefined): Promise<boolean>;
 	enablePlatformType(platformType: string): Promise<boolean>;
 	openDevToolsPage(
 		debugSessionId: string | undefined,

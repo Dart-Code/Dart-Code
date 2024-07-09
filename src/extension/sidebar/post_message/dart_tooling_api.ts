@@ -100,7 +100,9 @@ class VsCodeApiHandler extends ToolApi {
 		} else if (method === "initialize") {
 			return await this.api.initialize();
 		} else if (method === "selectDevice") {
-			return this.api.selectDevice(params.id as string);
+			return this.api.selectDevice(
+				nullToUndefined(params.id as string | undefined | null),
+			);
 		} else if (method === "enablePlatformType") {
 			return this.api.enablePlatformType(params.platformType as string);
 		} else if (method === "openDevToolsPage") {
@@ -160,7 +162,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		return await vs.commands.executeCommand(command, { commandSource: this.commandSource, ...args });
 	}
 
-	public async selectDevice(id: string): Promise<boolean> {
+	public async selectDevice(id: string | undefined): Promise<boolean> {
 		return this.deviceManager?.selectDeviceById(id) ?? false;
 	}
 

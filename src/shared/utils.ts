@@ -6,6 +6,8 @@ import { LogCategory } from "./enums";
 import { CustomScript, IAmDisposable, Logger } from "./interfaces";
 import { ExecutionInfo } from "./processes";
 
+export type PromiseOr<T> = Promise<T> | T;
+
 export function uniq<T>(array: T[]): T[] {
 	return array.filter((value, index) => array.indexOf(value) === index);
 }

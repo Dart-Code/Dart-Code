@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { Service } from "../../../shared/services/tooling_daemon_services";
+import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
 import { activate, delay, extApi, flutterHelloWorldMainFile, helloWorldMainFile } from "../../helpers";
 
 describe("dart tooling daemon", () => {
@@ -21,7 +21,7 @@ describe("dart tooling daemon", () => {
 		await daemon.connected;
 		await delay(50);
 
-		const result = await daemon.send(Service.getIDEWorkspaceRoots);
+		const result = await daemon.callMethod(ServiceMethod.getIDEWorkspaceRoots);
 		assert.ok(result.ideWorkspaceRoots.length);
 		const roots = vs.workspace.workspaceFolders?.map((wf) => wf.uri.toString()) ?? [];
 		assert.deepStrictEqual(result.ideWorkspaceRoots, roots);
@@ -39,7 +39,7 @@ describe("dart tooling daemon", () => {
 		await daemon.connected;
 		await delay(50);
 
-		const result = await daemon.send(Service.readFileAsString, { uri: helloWorldMainFile.toString() });
+		const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri: helloWorldMainFile.toString() });
 		assert.ok(result.content);
 
 		// If we're on Windows, try with different casings because it's easy to have different drive
@@ -58,7 +58,7 @@ describe("dart tooling daemon", () => {
 			] as Array<(_fullMatch: string, prefix: string, driveLetter: string, colon: string) => string>) {
 				const uri = helloWorldMainFile.toString().replace(/(file:\/\/\/)(\w)(:|%3a|%3A)/, replacer);
 				console.log(uri);
-				const result = await daemon.send(Service.readFileAsString, { uri });
+				const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri });
 				assert.ok(result.content);
 			}
 		}
@@ -73,7 +73,7 @@ describe("dart tooling daemon", () => {
 		await delay(50);
 
 		try {
-			const result = await daemon.send(Service.readFileAsString, { uri: flutterHelloWorldMainFile.toString() });
+			const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri: flutterHelloWorldMainFile.toString() });
 			assert.fail(`DTD returned content outside of workspace: (${flutterHelloWorldMainFile} / ${result.content.length} bytes)`);
 		} catch (e: any) {
 			assert.equal(e.code, 142);

@@ -113,6 +113,7 @@ import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
+import { FlutterDtdSidebar } from "./sidebar/dtd/sidebar";
 import { FlutterPostMessageSidebar } from "./sidebar/post_message/sidebar";
 import { DartFileUriLinkProvider } from "./terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "./terminal/package_uri_link_provider";
@@ -283,11 +284,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	void vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 	void vs.commands.executeCommand("setContext", FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, dartCapabilities.supportsFlutterSidebar);
 
-	// Dart Tooling Daemon.
-	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
-		? new VsCodeDartToolingDaemon(context, logger, sdks)
-		: undefined;
-
 	// Fire up Flutter daemon if required.
 	if (workspaceContext.hasAnyFlutterProjects && sdks.flutter) {
 		let runIfNoDevices;
@@ -338,6 +334,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
 		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
 	}
+
+	// Dart Tooling Daemon.
+	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
+		? new VsCodeDartToolingDaemon(context, logger, sdks, deviceManager)
+		: undefined;
 
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {
 		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
@@ -741,7 +742,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
-	context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
+	if (config.previewDtdSidebar && dartToolingDaemon)
+		context.subscriptions.push(new FlutterDtdSidebar(devTools, deviceManager, dartCapabilities));
+	else
+		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath: string) => {
 		if (!filePath) return;

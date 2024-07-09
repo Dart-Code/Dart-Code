@@ -5,20 +5,37 @@ export interface DtdError {
 	data: any,
 }
 export type DtdSuccess = DtdResult & { type: "Success" };
-export type DtdResponse = { id: string } & ({ result: DtdResult } | { error: DtdError });
+export interface DtdMessage { jsonrpc: "2.0", id?: string, method?: string, result?: DtdResult, error?: DtdError, params?: unknown }
+export type DtdResponse = DtdMessage & ({ result: DtdResult } | { error: DtdError });
 
 export interface DtdRequest {
 	jsonrpc: "2.0",
 	id: string;
 	method: string;
-	params: any;
+	params?: object;
 }
 
 export enum Service {
+	Editor,
+}
+
+export enum Stream {
+	Editor,
+}
+
+export enum ServiceMethod {
+	registerService = "registerService",
 	setIDEWorkspaceRoots = "FileSystem.setIDEWorkspaceRoots",
 	getIDEWorkspaceRoots = "FileSystem.getIDEWorkspaceRoots",
 	readFileAsString = "FileSystem.readFileAsString",
 }
+
+export interface RegisterServiceParams {
+	service: string;
+	method: string;
+	capabilities?: object;
+}
+export type RegisterServiceResult = DtdSuccess;
 
 export interface SetIDEWorkspaceRootsParams {
 	secret: string;
@@ -38,4 +55,117 @@ export interface ReadFileAsStringParams {
 export interface ReadFileAsStringResult {
 	type: "FileContent",
 	content: string;
+}
+
+
+export interface GetDevicesResult {
+	type: "GetDevicesResult";
+	devices: EditorDevice[];
+	selectedDeviceId?: string;
+}
+
+export interface GetDebugSessionsResult {
+	type: "GetDebugSessionsResult";
+	debugSessions: EditorDebugSession[];
+}
+
+export interface SelectDeviceParams {
+	deviceId?: string;
+}
+
+export interface EnablePlatformTypeParams {
+	platformType: string;
+}
+
+export interface HotReloadParams {
+	debugSessionId: string;
+}
+
+export interface HotRestartParams {
+	debugSessionId: string;
+}
+
+export interface OpenDevToolsPageParams {
+	debugSessionId?: string;
+	page?: string;
+	forceExternal?: boolean;
+	requiresDebugSession?: boolean;
+	prefersDebugSession?: boolean;
+}
+
+export interface SuccessResult {
+	type: "Success";
+}
+
+export interface EditorDevice {
+	id: string;
+	name: string;
+	category?: string;
+	emulator: boolean;
+	emulatorId?: string;
+	ephemeral: boolean;
+	platform: string;
+	platformType?: string;
+	supported: boolean;
+	rawDeviceName?: string;
+}
+
+export interface EditorDebugSession {
+	id: string;
+	name: string;
+	vmServiceUri?: string;
+	flutterMode?: string;
+	flutterDeviceId?: string;
+	debuggerType?: string;
+	projectRootPath?: string;
+}
+
+export enum EventKind {
+	deviceAdded,
+	deviceRemoved,
+	deviceChanged,
+	deviceSelected,
+	debugSessionStarted,
+	debugSessionChanged,
+	debugSessionStopped,
+}
+
+export interface Event {
+	kind: EventKind;
+	[key: string]: any;
+}
+
+export interface DeviceAddedEvent extends Event {
+	kind: EventKind.deviceAdded;
+	device: EditorDevice;
+}
+
+export interface DeviceChangedEvent extends Event {
+	kind: EventKind.deviceChanged;
+	device: EditorDevice;
+}
+
+export interface DeviceRemovedEvent extends Event {
+	kind: EventKind.deviceRemoved;
+	deviceId: string;
+}
+
+export interface DeviceSelectedEvent extends Event {
+	kind: EventKind.deviceSelected;
+	deviceId?: string;
+}
+
+export interface DebugSessionStartedEvent extends Event {
+	kind: EventKind.debugSessionStarted;
+	debugSession: EditorDebugSession;
+}
+
+export interface DebugSessionChangedEvent extends Event {
+	kind: EventKind.debugSessionChanged;
+	debugSession: EditorDebugSession;
+}
+
+export interface DebugSessionStoppedEvent extends Event {
+	kind: EventKind.debugSessionStopped;
+	debugSessionId: string;
 }

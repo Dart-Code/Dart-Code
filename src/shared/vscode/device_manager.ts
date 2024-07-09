@@ -25,6 +25,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public readonly onCurrentDeviceChanged = this.onCurrentDeviceChangedEmitter.event;
 	protected readonly onDevicesChangedEmitter = new vs.EventEmitter<void>();
 	public readonly onDevicesChanged = this.onDevicesChangedEmitter.event;
+	protected readonly onDeviceAddedEmitter = new vs.EventEmitter<f.Device>();
+	public readonly onDeviceAdded = this.onDeviceAddedEmitter.event;
+	protected readonly onDeviceRemovedEmitter = new vs.EventEmitter<string>();
+	public readonly onDeviceRemoved = this.onDeviceRemovedEmitter.event;
+	protected readonly onDeviceChangedEmitter = new vs.EventEmitter<f.Device>();
+	public readonly onDeviceChanged = this.onDeviceChangedEmitter.event;
 
 	constructor(
 		private readonly logger: Logger,
@@ -118,6 +124,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		void this.updateStatusBar();
+		this.onDeviceAddedEmitter.fire(device);
 		this.onDevicesChangedEmitter.fire();
 	}
 
@@ -144,6 +151,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		void this.updateStatusBar();
+		this.onDeviceRemovedEmitter.fire(dev.id);
 		this.onDevicesChangedEmitter.fire();
 	}
 
@@ -197,7 +205,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return undefined;
 	}
 
-	public async selectDeviceById(id: string): Promise<boolean> {
+	public async selectDeviceById(id: string | undefined): Promise<boolean> {
+		if (!id) {
+			this.setCurrentDevice(undefined);
+			return true;
+		}
+
 		const device = this.getDevice(id);
 		if (device) {
 			await this.selectDevice({
@@ -283,6 +296,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// send a cached set of devices that don't take the newly-enabled platform
 		// into account.
 		this.shortCacheForSupportedPlatforms = undefined;
+		for (const device of this.devices) {
+			if (device.platformType === platformType)
+				this.onDeviceChangedEmitter.fire(device);
+		}
 		this.onDevicesChangedEmitter.fire();
 
 		return true;

@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/unified-signatures */
 import * as path from "path";
 import * as ws from "ws";
 import { dartVMPath, tenMinutesInMs } from "../constants";
 import { LogCategory } from "../enums";
 import { DartSdks, IAmDisposable, Logger } from "../interfaces";
 import { CategoryLogger } from "../logging";
-import { PromiseCompleter, disposeAll } from "../utils";
+import { PromiseCompleter, PromiseOr, disposeAll } from "../utils";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
-import { DtdRequest, DtdResponse, DtdResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, ReadFileAsStringParams, ReadFileAsStringResult, Service, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult } from "./tooling_daemon_services";
+import { DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, SelectDeviceParams, Service, ServiceMethod, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
@@ -17,6 +18,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	private connection: ConnectionInfo | undefined;
 	private nextId = 1;
 	private completers: { [key: string]: PromiseCompleter<DtdResult> } = {};
+	private serviceHandlers: { [key: string]: (params?: object) => PromiseOr<DtdResult> } = {};
 
 	private hasShownTerminatedError = false;
 	private isShuttingDown = false;
@@ -68,30 +70,68 @@ export class DartToolingDaemon implements IAmDisposable {
 		const connection = await this.connected;
 		if (connection) {
 			const secret = connection.dtdSecret;
-			await this.send(Service.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
+			await this.callMethod(ServiceMethod.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
 		}
 	}
 
-	private handleData(data: string) {
+	private async handleData(data: string) {
 		this.logTraffic(`<== ${data}\n`);
-		const json: DtdResponse = JSON.parse(data);
+		const json = JSON.parse(data) as DtdMessage;
 		const id = json.id;
-		const completer: PromiseCompleter<DtdResult> = this.completers[id];
+		const method = json.method;
 
-		if (completer) {
-			delete this.completers[id];
+		if (id !== undefined && method) {
+			const request = json as DtdRequest;
+			// Handle service request.
+			const serviceHandler = this.serviceHandlers[method];
+			if (serviceHandler) {
+				const result = await serviceHandler(request.params);
+				await this.send({
+					id,
+					jsonrpc: "2.0",
+					result,
+				});
+			}
 
-			if ("error" in json)
-				completer.reject(json.error);
-			else
-				completer.resolve(json.result);
+		} else if (id) {
+			// Handle response.
+			const completer: PromiseCompleter<DtdResult> = this.completers[id];
+			const response = json as DtdResponse;
+
+			if (completer) {
+				delete this.completers[id];
+
+				if ("error" in response)
+					completer.reject(response.error);
+				else
+					completer.resolve(response.result);
+			}
 		}
 	}
 
-	public send(service: Service.setIDEWorkspaceRoots, params: SetIDEWorkspaceRootsParams): Promise<SetIDEWorkspaceRootsResult>;
-	public send(service: Service.getIDEWorkspaceRoots, params: GetIDEWorkspaceRootsParams): Promise<GetIDEWorkspaceRootsResult>;
-	public send(service: Service.readFileAsString, params: ReadFileAsStringParams): Promise<ReadFileAsStringResult>;
-	public async send(service: Service, params: any): Promise<DtdResult> {
+	public async registerService(service: Service.Editor, method: "getDevices", capabilities: object | undefined, f: () => PromiseOr<DtdResult & GetDevicesResult>): Promise<void>;
+	public async registerService(service: Service.Editor, method: "selectDevice", capabilities: object | undefined, f: (params: SelectDeviceParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
+	public async registerService(service: Service.Editor, method: "enablePlatformType", capabilities: object | undefined, f: (params: EnablePlatformTypeParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
+	public async registerService(service: Service.Editor, method: "getDebugSessions", capabilities: object | undefined, f: () => PromiseOr<DtdResult & GetDebugSessionsResult>): Promise<void>;
+	public async registerService(service: Service.Editor, method: "hotReload", capabilities: object | undefined, f: (params: HotReloadParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
+	public async registerService(service: Service.Editor, method: "hotRestart", capabilities: object | undefined, f: (params: HotRestartParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
+	public async registerService(service: Service.Editor, method: "openDevToolsPage", capabilities: object | undefined, f: (params: OpenDevToolsPageParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
+	public async registerService(service: Service, method: string, capabilities: object | undefined, f: (params: any) => PromiseOr<DtdResult>): Promise<void> {
+		const serviceName = Service[service];
+		const resp = await this.callMethod(ServiceMethod.registerService, { service: serviceName, method, capabilities });
+		if (resp.type !== "Success") {
+			throw new Error(`Failed to register service ${serviceName}.${method}: ${resp.type}`);
+		}
+
+		this.serviceHandlers[`${serviceName}.${method}`] = f;
+	}
+
+	public callMethod(service: ServiceMethod.registerService, params: RegisterServiceParams): Promise<RegisterServiceResult>;
+	public callMethod(service: ServiceMethod.setIDEWorkspaceRoots, params: SetIDEWorkspaceRootsParams): Promise<SetIDEWorkspaceRootsResult>;
+	public callMethod(service: ServiceMethod.getIDEWorkspaceRoots, params: GetIDEWorkspaceRootsParams): Promise<GetIDEWorkspaceRootsResult>;
+	public callMethod(service: ServiceMethod.readFileAsString, params: ReadFileAsStringParams): Promise<ReadFileAsStringResult>;
+	public callMethod(service: string, params?: unknown): Promise<DtdResult>;
+	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
 		if (!this.connection)
 			return Promise.reject("DTD connection is unavailable");
 
@@ -99,19 +139,41 @@ export class DartToolingDaemon implements IAmDisposable {
 		const completer = new PromiseCompleter<DtdResult>();
 		this.completers[id] = completer;
 
-		const json: DtdRequest = {
+		await this.send({
 			id,
 			jsonrpc: "2.0",
-			method: service,
-			params: params ?? {},
-		};
-		const str = JSON.stringify(json);
-		this.logTraffic(`==> ${str}\n`);
-		this.connection.socket.send(str);
+			method,
+			params,
+		});
 
 		return completer.promise;
 	}
 
+	public sendEvent(stream: Stream.Editor, params: DeviceAddedEvent | DeviceRemovedEvent | DeviceChangedEvent | DeviceSelectedEvent): void;
+	public sendEvent(stream: Stream.Editor, params: DebugSessionStartedEvent | DebugSessionStoppedEvent | DebugSessionChangedEvent): void;
+	public sendEvent(stream: Stream, params: Event): void {
+		if (!this.connection)
+			throw Error("DTD connection is unavailable");
+
+		void this.send({
+			jsonrpc: "2.0",
+			method: "postEvent",
+			params: {
+				eventData: { ...params, kind: undefined },
+				eventKind: EventKind[params.kind],
+				streamId: Stream[stream],
+			},
+		});
+	}
+
+	private send(json: DtdMessage) {
+		if (!this.connection)
+			return Promise.reject("DTD connection is unavailable");
+
+		const str = JSON.stringify(json);
+		this.logTraffic(`==> ${str}\n`);
+		this.connection.socket.send(str);
+	}
 
 	protected handleClose() {
 		this.logger.info(`DTD connection closed`);

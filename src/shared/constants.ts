@@ -148,6 +148,7 @@ export const vmServiceHttpLinkPattern = new RegExp("(http://[\\d\\.:]+/)");
 /// Used in DevTools querystring, so do not change.
 export abstract class CommandSource {
 	static commandPalette = "command";
+	static dtdServiceRequest = "dtdServiceRequest";
 	static sidebarContent = "sidebarContent";
 	static sidebarTitle = "sidebarToolbar";
 	static touchbar = "touchbar"; // MacOS touchbar button
