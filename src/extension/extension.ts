@@ -73,7 +73,6 @@ import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { DasFlutterOutlineProvider, FlutterOutlineProvider, FlutterWidgetItem, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
 import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizations_on_save_handler";
-import { FlutterSidebar } from "./flutter/sidebar";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
@@ -114,6 +113,7 @@ import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
+import { FlutterPostMessageSidebar } from "./sidebar/post_message/sidebar";
 import { DartFileUriLinkProvider } from "./terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "./terminal/package_uri_link_provider";
 import { VsCodeTestController } from "./test/vs_test_controller";
@@ -741,7 +741,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
-	context.subscriptions.push(new FlutterSidebar(devTools, deviceManager, dartCapabilities));
+	context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath: string) => {
 		if (!filePath) return;

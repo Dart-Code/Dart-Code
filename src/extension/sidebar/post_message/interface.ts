@@ -5,7 +5,7 @@
 /// `VsCodeCapabilities` to advertise which capabilities are available and
 /// handle any changes in behaviour.
 
-import { Event } from "../../shared/events";
+import { Event } from "../../../shared/events";
 
 export interface VsCodeApi {
 	capabilities: VsCodeCapabilities;
