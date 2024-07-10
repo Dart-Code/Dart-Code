@@ -1900,6 +1900,14 @@
 								"default": "/path/to/devtools",
 								"description": "The root directory containing a clone of the flutter/devtools repository."
 							},
+							"args": {
+								"type": "array",
+								"default": [],
+								"description": "Extra arguments to pass when running the `devtools_tool serve` command.",
+								"items": {
+									"type": "string"
+								}
+							},
 							"env": {
 								"type": "object",
 								"default": {
