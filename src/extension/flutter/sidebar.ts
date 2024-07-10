@@ -131,7 +131,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			<meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
 			<script>${pageScript}</script>
 			</head>
-			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></iframe></body>
+			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></iframe></body>
 			</html>
 			`;
 
