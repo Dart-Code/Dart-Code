@@ -999,23 +999,29 @@ function getSettingsThatRequireRestart() {
 }
 
 export async function deactivate(isRestart = false): Promise<void> {
-	setCommandVisiblity(false);
-	void analyzer?.dispose();
-	await flutterDaemon?.shutdown();
-	if (loggers) {
-		await Promise.all(loggers.map((logger) => logger.dispose()));
-		loggers.length = 0;
-	}
-	void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
-	if (!isRestart) {
-		void vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
-		void vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
-		void ringLogger?.dispose();
-		logger.dispose();
-	} else {
-		// If we are starting, add an additional delay just to make it more likely other services
-		// have shut down before we try to restart them.
-		await new Promise((resolve) => setTimeout(resolve, 500));
+	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
+	try {
+		setCommandVisiblity(false);
+		void analyzer?.dispose();
+		await flutterDaemon?.shutdown();
+		if (loggers) {
+			await Promise.all(loggers.map((logger) => logger.dispose()));
+			loggers.length = 0;
+		}
+		void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
+		if (!isRestart) {
+			void vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
+			void vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
+			void ringLogger?.dispose();
+			logger.dispose();
+		} else {
+			// If we are starting, add an additional delay just to make it more likely other services
+			// have shut down before we try to restart them.
+			await new Promise((resolve) => setTimeout(resolve, 500));
+		}
+		logger.info(`Extension deactivated!`);
+	} catch (e) {
+		logger.error(`Error during extension shutdown: ${e}`);
 	}
 }
 
