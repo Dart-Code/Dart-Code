@@ -26,7 +26,13 @@ export async function getFlutterConfigValue<T>(logger: Logger, flutterSdkPath: s
 	try {
 		const proc = await runToolProcess(logger, folder, binPath, args);
 		if (proc.exitCode === 0) {
-			const json = JSON.parse(proc.stdout);
+			// It's possible there is Flutter output before the JSON so trim everything before then.
+			let jsonString = proc.stdout.trim();
+			const firstBrace = jsonString.indexOf("{");
+			if (firstBrace > 0) {
+				jsonString = jsonString.substring(firstBrace);
+			}
+			const json = JSON.parse(jsonString);
 			return json[flutterConfigKey] as T;
 		}
 		throw Error(`Failed to run "flutter config --machine" (${proc.exitCode}): ${proc.stderr}`);
