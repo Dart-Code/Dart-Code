@@ -2338,7 +2338,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for very detailed logging in the Dart Analysis Server that may be useful when trying to diagnose Analysis Server issues. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for very detailed logging in the Dart Analysis Server that may be useful when trying to diagnose Analysis Server issues. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.analyzerLogFile": {
@@ -2347,7 +2347,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for communication between Dart Code and the Analysis Server. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for communication between Dart Code and the Analysis Server. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.toolingDaemonLogFile": {
@@ -2356,7 +2356,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for the `dart tooling-daemon` service, which coordinates between various Dart and Flutter tools and extensions. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for the `dart tooling-daemon` service, which coordinates between various Dart and Flutter tools and extensions. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.dapLogFile": {
@@ -2365,7 +2365,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for communication with the DAP debug adapters. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for communication with the DAP debug adapters. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.devToolsLogFile": {
@@ -2374,7 +2374,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a low-traffic log file for the Dart DevTools service.",
+						"markdownDescription": "The path to a low-traffic log file for the Dart DevTools service. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.extensionLogFile": {
@@ -2383,7 +2383,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a low-traffic log file for basic extension and editor issues.",
+						"markdownDescription": "The path to a low-traffic log file for basic extension and editor issues. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterDaemonLogFile": {
@@ -2392,7 +2392,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for the `flutter daemon` service, which provides information about connected devices accessible from the status bar. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for the `flutter daemon` service, which provides information about connected devices accessible from the status bar. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterRunLogFile": {
@@ -2451,7 +2451,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web apps. Use `${name`} in the log file name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web apps. Use `${name}` in the log file name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					}
 				}
