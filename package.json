@@ -2347,7 +2347,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for communication between Dart Code and the Analysis Server. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for communication between Dart Code and the Analysis Server. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.toolingDaemonLogFile": {
@@ -2356,7 +2356,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for the `dart tooling-daemon` service, which coordinates between various Dart and Flutter tools and extensions. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for the `dart tooling-daemon` service, which coordinates between various Dart and Flutter tools and extensions. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.dapLogFile": {
@@ -2374,7 +2374,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a low-traffic log file for the Dart DevTools service. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a low-traffic log file for the Dart DevTools service. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.extensionLogFile": {
@@ -2383,7 +2383,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a low-traffic log file for basic extension and editor issues. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a low-traffic log file for basic extension and editor issues. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterDaemonLogFile": {
@@ -2392,7 +2392,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for the `flutter daemon` service, which provides information about connected devices accessible from the status bar. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
+						"markdownDescription": "The path to a log file for the `flutter daemon` service, which provides information about connected devices accessible from the status bar. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.maxLogLineLength": {
@@ -2872,7 +2872,6 @@
 						"markdownDescription": "**LEGACY SETTING: Disabling this may break functionality on modern SDKs.**\n\nWhether to pass `--track-widget-creation` to Flutter apps (required to support 'Inspect Widget'). This setting is always ignored when running in Profile or Release mode.",
 						"scope": "resource"
 					},
-
 					"dart.dartTestLogFile": {
 						"type": [
 							"null",
