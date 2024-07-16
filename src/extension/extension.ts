@@ -183,7 +183,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	setupLog(config.analyzerLogFile, LogCategory.Analyzer);
 	setupLog(config.flutterDaemonLogFile, LogCategory.FlutterDaemon);
 	setupLog(config.toolingDaemonLogFile, LogCategory.DartToolingDaemon);
-	setupLog(config.dapLogFile, LogCategory.DAP);
 	setupLog(config.devToolsLogFile, LogCategory.DevTools);
 
 	if (!workspaceContextUnverified.sdks.dart || (workspaceContextUnverified.hasAnyFlutterProjects && !workspaceContextUnverified.sdks.flutter)) {

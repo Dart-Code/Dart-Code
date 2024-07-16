@@ -13,7 +13,7 @@ import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { DartWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestModel } from "../../shared/test/test_model";
 import { getPackageTestCapabilities } from "../../shared/test/version";
-import { filenameSafe, isWebDevice } from "../../shared/utils";
+import { isWebDevice } from "../../shared/utils";
 import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
@@ -26,7 +26,7 @@ import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { DevToolsManager } from "../sdk/dev_tools/manager";
-import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestFilter, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectCanUsePackageTest } from "../utils";
+import { ensureDebugLaunchUniqueId, getExcludedFolders, hasTestFilter, insertSessionName, isInsideFolderNamed, isTestFileOrFolder, isTestFolder, isValidEntryFile, projectCanUsePackageTest } from "../utils";
 import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 
 export class DebugConfigProvider implements DebugConfigurationProvider {
@@ -575,10 +575,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf, deviceManager?.daemonPortOverride);
 		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
-		debugConfig.vmServiceLogFile = this.insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
-		debugConfig.webDaemonLogFile = this.insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
+		debugConfig.vmServiceLogFile = insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
+		debugConfig.webDaemonLogFile = insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
-		debugConfig.dartTestLogFile = this.insertSessionName(debugConfig, debugConfig.dartTestLogFile || conf.dartTestLogFile);
+		debugConfig.dartTestLogFile = insertSessionName(debugConfig, debugConfig.dartTestLogFile || conf.dartTestLogFile);
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries
 			: !!config.debugSdkLibraries;
@@ -607,8 +607,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.customTool = customScript?.script;
 				debugConfig.customToolReplacesArgs = customScript?.replacesArgs;
 			}
-			debugConfig.flutterRunLogFile = this.insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
-			debugConfig.flutterTestLogFile = this.insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
+			debugConfig.flutterRunLogFile = insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
+			debugConfig.flutterTestLogFile = insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
 			debugConfig.showMemoryUsage =
 				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false
 					? debugConfig.showMemoryUsage
@@ -774,12 +774,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!args.includes(toAdd[0])) {
 			toAdd.forEach((s) => args.push(s));
 		}
-	}
-
-	private insertSessionName(args: { name: string }, logPath: string | undefined) {
-		return logPath
-			? logPath.replace(/\${name}/ig, filenameSafe(args.name || "unnamed-session"))
-			: logPath;
 	}
 }
 

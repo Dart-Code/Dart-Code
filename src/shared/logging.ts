@@ -6,6 +6,7 @@ import { platformEol } from "./constants";
 import { LogCategory, LogSeverity } from "./enums";
 import { IAmDisposable, LogMessage, Logger, SpawnedProcess } from "./interfaces";
 import { errorString } from "./utils";
+import { createFolderForFile } from "./utils/fs";
 
 class LogEmitter extends EventEmitter {
 	public fire(msg: LogMessage): void {
@@ -110,6 +111,7 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = (detailed = false) => detailed ? `[${(new Date()).toTimeString()}] ` : `[${(new Date()).toLocaleTimeString()}] `;
+	createFolderForFile(file);
 	let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
 	if (header)
 		logStream.write(header);
