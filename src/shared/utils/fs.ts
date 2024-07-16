@@ -377,6 +377,12 @@ export function createFolderForFile(file?: string): string | undefined {
 		if (!file || !path.isAbsolute(file))
 			return undefined;
 
+		// Skip creation of paths with variables, we'll rely on them
+		// being created after resolving.
+		if (file?.includes("${")) {
+			return file;
+		}
+
 		const folder = path.dirname(file);
 		if (!fs.existsSync(folder))
 			mkDirRecursive(folder);
