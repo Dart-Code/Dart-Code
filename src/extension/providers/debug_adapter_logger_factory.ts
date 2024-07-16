@@ -1,13 +1,13 @@
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession } from "vscode";
-import { DebuggerType, LogCategory } from "../../shared/enums";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
-import { captureLogs, CategoryLogger, EmittingLogger } from "../../shared/logging";
-import { config } from "../config";
-import { insertSessionName } from "../utils";
-import { getLogHeader } from "../utils/log";
+import { LogCategory } from "../../shared/enums";
+import { Logger } from "../../shared/interfaces";
+import { CategoryLogger } from "../../shared/logging";
 
 export class DartDebugAdapterLoggerFactory implements DebugAdapterTrackerFactory {
-	constructor(private readonly logger: EmittingLogger) { }
+	private readonly logger: Logger;
+	constructor(logger: Logger) {
+		this.logger = new CategoryLogger(logger, LogCategory.DAP);
+	}
 
 	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
 		return new DartDebugAdapterLogger(this.logger, session);
@@ -15,23 +15,9 @@ export class DartDebugAdapterLoggerFactory implements DebugAdapterTrackerFactory
 }
 
 class DartDebugAdapterLogger implements DebugAdapterTracker {
-	private logger: Logger;
-	private logFileDisposable: IAmDisposable | undefined;
-
-	constructor(private readonly emittingLogger: EmittingLogger, private readonly session: DebugSession) {
-		this.logger = new CategoryLogger(emittingLogger, LogCategory.DAP);
-	}
+	constructor(private readonly logger: Logger, private readonly session: DebugSession) { }
 
 	public onWillStartSession(): void {
-		let dapLogFile = insertSessionName(this.session.configuration, config.dapLogFile);
-		if (dapLogFile) {
-			const debuggerType = this.session.configuration.debuggerType as DebuggerType | undefined;
-			let debuggerTypeName = debuggerType !== undefined ? DebuggerType[debuggerType].toLowerCase() : "unknown";
-			debuggerTypeName = debuggerTypeName.replaceAll("test", "_test");
-
-			dapLogFile = dapLogFile.replaceAll("${kind}", debuggerTypeName);
-			this.logFileDisposable = captureLogs(this.emittingLogger, dapLogFile, getLogHeader(), config.maxLogLineLength, [LogCategory.DAP]);
-		}
 		this.logger.info(`Starting debug session ${this.session.id}`);
 	}
 
@@ -55,7 +41,5 @@ class DartDebugAdapterLogger implements DebugAdapterTracker {
 
 	public onExit(code: number | undefined, signal: string | undefined): void {
 		this.logger.info(`Debug session ${this.session.id} exit: code: ${code}, signal: ${signal}`);
-		void this.logFileDisposable?.dispose();
-		this.logFileDisposable = undefined;
 	}
 }
