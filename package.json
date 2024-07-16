@@ -2374,7 +2374,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a low-traffic log file for the Dart DevTools service.",
+						"description": "The path to a low-traffic log file for the Dart DevTools service. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.extensionLogFile": {
@@ -2383,7 +2383,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a low-traffic log file for basic extension and editor issues.",
+						"description": "The path to a low-traffic log file for basic extension and editor issues. Use `${workspaceName}` to insert the name of the current workspace in the file path.",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterDaemonLogFile": {
