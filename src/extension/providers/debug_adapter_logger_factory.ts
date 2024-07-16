@@ -1,5 +1,5 @@
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession } from "vscode";
-import { LogCategory } from "../../shared/enums";
+import { DebuggerType, LogCategory } from "../../shared/enums";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { captureLogs, CategoryLogger, EmittingLogger } from "../../shared/logging";
 import { config } from "../config";
@@ -23,8 +23,13 @@ class DartDebugAdapterLogger implements DebugAdapterTracker {
 	}
 
 	public onWillStartSession(): void {
-		const dapLogFile = insertSessionName(this.session.configuration, config.dapLogFile);
+		let dapLogFile = insertSessionName(this.session.configuration, config.dapLogFile);
 		if (dapLogFile) {
+			const debuggerType = this.session.configuration.debuggerType as DebuggerType | undefined;
+			let debuggerTypeName = debuggerType !== undefined ? DebuggerType[debuggerType].toLowerCase() : "unknown";
+			debuggerTypeName = debuggerTypeName.replaceAll("test", "_test");
+
+			dapLogFile = dapLogFile.replaceAll("${kind}", debuggerTypeName);
 			this.logFileDisposable = captureLogs(this.emittingLogger, dapLogFile, getLogHeader(), config.maxLogLineLength, [LogCategory.DAP]);
 		}
 		this.logger.info(`Starting debug session ${this.session.id}`);
