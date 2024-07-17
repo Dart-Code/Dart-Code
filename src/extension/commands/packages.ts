@@ -5,7 +5,7 @@ import { iUnderstandAction, tenSecondsInMs } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { getPubPackageStatus, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
+import { getPubWorkspaceStatus, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
@@ -230,15 +230,16 @@ export class PackageCommands extends BaseSdkCommands {
 			//   1 - then just do that one
 			//   more than 1 - prompt to do all
 			const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
-			const pubStatuses = uniq(projectFolders)
-				.map(vs.Uri.file)
-				.filter((uri) => config.for(uri).promptToGetPackages)
-				.map((uri) => ({ uri, status: getPubPackageStatus(this.sdks, this.logger, uri) }))
-				.filter((result) => result.status !== undefined);
-			this.logger.info(`Found ${pubStatuses.length} folders requiring "pub get" or "pub upgrade":${pubStatuses.map((result) => `\n    ${fsPath(result.uri)} (get: ${result.status?.probablyRequiresGet}, upgrade: ${result.status?.probablyRequiresUpgrade}, reason: ${result.status?.reason})`).join("")}`);
+			const pubStatuses = getPubWorkspaceStatus(
+				this.sdks,
+				this.logger,
+				uniq(projectFolders).map(vs.Uri.file).filter((uri) => config.for(uri).promptToGetPackages)
+			)
+				.filter((result) => result.pubRequired);
+			this.logger.info(`Found pub status for ${pubStatuses.length} folders:${pubStatuses.map((result) => `\n    ${fsPath(result.folderUri)} (pubRequired?: ${result.pubRequired}, reason: ${result.reason})`).join("")}`);
 
-			const someProjectsRequirePubUpgrade = pubStatuses.some((result) => result.status?.probablyRequiresUpgrade);
-			const projectsRequiringPub = pubStatuses.map((result) => result.uri);
+			const someProjectsRequirePubUpgrade = pubStatuses.some((result) => result.pubRequired === "UPGRADE");
+			const projectsRequiringPub = pubStatuses.map((result) => result.folderUri);
 
 			if (options?.upgradeOnSdkChange && someProjectsRequirePubUpgrade)
 				await promptToRunPubUpgrade(projectsRequiringPub);
