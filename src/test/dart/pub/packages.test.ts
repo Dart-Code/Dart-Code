@@ -57,7 +57,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The pubspec.yaml file was modified more recently than the .dart_tool/package_config.json file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/.dart_tool/package_config.json file" },
 		]);
 	});
 
@@ -72,7 +72,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The pubspec.lock file was modified more recently than the .dart_tool/package_config.json file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The proj1/pubspec.lock file was modified more recently than the proj1/.dart_tool/package_config.json file" },
 		]);
 	});
 
@@ -87,7 +87,7 @@ describe("pub package status", () => {
 		};
 
 		expectStatus(workspace, [
-			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The pubspec.yaml file was modified more recently than the pubspec.lock file" },
+			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The proj1/pubspec.yaml file was modified more recently than the proj1/pubspec.lock file" },
 		]);
 	});
 
@@ -259,6 +259,102 @@ describe("pub package status", () => {
 		]);
 	});
 
+
+	for (const openOnlyChildren of [false, true]) {
+		const openFolders = openOnlyChildren
+			? ["/projects/root/proj1", "/projects/root/proj2", "/projects/root/proj3"]
+			: ["/projects/root"];
+		const name = openOnlyChildren
+			? "pub workspace (only children open)"
+			: "pub workspace";
+
+		it(`${name}, no package configs`, async () => {
+			workspace = {
+				openFolders,
+				files: {
+					"/projects/root/pubspec.yaml": { mtime: 1, content: "workspace:\n- proj1\n- proj2" },
+					"/projects/root/proj1/pubspec.yaml": { mtime: 1, content: "resolution: workspace\ndependencies:" },
+					"/projects/root/proj2/pubspec.yaml": { mtime: 1, content: "resolution: workspace\ndependencies:" },
+					// proj3 is not part of the workspace
+					"/projects/root/proj3/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+				},
+			};
+
+			expectStatus(workspace, [
+				{ folder: "/projects/root", pubRequired: "GET", reason: "The .dart_tool/package_config.json file is missing" },
+				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj3", pubRequired: "GET", reason: "The .dart_tool/package_config.json file is missing" },
+			]);
+		});
+
+		it(`${name}, root pubspec is new`, async () => {
+			workspace = {
+				openFolders,
+				files: {
+					"/projects/root/.dart_tool/package_config.json": { mtime: 1, content: "{}" },
+					"/projects/root/pubspec.yaml": { mtime: 10, content: "workspace:\n- proj1\n- proj2" },
+					"/projects/root/proj1/pubspec.yaml": { mtime: 1, content: "resolution: workspace\ndependencies:" },
+					"/projects/root/proj2/pubspec.yaml": { mtime: 1, content: "resolution: workspace\ndependencies:" },
+					// proj3 is not part of the workspace
+					"/projects/root/proj3/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
+					"/projects/root/proj3/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+				},
+			};
+
+			expectStatus(workspace, [
+				{ folder: "/projects/root", pubRequired: "GET", reason: "The root/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
+				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj3", pubRequired: false, reason: "Up-to-date" },
+			]);
+		});
+
+		it(`${name}, child project pubspec is new`, async () => {
+			workspace = {
+				openFolders,
+				files: {
+					"/projects/root/.dart_tool/package_config.json": { mtime: 1, content: "{}" },
+					"/projects/root/pubspec.yaml": { mtime: 1, content: "workspace:\n- proj1\n- proj2" },
+					"/projects/root/proj1/pubspec.yaml": { mtime: 10, content: "resolution: workspace\ndependencies:" },
+					"/projects/root/proj2/pubspec.yaml": { mtime: 1, content: "resolution: workspace\ndependencies:" },
+					// proj3 is not part of the workspace
+					"/projects/root/proj3/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
+					"/projects/root/proj3/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+				},
+			};
+
+			expectStatus(workspace, [
+				{ folder: "/projects/root", pubRequired: "GET", reason: "The proj1/pubspec.yaml file was modified more recently than the root/.dart_tool/package_config.json file" },
+				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj3", pubRequired: false, reason: "Up-to-date" },
+			]);
+		});
+
+		it(`${name}, everything up-to-date`, async () => {
+			workspace = {
+				openFolders,
+				files: {
+					"/projects/root/.dart_tool/package_config.json": { mtime: 10, content: "{}" },
+					"/projects/root/pubspec.yaml": { mtime: 1, content: "workspace:\n- proj1\n- proj2" },
+					"/projects/root/proj1/pubspec.yaml": { mtime: 1, content: "resolution: workspace\ndependencies:" },
+					"/projects/root/proj2/pubspec.yaml": { mtime: 1, content: "resolution: workspace\ndependencies:" },
+					// proj3 is not part of the workspace
+					"/projects/root/proj3/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
+					"/projects/root/proj3/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+				},
+			};
+
+			expectStatus(workspace, [
+				{ folder: "/projects/root", pubRequired: false, reason: "Up-to-date" },
+				{ folder: "/projects/root/proj1", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj2", pubRequired: false, reason: "The project is part of a Pub workspace" },
+				{ folder: "/projects/root/proj3", pubRequired: false, reason: "Up-to-date" },
+			]);
+		});
+	}
+
 	function expectStatus(workspace: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", reason?: string }>) {
 		// Rewrite paths for Windows because we convert to/from URIs and VS Code's URI class always assumes the current platform.
 		const fixPath = isWin ? (p: string) => `Z:${p.replaceAll("/", "\\")}` : (p: string) => p;
@@ -268,7 +364,6 @@ describe("pub package status", () => {
 			fixedFiles[fixPath(p)] = workspace.files[p];
 		workspace.files = fixedFiles;
 		expectedStatuses = expectedStatuses.map((s) => ({ ...s, folder: fixPath(s.folder) }));
-
 
 		const files = workspace.files;
 		const existsSync = (f: string) => !!files[f];
@@ -293,11 +388,16 @@ describe("pub package status", () => {
 			readFileSync,
 			mtimeSync,
 		).map((result) => {
-			const newResult = ({ ...result, folderUri: undefined, folder: fsPath(result.folderUri) });
+			// Tests use folder paths instead of URIs
+			const newResult = ({ ...result, folderUri: undefined, folder: fsPath(result.folderUri), workspace: undefined });
 			delete newResult.folderUri;
+			// And for convenience we don't check the root flag because the other data is based on it.
+			delete newResult.workspace;
 			return newResult;
 		});
 
+		results.sort((a, b) => a.folder.localeCompare(b.folder));
+		expectedStatuses.sort((a, b) => a.folder.localeCompare(b.folder));
 		assert.deepStrictEqual(results, expectedStatuses);
 	}
 });
