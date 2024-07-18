@@ -1,0 +1,100 @@
+{
+  "autoCreateSubnetworks": true,
+  "creationTimestamp": "2024-07-05T21:31:21.565-07:00",
+  "id": "3394105648284530294",
+  "kind": "compute#network",
+  "name": "tiered-web-app-private-network",
+  "networkFirewallPolicyEnforcementOrder": "AFTER_CLASSIC_FIREWALL",
+  "peerings": [
+    {
+      "stackType": "IPV4_ONLY",
+      "importCustomRoutes": false,
+      "state": "ACTIVE",
+      "name": "redis-peer-200778743583",
+      "network": "projects/r95ce8d9ef34799b9p-tp/global/networks/tiered-web-app-private-network",
+      "exportSubnetRoutesWithPublicIp": true,
+      "autoCreateRoutes": true,
+      "stateDetails": "[2024-07-09T03:50:49.325-07:00]: Connected.",
+      "exportCustomRoutes": false,
+      "exchangeSubnetRoutes": true,
+      "importSubnetRoutesWithPublicIp": true
+    },
+    {
+      "stackType": "IPV4_ONLY",
+      "importCustomRoutes": false,
+      "state": "ACTIVE",
+      "name": "servicenetworking-googleapis-com",
+      "network": "projects/o550088284114556bp-tp/global/networks/servicenetworking",
+      "exportSubnetRoutesWithPublicIp": false,
+      "autoCreateRoutes": true,
+      "stateDetails": "[2024-07-05T21:35:20.651-07:00]: Connected.",
+      "exportCustomRoutes": false,
+      "exchangeSubnetRoutes": true,
+      "importSubnetRoutesWithPublicIp": false
+    }
+  ],
+  "routingConfig": {
+    "routingMode": "REGIONAL"
+  },
+  "selfLink": "projects/pimp-city-clothing-llc/global/networks/tiered-web-app-private-network",
+  "selfLinkWithId": "https://www.googleapis.com/compute/beta/projects/pimp-city-clothing-llc/global/networks/3394105648284530294",
+  "subnetworks": [
+    "projects/pimp-city-clothing-llc/regions/europe-west6/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-west2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/northamerica-northeast2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-south1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/me-central1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-east4/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-northeast3/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-east1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-east2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-northeast1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-west3/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-west4/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-south1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-west8/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/southamerica-east1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-west2/subnetworks/aet-uswest2-tiered--web--app--vpc--cx-sbnt",
+    "projects/pimp-city-clothing-llc/regions/asia-southeast2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-east7/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west3/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-east5/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/me-west1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-south2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-west1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west9/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/southamerica-west1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/australia-southeast1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/northamerica-northeast1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-southeast1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/asia-northeast2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/africa-south1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-north1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west12/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west10/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west4/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-southwest1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/australia-southeast2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-east1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/us-central1/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-central2/subnetworks/tiered-web-app-private-network",
+    "projects/pimp-city-clothing-llc/regions/europe-west8/subnetworks/tiered-web-app-private-network"
+  ]
+}
+
+  echo '<!doctype html><html><body><h1>Hello World!</h1></body></html>' | sudo tee /var/www/html/index.html
+In a browser, navigate to http://35.209.104.37/
+sudo apt-get update && sudo apt-get install apache2 -y
+sudo apt-get update && sudo apt-get install apache2 -y  sudo systemctl status apache2  echo '<!doctype html><html><body><h1>Hello World!</h1></body></html>' | sudo tee /var/www/html/index.html
+const firebaseConfig = {
+  apiKey: "AIzaSyDhQkOHY-803x8Vg2FX_b65MC-BEp8ojQA",
+  authDomain: "pimp-city-clothing-llc.firebaseapp.com",
+  databaseURL: "https://pimp-city-clothing-llc-default-rtdb.firebaseio.com",
+  projectId: "pimp-city-clothing-llc",
+  storageBucket: "pimp-city-clothing-llc.appspot.com",
+  messagingSenderId: "772129132688",
+  appId: "1:772129132688:web:c93389cda59de364b98815",
+  measurementId: "G-04C7LM5NST"
+};
