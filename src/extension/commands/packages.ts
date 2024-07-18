@@ -16,6 +16,10 @@ import { BaseSdkCommands, commandState } from "./sdk";
 
 let isFetchingPackages = false;
 let runPubGetDelayTimer: NodeJS.Timeout | undefined;
+
+/// The reason for the last pubspec save. Resets to undefined after 1s so can
+/// be used to tell if a watcher event was likely the result of an explicit in-IDE
+/// save versus modified externally.
 let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 
 export class PackageCommands extends BaseSdkCommands {
@@ -150,8 +154,10 @@ export class PackageCommands extends BaseSdkCommands {
 	private setupPubspecWatcher() {
 		this.disposables.push(vs.workspace.onWillSaveTextDocument((e) => {
 			const name = path.basename(fsPath(e.document.uri)).toLowerCase();
-			if (name === "pubspec.yaml" || name === "pubspec_overrides.yaml")
+			if (name === "pubspec.yaml" || name === "pubspec_overrides.yaml") {
 				lastPubspecSaveReason = e.reason;
+				setTimeout(() => lastPubspecSaveReason = undefined, 1000);
+			}
 		}));
 		const watcher = vs.workspace.createFileSystemWatcher("**/pubspec{,_overrides}.yaml");
 		this.disposables.push(watcher);
@@ -160,10 +166,11 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
+		const isManualSave = !!lastPubspecSaveReason;
 		const filePath = fsPath(uri);
 
 		// Never do anything for files inside hidden or build folders.
-		if (filePath.includes(`${path.sep}.`) || filePath.includes(`${path.sep}build${path.sep}`)) {
+		if (filePath.includes(`${path.sep}.`) || (!isManualSave && filePath.includes(`${path.sep}build${path.sep}`))) {
 			this.logger.info(`Skipping pubspec change for ignored folder ${filePath}`);
 			return;
 		}
