@@ -1,149 +1,13 @@
 /* eslint-disable @typescript-eslint/tslint/config */
 import { strict as assert } from "assert";
-import * as fs from "fs";
-import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { Sdks } from "../../../shared/interfaces";
-import { nullLogger } from "../../../shared/logging";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
-import { getPubPackageStatus, getPubWorkspaceStatus, PubPackageStatus } from "../../../shared/vscode/pub";
-import { activate, delay, extApi, getRandomTempFolder } from "../../helpers";
-
-describe("pub package status (legacy integration)", () => {
-	// TODO(dantup): Fold these into the newer tests below that don't need a real
-	//  filesystem to work.
-	let tempProjectPath: string;
-	let tempProjectUri: vs.Uri;
-
-	function sdkVersion(v: string): Sdks {
-		return {
-			dartSdkIsFromFlutter: false,
-			dartVersion: v,
-			isPreReleaseSdk: false,
-		};
-	}
-
-	const sdks123 = sdkVersion("1.2.3");
-
-	beforeEach("activate", () => activate());
-	beforeEach("set up project", () => {
-		tempProjectPath = getRandomTempFolder();
-		tempProjectUri = vs.Uri.file(tempProjectPath);
-	});
-
-	function createPubspec() {
-		const pubspecPath = path.join(tempProjectPath, "pubspec.yaml");
-		fs.writeFileSync(pubspecPath, `
-name: foo
-version: 1.0.0
-
-# We'll never
-dependencies:
-		`);
-	}
-
-	function createPubspecWithoutDependencies() {
-		const pubspecPath = path.join(tempProjectPath, "pubspec.yaml");
-		fs.writeFileSync(pubspecPath, "");
-	}
-
-	function createPackageConfig(pubGeneratorSdkVersion = sdks123.dartVersion) {
-		const dartToolPath = path.join(tempProjectPath, ".dart_tool");
-		fs.mkdirSync(dartToolPath, { recursive: true });
-		const packageConfigPath = path.join(dartToolPath, "package_config.json");
-		fs.writeFileSync(packageConfigPath, `{ "generatorVersion": "${pubGeneratorSdkVersion}" }`);
-	}
-
-	function expectFalse(status: PubPackageStatus) {
-		assert.equal(status.pubRequired, false);
-	}
-
-	function expectGet(status: PubPackageStatus) {
-		assert.equal(status.pubRequired, "GET");
-	}
-
-	function expectUpgrade(status: PubPackageStatus) {
-		assert.equal(status.pubRequired, "UPGRADE");
-	}
-
-	it("missing pubspec returns undefined", async () => {
-		const status = getPubPackageStatus(sdks123, nullLogger, tempProjectUri);
-		expectFalse(status);
-	});
-
-	it("pubspec without dependencies returns undefined", async () => {
-		createPubspecWithoutDependencies();
-		const status = getPubPackageStatus(sdks123, nullLogger, tempProjectUri);
-		expectFalse(status);
-	});
-
-	it("pubspec but missing package_config returns GET", async () => {
-		createPubspec();
-		const status = getPubPackageStatus(sdks123, nullLogger, tempProjectUri);
-		expectGet(status);
-	});
-
-	it("pubspec but stale package_config returns GET", async () => {
-		createPackageConfig();
-		await delay(1000);
-		createPubspec();
-		const status = getPubPackageStatus(sdks123, nullLogger, tempProjectUri);
-		expectGet(status);
-	});
-
-	it("pubspec but fresh package_config returns GET", async () => {
-		createPubspec();
-		createPackageConfig();
-		const status = getPubPackageStatus(sdks123, nullLogger, tempProjectUri);
-		expectFalse(status);
-	});
-
-	it("upgraded SDK (major) returns UPGRADE", async () => {
-		createPubspec();
-		createPackageConfig("1.0.0");
-		const status = getPubPackageStatus(sdkVersion("2.0.0"), nullLogger, tempProjectUri);
-		expectUpgrade(status);
-	});
-
-	it("upgraded SDK (minor) returns UPGRADE", async () => {
-		createPubspec();
-		createPackageConfig("2.0.0");
-		const status = getPubPackageStatus(sdkVersion("2.1.0"), nullLogger, tempProjectUri);
-		expectUpgrade(status);
-	});
-
-	it("upgraded SDK (patch) returns undefined", async () => {
-		createPubspec();
-		createPackageConfig("2.1.1");
-		const status = getPubPackageStatus(sdkVersion("2.1.0"), nullLogger, tempProjectUri);
-		expectFalse(status);
-	});
-
-	it("downgraded SDK (patch) returns GET", async () => {
-		createPubspec();
-		createPackageConfig("2.0.0");
-		const status = getPubPackageStatus(sdkVersion("1.0.0"), nullLogger, tempProjectUri);
-		expectGet(status);
-	});
-
-	it("downgraded SDK (minor) returns GET", async () => {
-		createPubspec();
-		createPackageConfig("2.1.0");
-		const status = getPubPackageStatus(sdkVersion("2.0.0"), nullLogger, tempProjectUri);
-		expectGet(status);
-	});
-
-	it("downgraded SDK (patch) returns undefined", async () => {
-		createPubspec();
-		createPackageConfig("2.1.0");
-		const status = getPubPackageStatus(sdkVersion("2.1.1"), nullLogger, tempProjectUri);
-		expectFalse(status);
-	});
-});
+import { getPubWorkspaceStatus } from "../../../shared/vscode/pub";
+import { activate, extApi } from "../../helpers";
 
 describe("pub package status", () => {
-	beforeEach("activate", () => activate());
+	before("activate", () => activate());
 
 	let workspace: WorkspaceInfo;
 
@@ -160,7 +24,7 @@ describe("pub package status", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
-				"/projects/proj1/.dart_tool/package_config.json": { mtime: 1 },
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 1, content: "{}" },
 				"/projects/proj1/pubspec.yaml": { mtime: 100, content: "" },
 			},
 		};
@@ -170,7 +34,7 @@ describe("pub package status", () => {
 		]);
 	});
 
-	it("package_config is missing", async () => {
+	it("no package_config", async () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
@@ -187,7 +51,7 @@ describe("pub package status", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
-				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2 },
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
 				"/projects/proj1/pubspec.yaml": { mtime: 100, content: "dependencies:" },
 			},
 		};
@@ -201,9 +65,9 @@ describe("pub package status", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
-				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2 },
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
 				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
-				"/projects/proj1/pubspec.lock": { mtime: 100 },
+				"/projects/proj1/pubspec.lock": { mtime: 100, content: "" },
 			},
 		};
 
@@ -216,9 +80,9 @@ describe("pub package status", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
-				"/projects/proj1/.dart_tool/package_config.json": { mtime: 3 },
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 3, content: "{}" },
 				"/projects/proj1/pubspec.yaml": { mtime: 2, content: "dependencies:" },
-				"/projects/proj1/pubspec.lock": { mtime: 1 },
+				"/projects/proj1/pubspec.lock": { mtime: 1, content: "" },
 			},
 		};
 
@@ -231,7 +95,97 @@ describe("pub package status", () => {
 		workspace = {
 			openFolders: ["/projects/proj1"],
 			files: {
-				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2 },
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
+				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+			},
+		};
+
+		expectStatus(workspace, [
+			{ folder: "/projects/proj1", pubRequired: false, reason: "Up-to-date" },
+		]);
+	});
+
+	it("last used SDK is old (MAJOR)", async () => {
+		workspace = {
+			sdkVersion: "2.0.0",
+			openFolders: ["/projects/proj1"],
+			files: {
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: `{ "generatorVersion": "1.2.3" }` },
+				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+			},
+		};
+
+		expectStatus(workspace, [
+			{ folder: "/projects/proj1", pubRequired: "UPGRADE", reason: "The current SDK version (2.0.0) is newer than the one last used to run \"pub get\" (1.2.3)" },
+		]);
+	});
+
+	it("last used SDK is old (MINOR)", async () => {
+		workspace = {
+			sdkVersion: "1.3.3",
+			openFolders: ["/projects/proj1"],
+			files: {
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: `{ "generatorVersion": "1.2.3" }` },
+				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+			},
+		};
+
+		expectStatus(workspace, [
+			{ folder: "/projects/proj1", pubRequired: "UPGRADE", reason: "The current SDK version (1.3.3) is newer than the one last used to run \"pub get\" (1.2.3)" },
+		]);
+	});
+
+	it("last used SDK is old (PATCH)", async () => {
+		workspace = {
+			sdkVersion: "1.2.4",
+			openFolders: ["/projects/proj1"],
+			files: {
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: `{ "generatorVersion": "1.2.3" }` },
+				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+			},
+		};
+
+		expectStatus(workspace, [
+			{ folder: "/projects/proj1", pubRequired: false, reason: "Up-to-date" },
+		]);
+	});
+
+	it("last used SDK is newer (MAJOR)", async () => {
+		workspace = {
+			sdkVersion: "1.2.3",
+			openFolders: ["/projects/proj1"],
+			files: {
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: `{ "generatorVersion": "2.0.0" }` },
+				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+			},
+		};
+
+		expectStatus(workspace, [
+			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The current SDK version (1.2.3) is older than the one last used to run \"pub get\" (2.0.0)" },
+		]);
+	});
+
+	it("last used SDK is newer (MINOR)", async () => {
+		workspace = {
+			sdkVersion: "1.2.3",
+			openFolders: ["/projects/proj1"],
+			files: {
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: `{ "generatorVersion": "1.3.3" }` },
+				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
+			},
+		};
+
+		expectStatus(workspace, [
+			{ folder: "/projects/proj1", pubRequired: "GET", reason: "The current SDK version (1.2.3) is older than the one last used to run \"pub get\" (1.3.3)" },
+		]);
+	});
+
+	it("last used SDK is newer (PATCH)", async () => {
+		workspace = {
+			sdkVersion: "1.2.3",
+			openFolders: ["/projects/proj1"],
+			files: {
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: `{ "generatorVersion": "1.2.4" }` },
 				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
 			},
 		};
@@ -260,9 +214,9 @@ describe("pub package status", () => {
 		workspace = {
 			openFolders: ["/projects/root"],
 			files: {
-				"/projects/root/proj1/.dart_tool/package_config.json": { mtime: 2 },
+				"/projects/root/proj1/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
 				"/projects/root/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
-				"/projects/root/proj2/.dart_tool/package_config.json": { mtime: 5 },
+				"/projects/root/proj2/.dart_tool/package_config.json": { mtime: 5, content: "{}" },
 				"/projects/root/proj2/pubspec.yaml": { mtime: 4, content: "dependencies:" },
 			},
 		};
@@ -292,9 +246,9 @@ describe("pub package status", () => {
 		workspace = {
 			openFolders: ["/projects/proj1", "/projects/proj2"],
 			files: {
-				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2 },
+				"/projects/proj1/.dart_tool/package_config.json": { mtime: 2, content: "{}" },
 				"/projects/proj1/pubspec.yaml": { mtime: 1, content: "dependencies:" },
-				"/projects/proj2/.dart_tool/package_config.json": { mtime: 5 },
+				"/projects/proj2/.dart_tool/package_config.json": { mtime: 5, content: "{}" },
 				"/projects/proj2/pubspec.yaml": { mtime: 4, content: "dependencies:" },
 			},
 		};
@@ -327,9 +281,9 @@ describe("pub package status", () => {
 		const projectFolders = foldersWithPubspecs.filter((p) => workspace.openFolders.find((wf) => isWithinPathOrEqual(p, wf)));
 
 		const results = getPubWorkspaceStatus(
-			workspace.sdks ?? {
+			{
 				dartSdkIsFromFlutter: false,
-				dartVersion: "1.2.3",
+				dartVersion: workspace.sdkVersion ?? "1.2.3",
 				isPreReleaseSdk: false,
 			},
 			extApi.logger,
@@ -350,7 +304,7 @@ describe("pub package status", () => {
 
 interface WorkspaceInfo {
 	openFolders: string[],
-	sdks?: Sdks,
+	sdkVersion?: string,
 	files: FilesInfo,
 }
 
@@ -360,5 +314,5 @@ interface FilesInfo {
 
 interface FileInfo {
 	mtime: number,
-	content?: string,
+	content: string,
 }

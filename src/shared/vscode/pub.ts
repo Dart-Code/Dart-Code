@@ -4,7 +4,7 @@ import * as semver from "semver";
 import { commands, Uri, window } from "vscode";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
-import { fsPath, getPubGeneratorVersion as getPubGeneratorSdkVersion, isWithinPath } from "../../shared/utils/fs";
+import { fsPath, getPubGeneratorVersion, isWithinPath } from "../../shared/utils/fs";
 
 export interface PubPackageStatus { folderUri: Uri, pubRequired: false | "GET" | "UPGRADE", reason?: string }
 
@@ -14,7 +14,7 @@ export function getPubWorkspaceStatus(
 	folderUris: Uri[],
 	includeDates = true,
 	existsSync: (itemPath: string) => boolean = fs.existsSync,
-	readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p).toString(),
+	readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p, "utf8").toString(),
 	mtimeSync: (itemPath: string) => Date = (p) => fs.statSync(p).mtime,
 ): PubPackageStatus[] {
 	return folderUris.map((folderUri) => getPubPackageStatus(sdks, logger, folderUri, includeDates, existsSync, readFileSync, mtimeSync));
@@ -26,7 +26,7 @@ export function getPubPackageStatus(
 	folderUri: Uri,
 	includeDates = true,
 	existsSync: (itemPath: string) => boolean = fs.existsSync,
-	readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p).toString(),
+	readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p, "utf8").toString(),
 	mtimeSync: (itemPath: string) => Date = (p) => fs.statSync(p).mtime,
 ): PubPackageStatus {
 	const folder = fsPath(folderUri);
@@ -52,7 +52,7 @@ export function getPubPackageStatus(
 
 	// If the Dart SDK version has upgraded by more than just a patch, we should
 	// prefer upgrade.
-	const lastUsedSdkVersion = getPubGeneratorSdkVersion(logger, packageMapPath);
+	const lastUsedSdkVersion = getPubGeneratorVersion(logger, packageMapPath, existsSync, readFileSync);
 	const currentSdkVersion = sdks.dartVersion;
 	if (lastUsedSdkVersion && currentSdkVersion) {
 		const lastUsedSdkMajorMinor = `${semver.major(lastUsedSdkVersion)}.${semver.minor(lastUsedSdkVersion)}.0`;
@@ -61,10 +61,10 @@ export function getPubPackageStatus(
 		logger.info(`Version last used for Pub is ${lastUsedSdkVersion} (${lastUsedSdkMajorMinor}), current is ${currentSdkVersion} (${currentSdkMajorMinor})`);
 		// For an SDK upgrade, we want to encourage upgrading.
 		if (semver.gt(currentSdkMajorMinor, lastUsedSdkMajorMinor))
-			return { folderUri, pubRequired: "UPGRADE", reason: `The current SDK version (${currentSdkMajorMinor}) is newer than the one last used to run "pub get" (${lastUsedSdkMajorMinor})` };
+			return { folderUri, pubRequired: "UPGRADE", reason: `The current SDK version (${currentSdkVersion}) is newer than the one last used to run "pub get" (${lastUsedSdkVersion})` };
 		// For a downgrade, Pub Get is enough to fix.
 		else if (semver.lt(currentSdkMajorMinor, lastUsedSdkMajorMinor))
-			return { folderUri, pubRequired: "GET", reason: `The current SDK version (${currentSdkMajorMinor}) is older than the one last used to run "pub get" (${lastUsedSdkMajorMinor})` };
+			return { folderUri, pubRequired: "GET", reason: `The current SDK version (${currentSdkVersion}) is older than the one last used to run "pub get" (${lastUsedSdkVersion})` };
 	}
 
 	const pubspecModified = mtimeSync(pubspecPath);

@@ -334,11 +334,16 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	}
 }
 
-export function getPubGeneratorVersion(logger: Logger, packageMapPath: string): string | undefined {
-	if (!fs.existsSync(packageMapPath))
+export function getPubGeneratorVersion(
+	logger: Logger,
+	packageMapPath: string,
+	existsSync: (itemPath: string) => boolean,
+	readFileSync: (itemPath: string) => string,
+): string | undefined {
+	if (!existsSync(packageMapPath))
 		return undefined;
 	try {
-		const content = fs.readFileSync(packageMapPath, "utf8");
+		const content = readFileSync(packageMapPath);
 		const data = JSON.parse(content);
 		const version = data.generatorVersion as string | undefined | null;
 		return nullToUndefined(semver.valid(version));
