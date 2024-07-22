@@ -28,7 +28,7 @@ export function getPubWorkspaceStatus(
 	// For any workspace projects, we need to also check their roots if they were not already in the initial set.
 	const workspaceProjects = statuses.filter((s) => s.workspace === "PROJECT");
 	if (workspaceProjects.length) {
-		logger.info(`Found ${workspaceProjects.length} Pub workspace projects roots that are not already in the set`);
+		logger.info(`Found ${workspaceProjects.length} Pub workspace projects with roots that are not already in the set`);
 		const includedWorkspaceRootPaths = new Set<string>();
 		statuses.filter((s) => s.workspace === "ROOT").forEach((p) => includedWorkspaceRootPaths.add(fsPath(p.folderUri)));
 
