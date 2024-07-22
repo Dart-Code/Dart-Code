@@ -665,8 +665,11 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		];
 
 		if (toolingDaemon) {
-			devToolsArgs.push("--dtd-uri");
-			devToolsArgs.push(await toolingDaemon.dtdUri);
+			const dtdUri = await toolingDaemon.dtdUri;
+			if (dtdUri) {
+				devToolsArgs.push("--dtd-uri");
+				devToolsArgs.push(dtdUri);
+			}
 		}
 
 		const executionInfo = customDevTools?.path ?

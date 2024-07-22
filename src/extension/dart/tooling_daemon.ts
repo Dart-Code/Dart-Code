@@ -35,7 +35,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		};
 
 		context.subscriptions.push(commands.registerCommand("dart.copyDtdUri", async () => {
-			await env.clipboard.writeText(await this.dtdUri);
+			await env.clipboard.writeText((await this.dtdUri) ?? "<dtd not available>");
 
 			const statusBarItem = this.statusBarItem;
 			statusBarItem.command = { ...copyUriCommand, title: "copied!" };
@@ -45,10 +45,12 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		const statusBarItem = this.statusBarItem;
 		statusBarItem.name = "Dart Tooling Daemon";
 		statusBarItem.text = "Dart Tooling Daemon Starting…";
-		void this.connected.then(() => {
-			void commands.executeCommand("setContext", DTD_AVAILABLE, true);
-			statusBarItem.text = "Dart Tooling Daemon";
-			statusBarItem.command = copyUriCommand;
+		void this.connected.then((connectionInfo) => {
+			if (connectionInfo) {
+				void commands.executeCommand("setContext", DTD_AVAILABLE, true);
+				statusBarItem.text = "Dart Tooling Daemon";
+				statusBarItem.command = copyUriCommand;
+			}
 		});
 	}
 

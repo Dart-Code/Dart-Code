@@ -21,7 +21,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	private hasShownTerminatedError = false;
 	private isShuttingDown = false;
 
-	private connectedCompleter = new PromiseCompleter<ConnectionInfo>();
+	private connectedCompleter = new PromiseCompleter<ConnectionInfo | undefined>();
 	public get connected() { return this.connectedCompleter.promise; }
 
 	constructor(
@@ -39,12 +39,14 @@ export class DartToolingDaemon implements IAmDisposable {
 		void this.dtdProcess.processExit.then(() => this.handleClose());
 	}
 
-	public get dtdUri(): Promise<string> {
+	public get dtdUri(): Promise<string | undefined> {
 		return this.dtdProcess.dtdUri;
 	}
 
 	private async connect() {
 		const dtdUri = await this.dtdProcess.dtdUri;
+		if (!dtdUri)
+			return;
 		const dtdSecret = await this.dtdProcess.dtdSecret;
 
 		this.logger.info(`Connecting to DTD at ${dtdUri}...`);
@@ -59,13 +61,15 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	private handleOpen() {
 		this.logger.info(`Connected to DTD`);
-		this.connectedCompleter.resolve(this.connection!);
+		this.connectedCompleter.resolve(this.connection);
 	}
 
 	protected async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
 		const connection = await this.connected;
-		const secret = connection.dtdSecret;
-		await this.send(Service.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
+		if (connection) {
+			const secret = connection.dtdSecret;
+			await this.send(Service.setIDEWorkspaceRoots, { secret, roots: workspaceFolderUris });
+		}
 	}
 
 	private handleData(data: string) {
@@ -157,13 +161,13 @@ export class DartToolingDaemon implements IAmDisposable {
 class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 	public hasReceivedConnectionInfo = false;
 
-	private dtdUriCompleter = new PromiseCompleter<string>();
+	private dtdUriCompleter = new PromiseCompleter<string | undefined>();
 	private dtdSecretCompleter = new PromiseCompleter<string>();
 	private processExitCompleter = new PromiseCompleter<void>();
 
 	public hasTerminated = false;
 
-	public get dtdUri(): Promise<string> {
+	public get dtdUri(): Promise<string | undefined> {
 		return this.dtdUriCompleter.promise;
 	}
 
@@ -191,6 +195,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		this.hasTerminated = true;
 		super.handleExit(code, signal);
 		this.processExitCompleter.resolve();
+		this.dtdUriCompleter.resolve(undefined);
 	}
 
 	protected shouldHandleMessage(_message: string): boolean {
