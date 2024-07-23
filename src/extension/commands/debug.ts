@@ -896,10 +896,14 @@ export class DebugCommands implements IAmDisposable {
 
 	public setSendLogsToClient(enabled: boolean) {
 		// Only send values for sessions that didn't already have logging enabled.
-		debugSessions.filter((d) => !d.session.configuration.sendLogsToClient).forEach((session) => {
-			void session.session.customRequest("updateSendLogsToClient", {
-				enabled,
-			});
+		debugSessions.filter((d) => !d.session.configuration.sendLogsToClient).forEach(async (session) => {
+			try {
+				await session.session.customRequest("updateSendLogsToClient", {
+					enabled,
+				});
+			} catch {
+				// Older SDKs don't support this, so just do nothing.
+			}
 		});
 	}
 
