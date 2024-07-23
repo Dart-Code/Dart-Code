@@ -637,13 +637,19 @@
 				"command": "dart.openDevToolsInspector",
 				"title": "Open DevTools Widget Inspector Page",
 				"category": "Flutter",
-				"icon": "media/commands/inspector.svg"
+				"icon": {
+					"dark": "media/commands/inspector_dark_mode.svg",
+					"light": "media/commands/inspector_light_mode.svg"
+				}
 			},
 			{
 				"command": "dart.openDevToolsPerformance",
 				"title": "Open DevTools Performance Page",
 				"category": "Flutter",
-				"icon": "media/commands/performance.svg"
+				"icon": {
+					"dark": "media/commands/performance_dark_mode.svg",
+					"light": "media/commands/performance_light_mode.svg"
+				}
 			},
 			{
 				"command": "dart.openDevToolsMemory",
@@ -654,7 +660,10 @@
 				"command": "dart.openDevToolsCpuProfiler",
 				"title": "Open DevTools CPU Profiler Page",
 				"category": "Dart",
-				"icon": "media/commands/performance.svg"
+				"icon": {
+					"dark": "media/commands/cpu_profiler_dark_mode.svg",
+					"light": "media/commands/cpu_profiler_light_mode.svg"
+				}
 			},
 			{
 				"command": "dart.openDevToolsNetwork",
