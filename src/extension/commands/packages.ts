@@ -5,7 +5,7 @@ import { iUnderstandAction, tenSecondsInMs } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { getPubWorkspaceStatus, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
+import { getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
@@ -66,6 +66,10 @@ export class PackageCommands extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
+		// Exclude folders we should never run pub get for.
+		if (!isValidPubGetTarget(uri).valid)
+			return;
+
 		const additionalArgs = [];
 		if (config.offline)
 			additionalArgs.push("--offline");
@@ -117,6 +121,11 @@ export class PackageCommands extends BaseSdkCommands {
 		}
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
+
+		// Exclude folders we should never run pub get for.
+		if (!isValidPubGetTarget(uri).valid)
+			return;
+
 		if (util.isInsideFlutterProject(uri))
 			return this.runFlutter(["pub", "upgrade"], uri);
 		else

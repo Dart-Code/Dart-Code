@@ -91,6 +91,17 @@ function getWorkspaceFolderPaths(
 	}
 }
 
+export function isValidPubGetTarget(folderUri: Uri): { valid: true } | { valid: false, reason: string } {
+	const folderPath = fsPath(folderUri);
+
+	// If a folder starts with '__' or '{' then it's probably a template of some
+	// sort and we shouldn't run.
+	if (folderPath.includes("__") || folderPath.includes("{"))
+		return { valid: false, reason: "Folder includes __ or { and looks like a template folder" };
+
+	return { valid: true };
+}
+
 function getPubPackageStatus(
 	sdks: Sdks,
 	logger: Logger,
@@ -107,10 +118,9 @@ function getPubPackageStatus(
 	if (!folder || !existsSync(pubspecPath))
 		return { folderUri, pubRequired: false, reason: "Folder or pubspec do not exist", workspace: "NONE" };
 
-	// If a folder starts with '__' or '{' then it's probably a template of some
-	// sort and we shouldn't run.
-	if (folder.includes("__") || folder.includes("{"))
-		return { folderUri, pubRequired: false, reason: "Folder starts with __ or { and looks like a template folder", workspace: "NONE" };
+	const isValid = isValidPubGetTarget(folderUri);
+	if (!isValid.valid)
+		return { folderUri, pubRequired: false, reason: isValid.reason, workspace: "NONE" };
 
 	const pubspecContent = readFileSync(pubspecPath);
 	const hasDependencies = pubspecHasDependenciesRegex.test(pubspecContent);
