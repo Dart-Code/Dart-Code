@@ -100,7 +100,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		return new Promise<TResp>((resolve, reject) => {
 			if (this.processExited) {
 				this.notifyRequestAfterExit();
-				reject(`Process has already exited with code ${this.process?.exitCode}`);
+				reject(`Tried to call "${method}" but process has already exited with code ${this.process?.exitCode}`);
 				return;
 			}
 

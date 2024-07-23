@@ -1006,12 +1006,14 @@ function getSettingsThatRequireRestart() {
 export async function deactivate(isRestart = false): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
 
+	const loggersToDispose = [...loggers];
+	loggers.length = 0;
 	await Promise.allSettled([
 		tryCleanup(() => setCommandVisiblity(false)),
 		tryCleanup(() => analyzer?.dispose()),
 		tryCleanup(() => flutterDaemon?.shutdown()),
 		tryCleanup(() => vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false)),
-		...loggers.map((l) => tryCleanup(() => l.dispose())),
+		...loggersToDispose.map((l) => tryCleanup(() => l.dispose())),
 	]);
 	logger.info(`Extension cleanup done`);
 

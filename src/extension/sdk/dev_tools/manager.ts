@@ -552,7 +552,16 @@ export class DevToolsManager implements vs.Disposable {
 					"serverpod.serverpod",
 				];
 				const effectiveAllowList = config.extensionRecommendationAllowList ?? defaultAllowList;
-				setTimeout(() => this.promptForExtensionRecommendations(effectiveAllowList), twentySecondsInMs);
+				setTimeout(async () => {
+					try {
+						await this.promptForExtensionRecommendations(effectiveAllowList);
+					} catch (e) {
+						// This can fail if we're restarting/shutting down before it fires.
+						const message = `Failed to check for extension recommendations: ${e}`;
+						console.error(message);
+						this.logger.error(message);
+					}
+				}, twentySecondsInMs);
 
 				portToBind = n.port;
 				resolve(`http://${n.host}:${n.port}/`);
