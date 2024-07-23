@@ -21,6 +21,7 @@ import { locateBestProjectRoot } from "../project";
 import { DevToolsLocation, DevToolsManager } from "../sdk/dev_tools/manager";
 import { isDartFile, isValidEntryFile } from "../utils";
 import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
+import { LoggingCommands } from "./logging";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
 const debugSessionsChangedEmitter = new vs.EventEmitter<void>();
@@ -70,7 +71,16 @@ export class DebugCommands implements IAmDisposable {
 	public isInspectingWidget = false;
 	private autoCancelNextInspectWidgetMode = false;
 
-	constructor(private readonly logger: Logger, private readonly fileTracker: LspFileTracker | undefined, private context: Context, private workspaceContext: DartWorkspaceContext, readonly dartCapabilities: DartCapabilities, readonly flutterCapabilities: FlutterCapabilities, private readonly devTools: DevToolsManager) {
+	constructor(
+		private readonly logger: Logger,
+		private readonly fileTracker: LspFileTracker | undefined,
+		private context: Context,
+		private workspaceContext: DartWorkspaceContext,
+		readonly dartCapabilities: DartCapabilities,
+		readonly flutterCapabilities: FlutterCapabilities,
+		private readonly devTools: DevToolsManager,
+		private readonly logging: LoggingCommands,
+	) {
 		this.vmServices = new VmServiceExtensions(logger, this, workspaceContext, flutterCapabilities);
 		this.devTools.debugCommands = this;
 		this.debugOptions.name = "Dart Debug Options";
@@ -84,6 +94,7 @@ export class DebugCommands implements IAmDisposable {
 		this.disposables.push(vs.debug.onDidStartDebugSession((s) => this.handleDebugSessionStart(s)));
 		this.disposables.push(vs.debug.onDidReceiveDebugSessionCustomEvent((e) => this.handleDebugSessionCustomEvent(e)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((s) => this.handleDebugSessionEnd(s)));
+		this.disposables.push(this.logging.onCaptureLogs((isCapturing) => this.setSendLogsToClient(isCapturing)));
 
 		// Handle enabling Run/Debug buttons for the file if an entry point or have a main() method.
 		if (this.fileTracker)
@@ -879,6 +890,15 @@ export class DebugCommands implements IAmDisposable {
 			void session.session.customRequest("updateDebugOptions", {
 				debugExternalPackageLibraries,
 				debugSdkLibraries,
+			});
+		});
+	}
+
+	public setSendLogsToClient(enabled: boolean) {
+		// Only send values for sessions that didn't already have logging enabled.
+		debugSessions.filter((d) => !d.session.configuration.sendLogsToClient).forEach((session) => {
+			void session.session.customRequest("updateSendLogsToClient", {
+				enabled,
 			});
 		});
 	}

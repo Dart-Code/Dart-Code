@@ -13,6 +13,8 @@ export let isLogging = false;
 export class LoggingCommands implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 	private currentLogCompleter: PromiseCompleter<void> | undefined;
+	private onCaptureLogsEmitter = new vs.EventEmitter<boolean>();
+	public readonly onCaptureLogs = this.onCaptureLogsEmitter.event;
 
 	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
 		this.disposables.push(
@@ -69,6 +71,7 @@ export class LoggingCommands implements vs.Disposable {
 
 		const logger = captureLogs(this.logger, fsPath(logUri), getLogHeader(), captureLogsMaxLineLength, allLoggedCategories);
 		isLogging = true;
+		this.onCaptureLogsEmitter.fire(isLogging);
 		this.disposables.push(logger);
 		void vs.commands.executeCommand("setContext", DART_IS_CAPTURING_LOGS_CONTEXT, true);
 		const completer = new PromiseCompleter<void>();
@@ -87,6 +90,7 @@ export class LoggingCommands implements vs.Disposable {
 		);
 
 		isLogging = false;
+		this.onCaptureLogsEmitter.fire(isLogging);
 		await logger.dispose();
 
 		const doc = await vs.workspace.openTextDocument(logUri);

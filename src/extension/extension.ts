@@ -487,6 +487,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		}
 	}
 
+	const loggingCommands = new LoggingCommands(logger, context.logPath);
+	context.subscriptions.push(loggingCommands);
+
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
@@ -496,7 +499,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(devTools);
 
 	// Debug commands.
-	const debugCommands = new DebugCommands(logger, lspAnalyzer?.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, devTools);
+	const debugCommands = new DebugCommands(logger, lspAnalyzer?.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, devTools, loggingCommands);
 	context.subscriptions.push(debugCommands);
 
 	// Task handlers.
@@ -668,7 +671,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Register URI handler.
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
 
-	context.subscriptions.push(new LoggingCommands(logger, context.logPath));
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	context.subscriptions.push(new TestCommands(logger, testModel, workspaceContext, vsCodeTestController, dartCapabilities, flutterCapabilities));
 
