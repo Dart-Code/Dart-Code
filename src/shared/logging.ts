@@ -147,7 +147,8 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 			return new Promise((resolve) => {
 				if (logStream) {
 					logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file ended${os.EOL}`);
-					logStream.end(resolve);
+					logStream.once("finish", resolve);
+					logStream.end();
 					logStream = undefined;
 				}
 			});

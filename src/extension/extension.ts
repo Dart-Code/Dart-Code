@@ -5,7 +5,7 @@ import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { vsCodeVersion } from "../shared/capabilities/vscode";
 import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
-import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
+import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -139,6 +139,7 @@ let experiments: KnownExperiments;
 const loggers: IAmDisposable[] = [];
 let ringLogger: IAmDisposable | undefined;
 const logger = new EmittingLogger();
+let extensionLog: IAmDisposable | undefined;
 
 // Keep a running in-memory buffer of last 200 log events we can give to the
 // user when something crashed even if they don't have disk-logging enabled.
@@ -154,7 +155,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	void vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
-	setupLog(getExtensionLogPath(), LogCategory.General);
+	if (!extensionLog)
+		extensionLog = setupLog(getExtensionLogPath(), LogCategory.General, false);
 
 	const webClient = new WebClient(extensionVersion);
 
@@ -869,9 +871,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// }
 }
 
-function setupLog(logFile: string | undefined, category: LogCategory) {
-	if (logFile)
-		loggers.push(captureLogs(logger, logFile, getLogHeader(), config.maxLogLineLength, [category]));
+function setupLog(logFile: string | undefined, category: LogCategory, autoDispose = true) {
+	if (logFile) {
+		const fileLogger = captureLogs(logger, logFile, getLogHeader(), config.maxLogLineLength, [category]);
+		if (autoDispose)
+			loggers.push(fileLogger);
+		return fileLogger;
+	}
 }
 
 function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
@@ -999,28 +1005,31 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart = false): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
-	try {
-		setCommandVisiblity(false);
-		void analyzer?.dispose();
-		await flutterDaemon?.shutdown();
-		if (loggers) {
-			await Promise.all(loggers.map((logger) => logger.dispose()));
-			loggers.length = 0;
-		}
-		void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false);
-		if (!isRestart) {
-			void vs.commands.executeCommand("setContext", HAS_LAST_DEBUG_CONFIG, false);
-			void vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, false);
-			void ringLogger?.dispose();
-			logger.dispose();
-		} else {
-			// If we are starting, add an additional delay just to make it more likely other services
-			// have shut down before we try to restart them.
-			await new Promise((resolve) => setTimeout(resolve, 500));
-		}
-		logger.info(`Extension deactivated!`);
-	} catch (e) {
-		logger.error(`Error during extension shutdown: ${e}`);
+
+	await Promise.allSettled([
+		tryCleanup(() => setCommandVisiblity(false)),
+		tryCleanup(() => analyzer?.dispose()),
+		tryCleanup(() => flutterDaemon?.shutdown()),
+		tryCleanup(() => vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false)),
+		...loggers.map((l) => tryCleanup(() => l.dispose())),
+	]);
+	logger.info(`Extension cleanup done`);
+
+	// Pump for any log events that might need to be written to the loggers.
+	await new Promise((resolve) => setTimeout(resolve, 100));
+
+	if (!isRestart) {
+		logger.info(`Closing all loggers...`);
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		await Promise.allSettled([
+			tryCleanup(() => logger.dispose()),
+			tryCleanup(() => ringLogger?.dispose()),
+			tryCleanup(() => extensionLog?.dispose()),
+		]);
+		await new Promise((resolve) => setTimeout(resolve, 50));
+	} else {
+		logger.info(`Restarting...`);
+		await new Promise((resolve) => setTimeout(resolve, 300));
 	}
 }
 
@@ -1029,5 +1038,18 @@ function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContex
 	void vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyStandardDartProjects);
 	void vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
 	void vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);
+}
+
+/// Calls a cleanup function in a try/catch to ensure we never throw and logs any error to the logger
+/// and the console.
+async function tryCleanup(f: () => void | Promise<void> | Thenable<void>): Promise<void> {
+	try {
+		await f();
+	} catch (e) {
+		try {
+			console.error(`Error cleaning up during extension shutdown: ${e}`);
+			logger.error(`Error cleaning up during extension shutdown: ${e}`);
+		} catch { }
+	}
 }
 
