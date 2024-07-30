@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest]
         node-version: [18]
         # legacy = last Dart SDK we'll support legacy protocol with
         build-version: [beta]

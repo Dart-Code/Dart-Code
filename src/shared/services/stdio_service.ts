@@ -296,6 +296,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");
 		else
 			this.logStream.write(message.trim() + "\r\n");
+		console.warn(message);
 	}
 
 	public dispose() {
