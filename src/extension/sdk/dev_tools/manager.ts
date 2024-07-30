@@ -716,7 +716,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 			this.additionalPidsToTerminate.push(n.pid);
 		});
 
-		this.createProcess(binCwd, binPath, binArgs, undefined);
+		this.createProcess(path.dirname(binPath), binPath, binArgs, undefined);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
