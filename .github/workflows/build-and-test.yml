@@ -42,9 +42,6 @@ jobs:
         # legacy = last Dart SDK we'll support legacy protocol with
         build-version: [beta]
         bot: [flutter_debug_sdk_dap]
-        include:
-          - os: ubuntu-latest
-            bot: flutter_snap
         exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
 
     steps:
@@ -231,14 +228,6 @@ jobs:
           path: .test_results
           if-no-files-found: ignore
 
-      - name: Store coverage
-        uses: actions/upload-artifact@v4
-        if: success() && matrix.build-version == 'stable'
-        with:
-          name: coverage-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
-          path: coverage
-          if-no-files-found: ignore
-
       - name: Store crash dumps
         uses: actions/upload-artifact@v4
         if: always()
@@ -276,15 +265,6 @@ jobs:
           delete-merged: true
         continue-on-error: true # fails if empty
 
-      - name: Merge coverage
-        uses: actions/upload-artifact/merge@v4
-        if: success()
-        with:
-          name: coverage
-          pattern: coverage-*
-          delete-merged: true
-        continue-on-error: true # fails if empty
-
       - name: Merge crash dumps
         uses: actions/upload-artifact/merge@v4
         if: always()
@@ -294,50 +274,3 @@ jobs:
           separate-directories: true
           delete-merged: true
         continue-on-error: true # fails if empty
-
-  upload_coverage:
-
-    name: Send Coverage to CodeClimate
-    needs: merge_artifacts
-    if: always() && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - uses: actions/checkout@v4
-
-      - name: Fetch Linux coverage
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage
-          path: coverage/linux
-
-      - name: Upload to CodeClimate
-        run: |
-          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
-          export GIT_BRANCH="${GITHUB_REF/refs\/heads\//}"
-          export GIT_SHA="${GITHUB_SHA}"
-          find coverage/**/**/lcov.info | cut -d '/' -f2- | xargs -I % -n1 ./cc-test-reporter format-coverage -t lcov -o coverage/%.json coverage/% # -p /home/runner/work/Dart-Code/Dart-Code
-          ./cc-test-reporter sum-coverage -o coverage/codeclimate.json coverage/**/**/lcov.info.json
-          ./cc-test-reporter upload-coverage
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-
-
-  notify_failure:
-
-    permissions:
-      contents: none
-    name: Notify Discord of Failure
-    needs: build
-    if: failure() && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Send notification to Discord
-        run: 'Invoke-WebRequest -Headers @{ "Content-Type" = "application/json" } -Method Post -Body "{`"content`":`"Build failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/Dart-Code/Dart-Code/commit/$($env:GITHUB_SHA)/checks`"}" -Uri $env:DISCORD_WEBHOOK'
-        shell: pwsh
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
