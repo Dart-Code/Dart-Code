@@ -198,10 +198,18 @@ jobs:
         run: ps -x
 
       - name: devtools server
-        run:
+        run: /home/runner/work/Dart-Code/Dart-Code/src/test/test_projects/bazel_workspace/scripts/custom_devtools.sh --machine
 
       - name: npm test
-        run: /home/runner/work/Dart-Code/Dart-Code/src/test/test_projects/bazel_workspace/scripts/custom_devtools.sh --machine
+        run: npm test
+        env:
+          CI: true
+          ELECTRON_NO_ATTACH_CONSOLE: 1
+          DISPLAY: ":99.0"
+          BOT: ${{ matrix.bot }}
+          BUILD_VERSION: ${{ matrix.build-version }}
+          LOGS_NAME: ${{ matrix.build-version }}
+          FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
       - name: ps -x (after)
         if: matrix.os != 'windows-latest'
