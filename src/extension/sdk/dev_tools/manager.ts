@@ -28,7 +28,6 @@ import { config } from "../../config";
 import { PubGlobal } from "../../pub/global";
 import { ExtensionRecommentations } from "../../recommendations/recommendations";
 import { getExcludedFolders } from "../../utils";
-import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 import { DevToolsEmbeddedView } from "./embedded_view";
 
@@ -717,7 +716,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 			this.additionalPidsToTerminate.push(n.pid);
 		});
 
-		this.createProcess(binCwd, binPath, binArgs, { toolEnv: getToolEnv(), envOverrides: binEnv });
+		this.createProcess(binCwd, binPath, binArgs, undefined);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {

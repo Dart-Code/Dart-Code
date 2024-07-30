@@ -27,15 +27,15 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		private logFile?: string) {
 	}
 
-	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides: { envOverrides?: { [key: string]: string | undefined }, toolEnv?: { [key: string]: string | undefined } }) {
+	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides: { envOverrides?: { [key: string]: string | undefined }, toolEnv?: { [key: string]: string | undefined } } | undefined) {
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
 		this.description = binPath;
 		if (workingDirectory)
 			this.logTraffic(`..  in ${workingDirectory}`);
-		if (envOverrides.envOverrides || envOverrides.toolEnv)
+		if (envOverrides && (envOverrides.envOverrides || envOverrides.toolEnv))
 			this.logTraffic(`..  with ${JSON.stringify(envOverrides)}`);
 
-		const env = Object.assign({}, envOverrides.toolEnv, envOverrides.envOverrides);
+		const env = envOverrides ? Object.assign({}, envOverrides.toolEnv, envOverrides.envOverrides) : undefined;
 		this.process = safeSpawn(workingDirectory, binPath, args, env);
 
 		this.logTraffic(`    PID: ${process.pid}`);
