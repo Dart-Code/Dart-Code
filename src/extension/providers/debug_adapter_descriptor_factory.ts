@@ -2,7 +2,8 @@ import * as path from "path";
 import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterExecutableOptions, DebugAdapterServer, DebugSession } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../../shared/constants";
+import { CodeCapabilities } from "../../shared/capabilities/vscode";
+import { dartVMPath, debugAdapterPath, executableNames, flutterPath, isWin } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
@@ -16,7 +17,7 @@ import { KnownExperiments } from "../experiments";
 import { getToolEnv } from "../utils/processes";
 
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
-	constructor(private readonly analytics: Analytics, private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly workspaceContext: WorkspaceContext, private readonly experiments: KnownExperiments) { }
+	constructor(private readonly analytics: Analytics, private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly codeCapabilities: CodeCapabilities, private readonly workspaceContext: WorkspaceContext, private readonly experiments: KnownExperiments) { }
 
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
 		return this.descriptorForType(session.configuration.debuggerType as DebuggerType, !!session.configuration.noDebug);
@@ -126,11 +127,11 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")} and options ${JSON.stringify(executableOptions)}`);
 			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args, executableOptions);
 		} else if (useSdkDap) {
-			const executable = isDartOrDartTest
+			let executable = isDartOrDartTest
 				? path.join(this.sdks.dart, dartVMPath)
 				: this.workspaceContext.config.flutterToolsScript?.script ?? (this.sdks.flutter ? path.join(this.sdks.flutter, flutterPath) : executableNames.flutter);
 
-			const args = ["debug_adapter"];
+			let args = ["debug_adapter"];
 			if (isDartTestOrFlutterTest)
 				args.push("--test");
 			if (isFlutterTest && this.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
@@ -138,6 +139,20 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 
 			if (this.workspaceContext.config.flutterSdkHome)
 				executableOptions.cwd = this.workspaceContext.config.flutterSdkHome;
+
+			const requiresBatWorkaround = isWin && !isDartOrDartTest && this.codeCapabilities.isUnableToRunBatDebugAdapters;
+			if (requiresBatWorkaround && this.sdks.flutter) {
+				this.logger.info(`Spawning debug adapter directly with dart.exe due to VS Code issue #224184`);
+				// From flutter.bat:
+				// "%dart%" --disable-dart-dev --packages="%flutter_tools_dir%\.dart_tool\package_config.json" %FLUTTER_TOOL_ARGS% "%snapshot_path%" %* & "%exit_with_errorlevel%"
+				executable = path.join(this.sdks.dart, dartVMPath);
+				args = [
+					"--disable-dart-dev",
+					`--packages=${path.join(this.sdks.flutter, ".dart_tool", "package_config.json")}`,
+					path.join(this.sdks.flutter, "bin", "cache", "flutter_tools.snapshot"),
+					...args,
+				];
+			}
 
 			this.logger.info(`Running SDK DAP Dart VM in ${executableOptions.cwd}: ${executable} ${args.join("    ")} and options ${JSON.stringify(executableOptions)}`);
 			logDebuggerStart(true);
