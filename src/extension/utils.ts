@@ -41,7 +41,7 @@ export function resolvePaths<T extends string | undefined>(p: T): string | (unde
 	if (typeof p !== "string")
 		return undefined as (undefined extends T ? undefined : never);
 
-	if (p.startsWith("~/") || p.startsWith("~\\"))
+	if (p.startsWith("~/"))
 		return path.join(os.homedir(), p.substr(2));
 	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)
 		return path.join(fsPath(workspace.workspaceFolders[0].uri), p);
