@@ -3,14 +3,18 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, deleteDirectoryRecursive, helloWorldFolder } from "../../helpers";
+import { activate, deleteDirectoryRecursive, extApi, helloWorldFolder } from "../../helpers";
 
 describe("dart tasks", () => {
 	beforeEach("activate", () => activate());
 	const dartDocOutputPath = path.join(fsPath(helloWorldFolder), "doc");
 	beforeEach("clear out sample folder", () => deleteDirectoryRecursive(dartDocOutputPath));
 
-	it("dart.task.dartdoc causes documentation to be generated", async () => {
+	it("dart.task.dartdoc causes documentation to be generated", async function () {
+		// https://github.com/dart-lang/dartdoc/issues/3823
+		if (extApi.dartCapabilities.version.startsWith("3.5.0") && extApi.dartCapabilities.version.endsWith("beta"))
+			this.skip();
+
 		assert.ok(!fs.existsSync(dartDocOutputPath));
 		await new Promise<void>(async (resolve, reject) => {
 			vs.tasks.onDidEndTaskProcess((task) => {

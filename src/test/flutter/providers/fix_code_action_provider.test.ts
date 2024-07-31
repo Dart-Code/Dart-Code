@@ -31,7 +31,7 @@ describe("fix_code_action_provider", () => {
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Col||ors"));
 		assert.ok(fixResults);
 		assert.ok(fixResults.length);
-		assert.ok(fixResults.find((r) => r.title.includes("Create local variable 'Colors'")));
+		assert.ok(fixResults.find((r) => r.title.includes("Create class 'Colors'")));
 	});
 
 	it("does not contain duplicates", async () => {
