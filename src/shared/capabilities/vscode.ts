@@ -19,10 +19,6 @@ export class CodeCapabilities {
 	get supportsEmbeddedDevTools() { return !isKnownCloudIde(env.appName); }
 	get supportsDevTools() { return !isCloudShell(env.appName); } // Until DevTools can work without SSE, it will not work on Cloud Shell.
 	get editorConfigFolder() { return isTheia(env.appName) ? ".theia" : ".vscode"; }
-
-	// Whether this version of VS Code has the issue that we can't spawn .bat debug adapters.
-	// https://github.com/microsoft/vscode/issues/224184
-	get isUnableToRunBatDebugAdapters() { return versionIsAtLeast(this.version, "1.92.0-0"); }
 }
 
 export const vsCodeVersion = new CodeCapabilities(codeVersion);
