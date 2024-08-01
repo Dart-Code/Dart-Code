@@ -180,6 +180,19 @@ export class DebugCommands implements IAmDisposable {
 			// Also, _prefer_ a debug session if we haven't been told but we know we're not a static page.
 			prefersDebugSession = prefersDebugSession ?? !isKnownStaticPage;
 
+			// As a workaround for https://github.com/Dart-Code/Dart-Code/issues/5208, if this is
+			// a request to launch an extension and neither flag was set, then rather than defaulting
+			// to `requires` (and not `prefers`), fall back to just prefering.
+			if (
+				pageId && pageId.endsWith("_ext")
+				&& options?.requiresDebugSession === undefined
+				&& options?.prefersDebugSession === undefined
+				&& requiresDebugSession
+			) {
+				requiresDebugSession = false;
+				prefersDebugSession = true;
+			}
+
 			let session: DartDebugSessionInformation | undefined;
 			if (requiresDebugSession || (prefersDebugSession && debugSessions.length)) {
 				session = options?.debugSessionId

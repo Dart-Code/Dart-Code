@@ -91,6 +91,9 @@ class VsCodeApiHandler extends ToolApi {
 	readonly apiName = "vsCode";
 
 	public async handleRequest(method: string, params: any): Promise<any> {
+		// IMPORTANT: Optional values here could be either `null` or `undefined` so should be
+		//  converted with `nullToUndefined` to match type signatures elsewhere (otherwise
+		//  checks for `== undefined` may fail because the value was null).
 		if (method === "getCapabilities") {
 			return this.api.capabilities;
 		} else if (method === "initialize") {
@@ -101,18 +104,21 @@ class VsCodeApiHandler extends ToolApi {
 			return this.api.enablePlatformType(params.platformType as string);
 		} else if (method === "openDevToolsPage") {
 			return this.api.openDevToolsPage(
-				params.debugSessionId as string | undefined,
-				params.page as string | undefined,
-				params.forceExternal as boolean | undefined,
-				params.requiresDebugSession as boolean | undefined,
-				params.prefersDebugSession as boolean | undefined,
+				nullToUndefined(params.debugSessionId as string | undefined | null),
+				nullToUndefined(params.page as string | undefined | null),
+				nullToUndefined(params.forceExternal as boolean | undefined | null),
+				nullToUndefined(params.requiresDebugSession as boolean | undefined | null),
+				nullToUndefined(params.prefersDebugSession as boolean | undefined | null),
 			);
 		} else if (method === "hotReload") {
 			return this.api.hotReload(params.debugSessionId as string);
 		} else if (method === "hotRestart") {
 			return this.api.hotRestart(params.debugSessionId as string);
 		} else if (method === "executeCommand") {
-			return await this.api.executeCommand(params.command as string, params.arguments as object[] | undefined);
+			return await this.api.executeCommand(
+				params.command as string,
+				nullToUndefined(params.arguments as object[] | undefined | null),
+			);
 		}
 	}
 }
