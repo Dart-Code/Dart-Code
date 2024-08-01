@@ -37,7 +37,6 @@ export enum VmServiceExtension {
 /// The service extensions we know about and allow toggling via commands.
 export enum VmService {
 	HotReload = "reloadSources",
-	HotRestart = "hotRestart",
 	LaunchDevTools = "launchDevTools",
 }
 
