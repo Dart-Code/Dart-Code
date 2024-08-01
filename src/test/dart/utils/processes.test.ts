@@ -28,7 +28,9 @@ function testExecution(filename: string) {
 				SET _string=%~1
 				ECHO %_string%
 				`
-			: "echo $1";
+			: `#!/usr/bin/env bash
+				echo $1
+				`;
 		fs.writeFileSync(fullPath, contents);
 		fs.chmodSync(fullPath, "775");
 
