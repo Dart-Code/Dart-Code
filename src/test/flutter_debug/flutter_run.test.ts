@@ -934,7 +934,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -957,7 +957,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -977,7 +977,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -997,7 +997,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
@@ -1021,7 +1021,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
 				.then(() => dc.configurationDoneRequest()),
-			dc.waitForEvent("stopped"),
+			dc.waitForStop(),
 			dc.launch(config),
 		);
 		const stack = await dc.getStack();
