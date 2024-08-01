@@ -668,6 +668,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			this.skip();
 		}
 
+		if (flutterTestDeviceIsWeb && extApi.dartCapabilities.version.startsWith("3.5.0") && extApi.dartCapabilities.version.endsWith("beta"))
+			// https://github.com/Dart-Code/Dart-Code/issues/5211
+			this.skip();
+
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		const expectedLocation = {
