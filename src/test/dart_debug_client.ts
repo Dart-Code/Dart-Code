@@ -27,11 +27,15 @@ export class DartDebugClient extends DebugClient {
 	public readonly isDartDap: boolean;
 	public readonly isUsingUris: boolean;
 
-	constructor(args: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
-		super(args.runtime, args.executable, args.args, "dart", { shell: args.runtime?.endsWith(".sh") ? true : undefined }, true);
-		this.isDartDap = args.runtime !== undefined && args.runtime !== "node";
+	constructor(daArgs: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
+		const useShell = daArgs.runtime?.endsWith(".sh") || daArgs.runtime?.endsWith(".bat");
+		const runtime = useShell ? `"${daArgs.runtime}"` : daArgs.runtime;
+		const executable = useShell ? `"${daArgs.executable}"` : daArgs.executable;
+		const args = useShell ? daArgs.args?.map((a) => `"${a}"`) : daArgs.args;
+		super(runtime, executable, args, "dart", { shell: useShell ? true : undefined }, true);
+		this.isDartDap = daArgs.runtime !== undefined && daArgs.runtime !== "node";
 		this.isUsingUris = this.isDartDap && this.dartCapabitilies.supportsMacroGeneratedFiles;
-		this.port = args.port;
+		this.port = daArgs.port;
 
 		// HACK to handle incoming requests..
 		const me = (this as unknown as { dispatch(body: string): void });
