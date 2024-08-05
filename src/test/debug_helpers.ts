@@ -60,20 +60,28 @@ export function createDebugClient(debugType: DebuggerType) {
 		if (!thisDc.hasTerminated) {
 			// Wait for a terminated event with a timeout.
 			const terminatedEvent = new Promise((resolve) => thisDc.on("terminated", resolve));
-			thisDc.terminateRequest().catch((e) => logger.error(e));
-			// Tests may require a second terminateRequest because they first print "waiting for test to finish...".
-			if (debugType === DebuggerType.DartTest || debugType === DebuggerType.FlutterTest || debugType === DebuggerType.WebTest) {
-				await Promise.race([delay(300), terminatedEvent]);
-				// If we still hasn't termianted, send the scond.
-				if (!thisDc.hasTerminated) {
-					thisDc.terminateRequest().catch((e) => logger.error(e));
+			try {
+				thisDc.terminateRequest().catch((e) => logger.error(e));
+				// Tests may require a second terminateRequest because they first print "waiting for test to finish...".
+				if (debugType === DebuggerType.DartTest || debugType === DebuggerType.FlutterTest || debugType === DebuggerType.WebTest) {
 					await Promise.race([delay(300), terminatedEvent]);
+					// If we still hasn't termianted, send the second.
+					if (!thisDc.hasTerminated) {
+						thisDc.terminateRequest().catch((e) => logger.error(e));
+						await Promise.race([delay(300), terminatedEvent]);
+					}
 				}
+			} catch (e) {
+				logger.error(e);
 			}
 			await withTimeout(terminatedEvent, "Timed out terminating and cleaning up!", 50);
 		}
 
-		thisDc.stop().catch((e) => logger.error(e));
+		try {
+			thisDc.stop().catch((e) => logger.error(e));
+		} catch (e) {
+			logger.error(e);
+		}
 	});
 	return thisDc;
 }
