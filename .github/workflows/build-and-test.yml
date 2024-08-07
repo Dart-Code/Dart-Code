@@ -2,9 +2,6 @@ name: Run Tests
 
 on:
   push:
-  pull_request:
-  schedule:
-     - cron: '0 6 * * 1' # 6am Monday
   workflow_dispatch:
 
 jobs:
@@ -20,15 +17,9 @@ jobs:
     steps:
       - id: no_exclude
         name: Run all builds
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
         # Exclude the non-LSP bots because we don't support legacy protocol for current stable or later, they will only be tested
         # as part of the legacy build bots.
         run: echo "excludes=[{\"build-version\":\"stable\",\"bot\":\"dart\"},{\"build-version\":\"stable\",\"bot\":\"flutter\"},{\"build-version\":\"beta\",\"bot\":\"dart\"},{\"build-version\":\"beta\",\"bot\":\"flutter\"}]" >> $GITHUB_OUTPUT
-      - id: exclude
-        name: Exclude some builds if not running on schedule
-        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
-        run: echo "excludes=[{\"build-version\":\"legacy\"},{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"},{\"build-version\":\"stable\",\"bot\":\"dart\"},{\"build-version\":\"stable\",\"bot\":\"flutter\"},{\"build-version\":\"beta\",\"bot\":\"dart\"},{\"build-version\":\"beta\",\"bot\":\"flutter\"}]" >> $GITHUB_OUTPUT
-
 
   build:
 
@@ -45,7 +36,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         node-version: [18]
         # legacy = last Dart SDK we'll support legacy protocol with
-        build-version: [legacy, stable, beta]
+        build-version: [stable]
         bot: [flutter_debug, flutter_debug_chrome, flutter_debug_sdk_dap, flutter_debug_chrome_sdk_dap, flutter_test_debug, flutter_test_debug_sdk_dap, dart_web_debug, flutter_repo, dart_debug, dart_debug_sdk_dap, dart, dart_lsp, flutter, flutter_lsp, misc]
         include:
           - os: ubuntu-latest
