@@ -12,7 +12,7 @@ describe("dart tasks", () => {
 
 	it("dart.task.dartdoc causes documentation to be generated", async function () {
 		// https://github.com/dart-lang/dartdoc/issues/3823
-		if (extApi.dartCapabilities.version.startsWith("3.5.0") && extApi.dartCapabilities.version.endsWith("beta"))
+		if (extApi.dartCapabilities.version.startsWith("3.5."))
 			this.skip();
 
 		assert.ok(!fs.existsSync(dartDocOutputPath));
