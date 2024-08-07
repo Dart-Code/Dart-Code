@@ -200,14 +200,6 @@ export const dartRecommendedConfig = {
 	// with Dart's ability to highlight only exact references to the selected variable.
 	"editor.selectionHighlight": false,
 
-	// By default, VS Code will pre-select the most recently used item from code
-	// completion. This is usually not the most relevant item.
-	//
-	// "first" will always select top item
-	// "recentlyUsedByPrefix" will filter the recently used items based on the
-	//     text immediately preceeding where completion was invoked.
-	"editor.suggestSelection": "first",
-
 	// Allows pressing <TAB> to complete snippets such as `for` even when the
 	// completion list is not visible.
 	"editor.tabCompletion": "onlySnippets",
