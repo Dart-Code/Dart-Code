@@ -30,11 +30,14 @@ describe("go to", () => {
 			this.skip();
 	});
 
-	beforeEach("write files", () => {
-		fs.writeFileSync(fsPath(helloWorldPubspec), fs.readFileSync(fsPath(helloWorldPubspec)).toString().replace("sdk: '>=2.12.0 <4.0.0'", "sdk: '>=3.5.0-0 <4.0.0'"));
+	beforeEach("write files", async () => {
+		fs.writeFileSync(fsPath(helloWorldPubspec), fs.readFileSync(fsPath(helloWorldPubspec)).toString().replace("sdk: '>=2.12.0 <4.0.0'", "sdk: '>=3.6.0-0 <4.0.0'"));
 		mkDirRecursive(path.dirname(fsPath(libFile)));
 		fs.writeFileSync(fsPath(libFile), libContent);
 		fs.writeFileSync(fsPath(augmentationFile), augmentationContent);
+
+		// Modifying pubspec will trigger analysis.
+		await extApi.nextAnalysis();
 	});
 
 	describe("augmentation", () => {
