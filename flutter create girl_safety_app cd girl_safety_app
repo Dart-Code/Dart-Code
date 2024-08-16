@@ -1,0 +1,58 @@
+import 'package:flutter/material.dart';
+import 'package:location/location.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Girls Safety App',
+      home: SafetyHome(),
+    );
+  }
+}
+
+class SafetyHome extends StatefulWidget {
+  @override
+  _SafetyHomeState createState() => _SafetyHomeState();
+}
+
+class _SafetyHomeState extends State<SafetyHome> {
+  final Location _location = Location();
+
+  Future<void> sendAlert() async {
+    // Get the current location
+    final locationData = await _location.getLocation();
+
+    // Send location data to Firestore
+    FirebaseFirestore.instance.collection('alerts').add({
+      'latitude': locationData.latitude,
+      'longitude': locationData.longitude,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    // Show confirmation message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('SOS Alert Sent!')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Girls Safety App'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: sendAlert,
+          child: Text('Send SOS Alert'),
+        ),
+      ),
+    );
+  }
+}
