@@ -29,7 +29,7 @@ describe("dart tooling daemon", () => {
 
 	it("should be able to read files inside the workspace root", async function () {
 		// https://github.com/Dart-Code/Dart-Code/issues/5210
-		if (extApi.dartCapabilities.version.startsWith("3.5.0") && extApi.dartCapabilities.version.endsWith("beta"))
+		if (extApi.dartCapabilities.version.startsWith("3.5."))
 			this.skip();
 
 		const daemon = extApi.toolingDaemon;
