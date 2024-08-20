@@ -749,6 +749,16 @@
 				"command": "_dart.showDebuggerNumbersAsDecimal",
 				"title": "Format integers as Decimal",
 				"category": "Dart"
+			},
+			{
+				"command": "_dart.settings.openDartTestAdditionalArgs",
+				"title": "Edit additional 'dart test' arguments",
+				"category": "Dart"
+			},
+			{
+				"command": "_dart.settings.openFlutterTestAdditionalArgs",
+				"title": "Edit additional 'flutter test' arguments",
+				"category": "Flutter"
 			}
 		],
 		"keybindings": [
@@ -1211,6 +1221,14 @@
 				{
 					"command": "_dart.showDebuggerNumbersAsDecimal",
 					"when": "false"
+				},
+				{
+					"command": "_dart.settings.openDartTestAdditionalArgs",
+					"when": "false"
+				},
+				{
+					"command": "_dart.settings.openFlutterTestAdditionalArgs",
+					"when": "false"
 				}
 			],
 			"debug/toolBar": [
@@ -1440,6 +1458,16 @@
 				}
 			],
 			"view/title": [
+				{
+					"when": "view == workbench.view.testing && dart-code:anyProjectLoaded",
+					"group": "dart@1",
+					"command": "_dart.settings.openDartTestAdditionalArgs"
+				},
+				{
+					"when": "view == workbench.view.testing && dart-code:anyFlutterProjectLoaded",
+					"group": "dart@2",
+					"command": "_dart.settings.openFlutterTestAdditionalArgs"
+				},
 				{
 					"when": "view == dartFlutterSidebar",
 					"group": "navigation@1",

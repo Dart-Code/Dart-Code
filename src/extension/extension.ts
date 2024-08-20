@@ -54,6 +54,7 @@ import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
 import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
+import { SettingsCommands } from "./commands/settings";
 import { TestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation } from "./commands/test";
 import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
@@ -672,6 +673,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.window.registerUriHandler(new DartUriHandler(flutterCapabilities)));
 
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
+	context.subscriptions.push(new SettingsCommands(logger, workspaceContext));
 	context.subscriptions.push(new TestCommands(logger, testModel, workspaceContext, vsCodeTestController, dartCapabilities, flutterCapabilities));
 
 	if (lspClient && lspAnalyzer) {
