@@ -830,11 +830,11 @@
 				},
 				{
 					"command": "pub.get",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "pub.get.all",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "dart.task.dartdoc",
@@ -846,15 +846,15 @@
 				},
 				{
 					"command": "pub.upgrade",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "pub.upgrade.majorVersions",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "pub.outdated",
-					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported"
+					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub"
 				},
 				{
 					"command": "dart.addSdkToPath",
@@ -870,11 +870,11 @@
 				},
 				{
 					"command": "dart.addDependency",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "dart.addDevDependency",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "_dart.removeDependency",
@@ -998,23 +998,23 @@
 				},
 				{
 					"command": "flutter.packages.get",
-					"when": "dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "flutter.packages.get.all",
-					"when": "dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "flutter.packages.upgrade",
-					"when": "dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "flutter.packages.upgrade.majorVersions",
-					"when": "dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "flutter.packages.outdated",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub"
 				},
 				{
 					"command": "flutter.clean",
@@ -1296,34 +1296,34 @@
 			],
 			"editor/title": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.get",
 					"group": "navigation@1"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.upgrade",
 					"alt": "pub.upgrade.majorVersions",
 					"group": "navigation@2"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.outdated",
 					"group": "navigation@3"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.get",
 					"group": "navigation@1"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.upgrade",
 					"alt": "flutter.packages.upgrade.majorVersions",
 					"group": "navigation@2"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.outdated",
 					"group": "navigation@3"
 				},
@@ -1340,35 +1340,35 @@
 			],
 			"editor/context": [
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
 					"command": "pub.outdated"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
 					"command": "flutter.packages.outdated"
 				},
 				{
@@ -1403,19 +1403,19 @@
 					"command": "pub.outdated"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.get"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.upgrade"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
 					"command": "flutter.packages.outdated"
 				},
 				{
@@ -1600,7 +1600,7 @@
 				{
 					"id": "dartDependencyTree",
 					"name": "Dependencies",
-					"when": "dart-code:anyProjectLoaded"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				}
 			],
 			"flutter": [
@@ -2452,6 +2452,12 @@
 				"title": "Pub",
 				"order": 1,
 				"properties": {
+					"dart.enablePub": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to enable functionality for using Pub. Turning this setting off will prevent the extension from ever running pub and hide all commands relating to this. Use this if you are using an alternative package manager.",
+						"scope": "window"
+					},
 					"dart.promptToGetPackages": {
 						"type": "boolean",
 						"default": true,

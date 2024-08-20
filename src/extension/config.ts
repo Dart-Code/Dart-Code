@@ -104,6 +104,7 @@ class Config {
 	get devToolsReuseWindows(): boolean { return this.getConfig<boolean>("devToolsReuseWindows", true); }
 	get devToolsTheme(): "dark" | "light" { return this.getConfig<"dark" | "light">("devToolsTheme", "dark"); }
 	get documentation(): undefined | string { return this.getConfig<null | string>("documentation", null); }
+	get enablePub(): boolean { return this.getConfig<boolean>("enablePub", true); }
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get enableServerSnippets(): boolean { return this.getConfig<boolean>("enableServerSnippets", true); }
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }

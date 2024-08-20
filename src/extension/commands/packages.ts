@@ -50,6 +50,9 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private async getPackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
+		if (!config.enablePub)
+			return;
+
 		if (Array.isArray(uri)) {
 			for (const item of uri) {
 				await this.getPackages(item);
@@ -84,12 +87,18 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private async getPackagesForAllProjects() {
+		if (!config.enablePub)
+			return;
+
 		const allFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
 		const uriFolders = allFolders.map((f) => vs.Uri.file(f));
 		await vs.commands.executeCommand("dart.getPackages", uriFolders);
 	}
 
 	private async listOutdatedPackages(uri: string | vs.Uri | undefined) {
+		if (!config.enablePub)
+			return;
+
 		if (!uri || !(uri instanceof vs.Uri)) {
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to check for outdated packages");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
@@ -106,6 +115,9 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private async upgradePackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
+		if (!config.enablePub)
+			return;
+
 		if (Array.isArray(uri)) {
 			for (const item of uri) {
 				await this.upgradePackages(item);
@@ -133,6 +145,9 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private async upgradePackagesMajorVersions(uri: string | vs.Uri | undefined) {
+		if (!config.enablePub)
+			return;
+
 		if (!this.dartCapabilities.supportsPubUpgradeMajorVersions) {
 			void vs.window.showErrorMessage("Your current Dart SDK does not support 'pub upgrade --major-versions'");
 			return;
@@ -161,6 +176,8 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private setupPubspecWatcher() {
+		// Create the watcher regardless of enablePub setting, because the handler will check
+		// and then we don't have to create/destroy as settings change.
 		this.disposables.push(vs.workspace.onWillSaveTextDocument((e) => {
 			const name = path.basename(fsPath(e.document.uri)).toLowerCase();
 			if (name === "pubspec.yaml" || name === "pubspec_overrides.yaml") {
@@ -175,6 +192,9 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
+		if (!config.enablePub)
+			return;
+
 		const isManualSave = !!lastPubspecSaveReason;
 		const filePath = fsPath(uri);
 
@@ -226,6 +246,9 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	public async fetchPackagesOrPrompt(uri: vs.Uri | undefined, options?: { alwaysPrompt?: boolean, upgradeOnSdkChange?: boolean }): Promise<void> {
+		if (!config.enablePub)
+			return;
+
 		if (isFetchingPackages) {
 			this.logger.info(`Already running pub get, skipping!`);
 			return;

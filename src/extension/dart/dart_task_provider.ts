@@ -40,13 +40,15 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 	protected createSharedTasks(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri): Array<Promise<vs.Task>> {
 		const promises: Array<Promise<vs.Task>> = [];
 
-		promises.push(this.createPubTask(workspaceFolder, projectFolder, ["get"]));
-		promises.push(this.createPubTask(workspaceFolder, projectFolder, ["upgrade"]));
-		if (referencesBuildRunner(fsPath(projectFolder))) {
-			promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "watch"]));
-			promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "build"]));
-			promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "serve"]));
-			promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "test"]));
+		if (config.enablePub) {
+			promises.push(this.createPubTask(workspaceFolder, projectFolder, ["get"]));
+			promises.push(this.createPubTask(workspaceFolder, projectFolder, ["upgrade"]));
+			if (referencesBuildRunner(fsPath(projectFolder))) {
+				promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "watch"]));
+				promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "build"]));
+				promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "serve"]));
+				promises.push(this.createPubTask(workspaceFolder, projectFolder, ["run", "build_runner", "test"]));
+			}
 		}
 
 		return promises;
