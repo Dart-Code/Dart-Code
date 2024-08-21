@@ -169,7 +169,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("formatter", data.formatter);
 		add("extensionKind", data.extensionKind);
 		add("platform", data.platform);
-		add("hostKind", data.hostKind);
+		add("hostKind", data.hostKind ?? "desktop");
 		add("showTodos", data.showTodos);
 		add("userLanguage", data.language);
 		add("workspaceType", data.workspaceType);
