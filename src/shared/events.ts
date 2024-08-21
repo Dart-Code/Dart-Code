@@ -24,4 +24,25 @@ export class EventEmitter<T> implements IAmDisposable {
 	}
 }
 
+export class EventsEmitter<T> implements IAmDisposable {
+	private emitter = new evt.EventEmitter();
+
+	public fire(event: string, x: T): void {
+		this.emitter.emit(event, x);
+	}
+
+	public listen(event: string, listener: (e: T) => any, thisArgs?: any): IAmDisposable {
+		if (thisArgs)
+			listener = listener.bind(thisArgs);
+		this.emitter.on(event, listener);
+		return {
+			dispose: () => { this.emitter.removeListener(event, listener); },
+		};
+	}
+
+	public dispose() {
+		this.emitter.removeAllListeners();
+	}
+}
+
 export type Event<T> = (listener: (e: T) => any, thisArgs?: any) => IAmDisposable;

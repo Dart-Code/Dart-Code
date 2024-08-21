@@ -15,12 +15,36 @@ export interface DtdRequest {
 	params?: object;
 }
 
+export interface DtdNotification {
+	jsonrpc: "2.0",
+	id: string;
+	method: "streamNotify";
+	params: {
+		streamId: string,
+		eventKind: string,
+		eventData: ServiceRegisteredEventData | ServiceUnregisteredEventData | any,
+	};
+}
+
+export interface ServiceRegisteredEventData {
+	service: string,
+	method: string,
+	capabilities?: any,
+}
+
+export interface ServiceUnregisteredEventData {
+	service: string,
+	method: string,
+}
+
 export enum Service {
 	Editor,
 }
 
 export enum Stream {
 	Editor,
+	Service,
+	Lsp,
 }
 
 export enum ServiceMethod {
@@ -28,6 +52,8 @@ export enum ServiceMethod {
 	setIDEWorkspaceRoots = "FileSystem.setIDEWorkspaceRoots",
 	getIDEWorkspaceRoots = "FileSystem.getIDEWorkspaceRoots",
 	readFileAsString = "FileSystem.readFileAsString",
+	streamListen = "streamListen",
+	streamCancel = "streamCancel",
 }
 
 export interface RegisterServiceParams {

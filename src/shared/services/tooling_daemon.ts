@@ -3,12 +3,13 @@ import * as path from "path";
 import * as ws from "ws";
 import { dartVMPath, tenMinutesInMs } from "../constants";
 import { LogCategory } from "../enums";
+import { EventsEmitter } from "../events";
 import { DartSdks, IAmDisposable, Logger } from "../interfaces";
 import { CategoryLogger } from "../logging";
 import { PromiseCompleter, PromiseOr, disposeAll } from "../utils";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
-import { DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, SelectDeviceParams, Service, ServiceMethod, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult } from "./tooling_daemon_services";
+import { DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
@@ -25,6 +26,8 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	private connectedCompleter = new PromiseCompleter<ConnectionInfo | undefined>();
 	public get connected() { return this.connectedCompleter.promise; }
+
+	private readonly notificationsEmitters: { [key: string]: EventsEmitter<any> } = {};
 
 	constructor(
 		logger: Logger,
@@ -80,7 +83,11 @@ export class DartToolingDaemon implements IAmDisposable {
 		const id = json.id;
 		const method = json.method;
 
-		if (id !== undefined && method) {
+		if (method === "streamNotify") {
+			const notification = json as DtdNotification;
+			this.notificationsEmitters[notification.params?.streamId]?.fire(notification.params.eventKind, notification.params.eventData);
+
+		} else if (id !== undefined && method) {
 			const request = json as DtdRequest;
 			// Handle service request.
 			const serviceHandler = this.serviceHandlers[method];
@@ -109,6 +116,21 @@ export class DartToolingDaemon implements IAmDisposable {
 		}
 	}
 
+	public onNotification(stream: string, eventKind: string, listener: (e: any) => any, thisArgs?: any): IAmDisposable {
+		if (!this.notificationsEmitters[stream])
+			this.notificationsEmitters[stream] = new EventsEmitter();
+
+		return this.notificationsEmitters[stream].listen(eventKind, listener, thisArgs);
+	}
+
+	public onServiceRegistered(listener: (e: ServiceRegisteredEventData) => any, thisArgs?: any): IAmDisposable {
+		return this.onNotification("Service", "ServiceRegistered", (e) => listener(e as ServiceRegisteredEventData), thisArgs);
+	}
+
+	public onServiceUnregistered(listener: (e: ServiceUnregisteredEventData) => any, thisArgs?: any): IAmDisposable {
+		return this.onNotification("Service", "ServiceUnregistered", (e) => listener(e as ServiceUnregisteredEventData), thisArgs);
+	}
+
 	public async registerService(service: Service.Editor, method: "getDevices", capabilities: object | undefined, f: () => PromiseOr<DtdResult & GetDevicesResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "selectDevice", capabilities: object | undefined, f: (params: SelectDeviceParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "enablePlatformType", capabilities: object | undefined, f: (params: EnablePlatformTypeParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
@@ -130,6 +152,8 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.setIDEWorkspaceRoots, params: SetIDEWorkspaceRootsParams): Promise<SetIDEWorkspaceRootsResult>;
 	public callMethod(service: ServiceMethod.getIDEWorkspaceRoots, params: GetIDEWorkspaceRootsParams): Promise<GetIDEWorkspaceRootsResult>;
 	public callMethod(service: ServiceMethod.readFileAsString, params: ReadFileAsStringParams): Promise<ReadFileAsStringResult>;
+	public callMethod(service: ServiceMethod.streamListen, params: { streamId: string }): Promise<DtdResult>;
+	public callMethod(service: ServiceMethod.streamCancel, params: { streamId: string }): Promise<DtdResult>;
 	public callMethod(service: string, params?: unknown): Promise<DtdResult>;
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
 		if (!this.connection)
@@ -147,6 +171,14 @@ export class DartToolingDaemon implements IAmDisposable {
 		});
 
 		return completer.promise;
+	}
+
+	public async streamListen(streamId: string): Promise<DtdResult> {
+		return this.callMethod(ServiceMethod.streamListen, { streamId });
+	}
+
+	public async streamCancel(streamId: string): Promise<DtdResult> {
+		return this.callMethod(ServiceMethod.streamCancel, { streamId });
 	}
 
 	public sendEvent(stream: Stream.Editor, params: DeviceAddedEvent | DeviceRemovedEvent | DeviceChangedEvent | DeviceSelectedEvent): void;

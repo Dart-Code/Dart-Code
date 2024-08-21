@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
+import { waitFor } from "../../../shared/utils/promises";
 import { activate, delay, extApi, flutterHelloWorldMainFile, helloWorldMainFile } from "../../helpers";
 
 describe("dart tooling daemon", () => {
@@ -79,6 +80,29 @@ describe("dart tooling daemon", () => {
 			assert.equal(e.code, 142);
 			assert.equal(e.message, "Permission denied");
 		}
+	});
+
+	it("should expose LSP methods via the analyzer", async function () {
+		// TODO(dantup): Unskip when we have a version number of capability for this functionality.
+		this.skip();
+
+		const daemon = extApi.toolingDaemon;
+		assert.ok(daemon);
+
+		// Wait for daemon to be up.
+		await daemon.connected;
+		await delay(50);
+
+		// Collect all available services.
+		const services: string[] = [];
+		const servicesSub = daemon.onServiceRegistered((e) => services.push(`${e.service}.${e.method}`));
+		await daemon.streamListen("Service");
+		await waitFor(() => services.length); // Wait until we start getting services.
+		await delay(100); // And then slightly more.
+		await daemon.streamCancel("Service");
+		await servicesSub.dispose();
+
+		assert.ok(services.includes("Lsp.textDocument/hover"), `Did not find "Lsp.textDocument/hover" in ${services.join(", ")}`);
 	});
 });
 
