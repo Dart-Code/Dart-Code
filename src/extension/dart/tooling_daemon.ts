@@ -104,16 +104,7 @@ class EditorServices implements IAmDisposable {
 	constructor(
 		private readonly daemon: DartToolingDaemon,
 		private readonly deviceManager: FlutterDeviceManager | undefined,
-	) {
-		// TODO(dantup): Events:
-		// - deviceAdded - done
-		// - deviceRemoved - done
-		// - deviceChanged - done
-		// - deviceSelected - done
-		// - debugSessionStarted
-		// - debugSessionStopped
-		// - debugSessionChanged
-	}
+	) { }
 
 	async register(): Promise<void> {
 		if (this.deviceManager) {

@@ -3,13 +3,14 @@ import * as stream from "stream";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
-import { AnalyzerStatusNotification, AugmentationRequest, AugmentedRequest, CompleteStatementRequest, DiagnosticServerRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { AnalyzerStatusNotification, AugmentationRequest, AugmentedRequest, CompleteStatementRequest, ConnectToDtdRequest, DiagnosticServerRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
+import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { fsPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { DartTextDocumentContentProviderFeature } from "../../shared/vscode/dart_text_document_content_provider";
@@ -36,7 +37,7 @@ export class LspAnalyzer extends Analyzer {
 	public readonly dartTextDocumentContentProvider: DartTextDocumentContentProviderFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
-	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
+	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly dtd: DartToolingDaemon | undefined) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 
 		this.setupStatusItem();
@@ -83,6 +84,15 @@ export class LspAnalyzer extends Analyzer {
 				}
 			});
 			this.onReadyCompleter.resolve();
+
+			// If we have DTD, send it to the server.
+			if (config.previewDtdLspIntegration && dtd !== null) {
+				// TODO(dantup): Switch from a preview flag to using a server-provided capability. That capability is not
+				//  yet available because we want to do more testing behind the preview flag first.
+				dtd?.dtdUri
+					.then((uri) => uri ? this.client.sendRequest(ConnectToDtdRequest.type, { uri }) : undefined)
+					.catch((e) => this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${e}`));
+			}
 		});
 	}
 

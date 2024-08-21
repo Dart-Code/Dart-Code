@@ -367,7 +367,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Fire up the analyzer process.
 	analyzer = isUsingLsp
-		? new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext)
+		? new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon)
 		: new DasAnalyzer(logger, analytics, sdks, dartCapabilities, workspaceContext);
 	const lspAnalyzer = isUsingLsp ? (analyzer as LspAnalyzer) : undefined;
 	const dasAnalyzer = isUsingLsp ? undefined : (analyzer as DasAnalyzer);

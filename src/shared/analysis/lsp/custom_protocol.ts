@@ -44,6 +44,10 @@ export class DiagnosticServerRequest {
 	public static type = new RequestType0<{ port: number }, void>("dart/diagnosticServer");
 }
 
+export class ConnectToDtdRequest {
+	public static type = new RequestType<{ uri: string }, null, void>("dart/connectToDtd");
+}
+
 export class ReanalyzeRequest {
 	public static type = new RequestType0<void, void>("dart/reanalyze");
 }
