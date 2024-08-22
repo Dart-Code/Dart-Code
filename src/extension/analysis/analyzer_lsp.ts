@@ -452,10 +452,7 @@ export class LspAnalyzer extends Analyzer {
 				previewSurveys: true,
 				remoteName: vs.env.remoteName,
 				suggestFromUnimportedLibraries: config.autoImportCompletions,
-				// TODO(dantup): When removing this flag, also remove the conditions on the
-				//  "dart.edit.fixAllInWorkspace" and "dart.edit.fixAllInWorkspace.preview"
-				//  commands in `package.json`.
-				useInEditorDartFixPrompt: sdks.isPreReleaseSdk,
+				useInEditorDartFixPrompt: true,
 			},
 			markdown: {
 				supportHtml: true,
