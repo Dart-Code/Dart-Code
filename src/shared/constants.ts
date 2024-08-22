@@ -226,5 +226,8 @@ export const defaultLaunchJson = JSON.stringify(
 	undefined, "\t"
 );
 
-// This indicates that a version is the latest possible.
+// This indicates that a version is the latest possible, used for Bazel workspaces.
 export const MAX_VERSION = "999.999.999";
+
+// This indicates the Flutter version file was missing and we are also assuming the highest.
+export const MISSING_VERSION_FILE_VERSION = "999.999.888";

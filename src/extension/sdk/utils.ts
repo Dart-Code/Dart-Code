@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, extensions, ProgressLocation, window, workspace } from "vscode";
-import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { ExtensionConfig, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
@@ -512,7 +512,13 @@ export class SdkUtils {
 
 		const isDartFromFlutter = (!!dartSdkResult.originalPath && isDartSdkFromFlutter(dartSdkResult.originalPath)) || (!!dartSdkPath && isDartSdkFromFlutter(dartSdkPath));
 		const dartVersion = getSdkVersion(this.logger, { sdkRoot: dartSdkPath });
-		const flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath });
+		let flutterVersion = workspaceConfig?.flutterVersion ?? getSdkVersion(this.logger, { sdkRoot: flutterSdkPath });
+		// Sometimes the Flutter 'version' file is missing (see https://github.com/flutter/flutter/issues/142521)
+		// but this is almost always on main/master, so in this case treat us as a max version that has everything enabled
+		// instead of nothing.
+		if (!flutterVersion && flutterSdkPath && !fs.existsSync(path.join(flutterSdkPath, "version")))
+			flutterVersion = MISSING_VERSION_FILE_VERSION;
+
 		const relevantSdkVersion = hasAnyFlutterProject ? flutterVersion : dartVersion;
 		const isPreReleaseSdk = !!relevantSdkVersion?.includes("-");
 

@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { MAX_VERSION } from "../../shared/constants";
+import { MAX_VERSION, MISSING_VERSION_FILE_VERSION } from "../../shared/constants";
 import { disposeAll } from "../../shared/utils";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
@@ -41,7 +41,11 @@ export class StatusBarVersionTracker implements vs.Disposable {
 	}
 
 	private versionOrLatest(version: string | undefined): string | undefined {
-		return version === MAX_VERSION ? "latest" : version;
+		return version === MAX_VERSION
+			? "latest"
+			: version === MISSING_VERSION_FILE_VERSION
+				? "missing"
+				: version;
 	}
 
 	private addStatusBarItem(id: string, kind: string, versionNumber: string, command: string | undefined) {
