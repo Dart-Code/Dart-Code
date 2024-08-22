@@ -6,7 +6,7 @@ import { logProcess } from "../../shared/logging";
 import * as channels from "../commands/channels";
 import { ringLog } from "../extension";
 import { openLogContents } from "../utils";
-import { safeToolSpawn } from "../utils/processes";
+import { runToolProcess, safeToolSpawn } from "../utils/processes";
 
 export async function initializeFlutterSdk(logger: Logger, flutterScript: string): Promise<void> {
 	logger.info(`Flutter is not initialized, running 'flutter doctor' to force...`);
@@ -49,5 +49,11 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 		logger.info(`Flutter initialized!`);
 	} catch (e) {
 		logger.warn(`Flutter initialization failed, proceeding without!`);
+	}
+	try {
+		// Run something that forces a 'version' file and can't result in it missing like 'doctor'
+		// https://github.com/flutter/flutter/issues/142521#issuecomment-2304780443
+		await runToolProcess(logger, undefined, flutterScript, ["--help"]);
+	} catch (e) {
 	}
 }
