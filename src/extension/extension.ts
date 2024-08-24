@@ -742,7 +742,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
-	if (config.previewDtdSidebar && dartToolingDaemon && dartCapabilities.supportsDevToolsDtdSidebar)
+	if (dartToolingDaemon && dartCapabilities.supportsDevToolsDtdSidebar)
 		context.subscriptions.push(new FlutterDtdSidebar(devTools, deviceManager, dartCapabilities));
 	else
 		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
