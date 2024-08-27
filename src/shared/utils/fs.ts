@@ -319,6 +319,39 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string }): string | undefined {
 	if (!sdkRoot)
 		return undefined;
+
+	// Try to read the new JSON file for Flutter. Don't use exist checks as it races,
+	// just try to read and see if we get contents.
+	const jsonVersionFile = path.join(sdkRoot, "bin", "cache", "flutter.version.json");
+	let jsonVersionFileContent: string | undefined;
+	try {
+		jsonVersionFileContent = fs.readFileSync(jsonVersionFile, "utf8").trim();
+	} catch (e) {
+	}
+
+	if (jsonVersionFileContent) {
+		let versionData: any;
+		try {
+			versionData = JSON.parse(jsonVersionFileContent);
+		} catch (e) {
+			logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON (${e}): ${jsonVersionFileContent}, falling back to legacy file`);
+		}
+
+		if (versionData) {
+			const flutterVersion = versionData.flutterVersion;
+			if (typeof flutterVersion === "string") {
+				const validVersion = nullToUndefined(semver.valid(flutterVersion));
+				if (validVersion) {
+					return validVersion;
+				} else {
+					logger.error(`${jsonVersionFile} did not contain a valid "flutterVersion": ${jsonVersionFileContent}, falling back to legacy file`);
+				}
+			} else {
+				logger.error(`${jsonVersionFile} did not contain a "flutterVersion": ${jsonVersionFileContent}, falling back to legacy file`);
+			}
+		}
+	}
+
 	const versionFile = path.join(sdkRoot, "version");
 	if (!fs.existsSync(versionFile))
 		return undefined;

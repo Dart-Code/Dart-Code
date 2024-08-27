@@ -44,7 +44,7 @@ export class StatusBarVersionTracker implements vs.Disposable {
 		return version === MAX_VERSION
 			? "latest"
 			: version === MISSING_VERSION_FILE_VERSION
-				? "missing"
+				? "unknown"
 				: version;
 	}
 
