@@ -1,8 +1,10 @@
 import { CodeAction, CodeActionKind, Command, commands, Uri, window } from "vscode";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
 import { DartCapabilities } from "../capabilities/dart";
+import { isWin } from "../constants";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
+import { forceWindowsDriveLetterToUppercaseInUriString } from "../utils/fs";
 
 
 export class InteractiveRefactors implements IAmDisposable {
@@ -95,11 +97,16 @@ export class InteractiveRefactors implements IAmDisposable {
 		// Enumerate through each parameter and prompt the user.
 		const paramValues = originalArguments.arguments.slice();
 		for (let i = 0; i < parameters.length; i++) {
-			const newValue = await this.promptUser(parameters[i]);
+			let newValue = await this.promptUser(parameters[i]);
 
 			// If no value, user cancelled so we should abort.
 			if (!newValue)
 				return;
+
+			// Normalize to uppercase drive letters.
+			if (isWin && typeof newValue === "string" && (newValue.startsWith("file:///") || newValue.includes("+file:///"))) {
+				newValue = forceWindowsDriveLetterToUppercaseInUriString(newValue);
+			}
 
 			paramValues[i] = newValue;
 		}

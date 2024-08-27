@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { isWin } from "../../../shared/constants";
 import { InteractiveRefactors, SupportedParameterKind } from "../../../shared/vscode/interactive_refactors";
 import { activate, emptyFile, extApi, helloWorldMainFile, sb } from "../../helpers";
 
@@ -122,6 +123,27 @@ describe("interactive refactors", () => {
 
 		// Expect the captured args to contain the value we returned from showSaveDialog.
 		assert.deepStrictEqual(capturedArgs.arguments[0], helloWorldMainFile.toString());
+	});
+
+	it("normalizes casing for 'saveUri' parameter responses", async function () {
+		if (!isWin)
+			this.skip();
+
+		const refactors = extApi.interactiveRefactors!;
+		const kind = SupportedParameterKind.saveUri;
+
+		// Use emptyFile as the default.
+		const defaultValue = emptyFile;
+
+		// Provide mainFile to the prompt.
+		const showSaveDialog = sb.stub(vs.window, "showSaveDialog");
+		showSaveDialog.resolves(vs.Uri.file("c:\\foo\\bar"));
+
+		const codeAction = createTestRefactor(kind, defaultValue);
+		const capturedArgs = await executeRefactor(refactors, codeAction);
+
+		// Expect the captured args to contain the value we returned from showSaveDialog.
+		assert.deepStrictEqual(capturedArgs.arguments[0], "file:///C%3A/foo/bar");
 	});
 });
 

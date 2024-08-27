@@ -41,6 +41,13 @@ export function forceWindowsDriveLetterToUppercase<T extends string | undefined>
 	return p;
 }
 
+export function forceWindowsDriveLetterToUppercaseInUriString<T extends string | undefined>(uriString: T): string | (undefined extends T ? undefined : never) {
+	if (typeof uriString !== "string")
+		return undefined as (undefined extends T ? undefined : never);
+
+	return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (match, scheme, authority, driveLetter, colon) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
+}
+
 /**
  * Returns a string for comparing URIs. For file (and dart-macro+file) URIs this will
  * be `fsPath()` (including for fake paths for generated files) with a `file:` or `dart-macro+file`
