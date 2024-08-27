@@ -402,7 +402,6 @@ export class DevToolsManager implements vs.Disposable {
 	private getDefaultQueryParams(): { [key: string]: string | undefined } {
 		return {
 			cacheBust: this.getCacheBust(),
-			hide: "debugger",
 			ide: "VSCode",
 		};
 	}
