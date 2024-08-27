@@ -83,7 +83,8 @@ describe("dart tooling daemon", () => {
 	});
 
 	it("should expose LSP methods via the analyzer", async function () {
-		// TODO(dantup): Unskip when we have a version number of capability for this functionality.
+		// TODO(dantup): Unskip when we have a version number of capability for this functionality
+		//  and an LSP method that is certainly registered.
 		this.skip();
 
 		const daemon = extApi.toolingDaemon;
