@@ -856,7 +856,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 
 			if (isFlutter && exists("lib/main.dart") && this.deviceManager) {
 				results.push({
-					name: `Flutter`,
+					name: `${name} (Flutter)`,
 					program: "lib/main.dart",
 					cwd,
 					request: "launch",
@@ -866,7 +866,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 				for (const device of devices) {
 					const deviceLabel = this.deviceManager?.labelForDevice(device);
 					results.push({
-						name: `Flutter (${deviceLabel})`,
+						name: `${name} (Flutter ${deviceLabel})`,
 						program: "lib/main.dart",
 						cwd,
 						deviceId: device.id,
@@ -875,7 +875,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 					});
 				}
 				results.push({
-					name: `Flutter (profile mode)`,
+					name: `${name} (Flutter profile mode)`,
 					program: "lib/main.dart",
 					cwd,
 					request: "launch",
@@ -883,7 +883,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 					flutterMode: "profile",
 				});
 				results.push({
-					name: `Flutter (release mode)`,
+					name: `${name} (Flutter release mode)`,
 					program: "lib/main.dart",
 					cwd,
 					request: "launch",
@@ -893,7 +893,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			}
 			if (!isFlutter && exists("web")) {
 				results.push({
-					name: `Dart Web`,
+					name: `${name} (Dart Web)`,
 					program: "web",
 					cwd,
 					request: "launch",
@@ -902,7 +902,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			}
 			if (exists("bin/main.dart")) {
 				results.push({
-					name: `Dart`,
+					name: `${name} (Dart)`,
 					program: "bin/main.dart",
 					cwd,
 					request: "launch",
@@ -911,7 +911,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			}
 			if (exists("test")) {
 				results.push({
-					name: `${isFlutter ? "Flutter" : "Dart"} Tests`,
+					name: `${name} (${isFlutter ? "Flutter" : "Dart"} Tests)`,
 					program: "test",
 					cwd,
 					request: "launch",
@@ -920,7 +920,7 @@ export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 			}
 			if (isFlutter && exists("integration_test")) {
 				results.push({
-					name: `${isFlutter ? "Flutter" : "Dart"} Integration Tests`,
+					name: `${name} (${isFlutter ? "Flutter" : "Dart"} Integration Tests)`,
 					program: "integration_test",
 					cwd,
 					request: "launch",
