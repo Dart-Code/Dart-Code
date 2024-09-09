@@ -2018,7 +2018,7 @@
 					"dart.hotReloadPatterns": {
 						"type": "array",
 						"default": [],
-						"markdownDescription": "An array of glob patterns that should trigger Hot Reload when saved. The pattern is matched against the absolute path of the file. Use `**/assets/**` to trigger reloading for everything in the assets directory.",
+						"markdownDescription": "An array of glob patterns that should trigger Hot Reload when saved. The pattern is matched against the absolute path of the file. Use `**/assets/**` to trigger reloading for everything in the assets directory. Must always start with \"**/\" and use forward slashes (even on Windows) as backslashes are used for escaping.",
 						"items": {
 							"type": "string"
 						},
@@ -2877,7 +2877,7 @@
 					"dart.doNotFormat": {
 						"type": "array",
 						"default": [],
-						"markdownDescription": "**LEGACY SETTING: Only applies to legacy analysis server protocol.**\n\nAn array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use `**/test/**` to skip formatting for all test directories.",
+						"markdownDescription": "**LEGACY SETTING: Only applies to legacy analysis server protocol.**\n\nAn array of glob patterns that should be excluded for formatting. The pattern is matched against the absolute path of the file. Use `**/test/**` to skip formatting for all test directories. Must always use forward slashes (even on Windows) as backslashes are used for escaping.",
 						"items": {
 							"type": "string"
 						},
@@ -3055,7 +3055,7 @@
 										"type": "string"
 									},
 									"path": {
-										"description": "Optionally filters this CodeLens to only files within a relative path from the workspace root.",
+										"description": "Optionally filters this CodeLens to only files within a relative path from the workspace root. Treated as a glob if starts with \"**/\" (for example \"**/test/**/foo_test.dart\") but must always use forward slashes (even on Windows) as backslashes are used for escaping in globs.",
 										"type": "string"
 									},
 									"for": {

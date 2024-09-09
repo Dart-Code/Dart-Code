@@ -149,37 +149,50 @@ describe("main_code_lens", () => {
 		}
 	}
 
-	it(`excludes templates where templateFor doesn't include the current file`, async () => {
-		await addLaunchConfigsForTest(
-			vs.workspace.workspaceFolders![0].uri,
-			[
-				{
-					codeLens: {
-						for: ["run-file", "run-test-file"],
-						path: "test",
-						title: "Run (terminal)",
-					},
-					console: "terminal",
-					name: "Run in Terminal",
-					request: "launch",
-					type: "dart",
-				},
-			],
-		);
-
-		for (const testConfig of [
-			{ fileUri: helloWorldMainFile, lensLocation: "main^() async {", expectMatch: false },
-			{ fileUri: helloWorldTestMainFile, lensLocation: "main^() {", expectMatch: true },
+	for (const testConfig of [
+		{ fileUri: helloWorldMainFile, lensLocation: "main^() async {", expectMatch: false },
+		{ fileUri: helloWorldTestMainFile, lensLocation: "main^() {", expectMatch: true },
+	]) {
+		for (const pathThatMatchesTestButNotLib of [
+			// All of these are valid entries in "codeLens.path" that should match the main test file ("test/basic_test.dart") but not
+			// the main lib file ("bin/main.dart").
+			"test",
+			"**/basic_test.dart",
+			"**/*_test.dart",
+			"**/**_test.dart",
+			"**/**_test.*",
 		]) {
+			it(`with a path of "${pathThatMatchesTestButNotLib}" ${testConfig.expectMatch ? "matches" : "does not match"} "${vs.workspace.asRelativePath(testConfig.fileUri)}"`, async () => {
+				await addLaunchConfigsForTest(
+					vs.workspace.workspaceFolders![0].uri,
+					[
+						{
+							codeLens: {
+								for: ["run-file", "run-test-file"],
+								path: pathThatMatchesTestButNotLib,
+								title: "Run (terminal)",
+							},
+							console: "terminal",
+							name: "Run in Terminal",
+							request: "launch",
+							type: "dart",
+						},
+					],
+				);
 
-			const editor = await openFile(testConfig.fileUri);
-			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
+				const editor = await openFile(testConfig.fileUri);
+				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
-			const fileCodeLens = await getCodeLens(editor.document);
-			const mainFunctionPos = positionOf(testConfig.lensLocation);
+				const fileCodeLens = await getCodeLens(editor.document);
+				const mainFunctionPos = positionOf(testConfig.lensLocation);
 
-			const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
-			assert.equal(codeLensForMainFunction.length, testConfig.expectMatch ? 3 : 2);
+				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
+				const codeLensNames = codeLensForMainFunction.map((cl) => cl.command!.title);
+				const expected = testConfig.expectMatch
+					? ["Run", "Debug", "Run (terminal)"]
+					: ["Run", "Debug"];
+				assert.deepStrictEqual(codeLensNames, expected);
+			});
 		}
-	});
+	}
 });
