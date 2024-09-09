@@ -86,11 +86,6 @@ export function isWithinPath(file: string, folder: string) {
 }
 
 export function isWithinPathOrEqual(file: string, folder: string) {
-	const relative = path.relative(folder, file);
-	return !relative || isWithinPath(file, folder);
-}
-
-export function isEqualOrWithinPath(file: string, folder: string) {
 	const relative = path.relative(folder.toLowerCase(), file.toLowerCase());
 	return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
 }
@@ -298,7 +293,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 	}
 
 	allPossibleFolders = allPossibleFolders
-		.filter((f) => !f.includes(dartToolFolderName) && excludedFolders.every((ef) => !isEqualOrWithinPath(f, ef)));
+		.filter((f) => !f.includes(dartToolFolderName) && excludedFolders.every((ef) => !isWithinPathOrEqual(f, ef)));
 
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
 		exists: options && options.requirePubspec
