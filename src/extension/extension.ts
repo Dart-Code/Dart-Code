@@ -771,7 +771,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Prompt user for any special config we might want to set.
 	if (!isRestart)
-		void showUserPrompts(logger, extContext, webClient, analytics, workspaceContext, extensionRecommendations);
+		void showUserPrompts(logger, extContext, webClient, analytics, workspaceContext, dartCapabilities, extensionRecommendations);
 
 	// Turn on all the commands.
 	setCommandVisiblity(true, workspaceContext);

@@ -6,23 +6,11 @@ export class Context {
 	}
 
 	// Helper we can manually call in the constructor when testing.
-	public clear(): void {
-		const clearableKeys = [
-			"devToolsNotificationLastShown",
-			"devToolsNotificationDoNotShowAgain",
-			"breakpointInNonDebuggableFileDoNotShowAgain",
-			"hasWarnedAboutFormatterSyntaxLimitation",
-			"hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation",
-			"hasNotifiedAboutProfileModeDefaultConfiguration",
-			"lastSeenVersion",
-			"lastUsedNewProjectPath",
-			"ignoredExtensionRecommendations",
-			"workspaceLastFlutterDeviceId",
-		];
-		for (const clearableKey of clearableKeys) {
-			void this.context.globalState.update(clearableKey, undefined);
-			void this.context.workspaceState.update(clearableKey, undefined);
-		}
+	public async clear(): Promise<void> {
+		for (const clearableKey of this.context.globalState.keys())
+			await this.context.globalState.update(clearableKey, undefined);
+		for (const clearableKey of this.context.workspaceState.keys())
+			await this.context.workspaceState.update(clearableKey, undefined);
 	}
 
 	public static for(context: ExtensionContext, workspaceContext: DartWorkspaceContext): Context {
@@ -43,6 +31,8 @@ export class Context {
 	public setFlutterSurveyNotificationLastShown(id: string, value: number | undefined) { void this.context.globalState.update(`flutterSurvey${id}NotificationLastShown`, value); }
 	public getFlutterSurveyNotificationDoNotShow(id: string): boolean | undefined { return !!this.context.globalState.get(`flutterSurvey${id}NotificationDoNotShowAgain`); }
 	public setFlutterSurveyNotificationDoNotShow(id: string, value: boolean | undefined) { void this.context.globalState.update(`flutterSurvey${id}NotificationDoNotShowAgain`, value); }
+	public getSdkDeprecationNoticeDoNotShow(dartSdkVersion: string): boolean | undefined { return !!this.context.globalState.get(`dartSdk${dartSdkVersion}DeprecationNotificationDoNotShowAgain`); }
+	public setSdkDeprecationNoticeDoNotShow(dartSdkVersion: string, value: boolean | undefined) { void this.context.globalState.update(`dartSdk${dartSdkVersion}DeprecationNotificationDoNotShowAgain`, value); }
 	get hasWarnedAboutFormatterSyntaxLimitation(): boolean { return !!this.context.globalState.get("hasWarnedAboutFormatterSyntaxLimitation"); }
 	set hasWarnedAboutFormatterSyntaxLimitation(value: boolean) { void this.context.globalState.update("hasWarnedAboutFormatterSyntaxLimitation", value); }
 	get hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation(): boolean { return !!this.context.globalState.get("hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation"); }

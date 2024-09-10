@@ -1,9 +1,11 @@
 import * as vs from "vscode";
+import { DartCapabilities } from "../capabilities/dart";
 import { vsCodeVersion } from "../capabilities/vscode";
-import { CommandSource, alwaysOpenAction, doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, notTodayAction, openAction, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
+import { CommandSource, alwaysOpenAction, doNotAskAgainAction, flutterSurveyDataUrl, iUnderstandAction, longRepeatPromptThreshold, moreInfoAction, noRepeatPromptThreshold, notTodayAction, openAction, sdkDeprecationInformationUrl, skipThisSurveyAction, takeSurveyAction, wantToTryDevToolsPrompt } from "../constants";
 import { WebClient } from "../fetch";
 import { Analytics, FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
-import { isRunningLocally } from "./utils";
+import { WorkspaceContext } from "../workspace";
+import { envUtils, isRunningLocally } from "./utils";
 import { Context } from "./workspace";
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
@@ -104,4 +106,48 @@ export async function showDevToolsNotificationIfAppropriate(context: Context): P
 		// No thanks.
 		return { didOpen: false };
 	}
+}
+
+export async function showSdkDeprecationNoticeIfAppropriate(logger: Logger, context: Context, workspaceContext: WorkspaceContext, dartCapabilities: DartCapabilities): Promise<boolean> {
+	if (dartCapabilities.version === DartCapabilities.empty.version)
+		return false;
+
+	if (!dartCapabilities.isUnsupportedNow && !dartCapabilities.isUnsupportedSoon)
+		return false;
+
+	const sdkKind = workspaceContext.sdks.dartSdkIsFromFlutter ? "Flutter" : "Dart";
+	let userShownSdkVersion = workspaceContext.sdks.dartSdkIsFromFlutter ? workspaceContext.sdks.flutterVersion : workspaceContext.sdks.dartVersion;
+	let dartSdkVersion = workspaceContext.sdks.dartVersion;
+
+	if (!userShownSdkVersion || !dartSdkVersion)
+		return false;
+
+	try {
+		// Trim to major+minor.
+		userShownSdkVersion = userShownSdkVersion.split(".").slice(0, 2).join(".");
+		dartSdkVersion = dartSdkVersion.split(".").slice(0, 2).join(".");
+
+		const message = dartCapabilities.isUnsupportedNow
+			? `v${userShownSdkVersion} of the ${sdkKind} SDK is not supported by this version of the Dart extension. Update to a more recent ${sdkKind} SDK or switch to an older version of the extension.`
+			: `Support for v${userShownSdkVersion} of the ${sdkKind} SDK will be removed in an upcoming release of the Dart extension. Consider updating to a more recent ${sdkKind} SDK.`;
+
+		const actions: Array<typeof moreInfoAction | typeof iUnderstandAction> = dartCapabilities.isUnsupportedNow
+			? [moreInfoAction]
+			: [moreInfoAction, iUnderstandAction];
+
+		if (dartCapabilities.isUnsupportedNow || !context.getSdkDeprecationNoticeDoNotShow(dartSdkVersion)) {
+			const action = await vs.window.showWarningMessage(message, ...actions);
+			if (action === moreInfoAction) {
+				await envUtils.openInBrowser(sdkDeprecationInformationUrl);
+			}
+
+			context.setSdkDeprecationNoticeDoNotShow(dartSdkVersion, true);
+
+			return true;
+		}
+	} catch (e) {
+		logger.error(e);
+	}
+
+	return false;
 }

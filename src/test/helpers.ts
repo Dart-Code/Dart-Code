@@ -1260,15 +1260,8 @@ export async function addLaunchConfigsForTest(workspaceUri: vs.Uri, configs: any
 	});
 }
 
-export function clearAllContext(context: Context): Promise<void> {
-	context.devToolsNotificationLastShown = undefined;
-	context.devToolsNotificationDoNotShow = undefined;
-	context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, undefined);
-	context.setFlutterSurveyNotificationDoNotShow(flutterTestSurveyID, undefined);
-
-	// HACK: Updating context is async, but since we use setters we can't easily wait
-	// and this is only test code...
-	return new Promise((resolve) => setTimeout(resolve, 50));
+export async function clearAllContext(context: Context): Promise<void> {
+	await context.clear();
 }
 
 export function ensurePackageTreeNode(items: vs.TreeItem[] | undefined | null, nodeContext: string, label: string, description?: string): vs.TreeItem {

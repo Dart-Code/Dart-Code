@@ -1,13 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { DartCapabilities } from "../shared/capabilities/dart";
 import { DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
 import { fsPath } from "../shared/utils/fs";
 import { checkHasFlutterExtension, extensionVersion, getExtensionVersionForReleaseNotes, hasFlutterExtension, isDevExtension } from "../shared/vscode/extension_utils";
-import { showFlutterSurveyNotificationIfAppropriate } from "../shared/vscode/user_prompts";
+import { showFlutterSurveyNotificationIfAppropriate, showSdkDeprecationNoticeIfAppropriate } from "../shared/vscode/user_prompts";
 import { envUtils, getDartWorkspaceFolders } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
@@ -15,7 +16,7 @@ import { markProjectCreationEnded, markProjectCreationStarted } from "./commands
 import { config } from "./config";
 import { ExtensionRecommentations } from "./recommendations/recommendations";
 
-export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext, extensionRecommendations: ExtensionRecommentations): Promise<void> {
+export async function showUserPrompts(logger: Logger, context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext, dartCapabilities: DartCapabilities, extensionRecommendations: ExtensionRecommentations): Promise<void> {
 	if (workspaceContext.config.disableStartupPrompts)
 		return;
 
@@ -31,6 +32,9 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		const stateKey = `${userPromptContextPrefix}${key}`;
 		prompt().then((res) => context.update(stateKey, res), error);
 	}
+
+	if (await showSdkDeprecationNoticeIfAppropriate(logger, context, workspaceContext, dartCapabilities))
+		return; // We showed it, so skip any more.
 
 	if (workspaceContext.hasAnyFlutterProjects && !hasFlutterExtension && !shouldSuppress(installFlutterExtensionPromptKey)) {
 		// It's possible that we got here when the user installed the Flutter extension, because it causes Dart to install

@@ -3,8 +3,9 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { doNotAskAgainAction, flutterSurveyDataUrl, longRepeatPromptThreshold, noRepeatPromptThreshold, openAction, skipThisSurveyAction, takeSurveyAction, twoHoursInMs, wantToTryDevToolsPrompt } from "../../shared/constants";
 import { Analytics } from "../../shared/interfaces";
+import { nullLogger } from "../../shared/logging";
 import { waitFor } from "../../shared/utils/promises";
-import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
+import { showDevToolsNotificationIfAppropriate, showFlutterSurveyNotificationIfAppropriate, showSdkDeprecationNoticeIfAppropriate } from "../../shared/vscode/user_prompts";
 import { activateWithoutAnalysis, clearAllContext, extApi, flutterTestSurveyID, logger, sb } from "../helpers";
 
 describe("DevTools notification", async () => {
@@ -280,3 +281,135 @@ describe("Survey notification", async () => {
 	});
 });
 
+describe("SDK deprecation notice", async () => {
+	let showWarningMessage: sinon.SinonStub;
+
+	beforeEach("activate", () => activateWithoutAnalysis());
+	beforeEach("set showWarningMessage stub", () => {
+		showWarningMessage = sb.stub(vs.window, "showWarningMessage").resolves();
+	});
+	beforeEach("clearExtensionContext", () => clearAllContext(extApi.context));
+	afterEach("clearExtensionContext", () => clearAllContext(extApi.context));
+
+
+	function configure(options: {
+		dartVersion?: string,
+		flutterVersion?: string,
+		dartIsFromFlutter?: boolean,
+		isUnsupported: boolean,
+		isUnsupportedSoon: boolean,
+	}) {
+		sb.stub(extApi.workspaceContext.sdks, "dartVersion").get(() => options.dartVersion ?? "1.1.1");
+		sb.stub(extApi.workspaceContext.sdks, "flutterVersion").get(() => options.flutterVersion ?? "2.2.2");
+		sb.stub(extApi.workspaceContext.sdks, "dartSdkIsFromFlutter").get(() => options.dartIsFromFlutter ?? false);
+		sb.stub(extApi.dartCapabilities, "isUnsupportedNow").get(() => options.isUnsupported);
+		sb.stub(extApi.dartCapabilities, "isUnsupportedSoon").get(() => options.isUnsupportedSoon);
+	}
+
+	async function testNotification() {
+		await showSdkDeprecationNoticeIfAppropriate(nullLogger, extApi.context, extApi.workspaceContext, extApi.dartCapabilities);
+	}
+
+	it("is not shown if the current SDK is supported", async () => {
+		configure({
+			isUnsupported: false,
+			isUnsupportedSoon: false,
+		});
+		await testNotification();
+
+		assert.equal(showWarningMessage.called, false);
+	});
+
+	it("is shown if the current SDK is unsupported now (Dart)", async () => {
+		configure({
+			isUnsupported: true,
+			isUnsupportedSoon: true, // isUnsupported is always checked first.
+		});
+		await testNotification();
+
+		assert.equal(showWarningMessage.calledOnce, true);
+		assert.equal(showWarningMessage.firstCall.args[0], "v1.1 of the Dart SDK is not supported by this version of the Dart extension. Update to a more recent Dart SDK or switch to an older version of the extension.");
+	});
+
+	it("is shown if the current SDK is unsupported now (Flutter)", async () => {
+		configure({
+			dartIsFromFlutter: true,
+			isUnsupported: true, // isUnsupported is always checked first.
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+
+		assert.equal(showWarningMessage.calledOnce, true);
+		assert.equal(showWarningMessage.firstCall.args[0], "v2.2 of the Flutter SDK is not supported by this version of the Dart extension. Update to a more recent Flutter SDK or switch to an older version of the extension.");
+	});
+
+	it("is shown if the current SDK is unsupported soon (Dart)", async () => {
+		configure({
+			isUnsupported: false,
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+
+
+		assert.equal(showWarningMessage.calledOnce, true);
+		assert.equal(showWarningMessage.firstCall.args[0], "Support for v1.1 of the Dart SDK will be removed in an upcoming release of the Dart extension. Consider updating to a more recent Dart SDK.");
+	});
+
+	it("is shown if the current SDK is unsupported soon (Flutter)", async () => {
+		configure({
+			dartIsFromFlutter: true,
+			isUnsupported: false,
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+
+		assert.equal(showWarningMessage.calledOnce, true);
+		assert.equal(showWarningMessage.firstCall.args[0], "Support for v2.2 of the Flutter SDK will be removed in an upcoming release of the Dart extension. Consider updating to a more recent Flutter SDK.");
+	});
+
+	it("is shown every time if the current SDK is unsupported now", async () => {
+		configure({
+			isUnsupported: true,
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+		await testNotification();
+
+		assert.equal(showWarningMessage.calledTwice, true);
+	});
+
+	it("is only once if the current SDK is unsupported soon", async () => {
+		configure({
+			isUnsupported: false,
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+		await testNotification();
+
+		assert.equal(showWarningMessage.calledOnce, true);
+	});
+
+	it("is shown for different major/minor SDK versions that are unsupported soon", async () => {
+		configure({
+			dartVersion: "1.1.1",
+			isUnsupported: false,
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+		configure({
+			dartVersion: "1.1.2",
+			isUnsupported: false,
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+		configure({
+			dartVersion: "1.2.3",
+			isUnsupported: false,
+			isUnsupportedSoon: true,
+		});
+		await testNotification();
+
+		// Expect only two, because the first two are same major+minor
+		assert.equal(showWarningMessage.calledTwice, true);
+	});
+});
