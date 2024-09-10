@@ -143,6 +143,8 @@ export const tryAgainAction = "Try Again";
 export const vmServiceListeningBannerPattern = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
 export const vmServiceHttpLinkPattern = new RegExp("(http://[\\d\\.:]+/)");
 
+export const sdkDeprecationInformationUrl = "https://TODO/";
+
 /// Constants used in reporting of where commands are executed from.
 ///
 /// Used in DevTools querystring, so do not change.

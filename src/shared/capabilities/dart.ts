@@ -21,6 +21,8 @@ export class DartCapabilities {
 			return versionIsAtLeast(this.version, "2.18.0-0");
 	}
 	get hasLspInsertTextModeSupport() { return versionIsAtLeast(this.version, "2.13.0-0"); }
+	get isUnsupportedNow() { return false; }
+	get isUnsupportedSoon() { return false; }
 	get supportsSnippetTextEdits() { return versionIsAtLeast(this.version, "2.13.0-150"); }
 	get supportsRefactorValidate() { return versionIsAtLeast(this.version, "2.17.0"); }
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
