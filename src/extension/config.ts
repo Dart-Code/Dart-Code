@@ -71,6 +71,8 @@ class Config {
 	get cliConsole(): "debugConsole" | "terminal" | "externalTerminal" { return this.getConfig<"debugConsole" | "terminal" | "externalTerminal">("cliConsole", "debugConsole"); }
 	get closeDevTools(): "never" | "ifOpened" | "always" { return this.getConfig<"never" | "ifOpened" | "always">("closeDevTools", "never"); }
 	get closingLabels(): boolean { return this.getConfig<boolean>("closingLabels", true); }
+	get closingLabelsPrefix(): string { return this.getConfig<string>("closingLabelsPrefix", " // "); }
+	get closingLabelsStyle(): string { console.log("Changed to:" + this.getConfig<string>("closingLabelsStyle", "normal")); return this.getConfig<string>("closingLabelsStyle", "normal"); }
 	get completionBudgetMilliseconds(): number | undefined { return this.getConfig<number | undefined>("completionBudgetMilliseconds", undefined); }
 	get customDartDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customDartDapPath", null)); }
 	get customDevToolsUri(): undefined | string { return this.getConfig<undefined | string>("customDevToolsUri", undefined); }

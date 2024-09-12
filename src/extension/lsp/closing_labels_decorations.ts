@@ -4,6 +4,7 @@ import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../sha
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { validLastCharacters } from "../decorations/closing_labels_decorations";
+import { config } from "../config";
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -11,15 +12,22 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	private editors: { [key: string]: vs.TextEditor } = {};
 	private updateTimeout?: NodeJS.Timeout;
 
-	private readonly decorationType = vs.window.createTextEditorDecorationType({
-		after: {
-			color: new vs.ThemeColor("dart.closingLabels"),
-			margin: "2px",
-		},
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
-	});
+	private decorationType: vs.TextEditorDecorationType | null = null;
+
+	private recreateDecorationType() {
+		if (this.decorationType) this.decorationType.dispose();
+		this.decorationType = vs.window.createTextEditorDecorationType({
+			after: {
+				color: new vs.ThemeColor("dart.closingLabels"),
+				fontStyle: config.closingLabelsStyle,
+				margin: "2px",
+			},
+			rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
+		});
+	}
 
 	constructor(private readonly analyzer: LanguageClient) {
+		this.recreateDecorationType();
 		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
 				const filePath = fsPath(vs.Uri.parse(n.uri));
@@ -74,26 +82,30 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			// Get the end of the line where we'll show the labels.
 			const endOfLine = editor.document.lineAt(finalCharacterPosition).range.end;
 
+			const closingLabelsPrefix = config.closingLabelsPrefix;
+
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
-				existingDecorationForLine.renderOptions.after.contentText = " // " + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
+				existingDecorationForLine.renderOptions.after.contentText = closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
 			} else {
 				const dec = {
 					range: new vs.Range(labelRange.start, endOfLine),
-					renderOptions: { after: { contentText: " // " + r.label } },
+					renderOptions: { after: { contentText: closingLabelsPrefix + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
 			}
 		}
 
+		this.recreateDecorationType();
+
 		this.editors[filePath] = editor;
-		editor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
+		editor.setDecorations(this.decorationType!, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
 	public dispose() {
 		for (const editor of Object.values(this.editors)) {
 			try {
-				editor.setDecorations(this.decorationType, []);
+				editor.setDecorations(this.decorationType!, []);
 			} catch {
 				// It's possible the editor was closed, but there
 				// doesn't seem to be a way to tell.

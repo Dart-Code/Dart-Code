@@ -4,6 +4,7 @@ import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
 import { isAnalyzable } from "../utils";
+import { config } from "../config";
 
 export const validLastCharacters = [")", "]"];
 
@@ -12,15 +13,22 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private activeEditor?: vs.TextEditor;
 	private closingLabels?: as.AnalysisClosingLabelsNotification;
 
-	private readonly decorationType = vs.window.createTextEditorDecorationType({
-		after: {
-			color: new vs.ThemeColor("dart.closingLabels"),
-			margin: "2px",
-		},
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
-	});
+	private decorationType: vs.TextEditorDecorationType | null = null;
+
+	private recreateDecorationType() {
+		if (this.decorationType) this.decorationType.dispose();
+		this.decorationType = vs.window.createTextEditorDecorationType({
+			after: {
+				color: new vs.ThemeColor("dart.closingLabels"),
+				fontStyle: config.closingLabelsStyle,
+				margin: "2px",
+			},
+			rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
+		});
+	}
 
 	constructor(private readonly analyzer: DasAnalyzerClient) {
+		this.recreateDecorationType();
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;
@@ -57,19 +65,23 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			// Get the end of the line where we'll show the labels.
 			const endOfLine = this.activeEditor.document.lineAt(finalCharacterPosition).range.end;
 
+			const closingLabelsPrefix = config.closingLabelsPrefix;
+
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
-				existingDecorationForLine.renderOptions.after.contentText = " // " + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
+				existingDecorationForLine.renderOptions.after.contentText = closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
 			} else {
 				const dec = {
 					range: new vs.Range(this.activeEditor.document.positionAt(r.offset), endOfLine),
-					renderOptions: { after: { contentText: " // " + r.label } },
+					renderOptions: { after: { contentText: closingLabelsPrefix + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
 			}
 		}
 
-		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
+		this.recreateDecorationType();
+
+		this.activeEditor.setDecorations(this.decorationType!, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
 	private setTrackingFile(editor: vs.TextEditor | undefined) {
@@ -77,7 +89,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			return;
 
 		if (editor !== this.activeEditor)
-			this.activeEditor?.setDecorations(this.decorationType, []);
+			this.activeEditor?.setDecorations(this.decorationType!, []);
 
 		if (editor) {
 			this.activeEditor = editor;
@@ -90,7 +102,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.activeEditor?.setDecorations(this.decorationType, []);
+		this.activeEditor?.setDecorations(this.decorationType!, []);
 		this.activeEditor = undefined;
 		disposeAll(this.subscriptions);
 	}
