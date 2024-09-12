@@ -12,7 +12,7 @@ import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { TestNode, TreeNode } from "../shared/test/test_model";
+import { TestNode } from "../shared/test/test_model";
 import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
@@ -1376,7 +1376,7 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 	return buffer;
 }
 
-export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | undefined, provider: vs.TreeDataProvider<TreeNode>, { buffer = [], indent = 0 }: { buffer?: string[]; indent?: number } = {}): Promise<string[]> {
+export async function makeTextTreeUsingCustomTree(parent: vs.TreeItem | vs.Uri | undefined, provider: vs.TreeDataProvider<vs.TreeItem>, { buffer = [], indent = 0 }: { buffer?: string[]; indent?: number } = {}): Promise<string[]> {
 	const parentNode = parent instanceof vs.Uri ? undefined : parent;
 	const parentResourceUri = parent instanceof vs.Uri ? parent : undefined;
 
@@ -1390,13 +1390,15 @@ export async function makeTextTreeUsingCustomTree(parent: TreeNode | vs.Uri | un
 
 		const label = treeItem.label;
 		const description = treeItem.description ? ` [${treeItem.description}]` : "";
-		const iconUri = treeItem.iconPath instanceof vs.Uri
+		const iconUri = treeItem.iconPath ? treeItem.iconPath instanceof vs.Uri
 			? treeItem.iconPath
 			: "dark" in (treeItem.iconPath as any)
 				? (treeItem.iconPath as any).dark as string | vs.Uri
-				: undefined;
-		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("-dark", "") : "<unknown icon>";
-		buffer.push(`${" ".repeat(indent * 4)}${label}${description} (${iconFile})`);
+				: undefined
+			: undefined;
+		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("-dark", "") : undefined;
+		const iconSuffix = iconFile ? ` (${iconFile})` : "";
+		buffer.push(`${" ".repeat(indent * 4)}${label}${description}${iconSuffix}`);
 		await makeTextTreeUsingCustomTree(item, provider, { buffer, indent: indent + 1 });
 	}
 	return buffer;

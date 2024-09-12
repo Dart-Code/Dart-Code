@@ -124,6 +124,7 @@ import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils/processes";
 import { DartPackagesProvider } from "./views/packages_view";
+import { DartPackagesProviderLegacy } from "./views/packages_view_legacy";
 
 let analyzer: Analyzer;
 let flutterDaemon: IFlutterDaemon | undefined;
@@ -707,7 +708,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	// Register our view providers.
-	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext, dartCapabilities);
+	const dartPackagesProvider = dartCapabilities.supportsPubDepsJson
+		? new DartPackagesProvider(logger, workspaceContext, dartCapabilities)
+		: new DartPackagesProviderLegacy(logger, workspaceContext, dartCapabilities);
 	context.subscriptions.push(dartPackagesProvider);
 	const packagesTreeView = vs.window.createTreeView("dartDependencyTree", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(packagesTreeView);

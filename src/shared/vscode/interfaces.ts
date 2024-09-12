@@ -8,11 +8,14 @@ import { DebuggerType, VersionStatus, VmService, VmServiceExtension } from "../e
 import { WebClient } from "../fetch";
 import { CustomScript, DartWorkspaceContext, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
+import { PubDeps } from "../pub/deps";
+import { PackageMapLoader } from "../pub/package_map";
 import { DartToolingDaemon } from "../services/tooling_daemon";
 import { TestSessionCoordinator } from "../test/coordinator";
 import { TestModel, TreeNode } from "../test/test_model";
 import { FlutterDeviceManager } from "./device_manager";
 import { InteractiveRefactors } from "./interactive_refactors";
+import { ProjectFinder } from "./utils";
 import { Context } from "./workspace";
 
 export interface DebugCommandHandler {
@@ -72,7 +75,7 @@ export interface InternalExtensionApi {
 	logger: EmittingLogger;
 	analyzer: Analyzer;
 	nextAnalysis: () => Promise<void>;
-	packagesTreeProvider: TreeDataProvider<TreeItem>;
+	packagesTreeProvider: TreeDataProvider<TreeItem> & { deps?: PubDeps, packageMapLoader?: PackageMapLoader, projectFinder?: ProjectFinder };
 	pubGlobal: {
 		installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; customActivateScript?: CustomScript; updateSilently?: boolean; silent?: boolean; }): Promise<string | undefined>;
 		checkVersionStatus(packageID: string, installedVersion: string | undefined, requiredVersion?: string): Promise<VersionStatus>;

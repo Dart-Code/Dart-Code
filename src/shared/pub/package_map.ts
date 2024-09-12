@@ -5,6 +5,14 @@ import { Logger } from "../interfaces";
 import { findFileInAncestor, uriToFilePath } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
 
+export class PackageMapLoader {
+	constructor(private readonly logger: Logger) { }
+
+	public loadForProject(projectFolder: string): PackageMap {
+		return PackageMap.loadForProject(this.logger, projectFolder);
+	}
+}
+
 export abstract class PackageMap {
 	public static findPackagesFile(entryPoint: string | undefined): string | undefined {
 		if (!entryPoint)
@@ -65,7 +73,7 @@ export abstract class PackageMap {
 	}
 }
 
-class MissingPackageMap extends PackageMap {
+export class MissingPackageMap extends PackageMap {
 	public get packages(): { [name: string]: string; } {
 		return {};
 	}
