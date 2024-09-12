@@ -52,17 +52,17 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			delete this.closingLabels[filePath];
 		}));
 		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
-			let updatedWatched = false;
+			let needsUpdate = false;
 			if (e.affectsConfiguration("dart.closingLabelsPrefix")) {
-				updatedWatched = true;
+				needsUpdate = true;
 				this.closingLabelsPrefix = config.closingLabelsPrefix;
 			}
 			if (e.affectsConfiguration("dart.closingLabels") || e.affectsConfiguration("dart.closingLabelsTextStyle")) {
-				updatedWatched = true;
+				needsUpdate = true;
 				this.decorationType.dispose();
 				this.buildDecorationType();
 			}
-			if (updatedWatched) {
+			if (needsUpdate) {
 				this.update();
 			}
 		}));
