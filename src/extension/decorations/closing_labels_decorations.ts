@@ -14,9 +14,9 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private closingLabels?: as.AnalysisClosingLabelsNotification;
 
 	private decorationType!: vs.TextEditorDecorationType;
-	private closingLabelsPrefix!: string;
+	private closingLabelsPrefix: string;
 
-	private getDecorationType() {
+	private buildDecorationType() {
 		this.decorationType = vs.window.createTextEditorDecorationType({
 			after: {
 				color: new vs.ThemeColor("dart.closingLabels"),
@@ -29,7 +29,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 	constructor(private readonly analyzer: DasAnalyzerClient) {
 		this.closingLabelsPrefix = config.closingLabelsPrefix;
-		this.getDecorationType();
+		this.buildDecorationType();
 
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
@@ -40,10 +40,17 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
 		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration("dart.closingLabels") || e.affectsConfiguration("dart.closingLabelsPrefix") || e.affectsConfiguration("dart.closingLabelsTextStyle")) {
+			let updatedWatched = false;
+			if (e.affectsConfiguration("dart.closingLabelsPrefix")) {
+				updatedWatched = true;
 				this.closingLabelsPrefix = config.closingLabelsPrefix;
+			}
+			if (e.affectsConfiguration("dart.closingLabels") || e.affectsConfiguration("dart.closingLabelsTextStyle")) {
+				updatedWatched = true;
 				this.decorationType.dispose();
-				this.getDecorationType();
+				this.buildDecorationType();
+			}
+			if (updatedWatched) {
 				this.update();
 			}
 		}));
