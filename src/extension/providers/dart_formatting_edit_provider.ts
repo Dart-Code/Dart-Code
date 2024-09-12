@@ -10,16 +10,17 @@ import { config } from "../config";
 
 export class DartFormattingEditProvider implements DocumentFormattingEditProvider, OnTypeFormattingEditProvider, IAmDisposable {
 	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzerClient, private readonly context: Context) {
-		workspace.onDidChangeConfiguration((e) => {
+		this.otherDisposables.push(workspace.onDidChangeConfiguration((e) => {
 			if (e.affectsConfiguration("dart.enableSdkFormatter")) {
 				if (config.enableSdkFormatter)
 					this.registerAllFormatters();
 				else
 					this.unregisterAllFormatters();
 			}
-		});
+		}));
 	}
 
+	private readonly otherDisposables: IAmDisposable[] = [];
 	private readonly registeredFormatters: IAmDisposable[] = [];
 	private readonly formatterRegisterFuncs: Array<() => void> = [];
 
@@ -110,6 +111,7 @@ export class DartFormattingEditProvider implements DocumentFormattingEditProvide
 	}
 
 	public dispose() {
+		disposeAll(this.otherDisposables);
 		this.unregisterAllFormatters();
 	}
 }
