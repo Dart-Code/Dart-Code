@@ -3,8 +3,8 @@ import * as as from "../../shared/analysis_server_types";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
-import { isAnalyzable } from "../utils";
 import { config } from "../config";
+import { isAnalyzable } from "../utils";
 
 export const validLastCharacters = [")", "]"];
 
@@ -13,14 +13,14 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private activeEditor?: vs.TextEditor;
 	private closingLabels?: as.AnalysisClosingLabelsNotification;
 
-	private decorationType: vs.TextEditorDecorationType | null = null;
+	private decorationType!: vs.TextEditorDecorationType;
+	private closingLabelsPrefix!: string;
 
-	private recreateDecorationType() {
-		if (this.decorationType) this.decorationType.dispose();
+	private getDecorationType() {
 		this.decorationType = vs.window.createTextEditorDecorationType({
 			after: {
 				color: new vs.ThemeColor("dart.closingLabels"),
-				fontStyle: config.closingLabelsStyle,
+				fontStyle: config.closingLabelsTextStyle,
 				margin: "2px",
 			},
 			rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
@@ -28,7 +28,9 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	constructor(private readonly analyzer: DasAnalyzerClient) {
-		this.recreateDecorationType();
+		this.closingLabelsPrefix = config.closingLabelsPrefix;
+		this.getDecorationType();
+
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;
@@ -37,9 +39,17 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		}));
 
 		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
+		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.closingLabels") || e.affectsConfiguration("dart.closingLabelsPrefix") || e.affectsConfiguration("dart.closingLabelsTextStyle")) {
+				this.closingLabelsPrefix = config.closingLabelsPrefix;
+				this.decorationType.dispose();
+				this.getDecorationType();
+				this.update();
+			}
+		}));
+
 		if (vs.window.activeTextEditor)
 			this.setTrackingFile(vs.window.activeTextEditor);
-
 	}
 
 	private update() {
@@ -65,23 +75,19 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			// Get the end of the line where we'll show the labels.
 			const endOfLine = this.activeEditor.document.lineAt(finalCharacterPosition).range.end;
 
-			const closingLabelsPrefix = config.closingLabelsPrefix;
-
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
-				existingDecorationForLine.renderOptions.after.contentText = closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
+				existingDecorationForLine.renderOptions.after.contentText = this.closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
 			} else {
 				const dec = {
 					range: new vs.Range(this.activeEditor.document.positionAt(r.offset), endOfLine),
-					renderOptions: { after: { contentText: closingLabelsPrefix + r.label } },
+					renderOptions: { after: { contentText: this.closingLabelsPrefix + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
 			}
 		}
 
-		this.recreateDecorationType();
-
-		this.activeEditor.setDecorations(this.decorationType!, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
+		this.activeEditor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
 	private setTrackingFile(editor: vs.TextEditor | undefined) {
@@ -89,7 +95,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 			return;
 
 		if (editor !== this.activeEditor)
-			this.activeEditor?.setDecorations(this.decorationType!, []);
+			this.activeEditor?.setDecorations(this.decorationType, []);
 
 		if (editor) {
 			this.activeEditor = editor;
@@ -102,8 +108,9 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	public dispose() {
-		this.activeEditor?.setDecorations(this.decorationType!, []);
+		this.activeEditor?.setDecorations(this.decorationType, []);
 		this.activeEditor = undefined;
+		this.decorationType.dispose();
 		disposeAll(this.subscriptions);
 	}
 }

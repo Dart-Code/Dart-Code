@@ -3,8 +3,8 @@ import { LanguageClient } from "vscode-languageclient/node";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { validLastCharacters } from "../decorations/closing_labels_decorations";
 import { config } from "../config";
+import { validLastCharacters } from "../decorations/closing_labels_decorations";
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
@@ -12,14 +12,14 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	private editors: { [key: string]: vs.TextEditor } = {};
 	private updateTimeout?: NodeJS.Timeout;
 
-	private decorationType: vs.TextEditorDecorationType | null = null;
+	private decorationType!: vs.TextEditorDecorationType;
+	private closingLabelsPrefix!: string;
 
-	private recreateDecorationType() {
-		if (this.decorationType) this.decorationType.dispose();
+	private getDecorationType() {
 		this.decorationType = vs.window.createTextEditorDecorationType({
 			after: {
 				color: new vs.ThemeColor("dart.closingLabels"),
-				fontStyle: config.closingLabelsStyle,
+				fontStyle: config.closingLabelsTextStyle,
 				margin: "2px",
 			},
 			rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
@@ -27,7 +27,9 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	constructor(private readonly analyzer: LanguageClient) {
-		this.recreateDecorationType();
+		this.closingLabelsPrefix = config.closingLabelsPrefix;
+		this.getDecorationType();
+
 		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
 				const filePath = fsPath(vs.Uri.parse(n.uri));
@@ -49,6 +51,16 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			const filePath = fsPath(td.uri);
 			delete this.closingLabels[filePath];
 		}));
+		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.closingLabels") || e.affectsConfiguration("dart.closingLabelsPrefix") || e.affectsConfiguration("dart.closingLabelsTextStyle")) {
+				this.closingLabelsPrefix = config.closingLabelsPrefix;
+				this.decorationType.dispose();
+				this.getDecorationType();
+				this.update();
+			}
+		}));
+
+
 		if (vs.window.activeTextEditor)
 			this.update();
 	}
@@ -82,35 +94,32 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			// Get the end of the line where we'll show the labels.
 			const endOfLine = editor.document.lineAt(finalCharacterPosition).range.end;
 
-			const closingLabelsPrefix = config.closingLabelsPrefix;
-
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
-				existingDecorationForLine.renderOptions.after.contentText = closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
+				existingDecorationForLine.renderOptions.after.contentText = this.closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
 			} else {
 				const dec = {
 					range: new vs.Range(labelRange.start, endOfLine),
-					renderOptions: { after: { contentText: closingLabelsPrefix + r.label } },
+					renderOptions: { after: { contentText: this.closingLabelsPrefix + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
 			}
 		}
 
-		this.recreateDecorationType();
-
 		this.editors[filePath] = editor;
-		editor.setDecorations(this.decorationType!, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
+		editor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
 	public dispose() {
 		for (const editor of Object.values(this.editors)) {
 			try {
-				editor.setDecorations(this.decorationType!, []);
+				editor.setDecorations(this.decorationType, []);
 			} catch {
 				// It's possible the editor was closed, but there
 				// doesn't seem to be a way to tell.
 			}
 		}
+		this.decorationType.dispose();
 		disposeAll(this.subscriptions);
 	}
 }

@@ -1986,15 +1986,12 @@
 						"scope": "window"
 					},
 					"dart.closingLabelsPrefix": {
-						"type": [
-							"null",
-							"string"
-						],
-						"default": null,
-						"markdownDescription": "The prefix to use for closing labels. If `null`, the default ` // ` prefix will be used.",
+						"type": "string",
+						"default": " // ",
+						"description": "The prefix to use in closing labels.",
 						"scope": "window"
 					},
-					"dart.closingLabelsStyle": {
+					"dart.closingLabelsTextStyle": {
 						"type": "string",
 						"enum": [
 							"normal",
@@ -2005,7 +2002,7 @@
 							"Italic"
 						],
 						"default": "normal",
-						"description": "The style to use for closing labels. This setting requires a theme that supports italic text.",
+						"markdownDescription": "The text style to use in closing labels. Using _Italic_ requires a font that supports italic text.",
 						"scope": "window"
 					},
 					"dart.completeFunctionCalls": {
