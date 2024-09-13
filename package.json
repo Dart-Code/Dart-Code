@@ -1985,6 +1985,26 @@
 						"description": "Whether to show annotations against constructor, method invocations and lists that span multiple lines.",
 						"scope": "window"
 					},
+					"dart.closingLabelsPrefix": {
+						"type": "string",
+						"default": " // ",
+						"description": "The prefix to use in closing labels.",
+						"scope": "window"
+					},
+					"dart.closingLabelsTextStyle": {
+						"type": "string",
+						"enum": [
+							"normal",
+							"italic"
+						],
+						"enumItemLabels": [
+							"Normal",
+							"Italic"
+						],
+						"default": "normal",
+						"markdownDescription": "The text style to use in closing labels. Using _Italic_ requires a font that supports italic text.",
+						"scope": "window"
+					},
 					"dart.completeFunctionCalls": {
 						"type": "boolean",
 						"default": true,

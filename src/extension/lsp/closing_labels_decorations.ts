@@ -3,6 +3,7 @@ import { LanguageClient } from "vscode-languageclient/node";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { config } from "../config";
 import { validLastCharacters } from "../decorations/closing_labels_decorations";
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
@@ -11,15 +12,24 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	private editors: { [key: string]: vs.TextEditor } = {};
 	private updateTimeout?: NodeJS.Timeout;
 
-	private readonly decorationType = vs.window.createTextEditorDecorationType({
-		after: {
-			color: new vs.ThemeColor("dart.closingLabels"),
-			margin: "2px",
-		},
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
-	});
+	private decorationType!: vs.TextEditorDecorationType;
+	private closingLabelsPrefix: string;
+
+	private buildDecorationType() {
+		this.decorationType = vs.window.createTextEditorDecorationType({
+			after: {
+				color: new vs.ThemeColor("dart.closingLabels"),
+				fontStyle: config.closingLabelsTextStyle,
+				margin: "2px",
+			},
+			rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
+		});
+	}
 
 	constructor(private readonly analyzer: LanguageClient) {
+		this.closingLabelsPrefix = config.closingLabelsPrefix;
+		this.buildDecorationType();
+
 		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
 				const filePath = fsPath(vs.Uri.parse(n.uri));
@@ -41,6 +51,23 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			const filePath = fsPath(td.uri);
 			delete this.closingLabels[filePath];
 		}));
+		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
+			let needsUpdate = false;
+			if (e.affectsConfiguration("dart.closingLabelsPrefix")) {
+				needsUpdate = true;
+				this.closingLabelsPrefix = config.closingLabelsPrefix;
+			}
+			if (e.affectsConfiguration("dart.closingLabels") || e.affectsConfiguration("dart.closingLabelsTextStyle")) {
+				needsUpdate = true;
+				this.decorationType.dispose();
+				this.buildDecorationType();
+			}
+			if (needsUpdate) {
+				this.update();
+			}
+		}));
+
+
 		if (vs.window.activeTextEditor)
 			this.update();
 	}
@@ -76,11 +103,11 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
-				existingDecorationForLine.renderOptions.after.contentText = " // " + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
+				existingDecorationForLine.renderOptions.after.contentText = this.closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
 			} else {
 				const dec = {
 					range: new vs.Range(labelRange.start, endOfLine),
-					renderOptions: { after: { contentText: " // " + r.label } },
+					renderOptions: { after: { contentText: this.closingLabelsPrefix + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
 			}
@@ -99,6 +126,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 				// doesn't seem to be a way to tell.
 			}
 		}
+		this.decorationType.dispose();
 		disposeAll(this.subscriptions);
 	}
 }

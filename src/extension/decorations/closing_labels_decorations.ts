@@ -3,6 +3,7 @@ import * as as from "../../shared/analysis_server_types";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DasAnalyzerClient } from "../analysis/analyzer_das";
+import { config } from "../config";
 import { isAnalyzable } from "../utils";
 
 export const validLastCharacters = [")", "]"];
@@ -12,15 +13,24 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	private activeEditor?: vs.TextEditor;
 	private closingLabels?: as.AnalysisClosingLabelsNotification;
 
-	private readonly decorationType = vs.window.createTextEditorDecorationType({
-		after: {
-			color: new vs.ThemeColor("dart.closingLabels"),
-			margin: "2px",
-		},
-		rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
-	});
+	private decorationType!: vs.TextEditorDecorationType;
+	private closingLabelsPrefix: string;
+
+	private buildDecorationType() {
+		this.decorationType = vs.window.createTextEditorDecorationType({
+			after: {
+				color: new vs.ThemeColor("dart.closingLabels"),
+				fontStyle: config.closingLabelsTextStyle,
+				margin: "2px",
+			},
+			rangeBehavior: vs.DecorationRangeBehavior.ClosedOpen,
+		});
+	}
 
 	constructor(private readonly analyzer: DasAnalyzerClient) {
+		this.closingLabelsPrefix = config.closingLabelsPrefix;
+		this.buildDecorationType();
+
 		this.subscriptions.push(this.analyzer.registerForAnalysisClosingLabels((n) => {
 			if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
 				this.closingLabels = n;
@@ -29,9 +39,24 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 		}));
 
 		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
+		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
+			let needsUpdate = false;
+			if (e.affectsConfiguration("dart.closingLabelsPrefix")) {
+				needsUpdate = true;
+				this.closingLabelsPrefix = config.closingLabelsPrefix;
+			}
+			if (e.affectsConfiguration("dart.closingLabels") || e.affectsConfiguration("dart.closingLabelsTextStyle")) {
+				needsUpdate = true;
+				this.decorationType.dispose();
+				this.buildDecorationType();
+			}
+			if (needsUpdate) {
+				this.update();
+			}
+		}));
+
 		if (vs.window.activeTextEditor)
 			this.setTrackingFile(vs.window.activeTextEditor);
-
 	}
 
 	private update() {
@@ -59,11 +84,11 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 
 			const existingDecorationForLine = decorations[endOfLine.line];
 			if (existingDecorationForLine) {
-				existingDecorationForLine.renderOptions.after.contentText = " // " + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
+				existingDecorationForLine.renderOptions.after.contentText = this.closingLabelsPrefix + r.label + " " + existingDecorationForLine.renderOptions.after.contentText;
 			} else {
 				const dec = {
 					range: new vs.Range(this.activeEditor.document.positionAt(r.offset), endOfLine),
-					renderOptions: { after: { contentText: " // " + r.label } },
+					renderOptions: { after: { contentText: this.closingLabelsPrefix + r.label } },
 				};
 				decorations[endOfLine.line] = dec;
 			}
@@ -92,6 +117,7 @@ export class ClosingLabelsDecorations implements vs.Disposable {
 	public dispose() {
 		this.activeEditor?.setDecorations(this.decorationType, []);
 		this.activeEditor = undefined;
+		this.decorationType.dispose();
 		disposeAll(this.subscriptions);
 	}
 }
