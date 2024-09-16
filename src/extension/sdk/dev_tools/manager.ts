@@ -677,6 +677,13 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 			if (dtdUri) {
 				devToolsArgs.push("--dtd-uri");
 				devToolsArgs.push(dtdUri);
+				if (this.dartCapabilities.supportsDevToolsDtdExposedUri) {
+					const exposedDtdUri = await envUtils.exposeUrl(dtdUri, this.logger);
+					if (exposedDtdUri !== dtdUri) {
+						devToolsArgs.push("--dtd-exposed-uri");
+						devToolsArgs.push(exposedDtdUri);
+					}
+				}
 			}
 		}
 
