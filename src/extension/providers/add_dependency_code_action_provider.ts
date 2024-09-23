@@ -6,6 +6,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { PubPackage } from "../commands/add_dependency";
 import { locateBestProjectRoot } from "../project";
 import { isAnalyzableAndInWorkspace } from "../utils";
+import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 const applicableErrorCodes = ["uri_does_not_exist", "conditional_uri_does_not_exist", "depend_on_referenced_packages"];
@@ -80,15 +81,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 	/// Checks if the diagnostic is a uri_does_not_exist and the URI is a package:
 	/// URI and returns the package name.
 	private extractPackageNameForUriNotFoundDiagnostic(document: TextDocument, diag: Diagnostic): string | undefined {
-		const code = diag.code;
-		if (!code)
-			return;
-
-		const errorCode = typeof code === "string" || typeof code === "number"
-			? code.toString()
-			: ("value" in code)
-				? code.value.toString()
-				: undefined;
+		const errorCode = getDiagnosticErrorCode(diag);
 		if (!errorCode)
 			return;
 

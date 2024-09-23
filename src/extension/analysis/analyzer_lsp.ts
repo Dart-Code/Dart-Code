@@ -25,6 +25,7 @@ import { config } from "../config";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
+import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { getAnalyzerArgs } from "./analyzer";
 import { SnippetTextEditFeature } from "./analyzer_lsp_snippet_text_edits";
 import { LspFileTracker } from "./file_tracker_lsp";
@@ -200,6 +201,16 @@ export class LspAnalyzer extends Analyzer {
 				}
 
 				next(token, params);
+			},
+
+			handleDiagnostics(uri, diagnostics, next) {
+				for (const diagnostic of diagnostics) {
+					const errorCode = getDiagnosticErrorCode(diagnostic);
+					if (errorCode === "file_names") {
+						diagnostic.message += "\nYou may need to close the file and restart VS Code after renaming a file by only casing.";
+					}
+				}
+				next(uri, diagnostics);
 			},
 
 			provideCompletionItem: async (document: vs.TextDocument, position: vs.Position, context: vs.CompletionContext, token: vs.CancellationToken, next: ls.ProvideCompletionItemsSignature) => {
