@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { debugAnywayAction, isDartCodeTestRun, showErrorsAction } from "../../shared/constants";
+import { isDartCodeTestRun, runAnywayAction, showErrorsAction } from "../../shared/constants";
 import { HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG } from "../../shared/constants.contexts";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
@@ -290,13 +290,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			logger.warn(`    ${fsPath(firstRelevantDiagnostic[0])}:${range.start.line}:${range.start.character}`);
 			logger.warn(`    ${firstRelevantError.message.split("\n")[0].trim()}`);
 			const action = await window.showErrorMessage(
-				"Build errors exist in your project.",
+				"Errors exist in your project.",
 				{ modal: true },
-				debugAnywayAction,
+				runAnywayAction,
 				showErrorsAction
 			);
-			if (action === debugAnywayAction) {
-				logger.info("Debugging anyway!");
+			if (action === runAnywayAction) {
+				logger.info("Running anyway!");
 				// Do nothing, we'll just carry on.
 			} else {
 				logger.info("Aborting!");

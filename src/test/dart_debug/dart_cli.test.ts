@@ -5,7 +5,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
-import { debugAnywayAction, showErrorsAction } from "../../shared/constants";
+import { runAnywayAction, showErrorsAction } from "../../shared/constants";
 import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType } from "../../shared/enums";
 import { versionIsAtLeast } from "../../shared/utils";
@@ -119,7 +119,7 @@ describe("dart cli debugger", () => {
 			await writeBrokenDartCodeIntoFileForTest(getTempProjectFile());
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
-			showErrorMessage.resolves(debugAnywayAction);
+			showErrorMessage.resolves(runAnywayAction);
 
 			const config = await startDebugger(dc, helloWorldMainFile);
 
@@ -138,7 +138,7 @@ describe("dart cli debugger", () => {
 			await writeBrokenDartCodeIntoFileForTest(getTempTestFile());
 
 			const showErrorMessage = sb.stub(vs.window, "showErrorMessage");
-			showErrorMessage.resolves(debugAnywayAction);
+			showErrorMessage.resolves(runAnywayAction);
 
 			const config = await startDebugger(dc, helloWorldMainFile);
 

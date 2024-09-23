@@ -126,7 +126,7 @@ export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied bec
 export const REFACTOR_ANYWAY = "Refactor Anyway";
 
 export const showErrorsAction = "Show Errors";
-export const debugAnywayAction = "Debug Anyway";
+export const runAnywayAction = "Run Anyway";
 
 export const userPromptContextPrefix = "hasPrompted.";
 export const installFlutterExtensionPromptKey = "install_flutter_extension_3";
