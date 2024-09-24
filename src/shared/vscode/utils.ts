@@ -11,7 +11,7 @@ import { Location, Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { PromiseCompleter, flatMap, notUndefined } from "../utils";
 import { SimpleTimeBasedCache } from "../utils/cache";
-import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath } from "../utils/fs";
+import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPathOrEqual } from "../utils/fs";
 import { isKnownCloudIde } from "./utils_cloud";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
@@ -152,7 +152,7 @@ export async function getAllProjectFoldersAndExclusions(
 		// Filter out any folders excluded by analysis_options.
 		try {
 			const excludedFolders = getAnalysisOptionsExcludedFolders(logger, projectFolders);
-			projectFolders = projectFolders.filter((p) => !excludedFolders.find((f) => p.startsWith(f)));
+			projectFolders = projectFolders.filter((p) => !excludedFolders.find((ex) => isWithinPathOrEqual(p, ex)));
 			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
 
 			allExcludedFolders = allExcludedFolders.concat(excludedFolders);
