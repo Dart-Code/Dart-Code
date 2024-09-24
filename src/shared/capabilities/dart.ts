@@ -21,8 +21,14 @@ export class DartCapabilities {
 			return versionIsAtLeast(this.version, "2.18.0-0");
 	}
 	get hasLspInsertTextModeSupport() { return versionIsAtLeast(this.version, "2.13.0-0"); }
+
+	// No SDKs are currently unsupported.
 	get isUnsupportedNow() { return false; }
-	get isUnsupportedSoon() { return false; }
+
+	// SDKs older than 3.0 are deprecated as of the release of Dart 3.6.
+	// https://groups.google.com/g/flutter-announce/c/JQHzM3FbBGI
+	get isUnsupportedSoon() { return !versionIsAtLeast(this.version, "3.0.0"); }
+
 	get supportsSnippetTextEdits() { return versionIsAtLeast(this.version, "2.13.0-150"); }
 	get supportsRefactorValidate() { return versionIsAtLeast(this.version, "2.17.0"); }
 	get supportsWriteServiceInfo() { return versionIsAtLeast(this.version, "2.7.1"); }
