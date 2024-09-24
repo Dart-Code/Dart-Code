@@ -107,7 +107,7 @@ export async function getAllProjectFoldersAndExclusions(
 		await inProgressProjectFolderSearch;
 	}
 
-	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}_${options.onlyWorkspaceRoots ? "true" : "false"}`;
+	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}_${!!options.sort}_${!!options.onlyWorkspaceRoots}`;
 	const cachedFolders = projectFolderCache.get(cacheKey);
 	if (cachedFolders) {
 		logger.info(`Returning cached results for project search`);
