@@ -49,7 +49,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 
 	public async getChildren(element?: PackageDep): Promise<PackageDep[]> {
 		if (!element) {
-			const allProjects = await this.projectFinder.findAllProjectFolders(getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+			const allProjects = await this.projectFinder.findAllProjectFolders(getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
 			// If there's only one, just skip over to the deps.

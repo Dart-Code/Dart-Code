@@ -11,12 +11,16 @@ export type DependencyType = "root" | "direct" | "dev" | "transitive";
 export class PubDeps {
 	constructor(private readonly logger: Logger, private readonly sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) { }
 
-	public buildTree(json: PubDepsJson): PubDepsTree {
+	public buildTree(json: PubDepsJson, packageName: string): PubDepsTree {
 		const packages: PubDepsJsonPackageLookup = {};
 		const rootPackageNames: string[] = [];
 		for (const p of json.packages) {
 			packages[p.name] = p;
-			if (p.kind === "root")
+			// TODO(dantup): Right now we only find the root for the specific package name. For non-workspaces
+			//  this is the only root. For Workspaces, this means we're running "pub deps" for each project
+			//  in the workspace and discarding the results for the others. This could potentially be optimized,
+			//  however since we expand the nodes lazily, there might not be much benefit.
+			if (p.kind === "root" && p.name === packageName)
 				rootPackageNames.push(p.name);
 		}
 
@@ -28,15 +32,35 @@ export class PubDeps {
 	}
 
 	private _buildRoot(pkg: PubDepsJsonPackage, packages: PubDepsJsonPackageLookup): PubDepsTreeRootPackage {
-		// TODO(dantup): Change this for post-workspace version where we need to read these from different collections
-		//  and walk to get transitives.
+		// If a node has a "directDependencies" node then we've got the new format
+		// (see https://github.com/dart-lang/pub/pull/4383).
+		//
+		// For the new format, we use:
+		//   directDependencies: `pkg.directDependencies`
+		//   devDependencies: `pkg.devDependencies`
+		//   transitiveDependencies: walk down `pkg.dependencies` collecting from child `dependencies` where not already seen
+		//
+		// Otherwise, we use:
+		//   directDependencies: `pkg.dependencies.filter((dep) => dep?.kind === "direct")`
+		//   devDependencies: `pkg.devDependencies.filter((dep) => dep?.kind === "dev")`
+		//   transitiveDependencies: walk down `pkg.dependencies` collecting from child `dependencies` where not already seen
+
+		const isNewFormat = !!pkg.directDependencies;
+
+
 		const allDependencies = pkg.dependencies?.map((name) => packages[name]).filter((pkg) => pkg) ?? [];
-		allDependencies.sort((d1, d2) => d1.name.localeCompare(d2.name));
-		const dependencies = allDependencies.filter((dep) => dep?.kind === "direct");
-		const devDependencies = allDependencies.filter((dep) => dep?.kind === "dev");
+		const directDependencies = isNewFormat
+			? pkg.directDependencies?.map((name) => packages[name]).filter((pkg) => pkg) ?? []
+			: allDependencies.filter((dep) => dep?.kind === "direct");
+		const devDependencies = isNewFormat
+			? pkg.devDependencies?.map((name) => packages[name]).filter((pkg) => pkg) ?? []
+			: allDependencies.filter((dep) => dep?.kind === "dev");
+		directDependencies.sort((d1, d2) => d1.name.localeCompare(d2.name));
+		devDependencies.sort((d1, d2) => d1.name.localeCompare(d2.name));
+
 		return {
-			dependencies: dependencies?.map((pkg) => this._buildDependency(pkg)),
-			devDependencies: devDependencies?.map((pkg) => this._buildDependency(pkg)),
+			dependencies: directDependencies.map((pkg) => this._buildDependency(pkg)),
+			devDependencies: devDependencies.map((pkg) => this._buildDependency(pkg)),
 			name: pkg.name,
 			transitiveDependencies: this._buildTransitiveDependencies(pkg, packages),
 			version: pkg.version,
@@ -96,7 +120,7 @@ export class PubDeps {
 
 	public async getTree(projectDirectory: string): Promise<PubDepsTree | undefined> {
 		const json = await this.getJson(projectDirectory);
-		return json ? this.buildTree(json) : undefined;
+		return json ? this.buildTree(json, path.basename(projectDirectory)) : undefined;
 	}
 
 	public async getJson(projectDirectory: string): Promise<PubDepsJson | undefined> {
@@ -138,21 +162,21 @@ export class PubDeps {
 /// versions, for example including `devDependencies` on packages
 /// even though they were included in `dependencies` pre-workspaces.
 export interface PubDepsJson {
-	root: string;
 	packages: PubDepsJsonPackage[];
 }
 
 /// A package in the `pub deps --json` output.
 ///
 /// These types cover both the pre-workspaces and post-workspaces
-/// versions, for example including `devDependencies` on packages
-/// even though they were included in `dependencies` pre-workspaces.
+/// versions, for example including `directDependencies`/`devDependencies` on packages
+/// even though they were not included in `dependencies` pre-workspaces.
 export interface PubDepsJsonPackage {
 	name: string;
 	version: string;
 	kind: DependencyType;
 	dependencies: string[] | undefined;
-	devDependencies: string[] | undefined;
+	directDependencies?: string[] | undefined;
+	devDependencies?: string[] | undefined;
 }
 
 /// A lookup of package name -> [PubDepsJsonPackage].
