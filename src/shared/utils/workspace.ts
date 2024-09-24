@@ -4,20 +4,20 @@ import { isWin, MAX_VERSION } from "../constants";
 import { CustomScript, ExtensionConfig, Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, dartSdkRoot: string, extensionConfig: ExtensionConfig) {
-	config.disableAutomaticPackageGet = true;
+	config.disableAutomaticPub = true;
 	// The Dart SDKs tests cannot run using pkg:test, so force them to use the VM.
 	config.supportsPackageTest = extensionConfig.experimentalTestRunnerInSdk;
 	config.supportsDartRunTest = false;
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string, extensionConfig: ExtensionConfig) {
-	config.disableAutomaticPackageGet = true;
+	config.disableAutomaticPub = true;
 	config.disableSdkUpdateChecks = true;
 	config.disableDartToolingDaemon = true;
 }
 
 export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string, extensionConfig: ExtensionConfig) {
-	config.disableAutomaticPackageGet = true;
+	config.disableAutomaticPub = true;
 	config.disableSdkUpdateChecks = true;
 	config.disableDartToolingDaemon = true;
 

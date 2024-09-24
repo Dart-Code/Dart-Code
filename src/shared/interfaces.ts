@@ -57,7 +57,9 @@ export interface WritableWorkspaceConfig {
 	startDevToolsServerEagerly?: boolean;
 	startDevToolsFromDaemon?: boolean;
 	disableAnalytics?: boolean;
-	disableAutomaticPackageGet?: boolean;
+	/// Whether to disable automatically running "pub get" such as to fetch packages, or for "pub deps"
+	/// that might create .dart_tool folders where they are not wanted.
+	disableAutomaticPub?: boolean;
 	/// Whether to disable DTD for this workspace.
 	disableDartToolingDaemon?: boolean;
 	disableSdkUpdateChecks?: boolean;

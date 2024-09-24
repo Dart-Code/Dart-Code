@@ -41,7 +41,7 @@ describe("extension", () => {
 		assert.ok(workspaceContext.sdks.dart);
 		assert.ok(workspaceContext.sdks.flutter);
 		assert.ok(workspaceContext.config);
-		assert.equal(workspaceContext.config?.disableAutomaticPackageGet, true);
+		assert.equal(workspaceContext.config?.disableAutomaticPub, true);
 		assert.equal(workspaceContext.config?.flutterVersion, MAX_VERSION);
 		assert.equal(workspaceContext.config?.forceFlutterWorkspace, true);
 		assert.equal(workspaceContext.config?.forceFlutterDebug, true);

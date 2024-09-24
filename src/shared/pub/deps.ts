@@ -1,7 +1,7 @@
 import * as path from "path";
 import { DartCapabilities } from "../capabilities/dart";
 import { dartVMPath, flutterPath } from "../constants";
-import { DartSdks, Logger } from "../interfaces";
+import { DartWorkspaceContext, Logger } from "../interfaces";
 import { runProcess, safeSpawn } from "../processes";
 import { isFlutterProjectFolder } from "../utils/fs";
 
@@ -9,7 +9,7 @@ export type DependencyType = "root" | "direct" | "dev" | "transitive";
 
 /// Interacts with "pub deps --json" to look up types of dependencies.
 export class PubDeps {
-	constructor(private readonly logger: Logger, private readonly sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) { }
 
 	public buildTree(json: PubDepsJson, packageName: string): PubDepsTree {
 		const packages: PubDepsJsonPackageLookup = {};
@@ -124,13 +124,14 @@ export class PubDeps {
 	}
 
 	public async getJson(projectDirectory: string): Promise<PubDepsJson | undefined> {
-		if (!this.dartCapabilities.supportsPubDepsJson) {
+		if (!this.dartCapabilities.supportsPubDepsJson || this.context.config.disableAutomaticPub) {
 			return undefined;
 		}
 
-		const binPath = isFlutterProjectFolder(projectDirectory) && this.sdks.flutter
-			? path.join(this.sdks.flutter, flutterPath)
-			: path.join(this.sdks.dart, dartVMPath);
+		const sdks = this.context.sdks;
+		const binPath = isFlutterProjectFolder(projectDirectory) && sdks.flutter
+			? path.join(sdks.flutter, flutterPath)
+			: path.join(sdks.dart, dartVMPath);
 		const result = await runProcess(this.logger, binPath, ["pub", "deps", "--json"], projectDirectory, undefined, safeSpawn);
 
 		if (result.exitCode !== 0) {

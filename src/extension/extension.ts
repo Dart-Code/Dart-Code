@@ -777,7 +777,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Prompt for pub get/upgrade if required
 	function checkForPackages() {
 		// Don't prompt for package updates in the Fuchsia tree/Dart SDK repo.
-		if (workspaceContext.config.disableAutomaticPackageGet)
+		if (workspaceContext.config.disableAutomaticPub)
 			return;
 		void packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true, upgradeOnSdkChange: true });
 	}

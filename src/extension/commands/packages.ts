@@ -214,8 +214,8 @@ export class PackageCommands extends BaseSdkCommands {
 		}
 
 		// Or if the workspace config says we shouldn't run.
-		if (this.workspace.config.disableAutomaticPackageGet) {
-			this.logger.info(`Workspace suppresses automatic "pub get"`);
+		if (this.workspace.config.disableAutomaticPub) {
+			this.logger.info(`Workspace suppresses automatic "pub"`);
 			return;
 		}
 

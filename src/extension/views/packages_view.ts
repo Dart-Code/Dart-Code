@@ -38,7 +38,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 			setTimeout(() => this.processPackageMapChangeEvents = true, 5000);
 			this.onDidChangeTreeDataEmitter.fire(undefined);
 		});
-		this.deps = new PubDeps(logger, context.sdks, dartCapabilities);
+		this.deps = new PubDeps(logger, context, dartCapabilities);
 		this.packageMapLoader = new PackageMapLoader(logger);
 		this.projectFinder = new ProjectFinder(logger);
 	}
