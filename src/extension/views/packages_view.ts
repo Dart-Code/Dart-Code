@@ -202,16 +202,20 @@ export class PackageDepProject extends PackageDep {
 		rootPackageUri: vs.Uri,
 	) {
 		const rootPackageFolder = fsPath(rootPackageUri);
-		super(path.basename(rootPackageFolder), undefined, vs.TreeItemCollapsibleState.Collapsed);
+		const wf = vs.workspace.getWorkspaceFolder(rootPackageUri);
+		const label = wf
+			// Show the relative path from the wf unless it is the wf, in which case show its name.
+			? path.relative(fsPath(wf.uri), rootPackageFolder) || path.basename(fsPath(wf.uri))
+			: path.basename(rootPackageFolder);
+		// Show folder name if there is a wf and we're not that folder.
+		const description = wf && path.relative(fsPath(wf.uri), rootPackageFolder)
+			? path.basename(fsPath(wf.uri))
+			: undefined;
+
+		super(label, undefined, vs.TreeItemCollapsibleState.Collapsed);
 		this.rootPackageFolder = rootPackageFolder;
 		this.contextValue = DART_DEP_PROJECT_NODE_CONTEXT;
-
-		// Calculate relative path to the folder for the description.
-		const wf = vs.workspace.getWorkspaceFolder(rootPackageUri);
-		if (wf) {
-			const workspaceFolder = fsPath(wf.uri);
-			this.description = path.relative(path.dirname(workspaceFolder), path.dirname(rootPackageFolder));
-		}
+		this.description = description;
 	}
 }
 
