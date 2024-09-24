@@ -3,6 +3,7 @@ import { DartCapabilities } from "../capabilities/dart";
 import { dartVMPath, flutterPath } from "../constants";
 import { DartSdks, Logger } from "../interfaces";
 import { runProcess, safeSpawn } from "../processes";
+import { isFlutterProjectFolder } from "../utils/fs";
 
 export type DependencyType = "root" | "direct" | "dev" | "transitive";
 
@@ -15,7 +16,7 @@ export class PubDeps {
 			return undefined;
 		}
 
-		const binPath = this.sdks.flutter
+		const binPath = isFlutterProjectFolder(projectDirectory) && this.sdks.flutter
 			? path.join(this.sdks.flutter, flutterPath)
 			: path.join(this.sdks.dart, dartVMPath);
 		const result = await runProcess(this.logger, binPath, ["pub", "deps", "--json"], projectDirectory, undefined, safeSpawn);
