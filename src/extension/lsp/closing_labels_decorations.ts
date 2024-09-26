@@ -10,7 +10,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
 	private closingLabels: { [key: string]: ClosingLabelsParams } = {};
 	private editors: { [key: string]: vs.TextEditor } = {};
-	private updateTimeout?: NodeJS.Timeout;
+	private updateTimeouts: { [key: string]: NodeJS.Timeout } = {};
 
 	private decorationType!: vs.TextEditorDecorationType;
 	private closingLabelsPrefix: string;
@@ -32,22 +32,27 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 
 		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
-				const filePath = fsPath(vs.Uri.parse(n.uri));
+				const uri = vs.Uri.parse(n.uri);
+				if (uri.scheme !== "file")
+					return;
+				const filePath = fsPath(uri);
 				this.closingLabels[filePath] = n;
-				// Fire an update if it was for the active document.
-				if (vs.window.activeTextEditor
-					&& vs.window.activeTextEditor.document
-					&& filePath === fsPath(vs.window.activeTextEditor.document.uri)) {
+				// Fire an update if it was for a visible editor.
+				const editor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file" && fsPath(e.document.uri) === filePath);
+				if (editor) {
 					// Delay this so if we're getting lots of updates we don't flicker.
-					if (this.updateTimeout)
-						clearTimeout(this.updateTimeout);
-					this.updateTimeout = setTimeout(() => this.update(), 500);
+					if (this.updateTimeouts[filePath])
+						clearTimeout(this.updateTimeouts[filePath]);
+					this.updateTimeouts[filePath] = setTimeout(() => this.update(uri), 500);
 				}
 			});
 		});
 
-		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor(() => this.update()));
+		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors(() => this.updateAll()));
 		this.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => {
+			if (td.uri.scheme !== "file")
+				return;
+
 			const filePath = fsPath(td.uri);
 			delete this.closingLabels[filePath];
 		}));
@@ -63,23 +68,27 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 				this.buildDecorationType();
 			}
 			if (needsUpdate) {
-				this.update();
+				this.updateAll();
 			}
 		}));
 
-
-		if (vs.window.activeTextEditor)
-			this.update();
+		this.updateAll();
 	}
 
-	private update() {
-		const editor = vs.window.activeTextEditor;
-		if (!editor || !editor.document)
-			return;
+	private updateAll() {
+		for (const editor of vs.window.visibleTextEditors)
+			this.update(editor.document.uri);
+	}
 
-		const filePath = fsPath(editor.document.uri);
+	private update(uri: vs.Uri) {
+		if (uri.scheme !== "file")
+			return;
+		const filePath = fsPath(uri);
 		if (!this.closingLabels[filePath])
 			return;
+
+		const editor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file" && fsPath(e.document.uri) === filePath);
+		if (!editor) return;
 
 		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: { contentText: string } } } } = [];
 		for (const r of this.closingLabels[filePath].labels) {
