@@ -239,7 +239,7 @@ export function escapeShell(args: string[]) {
 	return ret.join(" ");
 }
 
-export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean): Promise<void> {
+export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean, specificLog?: string): Promise<void> {
 	const restartAction = buttonText || "Reload";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
 	const ringLogContents = ringLog.toString();
@@ -250,7 +250,10 @@ export async function promptToReloadExtension(prompt?: string, buttonText?: stri
 		const chosenAction = prompt && await window.showInformationMessage(prompt, ...actions);
 		if (chosenAction === showLogAction) {
 			showPromptAgain = true;
-			void openLogContents(undefined, ringLogContents, tempLogPath);
+			if (specificLog && fs.existsSync(specificLog))
+				void workspace.openTextDocument(specificLog).then(window.showTextDocument);
+			else
+				void openLogContents(undefined, ringLogContents, tempLogPath);
 		} else if (!prompt || chosenAction === restartAction) {
 			void commands.executeCommand("_dart.reloadExtension");
 		}

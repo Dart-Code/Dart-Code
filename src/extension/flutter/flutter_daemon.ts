@@ -139,7 +139,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		// here can override hasShownTerminationError, for example to show the error when
 		// something tries to interact with the API (`notifyRequestAfterExit`).
 		this.hasShownTerminatedError = true;
-		void promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true);
+		void promptToReloadExtension(`The Flutter Daemon ${message}.`, undefined, true, config.flutterDaemonLogFile);
 	}
 
 	public dispose() {
@@ -158,7 +158,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		} catch (e) {
 			if (!this.hasShownTerminatedError && !this.isShuttingDown) {
 				this.hasShownTerminatedError = true;
-				void promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true);
+				void promptToReloadExtension("The Flutter Daemon has terminated.", undefined, true, config.flutterDaemonLogFile);
 				throw e;
 			}
 		}

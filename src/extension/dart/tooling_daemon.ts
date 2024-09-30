@@ -28,7 +28,13 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		sdks: DartSdks,
 		deviceManager: FlutterDeviceManager | undefined,
 	) {
-		super(logger, sdks, config.maxLogLineLength, getToolEnv, promptToReloadExtension);
+		super(
+			logger,
+			sdks,
+			config.maxLogLineLength,
+			getToolEnv,
+			(prompt?: string, buttonText?: string, offerLog?: boolean) => promptToReloadExtension(prompt, buttonText, offerLog, config.toolingDaemonLogFile),
+		);
 		context.subscriptions.push(this);
 
 		this.editorServices = new EditorServices(this, deviceManager);

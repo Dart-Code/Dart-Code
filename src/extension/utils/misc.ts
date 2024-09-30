@@ -1,6 +1,7 @@
 import * as path from "path";
 import { flutterPath } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
+import { config } from "../config";
 import { promptToReloadExtension } from "../utils";
 import { runToolProcess } from "./processes";
 
@@ -13,7 +14,7 @@ export function reportAnalyzerTerminatedWithError(duringStartup = false) {
 	const message = duringStartup
 		? "The Dart Analyzer could not be started."
 		: "The Dart Analyzer has terminated.";
-	void promptToReloadExtension(message, undefined, true).then(() => isShowingAnalyzerError = false);
+	void promptToReloadExtension(message, undefined, true, config.analyzerLogFile).then(() => isShowingAnalyzerError = false);
 }
 
 export async function getFlutterConfigValue<T>(logger: Logger, flutterSdkPath: string | undefined, folder: string, flutterConfigKey: string): Promise<T> {
