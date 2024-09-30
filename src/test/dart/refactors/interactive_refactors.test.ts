@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
+import { fsPath } from "../../../shared/utils/fs";
 import { InteractiveRefactors, SupportedParameterKind } from "../../../shared/vscode/interactive_refactors";
 import { activate, emptyFile, extApi, helloWorldMainFile, sb } from "../../helpers";
 
@@ -122,7 +123,7 @@ describe("interactive refactors", () => {
 		const capturedArgs = await executeRefactor(refactors, codeAction);
 
 		// Expect the captured args to contain the value we returned from showSaveDialog.
-		assert.deepStrictEqual(capturedArgs.arguments[0], helloWorldMainFile.toString());
+		assert.deepStrictEqual(fsPath(vs.Uri.parse(capturedArgs.arguments[0] as string)), fsPath(helloWorldMainFile));
 	});
 
 	it("normalizes casing for 'saveUri' parameter responses", async function () {
@@ -142,7 +143,7 @@ describe("interactive refactors", () => {
 		const codeAction = createTestRefactor(kind, defaultValue);
 		const capturedArgs = await executeRefactor(refactors, codeAction);
 
-		// Expect the captured args to contain the value we returned from showSaveDialog.
+		// Expect the captured args to contain the normalized (uppercase drive letter) value we returned from showSaveDialog.
 		assert.deepStrictEqual(capturedArgs.arguments[0], "file:///C%3A/foo/bar");
 	});
 });
