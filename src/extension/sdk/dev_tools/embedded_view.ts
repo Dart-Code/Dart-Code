@@ -8,6 +8,25 @@ const pageScript = `
 const vscode = acquireVsCodeApi();
 const originalState = vscode.getState();
 const originalFrameUrl = originalState?.frameUrl;
+
+// Track the background color as an indicator of whether the theme changed.
+let currentBackgroundColor;
+
+function getTheme() {
+	const isDarkMode = !document.body.classList.contains('vscode-light');
+	const backgroundColor = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
+	const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
+	const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
+	const fontSize = fontSizeWithUnits && fontSizeWithUnits.endsWith('px') ? parseFloat(fontSizeWithUnits) : undefined;
+
+	return {
+		isDarkMode: isDarkMode,
+		backgroundColor: backgroundColor,
+		foregroundColor: foregroundColor,
+		fontSize: fontSize,
+	};
+}
+
 window.addEventListener('load', (event) => {
 	// Restore previous frame if we had one.
 	const devToolsFrame = document.getElementById('devToolsFrame');
@@ -21,13 +40,13 @@ window.addEventListener('message', (event) => {
 	const devToolsFrame = document.getElementById('devToolsFrame');
 	switch (message.command) {
 		case "setUrl":
-			const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
-			const background = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
-			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
-			let url = \`\${message.url}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
-			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
-			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
-				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
+			const theme = getTheme();
+			const themeKind = theme.isDarkMode ? 'dark' : 'light';
+			// Don't include # in colors
+			// https://github.com/flutter/flutter/issues/155992
+			let url = \`\${message.url}&theme=\${themeKind}&backgroundColor=\${encodeURIComponent(theme.backgroundColor?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(theme.foregroundColor?.replace('#', ''))}\`;
+			if (theme.fontSize) {
+				url += \`&fontSize=\${encodeURIComponent(theme.fontSize)}\`;
 			}
 			if (devToolsFrame.src !== url) {
 				devToolsFrame.src = url;
@@ -62,6 +81,33 @@ window.addEventListener('keydown', (event) => {
 	// the DevTools iframe.
 	if (document.activeElement == document.body)
 		devToolsFrame?.contentWindow.focus();
+});
+
+
+function sendTheme() {
+	const devToolsFrame = document.getElementById('devToolsFrame');
+	const theme = getTheme();
+	devToolsFrame.contentWindow.postMessage({
+		method: 'editor.themeChanged',
+		params: {
+			kind: 'themeChanged',
+			theme: theme,
+		}
+	}, "*");
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+	new MutationObserver((mutationList) => {
+		for (const mutation of mutationList) {
+			if (mutation.type === "attributes" && mutation.attributeName == "class") {
+				let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
+				if (newBackgroundColor !== currentBackgroundColor) {
+					sendTheme();
+					break;
+				}
+			}
+		}
+	}).observe(document.body, { attributeFilter : ['class'], attributeOldValue: true });
 });
 `;
 
