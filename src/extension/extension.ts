@@ -749,7 +749,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	if (dartToolingDaemon && dartCapabilities.supportsDevToolsDtdSidebar)
-		context.subscriptions.push(new FlutterDtdSidebar(devTools, deviceManager, dartCapabilities));
+		context.subscriptions.push(new FlutterDtdSidebar(devTools, dartCapabilities));
 	else
 		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
 
