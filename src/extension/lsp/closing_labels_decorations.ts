@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { disposeAll } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
+import { uriComparisonString } from "../../shared/utils/fs";
 import { config } from "../config";
 import { validLastCharacters } from "../decorations/closing_labels_decorations";
 
@@ -33,28 +33,23 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
 				const uri = vs.Uri.parse(n.uri);
-				if (uri.scheme !== "file")
-					return;
-				const filePath = fsPath(uri);
-				this.closingLabels[filePath] = n;
+				const uriKey = uriComparisonString(uri);
+				this.closingLabels[uriKey] = n;
 				// Fire an update if it was for a visible editor.
-				const editor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file" && fsPath(e.document.uri) === filePath);
+				const editor = vs.window.visibleTextEditors.find((e) => uriComparisonString(e.document.uri) === uriKey);
 				if (editor) {
 					// Delay this so if we're getting lots of updates we don't flicker.
-					if (this.updateTimeouts[filePath])
-						clearTimeout(this.updateTimeouts[filePath]);
-					this.updateTimeouts[filePath] = setTimeout(() => this.update(uri), 500);
+					if (this.updateTimeouts[uriKey])
+						clearTimeout(this.updateTimeouts[uriKey]);
+					this.updateTimeouts[uriKey] = setTimeout(() => this.update(uri), 500);
 				}
 			});
 		});
 
 		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors(() => this.updateAll()));
 		this.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => {
-			if (td.uri.scheme !== "file")
-				return;
-
-			const filePath = fsPath(td.uri);
-			delete this.closingLabels[filePath];
+			const uriKey = uriComparisonString(td.uri);
+			delete this.closingLabels[uriKey];
 		}));
 		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
 			let needsUpdate = false;
@@ -81,17 +76,15 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	private update(uri: vs.Uri) {
-		if (uri.scheme !== "file")
-			return;
-		const filePath = fsPath(uri);
-		if (!this.closingLabels[filePath])
+		const uriKey = uriComparisonString(uri);
+		if (!this.closingLabels[uriKey])
 			return;
 
-		const editor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file" && fsPath(e.document.uri) === filePath);
+		const editor = vs.window.visibleTextEditors.find((e) => uriComparisonString(e.document.uri) === uriKey);
 		if (!editor) return;
 
 		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: { contentText: string } } } } = [];
-		for (const r of this.closingLabels[filePath].labels) {
+		for (const r of this.closingLabels[uriKey].labels) {
 			const labelRange = this.analyzer.protocol2CodeConverter.asRange(r.range);
 
 			// Ensure the label we got looks like a sensible range, otherwise the outline info
@@ -122,7 +115,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			}
 		}
 
-		this.editors[filePath] = editor;
+		this.editors[uriKey] = editor;
 		editor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 
