@@ -72,7 +72,9 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			const background = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
 			const qsSep = currentBaseUrl.includes("?") ? "&" : "?";
-			let url = \`\${currentBaseUrl}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+			// Don't include # in colors
+			// https://github.com/flutter/flutter/issues/155992
+			let url = \`\${currentBaseUrl}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(foreground?.replace('#', ''))}\`;
 			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
 			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
 				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
@@ -106,7 +108,6 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		});
 
 		document.addEventListener('DOMContentLoaded', function () {
-			lastBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 			new MutationObserver((mutationList) => {
 				for (const mutation of mutationList) {
 					if (mutation.type === "attributes" && mutation.attributeName == "class") {

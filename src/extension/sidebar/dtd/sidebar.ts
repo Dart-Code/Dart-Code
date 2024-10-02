@@ -3,7 +3,6 @@ import { URI } from "vscode-uri";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { IAmDisposable } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
-import { FlutterDeviceManager } from "../../../shared/vscode/device_manager";
 import { envUtils } from "../../../shared/vscode/utils";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
 
@@ -12,10 +11,9 @@ export class FlutterDtdSidebar implements IAmDisposable {
 
 	constructor(
 		readonly devTools: DevToolsManager,
-		readonly deviceManager: FlutterDeviceManager | undefined,
 		dartCapabilities: DartCapabilities,
 	) {
-		const webViewProvider = new MyWebViewProvider(devTools, deviceManager, dartCapabilities);
+		const webViewProvider = new MyWebViewProvider(devTools, dartCapabilities);
 		this.disposables.push(vs.window.registerWebviewViewProvider("dartFlutterSidebar", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
 
@@ -28,7 +26,6 @@ class MyWebViewProvider implements vs.WebviewViewProvider {
 	public webviewView: vs.WebviewView | undefined;
 	constructor(
 		private readonly devTools: DevToolsManager,
-		private readonly deviceManager: FlutterDeviceManager | undefined,
 		private readonly dartCapabilities: DartCapabilities,
 	) { }
 
@@ -51,51 +48,74 @@ class MyWebViewProvider implements vs.WebviewViewProvider {
 		const frameOrigin = `${sidebarUri.scheme}://${sidebarUri.authority}`;
 		const embedFlags = this.dartCapabilities.requiresDevToolsEmbedFlag ? "embed=true&embedMode=one" : "embedMode=one";
 		const pageScript = `
-		let currentBackgroundColor;
-		let currentBaseUrl;
+// Track the background color as an indicator of whether the theme changed.
+let currentBackgroundColor;
 
-		function setIframeSrc() {
-			const devToolsFrame = document.getElementById('devToolsFrame');
+function getTheme() {
+	const isDarkMode = !document.body.classList.contains('vscode-light');
+	const backgroundColor = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
+	const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-foreground');
+	const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
+	const fontSize = fontSizeWithUnits && fontSizeWithUnits.endsWith('px') ? parseFloat(fontSizeWithUnits) : undefined;
+
+	return {
+		isDarkMode: isDarkMode,
+		backgroundColor: backgroundColor,
+		foregroundColor: foregroundColor,
+		fontSize: fontSize,
+	};
+}
+
+const vscode = acquireVsCodeApi();
+window.addEventListener('message', (event) => {
+	const devToolsFrame = document.getElementById('devToolsFrame');
+	const message = event.data;
+
+	// Handle any special commands first.
+	switch (message.command) {
+		case "_dart-code.setUrl":
 			const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
 			const background = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 			const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
-			const qsSep = currentBaseUrl.includes("?") ? "&" : "?";
-			let url = \`\${currentBaseUrl}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background)}&foregroundColor=\${encodeURIComponent(foreground)}\`;
+			const qsSep = message.url.includes("?") ? "&" : "?";
+			// Don't include # in colors
+			// https://github.com/flutter/flutter/issues/155992
+			let url = \`\${message.url}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(foreground?.replace('#', ''))}\`;
 			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
 			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
 				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
 			}
 			if (devToolsFrame.src !== url)
 				devToolsFrame.src = url;
+			return;
+	}
+});
+
+function sendTheme() {
+	const devToolsFrame = document.getElementById('devToolsFrame');
+	const theme = getTheme();
+	devToolsFrame.contentWindow.postMessage({
+		method: 'editor.themeChanged',
+		params: {
+			kind: 'themeChanged',
+			theme: theme,
 		}
+	}, "*");
+}
 
-		const vscode = acquireVsCodeApi();
-		window.addEventListener('message', (event) => {
-			const devToolsFrame = document.getElementById('devToolsFrame');
-			const message = event.data;
-
-			// Handle any special commands first.
-			switch (message.command) {
-				case "_dart-code.setUrl":
-					currentBaseUrl = message.url;
-					setIframeSrc();
-					return;
-			}
-		});
-
-		document.addEventListener('DOMContentLoaded', function () {
-			lastBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
-			new MutationObserver((mutationList) => {
-				for (const mutation of mutationList) {
-					if (mutation.type === "attributes" && mutation.attributeName == "class") {
-						let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
-						if (newBackgroundColor !== currentBackgroundColor) {
-							setIframeSrc();
-						}
-					}
+document.addEventListener('DOMContentLoaded', function () {
+	new MutationObserver((mutationList) => {
+		for (const mutation of mutationList) {
+			if (mutation.type === "attributes" && mutation.attributeName == "class") {
+				let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
+				if (newBackgroundColor !== currentBackgroundColor) {
+					sendTheme();
+					break;
 				}
-			}).observe(document.body, { attributeFilter : ['class'], attributeOldValue: true });
-		});
+			}
+		}
+	}).observe(document.body, { attributeFilter : ['class'], attributeOldValue: true });
+});
 		`;
 
 		webviewView.webview.options = {
