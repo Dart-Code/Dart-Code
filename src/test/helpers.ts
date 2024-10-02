@@ -373,8 +373,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 
 export async function clearTestTree(): Promise<void> {
 	logger.info(`Clearing test tree...`);
-	for (const key of Object.keys(extApi.testModel.suites))
-		delete extApi.testModel.suites[key];
+	extApi.testModel.suites.clear();
 	extApi.testModel.updateNode();
 	await delay(50); // Allow tree to be updated.
 	if (extApi.testDiscoverer)

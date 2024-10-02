@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
@@ -136,7 +137,7 @@ export class TestCommands implements vs.Disposable {
 
 	private async runTestsForNode(suiteData: SuiteData, nodes: TreeNode[], debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
 		const testSelection = getTestSelectionForNodes(nodes);
-		const programPath = fsPath(suiteData.path);
+		const programPath = fsPath(URI.file(suiteData.path));
 		const isFlutter = isInsideFlutterProject(vs.Uri.file(suiteData.path));
 		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isFlutter;
 		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;

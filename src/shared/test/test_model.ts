@@ -1,10 +1,10 @@
-import * as path from "path";
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
 import { Position, Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { uniq } from "../utils";
-import { fsPath, isWithinPath } from "../utils/fs";
+import { DocumentCache } from "../utils/document_cache";
+import { isWithinPath } from "../utils/fs";
 import { makeRegexForTests } from "../utils/test";
 
 export abstract class TreeNode {
@@ -164,7 +164,7 @@ export class TestModel {
 	private readonly testEventListeners: TestEventListener[] = [];
 
 	// TODO: Make private?
-	public readonly suites: { [key: string]: SuiteData } = {};
+	public readonly suites = new DocumentCache<SuiteData>();
 
 	public constructor(private readonly config: { showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
 
@@ -172,20 +172,14 @@ export class TestModel {
 		this.testEventListeners.push(listener);
 	}
 
-	public flagSuiteStart(suitePath: string, isRunningWholeSuite: boolean): void {
-		if (suitePath && path.isAbsolute(suitePath)) {
-			const suite = this.suites[fsPath(suitePath)];
-			if (suite) {
+	public flagSuiteStart(suite: SuiteData, isRunningWholeSuite: boolean): void {
+		// Mark all test for this suite as "stale" which will make them faded, so that results from
+		// the "new" run are more obvious in the tree.
+		suite.getAllGroups().forEach((g) => g.isStale = true);
+		suite.getAllTests().forEach((t) => t.isStale = true);
 
-				// Mark all test for this suite as "stale" which will make them faded, so that results from
-				// the "new" run are more obvious in the tree.
-				suite.getAllGroups().forEach((g) => g.isStale = true);
-				suite.getAllTests().forEach((t) => t.isStale = true);
-
-				if (isRunningWholeSuite && suite) {
-					this.markAllAsPotentiallyDeleted(suite, TestSource.Result);
-				}
-			}
+		if (isRunningWholeSuite && suite) {
+			this.markAllAsPotentiallyDeleted(suite, TestSource.Result);
 		}
 	}
 
@@ -226,10 +220,10 @@ export class TestModel {
 	}
 
 	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
-		let suite = this.suites[suitePath];
+		let suite = this.suites.getForPath(suitePath);
 		if (!suite) {
 			suite = new SuiteData(suitePath, this.isPathInsideFlutterProject(suitePath));
-			this.suites[suitePath] = suite;
+			this.suites.setForPath(suitePath, suite);
 			return [suite, true];
 		}
 		return [suite, false];
@@ -239,13 +233,13 @@ export class TestModel {
 		// We can't tell if it's a file or directory because it's already been deleted, so just
 		// try both.
 		let found = false;
-		if (this.suites[suiteOrDirectoryPath]) {
+		if (this.suites.hasForPath(suiteOrDirectoryPath)) {
 			found = true;
-			delete this.suites[suiteOrDirectoryPath];
+			this.suites.deleteForPath(suiteOrDirectoryPath);
 		} else {
 			for (const suitePath of Object.keys(this.suites)) {
 				if (isWithinPath(suitePath, suiteOrDirectoryPath)) {
-					delete this.suites[suitePath];
+					this.suites.deleteForPath(suitePath);
 					found = true;
 				}
 			}
@@ -260,7 +254,9 @@ export class TestModel {
 		// skipped tests may be hidden, so the test counts need
 		// recomputing).
 
-		Object.values(this.suites).forEach((suite) => this.updateSuiteTestCountLabels(suite, true));
+		for (const suite of this.suites.values()) {
+			this.updateSuiteTestCountLabels(suite, true);
+		}
 	}
 
 	public updateNode(event?: NodeDidChangeEvent) {
@@ -304,7 +300,7 @@ export class TestModel {
 	}
 
 	public suiteDiscoveredConditional(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
-		return this.suites[suitePath] ?? this.suiteDiscovered(dartCodeDebugSessionID, suitePath);
+		return this.suites.getForPath(suitePath) ?? this.suiteDiscovered(dartCodeDebugSessionID, suitePath);
 	}
 
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
@@ -318,7 +314,7 @@ export class TestModel {
 
 	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
 		groupPath ??= suitePath;
-		const suite = this.suites[suitePath];
+		const suite = this.suites.getForPath(suitePath)!;
 		const existingGroup = suite.reuseMatchingGroup(groupName);
 		const oldParent = existingGroup?.parent;
 		let parent = parentID ? suite.getMyGroup(dartCodeDebugSessionID, parentID)! : suite.node;
@@ -363,7 +359,7 @@ export class TestModel {
 
 	public testDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, testID: number, testName: string | undefined, groupID: number | undefined, testPath: string | undefined, range: Range | undefined, startTime: number | undefined, hasStarted = false): TestNode {
 		testPath ??= suitePath;
-		const suite = this.suites[suitePath];
+		const suite = this.suites.getForPath(suitePath)!;
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
 		let parent: TreeNode = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
@@ -443,7 +439,7 @@ export class TestModel {
 	}
 
 	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {
-		const suite = this.suites[suitePath];
+		const suite = this.suites.getForPath(suitePath)!;
 		const testNode = suite.getCurrentTest(dartCodeDebugSessionID, testID)!;
 
 		if (result === "skipped") {
@@ -472,7 +468,7 @@ export class TestModel {
 	}
 
 	public suiteDone(dartCodeDebugSessionID: string | undefined, suitePath: string): void {
-		const suite = this.suites[suitePath];
+		const suite = this.suites.getForPath(suitePath);
 		if (!suite)
 			return;
 
@@ -494,7 +490,7 @@ export class TestModel {
 	}
 
 	public testOutput(dartCodeDebugSessionID: string, suitePath: string, testID: number, message: string) {
-		const suite = this.suites[suitePath];
+		const suite = this.suites.getForPath(suitePath)!;
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
 
 		if (test)
@@ -502,7 +498,7 @@ export class TestModel {
 	}
 
 	public testErrorOutput(dartCodeDebugSessionID: string, suitePath: string, testID: number, isFailure: boolean, message: string, stack: string) {
-		const suite = this.suites[suitePath];
+		const suite = this.suites.getForPath(suitePath)!;
 		const test = suite.getCurrentTest(dartCodeDebugSessionID, testID);
 
 		if (test)

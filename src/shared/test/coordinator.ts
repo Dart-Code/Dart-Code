@@ -50,7 +50,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 		// End them all and remove from the lookup.
 		for (const suitePath of suitePaths) {
-			this.handleSuiteEnd(dartCodeDebugSessionID, this.data.suites[suitePath]);
+			this.handleSuiteEnd(dartCodeDebugSessionID, this.data.suites.getForPath(suitePath)!);
 			this.owningDebugSessions[suitePath] = undefined;
 			delete this.owningDebugSessions[suitePath];
 		}

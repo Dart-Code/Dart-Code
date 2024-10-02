@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { GroupNode, NodeDidChangeEvent, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
@@ -132,7 +133,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	/// Replace the whole tree.
 	private replaceAll() {
-		const suiteTestItems = Object.values(this.model.suites)
+		const suiteTestItems = Array.from(this.model.suites.values())
 			.map((suite) => this.createOrUpdateNode(suite.node, true))
 			.filter(notUndefined);
 		this.controller.items.replace(suiteTestItems);
@@ -305,7 +306,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return false;
 		if (isSetupOrTeardownTestName(label))
 			return false;
-		if (this.discoverer?.fileTracker.supportsPackageTest(node.suiteData.path) === false)
+		if (this.discoverer?.fileTracker.supportsPackageTest(URI.file(node.suiteData.path)) === false)
 			return false;
 		return true;
 	}

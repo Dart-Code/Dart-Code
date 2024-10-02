@@ -942,7 +942,7 @@ export class DebugCommands implements IAmDisposable {
 		let isRunnable = isValidEntryFile(documentPath);
 
 		if (!isRunnable) {
-			const outline = this.fileTracker?.getOutlineFor(documentPath);
+			const outline = this.fileTracker?.getOutlineFor(documentUri);
 			isRunnable = !!outline?.children?.find((c) => c.element.name === "main");
 		}
 

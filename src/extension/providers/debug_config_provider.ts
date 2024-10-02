@@ -13,7 +13,7 @@ import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { DartWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestModel } from "../../shared/test/test_model";
 import { getPackageTestCapabilities } from "../../shared/test/version";
-import { isWebDevice } from "../../shared/utils";
+import { isWebDevice, notNullOrUndefined } from "../../shared/utils";
 import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
@@ -234,13 +234,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			warnIfPathCaseMismatch(logger, debugConfig.program, "the launch script", "check the 'program' field in your launch configuration file (.vscode/launch.json)");
 
 		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.DartTest) {
-			const suitePaths = isTestFolder(debugConfig.program)
-				? Object.values(this.testModel.suites)
-					.map((suite) => suite.path)
-					.filter((p) => p.startsWith(debugConfig.program!))
-				: [debugConfig.program!];
-			for (const suitePath of suitePaths)
-				this.testModel.flagSuiteStart(suitePath, !argsHaveTestFilter);
+			if (debugConfig.program) {
+				const suites = isTestFolder(debugConfig.program)
+					? Array.from(this.testModel.suites.values())
+						.filter((suite) => suite.path.startsWith(debugConfig.program!))
+					: [this.testModel.suites.getForPath(debugConfig.program)];
+				for (const suite of suites.filter(notNullOrUndefined))
+					this.testModel.flagSuiteStart(suite, !argsHaveTestFilter);
+			}
 		}
 
 		debugConfig.debuggerType = debugType;
