@@ -68,7 +68,7 @@ describe("command", () => {
 		assert.ok(sampleFolderUri);
 		assert.ok(showQuickPick.calledOnce);
 		assert.ok(openFolder.calledOnce);
-		const triggerFile = path.join(fsPath(sampleFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
+		const triggerFile = path.join(fsPath(vs.Uri.file(sampleFolderUri)), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 		assert.ok(fs.existsSync(triggerFile));
 
 		const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();
@@ -108,7 +108,7 @@ async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: s
 	assert.ok(showOpenDialog.calledOnce);
 	assert.ok(openFolder.calledOnce);
 
-	const triggerFile = path.join(fsPath(projectFolderUri), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
+	const triggerFile = path.join(fsPath(vs.Uri.file(projectFolderUri)), FLUTTER_CREATE_PROJECT_TRIGGER_FILE);
 	assert.ok(fs.existsSync(triggerFile));
 
 	const jsonString: string | undefined = fs.readFileSync(triggerFile).toString().trim();

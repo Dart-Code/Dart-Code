@@ -11,7 +11,7 @@ import { PackageMap } from "../pub/package_map";
 import { nullToUndefined } from "../utils";
 import { sortBy } from "./array";
 
-export function fsPath(uri: URI | string, { useRealCasing = false }: { useRealCasing?: boolean; } = {}): string {
+export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: boolean; } = {}): string {
 	// tslint:disable-next-line:disallow-fspath
 	let newPath = typeof uri === "string" ? uri : uri.fsPath;
 
@@ -51,16 +51,17 @@ export function forceWindowsDriveLetterToUppercaseInUriString<T extends string |
 /**
  * Returns a string for comparing URIs. For file (and dart-macro+file) URIs this will
  * be `fsPath()` (including for fake paths for generated files) with a `file:` or `dart-macro+file`
- * prefix (this will NOT be a valid URI).
+ * prefix (this will NOT be a valid URI). On Windows, the string will be lowercased.
  * For other URIs, it is the toString().
  *
  * This string is ONLY for comparising URIs to see if they are "the same document".
  */
 export function uriComparisonString(uri: URI): string {
-	if (uri.scheme === "file") {
-		return `file:${fsPath(uri)}`;
-	} else if (uri.scheme.endsWith("+file")) {
-		return `${uri.scheme}:${fsPath(uri.with({ scheme: "file" }))}`;
+	if (uri.scheme === "file" || uri.scheme.endsWith("+file")) {
+		const uriString = `${uri.scheme}:${fsPath(uri.with({ scheme: "file" }))}`;
+		// VS Code treats Windows as case-insensitive and not others (regardless
+		// of the actual file system settings).
+		return isWin ? uriString.toLowerCase() : uriString;
 	} else {
 		return uri.toString();
 	}

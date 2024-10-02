@@ -5,6 +5,7 @@ import { FlutterOutline, FlutterOutlineParams, Outline, OutlineParams, PublishFl
 import { EventEmitter } from "../../shared/events";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
+import { DocumentCache } from "../../shared/utils/document_cache";
 import { fsPath } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { lspToPosition } from "../../shared/vscode/utils";
@@ -14,9 +15,9 @@ import * as util from "../utils";
 
 export class LspFileTracker implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
-	private readonly outlines: { [key: string]: Outline } = {};
-	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};
-	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
+	private readonly outlines = new DocumentCache<Outline>();
+	private readonly flutterOutlines = new DocumentCache<FlutterOutline>();
+	private readonly pubRunTestSupport = new DocumentCache<boolean>();
 
 	protected readonly onOutlineEmitter = new EventEmitter<OutlineParams>();
 	public readonly onOutline = this.onOutlineEmitter.event;
@@ -26,48 +27,48 @@ export class LspFileTracker implements IAmDisposable {
 	constructor(private readonly logger: Logger, private readonly analyzer: LanguageClient, private readonly wsContext: WorkspaceContext) {
 		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishOutlineNotification.type, (n) => {
-				const filePath = fsPath(Uri.parse(n.uri));
-				this.outlines[filePath] = n.outline;
+				const uri = Uri.parse(n.uri);
+				this.outlines.set(uri, n.outline);
 				this.onOutlineEmitter.fire(n);
 			});
 			this.analyzer.onNotification(PublishFlutterOutlineNotification.type, (n) => {
-				const filePath = fsPath(Uri.parse(n.uri));
-				this.flutterOutlines[filePath] = n.outline;
+				const uri = Uri.parse(n.uri);
+				this.flutterOutlines.set(uri, n.outline);
 				this.onFlutterOutlineEmitter.fire(n);
 			});
 		});
 		this.watchPubspec();
 	}
 
-	public getOutlineFor(file: URI | string): Outline | undefined {
-		return this.outlines[fsPath(file)];
+	public getOutlineFor(uri: URI): Outline | undefined {
+		return this.outlines.get(uri);
 	}
 
 	public async waitForOutline(document: TextDocument, token?: CancellationToken): Promise<Outline | undefined> {
-		return waitFor(() => this.outlines[fsPath(document.uri)], 50, 5000, token);
+		return waitFor(() => this.outlines.get(document.uri), 50, 5000, token);
 	}
 
 	// TODO: Change this to withVersion when server sends versions.
 	public async waitForOutlineWithLength(document: TextDocument, length: number, token: CancellationToken): Promise<Outline | undefined> {
 		return waitFor(() => {
-			const outline = this.outlines[fsPath(document.uri)];
+			const outline = this.outlines.get(document.uri);
 			return outline && document.offsetAt(lspToPosition(outline.range.end)) === length ? outline : undefined;
 		}, 50, 5000, token);
 	}
 
-	public getFlutterOutlineFor(file: URI | string): FlutterOutline | undefined {
-		return this.flutterOutlines[fsPath(file)];
+	public getFlutterOutlineFor(uri: URI): FlutterOutline | undefined {
+		return this.flutterOutlines.get(uri);
 	}
 
 	// TODO: Change this to withVersion when server sends versions.
 	public async waitForFlutterOutlineWithLength(document: TextDocument, length: number, token: CancellationToken): Promise<FlutterOutline | undefined> {
 		return waitFor(() => {
-			const outline = this.flutterOutlines[fsPath(document.uri)];
+			const outline = this.flutterOutlines.get(document.uri);
 			return outline && document.offsetAt(lspToPosition(outline.range.end)) === length ? outline : undefined;
 		}, 50, 5000, token);
 	}
 
-	public supportsPackageTest(file: URI | string): boolean | undefined {
+	public supportsPackageTest(uri: URI): boolean | undefined {
 		// Handle explicit flags.
 		if (this.wsContext.config.supportsPackageTest === true)
 			return true;
@@ -75,18 +76,18 @@ export class LspFileTracker implements IAmDisposable {
 			return false;
 
 		// TODO: Both FileTrackers have a copy of this!
-		const path = fsPath(file);
-		if (!util.isRunnableTestFile(path))
+		const filePath = fsPath(uri);
+		if (!util.isRunnableTestFile(filePath))
 			return false;
-		if (this.pubRunTestSupport[path] === undefined) {
-			const projectRoot = locateBestProjectRoot(path);
-			this.pubRunTestSupport[path] = !!(projectRoot && util.projectCanUsePackageTest(projectRoot, this.wsContext.config));
+		if (!this.pubRunTestSupport.has(uri)) {
+			const projectRoot = locateBestProjectRoot(filePath);
+			this.pubRunTestSupport.set(uri, !!(projectRoot && util.projectCanUsePackageTest(projectRoot, this.wsContext.config)));
 		}
-		return this.pubRunTestSupport[fsPath(file)];
+		return this.pubRunTestSupport.get(uri);
 	}
 
 	private watchPubspec() {
-		const clearCachedPubRunTestData = () => Object.keys(this.pubRunTestSupport).forEach((f) => delete this.pubRunTestSupport[f]);
+		const clearCachedPubRunTestData = () => this.pubRunTestSupport.clear();
 
 		const watcher = workspace.createFileSystemWatcher("**/pubspec.yaml");
 		this.disposables.push(watcher);

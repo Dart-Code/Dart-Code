@@ -2,6 +2,7 @@ import { CancellationToken, Disposable, TextDocument, Uri, window, workspace } f
 import { AnalysisGetNavigationResponse, AnalysisNavigationNotification, FilePath, FlutterOutline, FoldingRegion, NavigationRegion, Occurrences, Outline } from "../../shared/analysis_server_types";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
+import { DocumentCache } from "../../shared/utils/document_cache";
 import { fsPath } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -11,12 +12,12 @@ import { DasAnalyzerClient } from "./analyzer_das";
 
 export class DasFileTracker implements IAmDisposable {
 	private disposables: Disposable[] = [];
-	private readonly navigations: { [key: string]: AnalysisNavigationNotification } = {};
-	private readonly outlines: { [key: string]: Outline } = {};
-	private readonly flutterOutlines: { [key: string]: FlutterOutline } = {};
-	private readonly occurrences: { [key: string]: Occurrences[] } = {};
-	private readonly folding: { [key: string]: FoldingRegion[] } = {};
-	private readonly pubRunTestSupport: { [key: string]: boolean } = {};
+	private readonly navigations = new DocumentCache<AnalysisNavigationNotification>();
+	private readonly outlines = new DocumentCache<Outline>();
+	private readonly flutterOutlines = new DocumentCache<FlutterOutline>();
+	private readonly occurrences = new DocumentCache<Occurrences[]>();
+	private readonly folding = new DocumentCache<FoldingRegion[]>();
+	private readonly pubRunTestSupport = new DocumentCache<boolean>();
 	private lastPriorityFiles: string[] = [];
 	private lastSubscribedFiles: string[] = [];
 
@@ -30,21 +31,21 @@ export class DasFileTracker implements IAmDisposable {
 			await this.updateSubscriptions();
 		}));
 		this.disposables.push(workspace.onDidCloseTextDocument(async (td) => {
-			const path = fsPath(td.uri);
-			delete this.navigations[path];
-			delete this.outlines[path];
-			delete this.flutterOutlines[path];
-			delete this.occurrences[path];
-			delete this.folding[path];
-			delete this.pubRunTestSupport[path];
+			const uri = td.uri;
+			this.navigations.delete(uri);
+			this.outlines.delete(uri);
+			this.flutterOutlines.delete(uri);
+			this.occurrences.delete(uri);
+			this.folding.delete(uri);
+			this.pubRunTestSupport.delete(uri);
 			await this.updateSubscriptions();
 		}));
 		this.disposables.push(window.onDidChangeVisibleTextEditors((e) => this.updatePriorityFiles()));
-		this.disposables.push(this.analyzer.registerForAnalysisNavigation((n) => this.navigations[n.file] = n));
-		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => this.outlines[o.file] = o.outline));
-		this.disposables.push(this.analyzer.registerForFlutterOutline((o) => this.flutterOutlines[o.file] = o.outline));
-		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => this.occurrences[o.file] = o.occurrences));
-		this.disposables.push(this.analyzer.registerForAnalysisFolding((f) => this.folding[f.file] = f.regions));
+		this.disposables.push(this.analyzer.registerForAnalysisNavigation((n) => this.navigations.set(Uri.file(n.file), n)));
+		this.disposables.push(this.analyzer.registerForAnalysisOutline((o) => this.outlines.set(Uri.file(o.file), o.outline)));
+		this.disposables.push(this.analyzer.registerForFlutterOutline((o) => this.flutterOutlines.set(Uri.file(o.file), o.outline)));
+		this.disposables.push(this.analyzer.registerForAnalysisOccurrences((o) => this.occurrences.set(Uri.file(o.file), o.occurrences)));
+		this.disposables.push(this.analyzer.registerForAnalysisFolding((f) => this.folding.set(Uri.file(f.file), f.regions)));
 		// It's possible that after the server gives us the version, we may send different subscriptions (eg.
 		// based on capabilities, like supporting priority files outside of the workspace root) so we may need
 		// to send again.
@@ -128,9 +129,9 @@ export class DasFileTracker implements IAmDisposable {
 
 	public getNavigationTargets(file: FilePath, offset: number): AnalysisGetNavigationResponse | undefined {
 		// Synthesize an AnalysisGetNavigationResponse based on our existing knowledge about navigation links in the file.
-		const notification = this.navigations[file];
+		const notification = this.navigations.get(Uri.file(file));
 		const region = notification?.regions?.find((region) => this.offsetWithinNavigationRegion(region, offset));
-		if (!region) return undefined;
+		if (!region || !notification) return undefined;
 		return {
 			files: notification.files,
 			regions: [region],
@@ -142,46 +143,46 @@ export class DasFileTracker implements IAmDisposable {
 		return offset >= region.offset && offset < region.offset + region.length;
 	}
 
-	public getOutlineFor(file: Uri): Outline | undefined {
-		return this.outlines[fsPath(file)];
+	public getOutlineFor(uri: Uri): Outline | undefined {
+		return this.outlines.get(uri);
 	}
 
-	public async waitForOutlineWithLength(file: Uri, length: number, token: CancellationToken): Promise<Outline | undefined> {
+	public async waitForOutlineWithLength(uri: Uri, length: number, token: CancellationToken): Promise<Outline | undefined> {
 		return waitFor(() => {
-			const outline = this.outlines[fsPath(file)];
+			const outline = this.outlines.get(uri);
 			return outline?.length === length ? outline : undefined;
 		}, 50, 5000, token);
 	}
 
-	public getFlutterOutlineFor(file: Uri): FlutterOutline | undefined {
-		return this.flutterOutlines[fsPath(file)];
+	public getFlutterOutlineFor(uri: Uri): FlutterOutline | undefined {
+		return this.flutterOutlines.get(uri);
 	}
 
-	public async waitForFlutterOutlineWithLength(file: Uri, length: number, token: CancellationToken): Promise<FlutterOutline | undefined> {
+	public async waitForFlutterOutlineWithLength(uri: Uri, length: number, token: CancellationToken): Promise<FlutterOutline | undefined> {
 		return waitFor(() => {
-			const outline = this.flutterOutlines[fsPath(file)];
+			const outline = this.flutterOutlines.get(uri);
 			return outline?.length === length ? outline : undefined;
 		}, 50, 5000, token);
 	}
 
-	public getOccurrencesFor(file: Uri): Occurrences[] | undefined {
-		return this.occurrences[fsPath(file)];
+	public getOccurrencesFor(uri: Uri): Occurrences[] | undefined {
+		return this.occurrences.get(uri);
 	}
 
-	public supportsPubRunTest(file: Uri): boolean | undefined {
+	public supportsPubRunTest(uri: Uri): boolean | undefined {
 		// TODO: Both FileTrackers have a copy of this!
-		const path = fsPath(file);
+		const path = fsPath(uri);
 		if (!util.isRunnableTestFile(path))
 			return false;
-		if (this.pubRunTestSupport[path] === undefined) {
+		if (!this.pubRunTestSupport.has(uri)) {
 			const projectRoot = locateBestProjectRoot(path);
-			this.pubRunTestSupport[path] = !!(projectRoot && util.projectCanUsePackageTest(projectRoot, this.wsContext.config));
+			this.pubRunTestSupport.set(uri, !!(projectRoot && util.projectCanUsePackageTest(projectRoot, this.wsContext.config)));
 		}
-		return this.pubRunTestSupport[fsPath(file)];
+		return this.pubRunTestSupport.get(uri);
 	}
 
 	private watchPubspec() {
-		const clearCachedPubRunTestData = () => Object.keys(this.pubRunTestSupport).forEach((f) => delete this.pubRunTestSupport[f]);
+		const clearCachedPubRunTestData = () => this.pubRunTestSupport.clear();
 
 		const watcher = workspace.createFileSystemWatcher("**/pubspec.yaml");
 		this.disposables.push(watcher);
@@ -189,8 +190,8 @@ export class DasFileTracker implements IAmDisposable {
 		watcher.onDidCreate(clearCachedPubRunTestData, this);
 	}
 
-	public getFoldingRegionsFor(file: Uri): FoldingRegion[] | undefined {
-		return this.folding[fsPath(file)];
+	public getFoldingRegionsFor(uri: Uri): FoldingRegion[] | undefined {
+		return this.folding.get(uri);
 	}
 
 	public getLastPriorityFiles(): string[] {

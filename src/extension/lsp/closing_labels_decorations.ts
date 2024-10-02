@@ -2,15 +2,16 @@ import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
 import { disposeAll } from "../../shared/utils";
-import { uriComparisonString } from "../../shared/utils/fs";
+import { DocumentCache } from "../../shared/utils/document_cache";
+import { findVisibleEditor } from "../../shared/vscode/editors";
 import { config } from "../config";
 import { validLastCharacters } from "../decorations/closing_labels_decorations";
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
-	private closingLabels: { [key: string]: ClosingLabelsParams } = {};
-	private editors: { [key: string]: vs.TextEditor } = {};
-	private updateTimeouts: { [key: string]: NodeJS.Timeout } = {};
+	private closingLabels = new DocumentCache<ClosingLabelsParams>();
+	private editors = new DocumentCache<vs.TextEditor>();
+	private updateTimeouts = new DocumentCache<NodeJS.Timeout>();
 
 	private decorationType!: vs.TextEditorDecorationType;
 	private closingLabelsPrefix: string;
@@ -33,23 +34,21 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 		void analyzer.start().then(() => {
 			this.analyzer.onNotification(PublishClosingLabelsNotification.type, (n) => {
 				const uri = vs.Uri.parse(n.uri);
-				const uriKey = uriComparisonString(uri);
-				this.closingLabels[uriKey] = n;
+				this.closingLabels.set(uri, n);
 				// Fire an update if it was for a visible editor.
-				const editor = vs.window.visibleTextEditors.find((e) => uriComparisonString(e.document.uri) === uriKey);
+				const editor = findVisibleEditor(uri);
 				if (editor) {
 					// Delay this so if we're getting lots of updates we don't flicker.
-					if (this.updateTimeouts[uriKey])
-						clearTimeout(this.updateTimeouts[uriKey]);
-					this.updateTimeouts[uriKey] = setTimeout(() => this.update(uri), 500);
+					if (this.updateTimeouts.has(uri))
+						clearTimeout(this.updateTimeouts.get(uri));
+					this.updateTimeouts.set(uri, setTimeout(() => this.update(uri), 500));
 				}
 			});
 		});
 
 		this.subscriptions.push(vs.window.onDidChangeVisibleTextEditors(() => this.updateAll()));
 		this.subscriptions.push(vs.workspace.onDidCloseTextDocument((td) => {
-			const uriKey = uriComparisonString(td.uri);
-			delete this.closingLabels[uriKey];
+			this.closingLabels.delete(td.uri);
 		}));
 		this.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
 			let needsUpdate = false;
@@ -76,15 +75,14 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	private update(uri: vs.Uri) {
-		const uriKey = uriComparisonString(uri);
-		if (!this.closingLabels[uriKey])
+		if (!this.closingLabels.has(uri))
 			return;
 
-		const editor = vs.window.visibleTextEditors.find((e) => uriComparisonString(e.document.uri) === uriKey);
+		const editor = findVisibleEditor(uri);
 		if (!editor) return;
 
 		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: { contentText: string } } } } = [];
-		for (const r of this.closingLabels[uriKey].labels) {
+		for (const r of this.closingLabels.get(uri)?.labels ?? []) {
 			const labelRange = this.analyzer.protocol2CodeConverter.asRange(r.range);
 
 			// Ensure the label we got looks like a sensible range, otherwise the outline info
@@ -115,7 +113,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 			}
 		}
 
-		this.editors[uriKey] = editor;
+		this.editors.set(uri, editor);
 		editor.setDecorations(this.decorationType, Object.keys(decorations).map((k) => parseInt(k, 10)).map((k) => decorations[k]));
 	}
 

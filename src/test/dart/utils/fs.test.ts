@@ -25,7 +25,7 @@ describe("findCommonAncestorFolder", () => {
 				fsPath(helloWorldTestFolder),
 				fsPath(flutterHelloWorldFolder),
 			]),
-			fsPath(testProjectsFolder),
+			fsPath(Uri.file(testProjectsFolder)),
 		);
 	});
 
