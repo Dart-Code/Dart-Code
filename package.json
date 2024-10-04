@@ -2810,6 +2810,12 @@
 						"description": "How many levels (including the workspace roots) down the workspace to search for Dart/Flutter projects. Increasing this number may help detect Flutter projects that are deeply nested in your workspace but slow down all operations that search for projects, including extension activation.",
 						"scope": "window"
 					},
+					"dart.enableSearchInAnalysisOptionsExcludedFolders": {
+						"type": "boolean",
+						"default": false,
+						"description": "Whether to search for Dart/Flutter projects in directories excluded in analysis_options.yaml. This can be useful if you have a mono-repo with multiple Dart/Flutter projects.",
+						"scope": "window"
+					},
 					"dart.env": {
 						"type": "object",
 						"default": {},
