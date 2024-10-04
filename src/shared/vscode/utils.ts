@@ -150,8 +150,7 @@ export async function getAllProjectFoldersAndExclusions(
 		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
 		startTimeMs = new Date().getTime();
 
-		// Filter out any folders excluded by analysis_options.
-
+		// Filter out any folders excluded by analysis_options if enableSearchInAnalysisOptionsExcludedFolders is set to false.
 		if (!config.enableSearchInAnalysisOptionsExcludedFolders) {
 			try {
 				const excludedFolders = getAnalysisOptionsExcludedFolders(logger, projectFolders);
