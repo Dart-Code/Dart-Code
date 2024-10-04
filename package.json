@@ -2813,7 +2813,7 @@
 					"dart.enableSearchInAnalysisOptionsExcludedFolders": {
 						"type": "boolean",
 						"default": false,
-						"description": "Whether to search for Dart/Flutter projects in directories excluded in analysis_options.yaml. This can be useful if you have a mono-repo with multiple Dart/Flutter projects.",
+						"description": "Whether to search for Dart/Flutter projects in directories excluded in `analysis_options.yaml`. This can be useful if you have a monorepo with multiple Dart/Flutter projects. For example, if you have a `packages` directory excluded in `analysis_options.yaml`, enabling this setting will allow each Dart/Flutter project inside to be analyzed using its own `analysis_options.yaml` instead of the one from the root directory. Enabling this setting allows Dart Code to find projects in that directory, making it possible to, for example, select target platforms that are not defined in the root directory.",
 						"scope": "window"
 					},
 					"dart.env": {
