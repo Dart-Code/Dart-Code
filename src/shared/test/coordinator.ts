@@ -1,3 +1,4 @@
+import { URI } from "vscode-uri";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { isWin } from "../constants";
 import { IAmDisposable, Logger, Range } from "../interfaces";
@@ -33,7 +34,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	/// jump over them.
 	private phantomGroupParents: { [key: string]: { [key: number]: number | null | undefined } } = {};
 
-	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(file: { fsPath: string } | string): Outline | undefined } | undefined) { }
+	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined } | undefined) { }
 
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
 		if (event === "dart.testNotification") {
@@ -117,7 +118,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	private captureTestOutlne(path: string) {
 		const visitor = new LspTestOutlineVisitor(this.logger, path);
 		this.suiteOutlineVisitors[path] = visitor;
-		const outline = this.fileTracker?.getOutlineFor(path);
+		const outline = this.fileTracker?.getOutlineFor(URI.file(path));
 		if (outline)
 			visitor.visit(outline);
 	}
