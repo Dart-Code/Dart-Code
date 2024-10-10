@@ -199,6 +199,15 @@ export function pubspecContentReferencesFlutter(content: string) {
 	}
 }
 
+export function tryGetPackageName(packageDirectory: string): string | undefined {
+	try {
+		const yaml = YAML.parse(fs.readFileSync(path.join(packageDirectory, "pubspec.yaml")).toString());
+		return yaml?.name ? yaml?.name : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
 export function referencesBuildRunner(folder?: string): boolean {
 	if (folder && hasPubspec(folder)) {
 		const regex = new RegExp("build_runner\\s*:", "i");
