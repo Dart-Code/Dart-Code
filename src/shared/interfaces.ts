@@ -279,6 +279,7 @@ export interface CustomDevToolsConfig {
 	args?: string[];
 	path?: string;
 	env?: { [key: string]: string };
+	legacy?: boolean; // devtools_tool instead of dt
 }
 
 export interface ExtensionConfig {
