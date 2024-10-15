@@ -5,6 +5,7 @@ import * as vs from "vscode";
 import { CodeActionKind, ExtensionKind, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, WorkspaceFolder, extensions, env as vsEnv, workspace } from "vscode";
 import * as lsp from "vscode-languageclient";
 import * as YAML from "yaml";
+import { config } from "../../extension/config";
 import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchProgressNotificationDelayInMs, projectSearchProgressText } from "../constants";
 import { EventEmitter } from "../events";
 import { Location, Logger } from "../interfaces";
@@ -149,15 +150,17 @@ export async function getAllProjectFoldersAndExclusions(
 		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
 		startTimeMs = new Date().getTime();
 
-		// Filter out any folders excluded by analysis_options.
-		try {
-			const excludedFolders = getAnalysisOptionsExcludedFolders(logger, projectFolders);
-			projectFolders = projectFolders.filter((p) => !excludedFolders.find((ex) => isWithinPathOrEqual(p, ex)));
-			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
+		// Filter out any folders excluded by analysis_options if enableSearchInAnalysisOptionsExcludedFolders is set to false.
+		if (!config.enableSearchInAnalysisOptionsExcludedFolders) {
+			try {
+				const excludedFolders = getAnalysisOptionsExcludedFolders(logger, projectFolders);
+				projectFolders = projectFolders.filter((p) => !excludedFolders.find((ex) => isWithinPathOrEqual(p, ex)));
+				logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
 
-			allExcludedFolders = allExcludedFolders.concat(excludedFolders);
-		} catch (e) {
-			logger.error(`Failed to filter out analysis_options exclusions: ${e}`);
+				allExcludedFolders = allExcludedFolders.concat(excludedFolders);
+			} catch (e) {
+				logger.error(`Failed to filter out analysis_options exclusions: ${e}`);
+			}
 		}
 
 		const result = { projectFolders, excludedFolders: new Set(allExcludedFolders) };

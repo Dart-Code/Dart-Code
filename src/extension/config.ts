@@ -110,6 +110,7 @@ class Config {
 	get enableSdkFormatter(): boolean { return this.getConfig<boolean>("enableSdkFormatter", true); }
 	get enableServerSnippets(): boolean { return this.getConfig<boolean>("enableServerSnippets", true); }
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
+	get enableSearchInAnalysisOptionsExcludedFolders(): boolean { return this.getConfig<boolean>("enableSearchInAnalysisOptionsExcludedFolders", false); }
 	get env(): object { return this.getConfig<object>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
