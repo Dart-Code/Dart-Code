@@ -550,10 +550,9 @@ export class DevToolsManager implements vs.Disposable {
 				const defaultAllowList: string[] = [
 					"serverpod.serverpod",
 				];
-				const effectiveAllowList = config.extensionRecommendationAllowList ?? defaultAllowList;
 				setTimeout(async () => {
 					try {
-						await this.promptForExtensionRecommendations(effectiveAllowList);
+						await this.promptForExtensionRecommendations();
 					} catch (e) {
 						// This can fail if we're restarting/shutting down before it fires.
 						const message = `Failed to check for extension recommendations: ${e}`;
@@ -595,7 +594,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 
-	public async promptForExtensionRecommendations(extensionAllowList: string[]): Promise<void> {
+	public async promptForExtensionRecommendations(): Promise<void> {
 		if (!config.showExtensionRecommendations)
 			return;
 
@@ -616,16 +615,13 @@ export class DevToolsManager implements vs.Disposable {
 		if (!results)
 			return;
 
-		const allowAllExtensions = !!extensionAllowList.includes("*");
-
 		const ignoredExtensions = this.context.getIgnoredExtensionRecommendationIdentifiers();
 		const installedExtension = vs.extensions.all.map((e) => e.id);
 		const promotableExtensions = Object.keys(results).flatMap((projectRoot) => results[projectRoot]?.extensions ?? [])
 			// Remove user-ignored extensions.
 			.filter((e) => ignoredExtensions.find((ignored) => ignored.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined)
 			// Remove already-installed extensions.
-			.filter((e) => installedExtension.find((installed) => installed.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined)
-			.filter((e) => allowAllExtensions || extensionAllowList.find((installed) => installed.trim().toLowerCase() === e.extension.trim().toLowerCase()) !== undefined);
+			.filter((e) => installedExtension.find((installed) => installed.trim().toLowerCase() === e.extension.trim().toLowerCase()) === undefined);
 		// If there are multiple we'll just pick the first. The user will either install or ignore
 		// and then next time we'd pick the next.
 		const promotableExtension = promotableExtensions?.at(0);
