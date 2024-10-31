@@ -51,7 +51,7 @@ export interface InternalExtensionApi {
 	devTools: {
 		start(): Promise<string | undefined>;
 		devtoolsUrl: Thenable<string> | undefined;
-		promptForExtensionRecommendations(allowList: string[]): Promise<void>;
+		promptForExtensionRecommendations(): Promise<void>;
 	};
 	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
