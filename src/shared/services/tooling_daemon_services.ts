@@ -147,6 +147,7 @@ export interface EditorDebugSession {
 }
 
 export enum EventKind {
+	activeLocationChanged,
 	deviceAdded,
 	deviceRemoved,
 	deviceChanged,
@@ -194,4 +195,28 @@ export interface DebugSessionChangedEvent extends Event {
 export interface DebugSessionStoppedEvent extends Event {
 	kind: EventKind.debugSessionStopped;
 	debugSessionId: string;
+}
+
+export interface ActiveLocationChangedEvent extends Event {
+	kind: EventKind.activeLocationChanged;
+	textDocument: VersionedTextDocumentIdentifier | undefined;
+	selections: EditorSelection[];
+}
+
+export interface VersionedTextDocumentIdentifier {
+	uri: string;
+	version: number;
+}
+
+export interface EditorSelection {
+	anchor: EditorPosition;
+	active: EditorPosition;
+}
+
+export interface EditorPosition {
+	/// The zero-based line number of this position.
+	line: number;
+
+	/// The zero-based column number of this position.
+	column: number;
 }

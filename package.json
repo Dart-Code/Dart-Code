@@ -2029,6 +2029,12 @@
 						"markdownDescription": "What level of documentation to show in Hovers and Code Completion details. When `null`, defaults to 'full' when running locally and 'none' in remote workspaces. This setting is only supported for Dart SDKs after v2.18.",
 						"scope": "window"
 					},
+					"dart.dtdEditorActiveLocationDelay": {
+						"type": "integer",
+						"default": 200,
+						"markdownDescription": "How long (in ms) to delay sending editor location change events over the Dart Tooling Daemon. Increasing this results in less events which may improve performance, at the expensive of tools that use these events not updating as quickly after your location/editor changes (requires restart).",
+						"scope": "window"
+					},
 					"dart.enableServerSnippets": {
 						"type": "boolean",
 						"default": true,

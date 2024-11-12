@@ -1,12 +1,13 @@
-import { commands, env, ExtensionContext, workspace } from "vscode";
+import { commands, env, ExtensionContext, window, workspace } from "vscode";
 import { CommandSource, restartReasonManual } from "../../shared/constants";
 import { DTD_AVAILABLE } from "../../shared/constants.contexts";
 import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { DartSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
-import { EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, SelectDeviceParams, Service, Stream } from "../../shared/services/tooling_daemon_services";
+import { ActiveLocationChangedEvent, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, SelectDeviceParams, Service, Stream } from "../../shared/services/tooling_daemon_services";
 import { disposeAll, nullToUndefined } from "../../shared/utils";
+import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
@@ -21,6 +22,8 @@ import { DartDebugSessionInformation } from "../utils/vscode/debug";
 export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	private readonly statusBarItem = getLanguageStatusItem("dart.toolingDaemon", ANALYSIS_FILTERS);
 	private readonly editorServices: EditorServices;
+	private sendActiveLocationDebounceTimer: NodeJS.Timeout | undefined;
+	private readonly activeLocationDebounceTimeMs = config.dtdEditorActiveLocationDelay;
 
 	constructor(
 		context: ExtensionContext,
@@ -44,6 +47,11 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		// Subscribe to event + send current/initial folders.
 		context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => this.sendWorkspaceRootsToDaemon()));
 		this.sendWorkspaceRootsToDaemon();
+
+		// Handle sending the current active location.
+		context.subscriptions.push(window.onDidChangeActiveTextEditor(() => this.queueActiveLocationChange()));
+		context.subscriptions.push(window.onDidChangeTextEditorSelection(() => this.queueActiveLocationChange()));
+		this.queueActiveLocationChange();
 
 		// Register services that we support.
 		void this.connected.then(() => this.registerServices()).catch((e) => logger.error(e));
@@ -96,6 +104,39 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	private sendWorkspaceRootsToDaemon() {
 		const workspaceFolderRootUris = getDartWorkspaceFolders().map((wf) => wf.uri.toString());
 		void this.sendWorkspaceFolders(workspaceFolderRootUris);
+	}
+
+	private queueActiveLocationChange() {
+		// We currently assume we only want this when the preview flag for LSP is enabled.
+		if (!config.previewDtdLspIntegration) return;
+
+		if (this.sendActiveLocationDebounceTimer)
+			clearTimeout(this.sendActiveLocationDebounceTimer);
+		this.sendActiveLocationDebounceTimer = setTimeout(() => this.sendActiveLocationChange(), this.activeLocationDebounceTimeMs);
+	}
+
+	private sendActiveLocationChange() {
+		const editor = window.activeTextEditor;
+		const document = editor?.document;
+
+		const location: ActiveLocationChangedEvent = {
+			kind: EventKind.activeLocationChanged,
+			selections: editor?.selections.map((s) => ({
+				active: {
+					column: s.active.character,
+					line: s.active.line,
+				},
+				anchor: {
+					column: s.anchor.character,
+					line: s.anchor.line,
+				},
+			})) ?? [],
+			textDocument: document ? {
+				uri: forceWindowsDriveLetterToUppercaseInUriString(document.uri.toString()),
+				version: document.version,
+			} : undefined,
+		};
+		void this.sendActiveLocation(location);
 	}
 
 	public dispose() {
