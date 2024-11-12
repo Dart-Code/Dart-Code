@@ -123,11 +123,11 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			kind: EventKind.activeLocationChanged,
 			selections: editor?.selections.map((s) => ({
 				active: {
-					column: s.active.character,
+					character: s.active.character,
 					line: s.active.line,
 				},
 				anchor: {
-					column: s.anchor.character,
+					character: s.anchor.character,
 					line: s.anchor.line,
 				},
 			})) ?? [],

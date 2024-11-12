@@ -217,6 +217,6 @@ export interface EditorPosition {
 	/// The zero-based line number of this position.
 	line: number;
 
-	/// The zero-based column number of this position.
-	column: number;
+	/// The zero-based character number of this position.
+	character: number;
 }
