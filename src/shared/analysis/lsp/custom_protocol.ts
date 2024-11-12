@@ -45,7 +45,7 @@ export class DiagnosticServerRequest {
 }
 
 export class ConnectToDtdRequest {
-	public static type = new RequestType<{ uri: string }, null, void>("dart/connectToDtd");
+	public static type = new RequestType<{ uri: string, registerExperimentalHandlers: boolean | undefined }, null, void>("dart/connectToDtd");
 }
 
 export class ReanalyzeRequest {

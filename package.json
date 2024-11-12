@@ -2866,6 +2866,12 @@
 						"default": false,
 						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) refactors on the lightbulb menu. This setting is intended for use by Dart Analysis Server developers or users that want to try out and provide feedback on in-progress refactors.",
 						"scope": "window"
+					},
+					"dart.experimentalDtdHandlers": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) LSP handlers through DTD. This setting is passed to the analysis server in the connectToDtd request and therefore relies on DTD being supported and enabled for the analysis server (requires restart).",
+						"scope": "window"
 					}
 				}
 			},

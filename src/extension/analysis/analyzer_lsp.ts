@@ -90,8 +90,9 @@ export class LspAnalyzer extends Analyzer {
 			if (config.previewDtdLspIntegration && dtd !== null) {
 				// TODO(dantup): Switch from a preview flag to using a server-provided capability. That capability is not
 				//  yet available because we want to do more testing behind the preview flag first.
+				const registerExperimentalHandlers = !!config.experimentalDtdHandlers;
 				dtd?.dtdUri
-					.then((uri) => uri ? this.client.sendRequest(ConnectToDtdRequest.type, { uri }) : undefined)
+					.then((uri) => uri ? this.client.sendRequest(ConnectToDtdRequest.type, { uri, registerExperimentalHandlers }) : undefined)
 					.catch((e) => this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${e}`));
 			}
 		});

@@ -170,6 +170,7 @@ class Config {
 	// TODO(dantup): When removing this flag, be sure to update the test
 	// "should expose LSP methods via the analyzer"
 	get previewDtdLspIntegration(): boolean { return this.getConfig<boolean>("previewDtdLspIntegration", false); }
+	get experimentalDtdHandlers(): boolean { return this.getConfig<boolean>("experimentalDtdHandlers", false); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }
 	get previewHotReloadOnSaveWatcher(): boolean { return this.getConfig<boolean>("previewHotReloadOnSaveWatcher", false); }
