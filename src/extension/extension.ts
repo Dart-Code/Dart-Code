@@ -95,6 +95,7 @@ import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_p
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
 import { DartDebugForcedAnsiColorSupportFactory } from "./providers/debug_adapter_forced_ansi_color_support";
 import { DartDebugForcedDebugModeFactory } from "./providers/debug_adapter_forced_debug_mode_factory";
+import { DartDebugForcedSingleThreadContinueFactory } from "./providers/debug_adapter_forced_single_thread_continue";
 import { DartDebugAdapterGlobalEvaluationContextFactory } from "./providers/debug_adapter_global_evaluation_context_factory";
 import { DartDebugAdapterHexViewFactory } from "./providers/debug_adapter_hex_view_factory";
 import { DartDebugAdapterLaunchStatusFactory } from "./providers/debug_adapter_launch_status_factory";
@@ -594,6 +595,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", forcedDebugMode));
 	const forcedAnsiColors = new DartDebugForcedAnsiColorSupportFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", forcedAnsiColors));
+	const forcedSingleThreadContinue = new DartDebugForcedSingleThreadContinueFactory();
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", forcedSingleThreadContinue));
 	const removeErrorShowUser = new DartDebugAdapterRemoveErrorShowUserFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", removeErrorShowUser));
 	const supportUris = new DartDebugAdapterSupportsUrisFactory(dartCapabilities);
@@ -603,7 +606,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Logger goes last, so it logs any mutations made by the above.
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
-	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, forcedAnsiColors, removeErrorShowUser, supportUris, launchStatus, debugLogger];
+	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, forcedAnsiColors, forcedSingleThreadContinue, removeErrorShowUser, supportUris, launchStatus, debugLogger];
 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
