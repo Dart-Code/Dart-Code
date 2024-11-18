@@ -1,6 +1,6 @@
 {
 	"name": "Dart",
-	"version": "1.3.0",
+	"version": "1.4.1",
 	"fileTypes": [
 		"dart"
 	],
@@ -69,6 +69,16 @@
 	],
 
 	"repository": {
+		"dartdoc-codeblock-triple": {
+			"begin": "^\\s*///\\s*(?!\\s*```)",
+			"end": "\n",
+			"contentName": "variable.other.source.dart"
+		},
+		"dartdoc-codeblock-block": {
+			"begin": "^\\s*\\*\\s*(?!(\\s*```|\/))",
+			"end": "\n",
+			"contentName": "variable.other.source.dart"
+		},
 		"dartdoc": {
 			"patterns": [
 				{
@@ -80,30 +90,31 @@
 					}
 				},
 				{
-					"match": "^ {4,}(?![ \\*]).*",
-					"captures": {
-						"0": {
-							"name": "variable.name.source.dart"
+					"begin": "^\\s*///\\s*(```)",
+					"end": "^\\s*///\\s*(```)|^(?!\\s*///)",
+					"patterns": [
+						{
+							"include": "#dartdoc-codeblock-triple"
 						}
-					}
+					]
 				},
 				{
-					"contentName": "variable.other.source.dart",
-					"begin": "```.*?$",
-					"end": "```"
-				},
-				{
-					"match": "(`[^`]+?`)",
-					"captures": {
-						"0": {
-							"name": "variable.other.source.dart"
+					"begin": "^\\s*\\*\\s*(```)",
+					"end": "^\\s*\\*\\s*(```)|^(?=\\s*\\*\/)",
+					"patterns": [
+						{
+							"include": "#dartdoc-codeblock-block"
 						}
-					}
+					]
 				},
 				{
-					"match": "(\\* ((    ).*))$",
+					"match": "`[^`\n]+`",
+					"name": "variable.other.source.dart"
+				},
+				{
+					"match": "(?:\\*|\\/\\/)\\s{4,}(.*?)(?=($|\\*\\/))",
 					"captures": {
-						"2": {
+						"1": {
 							"name": "variable.other.source.dart"
 						}
 					}
@@ -157,7 +168,7 @@
 				{
 					"name": "comment.block.documentation.dart",
 					"begin": "///",
-					"while": "^\\s*///",
+					"end": "^(?!\\s*///)",
 					"patterns": [
 						{
 							"include": "#dartdoc"

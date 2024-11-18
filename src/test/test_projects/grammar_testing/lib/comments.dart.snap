@@ -6,8 +6,7 @@
 #                                       ^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
 #                                             ^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >/// Every other line should be a comment.
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >
 >// ignore_for_file: unused_element
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.line.double-slash.dart
@@ -88,8 +87,8 @@
 #^^^^^^^^ source.dart comment.block.documentation.dart
 > *     test
 #^ source.dart comment.block.documentation.dart
-# ^^ source.dart comment.block.documentation.dart
-#   ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+# ^^^^^^ source.dart comment.block.documentation.dart
+#       ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
 > * test
 #^^^^^^^^ source.dart comment.block.documentation.dart
 > */
@@ -128,25 +127,19 @@
 #^^^ source.dart comment.block.documentation.dart
 #   ^^^^ source.dart comment.block.documentation.dart
 >/// /**
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^ source.dart comment.block.documentation.dart
 >///  * test
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >///  *     test
-#^^^ source.dart comment.block.documentation.dart
-#   ^^ source.dart comment.block.documentation.dart
-#     ^^ source.dart comment.block.documentation.dart
-#       ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+#^^^^^ source.dart comment.block.documentation.dart
+#     ^^^^^^ source.dart comment.block.documentation.dart
+#           ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
 >///  * test
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >///  */
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^ source.dart comment.block.documentation.dart
 >/// */
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^ source.dart comment.block.documentation.dart
 >
 >/**
 #^^^ source.dart comment.block.documentation.dart
@@ -154,9 +147,12 @@
 #^^^^^ source.dart comment.block.documentation.dart
 #     ^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
 > *    * bbb
-#^^^^^^^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+# ^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#      ^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart variable.other.source.dart
 > *    */
-#^^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+#^ source.dart comment.block.documentation.dart comment.block.documentation.dart
+# ^^^^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
 #      ^^ source.dart comment.block.documentation.dart comment.block.documentation.dart
 > */
 #^ source.dart comment.block.documentation.dart
@@ -177,8 +173,7 @@
 #^^^ source.dart comment.block.documentation.dart
 #   ^^^^^^ source.dart comment.block.documentation.dart
 >/// test
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^ source.dart comment.block.documentation.dart
 >var g = 1; /// test
 #^^^ source.dart storage.type.primitive.dart
 #   ^^^ source.dart
@@ -200,8 +195,7 @@
 #           ^^^ source.dart comment.block.documentation.dart
 #              ^^^^^^ source.dart comment.block.documentation.dart
 >/// test
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^ source.dart comment.block.documentation.dart
 >
 >
 >// test
@@ -321,18 +315,15 @@
 #^^^ source.dart comment.block.documentation.dart
 #   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >///
-#^^^ source.dart comment.block.documentation.dart
+#^^^^ source.dart comment.block.documentation.dart
 >/// ```dart
-#^^^ source.dart comment.block.documentation.dart
-#   ^ source.dart comment.block.documentation.dart
-#    ^^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^ source.dart comment.block.documentation.dart
+#       ^^^^^ source.dart comment.block.documentation.dart
 >/// test
-#^^^ source.dart comment.block.documentation.dart
-#   ^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
 >/// ```
-#^^^ source.dart comment.block.documentation.dart
-#   ^ source.dart comment.block.documentation.dart variable.other.source.dart
-#    ^^^ source.dart comment.block.documentation.dart
+#^^^^^^^ source.dart comment.block.documentation.dart
 >var r = 1;
 #^^^ source.dart storage.type.primitive.dart
 #   ^^^ source.dart
@@ -461,8 +452,8 @@
 #^^^^^^^^^^ source.dart comment.block.documentation.dart
 >   *     test
 #^^^ source.dart comment.block.documentation.dart
-#   ^^ source.dart comment.block.documentation.dart
-#     ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+#         ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
 >   * test
 #^^^^^^^^^^ source.dart comment.block.documentation.dart
 >   */
@@ -510,25 +501,19 @@
 #  ^^^ source.dart comment.block.documentation.dart
 #     ^^^^ source.dart comment.block.documentation.dart
 >  /// /**
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^ source.dart comment.block.documentation.dart
 >  ///  * test
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >  ///  *     test
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^ source.dart comment.block.documentation.dart
-#       ^^ source.dart comment.block.documentation.dart
-#         ^^^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+#^^^^^^^ source.dart comment.block.documentation.dart
+#       ^^^^^^ source.dart comment.block.documentation.dart
+#             ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
 >  ///  * test
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >  ///  */
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^ source.dart comment.block.documentation.dart
 >  /// */
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^ source.dart comment.block.documentation.dart
 >
 >  /// test
 #^^ source.dart
@@ -548,8 +533,7 @@
 #  ^^^ source.dart comment.block.documentation.dart
 #     ^^^^^^ source.dart comment.block.documentation.dart
 >  /// test
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >  var g = 1; /// test
 #^^ source.dart
 #  ^^^ source.dart storage.type.primitive.dart
@@ -573,8 +557,7 @@
 #             ^^^ source.dart comment.block.documentation.dart
 #                ^^^^^^ source.dart comment.block.documentation.dart
 >  /// test
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >
 >
 >  // test
@@ -714,18 +697,15 @@
 #  ^^^ source.dart comment.block.documentation.dart
 #     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.dart comment.block.documentation.dart
 >  ///
-#^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^ source.dart comment.block.documentation.dart
 >  /// ```dart
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^ source.dart comment.block.documentation.dart
-#      ^^^^^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^ source.dart comment.block.documentation.dart
+#         ^^^^^ source.dart comment.block.documentation.dart
 >  /// test
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^^^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+#^^^^^^ source.dart comment.block.documentation.dart
+#      ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
 >  /// ```
-#^^^^^ source.dart comment.block.documentation.dart
-#     ^ source.dart comment.block.documentation.dart variable.other.source.dart
-#      ^^^ source.dart comment.block.documentation.dart
+#^^^^^^^^^ source.dart comment.block.documentation.dart
 >  var r = 1;
 #^^ source.dart
 #  ^^^ source.dart storage.type.primitive.dart
