@@ -66,6 +66,28 @@
 				"  }",
 				"}"
 			]
+		},
+		"Flutter Inherited Widget": {
+			"prefix": "inhr",
+			"description": "Insert an InheritedWidget",
+			"body": [
+				"class $1 extends InheritedWidget {",
+				"  const $1({super.key});",
+				"",
+				"  static $1? maybeOf(BuildContext context) {",
+				"    return context.dependOnInheritedWidgetOfExactType<$1>();",
+				"  }",
+				"",
+				"  static $1 of(BuildContext context) {",
+				"    final $1? result = maybeOf(context);",
+				"    assert(result != null, 'No $1 found in context');",
+				"    return result!;",
+				"  }",
+				"",
+				"  @override",
+				"  bool updateShouldNotify($1 oldWidget) => ${0:true};",
+				"}"
+			]
 		}
 	}
 }
