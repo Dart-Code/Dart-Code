@@ -269,6 +269,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.goToImports",
+				"title": "Go to Imports",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.goToAugmented",
 				"title": "Go to Augmented Class/Member/Function",
 				"category": "Dart"
@@ -936,6 +941,10 @@
 					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
 				},
 				{
+					"command": "dart.goToImports",
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart && dart-code:goToImportsSupported"
+				},
+				{
 					"command": "dart.goToAugmented",
 					"when": "dart-code:anyProjectLoaded && editorLangId == dart && dart-code:lsp.request.dart.textDocument.augmented"
 				},
@@ -1377,6 +1386,11 @@
 				{
 					"when": "resourceExtname == .dart",
 					"command": "dart.goToSuper",
+					"group": "navigation@9"
+				},
+				{
+					"when": "resourceExtname == .dart && dart-code:goToImportsSupported",
+					"command": "dart.goToImports",
 					"group": "navigation@9"
 				}
 			],
