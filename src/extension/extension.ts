@@ -5,7 +5,7 @@ import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { vsCodeVersion } from "../shared/capabilities/vscode";
 import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
-import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
+import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -75,7 +75,7 @@ import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
 import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizations_on_save_handler";
 import { LspAnalyzerStatusReporter } from "./lsp/analyzer_status_reporter";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
-import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
+import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToImportsCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
 import { AddDependencyCodeActionProvider } from "./providers/add_dependency_code_action_provider";
 import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
@@ -285,6 +285,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	void vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
+	void vs.commands.executeCommand("setContext", GO_TO_IMPORTS_SUPPORTED_CONTEXT, dartCapabilities.supportsGoToImports);
 	void vs.commands.executeCommand("setContext", FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, dartCapabilities.supportsFlutterSidebar);
 
 	// Fire up Flutter daemon if required.
@@ -689,6 +690,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(new LspGoToSuperCommand(lspAnalyzer));
 		context.subscriptions.push(new LspGoToAugmentedCommand(lspAnalyzer));
 		context.subscriptions.push(new LspGoToAugmentationCommand(lspAnalyzer));
+		context.subscriptions.push(new LspGoToImportsCommand(lspAnalyzer));
 	}
 
 	// Set up commands for Dart editors.

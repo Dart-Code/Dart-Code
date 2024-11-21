@@ -13,6 +13,7 @@ export const DART_PLATFORM_NAME = "dart-code:dartPlatformName";
 // SDK version specific.
 export const SDK_IS_PRE_RELEASE = "dart-code:isPreReleaseSdk";
 export const PUB_OUTDATED_SUPPORTED_CONTEXT = "dart-code:pubOutdatedSupported";
+export const GO_TO_IMPORTS_SUPPORTED_CONTEXT = "dart-code:goToImportsSupported";
 export const FLUTTER_SIDEBAR_SUPPORTED_CONTEXT = "dart-code:flutterSidebarSupported";
 export const SUPPORTS_DEBUG_VALUE_FORMAT = "dart-code:supportsDebugValueFormat";
 export const DTD_AVAILABLE = "dart-code:dtdAvailable";
