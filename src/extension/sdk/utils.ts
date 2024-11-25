@@ -540,14 +540,14 @@ export class SdkUtils {
 	}
 
 	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdk: SdkSearchResults, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath", isWorkspaceSetting: boolean): Promise<void> {
-		let foundSdkPath = foundSdk?.originalPath;
+		const foundSdkPath = foundSdk?.originalPath;
 		if (!configSdkPath || !foundSdkPath) return;
 
-		configSdkPath = path.normalize(path.normalize(configSdkPath).toLowerCase() + path.sep);
-		foundSdkPath = path.normalize(path.normalize(foundSdkPath).toLowerCase() + path.sep);
+		const normalizedConfigSdkPath = path.normalize(path.normalize(configSdkPath).toLowerCase() + path.sep);
+		const normalizedFoundSdkPath = path.normalize(path.normalize(foundSdkPath).toLowerCase() + path.sep);
 
-		if (configSdkPath !== foundSdkPath) {
-			const action = await window.showWarningMessage(`The SDK configured in ${sdkConfigName} is not a valid SDK folder.`, openSettingsAction);
+		if (normalizedConfigSdkPath !== normalizedFoundSdkPath) {
+			const action = await window.showWarningMessage(`The SDK configured in ${sdkConfigName} is not a valid SDK folder: ${configSdkPath}`, openSettingsAction);
 			if (openSettingsAction === action) {
 				await commands.executeCommand(
 					isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson",
