@@ -1690,7 +1690,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a custom Dart Analysis Server. This setting is intended for use by Dart Analysis Server developers.",
+						"description": "The path to a custom Dart Analysis Server. This setting is intended for use by Dart Analysis Server developers. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"scope": "machine-overridable"
 					},
 					"dart.analyzerSshHost": {
@@ -2329,7 +2329,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a directory to save Flutter screenshots.",
+						"description": "The path to a directory to save Flutter screenshots. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterRememberSelectedDevice": {
@@ -2410,7 +2410,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for very detailed logging in the Dart Analysis Server that may be useful when trying to diagnose Analysis Server issues. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "The path to a log file for very detailed logging in the Dart Analysis Server that may be useful when trying to diagnose Analysis Server issues. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.analyzerLogFile": {
@@ -2419,7 +2419,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for communication between Dart Code and the Analysis Server. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "The path to a log file for communication between Dart Code and the Analysis Server. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.toolingDaemonLogFile": {
@@ -2428,7 +2428,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for the `dart tooling-daemon` service, which coordinates between various Dart and Flutter tools and extensions. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "The path to a log file for the `dart tooling-daemon` service, which coordinates between various Dart and Flutter tools and extensions. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.dapLogFile": {
@@ -2437,7 +2437,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for communication with the DAP debug adapters. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `${kind}` to insert a description of the kind of debug session ('dart', 'dart_test', 'flutter' etc.). Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "The path to a log file for communication with the DAP debug adapters. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `${kind}` to insert a description of the kind of debug session ('dart', 'dart_test', 'flutter' etc.). Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.devToolsLogFile": {
@@ -2446,7 +2446,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a low-traffic log file for the Dart DevTools service. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "The path to a low-traffic log file for the Dart DevTools service. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.extensionLogFile": {
@@ -2455,7 +2455,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a low-traffic log file for basic extension and editor issues. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "The path to a low-traffic log file for basic extension and editor issues. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterDaemonLogFile": {
@@ -2464,7 +2464,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The path to a log file for the `flutter daemon` service, which provides information about connected devices accessible from the status bar. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "The path to a log file for the `flutter daemon` service, which provides information about connected devices accessible from the status bar. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.maxLogLineLength": {
@@ -2698,7 +2698,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a custom Dart Debug Adapter. This setting is intended for use by Dart Debug Adapter developers.",
+						"description": "The path to a custom Dart Debug Adapter. This setting is intended for use by Dart Debug Adapter developers. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"scope": "machine-overridable"
 					},
 					"dart.customFlutterDapPath": {
@@ -2707,7 +2707,7 @@
 							"string"
 						],
 						"default": null,
-						"description": "The path to a custom Flutter Debug Adapter. This setting is intended for use by Dart Debug Adapter developers.",
+						"description": "The path to a custom Flutter Debug Adapter. This setting is intended for use by Dart Debug Adapter developers. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"scope": "machine-overridable"
 					}
 				}
@@ -2728,13 +2728,13 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The location of the Dart SDK to use for analyzing and executing code. If blank (or not a valid SDK), Dart Code will attempt to find it from the `PATH` environment variable. When editing a Flutter project, the version of Dart included in the Flutter SDK is used in preference.",
+						"markdownDescription": "The location of the Dart SDK to use for analyzing and executing code. If blank (or not a valid SDK), Dart Code will attempt to find it from the `PATH` environment variable. When editing a Flutter project, the version of Dart included in the Flutter SDK is used in preference. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"scope": "machine-overridable"
 					},
 					"dart.sdkPaths": {
 						"type": "array",
 						"default": [],
-						"description": "An array of paths that either directly point to a Dart SDK or the parent directory of multiple Dart SDKs that can be used for fast SDK switching. These paths are not used directly when searching for an SDK. When this setting is populated, the SDK version number in the status bar can be used to quickly switch between SDKs.",
+						"description": "An array of paths that either directly point to a Dart SDK or the parent directory of multiple Dart SDKs that can be used for fast SDK switching. These paths are not used directly when searching for an SDK. When this setting is populated, the SDK version number in the status bar can be used to quickly switch between SDKs. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"items": {
 							"type": "string"
 						},
@@ -2746,13 +2746,13 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The location of the Flutter SDK to use. If blank (or not a valid SDK), Dart Code will attempt to find it from the project directory, `FLUTTER_ROOT` environment variable and the `PATH` environment variable.",
+						"markdownDescription": "The location of the Flutter SDK to use. If blank (or not a valid SDK), Dart Code will attempt to find it from the project directory, `FLUTTER_ROOT` environment variable and the `PATH` environment variable. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterSdkPaths": {
 						"type": "array",
 						"default": [],
-						"description": "An array of paths that either directly point to a Flutter SDK or the parent directory of multiple Flutter SDKs that can be used for fast SDK switching. These paths are not used directly when searching for an SDK. When this setting is populated, the version number in the status bar can be used to quickly switch between SDKs.",
+						"description": "An array of paths that either directly point to a Flutter SDK or the parent directory of multiple Flutter SDKs that can be used for fast SDK switching. These paths are not used directly when searching for an SDK. When this setting is populated, the version number in the status bar can be used to quickly switch between SDKs. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows).",
 						"items": {
 							"type": "string"
 						},
@@ -2962,7 +2962,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for Dart test runs. This is useful when trying to diagnose issues with unit test executions. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for Dart test runs. This is useful when trying to diagnose issues with unit test executions. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterRunLogFile": {
@@ -2971,7 +2971,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for `flutter run`, which is used to launch Flutter apps from VS Code. This is useful when trying to diagnose issues with apps launching (or failing to) on simulators and devices. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for `flutter run`, which is used to launch Flutter apps from VS Code. This is useful when trying to diagnose issues with apps launching (or failing to) on simulators and devices. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.flutterTestLogFile": {
@@ -2980,7 +2980,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for `flutter test`, which is used to run unit tests from VS Code. This is useful when trying to diagnose issues with unit test executions. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for `flutter test`, which is used to run unit tests from VS Code. This is useful when trying to diagnose issues with unit test executions. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.vmServiceLogFile": {
@@ -2989,7 +2989,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for communication between Dart Code and the VM service. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for communication between Dart Code and the VM service. This is useful when trying to diagnose issues with debugging such as missed breakpoints. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
 					"dart.webDaemonLogFile": {
@@ -2998,7 +2998,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web apps. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web apps. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					}
 				}
