@@ -385,9 +385,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					break;
 				default:
 					const outputEvents = node.outputEvents;
-					const lastOutputEvent = outputEvents.length > 0 ? outputEvents[outputEvents.length - 1] : undefined;
-					const errorString = lastOutputEvent ? this.formatNotification(lastOutputEvent) : "Unknown test failure";
-					const testMessage = new vs.TestMessage(formatForTerminal(errorString));
+					const output = outputEvents.map((output) => this.formatNotification(output)).join("\n");
+					const testMessage = new vs.TestMessage(formatForTerminal(output));
 					if (result === "failure")
 						run.failed(item, testMessage, node.duration);
 					else
