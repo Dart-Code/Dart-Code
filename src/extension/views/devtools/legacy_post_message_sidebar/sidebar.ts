@@ -1,12 +1,12 @@
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
-import { DartCapabilities } from "../../../shared/capabilities/dart";
-import { CommandSource } from "../../../shared/constants";
-import { IAmDisposable } from "../../../shared/interfaces";
-import { disposeAll } from "../../../shared/utils";
-import { FlutterDeviceManager } from "../../../shared/vscode/device_manager";
-import { envUtils } from "../../../shared/vscode/utils";
-import { DevToolsManager } from "../../sdk/dev_tools/manager";
+import { DartCapabilities } from "../../../../shared/capabilities/dart";
+import { CommandSource } from "../../../../shared/constants";
+import { IAmDisposable } from "../../../../shared/interfaces";
+import { disposeAll } from "../../../../shared/utils";
+import { FlutterDeviceManager } from "../../../../shared/vscode/device_manager";
+import { envUtils } from "../../../../shared/vscode/utils";
+import { DevToolsManager } from "../../../sdk/dev_tools/manager";
 import { DartApi } from "./dart_tooling_api";
 
 export class FlutterPostMessageSidebar implements IAmDisposable {

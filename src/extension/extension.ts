@@ -115,8 +115,6 @@ import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
-import { FlutterDtdSidebar } from "./sidebar/dtd/sidebar";
-import { FlutterPostMessageSidebar } from "./sidebar/post_message/sidebar";
 import { DartFileUriLinkProvider } from "./terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "./terminal/package_uri_link_provider";
 import { VsCodeTestController } from "./test/vs_test_controller";
@@ -125,6 +123,8 @@ import * as util from "./utils";
 import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils/processes";
+import { FlutterPostMessageSidebar } from "./views/devtools/legacy_post_message_sidebar/sidebar";
+import { FlutterDtdSidebar } from "./views/devtools/sidebar";
 import { DartPackagesProvider } from "./views/packages_view";
 import { DartPackagesProviderLegacy } from "./views/packages_view_legacy";
 
