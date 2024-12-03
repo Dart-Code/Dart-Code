@@ -1601,6 +1601,11 @@
 					"id": "flutter",
 					"title": "Flutter",
 					"icon": "media/icons/flutter_activity_bar.svg"
+				},
+				{
+					"id": "flutterPropertyEditor",
+					"title": "Flutter Property Editor",
+					"icon": "media/icons/flutter_activity_bar.svg"
 				}
 			]
 		},
@@ -1623,6 +1628,15 @@
 					"id": "dartFlutterOutline",
 					"name": "Outline",
 					"when": "dart-code:anyFlutterProjectLoaded"
+				}
+			],
+			"flutterPropertyEditor": [
+				{
+					"id": "flutterPropertyEditor",
+					"type": "webview",
+					"name": "Flutter Property Editor",
+					"_whenForFutureWhenSwitchFromExperimentalFlagToCapabilities": "dart-code:anyFlutterProjectLoaded && dart-code:flutterPropertyEditorSupported",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalPropertyEditor"
 				}
 			]
 		},

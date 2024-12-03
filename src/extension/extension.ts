@@ -124,6 +124,7 @@ import { promptToReloadExtension } from "./utils";
 import { addToLogHeader, clearLogHeader, getExtensionLogPath, getLogHeader } from "./utils/log";
 import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils/processes";
 import { FlutterPostMessageSidebar } from "./views/devtools/legacy_post_message_sidebar/sidebar";
+import { PropertyEditor } from "./views/devtools/property_editor";
 import { FlutterDtdSidebar } from "./views/devtools/sidebar";
 import { DartPackagesProvider } from "./views/packages_view";
 import { DartPackagesProviderLegacy } from "./views/packages_view_legacy";
@@ -757,6 +758,12 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(new FlutterDtdSidebar(devTools, dartCapabilities));
 	else
 		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
+
+	// When switching from config to capability, also update package.json "when" condition for the view
+	// and implement the Context flag
+	// (see "_whenForFutureWhenSwitchFromExperimentalFlagToCapabilities" and "FLUTTER_SIDEBAR_SUPPORTED_CONTEXT").
+	if (dartToolingDaemon /* && dartCapabilities.supportsPropertyEditor */ && config.experimentalPropertyEditor)
+		context.subscriptions.push(new PropertyEditor(devTools, dartCapabilities));
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath: string) => {
 		if (!filePath) return;
