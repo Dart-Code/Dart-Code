@@ -3,7 +3,7 @@ import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { IAmDisposable } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
-import { MyBaseWebViewProvider } from "./base_view_provider";
+import { MySimpleBaseWebViewProvider } from "./base_view_provider";
 
 export class PropertyEditor implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
@@ -21,7 +21,7 @@ export class PropertyEditor implements IAmDisposable {
 	}
 }
 
-class MyWebViewProvider extends MyBaseWebViewProvider {
+class MyWebViewProvider extends MySimpleBaseWebViewProvider {
 	get pageName(): string {
 		return "Flutter Property Editor";
 	}

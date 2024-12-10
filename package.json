@@ -1582,6 +1582,11 @@
 					"id": "flutterPropertyEditor",
 					"title": "Flutter Property Editor",
 					"icon": "media/icons/property_editor_activity_bar.svg"
+				},
+				{
+					"id": "sidebarDevTools",
+					"title": "Flutter DevTools",
+					"icon": "media/icons/flutter_activity_bar.svg"
 				}
 			]
 		},
@@ -1613,6 +1618,57 @@
 					"name": "Flutter Property Editor",
 					"_whenForFutureWhenSwitchFromExperimentalFlagToCapabilities": "dart-code:anyFlutterProjectLoaded && dart-code:flutterPropertyEditorSupported",
 					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalPropertyEditor"
+				}
+			],
+			"sidebarDevTools": [
+				{
+					"id": "sidebarDevToolsInspector",
+					"type": "webview",
+					"name": "Inspector",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.inspector",
+					"visibility": "visible"
+				},
+				{
+					"id": "sidebarDevToolsCpuProfiler",
+					"type": "webview",
+					"name": "CPU Profiler",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.cpuProfiler",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsMemory",
+					"type": "webview",
+					"name": "Memory View",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.memory",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsPerformance",
+					"type": "webview",
+					"name": "Performance",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.performance",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsNetwork",
+					"type": "webview",
+					"name": "Network",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.network",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsLogging",
+					"type": "webview",
+					"name": "Logging",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.logging",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsDeepLinks",
+					"type": "webview",
+					"name": "Deep Links",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.deepLinks",
+					"visibility": "collapsed"
 				}
 			]
 		},
