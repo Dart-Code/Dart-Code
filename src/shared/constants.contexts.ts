@@ -40,3 +40,6 @@ export const DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT = "dart-code:depDevDep
 export const DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT = "dart-code:depTransitiveDependencyPackageNode";
 export const DART_DEP_FOLDER_NODE_CONTEXT = "dart-code:depFolderNode";
 export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
+
+// DevTools in Sidebar.
+export const SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX = "dart-code:devToolsSidebar.";
