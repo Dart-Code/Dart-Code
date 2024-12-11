@@ -51,6 +51,12 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		// Handle sending the current active location.
 		context.subscriptions.push(window.onDidChangeActiveTextEditor(() => this.queueActiveLocationChange()));
 		context.subscriptions.push(window.onDidChangeTextEditorSelection(() => this.queueActiveLocationChange()));
+		context.subscriptions.push(workspace.onDidChangeTextDocument((e) => {
+			// If the active document changed, this is implicitly a location change because
+			// the document is different now.
+			if (e.document === window.activeTextEditor?.document)
+				this.queueActiveLocationChange();
+		}));
 		this.queueActiveLocationChange();
 
 		// Register services that we support.
