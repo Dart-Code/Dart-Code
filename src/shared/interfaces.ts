@@ -289,6 +289,6 @@ export interface ExtensionConfig {
 export interface GetSDKCommandConfig {
 	executable: string;
 	args?: string[];
-	cwd: string,
+	cwd?: string,
 	env?: { [key: string]: string };
 }

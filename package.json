@@ -2796,7 +2796,7 @@
 							"null",
 							"object"
 						],
-						"required": ["executable", "cwd"], 
+						"required": ["executable"], 
 						"additionalProperties": false,
 						"default": null,
 						"description": "Get the Flutter SDK path from a command. Useful when using tools such as direnv, asdf, mise...",
@@ -2807,11 +2807,45 @@
 							"args": {
 								"type": ["null", "array"],
 								"items": {
-								"type": "string"
+									"type": "string"
 								}
 							},
 							"cwd": {
+								"type": ["null", "string"],
+								"description": "The working directory of the command relative to the workspace file directory if any, or relative to the workspace folder."
+							},
+							"env": {
+								"type": "object",
+								"additionalProperties": {
+									"type": ["string", "null"]
+								},
+								"description": "Environment variables to use when running the command. Keys are variable names, and values are strings or null."
+							}
+						},
+						"scope": "machine-overridable"
+					},
+					"dart.getDartSdkCommand": {
+						"type": [
+							"null",
+							"object"
+						],
+						"required": ["executable"], 
+						"additionalProperties": false,
+						"default": null,
+						"description": "Get the Dart SDK path from a command. Useful when using tools such as direnv, asdf, mise...",
+						"properties": {
+							"executable": {
 								"type": "string"
+							},
+							"args": {
+								"type": ["null", "array"],
+								"items": {
+									"type": "string"
+								}
+							},
+							"cwd": {
+								"type": ["null", "string"],
+								"description": "The working directory of the command relative to the workspace file directory if any, or relative to the workspace folder."
 							},
 							"env": {
 								"type": "object",

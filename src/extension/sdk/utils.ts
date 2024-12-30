@@ -401,14 +401,8 @@ export class SdkUtils {
 			hasAnyFlutterProject = true;
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
 		} else {
-
-			const getFlutterSDKCommand = config.getFlutterSdkCommand;
-			let flutterSdkPathFromCommand: string | undefined;
-
-			if (getFlutterSDKCommand) {
-				flutterSdkPathFromCommand = await this.runCustomGetSDKCommand(getFlutterSDKCommand);
-			}
-			this.logger.info(`TESTDAVID Flutter SDK from command: ${flutterSdkPathFromCommand}`);
+			// User provided custom command to obtain the sdk path
+			const flutterSdkPathFromCommand: string | undefined = config.getFlutterSdkCommand && await this.runCustomGetSDKCommand(config.getFlutterSdkCommand);
 
 			const flutterSdkSearchPaths = [
 				config.flutterSdkPath,
@@ -462,6 +456,9 @@ export class SdkUtils {
 			}
 		}
 
+		// User provided custom command to obtain the sdk path
+		const dartSdkPathFromCommand: string | undefined = config.getDartSdkCommand && await this.runCustomGetSDKCommand(config.getDartSdkCommand);
+
 		const dartSdkSearchPaths = [
 			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
 			fuchsiaRoot && path.join(fuchsiaRoot, "topaz/tools/prebuilt-dart-sdk", `${dartPlatformName}-x64`),
@@ -470,6 +467,7 @@ export class SdkUtils {
 			fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", dartPlatformName, "dart-sdk"),
 			firstFlutterProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
 			config.sdkPath,
+			dartSdkPathFromCommand,
 		].concat(paths)
 			// The above array only has the Flutter SDK	in the search path if we KNOW it's a flutter
 			// project, however this doesn't cover the activating-to-run-flutter.createProject so
@@ -550,17 +548,47 @@ export class SdkUtils {
 	}
 
 	private async runCustomGetSDKCommand(command: GetSDKCommandConfig): Promise<string | undefined> {
+		const globalWorkDir = this.getGlobalWorkingDirectory();
+		if (!globalWorkDir) return undefined;
+
+		const cmdWorkDir = command.cwd ?? ".";
+		const cmdWorkDirAbs = path.isAbsolute(cmdWorkDir) ? cmdWorkDir : path.join(globalWorkDir, cmdWorkDir);
 		try {
-			const commandResult = await runToolProcess(this.logger, command.cwd, command.executable, command.args ?? [], command.env);
+			const commandResult = await runToolProcess(this.logger, cmdWorkDirAbs, command.executable, command.args ?? [], command.env);
+			if (commandResult.exitCode !== 0) {
+				throw new Error("Command exited with non-zero code");
+			}
 			const sdkPath = commandResult.stdout.trim();
 			if (!sdkPath)
 				throw new Error(`Command output was empty`);
 			return sdkPath;
 		}catch (e) {
 			const commandJson = JSON.stringify(command);
-			this.logger.error(`TESTDAVID Failed to run the command to get the SDK: ${e}. Command: ${commandJson}`);
+			this.logger.error(`Failed to run the command to get the SDK: ${e}. Command: ${commandJson}. CWD: ${cmdWorkDirAbs}`);
 			return undefined;
 		}
+	}
+
+	/**
+	 * Obtains a sane default as a working directory.
+	 * When using a multiroot workspace setup, return the directory of the workspace file
+	 * Otherwise, return the path of the workspace directory.
+	 * If there is no workspace directory, return undefined
+	 */
+	private getGlobalWorkingDirectory(): string | undefined {
+		const workspaceFile = workspace.workspaceFile;
+		const workspaceFolders = workspace.workspaceFolders;
+
+		if (workspaceFile) {
+			// Use the workspace file's directory in a multi-root setup
+			return path.dirname(fsPath(workspaceFile));
+		} else if (workspaceFolders && workspaceFolders.length > 0) {
+			// Fallback to the first workspace folder
+			return fsPath(workspaceFolders[0].uri);
+		}
+
+		// No workspace open
+		return undefined;
 	}
 
 	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdk: SdkSearchResults, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath", isWorkspaceSetting: boolean): Promise<void> {
