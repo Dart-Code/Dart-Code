@@ -2790,6 +2790,38 @@
 						"default": true,
 						"markdownDescription": "Whether to add your selected Dart/Flutter SDK path to the `PATH` environment variable for the embedded terminal. This is useful when switching SDKs via `#dart.sdkPaths#` / `#dart.flutterSdkPaths#` to ensure commands run from the terminal are the same version as being used by the editor/debugger (requires restart).",
 						"scope": "window"
+					},
+					"dart.getFlutterSdkCommand": {
+						"type": [
+							"null",
+							"object"
+						],
+						"required": ["executable", "cwd"], 
+						"additionalProperties": false,
+						"default": null,
+						"description": "Get the Flutter SDK path from a command. Useful when using tools such as direnv, asdf, mise...",
+						"properties": {
+							"executable": {
+								"type": "string"
+							},
+							"args": {
+								"type": ["null", "array"],
+								"items": {
+								"type": "string"
+								}
+							},
+							"cwd": {
+								"type": "string"
+							},
+							"env": {
+								"type": "object",
+								"additionalProperties": {
+									"type": ["string", "null"]
+								},
+								"description": "Environment variables to use when running the command. Keys are variable names, and values are strings or null."
+							}
+						},
+						"scope": "machine-overridable"
 					}
 				}
 			},

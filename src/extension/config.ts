@@ -1,5 +1,5 @@
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vscode";
-import { CustomDevToolsConfig } from "../shared/interfaces";
+import { CustomDevToolsConfig, GetSDKCommandConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
 import { createFolderForFile } from "../shared/utils/fs";
 import { DevToolsLocation, DevToolsLocations } from "./sdk/dev_tools/manager";
@@ -148,6 +148,7 @@ class Config {
 	get flutterShowWebServerDevice(): "remote" | "always" { return this.getConfig<"remote" | "always">("flutterShowWebServerDevice", "remote"); }
 	get flutterTestLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null)))); }
 	get flutterWebRenderer(): "flutter-default" | "canvaskit" | "html" | "auto" { return this.getConfig<"flutter-default" | "canvaskit" | "html" | "auto">("flutterWebRenderer", "flutter-default"); }
+	get getFlutterSdkCommand(): undefined | GetSDKCommandConfig { return this.getConfig<null | GetSDKCommandConfig>("getFlutterSdkCommand", null); }
 	get hotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
 		const value = this.getConfig<"never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" | "always">("hotReloadOnSave", "never");
 		if (value === "always")

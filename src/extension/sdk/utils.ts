@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, extensions, ProgressLocation, window, workspace } from "vscode";
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
-import { ExtensionConfig, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
+import { ExtensionConfig, GetSDKCommandConfig, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
@@ -402,9 +402,11 @@ export class SdkUtils {
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
 		} else {
 
+			const getFlutterSDKCommand = config.getFlutterSdkCommand;
 			let flutterSdkPathFromCommand: string | undefined;
-			if (topLevelFolders.length > 0) {
-				flutterSdkPathFromCommand = await this.getDynamicFlutterSDKPath({cwd: topLevelFolders[0], command: "miseE", args: ["where", "flutter"]});
+
+			if (getFlutterSDKCommand) {
+				flutterSdkPathFromCommand = await this.runCustomGetSDKCommand(getFlutterSDKCommand);
 			}
 			this.logger.info(`TESTDAVID Flutter SDK from command: ${flutterSdkPathFromCommand}`);
 
@@ -547,13 +549,16 @@ export class SdkUtils {
 		);
 	}
 
-	private async getDynamicFlutterSDKPath({cwd, command, args} : {cwd: string, command: string, args: string[]}): Promise<string | undefined> {
+	private async runCustomGetSDKCommand(command: GetSDKCommandConfig): Promise<string | undefined> {
 		try {
-			const commandResult = await runToolProcess(this.logger, cwd, command, args);
+			const commandResult = await runToolProcess(this.logger, command.cwd, command.executable, command.args ?? [], command.env);
 			const sdkPath = commandResult.stdout.trim();
+			if (!sdkPath)
+				throw new Error(`Command output was empty`);
 			return sdkPath;
 		}catch (e) {
-			this.logger.error(`TESTDAVID Failed to run "${command}" to detect Flutter SDK: ${e}`);
+			const commandJson = JSON.stringify(command);
+			this.logger.error(`TESTDAVID Failed to run the command to get the SDK: ${e}. Command: ${commandJson}`);
 			return undefined;
 		}
 	}
