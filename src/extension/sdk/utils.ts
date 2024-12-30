@@ -401,8 +401,16 @@ export class SdkUtils {
 			hasAnyFlutterProject = true;
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
 		} else {
+
+			let flutterSdkPathFromCommand: string | undefined;
+			if (topLevelFolders.length > 0) {
+				flutterSdkPathFromCommand = await this.getDynamicFlutterSDKPath({cwd: topLevelFolders[0], command: "miseE", args: ["where", "flutter"]});
+			}
+			this.logger.info(`TESTDAVID Flutter SDK from command: ${flutterSdkPathFromCommand}`);
+
 			const flutterSdkSearchPaths = [
 				config.flutterSdkPath,
+				flutterSdkPathFromCommand,
 				// TODO: These could move into processFuchsiaWorkspace and be set on the config?
 				fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 				fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
@@ -537,6 +545,17 @@ export class SdkUtils {
 			hasAnyStandardDartProject,
 			!!fuchsiaRoot && hasAnyStandardDartProject,
 		);
+	}
+
+	private async getDynamicFlutterSDKPath({cwd, command, args} : {cwd: string, command: string, args: string[]}): Promise<string | undefined> {
+		try {
+			const commandResult = await runToolProcess(this.logger, cwd, command, args);
+			const sdkPath = commandResult.stdout.trim();
+			return sdkPath;
+		}catch (e) {
+			this.logger.error(`TESTDAVID Failed to run "${command}" to detect Flutter SDK: ${e}`);
+			return undefined;
+		}
 	}
 
 	private async warnIfBadConfigSdk(configSdkPath: string | undefined, foundSdk: SdkSearchResults, sdkConfigName: "dart.sdkPath" | "dart.flutterSdkPath", isWorkspaceSetting: boolean): Promise<void> {
