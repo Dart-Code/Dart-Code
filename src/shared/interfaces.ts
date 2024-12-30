@@ -285,3 +285,10 @@ export interface CustomDevToolsConfig {
 export interface ExtensionConfig {
 	get experimentalTestRunnerInSdk(): boolean;
 }
+
+export interface GetSDKCommandConfig {
+	executable: string;
+	args?: string[];
+	cwd?: string,
+	env?: { [key: string]: string };
+}
