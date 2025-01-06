@@ -10,7 +10,7 @@ import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 const applicableErrorCodes = ["uri_does_not_exist", "conditional_uri_does_not_exist", "depend_on_referenced_packages"];
-const packageUriSourceCodePattern = new RegExp(`r?['"]+package:(.*)\\/`);
+const packageUriSourceCodePattern = new RegExp(`r?['"]+package:([\\w\\-]+)\\/`);
 
 export class AddDependencyCodeActionProvider implements RankedCodeActionProvider {
 	constructor(public readonly selector: DocumentSelector) { }
