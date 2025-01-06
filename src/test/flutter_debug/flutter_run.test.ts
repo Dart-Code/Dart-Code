@@ -970,7 +970,10 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async () => {
+	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async function () {
+		if (!dc.isDartDap) // This fails because we think we stop on "pause interrupted", but since legacy DAP is going away we will just skip.
+			this.skip();
+
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
 		await waitAllThrowIfTerminates(dc,
