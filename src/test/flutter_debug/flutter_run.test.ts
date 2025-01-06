@@ -1078,11 +1078,22 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		]
 			.map((f) => f.name);
 		// The top 60 frames should be from func60 down to func1.
-		// For Flutter web, each frame appears twice, so handle that for now while waiting to hear
-		// if that's expected.
-		const frameMultiplier = frameNames[0] === frameNames[1] ? 2 : 1;
-		for (let i = 0; i < 60; i++)
-			assert.equal(frameNames[i * frameMultiplier], `func${60 - i}`);
+		// For Flutter web, each frame appears twice, once as a closure, so handle that for now while
+		// waiting to hear if that's expected.
+		let frameOffset: number;
+		if (frameNames[0] === "func60")
+			frameOffset = 0;
+		else if (frameNames[1] === "func60")
+			frameOffset = 1;
+		else
+			throw new Error(`Neither of the top two frames are 'frame60': ${frameNames.join(", ")}`);
+		const frameMultiplier = frameNames[frameOffset + 2] === "func59" ? 2 : 1;
+		for (let i = 0; i < 60; i++) {
+			const frameIndex = frameOffset + i * frameMultiplier;
+			const expectedFunction = `func${60 - i}`;
+			const actualFunction = frameNames[frameIndex];
+			assert.equal(actualFunction, expectedFunction, `Frame ${i} at index ${frameIndex} should be ${expectedFunction}`);
+		}
 	});
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
