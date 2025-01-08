@@ -1,4 +1,4 @@
-import { commands, env, ExtensionContext, window, workspace } from "vscode";
+import { commands, env, ExtensionContext, TextEditor, window, workspace } from "vscode";
 import { CommandSource, restartReasonManual } from "../../shared/constants";
 import { DTD_AVAILABLE } from "../../shared/constants.contexts";
 import { DebuggerType } from "../../shared/enums";
@@ -49,15 +49,15 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		this.sendWorkspaceRootsToDaemon();
 
 		// Handle sending the current active location.
-		context.subscriptions.push(window.onDidChangeActiveTextEditor(() => this.queueActiveLocationChange()));
-		context.subscriptions.push(window.onDidChangeTextEditorSelection(() => this.queueActiveLocationChange()));
+		context.subscriptions.push(window.onDidChangeActiveTextEditor((e) => this.queueActiveLocationChange(e)));
+		context.subscriptions.push(window.onDidChangeTextEditorSelection((e) => this.queueActiveLocationChange(e.textEditor)));
 		context.subscriptions.push(workspace.onDidChangeTextDocument((e) => {
 			// If the active document changed, this is implicitly a location change because
 			// the document is different now.
 			if (e.document === window.activeTextEditor?.document)
-				this.queueActiveLocationChange();
+				this.queueActiveLocationChange(window.activeTextEditor);
 		}));
-		this.queueActiveLocationChange();
+		this.queueActiveLocationChange(window.activeTextEditor);
 
 		// Register services that we support.
 		void this.connected.then(() => this.registerServices()).catch((e) => logger.error(e));
@@ -112,17 +112,24 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		void this.sendWorkspaceFolders(workspaceFolderRootUris);
 	}
 
-	private queueActiveLocationChange() {
+	private queueActiveLocationChange(editor: TextEditor | undefined) {
 		// We currently assume we only want this when the preview flag for LSP is enabled.
 		if (!config.previewDtdLspIntegration) return;
 
 		if (this.sendActiveLocationDebounceTimer)
 			clearTimeout(this.sendActiveLocationDebounceTimer);
-		this.sendActiveLocationDebounceTimer = setTimeout(() => this.sendActiveLocationChange(), this.activeLocationDebounceTimeMs);
+		this.sendActiveLocationDebounceTimer = setTimeout(() => this.sendActiveLocationChange(editor), this.activeLocationDebounceTimeMs);
 	}
 
-	private sendActiveLocationChange() {
-		const editor = window.activeTextEditor;
+	private sendActiveLocationChange(editor: TextEditor | undefined) {
+		// Usually we only send the change if the editor whose selection changed is still
+		// the active editor. However, if the active editor is a "non-editor" (for example an Output pane
+		// or embedded Widget Inspector), we will still allow this, to support selection changes triggered
+		// by the inspector when the inspector retains focus.
+		if (window.activeTextEditor && editor !== window.activeTextEditor) {
+			return;
+		}
+
 		const document = editor?.document;
 
 		const location: ActiveLocationChangedEvent = {

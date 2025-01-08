@@ -91,4 +91,24 @@ void missing() {
 }
 		`);
 	});
+
+	it("supports adding missing dependencies (root)", async () => {
+		await openFile(emptyFile);
+		await setTestContent(`import 'package:abc/def.dart';`);
+
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("pack||age"));
+		assert.ok(fixResults);
+		assert.ok(fixResults.length);
+		assert.ok(fixResults.find((r) => r.title.includes("Add 'abc' to dependencies")));
+	});
+
+	it("supports adding missing dependencies (nested)", async () => {
+		await openFile(emptyFile);
+		await setTestContent(`import 'package:abc/def/ghi.dart';`);
+
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("pack||age"));
+		assert.ok(fixResults);
+		assert.ok(fixResults.length);
+		assert.ok(fixResults.find((r) => r.title.includes("Add 'abc' to dependencies")));
+	});
 });
