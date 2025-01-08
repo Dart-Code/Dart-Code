@@ -401,8 +401,10 @@ export class SdkUtils {
 			hasAnyFlutterProject = true;
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
 		} else {
+			const configWorkspaceFlutterSdkPath = !!config.workspaceFlutterSdkPath;
+
 			// User provided custom command to obtain the sdk path
-			const flutterSdkPathFromCommand: string | undefined = config.getFlutterSdkCommand && await this.runCustomGetSDKCommand(config.getFlutterSdkCommand);
+			const flutterSdkPathFromCommand: string | undefined = config.getFlutterSdkCommand && await this.runCustomGetSDKCommand(config.getFlutterSdkCommand, "dart.getFlutterSdkCommand", configWorkspaceFlutterSdkPath);
 
 			const flutterSdkSearchPaths = [
 				config.flutterSdkPath,
@@ -433,7 +435,7 @@ export class SdkUtils {
 			}
 
 			if (hasAnyFlutterProject) {
-				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkResult, "dart.flutterSdkPath", !!config.workspaceFlutterSdkPath);
+				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkResult, "dart.flutterSdkPath", configWorkspaceFlutterSdkPath);
 			}
 
 			flutterSdkPath = flutterSdkResult.sdkPath;
@@ -456,8 +458,10 @@ export class SdkUtils {
 			}
 		}
 
+		const configWorkspaceDartSdkPath = !!config.workspaceSdkPath;
+
 		// User provided custom command to obtain the sdk path
-		const dartSdkPathFromCommand: string | undefined = config.getDartSdkCommand && await this.runCustomGetSDKCommand(config.getDartSdkCommand);
+		const dartSdkPathFromCommand: string | undefined = config.getDartSdkCommand && await this.runCustomGetSDKCommand(config.getDartSdkCommand, "dart.getDartSdkCommand", configWorkspaceDartSdkPath);
 
 		const dartSdkSearchPaths = [
 			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
@@ -483,7 +487,7 @@ export class SdkUtils {
 		const dartSdkResult = this.findDartSdk(dartSdkSearchPaths);
 
 		if (!hasAnyFlutterProject && !fuchsiaRoot && !firstFlutterProject && !workspaceConfig.forceFlutterWorkspace) {
-			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath", !!config.workspaceSdkPath);
+			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath", configWorkspaceDartSdkPath);
 		}
 
 		let dartSdkPath = dartSdkResult.sdkPath;
@@ -547,35 +551,39 @@ export class SdkUtils {
 		);
 	}
 
-	private async runCustomGetSDKCommand(command: GetSDKCommandConfig): Promise<string | undefined> {
-		const globalWorkDir = this.getGlobalWorkingDirectory();
-		if (!globalWorkDir) return undefined;
+	private async runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<string | undefined> {
+		const baseWorkDir = this.getWorkingDirectoryForGetSdkCommand();
+		// No workspace open, nothing to do
+		if (!baseWorkDir) return undefined;
 
 		const cmdWorkDir = command.cwd ?? ".";
-		const cmdWorkDirAbs = path.isAbsolute(cmdWorkDir) ? cmdWorkDir : path.join(globalWorkDir, cmdWorkDir);
+		const cmdWorkDirAbs = path.isAbsolute(cmdWorkDir) ? cmdWorkDir : path.join(baseWorkDir, cmdWorkDir);
 		try {
 			const commandResult = await runToolProcess(this.logger, cmdWorkDirAbs, command.executable, command.args ?? [], command.env);
 			if (commandResult.exitCode !== 0) {
-				throw new Error("Command exited with non-zero code");
+				throw new Error("Exited with non-zero code");
 			}
 			const sdkPath = commandResult.stdout.trim();
-			if (!sdkPath)
-				throw new Error(`Command output was empty`);
+
+			// Check if the path exists
+			if (!fs.existsSync(sdkPath)) {
+				throw new Error(`Path does not exist: ${sdkPath}`);
+			}
+
 			return sdkPath;
-		}catch (e) {
-			const commandJson = JSON.stringify(command);
-			this.logger.error(`Failed to run the command to get the SDK: ${e}. Command: ${commandJson}. CWD: ${cmdWorkDirAbs}`);
+		} catch (e) {
+			void this.warnIfBadSDKCommandOutput(e, cmdWorkDirAbs, sdkConfigName, isWorkspaceSetting);
 			return undefined;
 		}
 	}
 
 	/**
-	 * Obtains a sane default as a working directory.
+	 * Obtains a sane default as a working directory for the get SDK command.
 	 * When using a multiroot workspace setup, return the directory of the workspace file
 	 * Otherwise, return the path of the workspace directory.
 	 * If there is no workspace directory, return undefined
 	 */
-	private getGlobalWorkingDirectory(): string | undefined {
+	private getWorkingDirectoryForGetSdkCommand(): string | undefined {
 		const workspaceFile = workspace.workspaceFile;
 		const workspaceFolders = workspace.workspaceFolders;
 
@@ -601,14 +609,25 @@ export class SdkUtils {
 		if (normalizedConfigSdkPath !== normalizedFoundSdkPath) {
 			const action = await window.showWarningMessage(`The SDK configured in ${sdkConfigName} is not a valid SDK folder: ${configSdkPath}`, openSettingsAction);
 			if (openSettingsAction === action) {
-				await commands.executeCommand(
-					isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson",
-					{
-						revealSetting: { key: sdkConfigName },
-					}
-				);
+				await this.openSettingsFile(sdkConfigName, isWorkspaceSetting);
 			}
 		}
+	}
+
+	private async warnIfBadSDKCommandOutput(error: any, workDir: string, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean) {
+		const action = await window.showWarningMessage(`Failed to obtain the SDK from the command: ${error}. Working directory: ${workDir}.`, openSettingsAction);
+		if (openSettingsAction === action) {
+			await this.openSettingsFile(sdkConfigName, isWorkspaceSetting);
+		}
+	}
+
+	private async openSettingsFile(sdkConfigName: string, isWorkspaceSetting: boolean) {
+		await commands.executeCommand(
+			isWorkspaceSetting ? "workbench.action.openWorkspaceSettingsFile" : "workbench.action.openSettingsJson",
+			{
+				revealSetting: { key: sdkConfigName },
+			}
+		);
 	}
 
 	private findDartSdk(folders: string[]): SdkSearchResults {
