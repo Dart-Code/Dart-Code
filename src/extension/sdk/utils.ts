@@ -401,10 +401,8 @@ export class SdkUtils {
 			hasAnyFlutterProject = true;
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
 		} else {
-			const configWorkspaceFlutterSdkPath = !!config.workspaceFlutterSdkPath;
-
 			// User provided custom command to obtain the sdk path
-			const flutterSdkPathFromCommand: string | undefined = config.getFlutterSdkCommand && await this.runCustomGetSDKCommand(config.getFlutterSdkCommand, "dart.getFlutterSdkCommand", configWorkspaceFlutterSdkPath);
+			const flutterSdkPathFromCommand: string | undefined = config.getFlutterSdkCommand && await this.runCustomGetSDKCommand(config.getFlutterSdkCommand, "dart.getFlutterSdkCommand", !!config.workspaceGetFlutterSdkCommand);
 
 			const flutterSdkSearchPaths = [
 				config.flutterSdkPath,
@@ -435,7 +433,7 @@ export class SdkUtils {
 			}
 
 			if (hasAnyFlutterProject) {
-				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkResult, "dart.flutterSdkPath", configWorkspaceFlutterSdkPath);
+				void this.warnIfBadConfigSdk(config.flutterSdkPath, flutterSdkResult, "dart.flutterSdkPath", !!config.workspaceFlutterSdkPath);
 			}
 
 			flutterSdkPath = flutterSdkResult.sdkPath;
@@ -458,10 +456,8 @@ export class SdkUtils {
 			}
 		}
 
-		const configWorkspaceDartSdkPath = !!config.workspaceSdkPath;
-
 		// User provided custom command to obtain the sdk path
-		const dartSdkPathFromCommand: string | undefined = config.getDartSdkCommand && await this.runCustomGetSDKCommand(config.getDartSdkCommand, "dart.getDartSdkCommand", configWorkspaceDartSdkPath);
+		const dartSdkPathFromCommand: string | undefined = config.getDartSdkCommand && await this.runCustomGetSDKCommand(config.getDartSdkCommand, "dart.getDartSdkCommand", !!config.workspaceGetDartSdkCommand);
 
 		const dartSdkSearchPaths = [
 			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
@@ -487,7 +483,7 @@ export class SdkUtils {
 		const dartSdkResult = this.findDartSdk(dartSdkSearchPaths);
 
 		if (!hasAnyFlutterProject && !fuchsiaRoot && !firstFlutterProject && !workspaceConfig.forceFlutterWorkspace) {
-			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath", configWorkspaceDartSdkPath);
+			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath", !!config.workspaceSdkPath);
 		}
 
 		let dartSdkPath = dartSdkResult.sdkPath;

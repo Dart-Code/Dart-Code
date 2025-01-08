@@ -213,6 +213,8 @@ class Config {
 
 	get workspaceSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("sdkPath")); }
 	get workspaceFlutterSdkPath(): undefined | string { return resolvePaths(this.getWorkspaceConfig<null | string>("flutterSdkPath")); }
+	get workspaceGetDartSdkCommand(): undefined | GetSDKCommandConfig { return this.getWorkspaceConfig<null | GetSDKCommandConfig>("getDartSdkCommand"); }
+	get workspaceGetFlutterSdkCommand(): undefined | GetSDKCommandConfig { return this.getWorkspaceConfig<null | GetSDKCommandConfig>("getFlutterSdkCommand"); }
 
 	get hasExplicitShowTodosSetting(): boolean {
 		return this.hasExplicitSetting("showTodos");
