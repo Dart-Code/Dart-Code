@@ -565,6 +565,10 @@ export class SdkUtils {
 			}
 			const sdkPath = commandResult.stdout.trim();
 
+			if (!sdkPath) {
+				throw new Error("No output from command");
+			}
+
 			// Check if the path exists
 			if (!fs.existsSync(sdkPath)) {
 				throw new Error(`Path does not exist: ${sdkPath}`);
