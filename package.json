@@ -1605,7 +1605,7 @@
 				{
 					"id": "flutterPropertyEditor",
 					"title": "Flutter Property Editor",
-					"icon": "media/icons/flutter_activity_bar.svg"
+					"icon": "media/icons/property_editor_activity_bar.svg"
 				}
 			]
 		},
