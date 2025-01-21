@@ -2790,6 +2790,94 @@
 						"default": true,
 						"markdownDescription": "Whether to add your selected Dart/Flutter SDK path to the `PATH` environment variable for the embedded terminal. This is useful when switching SDKs via `#dart.sdkPaths#` / `#dart.flutterSdkPaths#` to ensure commands run from the terminal are the same version as being used by the editor/debugger (requires restart).",
 						"scope": "window"
+					},
+					"dart.getFlutterSdkCommand": {
+						"type": [
+							"null",
+							"object"
+						],
+						"required": [
+							"executable"
+						],
+						"additionalProperties": false,
+						"default": null,
+						"description": "Get the Flutter SDK path from a command. Useful when using tools such as direnv, asdf, mise... The command should exit with a 0 status code and it should print to the standard output just the path to the SDK. If the command fails (non zero exit or bad path), the extension will keep looking for other SDK paths. Some configuration examples can be found in: https://github.com/Dart-Code/Dart-Code/pull/5377",
+						"properties": {
+							"executable": {
+								"type": "string"
+							},
+							"args": {
+								"type": [
+									"null",
+									"array"
+								],
+								"items": {
+									"type": "string"
+								}
+							},
+							"cwd": {
+								"type": [
+									"null",
+									"string"
+								],
+								"description": "The working directory of the command relative to the workspace file directory if any, or relative to the workspace folder."
+							},
+							"env": {
+								"type": "object",
+								"additionalProperties": {
+									"type": [
+										"string",
+										"null"
+									]
+								},
+								"description": "Environment variables to use when running the command. Keys are variable names, and values are strings or null."
+							}
+						},
+						"scope": "machine-overridable"
+					},
+					"dart.getDartSdkCommand": {
+						"type": [
+							"null",
+							"object"
+						],
+						"required": [
+							"executable"
+						],
+						"additionalProperties": false,
+						"default": null,
+						"description": "Get the Dart SDK path from a command. Useful when using tools such as direnv, asdf, mise... The command should exit with a 0 status code and it should print to the standard output just the path to the SDK. If the command fails (non zero exit or bad path), the extension will keep looking for other SDK paths. Some configuration examples can be found in: https://github.com/Dart-Code/Dart-Code/pull/5377",
+						"properties": {
+							"executable": {
+								"type": "string"
+							},
+							"args": {
+								"type": [
+									"null",
+									"array"
+								],
+								"items": {
+									"type": "string"
+								}
+							},
+							"cwd": {
+								"type": [
+									"null",
+									"string"
+								],
+								"description": "The working directory of the command relative to the workspace file directory if any, or relative to the workspace folder."
+							},
+							"env": {
+								"type": "object",
+								"additionalProperties": {
+									"type": [
+										"string",
+										"null"
+									]
+								},
+								"description": "Environment variables to use when running the command. Keys are variable names, and values are strings or null."
+							}
+						},
+						"scope": "machine-overridable"
 					}
 				}
 			},
