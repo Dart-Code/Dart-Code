@@ -292,3 +292,8 @@ export interface GetSDKCommandConfig {
 	cwd?: string,
 	env?: { [key: string]: string };
 }
+
+export interface GetSDKCommandResult {
+	path?: string,
+	error?: string,
+}
