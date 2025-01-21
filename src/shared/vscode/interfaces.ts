@@ -6,7 +6,7 @@ import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
 import { DebuggerType, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
-import { CustomScript, DartWorkspaceContext, SpawnedProcess } from "../interfaces";
+import { CustomScript, DartWorkspaceContext, GetSDKCommandConfig, GetSDKCommandResult, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { PubDeps } from "../pub/deps";
 import { PackageMapLoader } from "../pub/package_map";
@@ -97,6 +97,10 @@ export interface InternalExtensionApi {
 	toolingDaemon: DartToolingDaemon;
 	webClient: WebClient;
 	workspaceContext: DartWorkspaceContext;
+	// Only available in test runs.
+	sdkUtils?: {
+		runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult>
+	},
 }
 
 export interface DelayedCompletionItem extends LazyCompletionItem {

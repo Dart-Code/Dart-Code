@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, extensions, ProgressLocation, window, workspace } from "vscode";
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
-import { ExtensionConfig, GetSDKCommandConfig, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
+import { ExtensionConfig, GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
@@ -402,11 +402,11 @@ export class SdkUtils {
 			flutterSdkPath = workspaceConfig?.flutterSdkHome;
 		} else {
 			// User provided custom command to obtain the sdk path
-			const flutterSdkPathFromCommand: string | undefined = config.getFlutterSdkCommand && await this.runCustomGetSDKCommand(config.getFlutterSdkCommand, "dart.getFlutterSdkCommand", !!config.workspaceGetFlutterSdkCommand);
+			const flutterSdkPathFromCommand = config.getFlutterSdkCommand && await this.runCustomGetSDKCommand(config.getFlutterSdkCommand, "dart.getFlutterSdkCommand", !!config.workspaceGetFlutterSdkCommand);
 
 			const flutterSdkSearchPaths = [
 				config.flutterSdkPath,
-				flutterSdkPathFromCommand,
+				flutterSdkPathFromCommand?.path,
 				// TODO: These could move into processFuchsiaWorkspace and be set on the config?
 				fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 				fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
@@ -457,7 +457,7 @@ export class SdkUtils {
 		}
 
 		// User provided custom command to obtain the sdk path
-		const dartSdkPathFromCommand: string | undefined = config.getDartSdkCommand && await this.runCustomGetSDKCommand(config.getDartSdkCommand, "dart.getDartSdkCommand", !!config.workspaceGetDartSdkCommand);
+		const dartSdkPathFromCommand = config.getDartSdkCommand && await this.runCustomGetSDKCommand(config.getDartSdkCommand, "dart.getDartSdkCommand", !!config.workspaceGetDartSdkCommand);
 
 		const dartSdkSearchPaths = [
 			// TODO: These could move into processFuchsiaWorkspace and be set on the config?
@@ -467,7 +467,7 @@ export class SdkUtils {
 			fuchsiaRoot && path.join(fuchsiaRoot, "dart/tools/sdks", dartPlatformName, "dart-sdk"),
 			firstFlutterProject && flutterSdkPath && path.join(flutterSdkPath, "bin/cache/dart-sdk"),
 			config.sdkPath,
-			dartSdkPathFromCommand,
+			dartSdkPathFromCommand?.path,
 		].concat(paths)
 			// The above array only has the Flutter SDK	in the search path if we KNOW it's a flutter
 			// project, however this doesn't cover the activating-to-run-flutter.createProject so
@@ -547,17 +547,17 @@ export class SdkUtils {
 		);
 	}
 
-	private async runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<string | undefined> {
+	private async runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult> {
 		const baseWorkDir = this.getWorkingDirectoryForGetSdkCommand();
 		// No workspace open, nothing to do
-		if (!baseWorkDir) return undefined;
+		if (!baseWorkDir) return { path: undefined };
 
 		const cmdWorkDir = command.cwd ?? ".";
 		const cmdWorkDirAbs = path.isAbsolute(cmdWorkDir) ? cmdWorkDir : path.join(baseWorkDir, cmdWorkDir);
 		try {
 			const commandResult = await runToolProcess(this.logger, cmdWorkDirAbs, command.executable, command.args ?? [], command.env);
 			if (commandResult.exitCode !== 0) {
-				throw new Error("Exited with non-zero code");
+				throw new Error(`Exited with non-zero code (${commandResult.exitCode})`);
 			}
 			const sdkPath = commandResult.stdout.trim();
 
@@ -570,10 +570,10 @@ export class SdkUtils {
 				throw new Error(`Path does not exist: ${sdkPath}`);
 			}
 
-			return sdkPath;
+			return { path: sdkPath };
 		} catch (e) {
 			void this.warnIfBadSDKCommandOutput(e, cmdWorkDirAbs, sdkConfigName, isWorkspaceSetting);
-			return undefined;
+			return { error: `${e}` };
 		}
 	}
 
