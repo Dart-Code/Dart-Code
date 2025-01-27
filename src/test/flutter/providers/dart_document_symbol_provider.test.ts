@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { waitFor } from "../../../shared/utils/promises";
 import { activate, ensureDocumentSymbol, flutterHelloWorldMainFile, getDocumentSymbols, getPackages } from "../../helpers";
 
 describe("dart_document_symbol_provider", () => {
@@ -9,7 +10,7 @@ describe("dart_document_symbol_provider", () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
 
 	it("returns expected items for 'flutter/hello_world'", async () => {
-		const symbols = await getDocumentSymbols();
+		const symbols = await waitFor(() => getDocumentSymbols());
 
 		assert.ok(symbols && symbols.length, "Didn't get any symbols");
 
