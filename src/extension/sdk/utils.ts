@@ -7,13 +7,13 @@ import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils"
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processDartSdkRepository, processFuchsiaWorkspace } from "../../shared/utils/workspace";
-import { envUtils, getAllProjectFolders, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { envUtils, getAllProjectFolders, getDartWorkspaceFolders, resolvePaths } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics, CloneSdkResult } from "../analytics";
 import { AddSdkToPath } from "../commands/add_sdk_to_path";
 import { config } from "../config";
 import { ringLog } from "../extension";
-import { getExcludedFolders, openLogContents, promptToReloadExtension, resolvePaths } from "../utils";
+import { getExcludedFolders, openLogContents, promptToReloadExtension } from "../utils";
 import { runToolProcess } from "../utils/processes";
 import { initializeFlutterSdk } from "./flutter";
 

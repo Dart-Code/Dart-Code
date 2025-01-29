@@ -2,8 +2,9 @@ import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vsc
 import { CustomDevToolsConfig, GetSDKCommandConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
 import { createFolderForFile } from "../shared/utils/fs";
+import { resolvePaths } from "../shared/vscode/utils";
 import { DevToolsLocation, DevToolsLocations } from "./sdk/dev_tools/manager";
-import { insertWorkspaceName, resolvePaths } from "./utils";
+import { insertWorkspaceName } from "./utils";
 import { setupToolEnv } from "./utils/processes";
 
 class Config {

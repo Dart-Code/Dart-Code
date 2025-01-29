@@ -37,17 +37,6 @@ export function isPathInsideFlutterProject(path: string): boolean {
 	return isFlutterProjectFolder(projectRoot);
 }
 
-export function resolvePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
-	if (typeof p !== "string")
-		return undefined as (undefined extends T ? undefined : never);
-
-	if (p.startsWith("~/"))
-		return path.join(os.homedir(), p.substr(2));
-	if (!path.isAbsolute(p) && workspace.workspaceFolders && workspace.workspaceFolders.length)
-		return path.join(fsPath(workspace.workspaceFolders[0].uri), p);
-	return p;
-}
-
 export function insertSessionName(args: { name: string }, logPath: string | undefined) {
 	return logPath
 		? logPath.replace(/\${name}/ig, filenameSafe(args.name || "unnamed-session"))
