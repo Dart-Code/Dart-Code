@@ -72,7 +72,6 @@ export interface WritableWorkspaceConfig {
 	flutterTestScript?: CustomScript;
 	flutterToolsScript?: CustomScript;
 	flutterVersion?: string;
-	useLegacyProtocol?: boolean;
 	forceFlutterWorkspace?: boolean;
 	forceFlutterDebug?: boolean;
 	skipFlutterInitialization?: boolean;

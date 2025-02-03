@@ -251,11 +251,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	const isVirtualWorkspace = vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.every((f) => f.uri.scheme !== "file");
-	function shouldUseLsp(): boolean {
-		return true;
-	}
-	const isUsingLsp = shouldUseLsp();
-	writableConfig.useLegacyProtocol = !isUsingLsp;
+	const isUsingLsp = true;
 	void vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
 
 	// Build log headers now we know analyzer type.
@@ -910,7 +906,7 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 	addToLogHeader(() => `Version: ${platformDisplayName} ${vs.version}`);
 	if (workspaceContext) {
 		addToLogHeader(() => ``);
-		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription} (${workspaceContext.config.useLegacyProtocol ? "DAS" : "LSP"})${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1 ? " (Multiroot)" : ""}`);
+		addToLogHeader(() => `Workspace type: ${workspaceContext.workspaceTypeDescription} (LSP)${vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length > 1 ? " (Multiroot)" : ""}`);
 		addToLogHeader(() => `Workspace name: ${vs.workspace.name}`);
 		const sdks = workspaceContext.sdks;
 		addToLogHeader(() => ``);

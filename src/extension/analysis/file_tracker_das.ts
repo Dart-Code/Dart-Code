@@ -88,9 +88,9 @@ export class DasFileTracker implements IAmDisposable {
 				subscriptions: {
 					CLOSING_LABELS: this.analyzer.capabilities.supportsClosingLabels ? openFiles : undefined,
 					// TODO(dantup): Why are we checking this here? This class is DAS-specific?
-					FOLDING: this.wsContext.config.useLegacyProtocol ? openFiles : undefined,
-					NAVIGATION: this.wsContext.config.useLegacyProtocol ? openFiles : undefined,
-					OCCURRENCES: this.wsContext.config.useLegacyProtocol ? openFiles : undefined,
+					FOLDING: openFiles,
+					NAVIGATION: openFiles,
+					OCCURRENCES: openFiles,
 					OUTLINE: openFiles,
 				},
 			});
