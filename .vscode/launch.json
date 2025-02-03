@@ -216,7 +216,7 @@
 			],
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -414,7 +414,7 @@
 			],
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {

@@ -10,16 +10,14 @@ const testFolder = "out/src/test";
 const testProjectsFolder = "src/test/test_projects";
 
 const testConfigs: TestConfig[] = [
-	{ testFolder: "dart", project: "hello_world", lsp: false },
-	{ testFolder: "dart", project: "hello_world", lsp: true },
+	{ testFolder: "dart", project: "hello_world" },
 	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"], sdkDaps: false },
 	{ testFolder: "dart_debug", project: "hello_world", sdkDaps: true },
 	{ testFolder: "web_debug", project: "web", debugAdapters: ["web", "web_test"] },
 	{ testFolder: "dart_nested", project: "dart_nested" },
 	{ testFolder: "dart_nested_flutter", project: "dart_nested_flutter" },
 	{ testFolder: "dart_nested_flutter2", project: "dart_nested_flutter2" },
-	{ testFolder: "flutter", project: "flutter_hello_world", lsp: false },
-	{ testFolder: "flutter", project: "flutter_hello_world", lsp: true },
+	{ testFolder: "flutter", project: "flutter_hello_world" },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: false },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: false, chrome: true },
 	{ testFolder: "flutter_debug", project: "flutter_hello_world", sdkDaps: true },
@@ -107,8 +105,6 @@ function getDebugServerConfigName(debugType: string) {
 
 function getTestConfigName(test: TestConfig) {
 	let name = getConfigName(test.testFolder);
-	if (test.lsp)
-		name = `${name} LSP`;
 	if (test.chrome)
 		name = `${name} Chrome`;
 	if (test.sdkDaps)
@@ -213,7 +209,6 @@ interface TestConfig {
 	testFolder: string;
 	project: string;
 	debugAdapters?: string[];
-	lsp?: boolean;
 	sdkDaps?: boolean;
 	chrome?: boolean;
 }
