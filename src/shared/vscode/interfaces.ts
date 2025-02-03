@@ -1,4 +1,4 @@
-import { CancellationToken, CompletionItem, CompletionItemProvider, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TestController, TestItem, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CancellationToken, CompletionItem, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, TestController, TestItem, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
@@ -38,7 +38,6 @@ export interface InternalExtensionApi {
 		supportsIncludedImports: boolean;
 	};
 	cancelAllAnalysisRequests: () => void;
-	completionItemProvider: CompletionItemProvider;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
 	interactiveRefactors: InteractiveRefactors | undefined;
@@ -81,7 +80,6 @@ export interface InternalExtensionApi {
 		getInstalledVersion(packageName: string, packageID: string): Promise<string | undefined>;
 		uninstall(packageID: string): Promise<void>;
 	};
-	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
 	testController: {
 		controller: TestController;

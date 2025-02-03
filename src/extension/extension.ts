@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { Analyzer } from "../shared/analyzer";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
+import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
@@ -14,27 +14,23 @@ import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq, withTimeout } from "../shared/utils";
-import { fsPath, isWithinPath } from "../shared/utils/fs";
+import { fsPath } from "../shared/utils/fs";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { createWatcher, envUtils, getDartWorkspaceFolders, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { DasAnalyzer } from "./analysis/analyzer_das";
 import { LspAnalyzer } from "./analysis/analyzer_lsp";
 import { AnalyzerStatusReporter } from "./analysis/analyzer_status_reporter";
-import { FileChangeHandler } from "./analysis/file_change_handler";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api/extension_api";
-import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { LspFlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples_lsp";
-import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
 import { LspMainCodeLensProvider } from "./code_lens/main_code_lens_provider_lsp";
-import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { LspTestCodeLensProvider } from "./code_lens/test_code_lens_provider_lsp";
 import { AddDependencyCommand } from "./commands/add_dependency";
 import { AddSdkToPathCommands } from "./commands/add_sdk_to_path";
@@ -51,7 +47,6 @@ import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
-import { RefactorCommands } from "./commands/refactor";
 import { SdkCommands } from "./commands/sdk";
 import { SettingsCommands } from "./commands/settings";
 import { TestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation } from "./commands/test";
@@ -60,10 +55,7 @@ import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
 import { HotReloadOnSaveHandler } from "./dart/hot_reload_save_handler";
 import { VsCodeDartToolingDaemon } from "./dart/tooling_daemon";
-import { ClosingLabelsDecorations } from "./decorations/closing_labels_decorations";
-import { FlutterIconDecorationsDas } from "./decorations/flutter_icon_decorations_das";
 import { FlutterIconDecorationsLsp } from "./decorations/flutter_icon_decorations_lsp";
-import { FlutterUiGuideDecorationsDas } from "./decorations/flutter_ui_guides_decorations_das";
 import { FlutterUiGuideDecorationsLsp } from "./decorations/flutter_ui_guides_decorations_lsp";
 import { DiagnosticReport } from "./diagnostic_report";
 import { KnownExperiments, getExperiments } from "./experiments";
@@ -77,20 +69,7 @@ import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToImportsCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
 import { AddDependencyCodeActionProvider } from "./providers/add_dependency_code_action_provider";
-import { AssistCodeActionProvider } from "./providers/assist_code_action_provider";
-import { DartCompletionItemProvider } from "./providers/dart_completion_item_provider";
-import { DartDiagnosticProvider } from "./providers/dart_diagnostic_provider";
-import { DartDocumentSymbolProvider } from "./providers/dart_document_symbol_provider";
-import { DartFoldingProvider } from "./providers/dart_folding_provider";
-import { DartFormattingEditProvider } from "./providers/dart_formatting_edit_provider";
-import { DartDocumentHighlightProvider } from "./providers/dart_highlighting_provider";
-import { DartHoverProvider } from "./providers/dart_hover_provider";
-import { DartImplementationProvider } from "./providers/dart_implementation_provider";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
-import { DartReferenceProvider } from "./providers/dart_reference_provider";
-import { DartRenameProvider } from "./providers/dart_rename_provider";
-import { DartSignatureHelpProvider } from "./providers/dart_signature_help_provider";
-import { DartWorkspaceSymbolProvider } from "./providers/dart_workspace_symbol_provider";
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
 import { DartDebugForcedAnsiColorSupportFactory } from "./providers/debug_adapter_forced_ansi_color_support";
 import { DartDebugForcedDebugModeFactory } from "./providers/debug_adapter_forced_debug_mode_factory";
@@ -102,12 +81,8 @@ import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_
 import { DartDebugAdapterRemoveErrorShowUserFactory } from "./providers/debug_adapter_remove_error_showUser_factory";
 import { DartDebugAdapterSupportsUrisFactory } from "./providers/debug_adapter_support_uris_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
-import { FixCodeActionProvider } from "./providers/fix_code_action_provider";
-import { LegacyDartWorkspaceSymbolProvider } from "./providers/legacy_dart_workspace_symbol_provider";
 import { RankingCodeActionProvider } from "./providers/ranking_code_action_provider";
-import { RefactorCodeActionProvider } from "./providers/refactor_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
-import { SourceCodeActionProvider } from "./providers/source_code_action_provider";
 import { PubGlobal } from "./pub/global";
 import { ExtensionRecommentations } from "./recommendations/recommendations";
 import { DevToolsManager } from "./sdk/dev_tools/manager";
@@ -133,7 +108,6 @@ let flutterDaemon: IFlutterDaemon | undefined;
 let deviceManager: FlutterDeviceManager | undefined;
 const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
-let analysisRoots: string[] = [];
 let analytics: Analytics;
 
 let showTodos: boolean | string[] | undefined;
@@ -384,9 +358,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (lspClient)
 		context.subscriptions.push(new LspClosingLabelsDecorations(lspClient));
 
-	const completionItemProvider = isUsingLsp || !dasClient ? undefined : new DartCompletionItemProvider(logger, dasClient);
-	const referenceProvider = isUsingLsp || !dasClient || !dasAnalyzer ? undefined : new DartReferenceProvider(dasClient, dasAnalyzer.fileTracker);
-
 	const activeFileFilters: vs.DocumentFilter[] = [...DART_MODE];
 
 	// Analyze Angular2 templates, requires the angular_analyzer_plugin.
@@ -407,54 +378,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// This is registered with VS Code further down, so it's metadata can be collected from all
 	// registered providers.
 	const rankingCodeActionProvider = new RankingCodeActionProvider();
-
 	rankingCodeActionProvider.registerProvider(new AddDependencyCodeActionProvider(DART_MODE));
 
-	const triggerCharacters = ".(${'\"/\\".split("");
-	if (!isUsingLsp && dasClient) {
-		context.subscriptions.push(vs.languages.registerHoverProvider(activeFileFilters, new DartHoverProvider(logger, dasClient)));
-		const formattingEditProvider = new DartFormattingEditProvider(logger, dasClient, extContext);
-		context.subscriptions.push(formattingEditProvider);
-		formattingEditProvider.registerDocumentFormatter(activeFileFilters);
-		// Only for Dart.
-		formattingEditProvider.registerTypingFormatter(DART_MODE, "}", ";");
-	}
-	if (completionItemProvider)
-		context.subscriptions.push(vs.languages.registerCompletionItemProvider(activeFileFilters, completionItemProvider, ...triggerCharacters));
-	if (referenceProvider) {
-		context.subscriptions.push(vs.languages.registerDefinitionProvider(activeFileFilters, referenceProvider));
-		context.subscriptions.push(vs.languages.registerReferenceProvider(activeFileFilters, referenceProvider));
-	}
-	let renameProvider: DartRenameProvider | undefined;
-	if (!isUsingLsp && dasClient && dasAnalyzer) {
-		context.subscriptions.push(vs.languages.registerDocumentHighlightProvider(activeFileFilters, new DartDocumentHighlightProvider(dasAnalyzer.fileTracker)));
-		rankingCodeActionProvider.registerProvider(new AssistCodeActionProvider(logger, activeFileFilters, dasClient));
-		rankingCodeActionProvider.registerProvider(new FixCodeActionProvider(logger, activeFileFilters, dasClient));
-		rankingCodeActionProvider.registerProvider(new RefactorCodeActionProvider(activeFileFilters, dasClient));
-
-		renameProvider = new DartRenameProvider(dasClient);
-		context.subscriptions.push(vs.languages.registerRenameProvider(activeFileFilters, renameProvider));
-
-		// Dart only.
-		context.subscriptions.push(vs.languages.registerCodeActionsProvider(DART_MODE, new SourceCodeActionProvider(), SourceCodeActionProvider.metadata));
-		context.subscriptions.push(vs.languages.registerImplementationProvider(DART_MODE, new DartImplementationProvider(dasAnalyzer)));
-
-		if (config.showMainCodeLens) {
-			const codeLensProvider = new MainCodeLensProvider(logger, dasAnalyzer);
-			context.subscriptions.push(codeLensProvider);
-			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
-		}
-		if (config.showTestCodeLens) {
-			const codeLensProvider = new TestCodeLensProvider(logger, dasAnalyzer);
-			context.subscriptions.push(codeLensProvider);
-			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
-		}
-		if (config.showDartPadSampleCodeLens && sdks.flutter) {
-			const codeLensProvider = new FlutterDartPadSamplesCodeLensProvider(logger, dasAnalyzer, sdks as FlutterSdks);
-			context.subscriptions.push(codeLensProvider);
-			context.subscriptions.push(vs.languages.registerCodeLensProvider(DART_MODE, codeLensProvider));
-		}
-	}
 	if (isUsingLsp && lspClient && lspAnalyzer) {
 		if (config.showMainCodeLens) {
 			const codeLensProvider = new LspMainCodeLensProvider(logger, lspAnalyzer);
@@ -508,38 +433,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	context.subscriptions.push(new FileChangeWarnings());
 	context.subscriptions.push(new DiagnosticReport(logger, workspaceContext, rebuildLogHeaders));
-
-	// Set up diagnostics.
-	if (!isUsingLsp && dasClient) {
-		const diagnostics = vs.languages.createDiagnosticCollection("dart");
-		context.subscriptions.push(diagnostics);
-		const diagnosticsProvider = new DartDiagnosticProvider(dasClient, diagnostics);
-
-		// TODO: Currently calculating analysis roots requires the version to check if
-		// we need the package workaround. In future if we stop supporting server < 1.20.1 we
-		// can unwrap this call so that it'll start sooner.
-		const serverConnected = dasClient.registerForServerConnected((sc) => {
-			serverConnected.dispose();
-			if (vs.workspace.workspaceFolders)
-				recalculateDasAnalysisRoots();
-
-			// Set up a handler to warn the user if they open a Dart file and we
-			// never set up the analyzer
-			let hasWarnedAboutLooseDartFiles = false;
-			const handleOpenFile = (d: vs.TextDocument) => {
-				if (!hasWarnedAboutLooseDartFiles && d.languageId === "dart" && d.uri.scheme === "file" && analysisRoots.length === 0) {
-					hasWarnedAboutLooseDartFiles = true;
-					void vs.window.showWarningMessage("For full Dart language support, please open a folder containing your Dart files instead of individual loose files");
-				}
-			};
-			context.subscriptions.push(vs.workspace.onDidOpenTextDocument((d) => handleOpenFile(d)));
-			// Fire for editors already visible at the time this code runs.
-			vs.window.visibleTextEditors.forEach((e) => handleOpenFile(e.document));
-		});
-
-		// Hook editor changes to send updated contents to analyzer.
-		context.subscriptions.push(new FileChangeHandler(dasClient));
-	}
 
 	util.logTime("All other stuff before debugger..");
 
@@ -597,51 +490,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(vs.debug.registerDebugConfigurationProvider("dart", new DynamicDebugConfigProvider(logger, deviceManager), vs.DebugConfigurationProviderTriggerKind.Dynamic));
 	}
 
-	if (!isUsingLsp && dasClient && dasAnalyzer) {
-		if (config.previewFlutterUiGuides)
-			context.subscriptions.push(new FlutterUiGuideDecorationsDas(dasAnalyzer));
-
-		if (config.flutterGutterIcons)
-			context.subscriptions.push(new FlutterIconDecorationsDas(logger, dasAnalyzer));
-
-		// Setup that requires server version/capabilities.
-		const connectedSetup = dasClient.registerForServerConnected(async (sc) => {
-			connectedSetup.dispose();
-
-			context.subscriptions.push(new RefactorCommands(logger, context, dasClient));
-
-			if (dasClient.capabilities.supportsClosingLabels && config.closingLabels) {
-				context.subscriptions.push(new ClosingLabelsDecorations(dasClient));
-			}
-
-			if (dasClient.capabilities.supportsGetDeclerations) {
-				context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new DartWorkspaceSymbolProvider(logger, dasClient, dartCapabilities)));
-			} else {
-				context.subscriptions.push(vs.languages.registerWorkspaceSymbolProvider(new LegacyDartWorkspaceSymbolProvider(logger, dasClient)));
-			}
-
-			if (dasClient.capabilities.supportsCustomFolding && config.analysisServerFolding)
-				context.subscriptions.push(vs.languages.registerFoldingRangeProvider(activeFileFilters, new DartFoldingProvider(dasAnalyzer)));
-
-			if (dasClient.capabilities.supportsGetSignature)
-				context.subscriptions.push(vs.languages.registerSignatureHelpProvider(
-					DART_MODE,
-					new DartSignatureHelpProvider(dasClient),
-				));
-
-			const documentSymbolProvider = new DartDocumentSymbolProvider(logger, dasAnalyzer.fileTracker);
-			activeFileFilters.forEach((filter) => {
-				context.subscriptions.push(vs.languages.registerDocumentSymbolProvider(filter, documentSymbolProvider));
-			});
-
-			// Set up completions for unimported items.
-			if (dasClient.capabilities.supportsAvailableSuggestions && config.autoImportCompletions) {
-				await dasClient.completionSetSubscriptions({
-					subscriptions: ["AVAILABLE_SUGGESTION_SETS"],
-				});
-			}
-		});
-	} else if (isUsingLsp && lspClient && lspAnalyzer) {
+	if (isUsingLsp && lspClient && lspAnalyzer) {
 		if (config.previewFlutterUiGuides)
 			context.subscriptions.push(new FlutterUiGuideDecorationsLsp(lspAnalyzer));
 
@@ -812,8 +661,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		}
 
 		workspaceContext.events.onPackageMapChange.fire();
-		if (!isUsingLsp)
-			recalculateDasAnalysisRoots();
 		checkForPackages();
 	}));
 
@@ -832,7 +679,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		analyzer,
 		analyzerCapabilities: dasClient && dasClient.capabilities,
 		cancelAllAnalysisRequests: () => dasClient && dasClient.cancelAllRequests(),
-		completionItemProvider,
 		context: extContext,
 		currentAnalysis: () => analyzer.onCurrentAnalysisComplete,
 		daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
@@ -858,7 +704,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		nextAnalysis: () => analyzer.onNextAnalysisComplete,
 		packagesTreeProvider: dartPackagesProvider,
 		pubGlobal,
-		renameProvider,
 		safeToolSpawn,
 		testController: vsCodeTestController,
 		testCoordinator,
@@ -920,42 +765,6 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 	logger?.info(getLogHeader());
 }
 
-function recalculateDasAnalysisRoots() {
-	const workspaceFolders = getDartWorkspaceFolders();
-	analysisRoots = workspaceFolders.map((w) => fsPath(w.uri));
-
-	// Sometimes people open their home directories as the workspace root and
-	// have all sorts of performance issues because of PubCache and AppData folders
-	// so we will exclude them if the user has opened a parent folder (opening a
-	// child of these directly will still work).
-	const excludeFolders: string[] = [];
-	if (isWin) {
-		const addExcludeIfRequired = (folder: string | undefined) => {
-			if (!folder || !path.isAbsolute(folder))
-				return;
-			const containingRoot = analysisRoots.find((root: string) => isWithinPath(folder, root));
-			if (containingRoot) {
-				logger.info(`Excluding folder ${folder} from analysis roots as it is a child of analysis root ${containingRoot} and may cause performance issues.`);
-				excludeFolders.push(folder);
-			}
-		};
-
-		addExcludeIfRequired(process.env.PUB_CACHE);
-		addExcludeIfRequired(process.env.APPDATA);
-		addExcludeIfRequired(process.env.LOCALAPPDATA);
-	}
-
-	// For each workspace, handle excluded folders.
-	workspaceFolders.forEach((f) => {
-		for (const folder of util.getExcludedFolders(f))
-			excludeFolders.push(folder);
-	});
-
-	void (analyzer as DasAnalyzer).client.analysisSetAnalysisRoots({
-		excluded: excludeFolders,
-		included: analysisRoots,
-	});
-}
 
 function handleConfigurationChange(sdks: Sdks) {
 	// TODOs

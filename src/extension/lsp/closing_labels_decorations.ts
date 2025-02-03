@@ -5,7 +5,8 @@ import { disposeAll } from "../../shared/utils";
 import { DocumentCache } from "../../shared/utils/document_cache";
 import { findVisibleEditor } from "../../shared/vscode/editors";
 import { config } from "../config";
-import { validLastCharacters } from "../decorations/closing_labels_decorations";
+
+const validLastCharacters = [")", "]"];
 
 export class LspClosingLabelsDecorations implements vs.Disposable {
 	private subscriptions: vs.Disposable[] = [];
