@@ -10,11 +10,6 @@ export class LspEditCommands implements vs.Disposable {
 		this.commands.push(
 			vs.commands.registerCommand("dart.sortMembers", () => this.runCodeAction("source.sortMembers")),
 		);
-		// TODO: Enable this when https://github.com/dart-lang/sdk/issues/33521
-		// is resolved.
-		// this.commands.push(
-		// 	vs.commands.registerCommand("dart.completeStatement", this.completeStatement, this),
-		// );
 	}
 
 	private getActiveEditor() {
@@ -23,32 +18,6 @@ export class LspEditCommands implements vs.Disposable {
 
 	private async runCodeAction(action: string) {
 		return vs.commands.executeCommand("editor.action.codeAction", { kind: action, apply: "ifSingle" });
-	}
-
-	// TODO(dantup): Is this wired up?!
-	private async completeStatement(): Promise<void> {
-		const editor = this.getActiveEditor();
-		if (!editor || !editor.selection)
-			return;
-
-		const edit = await this.analyzer.completeStatement(
-			{
-				position: this.analyzer.client.code2ProtocolConverter.asPosition(editor.selection.start),
-				textDocument: this.analyzer.client.code2ProtocolConverter.asVersionedTextDocumentIdentifier(editor.document),
-			},
-		);
-
-		if (edit) {
-			if (await this.validDocumentVersionsStillMatch(edit)) {
-				const codeEdit = await this.analyzer.client.protocol2CodeConverter.asWorkspaceEdit(edit);
-
-				if (!await vs.workspace.applyEdit(codeEdit)) {
-					void vs.window.showErrorMessage("VS Code failed to apply edits");
-				}
-			} else {
-				void vs.window.showErrorMessage("Documents have been modified so edits could not be applied");
-			}
-		}
 	}
 
 	private async validDocumentVersionsStillMatch(edit: WorkspaceEdit): Promise<boolean> {

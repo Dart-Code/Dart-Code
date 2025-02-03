@@ -396,16 +396,6 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.completeStatement",
-				"title": "Complete Statement",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.showTypeHierarchy",
-				"title": "Show Type Hierarchy",
-				"category": "Dart"
-			},
-			{
 				"command": "dart.openObservatory",
 				"title": "Open Observatory (Deprecated, use DevTools)",
 				"category": "Dart"
@@ -763,12 +753,6 @@
 		],
 		"keybindings": [
 			{
-				"command": "dart.showTypeHierarchy",
-				"when": "editorLangId == dart && !dart-code:isLsp",
-				"key": "f4",
-				"mac": "f4"
-			},
-			{
 				"command": "dart.hotReload",
 				"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession",
 				"key": "ctrl+f5"
@@ -975,14 +959,6 @@
 				{
 					"command": "dart.sortMembers",
 					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
-				},
-				{
-					"command": "dart.completeStatement",
-					"when": "dart-code:anyProjectLoaded && editorLangId == dart && !dart-code:isLsp"
-				},
-				{
-					"command": "dart.showTypeHierarchy",
-					"when": "dart-code:anyProjectLoaded && editorLangId == dart && !dart-code:isLsp"
 				},
 				{
 					"command": "dart.openObservatory",

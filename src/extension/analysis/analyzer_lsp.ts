@@ -3,7 +3,7 @@ import * as stream from "stream";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
-import { AnalyzerStatusNotification, AugmentationRequest, AugmentedRequest, CompleteStatementRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { AnalyzerStatusNotification, AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
@@ -452,13 +452,6 @@ export class LspAnalyzer extends Analyzer {
 	public async getAugmentation(params: ls.TextDocumentPositionParams): Promise<ls.Location | null> {
 		return this.client.sendRequest(
 			AugmentationRequest.type,
-			params,
-		);
-	}
-
-	public async completeStatement(params: ls.TextDocumentPositionParams): Promise<ls.WorkspaceEdit | null> {
-		return this.client.sendRequest(
-			CompleteStatementRequest.type,
 			params,
 		);
 	}
