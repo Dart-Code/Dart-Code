@@ -217,36 +217,6 @@
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_LSP": "false"
-			},
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Dart LSP Tests",
-			"type": "extensionHost",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test/test_projects/hello_world",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/src/test/dart",
-				"--profile-temp"
-			],
-			"env": {
-				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_LSP": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -445,36 +415,6 @@
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_LSP": "false"
-			},
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Flutter LSP Tests",
-			"type": "extensionHost",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test/test_projects/flutter_hello_world",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/src/test/flutter",
-				"--profile-temp"
-			],
-			"env": {
-				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_LSP": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -977,16 +917,6 @@
 			"stopAll": true
 		},
 		{
-			"name": "Dart LSP Tests + DAs",
-			"configurations": [
-				"Dart LSP Tests"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
 			"name": "Dart Debug Tests + DAs",
 			"configurations": [
 				"Dart Debug Tests",
@@ -1054,16 +984,6 @@
 			"name": "Flutter Tests + DAs",
 			"configurations": [
 				"Flutter Tests"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter LSP Tests + DAs",
-			"configurations": [
-				"Flutter LSP Tests"
 			],
 			"presentation": {
 				"order": 3

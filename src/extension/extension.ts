@@ -3,7 +3,6 @@ import * as vs from "vscode";
 import { Analyzer } from "../shared/analyzer";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { vsCodeVersion } from "../shared/capabilities/vscode";
 import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
@@ -253,22 +252,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	const isVirtualWorkspace = vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.every((f) => f.uri.scheme !== "file");
 	function shouldUseLsp(): boolean {
-		// Never use LSP if the LSP client would reject the current VS Code version or the Dart SDK doesn't support it.
-		if (!vsCodeVersion.supportsLatestLspClient || !dartCapabilities.canDefaultLsp)
-			return false;
-
-		// If DART_CODE_FORCE_LSP is set to true/false it always overrides.
-		if (process.env.DART_CODE_FORCE_LSP === "true")
-			return true;
-		if (process.env.DART_CODE_FORCE_LSP === "false")
-			return false;
-
-		// In virtual workspaces, we always use LSP because it will have non-file resources
-		// and we only handle them properly in LSP.
-		if (isVirtualWorkspace)
-			return true;
-
-		return !(config.useLegacyAnalyzerProtocol && dartCapabilities.supportsLegacyAnalyzerProtocol);
+		return false;
 	}
 	const isUsingLsp = shouldUseLsp();
 	writableConfig.useLegacyProtocol = !isUsingLsp;

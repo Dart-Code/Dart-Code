@@ -199,7 +199,6 @@ function getTestsConfig(test: TestConfig) {
 		env: {
 			DART_CODE_USE_DEBUG_SERVERS: "true",
 			DART_CODE_IS_TEST_RUN: "true",
-			DART_CODE_FORCE_LSP: test.lsp === undefined ? undefined : `${test.lsp}`,
 			DART_CODE_FORCE_SDK_DAP: test.sdkDaps === undefined ? undefined : `${test.sdkDaps}`,
 			FLUTTER_TEST_DEVICE_ID: test.chrome ? "chrome" : undefined,
 		},
