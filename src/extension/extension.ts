@@ -252,7 +252,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	const isVirtualWorkspace = vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.every((f) => f.uri.scheme !== "file");
 	function shouldUseLsp(): boolean {
-		return false;
+		return true;
 	}
 	const isUsingLsp = shouldUseLsp();
 	writableConfig.useLegacyProtocol = !isUsingLsp;
