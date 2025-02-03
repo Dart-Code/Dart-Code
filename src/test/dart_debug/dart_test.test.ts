@@ -2,13 +2,10 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
-import { Outline as lspOutline } from "../../shared/analysis/lsp/custom_protocol";
-import { Outline as asOutline } from "../../shared/analysis_server_types";
 import { DebuggerType } from "../../shared/enums";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
-import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
 import { LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
 import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
@@ -497,8 +494,8 @@ describe("dart test debugger", () => {
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
-				visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
-				for (const test of (visitor.tests as TestOutlineInfo[]).filter((t) => !t.isGroup)) {
+				visitor.visit(outline);
+				for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 					// Run the test.
 					const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestTreeFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
 					await runWithoutDebugging(
@@ -527,11 +524,11 @@ describe("dart test debugger", () => {
 				await runWithoutDebugging(helloWorldTestDupeNameFile);
 				let numRuns = 1;
 				await checkResults(`After initial run`);
-				const visitor = new TestOutlineVisitor(logger);
+				const visitor = new LspTestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
-				visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
+				visitor.visit(outline);
 				const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
 				const editor = await vs.window.showTextDocument(doc);
 				for (const modifyFile of [false, true]) {

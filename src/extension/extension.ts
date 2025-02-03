@@ -39,18 +39,15 @@ import { getOutputChannel } from "./commands/channels";
 import { DartCommands } from "./commands/dart";
 import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
-import { DasEditCommands } from "./commands/edit_das";
 import { LspEditCommands } from "./commands/edit_lsp";
 import { FlutterCommands } from "./commands/flutter";
 import { FlutterOutlineCommands } from "./commands/flutter_outline";
-import { GoToSuperCommand } from "./commands/go_to_super";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
 import { SdkCommands } from "./commands/sdk";
 import { SettingsCommands } from "./commands/settings";
 import { TestCommands, isInImplementationFileThatCanHaveTest, isInTestFileThatHasImplementation } from "./commands/test";
-import { TypeHierarchyCommand } from "./commands/type_hierarchy";
 import { config } from "./config";
 import { DartTaskProvider } from "./dart/dart_task_provider";
 import { HotReloadOnSaveHandler } from "./dart/hot_reload_save_handler";
@@ -524,11 +521,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands());
-	if (dasClient && dasAnalyzer) {
-		context.subscriptions.push(new DasEditCommands(logger, context, dasClient));
-		context.subscriptions.push(new TypeHierarchyCommand(logger, dasClient));
-		context.subscriptions.push(new GoToSuperCommand(dasAnalyzer));
-	} else if (lspClient && lspAnalyzer) {
+	if (lspClient && lspAnalyzer) {
 		context.subscriptions.push(new LspEditCommands(lspAnalyzer));
 	}
 

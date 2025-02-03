@@ -1,6 +1,4 @@
 import { strict as assert } from "assert";
-import { Outline as lspOutline } from "../../../shared/analysis/lsp/custom_protocol";
-import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { fsPath } from "../../../shared/utils/fs";
 import { LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import { activate, extApi, flutterTestOtherFile, getPackages, logger, waitForResult } from "../../helpers";
@@ -13,10 +11,10 @@ describe("test_outline_visitor", () => {
 	});
 
 	it("reads the correct groups and tests", () => {
-		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile);
+		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile)!;
 
 		const visitor = new LspTestOutlineVisitor(logger, fsPath(flutterTestOtherFile));
-		visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
+		visitor.visit(outline);
 
 		assert.equal(visitor.tests.length, 2);
 		assert.equal(visitor.tests[0].isGroup, true);

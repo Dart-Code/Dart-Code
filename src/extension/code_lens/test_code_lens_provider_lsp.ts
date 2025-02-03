@@ -2,7 +2,7 @@ import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, Tex
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { LspTestOutlineInfo, LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { LspTestOutlineVisitor, TestOutlineInfo } from "../../shared/utils/outline_lsp";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
@@ -58,7 +58,7 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		);
 	}
 
-	private createCodeLens(document: TextDocument, test: LspTestOutlineInfo, name: string, debug: boolean, template?: { name: string }): CodeLens {
+	private createCodeLens(document: TextDocument, test: TestOutlineInfo, name: string, debug: boolean, template?: { name: string }): CodeLens {
 		return new CodeLens(
 			lspToRange(test.range),
 			{

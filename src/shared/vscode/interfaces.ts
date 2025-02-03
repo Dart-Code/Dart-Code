@@ -1,6 +1,6 @@
 import { CancellationToken, CompletionItem, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, TestController, TestItem, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
-import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
+import { AvailableSuggestion } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
@@ -59,8 +59,8 @@ export interface InternalExtensionApi {
 		openInBrowser(url: string): Promise<boolean>;
 	};
 	fileTracker: {
-		getOutlineFor(uri: Uri): Outline | lsp.Outline | undefined;
-		getFlutterOutlineFor?: (uri: Uri) => FlutterOutline | lsp.FlutterOutline | undefined;
+		getOutlineFor(uri: Uri): lsp.Outline | undefined;
+		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
 		getLastPriorityFiles?: () => string[];
 		getLastSubscribedFiles?: () => string[];
 	};

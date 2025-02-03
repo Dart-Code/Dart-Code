@@ -140,8 +140,8 @@ export class LspTestOutlineVisitor extends LspOutlineVisitor {
 		super(logger);
 	}
 
-	public readonly tests: LspTestOutlineInfo[] = [];
-	public readonly testsByLine: { [key: number]: LspTestOutlineInfo[] } = {};
+	public readonly tests: TestOutlineInfo[] = [];
+	public readonly testsByLine: { [key: number]: TestOutlineInfo[] } = {};
 
 	private readonly names: string[] = [];
 
@@ -189,7 +189,7 @@ export class LspTestOutlineVisitor extends LspOutlineVisitor {
 	}
 }
 
-export interface LspTestOutlineInfo {
+export interface TestOutlineInfo {
 	fullName: string;
 	file: string;
 	isGroup: boolean;
