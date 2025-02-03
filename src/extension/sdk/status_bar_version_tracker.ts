@@ -9,7 +9,7 @@ import { config } from "../config";
 export class StatusBarVersionTracker implements vs.Disposable {
 	private disposables: vs.Disposable[] = [];
 
-	constructor(workspaceContext: WorkspaceContext, isLsp: boolean) {
+	constructor(workspaceContext: WorkspaceContext) {
 		const isFlutter = workspaceContext.hasAnyFlutterProjects;
 		const dartIsFromFlutter = workspaceContext.sdks.dartSdkIsFromFlutter;
 

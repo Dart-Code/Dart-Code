@@ -1,5 +1,4 @@
 // General.
-export const IS_LSP_CONTEXT = "dart-code:isLsp";
 export const DART_IS_CAPTURING_LOGS_CONTEXT = "dart-code:isCapturingLogs";
 export const IS_RUNNING_LOCALLY_CONTEXT = "dart-code:isRunningLocally";
 

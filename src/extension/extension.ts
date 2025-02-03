@@ -4,7 +4,7 @@ import { Analyzer } from "../shared/analyzer";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, isWin, platformDisplayName } from "../shared/constants";
-import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_LSP_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
+import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -252,14 +252,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	const isVirtualWorkspace = vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.every((f) => f.uri.scheme !== "file");
 	const isUsingLsp = true;
-	void vs.commands.executeCommand("setContext", IS_LSP_CONTEXT, isUsingLsp);
 
 	// Build log headers now we know analyzer type.
 	rebuildLogHeaders();
 
 	// Show the SDK version in the status bar.
 	if (sdks.dartVersion)
-		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext, isUsingLsp));
+		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
 
 	if (isVirtualWorkspace && !dartCapabilities.supportsNonFileSchemeWorkspaces) {
 		void vs.window.showWarningMessage("Please upgrade to the latest Dart/Flutter SDK to prevent errors in workspaces with virtual folders");
@@ -494,8 +493,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.tasks.registerTaskProvider(FlutterTaskProvider.type, new FlutterTaskProvider(logger, context, sdks, flutterCapabilities)));
 
 	// Snippets are language-specific
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(isUsingLsp, dartCapabilities, "snippets/dart.json", () => true)));
-	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(isUsingLsp, dartCapabilities, "snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri))));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(dartCapabilities, "snippets/dart.json", () => true)));
+	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(dartCapabilities, "snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri))));
 
 	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_LANGUAGE, new DartLanguageConfiguration()));
 
@@ -855,7 +854,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		getToolEnv,
 		initialAnalysis: analyzer.onInitialAnalysis,
 		interactiveRefactors: lspAnalyzer?.refactors,
-		isLsp: isUsingLsp,
 		logger,
 		nextAnalysis: () => analyzer.onNextAnalysisComplete,
 		packagesTreeProvider: dartPackagesProvider,
