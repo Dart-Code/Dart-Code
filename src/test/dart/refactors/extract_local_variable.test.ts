@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureTestContent, extApi, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, rangeOf, setTestContent } from "../../helpers";
 
 describe("refactor", () => {
 
@@ -22,14 +22,10 @@ String name() {
 
 		await (vs.commands.executeCommand(extractLocalAction.command!.command, ...extractLocalAction.command!.arguments || [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 
-		// Incorrect indenting for non-LSP is due to https://github.com/Microsoft/vscode/issues/63129
-		// When that's fixed, this variable can be removed.
-		const extraIndent = extApi.isLsp ? "" : "  ";
-
 		await ensureTestContent(`
 String name() {
   var s = "Danny";
-  ${extraIndent}return s;
+  return s;
 }
 		`);
 	});

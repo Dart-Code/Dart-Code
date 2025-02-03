@@ -8,10 +8,6 @@ describe("assist_code_action_provider", () => {
 	beforeEach("activate", () => activate());
 
 	it("sets selection correctly for code actions with snippets", async function () {
-		// Doesn't work for non-LSP due to https://github.com/microsoft/vscode/issues/63129.
-		if (!extApi.isLsp)
-			this.skip();
-
 		if (!extApi.dartCapabilities.supportsSnippetTextEdits)
 			this.skip();
 

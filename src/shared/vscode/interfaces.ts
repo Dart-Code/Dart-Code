@@ -44,7 +44,6 @@ export interface InternalExtensionApi {
 	interactiveRefactors: InteractiveRefactors | undefined;
 	isInTestFileThatHasImplementation: boolean;
 	isInImplementationFileThatCanHaveTest: boolean;
-	isLsp: boolean;
 	dartCapabilities: DartCapabilities;
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;

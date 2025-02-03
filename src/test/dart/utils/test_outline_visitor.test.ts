@@ -2,7 +2,6 @@ import { strict as assert } from "assert";
 import { Outline as lspOutline } from "../../../shared/analysis/lsp/custom_protocol";
 import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { fsPath } from "../../../shared/utils/fs";
-import { TestOutlineVisitor } from "../../../shared/utils/outline_das";
 import { LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
 import { activate, extApi, getPackages, helloWorldTestMainFile, logger, waitForResult } from "../../helpers";
 
@@ -19,7 +18,7 @@ describe("test_outline_visitor", () => {
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestMainFile}`);
 
-		const visitor = extApi.isLsp ? new LspTestOutlineVisitor(logger, fsPath(helloWorldTestMainFile)) : new TestOutlineVisitor(logger);
+		const visitor = new LspTestOutlineVisitor(logger, fsPath(helloWorldTestMainFile));
 		visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
 
 		assert.equal(visitor.tests.length, 11);

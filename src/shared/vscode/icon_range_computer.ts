@@ -7,6 +7,7 @@ import * as lsp from "../analysis/lsp/custom_protocol";
 import { lspToRange, toRange } from "./utils";
 
 export class IconRangeComputer {
+	// isLsp: Remove me
 	constructor(private readonly logger: Logger) { }
 
 	public compute(document: vs.TextDocument, outline: das.FlutterOutline): { [key: string]: vs.Range[] } {

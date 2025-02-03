@@ -4,11 +4,7 @@ import { activate, checkTreeNodeResults, delay, extApi, getExpectedResults, hell
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
 
-	it("discovers test when opening a file", async function () {
-		// Discovery is only supported for LSP.
-		if (!extApi.isLsp)
-			this.skip();
-
+	it("discovers test when opening a file", async () => {
 		// Ensure no results before we start.
 		const initialResults = makeTestTextTree(helloWorldTestDiscoveryFile).join("\n");
 		assert.equal(initialResults, "");
@@ -27,11 +23,7 @@ describe("dart tests", () => {
 		checkTreeNodeResults(actualResults, expectedResults);
 	});
 
-	it("handles renaming of discovered tests", async function () {
-		// Discovery is only supported for LSP.
-		if (!extApi.isLsp)
-			this.skip();
-
+	it("handles renaming of discovered tests", async () => {
 		await openFile(helloWorldRenameTestFile);
 		await setTestContent(`
 import "package:test/test.dart";
@@ -62,10 +54,7 @@ test/rename_test.dart [0/1 passed] Unknown
 		`);
 	});
 
-	it("discovers a large number of tests in a reasonable time", async function () {
-		if (!extApi.isLsp)
-			this.skip();
-
+	it("discovers a large number of tests in a reasonable time", async () => {
 		// Ensure no results before we start.
 		const initialResults = makeTestTextTree(helloWorldTestDiscoveryLargeFile).join("\n");
 		assert.equal(initialResults, "");
@@ -87,10 +76,7 @@ test/rename_test.dart [0/1 passed] Unknown
 		assert.ok(timeTakenMs < 5000, `Took ${timeTakenMs}ms to discover tests`);
 	});
 
-	it("does not discover tests in folders excluded by settings", async function () {
-		if (!extApi.isLsp)
-			this.skip();
-
+	it("does not discover tests in folders excluded by settings", async () => {
 		await extApi.testController?.discoverer?.ensureSuitesDiscovered();
 		const results = makeTestTextTree();
 		// Ensure results are valid.
@@ -99,10 +85,7 @@ test/rename_test.dart [0/1 passed] Unknown
 		assert.equal(!!results.find((suite) => suite.includes("excluded_by_setting")), false, "excluded_by_setting was in the test list");
 	});
 
-	it("does not discover tests in folders excluded by analysis_options", async function () {
-		if (!extApi.isLsp)
-			this.skip();
-
+	it("does not discover tests in folders excluded by analysis_options", async () => {
 		await extApi.testController?.discoverer?.ensureSuitesDiscovered();
 		const results = makeTestTextTree();
 		// Ensure results are valid.

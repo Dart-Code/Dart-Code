@@ -786,10 +786,7 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 			`${symbol.location.uri} should equal ${uriOrMatch})`,
 		);
 	assert.ok(symbol.location);
-	if (extApi.isLsp)
-		assert.ok(symbol.location.range);
-	else // For non-LSP, we use resolve. This can be dropped when we're full LSP.
-		assert.ok(!symbol.location.range);
+	assert.ok(symbol.location.range);
 }
 
 export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>, name: string, kind: vs.SymbolKind, parentName?: string): void {

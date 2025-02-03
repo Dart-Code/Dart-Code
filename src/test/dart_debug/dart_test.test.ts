@@ -493,7 +493,7 @@ describe("dart test debugger", () => {
 				await runWithoutDebugging(helloWorldTestTreeFile);
 				let numRuns = 1;
 				await checkResults(`After initial run`);
-				const visitor = extApi.isLsp ? new LspTestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile)) : new TestOutlineVisitor(logger);
+				const visitor = new LspTestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);

@@ -136,6 +136,7 @@ export abstract class OutlineVisitor {
 }
 
 export class TestOutlineVisitor extends OutlineVisitor {
+	// isLsp: remove me
 	public readonly tests: DasTestOutlineInfo[] = [];
 	private readonly names: string[] = [];
 	protected visitUnitTestTest(outline: as.Outline) {

@@ -7,7 +7,7 @@ describe("move top level to file refactor", () => {
 
 	beforeEach("activate", () => activate());
 	beforeEach("check capabilities", function () {
-		if (!extApi.isLsp || !extApi.dartCapabilities.supportsMoveTopLevelToFile)
+		if (!extApi.dartCapabilities.supportsMoveTopLevelToFile)
 			this.skip();
 	});
 

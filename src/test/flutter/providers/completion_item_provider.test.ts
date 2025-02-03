@@ -8,14 +8,7 @@ describe("completion_item_provider", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activate(undefined));
 
-	it("includes expected completions", async function () {
-		if (!extApi.isLsp) {
-			// This test fails for legacy because we get Text() from 'dart:html' but we can't
-			// easily tell it's that from the test (because we don't have access to the internal
-			// fields). It's complicated to fix and legacy protocol is going away, so just skip.
-			this.skip();
-		}
-
+	it("includes expected completions", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		await extApi.currentAnalysis();
 		const completions = await getCompletionsAt("return T^ext");
@@ -25,11 +18,6 @@ describe("completion_item_provider", () => {
 	});
 
 	describe("with not-imported completions", () => {
-		beforeEach("ensure supported", function () {
-			if (!extApi.isLsp)
-				this.skip();
-		});
-
 		it("includes overlapping unimported symbols from multiple files", async () => {
 			await setTestContent(`
 main() {

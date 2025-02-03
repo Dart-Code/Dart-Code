@@ -6,8 +6,8 @@ describe("assist_code_action_provider", () => {
 	beforeEach("activate", () => activate());
 
 	it("handles Snippets in assists with choices", async function () {
-		// LSP only, and requires an SDK that will use snippets in code actions.
-		if (!extApi.isLsp || !extApi.dartCapabilities.supportsSnippetTextEdits)
+		// Requires an SDK that will use snippets in code actions.
+		if (!extApi.dartCapabilities.supportsSnippetTextEdits)
 			this.skip();
 
 		await openFile(emptyFile);

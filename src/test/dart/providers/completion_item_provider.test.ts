@@ -6,9 +6,7 @@ import { acceptFirstSuggestion, activate, completionLabel, currentDoc, emptyFile
 describe("completion_item_provider", () => {
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
 
-	it("does not add parens on functions in show/hide", async function () {
-		if (!extApi.isLsp)
-			this.skip();
+	it("does not add parens on functions in show/hide", async () => {
 		const doc = currentDoc();
 		await setTestContent(doc.getText().replace(/\/\/ IMPORTS HERE/mg, "import 'dart:io' show ;"));
 
@@ -75,14 +73,7 @@ main() {
 		const completions = await getCompletionsAt(`foo(fo^`);
 
 		const comp = ensureCompletion(completions, vs.CompletionItemKind.Variable, "foo:", "foo:");
-		if (extApi.isLsp)
-			assert.equal(comp.insertText, "foo: ");
-		else if (typeof comp.insertText === "string")
-			throw new Error("Expected SnippetString, got string");
-		else if (comp.insertText!.value.includes("{"))
-			assert.equal(comp.insertText!.value, "foo: ${1:}");
-		else
-			assert.equal(comp.insertText!.value, "foo: $0");
+		assert.equal(comp.insertText, "foo: ");
 	});
 
 	it("includes classes and constructors from other files", async () => {
@@ -100,10 +91,7 @@ main() {
 		assert.equal(classComp.detail, undefined);
 
 		const constrComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessResult(…)", "ProcessResult");
-		if (extApi.isLsp)
-			assert.equal(constrComp.detail, "(int pid, int exitCode, dynamic stdout, dynamic stderr) → ProcessResult");
-		else
-			assert.equal(constrComp.detail, "(this.pid, this.exitCode, this.stdout, this.stderr) → ProcessResult");
+		assert.equal(constrComp.detail, "(int pid, int exitCode, dynamic stdout, dynamic stderr) → ProcessResult");
 	});
 
 	it("fully populates a completion", async () => {
@@ -112,19 +100,10 @@ main() {
 
 		const cl: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
 		assert.equal(cl.additionalTextEdits, undefined); // Tested in the unimported imports test.
-		if (extApi.isLsp)
-			assert.equal(cl.command!.command, "editor.action.triggerParameterHints");
-		else
-			assert.equal(cl.command, undefined);
+		assert.equal(cl.command!.command, "editor.action.triggerParameterHints");
 		assert.equal(cl.commitCharacters, undefined); // TODO: ??
 		assert.equal(cl.detail, "(int i) → int"); // No auto import message here
-		if (extApi.isLsp) {
-			assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${0:i})");
-		} else {
-			assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${1:i})");
-			// https://github.com/microsoft/language-server-protocol/issues/880
-			assert.equal(cl.keepWhitespace, true);
-		}
+		assert.equal((cl.insertText as vs.SnippetString).value, "methodWithArgsAndReturnValue(${0:i})");
 		assert.notEqual(cl.preselect, true);
 		ensureRanges(cl.range, "|ret|urn str", "|return| str");
 	});
@@ -157,7 +136,7 @@ class Student extends Person {
 
 		// Compensate for LSP messing with indent.
 		// https://github.com/microsoft/language-server-protocol/issues/880
-		const extraUnwantedIndent = extApi.isLsp && !extApi.dartCapabilities.hasLspInsertTextModeSupport ? "  " : "";
+		const extraUnwantedIndent = !extApi.dartCapabilities.hasLspInsertTextModeSupport ? "  " : "";
 
 		await ensureTestContentWithSelection(`
 abstract class Person {
@@ -173,11 +152,6 @@ ${extraUnwantedIndent}  String get fullName => |${expectedBody}|; //
 	});
 
 	describe("with not-imported completions", () => {
-		beforeEach("ensure supported", function () {
-			if (!extApi.isLsp)
-				this.skip();
-		});
-
 		it("includes unimported symbols", async () => {
 			await setTestContent(`
 main() {
@@ -204,9 +178,6 @@ main() {
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'");
 			assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult");
-			// https://github.com/microsoft/language-server-protocol/issues/880
-			if (!extApi.isLsp)
-				assert.equal(completion.keepWhitespace, true);
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Process|Res", "|ProcessRes|");
 		});
@@ -217,32 +188,21 @@ main() {
   ProcessRes
 }
 		`);
-			const completions = await getCompletionsAt("ProcessRe^s", { requireComplete: true, resolveCount: extApi.isLsp ? 5000 : 50000 }); // non-LSP doesn't filter so we need to resolve more :(
+			const completions = await getCompletionsAt("ProcessRe^s", { requireComplete: true, resolveCount: 5000 }); // non-LSP doesn't filter so we need to resolve more :(
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessResult(…)", "ProcessResult");
 
 			assert.ok(completion.additionalTextEdits!.length);
-			if (extApi.isLsp)
-				assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
-			else
-				assert.equal(completion.command, undefined);
+			assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			assert.equal(completion.detail, "Auto import from 'dart:io'\n\n(int pid, int exitCode, dynamic stdout, dynamic stderr) → ProcessResult");
 			// TODO: Restore when a fix for https://github.com/Dart-Code/Dart-Code/issues/4361 is available.
-			// if (extApi.isLsp) {
 			// 	// This text changed, so handle both.
 			// 	const doc = (completion.documentation as vs.MarkdownString).value;
 			// 	if (doc.startsWith("[ProcessResult]"))
 			// 		assert.equal(doc, "[ProcessInfo] provides methods for retrieving information about the\ncurrent process.");
 			// 	else
 			// 		assert.equal(doc, "Methods for retrieving information about the current process.");
-			// }
-			if (extApi.isLsp)
-				assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult(${1:pid}, ${2:exitCode}, ${3:stdout}, ${4:stderr})");
-			else
-				assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult()");
-			// https://github.com/microsoft/language-server-protocol/issues/880
-			if (!extApi.isLsp)
-				assert.equal(completion.keepWhitespace, true);
+			assert.equal(snippetValue(completion.insertText) ?? completionLabel(completion), "ProcessResult(${1:pid}, ${2:exitCode}, ${3:stdout}, ${4:stderr})");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|ProcessRe|s", "|ProcessRes|");
 		});
@@ -258,10 +218,7 @@ main() {
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "HashMap(…)", "HashMap");
 
 			assert.ok(completion.additionalTextEdits!.length);
-			if (extApi.isLsp)
-				assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
-			else
-				assert.equal(completion.command, undefined);
+			assert.equal(completion.command!.command, "editor.action.triggerParameterHints");
 			assert.equal(completion.commitCharacters, undefined); // TODO: ??
 			// This signature changed in a newer Dev version of Dart (2020-05-13).
 			assert.ok(
@@ -270,18 +227,11 @@ main() {
 				// 2022-10-11
 				|| completion.detail === "Auto import from 'dart:collection'\n\n({bool Function(K, K)? equals, int Function(K)? hashCode, bool Function(dynamic)? isValidKey}) → HashMap<K, V>",
 			);
-			if (extApi.isLsp) {
-				const insertText = snippetValue(completion.insertText) ?? (completion.label as string);
-				if (insertText.includes("${"))
-					assert.equal(insertText, "HashMap(${0:})");
-				else
-					assert.equal(insertText, "HashMap($0)");
-			} else {
-				assert.equal((completion.insertText as vs.SnippetString).value, "HashMap($1)");
-			}
-			// https://github.com/microsoft/language-server-protocol/issues/880
-			if (!extApi.isLsp)
-				assert.equal(completion.keepWhitespace, true);
+			const insertText = snippetValue(completion.insertText) ?? (completion.label as string);
+			if (insertText.includes("${"))
+				assert.equal(insertText, "HashMap(${0:})");
+			else
+				assert.equal(insertText, "HashMap($0)");
 			assert.notEqual(completion.preselect, true);
 			ensureRanges(completion.range, "|Hash|Ma", "|HashMa|");
 		});
