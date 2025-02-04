@@ -8,7 +8,7 @@ import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 
-export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, isLsp: boolean) {
+export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities) {
 	const analyzerPath = config.analyzerPath || (
 		dartCapabilities.supportsLanguageServerCommand
 			? "language-server"
@@ -24,10 +24,10 @@ export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities
 		throw new Error(msg);
 	}
 
-	return buildAnalyzerArgs(analyzerPath, dartCapabilities, isLsp);
+	return buildAnalyzerArgs(analyzerPath, dartCapabilities);
 }
 
-function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilities, isLsp: boolean) {
+function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilities) {
 	let analyzerArgs = [];
 
 	// Optionally start the VM service for the analyzer.
@@ -51,13 +51,9 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 	analyzerArgs.push(analyzerPath);
 
 	if (analyzerPath === "language-server") {
-		if (!isLsp)
-			analyzerArgs.push("--protocol=analyzer");
-		else
-			analyzerArgs.push("--protocol=lsp");
+		analyzerArgs.push("--protocol=lsp");
 	} else {
-		if (isLsp)
-			analyzerArgs.push("--lsp");
+		analyzerArgs.push("--lsp");
 	}
 
 	// Optionally start the analyzer's diagnostic web server on the given port.

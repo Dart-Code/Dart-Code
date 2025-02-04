@@ -281,9 +281,6 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	logger.info(`Waiting for in-progress analysis`);
 	await extApi.currentAnalysis();
 
-	logger.info(`Cancelling any in-progress requests`);
-	extApi.cancelAllAnalysisRequests();
-
 	logger.info(`Ready to start test`);
 	const cpuLoad = os.loadavg();
 	const totalMem = os.totalmem();

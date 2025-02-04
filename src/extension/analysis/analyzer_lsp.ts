@@ -590,7 +590,7 @@ export class LspAnalyzer extends Analyzer {
 		// TODO: Replace with constructing an Analyzer that passes LSP flag (but still reads config
 		// from paths etc) and provide it's process.
 		const vmPath = path.join(sdks.dart, dartVMPath);
-		const args = getAnalyzerArgs(logger, sdks, dartCapabilities, true);
+		const args = getAnalyzerArgs(logger, sdks, dartCapabilities);
 
 		logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
 		const process = safeToolSpawn(undefined, vmPath, args);

@@ -32,12 +32,6 @@ export interface DebugCommandHandler {
 
 export interface InternalExtensionApi {
 	addDependencyCommand: any,
-	analyzerCapabilities?: {
-		supportsGetSignature: boolean;
-		supportsAvailableSuggestions: boolean;
-		supportsIncludedImports: boolean;
-	};
-	cancelAllAnalysisRequests: () => void;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
 	interactiveRefactors: InteractiveRefactors | undefined;

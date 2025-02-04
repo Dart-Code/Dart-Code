@@ -200,7 +200,6 @@ class Config {
 	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null)))); }
 	get updateDevTools(): boolean { return this.getConfig<boolean>("updateDevTools", true); }
 	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
-	get useLegacyAnalyzerProtocol(): boolean { return this.getConfig<boolean>("useLegacyAnalyzerProtocol", false); }
 	get useLegacyDebugAdapters(): undefined | boolean { return this.getConfig<null | boolean>("useLegacyDebugAdapters", null); }
 	get vmServiceLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null)))); }
 	get warnWhenEditingFilesInPubCache(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesInPubCache", true); }

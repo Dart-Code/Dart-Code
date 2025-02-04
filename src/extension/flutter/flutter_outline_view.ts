@@ -2,14 +2,13 @@ import * as path from "path";
 import * as vs from "vscode";
 import * as lsp from "vscode-languageclient";
 import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
-import * as as from "../../shared/analysis_server_types";
 import { nullLogger } from "../../shared/logging";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
 import { lspToPosition, lspToRange, toRange, treeLabel } from "../../shared/vscode/utils";
-import { DasAnalyzer, getSymbolKindForElementKind } from "../analysis/analyzer_das";
+import { getSymbolKindForElementKind } from "../analysis/analyzer_das";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { Analytics } from "../analytics";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
@@ -149,82 +148,6 @@ export abstract class FlutterOutlineProvider implements vs.TreeDataProvider<Flut
 	public dispose() {
 		this.activeEditor = undefined;
 		disposeAll(this.subscriptions);
-	}
-}
-
-export class DasFlutterOutlineProvider extends FlutterOutlineProvider {
-	protected flutterOutline: as.FlutterOutline | undefined;
-	constructor(analytics: Analytics, private readonly analyzer: DasAnalyzer) {
-		super(analytics);
-		this.analyzer.client.registerForServerConnected((c) => {
-			if (analyzer.client.capabilities.supportsFlutterOutline) {
-				this.analyzer.client.registerForFlutterOutline((n) => {
-					if (this.activeEditor && n.file === fsPath(this.activeEditor.document.uri)) {
-						this.flutterOutline = n.outline;
-						this.treeNodesByLine = [];
-						// Delay this so if we're getting lots of updates we don't flicker.
-						if (this.updateTimeout)
-							clearTimeout(this.updateTimeout);
-						if (!this.rootNode)
-							void this.update();
-						else
-							this.updateTimeout = setTimeout(() => this.update(), 200);
-					}
-				});
-
-				this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => this.setTrackingFile(e)));
-				if (vs.window.activeTextEditor) {
-					this.setTrackingFile(vs.window.activeTextEditor);
-				}
-			}
-		});
-	}
-
-	protected async loadExistingOutline() {
-		this.flutterOutline = this.activeEditor ? this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri) : undefined;
-		if (this.flutterOutline)
-			await this.update();
-		else {
-			this.rootNode = undefined;
-			this.refresh(); // Force update (to nothing) while requests are in-flight.
-		}
-		if (this.activeEditor)
-			this.analyzer.client.forceNotificationsFor(fsPath(this.activeEditor.document.uri));
-	}
-
-	private async update() {
-		// Build the tree from our outline
-		if (this.flutterOutline) {
-			this.rootNode = await this.createTreeNode(undefined, this.flutterOutline, this.activeEditor);
-			FlutterOutlineProvider.showTree();
-		} else {
-			this.rootNode = undefined;
-			FlutterOutlineProvider.hideTree();
-		}
-		this.refresh();
-	}
-
-	private async createTreeNode(parent: FlutterWidgetItem | undefined, element: as.FlutterOutline, editor: vs.TextEditor | undefined): Promise<FlutterWidgetItem | undefined> {
-		// Ensure we're still active editor before trying to use.
-		if (editor && editor.document && !editor.document.isClosed && this.activeEditor === editor) {
-			const node = new FlutterWidgetItem(parent, element, editor);
-
-			// Add this node to a lookup by line so we can quickly find it as the user moves around the doc.
-			const startLine = editor.document.positionAt(element.offset).line;
-			const endLine = editor.document.positionAt(element.offset + element.length).line;
-			for (let line = startLine; line <= endLine; line++) {
-				if (!this.treeNodesByLine[line]) {
-					this.treeNodesByLine[line] = [];
-				}
-				this.treeNodesByLine[line].push(node);
-			}
-			if (element.children)
-				node.children = (await Promise.all(element.children.map((c) => this.createTreeNode(node, c, editor)))).filter((n) => n).map((n) => n!);
-
-			return node;
-		}
-
-		return undefined;
 	}
 }
 
