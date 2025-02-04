@@ -1309,7 +1309,7 @@ export function isTestDoneSuccessNotification(e: vs.DebugSessionCustomEvent) {
 	return notification.type === "testDone" && notification.result !== "error" && !notification.hidden;
 }
 
-export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {
+export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffer = [], indent = 0, onlyFailures, onlyActive, sortByLabel }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean, sortByLabel?: boolean } = {}): string[] {
 	const collection = items instanceof vs.Uri
 		? extApi.testController.controller.items
 		: items ?? extApi.testController.controller.items;
@@ -1321,10 +1321,12 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 			testItems.push(item);
 	});
 
-	// Sort the items by their locations so we get stable results. Otherwise the order that items
+	// Sort the items by their locations by default so we get stable results. Otherwise the order that items
 	// are created would be used, which is usually source-order, but could be different if the user
 	// selectively runs tests starting at the end of the file.
-	sortBy(testItems, getSourceLine);
+	// Allow overriding to sort by name for tests that are modifying files and running subsets of tests
+	// and don't care about source order.
+	sortBy(testItems, sortByLabel ? (item) => item.label : getSourceLine);
 
 	for (const item of testItems) {
 		const lastResult = extApi.testController.getLatestData(item);
@@ -1356,7 +1358,7 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 		if (includeNode)
 			buffer.push(`${" ".repeat(indent * 4)}${nodeString}`);
 
-		makeTestTextTree(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive });
+		makeTestTextTree(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive, sortByLabel });
 	}
 
 	return buffer;

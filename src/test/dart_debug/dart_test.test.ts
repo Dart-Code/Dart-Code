@@ -514,7 +514,7 @@ describe("dart test debugger", () => {
 				async function checkResults(description: string): Promise<void> {
 					logger.info(description);
 					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree(helloWorldTestDupeNameFile).join("\n");
+					const actualResults = makeTestTextTree(helloWorldTestDupeNameFile, { sortByLabel: true }).join("\n");
 
 					assert.ok(expectedResults);
 					assert.ok(actualResults);
@@ -522,7 +522,6 @@ describe("dart test debugger", () => {
 				}
 
 				await runWithoutDebugging(helloWorldTestDupeNameFile);
-				let numRuns = 1;
 				await checkResults(`After initial run`);
 				const visitor = new LspTestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
@@ -540,14 +539,14 @@ describe("dart test debugger", () => {
 					for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
 						await runWithoutDebugging(execInfo.programUri, execInfo.args);
-						await checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
 					}
+					await checkResults(`After running tests`);
 					// Re-run each group.
 					for (const group of visitor.tests.filter((t) => t.isGroup)) {
 						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(group)], runByLine);
 						await runWithoutDebugging(execInfo.programUri, execInfo.args);
-						await checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
 					}
+					await checkResults(`After running groups`);
 				}
 			}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
