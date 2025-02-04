@@ -649,7 +649,8 @@ test/tree_test.dart [6/8 passed] Failed
 	}
 
 	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<any>>): Promise<void> {
-		await openFile(file);
+		const fileUriWithoutQuery = file.with({ query: "" });
+		await openFile(fileUriWithoutQuery);
 		const config = await startDebugger(dc, file, { args, noDebug: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
