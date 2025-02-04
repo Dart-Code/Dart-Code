@@ -147,7 +147,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 
 		const template = triggerData?.template;
-		const templateSupportsPlatform = template === undefined || !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === template ?? "app");
+		const templateSupportsPlatform = template === undefined || !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === (template ?? "app"));
 		const defaultPlatforms = config.flutterCreatePlatforms;
 
 		const args = ["create"];
@@ -189,7 +189,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		if (template) {
 			args.push("--template");
 			args.push(template);
-			if (triggerData?.empty && this.flutterCapabilities.supportsCreateEmpty)
+			if (triggerData?.empty)
 				args.push("--empty");
 			args.push("--overwrite");
 		}
@@ -225,13 +225,11 @@ export class FlutterCommands extends BaseSdkCommands {
 				template: { id: "app" },
 			},
 			{
-				condition: this.flutterCapabilities.supportsCreateEmpty,
 				detail: "A Flutter application without descriptive comments or tests.",
 				label: "Empty Application",
 				template: { id: "app", empty: true },
 			},
 			{
-				condition: this.flutterCapabilities.supportsCreateSkeleton,
 				detail: "A List View / Detail View Flutter application that follows community best practices.",
 				label: "Skeleton Application",
 				template: { id: "skeleton" },
@@ -255,7 +253,7 @@ export class FlutterCommands extends BaseSdkCommands {
 				label: "Plugin",
 				template: { id: "plugin" },
 			},
-		].filter((t) => t.condition !== false);
+		];
 
 		return templates;
 	}
@@ -371,7 +369,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		// Fetch the JSON for the available samples.
 		let snippets: FlutterSampleSnippet[];
 		try {
-			snippets = await getFlutterSnippets(this.logger, this.sdks, this.flutterCapabilities);
+			snippets = await getFlutterSnippets(this.logger, this.sdks);
 		} catch {
 			void vs.window.showErrorMessage("Unable to retrieve Flutter documentation snippets");
 			return;

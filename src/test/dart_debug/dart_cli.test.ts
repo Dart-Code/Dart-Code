@@ -23,10 +23,7 @@ describe("dart cli debugger", () => {
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;
-	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.Dart);
 		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
@@ -1378,7 +1375,7 @@ insp=<inspected variable>
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
 				path: dc.isUsingUris ? helloWorldBrokenFile.toString() : fsPath(helloWorldBrokenFile),
-				text: extApi.dartCapabilities.sdkDapProvidesExceptionText ? "_Exception (Exception: Oops)" : undefined,
+				text: "_Exception (Exception: Oops)",
 			}),
 			dc.launch(config),
 		);

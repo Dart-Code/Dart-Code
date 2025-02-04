@@ -1,19 +1,13 @@
 import * as fs from "fs";
-import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { analyzerSnapshotPath } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { config } from "../config";
 
 export function getAnalyzerArgs(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities) {
-	const analyzerPath = config.analyzerPath || (
-		dartCapabilities.supportsLanguageServerCommand
-			? "language-server"
-			: path.join(sdks.dart, analyzerSnapshotPath)
-	);
+	const analyzerPath = config.analyzerPath || "language-server";
 
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer
 	// might not exist on the local machine.
@@ -40,8 +34,7 @@ function buildAnalyzerArgs(analyzerPath: string, dartCapabilities: DartCapabilit
 		analyzerArgs.push(`-DSILENT_VM_SERVICE=true`);
 		analyzerArgs.push(`--disable-service-auth-codes`);
 		analyzerArgs.push(`--no-dds`);
-		if (dartCapabilities.supportsNoServeDevTools)
-			analyzerArgs.push("--no-serve-devtools");
+		analyzerArgs.push("--no-serve-devtools");
 	}
 
 	// Allow arbitrary VM args to be passed to the analysis server.

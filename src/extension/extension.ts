@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName } from "../shared/constants";
-import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, PUB_OUTDATED_SUPPORTED_CONTEXT, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
+import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -93,7 +93,6 @@ import { FlutterPostMessageSidebar } from "./views/devtools/legacy_post_message_
 import { PropertyEditor } from "./views/devtools/property_editor";
 import { FlutterDtdSidebar } from "./views/devtools/sidebar";
 import { DartPackagesProvider } from "./views/packages_view";
-import { DartPackagesProviderLegacy } from "./views/packages_view_legacy";
 
 let maybeAnalyzer: LspAnalyzer | undefined;
 let flutterDaemon: IFlutterDaemon | undefined;
@@ -204,7 +203,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 		// If we're going to pass the DevTools URL to Flutter, we need to eagerly start it
 		// so it's already running.
-		if (workspaceContext.hasAnyFlutterProjects && config.shareDevToolsWithFlutter && flutterCapabilities.supportsDevToolsServerAddress) {
+		if (workspaceContext.hasAnyFlutterProjects && config.shareDevToolsWithFlutter) {
 			writableConfig.startDevToolsServerEagerly = true;
 		}
 	}
@@ -225,11 +224,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (sdks.dartVersion)
 		context.subscriptions.push(new StatusBarVersionTracker(workspaceContext));
 
-	if (isVirtualWorkspace && !dartCapabilities.supportsNonFileSchemeWorkspaces) {
-		void vs.window.showWarningMessage("Please upgrade to the latest Dart/Flutter SDK to prevent errors in workspaces with virtual folders");
-	}
-
-	void vs.commands.executeCommand("setContext", PUB_OUTDATED_SUPPORTED_CONTEXT, dartCapabilities.supportsPubOutdated);
 	void vs.commands.executeCommand("setContext", GO_TO_IMPORTS_SUPPORTED_CONTEXT, dartCapabilities.supportsGoToImports);
 	void vs.commands.executeCommand("setContext", FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, dartCapabilities.supportsFlutterSidebar);
 
@@ -506,9 +500,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	// Register our view providers.
-	const dartPackagesProvider = dartCapabilities.supportsPubDepsJson
-		? new DartPackagesProvider(logger, workspaceContext, dartCapabilities)
-		: new DartPackagesProviderLegacy(logger, workspaceContext, dartCapabilities);
+	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext, dartCapabilities);
 	context.subscriptions.push(dartPackagesProvider);
 	const packagesTreeView = vs.window.createTreeView("dartDependencyTree", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(packagesTreeView);

@@ -125,7 +125,7 @@ export class PubDeps {
 	}
 
 	public async getJson(projectDirectory: string): Promise<PubDepsJson | undefined> {
-		if (!this.dartCapabilities.supportsPubDepsJson || this.context.config.disableAutomaticPub) {
+		if (this.context.config.disableAutomaticPub) {
 			return undefined;
 		}
 

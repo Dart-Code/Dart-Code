@@ -36,7 +36,6 @@ export const devToolsToolLegacyPath = "tool/bin/" + executableNames.devToolsTool
 export const dartDocPath = "bin/" + executableNames.dartdoc;
 export const pubPath = "bin/" + executableNames.pub;
 export const flutterPath = "bin/" + executableNames.flutter;
-export const pubSnapshotPath = "bin/snapshots/pub.dart.snapshot";
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/" + s);
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";

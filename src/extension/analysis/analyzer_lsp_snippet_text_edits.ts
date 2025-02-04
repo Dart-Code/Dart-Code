@@ -14,14 +14,13 @@ export class SnippetTextEditFeature implements IAmDisposable {
 	}
 
 	public get feature(): StaticFeature {
-		const supportsSnippetTextEdits = this.dartCapabilities.supportsSnippetTextEdits;
 		const snippetTextEditsEnabled = config.lspSnippetTextEdits;
 
 		return {
 			dispose() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
 				capabilities.experimental = capabilities.experimental ?? {};
-				if (supportsSnippetTextEdits && snippetTextEditsEnabled) {
+				if (snippetTextEditsEnabled) {
 					capabilities.experimental.snippetTextEdit = true;
 				}
 			},

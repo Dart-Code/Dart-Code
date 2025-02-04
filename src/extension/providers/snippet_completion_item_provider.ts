@@ -35,7 +35,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		if (!config.enableSnippets)
 			return;
 
-		if (config.enableServerSnippets && this.dartCapabilities.supportsServerSnippets)
+		if (config.enableServerSnippets)
 			return;
 
 		const line = document.lineAt(position.line).text.slice(0, position.character);

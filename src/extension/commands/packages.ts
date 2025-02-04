@@ -148,11 +148,6 @@ export class PackageCommands extends BaseSdkCommands {
 		if (!config.enablePub)
 			return;
 
-		if (!this.dartCapabilities.supportsPubUpgradeMajorVersions) {
-			void vs.window.showErrorMessage("Your current Dart SDK does not support 'pub upgrade --major-versions'");
-			return;
-		}
-
 		if (!this.context.hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation) {
 			const resp = await vs.window.showWarningMessage("Running 'pub get --major-versions' will update your pubspec.yaml to match the 'resolvable' column reported in 'pub outdated'", iUnderstandAction);
 			if (resp !== iUnderstandAction) {

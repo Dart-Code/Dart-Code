@@ -23,13 +23,9 @@ export class InteractiveRefactors implements IAmDisposable {
 			fillClientCapabilities(capabilities: ClientCapabilities) {
 				capabilities.experimental ??= {};
 				capabilities.experimental.dartCodeAction ??= {};
-				// Originally server expected a `bool` for `commandParameterSupport` so we can only send
-				// this object to new versions.
-				if (dartCapabilities.supportsCommandParameterSupportedKinds) {
-					capabilities.experimental.dartCodeAction.commandParameterSupport = {
-						supportedKinds: Object.values(SupportedParameterKind),
-					};
-				}
+				capabilities.experimental.dartCodeAction.commandParameterSupport = {
+					supportedKinds: Object.values(SupportedParameterKind),
+				};
 			},
 			getState(): FeatureState {
 				return { kind: "static" };

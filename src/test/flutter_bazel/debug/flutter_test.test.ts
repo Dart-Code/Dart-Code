@@ -3,7 +3,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, ensureHasRunRecently, extApi, flutterBazelRoot, flutterBazelTestMainFile, prepareHasRunFile } from "../../helpers";
+import { activate, ensureHasRunRecently, flutterBazelRoot, flutterBazelTestMainFile, prepareHasRunFile } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach(function () {
@@ -14,12 +14,7 @@ describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterBazelTestMainFile));
 
 	let dc: DartDebugClient;
-	beforeEach("create debug client", function () {
-		// When in Bazel, the Flutter version is set to MAX_VERSION which enables everything, so use
-		// the Dart SDK version instead as an approx indicator of whether the SDK supports the dap.
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.FlutterTest);
 	});
 

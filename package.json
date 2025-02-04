@@ -838,7 +838,7 @@
 				},
 				{
 					"command": "pub.outdated",
-					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "dart.addSdkToPath",
@@ -994,7 +994,7 @@
 				},
 				{
 					"command": "flutter.packages.outdated",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "flutter.clean",
@@ -1332,7 +1332,7 @@
 					"command": "pub.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.outdated"
 				},
 				{
@@ -1348,7 +1348,7 @@
 					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.outdated"
 				},
 				{
@@ -1384,7 +1384,7 @@
 					"command": "pub.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.outdated"
 				},
 				{
@@ -1400,7 +1400,7 @@
 					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.outdated"
 				},
 				{

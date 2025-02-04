@@ -1,7 +1,7 @@
 import * as child_process from "child_process";
 import * as path from "path";
 import { DartCapabilities } from "./capabilities/dart";
-import { dartVMPath, isWin, pubPath } from "./constants";
+import { dartVMPath, isWin } from "./constants";
 import { LogCategory } from "./enums";
 import { CancellationToken, Logger, SpawnedProcess } from "./interfaces";
 import { logProcess } from "./logging";
@@ -66,17 +66,11 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 type SpawnFunction = (workingDirectory: string | undefined, binPath: string, args: string[], env: { [key: string]: string | undefined } | undefined) => SpawnedProcess;
 
 export function getPubExecutionInfo(dartCapabilities: DartCapabilities, dartSdkPath: string, args: string[]): ExecutionInfo {
-	if (dartCapabilities.supportsDartPub) {
-		return {
-			args: ["pub", ...args],
-			executable: path.join(dartSdkPath, dartVMPath),
-		};
-	} else {
-		return {
-			args,
-			executable: path.join(dartSdkPath, pubPath),
-		};
-	}
+	// TODO(dantup): Inline this now there's no condition?
+	return {
+		args: ["pub", ...args],
+		executable: path.join(dartSdkPath, dartVMPath),
+	};
 }
 
 export interface ExecutionInfo {

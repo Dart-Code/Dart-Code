@@ -1,15 +1,11 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, emptyFile, ensureTestContentWithSelection, extApi, openFile, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, emptyFile, ensureTestContentWithSelection, openFile, rangeOf, setTestContent } from "../../helpers";
 
 describe("assist_code_action_provider", () => {
 	beforeEach("activate", () => activate());
 
 	it("handles Snippets in assists with choices", async function () {
-		// Requires an SDK that will use snippets in code actions.
-		if (!extApi.dartCapabilities.supportsSnippetTextEdits)
-			this.skip();
-
 		await openFile(emptyFile);
 		await setTestContent(`
 void f(String name) {

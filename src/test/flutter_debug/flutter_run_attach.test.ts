@@ -7,7 +7,7 @@ import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType } from "../../shared/enums";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, deferUntilLast, delay, extApi, fileSafeCurrentTestName, flutterHelloWorldMainFile, getAttachConfiguration, logger, watchPromise } from "../helpers";
+import { activate, deferUntilLast, delay, fileSafeCurrentTestName, flutterHelloWorldMainFile, getAttachConfiguration, logger, watchPromise } from "../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("Skip attach tests for web devices", function () {
@@ -22,10 +22,7 @@ describe("flutter run debugger (attach)", () => {
 	});
 
 	let dc: DartDebugClient;
-	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.Flutter);
 	});
 

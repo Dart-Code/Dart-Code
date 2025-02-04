@@ -1,16 +1,11 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, captureOutput, extApi, getPackages } from "../../helpers";
+import { activate, captureOutput, getPackages } from "../../helpers";
 
 describe("flutter packages outdated", () => {
 
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
-
-	beforeEach("skip if not supported", function () {
-		if (!extApi.dartCapabilities.supportsPubOutdated)
-			this.skip();
-	});
 
 	it("runs and prints output", async () => {
 		const buffer = captureOutput("flutter (flutter_hello_world)");

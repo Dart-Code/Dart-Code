@@ -50,7 +50,7 @@ export class ThreadManager {
 		if (!this.debugSession?.vmService)
 			return;
 
-		if (this.debugSession.vmServiceCapabilities.supportsSetIsolatePauseMode && this.debugSession.dartCapabilities.supportsSetIsolatePauseModeForWeb) {
+		if (this.debugSession.vmServiceCapabilities.supportsSetIsolatePauseMode) {
 			await this.debugSession.vmService.setIsolatePauseMode(isolateRef.id, { exceptionPauseMode: mode });
 		} else {
 			await this.debugSession.vmService.setExceptionPauseMode(isolateRef.id, mode);
@@ -111,7 +111,7 @@ export class ThreadManager {
 		// Set whether libraries should be debuggable based on user settings.
 		const response = await this.debugSession.vmService.getIsolate(isolateRef.id);
 		const isolate: VMIsolate = response.result as VMIsolate;
-		const validDebugLibraries = isolate.libraries?.filter((l) => this.debugSession.isValidToDebug(l.uri)) || [];
+		const validDebugLibraries = isolate.libraries || [];
 		if (validDebugLibraries.length === 0)
 			return;
 

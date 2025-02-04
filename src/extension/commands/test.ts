@@ -139,15 +139,13 @@ export class TestCommands implements vs.Disposable {
 		const testSelection = getTestSelectionForNodes(nodes);
 		const programPath = fsPath(URI.file(suiteData.path));
 		const isFlutter = isInsideFlutterProject(vs.Uri.file(suiteData.path));
-		const canRunSkippedTest = this.flutterCapabilities.supportsRunSkippedTests || !isFlutter;
-		const shouldRunSkippedTests = runSkippedTests && canRunSkippedTest;
 
 		return this.runTests({
 			debug,
 			isFlutter,
 			launchTemplate: undefined,
 			programPath,
-			shouldRunSkippedTests,
+			shouldRunSkippedTests: runSkippedTests,
 			suppressPrompts,
 			testRun,
 			testSelection,
@@ -165,11 +163,11 @@ export class TestCommands implements vs.Disposable {
 		}
 
 		let shouldRunTestsByLine = false;
-		// Determine wheher we can and should run tests by line number.
+		// Determine whether we can and should run tests by line number.
 		if (testSelection?.length && config.testInvocationMode === "line") {
 			isFlutter = isFlutter ?? isPathInsideFlutterProject(programPath);
 			if (isFlutter) {
-				shouldRunTestsByLine = this.flutterCapabilities.supportsRunTestsByLine;
+				shouldRunTestsByLine = true;
 			} else {
 				const projectFolderPath = locateBestProjectRoot(programPath);
 				if (projectFolderPath) {
@@ -236,15 +234,13 @@ export class TestCommands implements vs.Disposable {
 
 	private startTestFromOutline(noDebug: boolean, test: TestOutlineInfo, launchTemplate: any | undefined) {
 		const isFlutter = isInsideFlutterProject(vs.Uri.file(test.file));
-		const canRunSkippedTest = (this.flutterCapabilities.supportsRunSkippedTests || !isFlutter);
-		const shouldRunSkippedTests = canRunSkippedTest; // These are the same when running directly, since we always run skipped.
 
 		return this.runTests({
 			debug: !noDebug,
 			isFlutter,
 			launchTemplate,
 			programPath: test.file,
-			shouldRunSkippedTests,
+			shouldRunSkippedTests: true,
 			suppressPrompts: false,
 			testRun: undefined,
 			testSelection: [getTestSelectionForOutline(test)],

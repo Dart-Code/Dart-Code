@@ -32,18 +32,12 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const isDartTest = debuggerType === DebuggerType.DartTest;
 		const isFlutterTest = debuggerType === DebuggerType.FlutterTest;
 
-		let isSdkDapSupported = false;
-		let canDefaultToSdkDap = false;
 		let isPreReleaseSdk = false;
 		let isInSdkDapExperiment = false;
 		if (isDartOrDartTest) {
-			isSdkDapSupported = this.dartCapabilities.supportsSdkDap;
-			canDefaultToSdkDap = this.dartCapabilities.canDefaultSdkDaps;
 			isPreReleaseSdk = this.dartCapabilities.version.includes("-");
 			isInSdkDapExperiment = this.experiments.dartSdkDaps.applies;
 		} else if (isFlutterOrFlutterTest) {
-			isSdkDapSupported = this.flutterCapabilities.supportsSdkDap;
-			canDefaultToSdkDap = this.flutterCapabilities.canDefaultSdkDaps;
 			isPreReleaseSdk = this.flutterCapabilities.version.includes("-");
 			isInSdkDapExperiment = this.flutterCapabilities.useLegacyDapExperiment
 				? this.experiments.flutterSdkDapsLegacy.applies
@@ -61,25 +55,18 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			useSdkDap = forceSdkDap;
 			sdkDapReason = "DART_CODE_FORCE_SDK_DAP env variable";
 		} else {
-			if (!isSdkDapSupported) {
-				useSdkDap = false;
-				sdkDapReason = "not supported for SDK";
-			} else if (this.workspaceContext.config.forceFlutterWorkspace) {
+			if (this.workspaceContext.config.forceFlutterWorkspace) {
 				useSdkDap = true;
 				sdkDapReason = "workspaceContext.config.forceFlutterWorkspace";
 			} else if (config.useLegacyDebugAdapters !== undefined) {
 				useSdkDap = !config.useLegacyDebugAdapters;
 				sdkDapReason = "config.useLegacyDebugAdapters";
-			} else if (canDefaultToSdkDap && isPreReleaseSdk) {
+			} else if (isPreReleaseSdk) {
 				useSdkDap = true;
 				sdkDapReason = "canDefaultToSdkDap and using pre-release SDK";
 			} else {
 				useSdkDap = isInSdkDapExperiment;
 				sdkDapReason = "sdkDaps experiment";
-				if (useSdkDap && !canDefaultToSdkDap) {
-					useSdkDap = false;
-					sdkDapReason = "sdkDaps experiment overriden by canDefaultSdkDaps";
-				}
 			}
 		}
 		this.logger.info(`SDK DAP setting is ${useSdkDap}, set by ${sdkDapReason}`);
@@ -120,8 +107,6 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			const args = [config.customFlutterDapPath, "debug_adapter"];
 			if (isFlutterTest)
 				args.push("--test");
-			if (isFlutterTest && this.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
-				args.push("--no-dds");
 
 			this.logger.info(`Running custom Flutter debugger using Dart VM with args ${args.join("    ")} and options ${JSON.stringify(executableOptions)}`);
 			return new DebugAdapterExecutable(path.join(this.sdks.dart, dartVMPath), args, executableOptions);
@@ -133,8 +118,6 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			const args = ["debug_adapter"];
 			if (isDartTestOrFlutterTest)
 				args.push("--test");
-			if (isFlutterTest && this.flutterCapabilities.requiresDdsDisabledForSdkDapTestRuns)
-				args.push("--no-dds");
 
 			if (this.workspaceContext.config.flutterSdkHome)
 				executableOptions.cwd = this.workspaceContext.config.flutterSdkHome;

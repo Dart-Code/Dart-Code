@@ -20,10 +20,7 @@ describe("dart test debugger", () => {
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;
-	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.DartTest);
 		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});

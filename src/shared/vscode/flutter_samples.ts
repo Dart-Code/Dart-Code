@@ -8,12 +8,6 @@ import { getRandomInt, mkDirRecursive } from "../utils/fs";
 import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../utils/projects";
 
 export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string, flutterSdkOverride?: string): vs.Uri | undefined {
-	// Ensure we're on at least Flutter v1 so we know creating samples works.
-	if (!flutterCapabilities.supportsCreatingSamples) {
-		void vs.window.showErrorMessage("Opening sample projects requires Flutter v1.0 or later");
-		return;
-	}
-
 	// Create a temp folder for the sample.
 	const tempSamplePath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", sampleID, getRandomInt(0x1000, 0x10000).toString(16));
 

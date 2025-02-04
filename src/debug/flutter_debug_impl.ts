@@ -315,11 +315,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (!this.appHasStarted || !this.currentRunningAppId || !this.runDaemon)
 			return;
 
-		if (!this.flutterCapabilities.supportsRestartDebounce && this.isReloadInProgress) {
-			this.sendEvent(new OutputEvent("Reload already in progress, ignoring request", "stderr"));
-			return;
-		}
-
 		this.isReloadInProgress = true;
 		const restartType = hotRestart ? "hot-restart" : "hot-reload";
 

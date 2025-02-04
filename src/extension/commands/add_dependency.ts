@@ -214,12 +214,8 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	/// which case they must also provide package name etc).
 	private async promptForPackageInfo(): Promise<string | PickablePackage | undefined> {
 		const quickPick = vs.window.createQuickPick<PickablePackage>();
-		quickPick.placeholder = this.dartCapabilities.supportsPubAddMultiple
-			? "package name (can be comma separated), URL or path"
-			: "package name, URL or path";
-		quickPick.title = this.dartCapabilities.supportsPubAddMultiple
-			? "Enter package name(s), URL or local path"
-			: "Enter a package name, URL or local path";
+		quickPick.placeholder = "package name (can be comma separated), URL or path";
+		quickPick.title = "Enter package name(s), URL or local path";
 		quickPick.items = this.getPackageEntries();
 		quickPick.onDidChangeValue((userInput) => {
 			quickPick.items = this.getPackageEntries(userInput);
@@ -325,7 +321,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	private getPackageEntries(userInput?: string): PickablePackage[] {
 		let currentSearchString = userInput;
 		let completionItemPrefixes = "";
-		if (userInput && this.dartCapabilities.supportsPubAddMultiple) {
+		if (userInput) {
 			// If we support multiple, we need to split "foo, bar, ba" into "foo, bar, " and "ba". One is the search
 			// and the other is a prefix that needs adding to all package names in the completion list.
 			const startOfCurrentPackageName = Math.max(userInput.lastIndexOf(" "), userInput.lastIndexOf(","));

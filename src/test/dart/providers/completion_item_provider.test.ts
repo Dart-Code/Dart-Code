@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { acceptFirstSuggestion, activate, completionLabel, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
+import { acceptFirstSuggestion, activate, completionLabel, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
@@ -133,10 +133,6 @@ class Student extends Person {
 		await acceptFirstSuggestion();
 		const expectedBody = "throw UnimplementedError()";
 
-		// Compensate for LSP messing with indent.
-		// https://github.com/microsoft/language-server-protocol/issues/880
-		const extraUnwantedIndent = !extApi.dartCapabilities.hasLspInsertTextModeSupport ? "  " : "";
-
 		await ensureTestContentWithSelection(`
 abstract class Person {
   String get fullName;
@@ -144,8 +140,8 @@ abstract class Person {
 
 class Student extends Person {
   @override
-${extraUnwantedIndent}  // TODO: implement fullName
-${extraUnwantedIndent}  String get fullName => |${expectedBody}|; //
+  // TODO: implement fullName
+  String get fullName => |${expectedBody}|; //
 }
 	`);
 	});

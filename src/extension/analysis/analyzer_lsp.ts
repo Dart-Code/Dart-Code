@@ -318,17 +318,15 @@ export class LspAnalyzer extends Analyzer {
 						// so we don't ask for a name if it will fail for a reason like a closure with an argument.
 						const willPrompt = refactorKind === "EXTRACT_METHOD" || refactorKind === "EXTRACT_WIDGET";
 						if (willPrompt) {
-							if (this.dartCapabilities.supportsRefactorValidate) {
-								try {
-									const validateResult = await next(validateCommand, args);
-									if (validateResult.valid === false) {
-										void vs.window.showErrorMessage(validateResult.message as string);
-										return;
-									}
-								} catch (e) {
-									// If an error occurs, we'll just continue as if validation passed.
-									this.logger.error(e);
+							try {
+								const validateResult = await next(validateCommand, args);
+								if (validateResult.valid === false) {
+									void vs.window.showErrorMessage(validateResult.message as string);
+									return;
 								}
+							} catch (e) {
+								// If an error occurs, we'll just continue as if validation passed.
+								this.logger.error(e);
 							}
 
 							let name: string | undefined;
@@ -386,12 +384,7 @@ export class LspAnalyzer extends Analyzer {
 					if (Array.isArray(results)) {
 						for (const result of results) {
 							// Replace any instance of enableSnippets with the value of enableServerSnippets.
-							result.enableSnippets = config.enableServerSnippets && this.dartCapabilities.supportsServerSnippets;
-
-							// Flatten showTodos to a boolean if array not supported.
-							if (Array.isArray(result.showTodos) && !this.dartCapabilities.supportsShowTodoArray) {
-								result.showTodos = result.showTodos.length !== 0;
-							}
+							result.enableSnippets = config.enableServerSnippets;
 
 							// Set default documentation and maxCompletionItems based on whether we're running locally or not.
 							// When running locally, payload size is less of an issue so we include full docs and a large list.

@@ -1,7 +1,7 @@
 import { Event, OutputEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import * as path from "path";
-import { dartVMPath, debugTerminatingProgressId, pubSnapshotPath, vmServiceHttpLinkPattern } from "../shared/constants";
+import { dartVMPath, debugTerminatingProgressId, vmServiceHttpLinkPattern } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger, SpawnedProcess } from "../shared/interfaces";
@@ -52,17 +52,10 @@ export class DartTestDebugSession extends DartDebugSession {
 			allArgs.push("--pause_isolates_on_start=true");
 		}
 
-		if (this.dartCapabilities.supportsDartRunTest) {
-			// Use "dart --vm-args run test:test"
-			allArgs.push("run");
-			if (this.dartCapabilities.supportsNoServeDevTools)
-				allArgs.push("--no-serve-devtools");
-			allArgs.push("test:test");
-		} else {
-			// Use "dart --vm-args [pub-snapshot] run test"
-			allArgs.push(path.join(args.dartSdkPath, pubSnapshotPath));
-			allArgs = allArgs.concat(["run", "test"]);
-		}
+		// Use "dart run test:test"
+		allArgs.push("run");
+		allArgs.push("--no-serve-devtools");
+		allArgs.push("test:test");
 
 		allArgs.push("-r");
 		allArgs.push("json");

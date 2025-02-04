@@ -189,8 +189,8 @@ export class DartTaskProvider extends BaseTaskProvider {
 		context.subscriptions.push(vs.commands.registerCommand("dart.task.dartdoc", (uri: vs.Uri) => this.runTask(uri, this.dartDocCommand, this.dartDocArguments)));
 	}
 
-	private get dartDocCommand() { return this.dartCapabilities.supportsDartDoc ? "dart" : "dartdoc"; }
-	private get dartDocArguments() { return this.dartCapabilities.supportsDartDoc ? ["doc", "."] : ["."]; }
+	readonly dartDocCommand = "dart";
+	readonly dartDocArguments = ["doc", "."];
 
 	get type() { return DartTaskProvider.type; }
 
@@ -216,11 +216,9 @@ export class DartTaskProvider extends BaseTaskProvider {
 	}
 
 	protected createPubTask(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, args: string[]) {
-		if (this.dartCapabilities.supportsDartRunForPub && args && args.length && args[0] === "run")
+		if (args && args.length && args[0] === "run")
 			return this.createTask(workspaceFolder, projectFolder, "dart", [...args]);
-		else if (this.dartCapabilities.supportsDartPub)
-			return this.createTask(workspaceFolder, projectFolder, "dart", ["pub", ...args]);
 		else
-			return this.createTask(workspaceFolder, projectFolder, "pub", args);
+			return this.createTask(workspaceFolder, projectFolder, "dart", ["pub", ...args]);
 	}
 }
