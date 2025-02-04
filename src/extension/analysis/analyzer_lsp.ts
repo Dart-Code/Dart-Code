@@ -28,11 +28,11 @@ import { safeToolSpawn } from "../utils/processes";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { getAnalyzerArgs } from "./analyzer";
 import { SnippetTextEditFeature } from "./analyzer_lsp_snippet_text_edits";
-import { LspFileTracker } from "./file_tracker_lsp";
+import { FileTracker } from "./file_tracker";
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
-	public readonly fileTracker: LspFileTracker;
+	public readonly fileTracker: FileTracker;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
 	public readonly dartTextDocumentContentProvider: DartTextDocumentContentProviderFeature | undefined;
@@ -52,7 +52,7 @@ export class LspAnalyzer extends Analyzer {
 			this.client.registerFeature(this.dartTextDocumentContentProvider.feature);
 			this.disposables.push(this.dartTextDocumentContentProvider);
 		}
-		this.fileTracker = new LspFileTracker(logger, this.client, wsContext);
+		this.fileTracker = new FileTracker(logger, this.client, wsContext);
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.client.registerFeature(this.refactors.feature);

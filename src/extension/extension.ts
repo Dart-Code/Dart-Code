@@ -54,7 +54,7 @@ import { DiagnosticReport } from "./diagnostic_report";
 import { KnownExperiments, getExperiments } from "./experiments";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
-import { FlutterOutlineProvider, FlutterWidgetItem, LspFlutterOutlineProvider } from "./flutter/flutter_outline_view";
+import { FlutterOutlineProvider, FlutterWidgetItem } from "./flutter/flutter_outline_view";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
 import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizations_on_save_handler";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
@@ -95,7 +95,7 @@ import { FlutterDtdSidebar } from "./views/devtools/sidebar";
 import { DartPackagesProvider } from "./views/packages_view";
 import { DartPackagesProviderLegacy } from "./views/packages_view_legacy";
 
-let analyzer: LspAnalyzer;
+let maybeAnalyzer: LspAnalyzer | undefined;
 let flutterDaemon: IFlutterDaemon | undefined;
 let deviceManager: FlutterDeviceManager | undefined;
 const dartCapabilities = DartCapabilities.empty;
@@ -315,7 +315,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		await handleNewProjects(logger, extContext);
 
 	// Fire up the analyzer process.
-	analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon);
+	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon);
+	maybeAnalyzer = maybeAnalyzer;
 	context.subscriptions.push(analyzer);
 
 	void analyzer.onReady.then(() => {
@@ -391,7 +392,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(devTools);
 
 	// Debug commands.
-	const debugCommands = new DebugCommands(logger, analyzer?.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, devTools, loggingCommands);
+	const debugCommands = new DebugCommands(logger, analyzer.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, devTools, loggingCommands);
 	context.subscriptions.push(debugCommands);
 
 	// Task handlers.
@@ -410,7 +411,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	util.logTime("All other stuff before debugger..");
 
 	const testModel = new TestModel(config, util.isPathInsideFlutterProject);
-	const testCoordinator = new TestSessionCoordinator(logger, testModel, analyzer?.fileTracker);
+	const testCoordinator = new TestSessionCoordinator(logger, testModel, analyzer.fileTracker);
 	context.subscriptions.push(
 		testCoordinator,
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body)),
@@ -515,7 +516,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (config.flutterOutline) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
 
-		flutterOutlineTreeProvider = new LspFlutterOutlineProvider(analytics, analyzer);
+		flutterOutlineTreeProvider = new FlutterOutlineProvider(analyzer);
 		const tree = vs.window.createTreeView<FlutterWidgetItem>("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection(async (e) => {
 			if (!flutterOutlineTreeProvider!.isSelectingBecauseOfEditor)
@@ -638,7 +639,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		addDependencyCommand,
 		analyzer,
 		context: extContext,
-		currentAnalysis: () => analyzer.onCurrentAnalysisComplete,
+		currentAnalysis: () => analyzer?.onCurrentAnalysisComplete,
 		daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 		dartCapabilities,
 		debugAdapterDescriptorFactory,
@@ -657,9 +658,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		getOutputChannel,
 		getToolEnv,
 		initialAnalysis: analyzer.onInitialAnalysis,
-		interactiveRefactors: analyzer?.refactors,
+		interactiveRefactors: analyzer.refactors,
 		logger,
-		nextAnalysis: () => analyzer.onNextAnalysisComplete,
+		nextAnalysis: () => analyzer?.onNextAnalysisComplete,
 		packagesTreeProvider: dartPackagesProvider,
 		pubGlobal,
 		safeToolSpawn,
@@ -779,7 +780,7 @@ export async function deactivate(isRestart = false): Promise<void> {
 	loggers.length = 0;
 	await Promise.allSettled([
 		tryCleanup(() => setCommandVisiblity(false)),
-		tryCleanup(() => analyzer?.dispose()),
+		tryCleanup(() => maybeAnalyzer?.dispose()),
 		tryCleanup(() => flutterDaemon?.shutdown()),
 		tryCleanup(() => vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, false)),
 		...loggersToDispose.map((l) => tryCleanup(() => l.dispose())),

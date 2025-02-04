@@ -10,7 +10,7 @@ import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../
 import { OutlineVisitor } from "../../shared/utils/outline";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions } from "../../shared/vscode/utils";
-import { LspFileTracker } from "../analysis/file_tracker_lsp";
+import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
 import { getExcludedFolders, isTestFile } from "../utils";
 
@@ -24,7 +24,7 @@ export class TestDiscoverer implements IAmDisposable {
 
 	public testDiscoveryPerformed: Promise<void> | undefined;
 
-	constructor(private readonly logger: Logger, public readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
+	constructor(private readonly logger: Logger, public readonly fileTracker: FileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline((o) => this.handleOutline(o)));
 	}
 
