@@ -5,7 +5,7 @@ import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
 import { disposeAll, maybeUriToFilePath, uriToFilePath } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
-import { LspTestOutlineVisitor } from "../utils/outline_lsp";
+import { TestOutlineVisitor } from "../utils/outline";
 import { isSetupOrTeardownTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
 
@@ -28,7 +28,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	/// A link between a suite path and a visitor for visiting its latest outline data.
 	/// This data is refreshed when a test suite starts running.
-	private suiteOutlineVisitors: { [key: string]: LspTestOutlineVisitor | undefined } = {};
+	private suiteOutlineVisitors: { [key: string]: TestOutlineVisitor | undefined } = {};
 
 	/// For each debug session ID, stores a mapping of phantom (empty) groups and their parent IDs so we can
 	/// jump over them.
@@ -116,7 +116,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private captureTestOutlne(path: string) {
-		const visitor = new LspTestOutlineVisitor(this.logger, path);
+		const visitor = new TestOutlineVisitor(this.logger, path);
 		this.suiteOutlineVisitors[path] = visitor;
 		const outline = this.fileTracker?.getOutlineFor(URI.file(path));
 		if (outline)

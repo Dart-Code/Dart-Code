@@ -5,7 +5,7 @@ import { escapeRegExp } from "../../shared/utils";
 import { OpenedFileInformation, Position } from "../interfaces";
 import { GroupNode, SuiteNode, TestNode, TreeNode } from "../test/test_model";
 import { fsPath } from "./fs";
-import { TestOutlineInfo } from "./outline_lsp";
+import { TestOutlineInfo } from "./outline";
 
 export function getLaunchConfig(noDebug: boolean, path: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests?: boolean, template?: any | undefined): { program: string } & BasicDebugConfiguration {
 	let programString = path;

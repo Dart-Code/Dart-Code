@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
-import { LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
+import { TestOutlineVisitor } from "../../../shared/utils/outline";
 import { activate, extApi, getPackages, helloWorldTestMainFile, logger, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
@@ -16,7 +16,7 @@ describe("test_outline_visitor", () => {
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestMainFile}`);
 
-		const visitor = new LspTestOutlineVisitor(logger, fsPath(helloWorldTestMainFile));
+		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestMainFile));
 		visitor.visit(outline);
 
 		assert.equal(visitor.tests.length, 11);

@@ -11,7 +11,7 @@ import { getPackageTestCapabilities } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
-import { TestOutlineInfo } from "../../shared/utils/outline_lsp";
+import { TestOutlineInfo } from "../../shared/utils/outline";
 import { TestSelection, createTestFileAction, defaultTestFileContents, getLaunchConfig, getTestSelectionForNodes, getTestSelectionForOutline } from "../../shared/utils/test";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { getAllProjectFolders } from "../../shared/vscode/utils";

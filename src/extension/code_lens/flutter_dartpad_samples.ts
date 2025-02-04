@@ -3,13 +3,13 @@ import { CancellationToken, CodeLens, CodeLensProvider, commands, Event, EventEm
 import { FlutterSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { LspClassOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { ClassOutlineVisitor } from "../../shared/utils/outline";
 import { envUtils, lspToPosition, lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 
 const dartPadSamplePattern = new RegExp("\\{@tool\\s+dartpad");
 
-export class LspFlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, IAmDisposable {
+export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
@@ -50,7 +50,7 @@ export class LspFlutterDartPadSamplesCodeLensProvider implements CodeLensProvide
 
 		const libraryName = filePath.substr(this.flutterPackagesFolder.length).replace("\\", "/").split("/")[0];
 
-		const visitor = new LspClassOutlineVisitor(this.logger);
+		const visitor = new ClassOutlineVisitor(this.logger);
 		visitor.visit(outline);
 
 		// Filter classes to those with DartPad samples.

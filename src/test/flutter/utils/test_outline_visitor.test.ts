@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
-import { LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
+import { TestOutlineVisitor } from "../../../shared/utils/outline";
 import { activate, extApi, flutterTestOtherFile, getPackages, logger, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
@@ -13,7 +13,7 @@ describe("test_outline_visitor", () => {
 	it("reads the correct groups and tests", () => {
 		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile)!;
 
-		const visitor = new LspTestOutlineVisitor(logger, fsPath(flutterTestOtherFile));
+		const visitor = new TestOutlineVisitor(logger, fsPath(flutterTestOtherFile));
 		visitor.visit(outline);
 
 		assert.equal(visitor.tests.length, 2);

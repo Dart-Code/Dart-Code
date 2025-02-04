@@ -2,13 +2,13 @@ import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, Tex
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { LspTestOutlineVisitor, TestOutlineInfo } from "../../shared/utils/outline_lsp";
+import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { isTestFile } from "../utils";
 
-export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable {
+export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
@@ -41,7 +41,7 @@ export class LspTestCodeLensProvider implements CodeLensProvider, IAmDisposable 
 		const templatesHaveRun = !!templates.find((t) => t.name === "Run");
 		const templatesHaveDebug = !!templates.find((t) => t.name === "Debug");
 
-		const visitor = new LspTestOutlineVisitor(this.logger, fsPath(document.uri));
+		const visitor = new TestOutlineVisitor(this.logger, fsPath(document.uri));
 		visitor.visit(outline);
 		return flatMap(
 			visitor.tests

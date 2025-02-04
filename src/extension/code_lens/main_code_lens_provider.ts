@@ -8,7 +8,7 @@ import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer_lsp";
 import { isInsideFlutterProject, isTestFile } from "../utils";
 
-export class LspMainCodeLensProvider implements CodeLensProvider, IAmDisposable {
+export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;

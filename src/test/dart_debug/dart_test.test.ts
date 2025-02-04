@@ -6,7 +6,7 @@ import { DebuggerType } from "../../shared/enums";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
-import { LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { TestOutlineVisitor } from "../../shared/utils/outline";
 import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartDebugClient } from "../dart_debug_client";
@@ -490,7 +490,7 @@ describe("dart test debugger", () => {
 				await runWithoutDebugging(helloWorldTestTreeFile);
 				let numRuns = 1;
 				await checkResults(`After initial run`);
-				const visitor = new LspTestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
+				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
@@ -523,7 +523,7 @@ describe("dart test debugger", () => {
 
 				await runWithoutDebugging(helloWorldTestDupeNameFile);
 				await checkResults(`After initial run`);
-				const visitor = new LspTestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
+				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);

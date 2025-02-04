@@ -3,7 +3,7 @@ import * as stream from "stream";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } from "vscode-languageclient/node";
-import { AnalyzerStatusNotification, AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
+import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
@@ -64,11 +64,6 @@ export class LspAnalyzer extends Analyzer {
 		void this.client.start().then(() => {
 			this.statusItem.text = "Dart Analysis Server";
 			// Reminder: These onNotification calls only hold ONE handler!
-			// https://github.com/microsoft/vscode-languageserver-node/issues/174
-			// TODO: Remove this once Dart/Flutter stable LSP servers are using $/progress.
-			this.client.onNotification(AnalyzerStatusNotification.type, (params) => {
-				this.onAnalysisStatusChangeEmitter.fire({ isAnalyzing: params.isAnalyzing });
-			});
 			this.client.onNotification(OpenUriNotification.type, (params) => {
 				const uri = vs.Uri.parse(params.uri);
 				switch (uri.scheme) {
