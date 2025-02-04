@@ -1,6 +1,5 @@
-import { CancellationToken, CompletionItem, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, TestController, TestItem, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CancellationToken, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, OutputChannel, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
-import { AvailableSuggestion } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
@@ -92,29 +91,6 @@ export interface InternalExtensionApi {
 	sdkUtils?: {
 		runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult>
 	},
-}
-
-export interface DelayedCompletionItem extends LazyCompletionItem {
-	autoImportUri: string;
-	document: TextDocument;
-	enableCommitCharacters: boolean;
-	filePath: string;
-	insertArgumentPlaceholders: boolean;
-	nextCharacter: string;
-	offset: number;
-	relevance: number;
-	replacementLength: number;
-	replacementOffset: number;
-	suggestion: AvailableSuggestion;
-	suggestionSetID: number;
-}
-
-// To avoid sending back huge docs for every completion item, we stash some data
-// in our own fields (which won't serialise) and then restore them in resolve()
-// on an individual completion basis.
-export interface LazyCompletionItem extends CompletionItem {
-	// tslint:disable-next-line: variable-name
-	_documentation?: string | MarkdownString;
 }
 
 export interface FlutterSampleSnippet {

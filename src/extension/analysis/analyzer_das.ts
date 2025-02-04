@@ -1,9 +1,8 @@
 import * as vs from "vscode";
-import * as as from "../../shared/analysis_server_types";
 import { LogCategory } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 
-export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind | string): vs.SymbolKind {
+export function getSymbolKindForElementKind(logger: Logger, kind: ElementKind | string): vs.SymbolKind {
 	switch (kind) {
 		case "CLASS":
 		case "CLASS_TYPE_ALIAS":
@@ -56,3 +55,36 @@ export function getSymbolKindForElementKind(logger: Logger, kind: as.ElementKind
 			return vs.SymbolKind.Object;
 	}
 }
+
+/**
+ * An enumeration of the kinds of elements.
+ */
+export type ElementKind =
+	"CLASS"
+	| "CLASS_TYPE_ALIAS"
+	| "COMPILATION_UNIT"
+	| "CONSTRUCTOR"
+	| "CONSTRUCTOR_INVOCATION"
+	| "ENUM"
+	| "ENUM_CONSTANT"
+	| "EXTENSION"
+	| "FIELD"
+	| "FILE"
+	| "FUNCTION"
+	| "FUNCTION_INVOCATION"
+	| "FUNCTION_TYPE_ALIAS"
+	| "GETTER"
+	| "LABEL"
+	| "LIBRARY"
+	| "LOCAL_VARIABLE"
+	| "METHOD"
+	| "MIXIN"
+	| "PARAMETER"
+	| "PREFIX"
+	| "SETTER"
+	| "TOP_LEVEL_VARIABLE"
+	| "TYPE_ALIAS"
+	| "TYPE_PARAMETER"
+	| "UNIT_TEST_GROUP"
+	| "UNIT_TEST_TEST"
+	| "UNKNOWN";

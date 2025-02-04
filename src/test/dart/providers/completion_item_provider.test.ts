@@ -1,6 +1,5 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { LazyCompletionItem } from "../../../shared/vscode/interfaces";
 import { acceptFirstSuggestion, activate, completionLabel, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, extApi, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
@@ -87,10 +86,10 @@ main() {
 		`);
 		const completions = await getCompletionsAt(`ProcessRes^`);
 
-		const classComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
+		const classComp = ensureCompletion(completions, vs.CompletionItemKind.Class, "ProcessResult", "ProcessResult");
 		assert.equal(classComp.detail, undefined);
 
-		const constrComp: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessResult(…)", "ProcessResult");
+		const constrComp = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessResult(…)", "ProcessResult");
 		assert.equal(constrComp.detail, "(int pid, int exitCode, dynamic stdout, dynamic stderr) → ProcessResult");
 	});
 
@@ -98,7 +97,7 @@ main() {
 		await openFile(everythingFile);
 		const completions = await getCompletionsAt(`ret^urn str`);
 
-		const cl: LazyCompletionItem = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
+		const cl = ensureCompletion(completions, vs.CompletionItemKind.Method, "methodWithArgsAndReturnValue(…)", "methodWithArgsAndReturnValue");
 		assert.equal(cl.additionalTextEdits, undefined); // Tested in the unimported imports test.
 		assert.equal(cl.command!.command, "editor.action.triggerParameterHints");
 		assert.equal(cl.commitCharacters, undefined); // TODO: ??
