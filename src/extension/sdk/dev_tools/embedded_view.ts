@@ -16,14 +16,11 @@ function getTheme() {
 	const isDarkMode = !document.body.classList.contains('vscode-light');
 	const backgroundColor = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
 	const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
-	const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
-	const fontSize = fontSizeWithUnits && fontSizeWithUnits.endsWith('px') ? parseFloat(fontSizeWithUnits) : undefined;
 
 	return {
 		isDarkMode: isDarkMode,
 		backgroundColor: backgroundColor,
 		foregroundColor: foregroundColor,
-		fontSize: fontSize,
 	};
 }
 
@@ -45,9 +42,6 @@ window.addEventListener('message', (event) => {
 			// Don't include # in colors
 			// https://github.com/flutter/flutter/issues/155992
 			let url = \`\${message.url}&theme=\${themeKind}&backgroundColor=\${encodeURIComponent(theme.backgroundColor?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(theme.foregroundColor?.replace('#', ''))}\`;
-			if (theme.fontSize) {
-				url += \`&fontSize=\${encodeURIComponent(theme.fontSize)}\`;
-			}
 			if (devToolsFrame.src !== url) {
 				devToolsFrame.src = url;
 				vscode.setState({ frameUrl: url });

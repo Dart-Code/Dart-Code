@@ -60,14 +60,11 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		const isDarkMode = !document.body.classList.contains('vscode-light');
 		const backgroundColor = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 		const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-foreground');
-		const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
-		const fontSize = fontSizeWithUnits && fontSizeWithUnits.endsWith('px') ? parseFloat(fontSizeWithUnits) : undefined;
 
 		return {
 			isDarkMode: isDarkMode,
 			backgroundColor: backgroundColor,
 			foregroundColor: foregroundColor,
-			fontSize: fontSize,
 		};
 	}
 
@@ -86,10 +83,6 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 				// Don't include # in colors
 				// https://github.com/flutter/flutter/issues/155992
 				let url = \`\${message.url}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(foreground?.replace('#', ''))}\`;
-				const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
-				if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
-					url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
-				}
 				if (devToolsFrame.src !== url)
 					devToolsFrame.src = url;
 				return;
