@@ -74,15 +74,6 @@
 				"configuration": "./syntaxes/dart-language-configuration.json"
 			}
 		],
-		"resourceLabelFormatters": [
-			{
-				"scheme": "dart-macro+file",
-				"formatting": {
-					"label": "${scheme}://${path}",
-					"separator": "/"
-				}
-			}
-		],
 		"grammars": [
 			{
 				"language": "dart",

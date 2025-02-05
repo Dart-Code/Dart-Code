@@ -4,7 +4,6 @@ import * as os from "os";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { URI } from "vscode-uri";
 import { runAnywayAction, showErrorsAction } from "../../shared/constants";
 import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType } from "../../shared/enums";
@@ -188,7 +187,7 @@ describe("dart cli debugger", () => {
 		// Stop at a breakpoint so the app won't quit while we're checking the terminal.
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		// Ensure we have a terminal for it.
@@ -299,7 +298,7 @@ void printSomething() {
 		// Stop at a breakpoint so the app won't quit while we're verifying DevTools.
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		const devTools = await vs.commands.executeCommand<{ url: string, dispose: () => void }>("dart.openDevTools");
@@ -319,12 +318,12 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "main");
-		dc.assertPath(frames[0].source!.path, dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile));
+		dc.assertPath(frames[0].source!.path, fsPath(helloWorldMainFile));
 		assert.equal(frames[0].source!.name, path.relative(fsPath(helloWorldFolder), fsPath(helloWorldMainFile)));
 
 		await dc.terminateRequest();
@@ -338,7 +337,7 @@ void printSomething() {
 			dc.waitForEvent("terminated"),
 			dc.setBreakpointWithoutHitting(config, {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+				path: fsPath(helloWorldMainFile),
 			}),
 		);
 	});
@@ -348,12 +347,12 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldPartEntryFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line,
-			path: dc.isUsingUris ? helloWorldPartFile.toString() : fsPath(helloWorldPartFile),
+			path: fsPath(helloWorldPartFile),
 		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "do_print");
-		dc.assertPath(frames[0].source!.path, dc.isUsingUris ? helloWorldPartFile.toString() : fsPath(helloWorldPartFile));
+		dc.assertPath(frames[0].source!.path, fsPath(helloWorldPartFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/part.dart");
 
 		await dc.terminateRequest();
@@ -364,12 +363,12 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldDeferredEntryFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line,
-			path: dc.isUsingUris ? helloWorldDeferredScriptFile.toString() : fsPath(helloWorldDeferredScriptFile),
+			path: fsPath(helloWorldDeferredScriptFile),
 		});
 		const stack = await dc.getStack();
 		const frames = stack.body.stackFrames;
 		assert.equal(frames[0].name, "do_print");
-		dc.assertPath(frames[0].source!.path, dc.isUsingUris ? helloWorldDeferredScriptFile.toString() : fsPath(helloWorldDeferredScriptFile));
+		dc.assertPath(frames[0].source!.path, fsPath(helloWorldDeferredScriptFile));
 		assert.equal(frames[0].source!.name, "package:hello_world/deferred_script.dart");
 
 		await dc.terminateRequest();
@@ -380,7 +379,7 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const def = await getDefinition(positionOf("pri^nt("));
-		const defPath = dc.isUsingUris ? uriFor(def).toString() : fsPath(uriFor(def));
+		const defPath = fsPath(uriFor(def));
 		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: rangeFor(def).start.line + 1,
@@ -397,7 +396,7 @@ void printSomething() {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read`
 		const def = await getDefinition(positionOf("http.re^ad"));
-		const defPath = dc.isUsingUris ? uriFor(def).toString() : fsPath(uriFor(def));
+		const defPath = fsPath(uriFor(def));
 		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: rangeFor(def).start.line + 1,
@@ -417,14 +416,12 @@ void printSomething() {
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
 		const expectedDefPath = dc.isDartDap
-			? dc.isUsingUris
-				? URI.file(sdkPathForSdkDap(dc, "lib/core/print.dart")!).toString()
-				: sdkPathForSdkDap(dc, "lib/core/print.dart")
+			? sdkPathForSdkDap(dc, "lib/core/print.dart")
 			: undefined;
 		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {}).then((response) => {
@@ -445,14 +442,12 @@ void printSomething() {
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
 		const expectedPrintDefPath = dc.isDartDap
-			? dc.isUsingUris
-				? URI.file(sdkPathForSdkDap(dc, "lib/core/print.dart")!).toString()
-				: sdkPathForSdkDap(dc, "lib/core/print.dart")
+			? sdkPathForSdkDap(dc, "lib/core/print.dart")
 			: undefined;
 		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 		await dc.customRequest("updateDebugOptions", { debugSdkLibraries: true });
 		await delay(100);
@@ -477,12 +472,12 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
-				path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+				path: fsPath(helloWorldMainFile),
 			}),
 			dc.stepIn(),
 		);
@@ -495,11 +490,11 @@ void printSomething() {
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
-		const expectedHttpReadDefinitionPath = dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef));
+		const expectedHttpReadDefinitionPath = fsPath(uriFor(httpReadDef));
 		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1,
-			path: dc.isUsingUris ? helloWorldHttpFile.toString() : fsPath(helloWorldHttpFile),
+			path: fsPath(helloWorldHttpFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
@@ -533,12 +528,12 @@ void printSomething() {
 		);
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1, // vs.Position is 0-based, but DAP is 1-based.
-			path: dc.isUsingUris ? helloWorldHttpFile.toString() : fsPath(helloWorldHttpFile),
+			path: fsPath(helloWorldHttpFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
-				path: dc.isUsingUris ? helloWorldHttpFile.toString() : fsPath(helloWorldHttpFile),
+				path: fsPath(helloWorldHttpFile),
 			}),
 			dc.stepIn(),
 		);
@@ -551,7 +546,7 @@ void printSomething() {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const expectedPrintThingDefinitionPath = dc.isUsingUris ? uriFor(printMyThingDef).toString() : fsPath(uriFor(printMyThingDef));
+		const expectedPrintThingDefinitionPath = fsPath(uriFor(printMyThingDef));
 		const config = await startDebugger(
 			dc,
 			helloWorldLocalPackageFile,
@@ -563,7 +558,7 @@ void printSomething() {
 		);
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
-			path: dc.isUsingUris ? helloWorldLocalPackageFile.toString() : fsPath(helloWorldLocalPackageFile),
+			path: fsPath(helloWorldLocalPackageFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
@@ -688,7 +683,7 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldStack60File);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1,
-			path: dc.isUsingUris ? helloWorldStack60File.toString() : fsPath(helloWorldStack60File),
+			path: fsPath(helloWorldStack60File),
 		});
 
 		// Get the total stack size we should expect and ensure it's a little over the expected 60
@@ -762,7 +757,7 @@ void printSomething() {
 							condition,
 							line: positionOf("^// BREAKPOINT1").line,
 						}],
-						source: { path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile) },
+						source: { path: fsPath(helloWorldMainFile) },
 					}))
 					.then(() => dc.configurationDoneRequest()),
 				expectation,
@@ -795,7 +790,7 @@ void printSomething() {
 					// we have examples of both (as well as "escaped" brackets).
 					logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
 				}],
-				source: { path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile) },
+				source: { path: fsPath(helloWorldMainFile) },
 			})).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
 			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
@@ -808,7 +803,7 @@ void printSomething() {
 		const debugConfig = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -890,7 +885,7 @@ void printSomething() {
 		const debugConfig = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -907,7 +902,7 @@ void printSomething() {
 		const debugConfig = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -925,7 +920,7 @@ void printSomething() {
 		const debugConfig = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT2").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -941,7 +936,7 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldGettersFile.toString() : fsPath(helloWorldGettersFile),
+			path: fsPath(helloWorldGettersFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -967,7 +962,7 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldGettersFile.toString() : fsPath(helloWorldGettersFile),
+			path: fsPath(helloWorldGettersFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -990,7 +985,7 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1013,7 +1008,7 @@ void printSomething() {
 		const config = await startDebugger(dc, helloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1050,7 +1045,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1071,7 +1066,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1088,7 +1083,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1106,7 +1101,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1125,7 +1120,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1143,7 +1138,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1161,7 +1156,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1178,7 +1173,7 @@ void printSomething() {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-					path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+					path: fsPath(helloWorldMainFile),
 				}),
 			);
 
@@ -1348,7 +1343,7 @@ insp=<inspected variable>
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: dc.isUsingUris ? helloWorldBrokenFile.toString() : fsPath(helloWorldBrokenFile),
+				path: fsPath(helloWorldBrokenFile),
 			}),
 			dc.launch(config),
 		);
@@ -1374,7 +1369,7 @@ insp=<inspected variable>
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
-				path: dc.isUsingUris ? helloWorldBrokenFile.toString() : fsPath(helloWorldBrokenFile),
+				path: fsPath(helloWorldBrokenFile),
 				text: "_Exception (Exception: Oops)",
 			}),
 			dc.launch(config),
@@ -1464,7 +1459,7 @@ insp=<inspected variable>
 				dc.assertOutputContains("stderr", "#0      main")
 					.then((event) => {
 						assert.equal(event.body.source!.name, path.join("bin", "broken.dart"));
-						dc.assertPath(event.body.source!.path, dc.isUsingUris ? helloWorldBrokenFile.toString() : fsPath(helloWorldBrokenFile));
+						dc.assertPath(event.body.source!.path, fsPath(helloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 3);
 					}),
@@ -1593,7 +1588,7 @@ insp=<inspected variable>
 			const config = await attachDebugger(observatoryUri);
 			await dc.hitBreakpoint(config, {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+				path: fsPath(helloWorldMainFile),
 			});
 
 			await dc.terminateRequest();
@@ -1606,7 +1601,7 @@ insp=<inspected variable>
 			const config = await attachDebugger(observatoryUri);
 			await dc.hitBreakpoint(config, {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+				path: fsPath(helloWorldMainFile),
 			});
 			await dc.terminateRequest();
 

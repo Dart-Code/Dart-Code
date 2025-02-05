@@ -372,7 +372,7 @@ describe("flutter test debugger", () => {
 				const config = await startDebugger(dc, flutterTestMainFile);
 				await dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-					path: dc.isUsingUris ? flutterTestMainFile.toString() : fsPath(flutterTestMainFile),
+					path: fsPath(flutterTestMainFile),
 				});
 			});
 
@@ -395,7 +395,7 @@ describe("flutter test debugger", () => {
 					dc.configurationSequence(),
 					dc.assertStoppedLocation("exception", {
 						line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-						path: dc.isUsingUris ? flutterTestBrokenFile.toString() : fsPath(flutterTestBrokenFile),
+						path: fsPath(flutterTestBrokenFile),
 					}),
 					dc.launch(config),
 				);
@@ -476,7 +476,7 @@ describe("flutter test debugger", () => {
 				await waitAllThrowIfTerminates(dc,
 					dc.hitBreakpoint(config, {
 						line: positionOf("^// BREAKPOINT1").line,
-						path: dc.isUsingUris ? flutterIntegrationTestFile.toString() : fsPath(flutterIntegrationTestFile),
+						path: fsPath(flutterIntegrationTestFile),
 					}),
 				);
 			});
@@ -488,7 +488,7 @@ describe("flutter test debugger", () => {
 				await waitAllThrowIfTerminates(dc,
 					dc.hitBreakpoint(config, {
 						line: positionOf("^// BREAKPOINT1").line,
-						path: dc.isUsingUris ? flutterHelloWorldCounterAppFile.toString() : fsPath(flutterHelloWorldCounterAppFile),
+						path: fsPath(flutterHelloWorldCounterAppFile),
 					}),
 				);
 			});
