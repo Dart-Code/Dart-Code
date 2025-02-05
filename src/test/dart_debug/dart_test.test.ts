@@ -174,7 +174,7 @@ describe("dart test debugger", () => {
 				const config = await startDebugger(dc, helloWorldTestMainFile);
 				await dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-					path: fsPath(helloWorldTestMainFile),
+					path: dc.isUsingUris ? helloWorldTestMainFile.toString() : fsPath(helloWorldTestMainFile),
 				});
 			});
 
@@ -197,7 +197,7 @@ describe("dart test debugger", () => {
 					dc.configurationSequence(),
 					dc.assertStoppedLocation("exception", {
 						line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
-						path: fsPath(helloWorldTestBrokenFile),
+						path: dc.isUsingUris ? helloWorldTestBrokenFile.toString() : fsPath(helloWorldTestBrokenFile),
 					}),
 					dc.launch(config),
 				);

@@ -25,6 +25,7 @@ export class DartDebugClient extends DebugClient {
 	public hasStarted = false;
 	public hasTerminated = false;
 	public readonly isDartDap: boolean;
+	public readonly isUsingUris: boolean;
 
 	constructor(daArgs: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
 		const useShell = daArgs.runtime?.endsWith(".sh") || daArgs.runtime?.endsWith(".bat");
@@ -33,6 +34,7 @@ export class DartDebugClient extends DebugClient {
 		const args = useShell ? daArgs.args?.map((a) => `"${a}"`) : daArgs.args;
 		super(runtime, executable, args, "dart", { shell: useShell ? true : undefined }, true);
 		this.isDartDap = daArgs.runtime !== undefined && daArgs.runtime !== "node";
+		this.isUsingUris = this.isDartDap && this.dartCapabitilies.supportsMacroGeneratedFiles;
 		this.port = daArgs.port;
 
 		// HACK to handle incoming requests..

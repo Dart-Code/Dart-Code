@@ -670,7 +670,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		const expectedLocation = {
 			line: positionOf("^// BREAKPOINT1").line, // positionOf is 0-based, and seems to want 1-based, BUT comment is on next line!
-			path: fsPath(flutterHelloWorldMainFile),
+			path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 		};
 		await watchPromise("stops_at_a_breakpoint->hitBreakpoint", dc.hitBreakpoint(config, expectedLocation));
 		const stack = await dc.getStack();
@@ -739,7 +739,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("terminated"),
 			dc.setBreakpointWithoutHitting(config, {
 				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterHelloWorldMainFile),
+				path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 				// TODO: This should be false in noDebug mode in SDK DAPs too.
 				// verified: false,
 			})
@@ -767,11 +767,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
 		const printDef = await getDefinition(printCall);
-		const expectedPrintDefinitionPath = dc.isDartDap ? fsPath(uriFor(printDef)) : undefined;
+		const expectedPrintDefinitionPath = dc.isUsingUris ? uriFor(printDef).toString() : dc.isDartDap ? fsPath(uriFor(printDef)) : undefined;
 		const config = await startDebugger(dc, flutterHelloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
-			path: fsPath(flutterHelloWorldMainFile),
+			path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
@@ -802,12 +802,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
-			path: fsPath(flutterHelloWorldMainFile),
+			path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
-				path: fsPath(flutterHelloWorldMainFile),
+				path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 			}),
 			dc.stepIn(),
 		);
@@ -826,11 +826,11 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `http.read(`
 		const httpReadCall = positionOf("http.re^ad(");
 		const httpReadDef = await getDefinition(httpReadCall);
-		const expectedHttpReadDefinitionPath = fsPath(uriFor(httpReadDef));
+		const expectedHttpReadDefinitionPath = dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef));
 		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line + 1,
-			path: fsPath(flutterHelloWorldHttpFile),
+			path: dc.isUsingUris ? flutterHelloWorldHttpFile.toString() : fsPath(flutterHelloWorldHttpFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
@@ -862,12 +862,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: httpReadCall.line,
-			path: fsPath(flutterHelloWorldHttpFile),
+			path: dc.isUsingUris ? flutterHelloWorldHttpFile.toString() : fsPath(flutterHelloWorldHttpFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
-				path: fsPath(flutterHelloWorldHttpFile),
+				path: dc.isUsingUris ? flutterHelloWorldHttpFile.toString() : fsPath(flutterHelloWorldHttpFile),
 			}),
 			dc.stepIn(),
 		);
@@ -886,7 +886,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `printMyThing()`
 		const printMyThingCall = positionOf("printMy^Thing(");
 		const printMyThingDef = await getDefinition(printMyThingCall);
-		const expectedPrintThingDefinitionPath = fsPath(uriFor(printMyThingDef));
+		const expectedPrintThingDefinitionPath = dc.isUsingUris ? uriFor(printMyThingDef).toString() : fsPath(uriFor(printMyThingDef));
 		const config = await startDebugger(dc, flutterHelloWorldLocalPackageFile, {
 			// Override this since it's not really open in the workspace.
 			additionalProjectPaths: [fsPath(myPackageFolder)],
@@ -894,7 +894,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 		await dc.hitBreakpoint(config, {
 			line: printMyThingCall.line + 1,
-			path: fsPath(flutterHelloWorldLocalPackageFile),
+			path: dc.isUsingUris ? flutterHelloWorldLocalPackageFile.toString() : fsPath(flutterHelloWorldLocalPackageFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
@@ -1039,7 +1039,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldStack60File);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1,
-			path: fsPath(flutterHelloWorldStack60File),
+			path: dc.isUsingUris ? flutterHelloWorldStack60File.toString() : fsPath(flutterHelloWorldStack60File),
 		});
 
 		// Get the total stack size we should expect and ensure it's a little over the expected current 560
@@ -1194,7 +1194,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const debugConfig = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(flutterHelloWorldMainFile),
+			path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1284,7 +1284,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const debugConfig = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
 			line: positionOf("^// BREAKPOINT2").line, // positionOf is 0-based, but seems to want 1-based
-			path: fsPath(flutterHelloWorldMainFile),
+			path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1306,7 +1306,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: fsPath(flutterHelloWorldGettersFile),
+			path: dc.isUsingUris ? flutterHelloWorldGettersFile.toString() : fsPath(flutterHelloWorldGettersFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1338,7 +1338,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldGettersFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: fsPath(flutterHelloWorldGettersFile),
+			path: dc.isUsingUris ? flutterHelloWorldGettersFile.toString() : fsPath(flutterHelloWorldGettersFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1366,7 +1366,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(flutterHelloWorldMainFile),
+			path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1392,7 +1392,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(flutterHelloWorldMainFile),
+			path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 		});
 
 		const variables = await dc.getTopFrameVariables("Locals");
@@ -1432,7 +1432,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
-					path: fsPath(flutterHelloWorldMainFile),
+					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 
@@ -1453,7 +1453,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
-					path: fsPath(flutterHelloWorldMainFile),
+					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 
@@ -1474,7 +1474,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
-					path: fsPath(flutterHelloWorldMainFile),
+					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 
@@ -1496,7 +1496,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line,
-					path: fsPath(flutterHelloWorldMainFile),
+					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 
@@ -1593,7 +1593,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^Oops").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterHelloWorldBrokenFile),
+				path: dc.isUsingUris ? flutterHelloWorldBrokenFile.toString() : fsPath(flutterHelloWorldBrokenFile),
 			}),
 			dc.launch(config),
 		);
@@ -1638,7 +1638,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.configurationSequence(),
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterHelloWorldBrokenFile),
+				path: dc.isUsingUris ? flutterHelloWorldBrokenFile.toString() : fsPath(flutterHelloWorldBrokenFile),
 			}),
 			dc.launch(config),
 		);
@@ -1686,7 +1686,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				dc.assertOutputContains(undefined, "_throwAnException")
 					.then((event) => {
 						assert.equal(event.body.source!.name, "package:flutter_hello_world/broken.dart");
-						dc.assertPath(event.body.source!.path, fsPath(flutterHelloWorldBrokenFile));
+						dc.assertPath(event.body.source!.path, dc.isUsingUris ? flutterHelloWorldBrokenFile.toString() : fsPath(flutterHelloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
 					}),

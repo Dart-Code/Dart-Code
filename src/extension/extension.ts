@@ -71,6 +71,7 @@ import { DartDebugAdapterHexViewFactory } from "./providers/debug_adapter_hex_vi
 import { DartDebugAdapterLaunchStatusFactory } from "./providers/debug_adapter_launch_status_factory";
 import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_factory";
 import { DartDebugAdapterRemoveErrorShowUserFactory } from "./providers/debug_adapter_remove_error_showUser_factory";
+import { DartDebugAdapterSupportsUrisFactory } from "./providers/debug_adapter_support_uris_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
 import { RankingCodeActionProvider } from "./providers/ranking_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
@@ -439,12 +440,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", forcedSingleThread));
 	const removeErrorShowUser = new DartDebugAdapterRemoveErrorShowUserFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", removeErrorShowUser));
+	const supportUris = new DartDebugAdapterSupportsUrisFactory(dartCapabilities);
+	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", supportUris));
 	const launchStatus = new DartDebugAdapterLaunchStatusFactory();
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", launchStatus));
 	// Logger goes last, so it logs any mutations made by the above.
 	const debugLogger = new DartDebugAdapterLoggerFactory(logger);
 	context.subscriptions.push(vs.debug.registerDebugAdapterTrackerFactory("dart", debugLogger));
-	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, forcedAnsiColors, forcedSingleThread, removeErrorShowUser, launchStatus, debugLogger];
+	const trackerFactories = [globalEvaluationContext, hexFormatter, forcedDebugMode, forcedAnsiColors, forcedSingleThread, removeErrorShowUser, supportUris, launchStatus, debugLogger];
 
 	const debugAdapterDescriptorFactory = new DartDebugAdapterDescriptorFactory(analytics, sdks, logger, extContext, dartCapabilities, flutterCapabilities, workspaceContext, experiments);
 	context.subscriptions.push(vs.debug.registerDebugAdapterDescriptorFactory("dart", debugAdapterDescriptorFactory));
