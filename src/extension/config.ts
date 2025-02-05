@@ -198,6 +198,7 @@ class Config {
 	get showTodos(): boolean | string[] { return this.getConfig<boolean | string[]>("showTodos", true); }
 	get testInvocationMode(): "name" | "line" { return this.getConfig<"name" | "line">("testInvocationMode", "name"); }
 	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null)))); }
+	get toolingDaemonAdditionalArgs(): string[] { return this.getConfig<string[]>("toolingDaemonAdditionalArgs", []); }
 	get updateDevTools(): boolean { return this.getConfig<boolean>("updateDevTools", true); }
 	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
 	get useLegacyDebugAdapters(): undefined | boolean { return this.getConfig<null | boolean>("useLegacyDebugAdapters", null); }

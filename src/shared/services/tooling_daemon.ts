@@ -32,12 +32,13 @@ export class DartToolingDaemon implements IAmDisposable {
 	constructor(
 		logger: Logger,
 		sdks: DartSdks,
+		additionalArgs: string[],
 		maxLogLineLength: number | undefined,
 		getToolEnv: () => any,
 		private readonly promptToReloadExtension: (prompt?: string, buttonText?: string, offerLog?: boolean) => Promise<void>,
 	) {
 		this.logger = new CategoryLogger(logger, LogCategory.DartToolingDaemon);
-		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, maxLogLineLength, getToolEnv);
+		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, additionalArgs, maxLogLineLength, getToolEnv);
 		this.disposables.push(this.dtdProcess);
 
 		void this.dtdProcess.dtdUri.then(() => this.connect());
@@ -280,13 +281,14 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return this.processExitCompleter.promise;
 	}
 
-	constructor(logger: Logger, private readonly sdks: DartSdks, maxLogLineLength: number | undefined, getToolEnv: () => any) {
+	constructor(logger: Logger, private readonly sdks: DartSdks, additionalArgs: string[], maxLogLineLength: number | undefined, getToolEnv: () => any) {
 		super(logger, maxLogLineLength, true, true);
 
 		const executable = path.join(this.sdks.dart, dartVMPath);
 		const daemonArgs = [
 			"tooling-daemon",
 			"--machine",
+			...additionalArgs,
 		];
 
 		this.createProcess(undefined, executable, daemonArgs, { toolEnv: getToolEnv() });

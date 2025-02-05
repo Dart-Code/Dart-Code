@@ -2904,6 +2904,15 @@
 						"default": {},
 						"description": "Additional environment variables to be added to all Dart/Flutter processes spawned by the Dart and Flutter extensions.",
 						"scope": "window"
+					},
+					"dart.toolingDaemonAdditionalArgs": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "Additional args to pass to the `dart tooling-daemon` command that runs as a background service (requires restart).",
+						"scope": "window",
+						"items": {
+							"type": "string"
+						}
 					}
 				}
 			},
