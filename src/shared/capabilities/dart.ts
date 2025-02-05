@@ -18,7 +18,8 @@ export class DartCapabilities {
 
 	get needsNoExampleForPubGet() { return versionIsAtLeast(this.version, "3.1.0"); }
 	get omitsVoidForSetters() { return versionIsAtLeast(this.version, "3.3.0-0"); }
-	get supportsAugmentations() { return versionIsAtLeast(this.version, "3.7.0-0"); }
+	// TODO(dantup): Fix this when it's clearer what augmentations will look like.
+	get supportsAugmentations() { return versionIsAtLeast(this.version, "9.9.0-0"); }
 	get supportsGoToImports() { return versionIsAtLeast(this.version, "3.7.0-0"); }
 	get supportsFlutterSidebar() { return versionIsAtLeast(this.version, "3.2.0-201"); }
 	get requiresDevToolsEmbedFlag() { return !versionIsAtLeast(this.version, "3.7.0-0"); }
