@@ -101,11 +101,7 @@ export function getTestSelectionForNode(treeNode: GroupNode | TestNode): TestSel
 }
 
 export function getTestSelectionForOutline(test: TestOutlineInfo): TestSelection {
-	// We only support running by lines for LSP because we don't have the position for DAS
-	// without an async opening of the document (to map offset -> position).
-	const position = "range" in test
-		? test.range.start
-		: undefined;
+	const position = test.range.start;
 	return { name: test.fullName, isGroup: test.isGroup, position };
 }
 
