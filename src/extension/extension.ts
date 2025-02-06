@@ -22,7 +22,7 @@ import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
-import { LspAnalyzer } from "./analysis/analyzer_lsp";
+import { LspAnalyzer } from "./analysis/analyzer";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
 import { DartExtensionApi } from "./api/extension_api";

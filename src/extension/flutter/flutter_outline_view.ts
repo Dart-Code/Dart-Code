@@ -10,7 +10,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { extensionPath } from "../../shared/vscode/extension_utils";
 import { getIconForSymbolKind } from "../../shared/vscode/mappings";
 import { lspToPosition, lspToRange, toRange, treeLabel } from "../../shared/vscode/utils";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { LspAnalyzer } from "../analysis/analyzer";
 import { flutterOutlineCommands } from "../commands/flutter_outline";
 import { isAnalyzable } from "../utils";
 

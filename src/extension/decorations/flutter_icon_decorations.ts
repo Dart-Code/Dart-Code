@@ -5,7 +5,7 @@ import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { docsIconPathFormat } from "../../shared/vscode/extension_utils";
 import { IconRangeComputerLsp } from "../../shared/vscode/icon_range_computer";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { LspAnalyzer } from "../analysis/analyzer";
 import { isAnalyzable } from "../utils";
 
 export class FlutterIconDecorations implements vs.Disposable {

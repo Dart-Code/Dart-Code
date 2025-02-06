@@ -5,7 +5,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { LspAnalyzer } from "../analysis/analyzer";
 import { isTestFile } from "../utils";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
