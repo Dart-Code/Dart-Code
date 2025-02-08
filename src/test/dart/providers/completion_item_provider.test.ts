@@ -183,7 +183,7 @@ main() {
   ProcessRes
 }
 		`);
-			const completions = await getCompletionsAt("ProcessRe^s", { requireComplete: true, resolveCount: 5000 }); // non-LSP doesn't filter so we need to resolve more :(
+			const completions = await getCompletionsAt("ProcessRe^s", { requireComplete: true, resolveCount: 5000 });
 			const completion = ensureCompletion(completions, vs.CompletionItemKind.Constructor, "ProcessResult(…)", "ProcessResult");
 
 			assert.ok(completion.additionalTextEdits!.length);

@@ -5,7 +5,7 @@ import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { LspAnalyzer } from "../analysis/analyzer";
 import { isInsideFlutterProject, isTestFile } from "../utils";
 
 export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {

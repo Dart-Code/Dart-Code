@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { waitFor } from "../../../shared/utils/promises";
 import { activate, ensureDocumentSymbol, flutterHelloWorldMainFile, getDocumentSymbols, getPackages } from "../../helpers";
 
-describe("dart_document_symbol_provider", () => {
+describe.only("dart_document_symbol_provider", () => {
 
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());

@@ -4,7 +4,7 @@ import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DocumentPositionTracker } from "../../shared/vscode/trackers";
 import { lspToPosition } from "../../shared/vscode/utils";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { LspAnalyzer } from "../analysis/analyzer";
 import { config } from "../config";
 
 const nonBreakingSpace = "\xa0";

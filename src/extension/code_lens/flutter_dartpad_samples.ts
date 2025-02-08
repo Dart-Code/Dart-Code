@@ -5,7 +5,7 @@ import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { ClassOutlineVisitor } from "../../shared/utils/outline";
 import { envUtils, lspToPosition, lspToRange } from "../../shared/vscode/utils";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { LspAnalyzer } from "../analysis/analyzer";
 
 const dartPadSamplePattern = new RegExp("\\{@tool\\s+dartpad");
 
