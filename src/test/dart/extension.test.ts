@@ -40,7 +40,7 @@ describe("extension", () => {
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.equal(sdks.dartSdkIsFromFlutter, false);
-		assert.equal(sdks.dart.indexOf("flutter"), -1);
+		assert.equal(sdks.dart.toLowerCase().indexOf("flutter"), -1);
 	});
 	it("did not set FLUTTER_ROOT", async () => {
 		await activateWithoutAnalysis();
