@@ -513,38 +513,7 @@ export class LspAnalyzer extends Analyzer {
 			const result = (await originalAsWorkspaceEdit(item, token)) as vs.WorkspaceEdit | undefined;
 			if (!result) return;
 
-			const snippetTypes = new Set<string>();
-			// Figure out which are Snippets.
-			for (const change of item?.documentChanges ?? []) {
-				if (ls.TextDocumentEdit.is(change)) {
-					const uri = vs.Uri.parse(change.textDocument.uri);
-					for (const edit of change.edits) {
-						if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
-							snippetTypes.add(`${fsPath(uri)}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
-						}
-					}
-				}
-			}
-			for (const uriString of Object.keys(item?.changes ?? {})) {
-				const uri = vs.Uri.parse(uriString);
-				for (const edit of item!.changes![uriString]) {
-					if ((edit as any).insertTextFormat === ls.InsertTextFormat.Snippet) {
-						snippetTypes.add(`${fsPath(uri)}:${edit.newText}:${edit.range.start.line}:${edit.range.start.character}`);
-					}
-				}
-			}
-
-			if (snippetTypes.size > 0) {
-				for (const changeset of result.entries()) {
-					const uri = changeset[0];
-					const changes = changeset[1];
-					for (const change of changes) {
-						if (snippetTypes.has(`${fsPath(uri)}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
-							(change as any).insertTextFormat = ls.InsertTextFormat.Snippet;
-						}
-					}
-				}
-			}
+			LspAnalyzer.rewriteUnofficialSnippetEdits(item, result);
 
 			return result;
 		}
@@ -572,6 +541,45 @@ export class LspAnalyzer extends Analyzer {
 		p2c.asCodeActionResult = asCodeActionResult;
 
 		return client;
+	}
+
+	// Update the `insertTextFormat`s on edits that are non-standard Snippet Edits specified by the Rust analyzer team.
+	// https://github.com/rust-analyzer/rust-analyzer/blob/b35559a2460e7f0b2b79a7029db0c5d4e0acdb44/docs/dev/lsp-extensions.md#snippet-textedit
+	private static rewriteUnofficialSnippetEdits(serverEdit: ls.WorkspaceEdit | null | undefined, vsCodeEdit: vs.WorkspaceEdit) {
+		const snippetTypes = new Set<string>();
+		// Figure out which are custom Snippets using the Rust-specified format.
+		for (const change of serverEdit?.documentChanges ?? []) {
+			if (ls.TextDocumentEdit.is(change)) {
+				const uri = vs.Uri.parse(change.textDocument.uri);
+				for (const edit of change.edits) {
+					const edit2 = edit as (ls.TextEdit | ls.AnnotatedTextEdit) & { insertTextFormat?: ls.InsertTextFormat; };
+					if (edit2.newText && edit2.insertTextFormat === ls.InsertTextFormat.Snippet) {
+						snippetTypes.add(`${fsPath(uri)}:${edit2.newText}:${edit2.range.start.line}:${edit2.range.start.character}`);
+					}
+				}
+			}
+		}
+		for (const uriString of Object.keys(serverEdit?.changes ?? {})) {
+			const uri = vs.Uri.parse(uriString);
+			for (const edit of serverEdit!.changes![uriString]) {
+				const edit2 = edit as ls.TextEdit & { insertTextFormat?: ls.InsertTextFormat; };
+				if (edit2.newText && edit2.insertTextFormat === ls.InsertTextFormat.Snippet) {
+					snippetTypes.add(`${fsPath(uri)}:${edit2.newText}:${edit2.range.start.line}:${edit2.range.start.character}`);
+				}
+			}
+		}
+
+		if (snippetTypes.size > 0) {
+			for (const changeset of vsCodeEdit.entries()) {
+				const uri = changeset[0];
+				const changes = changeset[1];
+				for (const change of changes) {
+					if (snippetTypes.has(`${fsPath(uri)}:${change.newText}:${change.range.start.line}:${change.range.start.character}`)) {
+						(change as any).isCustomSnippet = true;
+					}
+				}
+			}
+		}
 	}
 
 	private spawnServer(logger: Logger, sdks: DartSdks): Promise<StreamInfo> {
