@@ -1,13 +1,16 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { waitFor } from "../../../shared/utils/promises";
 import { activate, ensureDocumentSymbol, everythingFile, getDocumentSymbols } from "../../helpers";
 
-describe("document_symbol_provider", () => {
+describe("dart_document_symbol_provider", () => {
 
 	beforeEach("activate everythingFile", () => activate(everythingFile));
 
 	it("returns expected items for 'everything.dart'", async () => {
-		const symbols = await getDocumentSymbols();
+		const symbols = await waitFor(() => getDocumentSymbols());
+
+		assert.ok(symbols && symbols.length, "Didn't get any symbols");
 
 		ensureDocumentSymbol(symbols, "MyTestClass", vs.SymbolKind.Class);
 		ensureDocumentSymbol(symbols, "myTestNumField", vs.SymbolKind.Field, "MyTestClass");
