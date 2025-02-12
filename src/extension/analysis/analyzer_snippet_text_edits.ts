@@ -1,5 +1,4 @@
 import * as vs from "vscode";
-import * as ls from "vscode-languageclient";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { IAmDisposable } from "../../shared/interfaces";
@@ -43,8 +42,8 @@ export class SnippetTextEditFeature implements IAmDisposable {
 					if (entries.length === 1 && entries[0][1].length === 1) {
 						const uri = entries[0][0];
 						const textEdit = entries[0][1][0];
-						// HACK: Check the injected insertTextFormat added in the asWorkspaceEdit overrides.
-						const hasSnippet = (textEdit as any).insertTextFormat === ls.InsertTextFormat.Snippet;
+						// HACK: Check the injected "isCustomSnippet" field added in the asWorkspaceEdit overrides.
+						const hasSnippet = !!(textEdit as any).isCustomSnippet;
 
 						// HACK: Work around the server producing 0th choice tabstops that are not valid until a
 						// server fix lands.

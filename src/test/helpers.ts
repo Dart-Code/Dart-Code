@@ -651,10 +651,10 @@ export function rangesOf(searchText: string): vs.Range[] {
 	return results;
 }
 
-export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>> {
+export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }> | undefined> {
 	const documentSymbolResult = await vs.commands.executeCommand<vs.DocumentSymbol[]>("vscode.executeDocumentSymbolProvider", currentDoc().uri);
-	if (!documentSymbolResult)
-		return [];
+	if (!documentSymbolResult || !documentSymbolResult.length)
+		return undefined;
 
 	// Return a flattened list with references to parent for simplified testing.
 	const resultWithEmptyParents = documentSymbolResult.map((c) => Object.assign(c, { parent: undefined as vs.DocumentSymbol | undefined }));

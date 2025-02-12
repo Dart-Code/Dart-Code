@@ -198,7 +198,6 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	}
 
 	private async onDevicesChanged(): Promise<void> {
-
 		let devices: Device[] = [];
 		let unsupportedDevices: Device[] = [];
 

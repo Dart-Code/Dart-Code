@@ -824,11 +824,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldHttpFile);
 		// Get location for `http.read(`
-		const httpReadCall = positionOf("http.re^ad(");
+		const httpReadCall = positionOf("http.^read(");
 		const httpReadDef = await getDefinition(httpReadCall);
 		const expectedHttpReadDefinitionPath = dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef));
 		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
+			column: httpReadCall.character + 1,
 			line: httpReadCall.line + 1,
 			path: dc.isUsingUris ? flutterHelloWorldHttpFile.toString() : fsPath(flutterHelloWorldHttpFile),
 		});
