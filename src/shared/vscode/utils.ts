@@ -118,21 +118,17 @@ export async function getAllProjectFoldersAndExclusions(
 	getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
 	options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, workspaceFolders?: WorkspaceFolder[], onlyWorkspaceRoots?: boolean },
 ): Promise<ProjectFolderSearchResults> {
-	logger.info(`DART5413-DEBUG: options.workspaceFolders: ${options.workspaceFolders}`);
 	const workspaceFolders = options.workspaceFolders ?? getDartWorkspaceFolders();
-	logger.info(`DART5413-DEBUG: Searching in ${workspaceFolders.length} Dart Workspace Folders (of ${workspace.workspaceFolders?.length})`);
 
 	// If an existing search is in progress, wait because it might populate the cache with the results
 	// we want.
 	if (inProgressProjectFolderSearch) {
-		logger.info(`DART5413-DEBUG: Returning in-progress search`);
 		await inProgressProjectFolderSearch;
 	}
 
 	const cacheKey = `folders_${workspaceFolders.map((f) => f.uri.toString()).join(path.sep)}_${!!options.sort}_${!!options.onlyWorkspaceRoots}`;
 	const cachedFolders = projectFolderCache.get(cacheKey);
 	if (cachedFolders) {
-		logger.info(`DART5413-DEBUG: Returning cached results (${cacheKey})`);
 		logger.info(`Returning cached results for project search`);
 		return cachedFolders;
 	}
@@ -147,8 +143,6 @@ export async function getAllProjectFoldersAndExclusions(
 
 		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
 		let allExcludedFolders = getExcludedFolders ? flatMap(workspaceFolders, getExcludedFolders) : [];
-		logger.info(`DART5413-DEBUG: topLevelFolders: ${topLevelFolders.join(", ")}`);
-		logger.info(`DART5413-DEBUG: allExcludedFolders: ${allExcludedFolders.join(", ")}`);
 		const resultsPromise = findProjectFolders(logger, topLevelFolders, allExcludedFolders, options, tokenSource.token);
 
 		// After some time, if we still have not completed, show a progress notification that can be cancelled
