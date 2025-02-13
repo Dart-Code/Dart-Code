@@ -6,7 +6,7 @@ import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
-import { WorkspaceConfig } from "../shared/interfaces";
+import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
 import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
@@ -274,13 +274,31 @@ export async function openLogContents(logType = `txt`, logContents: string, temp
 
 /// Gets all excluded folders (full absolute paths) for a given workspace
 /// folder based on config.
-export function getExcludedFolders(f: WorkspaceFolder | undefined): string[] {
+export function getExcludedFolders(f: WorkspaceFolder | undefined, logger?: Logger): string[] {
 	if (!f)
 		return [];
 
-	const excludedForWorkspace = config.for(f.uri).analysisExcludedFolders;
+	const c = config.for(f.uri);
+	const excludedForWorkspace = c.analysisExcludedFolders;
 	if (!excludedForWorkspace || !Array.isArray(excludedForWorkspace))
 		return [];
+
+	logger?.info(`DART5413-DEBUG: Found exclusion: [${excludedForWorkspace.join(", ")}] for ${f.uri}`);
+
+	const inspect = c.config.inspect("analysisExcludedFolders");
+	logger?.info(`inspect:
+		defaultLanguageValue: ${inspect?.defaultLanguageValue}
+		defaultValue: ${inspect?.defaultValue}
+		globalLanguageValue: ${inspect?.globalLanguageValue}
+		globalValue: ${inspect?.globalValue}
+		key: ${inspect?.key}
+		languageIds: ${inspect?.languageIds}
+		workspaceFolderLanguageValue: ${inspect?.workspaceFolderLanguageValue}
+		workspaceFolderValue: ${inspect?.workspaceFolderValue}
+		workspaceLanguageValue: ${inspect?.workspaceLanguageValue}
+		workspaceValue: ${inspect?.workspaceValue}
+	`);
+
 
 	const workspacePath = fsPath(f.uri);
 	return excludedForWorkspace.map((folder) => {
