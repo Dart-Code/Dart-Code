@@ -165,14 +165,17 @@ export async function getAllProjectFoldersAndExclusions(
 
 		let projectFolders = await resultsPromise;
 		isComplete = true;
-		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
+		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for ${projectFolders.length} projects (${options.searchDepth} levels)`);
+		logger.info(`    Found projects:`);
+		for (const projectFolder of projectFolders)
+			logger.info(`        ${projectFolder}`);
 		startTimeMs = new Date().getTime();
 
 		// Filter out any folders excluded by analysis_options.
 		try {
 			const excludedFolders = getAnalysisOptionsExcludedFolders(logger, projectFolders);
 			projectFolders = projectFolders.filter((p) => !excludedFolders.find((ex) => isWithinPathOrEqual(p, ex)));
-			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
+			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules). ${projectFolders.length} projects remain.`);
 
 			allExcludedFolders = allExcludedFolders.concat(excludedFolders);
 		} catch (e) {
