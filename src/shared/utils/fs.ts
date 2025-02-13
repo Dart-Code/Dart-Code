@@ -302,18 +302,28 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 		previousLevelFolders = nextLevelFolders;
 	}
 
+	logger.info(`DART5413-DEBUG: allPossibleFolders1: ${allPossibleFolders.length}`);
 	allPossibleFolders = allPossibleFolders
 		.filter((f) => !f.includes(dartToolFolderName) && excludedFolders.every((ef) => !isWithinPathOrEqual(f, ef)));
+	logger.info(`DART5413-DEBUG: allPossibleFolders2: ${allPossibleFolders.length}`);
 
-	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
-		exists: options && options.requirePubspec
-			? await hasPubspecAsync(folder)
-			: options.onlyWorkspaceRoots || await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
-		folder,
-	}));
+	logger.info(`DART5413-DEBUG: Checking for pubspecs: ${options.requirePubspec}`);
+	const projectFolderPromises = allPossibleFolders.map(async (folder) => {
+		const hasPub = await hasPubspecAsync(folder);
+		logger.info(`DART5413-DEBUG: hasPubspec?: ${folder}: ${hasPub}`);
+		return {
+			exists: options && options.requirePubspec
+				? hasPub
+				: options.onlyWorkspaceRoots || hasPub || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
+			folder,
+		};
+	});
 	const projectFoldersChecks = await Promise.all(projectFolderPromises);
 	const projectFolders = projectFoldersChecks
-		.filter((res) => res.exists)
+		.filter((res) => {
+			logger.info(`DART5413-DEBUG: exists? ${res.folder}: ${res.exists}`);
+			return res.exists;
+		})
 		.map((res) => res.folder);
 
 	return options && options.sort
