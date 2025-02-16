@@ -109,14 +109,36 @@ const scriptNonce = Buffer.from(pageScript).toString("base64");
 const frameCss = "position: absolute; top: 0; left: 0; width: 100%; height: 100%";
 const cssNonce = Buffer.from(frameCss).toString("base64");
 
-export class DevToolsEmbeddedView implements IAmDisposable {
-	private readonly panel: vs.WebviewPanel;
+export abstract class DevToolsEmbeddedViewOrSidebarView implements IAmDisposable {
 	private onDisposeEmitter: EventEmitter<void> = new EventEmitter<void>();
-	private messageDisposable: vs.Disposable;
+
 	public readonly onDispose: Event<void> = this.onDisposeEmitter.event;
 	public openedAutomatically = false;
 
-	constructor(public session: DartDebugSessionInformation | undefined, readonly devToolsUri: string, readonly pageTitle: string, location: "beside" | "active" | undefined) {
+	constructor(public session: DartDebugSessionInformation | undefined) { }
+
+	abstract setUrl(url: string): void;
+	abstract reload(): void;
+
+	public load(session: DartDebugSessionInformation | undefined, url: string): void {
+		this.session = session;
+		this.setUrl(url);
+	}
+
+	public dispose(): void {
+		this.onDisposeEmitter.fire();
+	}
+}
+
+
+export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
+	private readonly panel: vs.WebviewPanel;
+	// TODO(dantup): Suppoer this on base for sidebar version?
+	private messageDisposable: vs.Disposable;
+
+	constructor(session: DartDebugSessionInformation | undefined, readonly devToolsUri: string, readonly pageTitle: string, location: "beside" | "active" | undefined) {
+		super(session);
+
 		const column = location === "active"
 			? vs.ViewColumn.Active
 			: (firstNonEditorColumn() ?? vs.ViewColumn.Beside);
@@ -147,9 +169,8 @@ export class DevToolsEmbeddedView implements IAmDisposable {
 		);
 	}
 
-	public load(session: DartDebugSessionInformation | undefined, uri: string): void {
-		this.session = session;
-		void this.panel.webview.postMessage({ command: "setUrl", url: uri });
+	public setUrl(url: string): void {
+		void this.panel.webview.postMessage({ command: "setUrl", url });
 		this.panel.reveal();
 	}
 
@@ -157,10 +178,12 @@ export class DevToolsEmbeddedView implements IAmDisposable {
 		void this.panel.webview.postMessage({ command: "refresh" });
 	}
 
+
 	public dispose(panelDisposed = false): void {
 		if (!panelDisposed)
 			this.panel.dispose();
-		this.onDisposeEmitter.fire();
-		this.messageDisposable.dispose();
+		super.dispose();
 	}
 }
+
+
