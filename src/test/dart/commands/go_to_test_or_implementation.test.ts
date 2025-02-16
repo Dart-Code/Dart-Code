@@ -11,6 +11,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 	describe(commandName, () => {
 
 		beforeEach("activate", () => activate());
+		after("clean up", () => setupTestFiles());
 
 		it("can jump from lib/ implementation file to test/ file", async () => {
 			setupTestFiles({
@@ -251,7 +252,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 }
 
 
-function setupTestFiles(files: {
+function setupTestFiles(files?: {
 	libFile: boolean,
 	libSrcFile: boolean,
 	testFile: boolean,
@@ -261,19 +262,19 @@ function setupTestFiles(files: {
 	createFolderForFile(fsPath(helloWorldGoToLibSrcFile));
 	createFolderForFile(fsPath(helloWorldGoToTestFile));
 	createFolderForFile(fsPath(helloWorldGoToTestSrcFile));
-	if (files.libFile)
+	if (files?.libFile)
 		fs.writeFileSync(fsPath(helloWorldGoToLibFile), "");
 	else
 		tryDelete(helloWorldGoToLibFile);
-	if (files.libSrcFile)
+	if (files?.libSrcFile)
 		fs.writeFileSync(fsPath(helloWorldGoToLibSrcFile), "");
 	else
 		tryDelete(helloWorldGoToLibSrcFile);
-	if (files.testFile)
+	if (files?.testFile)
 		fs.writeFileSync(fsPath(helloWorldGoToTestFile), "");
 	else
 		tryDelete(helloWorldGoToTestFile);
-	if (files.testSrcFile)
+	if (files?.testSrcFile)
 		fs.writeFileSync(fsPath(helloWorldGoToTestSrcFile), "");
 	else
 		tryDelete(helloWorldGoToTestSrcFile);

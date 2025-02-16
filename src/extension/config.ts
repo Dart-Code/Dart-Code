@@ -2,8 +2,9 @@ import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from "vsc
 import { CustomDevToolsConfig, GetSDKCommandConfig } from "../shared/interfaces";
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
 import { createFolderForFile } from "../shared/utils/fs";
+import { resolvePaths } from "../shared/vscode/utils";
 import { DevToolsLocation, DevToolsLocations } from "./sdk/dev_tools/manager";
-import { insertWorkspaceName, resolvePaths } from "./utils";
+import { insertWorkspaceName } from "./utils";
 import { setupToolEnv } from "./utils/processes";
 
 class Config {
@@ -198,9 +199,9 @@ class Config {
 	get showTodos(): boolean | string[] { return this.getConfig<boolean | string[]>("showTodos", true); }
 	get testInvocationMode(): "name" | "line" { return this.getConfig<"name" | "line">("testInvocationMode", "name"); }
 	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null)))); }
+	get toolingDaemonAdditionalArgs(): string[] { return this.getConfig<string[]>("toolingDaemonAdditionalArgs", []); }
 	get updateDevTools(): boolean { return this.getConfig<boolean>("updateDevTools", true); }
 	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
-	get useLegacyAnalyzerProtocol(): boolean { return this.getConfig<boolean>("useLegacyAnalyzerProtocol", false); }
 	get useLegacyDebugAdapters(): undefined | boolean { return this.getConfig<null | boolean>("useLegacyDebugAdapters", null); }
 	get vmServiceLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null)))); }
 	get warnWhenEditingFilesInPubCache(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesInPubCache", true); }

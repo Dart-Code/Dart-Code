@@ -11,7 +11,6 @@ import { CommandSource, cpuProfilerPage, dartVMPath, devToolsHomePage, devToolsP
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
-import { getPubExecutionInfo } from "../../../shared/processes";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
@@ -172,23 +171,6 @@ export class DevToolsManager implements vs.Disposable {
 
 		if (!this.devtoolsUrl) {
 			this.setNotStartedStatusBar();
-			// Ensure the Pub version of DevTools is installed if we're not launching from the daemon or
-			// the version from the Dart SDK.
-			if (!this.dartCapabilities.supportsDartDevTools) {
-				const installedVersion = await this.pubGlobal.installIfRequired({
-					moreInfoLink: undefined,
-					packageID: devtoolsPackageID,
-					packageName: devtoolsPackageName,
-					requiredVersion: "0.9.6",
-					silent,
-					skipOptionalUpdates: !config.updateDevTools,
-					updateSilently: true,
-				});
-				// If install failed, we can't start.
-				if (!installedVersion) {
-					return undefined;
-				}
-			}
 
 			// Ignore silent flag if we're using a custom DevTools, because it could
 			// take much longer to start and won't be obvious why launching isn't working.
@@ -434,11 +416,8 @@ export class DevToolsManager implements vs.Disposable {
 		};
 
 		// Handle new Path URL DevTools.
-		let path = "";
-		if (this.dartCapabilities.supportsDartDevToolsPathUrls) {
-			path = queryParams.page ?? "";
-			delete queryParams.page;
-		}
+		const path = queryParams.page ?? "";
+		delete queryParams.page;
 
 		if (vmServiceUri) {
 			/**
@@ -719,13 +698,11 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 				executable: path.join(customDevTools.path, customDevTools.legacy ? devToolsToolLegacyPath : devToolsToolPath),
 
 			}
-			: dartCapabilities.supportsDartDevTools
-				? usingCustomScript(
-					dartVm,
-					["devtools"],
-					workspaceContext.config?.flutterDevToolsScript,
-				)
-				: getPubExecutionInfo(dartCapabilities, workspaceContext.sdks.dart, ["global", "run", "devtools"]);
+			: usingCustomScript(
+				dartVm,
+				["devtools"],
+				workspaceContext.config?.flutterDevToolsScript,
+			);
 
 		const binPath = executionInfo.executable;
 		const binArgs = [...executionInfo.args, ...devToolsArgs];

@@ -1,11 +1,11 @@
 import * as path from "path";
-import { CancellationToken, CodeLens, CodeLensProvider, commands, Event, EventEmitter, TextDocument } from "vscode";
+import { CancellationToken, CodeLens, CodeLensProvider, commands, Event, EventEmitter, Range, TextDocument } from "vscode";
 import { FlutterSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { ClassOutlineVisitor } from "../../shared/utils/outline_das";
-import { envUtils, toRange } from "../../shared/vscode/utils";
-import { DasAnalyzer } from "../analysis/analyzer_das";
+import { ClassOutlineVisitor } from "../../shared/utils/outline";
+import { envUtils, lspToPosition, lspToRange } from "../../shared/vscode/utils";
+import { LspAnalyzer } from "../analysis/analyzer";
 
 const dartPadSamplePattern = new RegExp("\\{@tool\\s+dartpad");
 
@@ -15,8 +15,8 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
 	private readonly flutterPackagesFolder: string;
 
-	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzer, private readonly sdks: FlutterSdks) {
-		this.disposables.push(this.analyzer.client.registerForAnalysisOutline((n) => {
+	constructor(private readonly logger: Logger, private readonly analyzer: LspAnalyzer, private readonly sdks: FlutterSdks) {
+		this.disposables.push(this.analyzer.fileTracker.onOutline(() => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 
@@ -44,7 +44,7 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 		// Without version numbers, the best we have to tell if an outline is likely correct or stale is
 		// if its length matches the document exactly.
 		const expectedLength = document.getText().length;
-		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document.uri, expectedLength, token);
+		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document, expectedLength, token);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
@@ -56,14 +56,14 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 		// Filter classes to those with DartPad samples.
 		const samples = visitor.classes.filter((cl) => {
 			// HACK: DartDocs are between the main offset and codeOffset.
-			const docs = document.getText(toRange(document, cl.offset, cl.codeOffset - cl.offset));
+			const docs = document.getText(new Range(lspToPosition(cl.range.start), lspToPosition(cl.codeRange.start)));
 			return dartPadSamplePattern.test(docs);
 		}).map((cl) => ({ ...cl, libraryName }));
 
 		return samples
-			.filter((sample) => sample.codeOffset && sample.codeLength)
+			.filter((sample) => sample.codeRange)
 			.map((sample) => new CodeLens(
-				toRange(document, sample.codeOffset, sample.codeLength),
+				lspToRange(sample.codeRange),
 				{
 					arguments: [sample],
 					command: "_dart.openDartPadSample",

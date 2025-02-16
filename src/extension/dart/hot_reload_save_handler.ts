@@ -11,7 +11,6 @@ import { isWithinWorkspace, shouldHotReloadFor } from "../utils";
 
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
-	private flutterHotReloadDelayTimer: NodeJS.Timeout | undefined;
 	private dartHotReloadDelayTimer: NodeJS.Timeout | undefined;
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
@@ -123,32 +122,17 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 
 		const commandToRun = "dart.hotReload";
 		const args = {
-			debounce: this.flutterCapabilities.supportsRestartDebounce,
+			debounce: true,
 			onlyFlutter: true,
 			reason: restartReasonSave,
 		};
 
-		if (this.flutterCapabilities.supportsRestartDebounce) {
-			void commands.executeCommand(commandToRun, args);
-		} else {
-			// Debounce to avoid reloading multiple times during multi-file-save (Save All).
-			// Hopefully we can improve in future: https://github.com/microsoft/vscode/issues/86087
-			if (this.flutterHotReloadDelayTimer) {
-				clearTimeout(this.flutterHotReloadDelayTimer);
-			}
-
-			this.flutterHotReloadDelayTimer = setTimeout(() => {
-				this.flutterHotReloadDelayTimer = undefined;
-				void commands.executeCommand(commandToRun, args);
-			}, 200);
-		}
+		void commands.executeCommand(commandToRun, args);
 	}
 
 	public dispose(): void | Promise<void> {
 		if (this.dartHotReloadDelayTimer)
 			clearTimeout(this.dartHotReloadDelayTimer);
-		if (this.flutterHotReloadDelayTimer)
-			clearTimeout(this.flutterHotReloadDelayTimer);
 
 		disposeAll(this.disposables);
 	}

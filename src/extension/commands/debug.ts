@@ -14,7 +14,7 @@ import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
-import { LspFileTracker } from "../analysis/file_tracker_lsp";
+import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
 import { VmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
 import { locateBestProjectRoot } from "../project";
@@ -79,7 +79,7 @@ export class DebugCommands implements IAmDisposable {
 
 	constructor(
 		private readonly logger: Logger,
-		private readonly fileTracker: LspFileTracker | undefined,
+		private readonly fileTracker: FileTracker,
 		private context: Context,
 		private workspaceContext: DartWorkspaceContext,
 		readonly dartCapabilities: DartCapabilities,
@@ -942,7 +942,7 @@ export class DebugCommands implements IAmDisposable {
 		let isRunnable = isValidEntryFile(documentPath);
 
 		if (!isRunnable) {
-			const outline = this.fileTracker?.getOutlineFor(documentUri);
+			const outline = this.fileTracker.getOutlineFor(documentUri);
 			isRunnable = !!outline?.children?.find((c) => c.element.name === "main");
 		}
 

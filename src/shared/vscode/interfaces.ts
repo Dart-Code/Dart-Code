@@ -1,6 +1,5 @@
-import { CancellationToken, CompletionItem, CompletionItemProvider, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, MarkdownString, OutputChannel, RenameProvider, TestController, TestItem, TestRunRequest, TextDocument, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CancellationToken, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, OutputChannel, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
 import * as lsp from "../analysis/lsp/custom_protocol";
-import { AvailableSuggestion, FlutterOutline, Outline } from "../analysis_server_types";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
@@ -32,19 +31,11 @@ export interface DebugCommandHandler {
 
 export interface InternalExtensionApi {
 	addDependencyCommand: any,
-	analyzerCapabilities?: {
-		supportsGetSignature: boolean;
-		supportsAvailableSuggestions: boolean;
-		supportsIncludedImports: boolean;
-	};
-	cancelAllAnalysisRequests: () => void;
-	completionItemProvider: CompletionItemProvider;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
 	interactiveRefactors: InteractiveRefactors | undefined;
 	isInTestFileThatHasImplementation: boolean;
 	isInImplementationFileThatCanHaveTest: boolean;
-	isLsp: boolean;
 	dartCapabilities: DartCapabilities;
 	debugAdapterDescriptorFactory: { descriptorForType(debuggerType: DebuggerType): DebugAdapterDescriptor },
 	debugCommands: DebugCommandHandler;
@@ -61,8 +52,8 @@ export interface InternalExtensionApi {
 		openInBrowser(url: string): Promise<boolean>;
 	};
 	fileTracker: {
-		getOutlineFor(uri: Uri): Outline | lsp.Outline | undefined;
-		getFlutterOutlineFor?: (uri: Uri) => FlutterOutline | lsp.FlutterOutline | undefined;
+		getOutlineFor(uri: Uri): lsp.Outline | undefined;
+		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
 		getLastPriorityFiles?: () => string[];
 		getLastSubscribedFiles?: () => string[];
 	};
@@ -82,7 +73,6 @@ export interface InternalExtensionApi {
 		getInstalledVersion(packageName: string, packageID: string): Promise<string | undefined>;
 		uninstall(packageID: string): Promise<void>;
 	};
-	renameProvider: RenameProvider | undefined;
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
 	testController: {
 		controller: TestController;
@@ -101,29 +91,6 @@ export interface InternalExtensionApi {
 	sdkUtils?: {
 		runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult>
 	},
-}
-
-export interface DelayedCompletionItem extends LazyCompletionItem {
-	autoImportUri: string;
-	document: TextDocument;
-	enableCommitCharacters: boolean;
-	filePath: string;
-	insertArgumentPlaceholders: boolean;
-	nextCharacter: string;
-	offset: number;
-	relevance: number;
-	replacementLength: number;
-	replacementOffset: number;
-	suggestion: AvailableSuggestion;
-	suggestionSetID: number;
-}
-
-// To avoid sending back huge docs for every completion item, we stash some data
-// in our own fields (which won't serialise) and then restore them in resolve()
-// on an individual completion basis.
-export interface LazyCompletionItem extends CompletionItem {
-	// tslint:disable-next-line: variable-name
-	_documentation?: string | MarkdownString;
 }
 
 export interface FlutterSampleSnippet {

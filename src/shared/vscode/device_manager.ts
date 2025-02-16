@@ -222,6 +222,18 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return false;
 	}
 
+	public async selectDeviceByPlatformType(platformType: string): Promise<boolean> {
+		const device = this.devices.find((d) => d.platformType === platformType);
+		if (device) {
+			await this.selectDevice({
+				device,
+				label: this.labelForDevice(device, { withIcon: true }),
+			});
+			return true;
+		}
+		return false;
+	}
+
 	public async selectDevice(selection: PickableDevice) {
 		const emulatorTypeLabel = this.emulatorLabel(selection.device.platformType);
 		switch (selection.device.type) {
@@ -257,6 +269,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 				const platformType = selection.device.platformType;
 				if (!await this.enablePlatformType(platformType))
 					return false;
+				// Attempt to select a device of this type that might now be valid.
+				await this.selectDeviceByPlatformType(platformType);
 				break;
 			case "device":
 				this.rememberDevice(selection.device);

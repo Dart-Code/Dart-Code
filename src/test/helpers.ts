@@ -281,9 +281,6 @@ export async function activate(file?: vs.Uri | null | undefined): Promise<void> 
 	logger.info(`Waiting for in-progress analysis`);
 	await extApi.currentAnalysis();
 
-	logger.info(`Cancelling any in-progress requests`);
-	extApi.cancelAllAnalysisRequests();
-
 	logger.info(`Ready to start test`);
 	const cpuLoad = os.loadavg();
 	const totalMem = os.totalmem();
@@ -654,10 +651,10 @@ export function rangesOf(searchText: string): vs.Range[] {
 	return results;
 }
 
-export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>> {
+export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }> | undefined> {
 	const documentSymbolResult = await vs.commands.executeCommand<vs.DocumentSymbol[]>("vscode.executeDocumentSymbolProvider", currentDoc().uri);
-	if (!documentSymbolResult)
-		return [];
+	if (!documentSymbolResult || !documentSymbolResult.length)
+		return undefined;
 
 	// Return a flattened list with references to parent for simplified testing.
 	const resultWithEmptyParents = documentSymbolResult.map((c) => Object.assign(c, { parent: undefined as vs.DocumentSymbol | undefined }));
@@ -786,10 +783,7 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 			`${symbol.location.uri} should equal ${uriOrMatch})`,
 		);
 	assert.ok(symbol.location);
-	if (extApi.isLsp)
-		assert.ok(symbol.location.range);
-	else // For non-LSP, we use resolve. This can be dropped when we're full LSP.
-		assert.ok(!symbol.location.range);
+	assert.ok(symbol.location.range);
 }
 
 export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }>, name: string, kind: vs.SymbolKind, parentName?: string): void {
@@ -1315,7 +1309,7 @@ export function isTestDoneSuccessNotification(e: vs.DebugSessionCustomEvent) {
 	return notification.type === "testDone" && notification.result !== "error" && !notification.hidden;
 }
 
-export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffer = [], indent = 0, onlyFailures, onlyActive }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean } = {}): string[] {
+export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffer = [], indent = 0, onlyFailures, onlyActive, sortByLabel }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean, sortByLabel?: boolean } = {}): string[] {
 	const collection = items instanceof vs.Uri
 		? extApi.testController.controller.items
 		: items ?? extApi.testController.controller.items;
@@ -1327,10 +1321,12 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 			testItems.push(item);
 	});
 
-	// Sort the items by their locations so we get stable results. Otherwise the order that items
+	// Sort the items by their locations by default so we get stable results. Otherwise the order that items
 	// are created would be used, which is usually source-order, but could be different if the user
 	// selectively runs tests starting at the end of the file.
-	sortBy(testItems, getSourceLine);
+	// Allow overriding to sort by name for tests that are modifying files and running subsets of tests
+	// and don't care about source order.
+	sortBy(testItems, sortByLabel ? (item) => item.label : getSourceLine);
 
 	for (const item of testItems) {
 		const lastResult = extApi.testController.getLatestData(item);
@@ -1362,7 +1358,7 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 		if (includeNode)
 			buffer.push(`${" ".repeat(indent * 4)}${nodeString}`);
 
-		makeTestTextTree(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive });
+		makeTestTextTree(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive, sortByLabel });
 	}
 
 	return buffer;

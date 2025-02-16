@@ -97,7 +97,6 @@ export class DartDebugSession extends DebugSession {
 	protected shouldKillProcessOnTerminate = true;
 	protected logCategory = LogCategory.General; // This isn't used as General, since both debuggers override it.
 	protected supportsRunInTerminalRequest = false;
-	protected supportsDebugInternalLibraries = false;
 	protected isTerminating = false;
 	protected readonly logger = new DebugAdapterLogger(this, LogCategory.VmService);
 	protected debuggerInit: Promise<void> | undefined;
@@ -189,9 +188,8 @@ export class DartDebugSession extends DebugSession {
 		await this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.program || args.cwd));
 		this.dartCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.dartSdkPath }) ?? this.dartCapabilities.version;
-		this.useWriteServiceInfo = this.allowWriteServiceInfo && this.dartCapabilities.supportsWriteServiceInfo;
+		this.useWriteServiceInfo = this.allowWriteServiceInfo;
 		this.deleteServiceFileAfterRead = !!args.deleteServiceInfoFile;
-		this.supportsDebugInternalLibraries = this.dartCapabilities.supportsDebugInternalLibraries;
 		this.readSharedArgs(args);
 
 		this.logDapResponse(response);
@@ -420,8 +418,7 @@ export class DartDebugSession extends DebugSession {
 			this.expectAdditionalPidToTerminate = true;
 			allArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 			allArgs.push("--pause_isolates_on_start=true");
-			if (this.dartCapabilities.supportsNoServeDevTools)
-				allArgs.push("--no-serve-devtools");
+			allArgs.push("--no-serve-devtools");
 		}
 		if (this.useWriteServiceInfo && this.vmServiceInfoFile) {
 			allArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
@@ -1172,8 +1169,6 @@ export class DartDebugSession extends DebugSession {
 	}
 
 	private isDebuggable(uri: string): boolean {
-		if (!this.isValidToDebug(uri))
-			return false;
 		if (this.isSdkLibrary(uri))
 			return this.debugSdkLibraries;
 		if (this.isExternalLibrary(uri))
@@ -2179,10 +2174,6 @@ export class DartDebugSession extends DebugSession {
 				variablesReference: val.valueAsString ? 0 : thread.storeData(val),
 			};
 		}
-	}
-
-	public isValidToDebug(uri: string) {
-		return this.supportsDebugInternalLibraries || !uri.startsWith("dart:_");
 	}
 
 	public isSdkLibrary(uri: string) {

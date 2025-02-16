@@ -165,7 +165,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		// Ensure we have a device if required.
 		let deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId as string | undefined) || this.deviceManager?.currentDevice;
 		const requiresDevice = (debugType === DebuggerType.Flutter && !isAttachRequest)
-			|| (DebuggerType.FlutterTest && isIntegrationTest && this.flutterCapabilities.supportsRunningIntegrationTests);
+			|| (DebuggerType.FlutterTest && isIntegrationTest);
 		if (requiresDevice) {
 			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
 				let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
@@ -703,7 +703,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					break;
 
 				default: // Debug mode.
-					const futterVmServicePortOption = this.flutterCapabilities.supportsFlutterHostVmServicePort ? "host-vmservice-port" : "observatory-port";
+					const futterVmServicePortOption = "host-vmservice-port";
 					if (debugConfig.vmServicePort && isDebug)
 						this.addArgsIfNotExist(args, `--${futterVmServicePortOption}`, debugConfig.vmServicePort.toString());
 					if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
@@ -714,14 +714,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				this.addArgsIfNotExist(args, "--target-platform", debugConfig.flutterPlatform);
 
 			if (debugConfig.deviceId === "web-server") {
-				if (this.flutterCapabilities.supportsWsVmService && !args.includes("--web-server-debug-protocol"))
+				if (!args.includes("--web-server-debug-protocol"))
 					this.addArgsIfNotExist(args, "--web-server-debug-protocol", "ws");
-				if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsDebugBackend)
+				if (config.debugExtensionBackendProtocol)
 					this.addArgsIfNotExist(args, "--web-server-debug-backend-protocol", config.debugExtensionBackendProtocol);
-				if (config.debugExtensionBackendProtocol && this.flutterCapabilities.supportsWsInjectedClient)
+				if (config.debugExtensionBackendProtocol)
 					this.addArgsIfNotExist(args, "--web-server-debug-injected-client-protocol", config.debugExtensionBackendProtocol);
 			}
-			if (this.flutterCapabilities.supportsExposeUrl && !isRunningLocally)
+			if (!isRunningLocally)
 				this.addArgsIfNotExist(args, "--web-allow-expose-url");
 
 			if (isWeb) {
@@ -736,7 +736,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			this.addArgsIfNotExist(args, "--daemon-connection-port", daemonPort.toString());
 		}
 
-		if (config.shareDevToolsWithFlutter && this.flutterCapabilities.supportsDevToolsServerAddress && !args.includes("--devtools-server-address")) {
+		if (config.shareDevToolsWithFlutter && !args.includes("--devtools-server-address")) {
 			this.logger.info("Getting DevTools server address to pass to Flutter...");
 			try {
 				const devtoolsUrl = await this.devTools.devtoolsUrl;

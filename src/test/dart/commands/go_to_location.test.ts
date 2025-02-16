@@ -1,14 +1,10 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
-import { activate, closeAllOpenFiles, currentEditor, extApi, helloWorldMainFile } from "../../helpers";
+import { activate, closeAllOpenFiles, currentEditor, helloWorldMainFile } from "../../helpers";
 
 describe("go_to_location", () => {
 	beforeEach("activate", () => activate());
-	beforeEach("skip it not LSP", async function () {
-		if (!extApi.isLsp)
-			this.skip();
-	});
 
 	async function testCommand(targetLocation: vs.Location | ls.Location) {
 		await vs.commands.executeCommand("dart.goToLocation", targetLocation);

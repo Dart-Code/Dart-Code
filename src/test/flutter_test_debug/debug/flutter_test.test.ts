@@ -19,10 +19,7 @@ describe("flutter test debugger", () => {
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;
-	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.FlutterTest);
 		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
@@ -140,49 +137,7 @@ describe("flutter test debugger", () => {
 				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
 			});
 
-			it("does not attempt to run skipped tests from codelens if not supported", async function () {
-				if (extApi.flutterCapabilities.supportsRunSkippedTests)
-					this.skip();
-
-				const editor = await openFile(flutterTestMainFile);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
-
-				const fileCodeLens = await getCodeLens(editor.document);
-				const testPos = positionOf(`test^Widgets('Skipped test`);
-
-				const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
-				assert.equal(codeLensForTest.length, 2);
-
-				if (!codeLensForTest[0].command) {
-					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-					// race condition. Rather than failing our test runs, skip.
-					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-					this.skip();
-					return;
-				}
-
-				const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
-				assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
-				assert.equal(runAction.command!.arguments![0].fullName, "Skipped test");
-				assert.equal(runAction.command!.arguments![0].isGroup, false);
-
-				const customEvents = await captureDebugSessionCustomEvents(async () => {
-					const didStart = await vs.commands.executeCommand(runAction.command!.command, ...(runAction.command!.arguments ?? [])); // eslint-disable-line @typescript-eslint/no-unsafe-argument
-					assert.ok(didStart);
-				});
-
-				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
-				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
-				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
-
-				const testDone = testDoneNotification.body as TestDoneNotification;
-				assert.equal(testDone.skipped, true);
-			});
-
-			it("can run skipped tests from codelens if supported", async function () {
-				if (!extApi.flutterCapabilities.supportsRunSkippedTests)
-					this.skip();
-
+			it("can run skipped tests from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
 				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
 
@@ -503,10 +458,7 @@ describe("flutter test debugger", () => {
 				);
 			});
 
-			it("can run integration_test tests", async function () {
-				if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
-					this.skip();
-
+			it("can run integration_test tests", async () => {
 				const config = await startDebugger(dc, flutterIntegrationTestFile);
 				config.noDebug = true;
 
@@ -517,10 +469,7 @@ describe("flutter test debugger", () => {
 				);
 			});
 
-			it("stops at a breakpoint in test code in integration_test tests", async function () {
-				if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
-					this.skip();
-
+			it("stops at a breakpoint in test code in integration_test tests", async () => {
 				await openFile(flutterIntegrationTestFile);
 				const config = await startDebugger(dc, flutterIntegrationTestFile);
 
@@ -532,10 +481,7 @@ describe("flutter test debugger", () => {
 				);
 			});
 
-			it("stops at a breakpoint in app code in integration_test tests", async function () {
-				if (!extApi.flutterCapabilities.supportsRunningIntegrationTests)
-					this.skip();
-
+			it("stops at a breakpoint in app code in integration_test tests", async () => {
 				await openFile(flutterHelloWorldCounterAppFile);
 				const config = await startDebugger(dc, flutterIntegrationTestFile);
 

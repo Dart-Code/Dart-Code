@@ -24,11 +24,6 @@ export class DartCommands extends BaseSdkCommands {
 	}
 
 	private dartCreate(projectPath: string, templateName: string) {
-		if (!this.dartCapabilities.supportsDartCreate) {
-			void vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
-			return;
-		}
-
 		const binPath = path.join(this.sdks.dart, dartVMPath);
 		const projectContainer = path.dirname(projectPath);
 		const projectName = path.basename(projectPath);
@@ -44,11 +39,6 @@ export class DartCommands extends BaseSdkCommands {
 
 		if (!this.sdks || !this.sdks.dart) {
 			this.sdkUtils.showDartActivationFailure(command);
-			return;
-		}
-
-		if (!this.dartCapabilities.supportsDartCreate) {
-			void vs.window.showErrorMessage("Creating projects is only supported for Dart SDKs >= v2.10");
 			return;
 		}
 

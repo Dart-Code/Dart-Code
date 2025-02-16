@@ -23,10 +23,7 @@ describe("dart cli debugger", () => {
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;
-	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.Dart);
 		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
@@ -496,11 +493,12 @@ void printSomething() {
 	it("steps into an external library if debugExternalPackageLibraries is true", async () => {
 		await openFile(helloWorldHttpFile);
 		// Get location for `http.read(`
-		const httpReadCall = positionOf("http.re^ad(");
+		const httpReadCall = positionOf("http.^read(");
 		const httpReadDef = await getDefinition(httpReadCall);
 		const expectedHttpReadDefinitionPath = dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef));
 		const config = await startDebugger(dc, helloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
+			column: httpReadCall.character + 1,
 			line: httpReadCall.line + 1,
 			path: dc.isUsingUris ? helloWorldHttpFile.toString() : fsPath(helloWorldHttpFile),
 		});
@@ -1378,7 +1376,7 @@ insp=<inspected variable>
 			dc.assertStoppedLocation("exception", {
 				line: positionOf("^throw").line + 1, // TODO: This line seems to be one-based but position is zero-based?
 				path: dc.isUsingUris ? helloWorldBrokenFile.toString() : fsPath(helloWorldBrokenFile),
-				text: extApi.dartCapabilities.sdkDapProvidesExceptionText ? "_Exception (Exception: Oops)" : undefined,
+				text: "_Exception (Exception: Oops)",
 			}),
 			dc.launch(config),
 		);

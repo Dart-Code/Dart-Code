@@ -3,7 +3,7 @@ import { Outline } from "../analysis/lsp/custom_protocol";
 import { Logger } from "../interfaces";
 import { extractTestNameFromOutline } from "./test";
 
-export abstract class LspOutlineVisitor {
+export abstract class OutlineVisitor {
 	constructor(private logger: Logger) { }
 
 	public visit(outline: Outline) {
@@ -135,13 +135,13 @@ export abstract class LspOutlineVisitor {
 	protected visitUnknown(outline: Outline): void { this.visitChildren(outline); }
 }
 
-export class LspTestOutlineVisitor extends LspOutlineVisitor {
+export class TestOutlineVisitor extends OutlineVisitor {
 	constructor(logger: Logger, private readonly file: string) {
 		super(logger);
 	}
 
-	public readonly tests: LspTestOutlineInfo[] = [];
-	public readonly testsByLine: { [key: number]: LspTestOutlineInfo[] } = {};
+	public readonly tests: TestOutlineInfo[] = [];
+	public readonly testsByLine: { [key: number]: TestOutlineInfo[] } = {};
 
 	private readonly names: string[] = [];
 
@@ -189,15 +189,15 @@ export class LspTestOutlineVisitor extends LspOutlineVisitor {
 	}
 }
 
-export interface LspTestOutlineInfo {
+export interface TestOutlineInfo {
 	fullName: string;
 	file: string;
 	isGroup: boolean;
 	range: Range;
 }
 
-export class LspClassOutlineVisitor extends LspOutlineVisitor {
-	public readonly classes: LspClassInfo[] = [];
+export class ClassOutlineVisitor extends OutlineVisitor {
+	public readonly classes: ClassInfo[] = [];
 	protected visitClass(outline: Outline) {
 		this.addClass(outline);
 		super.visitClass(outline);
@@ -220,7 +220,7 @@ export class LspClassOutlineVisitor extends LspOutlineVisitor {
 	}
 }
 
-export interface LspClassInfo {
+export interface ClassInfo {
 	className: string;
 	elementKind: string;
 	range: Range;

@@ -7,10 +7,10 @@ import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../shared/utils/fs";
-import { LspOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { OutlineVisitor } from "../../shared/utils/outline";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions } from "../../shared/vscode/utils";
-import { LspFileTracker } from "../analysis/file_tracker_lsp";
+import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
 import { getExcludedFolders, isTestFile } from "../utils";
 
@@ -24,7 +24,7 @@ export class TestDiscoverer implements IAmDisposable {
 
 	public testDiscoveryPerformed: Promise<void> | undefined;
 
-	constructor(private readonly logger: Logger, public readonly fileTracker: LspFileTracker, private readonly model: TestModel) {
+	constructor(private readonly logger: Logger, public readonly fileTracker: FileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline((o) => this.handleOutline(o)));
 	}
 
@@ -101,7 +101,7 @@ export class TestDiscoverer implements IAmDisposable {
 					.map((item) => ({ name: item[0], type: item[1] }))
 					.filter((item) => !item.name.startsWith("."))
 					.map((item) => ({ name: item.name, type: item.type, path: path.join(fileOrDirectory, item.name) }))
-					.filter((item) => !excludedFolders?.has(item.path) ?? false)
+					.filter((item) => !(excludedFolders?.has(item.path) ?? false))
 					.map((item) => this.discoverTestSuites(item.path, excludedFolders, item.type === vs.FileType.Directory, level + 1));
 
 				await Promise.all(childPromises);
@@ -170,7 +170,7 @@ export class TestDiscoverer implements IAmDisposable {
 	}
 }
 
-class TestDiscoveryVisitor extends LspOutlineVisitor {
+class TestDiscoveryVisitor extends OutlineVisitor {
 	private readonly stack: Array<{ id: number, name: string }> = [];
 	private id = 1;
 

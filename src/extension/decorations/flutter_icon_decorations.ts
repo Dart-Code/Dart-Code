@@ -1,16 +1,20 @@
 import * as vs from "vscode";
+import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
 import { Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
+import { fsPath } from "../../shared/utils/fs";
 import { docsIconPathFormat } from "../../shared/vscode/extension_utils";
+import { IconRangeComputerLsp } from "../../shared/vscode/icon_range_computer";
+import { LspAnalyzer } from "../analysis/analyzer";
 import { isAnalyzable } from "../utils";
 
-export abstract class FlutterIconDecorations implements vs.Disposable {
+export class FlutterIconDecorations implements vs.Disposable {
 	protected readonly subscriptions: vs.Disposable[] = [];
 	protected activeEditor?: vs.TextEditor;
-
 	private readonly decorationTypes: { [key: string]: vs.TextEditorDecorationType } = {};
+	private readonly computer: IconRangeComputerLsp;
 
-	constructor(protected readonly logger: Logger) {
+	constructor(logger: Logger, private readonly analyzer: LspAnalyzer) {
 		this.subscriptions.push(vs.window.onDidChangeActiveTextEditor((e) => {
 			this.setTrackingFile(e);
 			this.update();
@@ -19,9 +23,29 @@ export abstract class FlutterIconDecorations implements vs.Disposable {
 			this.setTrackingFile(vs.window.activeTextEditor);
 			this.update();
 		});
+		this.computer = new IconRangeComputerLsp(logger);
+
+		this.subscriptions.push(this.analyzer.fileTracker.onFlutterOutline(async (op) => {
+			if (this.activeEditor && fsPath(this.activeEditor.document.uri) === fsPath(vs.Uri.parse(op.uri))) {
+				this.update(op.outline);
+			}
+		}));
 	}
 
-	protected abstract update(): void;
+	protected update(outline?: FlutterOutline) {
+		if (!this.activeEditor)
+			return;
+
+		if (!outline)
+			outline = this.analyzer.fileTracker.getFlutterOutlineFor(this.activeEditor.document.uri);
+
+		if (!outline)
+			return;
+
+		const results = this.computer.compute(outline);
+
+		this.render(results);
+	}
 
 	protected render(results: { [key: string]: vs.Range[]; }) {
 		if (!this.activeEditor)

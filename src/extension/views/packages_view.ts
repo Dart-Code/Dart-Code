@@ -17,9 +17,9 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 	protected readonly disposables: vs.Disposable[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
-	private readonly deps: PubDeps;
-	private readonly packageMapLoader: PackageMapLoader;
-	private readonly projectFinder: ProjectFinder;
+	public readonly deps: PubDeps;
+	public readonly packageMapLoader: PackageMapLoader;
+	public readonly projectFinder: ProjectFinder;
 
 	private processPackageMapChangeEvents = true;
 

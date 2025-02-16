@@ -28,10 +28,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;
-	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.flutterCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		if (extApi.debugSessions.length > 0) {
 			extApi.logger.warn(`Some debug sessions are already running before test started:`);
 			for (const debugSession of extApi.debugSessions) {
@@ -573,10 +570,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("automatically spawns DevTools at startup", async function () {
-		if (!extApi.flutterCapabilities.supportsDevToolsServerAddress)
-			this.skip();
-
+	it("automatically spawns DevTools at startup", async () => {
 		assert.ok(extApi.devTools.devtoolsUrl);
 		assert.ok((await extApi.devTools.devtoolsUrl).startsWith("http://"));
 	});
@@ -830,11 +824,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await openFile(flutterHelloWorldHttpFile);
 		// Get location for `http.read(`
-		const httpReadCall = positionOf("http.re^ad(");
+		const httpReadCall = positionOf("http.^read(");
 		const httpReadDef = await getDefinition(httpReadCall);
 		const expectedHttpReadDefinitionPath = dc.isUsingUris ? uriFor(httpReadDef).toString() : fsPath(uriFor(httpReadDef));
 		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: true });
 		await dc.hitBreakpoint(config, {
+			column: httpReadCall.character + 1,
 			line: httpReadCall.line + 1,
 			path: dc.isUsingUris ? flutterHelloWorldHttpFile.toString() : fsPath(flutterHelloWorldHttpFile),
 		});
@@ -1707,9 +1702,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("renders correct output for structured errors", async function () {
-		if (!extApi.flutterCapabilities.hasLatestStructuredErrorsWork)
-			return this.skip();
-
 		// Currently this test fails on Chrome because we always lose the race
 		// with enabling structured errors versus the error occurring
 		if (flutterTestDeviceIsWeb)

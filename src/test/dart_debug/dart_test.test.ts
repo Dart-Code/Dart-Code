@@ -2,14 +2,11 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
-import { Outline as lspOutline } from "../../shared/analysis/lsp/custom_protocol";
-import { Outline as asOutline } from "../../shared/analysis_server_types";
 import { DebuggerType } from "../../shared/enums";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
-import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline_das";
-import { LspTestOutlineVisitor } from "../../shared/utils/outline_lsp";
+import { TestOutlineVisitor } from "../../shared/utils/outline";
 import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartDebugClient } from "../dart_debug_client";
@@ -23,10 +20,7 @@ describe("dart test debugger", () => {
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;
-	beforeEach("create debug client", function () {
-		if (process.env.DART_CODE_FORCE_SDK_DAP === "true" && !extApi.dartCapabilities.supportsSdkDap)
-			this.skip();
-
+	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.DartTest);
 		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
@@ -493,12 +487,12 @@ describe("dart test debugger", () => {
 				await runWithoutDebugging(helloWorldTestTreeFile);
 				let numRuns = 1;
 				await checkResults(`After initial run`);
-				const visitor = extApi.isLsp ? new LspTestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile)) : new TestOutlineVisitor(logger);
+				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
-				visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
-				for (const test of (visitor.tests as TestOutlineInfo[]).filter((t) => !t.isGroup)) {
+				visitor.visit(outline);
+				for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 					// Run the test.
 					const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestTreeFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
 					await runWithoutDebugging(
@@ -517,7 +511,7 @@ describe("dart test debugger", () => {
 				async function checkResults(description: string): Promise<void> {
 					logger.info(description);
 					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree(helloWorldTestDupeNameFile).join("\n");
+					const actualResults = makeTestTextTree(helloWorldTestDupeNameFile, { sortByLabel: true }).join("\n");
 
 					assert.ok(expectedResults);
 					assert.ok(actualResults);
@@ -525,13 +519,12 @@ describe("dart test debugger", () => {
 				}
 
 				await runWithoutDebugging(helloWorldTestDupeNameFile);
-				let numRuns = 1;
 				await checkResults(`After initial run`);
-				const visitor = new TestOutlineVisitor(logger);
+				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
 				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
-				visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
+				visitor.visit(outline);
 				const doc = await vs.workspace.openTextDocument(helloWorldTestDupeNameFile);
 				const editor = await vs.window.showTextDocument(doc);
 				for (const modifyFile of [false, true]) {
@@ -543,14 +536,14 @@ describe("dart test debugger", () => {
 					for (const test of visitor.tests.filter((t) => !t.isGroup)) {
 						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(test)], runByLine);
 						await runWithoutDebugging(execInfo.programUri, execInfo.args);
-						await checkResults(`After running ${numRuns++} tests (most recently the test: ${test.fullName})`);
 					}
+					await checkResults(`After running tests`);
 					// Re-run each group.
 					for (const group of visitor.tests.filter((t) => t.isGroup)) {
 						const execInfo = testUtils.getTestExecutionInfo(fsPath(helloWorldTestDupeNameFile), [testUtils.getTestSelectionForOutline(group)], runByLine);
 						await runWithoutDebugging(execInfo.programUri, execInfo.args);
-						await checkResults(`After running ${numRuns++} groups (most recently the group: ${group.fullName})`);
 					}
+					await checkResults(`After running groups`);
 				}
 			}).timeout(160000); // This test runs lots of tests, and they're quite slow to start up currently.
 
@@ -653,7 +646,8 @@ test/tree_test.dart [6/8 passed] Failed
 	}
 
 	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<any>>): Promise<void> {
-		await openFile(file);
+		const fileUriWithoutQuery = file.with({ query: "" });
+		await openFile(fileUriWithoutQuery);
 		const config = await startDebugger(dc, file, { args, noDebug: true });
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),

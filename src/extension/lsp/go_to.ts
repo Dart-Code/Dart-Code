@@ -3,7 +3,7 @@ import * as ls from "vscode-languageclient";
 import { disposeAll } from "../../shared/utils";
 import { uriComparisonString } from "../../shared/utils/fs";
 import { showCode } from "../../shared/vscode/utils";
-import { LspAnalyzer } from "../analysis/analyzer_lsp";
+import { LspAnalyzer } from "../analysis/analyzer";
 import * as editors from "../editors";
 
 abstract class LspGoToCommand implements vs.Disposable {

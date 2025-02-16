@@ -1,7 +1,5 @@
 import { strict as assert } from "assert";
-import * as lsp from "../../../shared/analysis/lsp/custom_protocol";
-import * as das from "../../../shared/analysis_server_types";
-import { IconRangeComputer, IconRangeComputerLsp } from "../../../shared/vscode/icon_range_computer";
+import { IconRangeComputerLsp } from "../../../shared/vscode/icon_range_computer";
 import { activate, currentDoc, extApi, rangeOf, setTestContent, waitForNextAnalysis } from "../../helpers";
 
 describe("flutter_icon_decorations", () => {
@@ -27,9 +25,7 @@ var btn2 = RaisedButton.icon(
 
 		const doc = currentDoc();
 		const outline = extApi.fileTracker.getFlutterOutlineFor!(doc.uri)!;
-		const results = extApi.isLsp
-			? new IconRangeComputerLsp(extApi.logger).compute(outline as lsp.FlutterOutline)
-			: new IconRangeComputer(extApi.logger).compute(doc, outline as das.FlutterOutline);
+		const results = new IconRangeComputerLsp(extApi.logger).compute(outline);
 
 		assert.ok(results);
 		assert.deepStrictEqual(Object.keys(results), ["material/add", "cupertino/battery_75_percent"]);

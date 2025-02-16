@@ -14,15 +14,7 @@ describe("packages tree data", () => {
 
 	before("activate", () => activate());
 
-	beforeEach("skip for old SDKs", function () {
-		if (!extApi.dartCapabilities.supportsPubDepsJson)
-			this.skip();
-	});
-
-	beforeEach("setup deps + mocks", function () {
-		if (!extApi.dartCapabilities.supportsPubDepsJson)
-			this.skip();
-
+	beforeEach("setup deps + mocks", () => {
 		deps = extApi.packagesTreeProvider.deps!;
 		packageMapLoader = extApi.packagesTreeProvider.packageMapLoader!;
 		projectFinder = extApi.packagesTreeProvider.projectFinder!;

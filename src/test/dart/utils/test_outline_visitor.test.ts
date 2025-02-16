@@ -1,9 +1,6 @@
 import { strict as assert } from "assert";
-import { Outline as lspOutline } from "../../../shared/analysis/lsp/custom_protocol";
-import { Outline as asOutline } from "../../../shared/analysis_server_types";
 import { fsPath } from "../../../shared/utils/fs";
-import { TestOutlineVisitor } from "../../../shared/utils/outline_das";
-import { LspTestOutlineVisitor } from "../../../shared/utils/outline_lsp";
+import { TestOutlineVisitor } from "../../../shared/utils/outline";
 import { activate, extApi, getPackages, helloWorldTestMainFile, logger, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
@@ -15,12 +12,12 @@ describe("test_outline_visitor", () => {
 	});
 
 	it("reads the correct groups and tests", () => {
-		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestMainFile) as asOutline | undefined;
+		const outline = extApi.fileTracker.getOutlineFor(helloWorldTestMainFile);
 		if (!outline)
 			throw new Error(`Did not get outline for ${helloWorldTestMainFile}`);
 
-		const visitor = extApi.isLsp ? new LspTestOutlineVisitor(logger, fsPath(helloWorldTestMainFile)) : new TestOutlineVisitor(logger);
-		visitor.visit(outline as asOutline & lspOutline); // TODO: Remove when we don't have two outlines
+		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestMainFile));
+		visitor.visit(outline);
 
 		assert.equal(visitor.tests.length, 11);
 		assert.equal(visitor.tests[0].isGroup, true);

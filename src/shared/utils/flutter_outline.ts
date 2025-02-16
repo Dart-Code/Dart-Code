@@ -1,15 +1,14 @@
-import * as lsp from "../analysis/lsp/custom_protocol";
-import * as as from "../analysis_server_types";
+import { FlutterOutline, FlutterOutlineAttribute } from "../analysis/lsp/custom_protocol";
 import { Logger } from "../interfaces";
 
 export abstract class FlutterOutlineVisitor {
 	constructor(private logger: Logger) { }
 
-	public visit(outline: as.FlutterOutline) {
+	public visit(outline: FlutterOutline) {
 		this.visitNode(outline);
 	}
 
-	private visitChildren(outline: as.FlutterOutline) {
+	private visitChildren(outline: FlutterOutline) {
 		if (outline.children) {
 			for (const child of outline.children) {
 				this.visit(child);
@@ -17,7 +16,7 @@ export abstract class FlutterOutlineVisitor {
 		}
 	}
 
-	private visitNode(outline: as.FlutterOutline) {
+	private visitNode(outline: FlutterOutline) {
 		switch (outline && outline.kind) {
 			case "DART_ELEMENT":
 				this.visitDartElement(outline);
@@ -46,24 +45,24 @@ export abstract class FlutterOutlineVisitor {
 		}
 	}
 
-	protected visitDartElement(outline: as.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitGeneric(outline: as.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitNewInstance(outline: as.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitInvocation(outline: as.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitVariable(outline: as.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitPlaceholder(outline: as.FlutterOutline): void { this.visitChildren(outline); }
+	protected visitDartElement(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitGeneric(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitNewInstance(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitInvocation(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitVariable(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitPlaceholder(outline: FlutterOutline): void { this.visitChildren(outline); }
 	// tslint:disable-next-line: no-empty
-	protected visitAttribute(attribute: as.FlutterOutlineAttribute): void { }
+	protected visitAttribute(attribute: FlutterOutlineAttribute): void { }
 }
 
 export abstract class FlutterOutlineVisitorLsp {
 	constructor(private logger: Logger) { }
 
-	public visit(outline: lsp.FlutterOutline) {
+	public visit(outline: FlutterOutline) {
 		this.visitNode(outline);
 	}
 
-	private visitChildren(outline: lsp.FlutterOutline) {
+	private visitChildren(outline: FlutterOutline) {
 		if (outline.children) {
 			for (const child of outline.children) {
 				this.visit(child);
@@ -71,7 +70,7 @@ export abstract class FlutterOutlineVisitorLsp {
 		}
 	}
 
-	private visitNode(outline: lsp.FlutterOutline) {
+	private visitNode(outline: FlutterOutline) {
 		switch (outline && outline.kind) {
 			case "DART_ELEMENT":
 				this.visitDartElement(outline);
@@ -100,12 +99,12 @@ export abstract class FlutterOutlineVisitorLsp {
 		}
 	}
 
-	protected visitDartElement(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitGeneric(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitNewInstance(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitInvocation(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitVariable(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
-	protected visitPlaceholder(outline: lsp.FlutterOutline): void { this.visitChildren(outline); }
+	protected visitDartElement(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitGeneric(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitNewInstance(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitInvocation(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitVariable(outline: FlutterOutline): void { this.visitChildren(outline); }
+	protected visitPlaceholder(outline: FlutterOutline): void { this.visitChildren(outline); }
 	// tslint:disable-next-line: no-empty
-	protected visitAttribute(attribute: lsp.FlutterOutlineAttribute): void { }
+	protected visitAttribute(attribute: FlutterOutlineAttribute): void { }
 }

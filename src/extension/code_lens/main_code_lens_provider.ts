@@ -1,11 +1,11 @@
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
-import { Outline } from "../../shared/analysis_server_types";
+import { Outline } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
-import { toRange } from "../../shared/vscode/utils";
-import { DasAnalyzer } from "../analysis/analyzer_das";
+import { lspToRange } from "../../shared/vscode/utils";
+import { LspAnalyzer } from "../analysis/analyzer";
 import { isInsideFlutterProject, isTestFile } from "../utils";
 
 export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
@@ -13,8 +13,8 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	private onDidChangeCodeLensesEmitter: EventEmitter<void> = new EventEmitter<void>();
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
 
-	constructor(private readonly logger: Logger, private readonly analyzer: DasAnalyzer) {
-		this.disposables.push(this.analyzer.client.registerForAnalysisOutline((n) => {
+	constructor(private readonly logger: Logger, private readonly analyzer: LspAnalyzer) {
+		this.disposables.push(this.analyzer.fileTracker.onOutline(() => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
 	}
@@ -23,7 +23,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		// Without version numbers, the best we have to tell if an outline is likely correct or stale is
 		// if its length matches the document exactly.
 		const expectedLength = document.getText().length;
-		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document.uri, expectedLength, token);
+		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document, expectedLength, token);
 		if (!outline || !outline.children || !outline.children.length)
 			return;
 
@@ -49,7 +49,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 
 	private createCodeLens(document: TextDocument, mainFunction: Outline, name: string, debug: boolean, template?: { [key: string]: string }): CodeLens {
 		return new CodeLens(
-			toRange(document, mainFunction.offset, mainFunction.length),
+			lspToRange(mainFunction.codeRange),
 			{
 				arguments: [{ resource: document.uri, launchTemplate: template }],
 				command: debug ? "dart.startDebugging" : "dart.startWithoutDebugging",

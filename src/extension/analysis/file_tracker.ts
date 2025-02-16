@@ -13,7 +13,7 @@ import { WorkspaceContext } from "../../shared/workspace";
 import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 
-export class LspFileTracker implements IAmDisposable {
+export class FileTracker implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private readonly outlines = new DocumentCache<Outline>();
 	private readonly flutterOutlines = new DocumentCache<FlutterOutline>();

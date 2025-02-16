@@ -21,7 +21,7 @@ async function runTests(testFolder: string, workspaceFolder: string, logSuffix?:
 	if (!fs.existsSync(logPath))
 		fs.mkdirSync(logPath);
 
-	const codeVersion = (!process.env.BUILD_VERSION || process.env.BUILD_VERSION === "stable" || process.env.BUILD_VERSION === "legacy") ? "stable" : "insiders";
+	const codeVersion = (!process.env.BUILD_VERSION || process.env.BUILD_VERSION === "stable") ? "stable" : "insiders";
 
 	// The VS Code download is often flaky on GH Actions, so we want to retry
 	// if required - however we don't want to re-run tests if they fail, so do
@@ -92,16 +92,10 @@ async function runAllTests(): Promise<void> {
 	try {
 		// TODO: Generate this from shared code with generate_launch_configs.ts.
 		if (!process.env.BOT || process.env.BOT === "dart") {
-			await runTests("dart", "hello_world", undefined, { DART_CODE_FORCE_LSP: "false" });
-		}
-		if (!process.env.BOT || process.env.BOT === "dart_lsp") {
-			await runTests("dart", "hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
+			await runTests("dart", "hello_world", undefined);
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter") {
-			await runTests("flutter", "flutter_hello_world", undefined, { DART_CODE_FORCE_LSP: "false" });
-		}
-		if (!process.env.BOT || process.env.BOT === "flutter_lsp") {
-			await runTests("flutter", "flutter_hello_world", "lsp", { DART_CODE_FORCE_LSP: "true" });
+			await runTests("flutter", "flutter_hello_world", undefined);
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_snap") {
 			await runTests("flutter_snap", "empty");

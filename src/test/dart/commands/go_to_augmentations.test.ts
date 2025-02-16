@@ -26,7 +26,7 @@ describe("go to", () => {
 	});
 
 	beforeEach("skip if not supported", function () {
-		if (!extApi.isLsp || !extApi.dartCapabilities.supportsAugmentations)
+		if (!extApi.dartCapabilities.supportsAugmentations)
 			this.skip();
 	});
 

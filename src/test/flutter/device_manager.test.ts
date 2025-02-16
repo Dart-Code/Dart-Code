@@ -236,7 +236,7 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, desktop);
 	});
 
-	it("shows unsupported platforms and prompts to run flutter create if selected", async () => {
+	it("shows unsupported platforms, prompts to run flutter create, and selects", async () => {
 		await daemon.connect(desktop, false);
 		const devices = dm.getPickableDevices(["android"]);
 		const d = devices.find((e) => "device" in e && e.device.type === "platform-enabler" && e.device.platformType === "macos") as PickableDevice | undefined;
@@ -259,6 +259,9 @@ describe("device_manager", () => {
 		// Check we prompted, and when we said yes, we called the command.
 		assert.equal(runCreatePrompt.called, true);
 		assert.equal(flutterCreateCommand.called, true);
+
+		// Also ensure we selected this device afterwards.
+		assert.deepStrictEqual(dm.currentDevice, desktop);
 	});
 
 	it("tryGetSupportedPlatforms returns platforms", async () => {

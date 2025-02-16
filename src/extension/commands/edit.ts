@@ -15,7 +15,12 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.printSelectionToTerminal", this.printSelectionToTerminal, this),
 			vs.commands.registerCommand("dart.toggleLineComment", this.toggleLineComment, this),
 			vs.commands.registerCommand("dart.toggleDartdocComment", this.toggleDartdocComment, this),
+			vs.commands.registerCommand("dart.sortMembers", () => this.runCodeAction("source.sortMembers")),
 		);
+	}
+
+	private async runCodeAction(action: string) {
+		return vs.commands.executeCommand("editor.action.codeAction", { kind: action, apply: "ifSingle" });
 	}
 
 	private async jumpToLineColInUri(uri: vs.Uri, lineNumber?: number, columnNumber?: number, inOtherEditorColumn?: boolean) {

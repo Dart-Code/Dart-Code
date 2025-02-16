@@ -1,12 +1,14 @@
 import { strict as assert } from "assert";
 import * as os from "os";
 import * as path from "path";
+import * as vs from "vscode";
 import { isWin } from "../../shared/constants";
 import { escapeDartString, generateTestNameFromFileName, isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
 import { arrayContainsArray } from "../../shared/utils/array";
 import { applyColor, red } from "../../shared/utils/colors";
 import { fsPath, homeRelativePath, isWithinPath, isWithinPathOrEqual } from "../../shared/utils/fs";
-import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder } from "../helpers";
+import { resolvePaths } from "../../shared/vscode/utils";
+import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder, helloWorldMainFile, sb } from "../helpers";
 
 describe("versionIsAtLeast", () => {
 	it("should not consider build numbers when comparing versions", () => {
@@ -247,5 +249,31 @@ describe("homeRelativePath", () => {
 	it("handles home dir", () => {
 		// We always use forward slashes for home-dir-relative paths, even on Windows.
 		assert.equal(homeRelativePath(path.join(os.homedir(), "foo", "bar")), "~/foo/bar");
+	});
+});
+
+describe("resolvePaths", () => {
+	it("does not map absolute paths", () => {
+		const fullPath = fsPath(helloWorldMainFile);
+		assert.equal(resolvePaths(fullPath), fullPath);
+	});
+
+	const sampleWorkspaceFilePath = path.join(fsPath(flutterHelloWorldFolder), "foo.code-workspace");
+	const sampleWorkspaceFileUri = vs.Uri.file(sampleWorkspaceFilePath);
+	const sampleWorkspaceFolderPath = path.dirname(sampleWorkspaceFilePath);
+
+	it("maps relative path with file:/// workspace file", () => {
+		sb.stub(vs.workspace, "workspaceFile").get(() => sampleWorkspaceFileUri);
+		assert.equal(resolvePaths("./foo"), path.join(sampleWorkspaceFolderPath, "foo"));
+	});
+
+	it("maps relative path with open folder for non-file:/// workspace file", () => {
+		sb.stub(vs.workspace, "workspaceFile").get(() => sampleWorkspaceFileUri.with({ scheme: "untitled" }));
+		// The workspace file is not file:/// so we ignore it (opening multiple folders are once creates an untitled-scheme workspace file).
+		assert.equal(resolvePaths("./foo"), path.join(fsPath(helloWorldFolder), "foo"));
+	});
+
+	it("maps relative path with open folder for non-workspace", () => {
+		assert.equal(resolvePaths("./foo"), path.join(fsPath(helloWorldFolder), "foo"));
 	});
 });

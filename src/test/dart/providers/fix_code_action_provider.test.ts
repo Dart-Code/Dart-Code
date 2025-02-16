@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, defer, emptyFile, ensureTestContent, extApi, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
+import { activate, currentDoc, defer, emptyFile, ensureTestContent, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
 	beforeEach("activate", () => activate());
@@ -49,10 +49,6 @@ describe("fix_code_action_provider", () => {
 	});
 
 	it("inserts correct indenting for create_method", async function () {
-		// Doesn't work for non-LSP due to https://github.com/microsoft/vscode/issues/63129.
-		if (!extApi.isLsp)
-			this.skip();
-
 		await openFile(emptyFile);
 		await setTestContent(`
 main() {

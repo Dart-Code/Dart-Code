@@ -1,20 +1,13 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureTestContent, ensureTestContentWithSelection, extApi, flutterEmptyFile, getPackages, openFile, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, ensureTestContentWithSelection, flutterEmptyFile, getPackages, openFile, rangeOf, setTestContent } from "../../helpers";
 
 describe("assist_code_action_provider", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
-	it("sets selection correctly for code actions with snippets", async function () {
-		// Doesn't work for non-LSP due to https://github.com/microsoft/vscode/issues/63129.
-		if (!extApi.isLsp)
-			this.skip();
-
-		if (!extApi.dartCapabilities.supportsSnippetTextEdits)
-			this.skip();
-
+	it("sets selection correctly for code actions with snippets", async () => {
 		await openFile(flutterEmptyFile);
 		await setTestContent(`
 import 'package:flutter/widgets.dart';

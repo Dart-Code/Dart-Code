@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart",
 	"description": "Dart language support and debugger for Visual Studio Code.",
-	"version": "3.104.0-dev",
+	"version": "3.106.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
 		"vscode": "^1.75.0"
@@ -396,16 +396,6 @@
 				"category": "Dart"
 			},
 			{
-				"command": "dart.completeStatement",
-				"title": "Complete Statement",
-				"category": "Dart"
-			},
-			{
-				"command": "dart.showTypeHierarchy",
-				"title": "Show Type Hierarchy",
-				"category": "Dart"
-			},
-			{
 				"command": "dart.openObservatory",
 				"title": "Open Observatory (Deprecated, use DevTools)",
 				"category": "Dart"
@@ -763,12 +753,6 @@
 		],
 		"keybindings": [
 			{
-				"command": "dart.showTypeHierarchy",
-				"when": "editorLangId == dart && !dart-code:isLsp",
-				"key": "f4",
-				"mac": "f4"
-			},
-			{
 				"command": "dart.hotReload",
 				"when": "inDebugMode && debugType == dart && dart-code:service.reloadSources || inDebugMode && debugType == dart && dart-code:isInDartDebugSession",
 				"key": "ctrl+f5"
@@ -854,7 +838,7 @@
 				},
 				{
 					"command": "pub.outdated",
-					"when": "dart-code:anyProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "dart.addSdkToPath",
@@ -977,14 +961,6 @@
 					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
 				},
 				{
-					"command": "dart.completeStatement",
-					"when": "dart-code:anyProjectLoaded && editorLangId == dart && !dart-code:isLsp"
-				},
-				{
-					"command": "dart.showTypeHierarchy",
-					"when": "dart-code:anyProjectLoaded && editorLangId == dart && !dart-code:isLsp"
-				},
-				{
 					"command": "dart.openObservatory",
 					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
 				},
@@ -1018,7 +994,7 @@
 				},
 				{
 					"command": "flutter.packages.outdated",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.enablePub"
 				},
 				{
 					"command": "flutter.clean",
@@ -1356,7 +1332,7 @@
 					"command": "pub.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "pub.outdated"
 				},
 				{
@@ -1372,7 +1348,7 @@
 					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.outdated"
 				},
 				{
@@ -1408,7 +1384,7 @@
 					"command": "pub.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyProjectLoaded && !dart-code:anyFlutterProjectLoaded",
 					"command": "pub.outdated"
 				},
 				{
@@ -1424,7 +1400,7 @@
 					"command": "flutter.packages.upgrade.majorVersions"
 				},
 				{
-					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && dart-code:pubOutdatedSupported && config.dart.enablePub",
+					"when": "resourceFilename == pubspec.yaml && dart-code:anyFlutterProjectLoaded && config.dart.enablePub",
 					"command": "flutter.packages.outdated"
 				},
 				{
@@ -2993,6 +2969,15 @@
 						"default": {},
 						"description": "Additional environment variables to be added to all Dart/Flutter processes spawned by the Dart and Flutter extensions.",
 						"scope": "window"
+					},
+					"dart.toolingDaemonAdditionalArgs": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "Additional args to pass to the `dart tooling-daemon` command that runs as a background service (requires restart).",
+						"scope": "window",
+						"items": {
+							"type": "string"
+						}
 					}
 				}
 			},
@@ -3086,12 +3071,6 @@
 							"type": "string"
 						},
 						"scope": "resource"
-					},
-					"dart.useLegacyAnalyzerProtocol": {
-						"type": "boolean",
-						"default": false,
-						"markdownDescription": "**LEGACY SETTING: Only applies to Dart SDKs before v3.3 and is generally not recommended since v2.12.**\n\n Whether to use the Dart Analyzer's original protocol instead of LSP. Some features are not supported when using the legacy protocol and support for it will eventually be removed. Please file issues on GitHub in the Dart Code repo if you find yourself needing to enable this setting.",
-						"scope": "window"
 					},
 					"dart.useLegacyDebugAdapters": {
 						"type": [

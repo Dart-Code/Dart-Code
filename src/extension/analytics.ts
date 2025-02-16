@@ -268,7 +268,7 @@ export class Analytics implements IAmDisposable {
 			: undefined;
 
 		const data: AnalyticsData = {
-			analyzerProtocol: this.workspaceContext?.config.useLegacyProtocol ? "DAS" : "LSP",
+			analyzerProtocol: "LSP",
 			anonymize: true,
 			appName: env.appName,
 			closingLabels: config.closingLabels ? "On" : "Off",

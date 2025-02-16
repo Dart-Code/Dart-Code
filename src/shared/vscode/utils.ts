@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import { URL } from "url";
 import * as vs from "vscode";
@@ -31,6 +32,24 @@ export const isRunningLocally =
 	// override that.
 	!isKnownCloudIde(vs.env.appName)
 	&& (!dartExtension || dartExtension.extensionKind === ExtensionKind.UI);
+
+export function resolvePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
+	if (typeof p !== "string")
+		return undefined as (undefined extends T ? undefined : never);
+
+	if (p.startsWith("~/"))
+		return path.join(os.homedir(), p.substr(2));
+	if (!path.isAbsolute(p)) {
+		const relativePathBase = workspace.workspaceFile?.scheme === "file"
+			? path.dirname(fsPath(workspace.workspaceFile))
+			: workspace.workspaceFolders?.length
+				? fsPath(workspace.workspaceFolders[0].uri)
+				: undefined;
+		if (relativePathBase)
+			return path.join(relativePathBase, p);
+	}
+	return p;
+}
 
 export function getDartWorkspaceFolders(): WorkspaceFolder[] {
 	if (!workspace.workspaceFolders)
@@ -146,14 +165,17 @@ export async function getAllProjectFoldersAndExclusions(
 
 		let projectFolders = await resultsPromise;
 		isComplete = true;
-		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for projects (${options.searchDepth} levels)`);
+		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for ${projectFolders.length} projects (${options.searchDepth} levels)`);
+		logger.info(`    Found projects:`);
+		for (const projectFolder of projectFolders)
+			logger.info(`        ${projectFolder}`);
 		startTimeMs = new Date().getTime();
 
 		// Filter out any folders excluded by analysis_options.
 		try {
 			const excludedFolders = getAnalysisOptionsExcludedFolders(logger, projectFolders);
 			projectFolders = projectFolders.filter((p) => !excludedFolders.find((ex) => isWithinPathOrEqual(p, ex)));
-			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules)`);
+			logger.info(`Took ${new Date().getTime() - startTimeMs}ms to filter out excluded projects (${excludedFolders.length} exclusion rules). ${projectFolders.length} projects remain.`);
 
 			allExcludedFolders = allExcludedFolders.concat(excludedFolders);
 		} catch (e) {

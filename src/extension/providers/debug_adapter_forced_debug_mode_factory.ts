@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { DartLaunchArgs } from "../../shared/debug/interfaces";
 
 /**
- * Forces debug mode in the launchRequest if the 'forceDisableDebugging' flag was set by the debug config provider.
+ * Forces debug mode in the launchRequest if the 'forceEnableDebugging' flag was set by the debug config provider.
  *
  * This enables functionality like the widget inspectors ToolEvent navigation.
  *

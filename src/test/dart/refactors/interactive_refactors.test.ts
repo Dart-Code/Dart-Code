@@ -10,10 +10,6 @@ describe("interactive refactors", () => {
 	const testRefactorCommandName = "myRefactorCommand";
 
 	beforeEach("activate", () => activate());
-	beforeEach("check capabilities", function () {
-		if (!extApi.isLsp)
-			this.skip();
-	});
 
 	it("does not rewrite unrelated code actions", async () => {
 		const refactors = extApi.interactiveRefactors!;

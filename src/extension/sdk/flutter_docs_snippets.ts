@@ -1,21 +1,13 @@
 import * as fs from "fs";
-import * as https from "https";
 import * as os from "os";
 import * as path from "path";
-import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { flutterPath } from "../../shared/constants";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { getRandomInt, tryDeleteFile } from "../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
 import { runToolProcess } from "../utils/processes";
 
-export function getFlutterSnippets(logger: Logger, sdks: Sdks, capabilities: FlutterCapabilities): Promise<FlutterSampleSnippet[]> {
-	if (capabilities.supportsFlutterCreateListSamples)
-		return getFlutterSnippetsFromSdk(logger, sdks);
-	return getFlutterSnippetsFromWeb();
-}
-
-async function getFlutterSnippetsFromSdk(logger: Logger, sdks: Sdks): Promise<FlutterSampleSnippet[]> {
+export async function getFlutterSnippets(logger: Logger, sdks: Sdks): Promise<FlutterSampleSnippet[]> {
 	if (!sdks.flutter)
 		throw new Error("Flutter SDK not available");
 
@@ -35,29 +27,4 @@ async function getFlutterSnippetsFromSdk(logger: Logger, sdks: Sdks): Promise<Fl
 	} finally {
 		tryDeleteFile(tempPath);
 	}
-}
-
-function getFlutterSnippetsFromWeb(): Promise<FlutterSampleSnippet[]> {
-	return new Promise<FlutterSampleSnippet[]>((resolve, reject) => {
-		const options: https.RequestOptions = {
-			hostname: "api.flutter.dev",
-			method: "GET",
-			path: "/snippets/index.json",
-			port: 443,
-		};
-
-		const req = https.request(options, (resp) => {
-			if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-				reject({ message: `Failed to get Flutter samples ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
-			} else {
-				const chunks: string[] = [];
-				resp.on("data", (b: Buffer | string) => chunks.push(b.toString()));
-				resp.on("end", () => {
-					const json = chunks.join("");
-					resolve(JSON.parse(json) as FlutterSampleSnippet[]);
-				});
-			}
-		});
-		req.end();
-	});
 }

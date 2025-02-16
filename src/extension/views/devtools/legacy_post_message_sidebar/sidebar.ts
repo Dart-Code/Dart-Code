@@ -75,10 +75,6 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			// Don't include # in colors
 			// https://github.com/flutter/flutter/issues/155992
 			let url = \`\${currentBaseUrl}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(foreground?.replace('#', ''))}\`;
-			const fontSizeWithUnits = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-font-size');
-			if (fontSizeWithUnits && fontSizeWithUnits.endsWith('px')) {
-				url += \`&fontSize=\${encodeURIComponent(parseFloat(fontSizeWithUnits))}\`;
-			}
 			if (devToolsFrame.src !== url)
 				devToolsFrame.src = url;
 		}
