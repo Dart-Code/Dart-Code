@@ -606,7 +606,7 @@ export class LspAnalyzer extends Analyzer {
 		process.stderr.on("data", (data) => {
 			const errorOutput = data.toString();
 
-			// Handle some well-known kinds of errors to help understand troubleshoot.
+			// Handle some well-known kinds of errors to help troubleshoot.
 			if (typeof errorOutput === "string") {
 				if (!hasShownAnalysisServerVersionMismatchError && config.analyzerPath && errorOutput.includes("analysis_server.dart") && errorOutput.includes("The specified language version is too high")) {
 					hasShownAnalysisServerVersionMismatchError = true;
