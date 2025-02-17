@@ -24,11 +24,15 @@ import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils"
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
+import { promptToReloadExtension } from "../utils";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
 import { FileTracker } from "./file_tracker";
+
+// Globals so we only show these errors once per session.
+let hasShownAnalysisServerVersionMismatchError = false;
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
@@ -599,7 +603,19 @@ export class LspAnalyzer extends Analyzer {
 		const writer = new LoggingTransform(logger, "==>");
 		writer.pipe(process.stdin);
 
-		process.stderr.on("data", (data) => logger.error(data.toString()));
+		process.stderr.on("data", (data) => {
+			const errorOutput = data.toString();
+
+			// Handle some well-known kinds of errors to help understand troubleshoot.
+			if (typeof errorOutput === "string") {
+				if (!hasShownAnalysisServerVersionMismatchError && config.analyzerPath && errorOutput.includes("analysis_server.dart") && errorOutput.includes("The specified language version is too high")) {
+					hasShownAnalysisServerVersionMismatchError = true;
+					void promptToReloadExtension("Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?", undefined, true, undefined, true);
+				}
+			}
+
+			logger.error(errorOutput);
+		});
 		process.on("exit", (code, signal) => {
 			if (code)
 				reportAnalyzerTerminatedWithError();

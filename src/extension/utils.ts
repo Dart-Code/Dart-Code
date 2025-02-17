@@ -228,7 +228,7 @@ export function escapeShell(args: string[]) {
 	return ret.join(" ");
 }
 
-export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean, specificLog?: string): Promise<void> {
+export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean, specificLog?: string, useError?: boolean): Promise<void> {
 	const restartAction = buttonText || "Reload";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
 	const ringLogContents = ringLog.toString();
@@ -236,7 +236,8 @@ export async function promptToReloadExtension(prompt?: string, buttonText?: stri
 	const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
 	while (showPromptAgain) {
 		showPromptAgain = false;
-		const chosenAction = prompt && await window.showInformationMessage(prompt, ...actions);
+		const show = useError ? window.showErrorMessage : window.showInformationMessage;
+		const chosenAction = prompt && await show(prompt, ...actions);
 		if (chosenAction === showLogAction) {
 			showPromptAgain = true;
 			if (specificLog && fs.existsSync(specificLog))
