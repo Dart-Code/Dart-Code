@@ -451,6 +451,7 @@ export class LspAnalyzer extends Analyzer {
 	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
+			errorHandler: new DartErrorHandler(),
 			initializationOptions: {
 				allowOpenUri: true,
 				appHost: vs.env.appHost,
@@ -693,4 +694,43 @@ export function getAnalyzerArgs(logger: Logger) {
 		analyzerArgs = analyzerArgs.concat(config.analyzerAdditionalArgs);
 
 	return analyzerArgs;
+}
+
+/// An implementation of the default error handler that provides improved
+/// error messages.
+///
+// https://github.com/microsoft/vscode-languageserver-node/blob/d810d51297c667bd3a3f46912eb849055beb8b6b/client/src/common/client.ts#L439
+class DartErrorHandler implements ls.ErrorHandler {
+	private readonly restarts: number[] = [];
+
+	readonly maxRestartCount = 4;
+
+	public error(_error: Error, _message: ls.Message, count: number): ls.ErrorHandlerResult {
+		if (count && count <= 3) {
+			return { action: ls.ErrorAction.Continue };
+		}
+		return { action: ls.ErrorAction.Shutdown };
+	}
+
+	public closed(): ls.CloseHandlerResult {
+		this.restarts.push(Date.now());
+		if (this.restarts.length <= this.maxRestartCount) {
+			return { action: ls.CloseAction.Restart };
+		} else {
+			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
+			if (diff <= 3 * 60 * 1000) {
+				const message = `The Dart Analysis Server crashed ${this.maxRestartCount + 1} times in the last 3 minutes. See the log for more information.`;
+				void promptToReloadExtension(message, undefined, true, undefined, true);
+				return {
+					action: ls.CloseAction.DoNotRestart,
+					handled: true,
+				};
+			} else {
+				this.restarts.shift();
+				return {
+					action: ls.CloseAction.Restart,
+				};
+			}
+		}
+	}
 }
