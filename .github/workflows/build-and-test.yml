@@ -227,6 +227,7 @@ jobs:
         with:
           name: test-logs-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .dart_code_test_logs
+          include-hidden-files: true
           if-no-files-found: ignore
 
       - name: Store test results
@@ -235,6 +236,7 @@ jobs:
         with:
           name: test-results-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .test_results
+          include-hidden-files: true
           if-no-files-found: ignore
 
       - name: Store coverage
@@ -251,6 +253,7 @@ jobs:
         with:
           name: crash-dumps-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
           path: .crash_dumps
+          include-hidden-files: true
           if-no-files-found: ignore
 
   merge_artifacts:
