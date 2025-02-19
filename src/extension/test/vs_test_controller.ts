@@ -386,7 +386,18 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				default:
 					const outputEvents = node.outputEvents;
 					const output = outputEvents.map((output) => this.formatNotification(output)).join("\n");
-					const testMessage = new vs.TestMessage(formatForTerminal(output));
+					const outputMessage = formatForTerminal(output);
+					const testMessage = new vs.TestMessage(outputMessage);
+
+					// Attempt to extract Expected/Actual values if they are simple and on one line.
+					const valueMatch = outputMessage.replaceAll("\r\n", "\n").replaceAll("\r", "\n").match(/^Expected: (.*)\n\s*Actual: (.*)\n\n/);
+					if (valueMatch) {
+						const expected = valueMatch[1];
+						const actual = valueMatch[2];
+						testMessage.expectedOutput = typeof expected === "string" ? expected : undefined;
+						testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
+					}
+
 					if (result === "failure")
 						run.failed(item, testMessage, node.duration);
 					else
