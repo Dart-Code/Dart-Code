@@ -416,9 +416,9 @@ export class DartDebugSession extends DebugSession {
 
 		if (this.shouldConnectDebugger) {
 			this.expectAdditionalPidToTerminate = true;
+			allArgs.push("--no-serve-devtools");
 			allArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 			allArgs.push("--pause_isolates_on_start=true");
-			allArgs.push("--no-serve-devtools");
 		}
 		if (this.useWriteServiceInfo && this.vmServiceInfoFile) {
 			allArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
