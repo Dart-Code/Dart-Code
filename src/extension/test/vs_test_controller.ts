@@ -7,6 +7,7 @@ import { ErrorNotification, PrintNotification } from "../../shared/test_protocol
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { isSetupOrTeardownTestName } from "../../shared/utils/test";
+import { debugSessions } from "../commands/debug";
 import { config } from "../config";
 import { TestDiscoverer } from "../lsp/test_discoverer";
 import { formatForTerminal } from "../utils/vscode/terminals";
@@ -393,19 +394,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					run.passed(item, node.duration);
 					break;
 				default:
-					const outputEvents = node.outputEvents;
-					const output = outputEvents.map((output) => this.formatNotification(output)).join("\n");
-					const outputMessage = formatForTerminal(output);
-					const testMessage = new vs.TestMessage(outputMessage);
-
-					// Attempt to extract Expected/Actual values if they are simple and on one line.
-					const valueMatch = outputMessage.replaceAll("\r\n", "\n").replaceAll("\r", "\n").match(/^Expected: (.*)\n\s*Actual: (.*)\n\n/);
-					if (valueMatch) {
-						const expected = valueMatch[1];
-						const actual = valueMatch[2];
-						testMessage.expectedOutput = typeof expected === "string" ? expected : undefined;
-						testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
-					}
+					const testMessage = this.buildFailureEndMessage(sessionID, node, item);
 
 					if (result === "failure")
 						run.failed(item, testMessage, node.duration);
@@ -414,6 +403,51 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					break;
 			}
 		}
+	}
+
+	/// Builds a TestMessage to use for the failed/errored event for a test.
+	private buildFailureEndMessage(sessionID: string, node: TestNode, item: vs.TestItem) {
+		const outputEvents = node.outputEvents;
+		const output = outputEvents.map((output) => this.formatNotification(output)).join("\n");
+		const outputMessage = formatForTerminal(output);
+		const testMessage = new vs.TestMessage(outputMessage);
+
+		// Attempt to extract Expected/Actual values if they are simple and on one line.
+		const valueMatch = outputMessage.replaceAll("\r\n", "\n").replaceAll("\r", "\n").match(/^Expected: (.*)\n\s*Actual: (.*)\n\n/);
+		if (valueMatch) {
+			const expected = valueMatch[1];
+			const actual = valueMatch[2];
+			testMessage.expectedOutput = typeof expected === "string" ? expected : undefined;
+			testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
+		}
+
+		// Attempt to parse a stack trace to provide some frames to the test API.
+		const debugSession = debugSessions.find((ds) => ds.session.configuration?.dartCodeDebugSessionID === sessionID);
+		const workingDirectory = debugSession?.session?.configuration?.cwd;
+		const stackTrace = outputEvents.map((event) => "stackTrace" in event ? event.stackTrace : undefined).find((s) => s);
+		if (typeof workingDirectory === "string" && stackTrace && item.uri?.scheme === "file") {
+			const stackFrameMatches = stackTrace.matchAll(/^(.*\.dart) (\d+):(\d+)\s+(.*)$/gm);
+			const parsedFrames: Array<{ relativePath: string, oneBasedLine: number, oneBasedColumn: number, label: string }> = [];
+
+			for (const match of stackFrameMatches) {
+				parsedFrames.push({
+					label: match[4],
+					oneBasedColumn: parseInt(match[3], 10),
+					oneBasedLine: parseInt(match[2], 10),
+					relativePath: match[1],
+				});
+			}
+
+			if (parsedFrames.length) {
+				testMessage.stackTrace = parsedFrames.map((f) => new vs.TestMessageStackFrame(
+					f.label,
+					vs.Uri.file(path.join(workingDirectory, f.relativePath)),
+					new vs.Position(f.oneBasedLine - 1, f.oneBasedColumn - 1),
+				));
+			}
+		}
+
+		return testMessage;
 	}
 
 	public suiteDone(sessionID: string, node: SuiteNode): void { }

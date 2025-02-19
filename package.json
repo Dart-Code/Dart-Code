@@ -5,7 +5,7 @@
 	"version": "3.112.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.75.0"
+		"vscode": "^1.96.0"
 	},
 	"extensionKind": [
 		"workspace"
@@ -3589,7 +3589,7 @@
 		"@types/node": "^20.14.15",
 		"@types/semver": "^7.5.8",
 		"@types/sinon": "5.0.5",
-		"@types/vscode": "^1.75.0",
+		"@types/vscode": "^1.96.0",
 		"@types/ws": "^8.5.14",
 		"@typescript-eslint/eslint-plugin": "^7.18.0",
 		"@typescript-eslint/eslint-plugin-tslint": "^7.0.2",
