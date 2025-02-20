@@ -59,7 +59,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 		}
 
 		const file = path.join(folder, files[0].name);
-		safeToolSpawn(folder, "open", [file]);
+		safeToolSpawn(folder, "open", ["-a", "XCode", file]);
 	}
 
 	private async getAndroidStudioDir(folder: string): Promise<string> {
