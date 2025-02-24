@@ -654,7 +654,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	const numReloads = 1;
-	it.only(`stops at a breakpoint after each reload (${numReloads})`, async function () {
+	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
 		if (!dc.isDartDap && extApi.flutterCapabilities?.version.startsWith("3.19")) {
 			// This is known broken in Flutter 3.19 (for legacy DAP) so skip for this version and re-enable
 			// for the next version.
