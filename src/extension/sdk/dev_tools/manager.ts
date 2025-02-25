@@ -305,7 +305,7 @@ export class DevToolsManager implements vs.Disposable {
 			const reusablePanel = panels.find((p) => p.session && p.session.hasEnded);
 			if (reusablePanel) {
 				reusablePanel.session = session;
-				await this.launch(false, session, { location: "beside", pageId });
+				await this.launch(false, session, { location: this.getDevToolsLocation(pageId), pageId });
 			}
 		}
 	}
