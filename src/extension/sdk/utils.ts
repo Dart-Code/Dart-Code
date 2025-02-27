@@ -352,13 +352,8 @@ export class SdkUtils {
 
 			const isSomethingFlutter = refsFlutter || hasFlutterCreateProjectTriggerFile || isFlutterRepo;
 
-			if (isSomethingFlutter) {
-				this.logger.info(`Found Flutter project at ${folder}:
-			Mobile? ${refsFlutter}
-			Web? ${refsWeb}
-			Create Trigger? ${hasFlutterCreateProjectTriggerFile}
-			Flutter Repo? ${isFlutterRepo}`);
-			}
+			const kind = isSomethingFlutter ? "Flutter" : "non-Flutter";
+			this.logger.info(`Found ${kind} project at ${folder} (Pubspec? ${hasPubspecFile}, Mobile? ${refsFlutter}, Create Trigger? ${hasFlutterCreateProjectTriggerFile}, Flutter Repo? ${isFlutterRepo})`);
 
 			// Track the first Flutter Project so we can try finding the Flutter SDK from its packages file.
 			firstFlutterProject = firstFlutterProject || (isSomethingFlutter ? folder : undefined);

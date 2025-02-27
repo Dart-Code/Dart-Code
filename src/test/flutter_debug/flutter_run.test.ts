@@ -663,7 +663,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		}
 
 		// https://github.com/Dart-Code/Dart-Code/issues/5211
-		if (flutterTestDeviceIsWeb && (extApi.dartCapabilities.version.startsWith("3.5.") || extApi.dartCapabilities.version.startsWith("3.6.")))
+		if (flutterTestDeviceIsWeb && (extApi.dartCapabilities.version.startsWith("3.5.") || extApi.dartCapabilities.version.startsWith("3.6.") || extApi.dartCapabilities.version.startsWith("3.7.") || extApi.dartCapabilities.version.startsWith("3.8.")))
 			this.skip();
 
 		await openFile(flutterHelloWorldMainFile);

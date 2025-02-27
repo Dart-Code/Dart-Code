@@ -13,7 +13,7 @@ import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq, withTimeout } from "../shared/utils";
-import { fsPath } from "../shared/utils/fs";
+import { fsPath, getRandomInt } from "../shared/utils/fs";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
@@ -114,6 +114,12 @@ let extensionLog: IAmDisposable | undefined;
 // Keep a running in-memory buffer of last 200 log events we can give to the
 // user when something crashed even if they don't have disk-logging enabled.
 export const ringLog: RingLog = new RingLog(200);
+
+// A key used to access state tied to this "session" to work around a possible VS Code bug that persists
+// state unexpectedly accross sessions.
+//
+// https://github.com/microsoft/vscode/issues/240207
+export const perSessionWebviewStateKey = `webviewState_${(new Date()).getTime()}_${getRandomInt(1, 1000)}`;
 
 export async function activate(context: vs.ExtensionContext, isRestart = false) {
 	// Ring logger is only set up once and presist over silent restarts.

@@ -88,7 +88,7 @@ class Config {
 	get devToolsBrowser(): "chrome" | "default" { return this.getConfig<"chrome" | "default">("devToolsBrowser", "chrome"); }
 	get devToolsLocation(): DevToolsLocations & { default: DevToolsLocation } {
 		const defaultValue: DevToolsLocations = { default: "beside" };
-		const configValue = this.getConfig<DevToolsLocations | "beside" | "active" | "external">("devToolsLocation", defaultValue);
+		const configValue = this.getConfig<DevToolsLocations | "beside" | "active" | "external" | "sidebar">("devToolsLocation", defaultValue);
 		if (!defaultValue)
 			return defaultValue;
 
@@ -175,6 +175,7 @@ class Config {
 	get previewDtdLspIntegration(): boolean { return this.getConfig<boolean>("previewDtdLspIntegration", false); }
 	get experimentalDtdHandlers(): boolean { return this.getConfig<boolean>("experimentalDtdHandlers", false); }
 	get experimentalPropertyEditor(): boolean { return this.getConfig<boolean>("experimentalPropertyEditor", false); }
+	get experimentalSidebarDevTools(): boolean { return this.getConfig<boolean>("experimentalSidebarDevTools", false); }
 	get dtdEditorActiveLocationDelay(): number { return this.getConfig<number>("dtdEditorActiveLocationDelay", 200); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }

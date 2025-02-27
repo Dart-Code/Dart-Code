@@ -29,7 +29,8 @@ import { ExtensionRecommentations } from "../../recommendations/recommendations"
 import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
-import { DevToolsEmbeddedView } from "./embedded_view";
+import { SidebarDevTools } from "../../views/devtools/sidebar_devtools";
+import { DevToolsEmbeddedView, DevToolsEmbeddedViewOrSidebarView } from "./embedded_view";
 
 const devtoolsPackageID = "devtools";
 const devtoolsPackageName = "Dart DevTools";
@@ -41,7 +42,7 @@ const devtoolsPackageName = "Dart DevTools";
 let portToBind: number | undefined;
 
 // This is static because we want to track embedded views across restarts of DevToolsManager.
-const devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedView[] | undefined } = {};
+const devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedViewOrSidebarView[] | undefined } = {};
 
 /// Handles launching DevTools in the browser and managing the underlying service.
 export class DevToolsManager implements vs.Disposable {
@@ -83,14 +84,27 @@ export class DevToolsManager implements vs.Disposable {
 
 				// If there are disconnected panels for this page, trigger a launch
 				// of the page to reuse it.
-				const closablePanels = panels
-					.filter((p) => p.session?.session.id === session.id)
-					.filter((p) => p.openedAutomatically || config.closeDevTools === "always");
-				for (const panel of closablePanels) {
-					panel.dispose();
+				const sessionPanels = panels
+					.filter((p) => p.session?.session.id === session.id);
+
+				for (const panel of sessionPanels) {
+					if (panel.openedAutomatically || config.closeDevTools === "always")
+						panel.dispose();
+
 				}
 			}
 		}));
+
+		// Pre-populate pages for the sidebar pages so they don't show up as infinite spinners.
+		for (const page of devToolsPages) {
+			let views = devToolsEmbeddedViews[page.id];
+			if (!views)
+				views = devToolsEmbeddedViews[page.id] = [];
+
+			if (!views.length) {
+				views.push(new SidebarDevTools(page.id, this, this.dartCapabilities));
+			}
+		}
 	}
 
 	private setNotStartedStatusBar() {
@@ -291,7 +305,7 @@ export class DevToolsManager implements vs.Disposable {
 			const reusablePanel = panels.find((p) => p.session && p.session.hasEnded);
 			if (reusablePanel) {
 				reusablePanel.session = session;
-				await this.launch(false, session, { location: "beside", pageId });
+				await this.launch(false, session, { location: this.getDevToolsLocation(pageId), pageId });
 			}
 		}
 	}
@@ -431,19 +445,33 @@ export class DevToolsManager implements vs.Disposable {
 		return `${baseUrl}${urlPathSeperator}${path}?${paramsString}`;
 	}
 
-	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | undefined, triggeredAutomatically: boolean | undefined) {
+	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | "sidebar" | undefined, triggeredAutomatically: boolean | undefined) {
 		const pageId = page.id;
 		const pageTitle = page.title;
 
-		if (!devToolsEmbeddedViews[pageId]) {
-			devToolsEmbeddedViews[pageId] = [];
+		let views = devToolsEmbeddedViews[pageId];
+		if (!views) {
+			views = devToolsEmbeddedViews[pageId] = [];
 		}
 		// Look through any open DevTools frames for this page, to see if any are already our session, or
 		// are for a session that has been stopped.
-		let frame = devToolsEmbeddedViews[pageId]?.find((dtev) => dtev.session === session || (dtev.session && dtev.session.hasEnded));
+		let frame = views.find((dtev) => {
+			// Don't use a Sidebar frame if we're not enabled/requested.
+			if (dtev instanceof SidebarDevTools && (!config.experimentalSidebarDevTools || location !== "sidebar"))
+				return false;
+
+			return !dtev.session || dtev.session === session || (dtev.session && dtev.session.hasEnded);
+		});
 		if (!frame) {
+			if (location === "sidebar")
+				location = "beside"; // Unsupported sidebar config or view was somehow not pre-populated in frames.
 			frame = new DevToolsEmbeddedView(session, uri, pageTitle, location);
-			frame.onDispose(() => delete devToolsEmbeddedViews[pageId]);
+			frame.onDispose(() => {
+				if (!frame) return;
+				const index = views.indexOf(frame);
+				if (index === -1) return;
+				views.splice(index, 1);
+			});
 			devToolsEmbeddedViews[pageId]?.push(frame);
 		}
 		frame.openedAutomatically = !!triggeredAutomatically;
@@ -761,7 +789,7 @@ interface ExtensionResult {
 	extension: string;
 }
 
-export type DevToolsLocation = "beside" | "active" | "external";
+export type DevToolsLocation = "beside" | "active" | "external" | "sidebar";
 
 export interface DevToolsLocations {
 	[key: string]: DevToolsLocation | undefined

@@ -24,11 +24,15 @@ import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils"
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
+import { promptToReloadExtension } from "../utils";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
 import { FileTracker } from "./file_tracker";
+
+// Globals so we only show these errors once per session.
+let hasShownAnalysisServerVersionMismatchError = false;
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
@@ -447,6 +451,7 @@ export class LspAnalyzer extends Analyzer {
 	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
+			errorHandler: new DartErrorHandler(),
 			initializationOptions: {
 				allowOpenUri: true,
 				appHost: vs.env.appHost,
@@ -599,7 +604,19 @@ export class LspAnalyzer extends Analyzer {
 		const writer = new LoggingTransform(logger, "==>");
 		writer.pipe(process.stdin);
 
-		process.stderr.on("data", (data) => logger.error(data.toString()));
+		process.stderr.on("data", (data) => {
+			const errorOutput = data.toString();
+
+			// Handle some well-known kinds of errors to help troubleshoot.
+			if (typeof errorOutput === "string") {
+				if (!hasShownAnalysisServerVersionMismatchError && config.analyzerPath && errorOutput.includes("analysis_server.dart") && errorOutput.includes("The specified language version is too high")) {
+					hasShownAnalysisServerVersionMismatchError = true;
+					void promptToReloadExtension("Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?", undefined, true, undefined, true);
+				}
+			}
+
+			logger.error(errorOutput);
+		});
 		process.on("exit", (code, signal) => {
 			if (code)
 				reportAnalyzerTerminatedWithError();
@@ -677,4 +694,43 @@ export function getAnalyzerArgs(logger: Logger) {
 		analyzerArgs = analyzerArgs.concat(config.analyzerAdditionalArgs);
 
 	return analyzerArgs;
+}
+
+/// An implementation of the default error handler that provides improved
+/// error messages.
+///
+// https://github.com/microsoft/vscode-languageserver-node/blob/d810d51297c667bd3a3f46912eb849055beb8b6b/client/src/common/client.ts#L439
+class DartErrorHandler implements ls.ErrorHandler {
+	private readonly restarts: number[] = [];
+
+	readonly maxRestartCount = 4;
+
+	public error(_error: Error, _message: ls.Message, count: number): ls.ErrorHandlerResult {
+		if (count && count <= 3) {
+			return { action: ls.ErrorAction.Continue };
+		}
+		return { action: ls.ErrorAction.Shutdown };
+	}
+
+	public closed(): ls.CloseHandlerResult {
+		this.restarts.push(Date.now());
+		if (this.restarts.length <= this.maxRestartCount) {
+			return { action: ls.CloseAction.Restart };
+		} else {
+			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
+			if (diff <= 3 * 60 * 1000) {
+				const message = `The Dart Analysis Server crashed ${this.maxRestartCount + 1} times in the last 3 minutes. See the log for more information.`;
+				void promptToReloadExtension(message, undefined, true, undefined, true);
+				return {
+					action: ls.CloseAction.DoNotRestart,
+					handled: true,
+				};
+			} else {
+				this.restarts.shift();
+				return {
+					action: ls.CloseAction.Restart,
+				};
+			}
+		}
+	}
 }

@@ -4,7 +4,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CommandSource, debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, widgetInspectorPage } from "../../shared/constants";
 import { isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext } from "../../shared/constants.contexts";
-import { DebugOption, DebuggerType, LogSeverity, VmService, VmServiceExtension, debugOptionNames } from "../../shared/enums";
+import { DebugOption, DebuggerType, LogCategory, LogSeverity, VmService, VmServiceExtension, debugOptionNames } from "../../shared/enums";
 import { DartWorkspaceContext, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
 import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
@@ -643,15 +643,16 @@ export class DebugCommands implements IAmDisposable {
 		if (event === "dart.log") {
 			const message: LogMessage = e.body;
 			const logMessage = `[${e.session.name}] ${message.message}`;
+			const category = message.category ?? logMessage.includes("[VM]") ? LogCategory.VmService : LogCategory.DAP;
 			switch (message.severity) {
 				case LogSeverity.Warn:
-					this.logger.warn(logMessage, message.category);
+					this.logger.warn(logMessage, category);
 					break;
 				case LogSeverity.Error:
-					this.logger.error(logMessage, message.category);
+					this.logger.error(logMessage, category);
 					break;
 				default:
-					this.logger.info(logMessage, message.category);
+					this.logger.info(logMessage, category);
 			}
 		} else if (event === "dart.hotRestartRequest") {
 			// This event comes back when the user restarts with the Restart button

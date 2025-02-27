@@ -5,7 +5,7 @@
 	"version": "3.106.0-dev",
 	"publisher": "Dart-Code",
 	"engines": {
-		"vscode": "^1.75.0"
+		"vscode": "^1.96.0"
 	},
 	"extensionKind": [
 		"workspace"
@@ -1582,6 +1582,11 @@
 					"id": "flutterPropertyEditor",
 					"title": "Flutter Property Editor",
 					"icon": "media/icons/property_editor_activity_bar.svg"
+				},
+				{
+					"id": "sidebarDevTools",
+					"title": "Flutter DevTools",
+					"icon": "media/icons/flutter_activity_bar.svg"
 				}
 			]
 		},
@@ -1613,6 +1618,57 @@
 					"name": "Flutter Property Editor",
 					"_whenForFutureWhenSwitchFromExperimentalFlagToCapabilities": "dart-code:anyFlutterProjectLoaded && dart-code:flutterPropertyEditorSupported",
 					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalPropertyEditor"
+				}
+			],
+			"sidebarDevTools": [
+				{
+					"id": "sidebarDevToolsInspector",
+					"type": "webview",
+					"name": "Inspector",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.inspector",
+					"visibility": "visible"
+				},
+				{
+					"id": "sidebarDevToolsCpuProfiler",
+					"type": "webview",
+					"name": "CPU Profiler",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.cpuProfiler",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsMemory",
+					"type": "webview",
+					"name": "Memory View",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.memory",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsPerformance",
+					"type": "webview",
+					"name": "Performance",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.performance",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsNetwork",
+					"type": "webview",
+					"name": "Network",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.network",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsLogging",
+					"type": "webview",
+					"name": "Logging",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.logging",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "sidebarDevToolsDeepLinks",
+					"type": "webview",
+					"name": "Deep Links",
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.deepLinks",
+					"visibility": "collapsed"
 				}
 			]
 		},
@@ -3457,42 +3513,42 @@
 		"update-grammar-snapshots": "vscode-tmgrammar-snap --updateSnapshot \"src/test/test_projects/grammar_testing/**/*.dart\""
 	},
 	"dependencies": {
-		"@vscode/debugadapter": "^1.61.0",
-		"@vscode/debugprotocol": "^1.61.0",
-		"minimatch": "^9.0.5",
-		"semver": "^7.6.2",
+		"@vscode/debugadapter": "^1.68.0",
+		"@vscode/debugprotocol": "^1.68.0",
+		"minimatch": "^10.0.1",
+		"semver": "^7.7.1",
 		"vscode-languageclient": "^8.1.0",
 		"ws": "^8.18.0",
-		"yaml": "^2.4.5",
-		"vscode-uri": "^3.0.8"
+		"yaml": "^2.7.0",
+		"vscode-uri": "^3.1.0"
 	},
 	"devDependencies": {
-		"@types/mocha": "^10.0.7",
-		"@types/node": "^20.14.9",
+		"@types/mocha": "^10.0.10",
+		"@types/node": "^20.14.15",
 		"@types/semver": "^7.5.8",
 		"@types/sinon": "5.0.5",
-		"@types/vscode": "^1.75.0",
-		"@types/ws": "^8.5.10",
-		"@typescript-eslint/eslint-plugin": "^7.15.0",
+		"@types/vscode": "^1.96.0",
+		"@types/ws": "^8.5.14",
+		"@typescript-eslint/eslint-plugin": "^7.18.0",
 		"@typescript-eslint/eslint-plugin-tslint": "^7.0.2",
-		"@typescript-eslint/parser": "^7.15.0",
-		"@vscode/debugadapter-testsupport": "^1.65.0",
+		"@typescript-eslint/parser": "^7.18.0",
+		"@vscode/debugadapter-testsupport": "^1.68.0",
 		"@vscode/test-electron": "^2.4.1",
-		"eslint": "^8.57.0",
-		"glob": "^10.4.2",
-		"mocha": "^10.6.0",
+		"eslint": "^8.57.1",
+		"glob": "^11.0.1",
+		"mocha": "^11.1.0",
 		"nyc": "^15.1.0",
 		"sinon": "^13.0.2",
 		"source-map-support": "^0.5.21",
-		"ts-loader": "^9.5.1",
+		"ts-loader": "^9.5.2",
 		"tslint": "^6.1.3",
-		"typescript": "^5.5.2",
+		"typescript": "^5.7.3",
 		"vscode-tmgrammar-test": "^0.1.3",
-		"webpack": "^5.94.0",
+		"webpack": "^5.98.0",
 		"webpack-cli": "^5.1.4"
 	},
 	"optionalDependencies": {
-		"bufferutil": "^4.0.8",
-		"utf-8-validate": "^6.0.4"
+		"bufferutil": "^4.0.9",
+		"utf-8-validate": "^6.0.5"
 	}
 }

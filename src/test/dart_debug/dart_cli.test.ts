@@ -1491,7 +1491,7 @@ insp=<inspected variable>
 			dc.launch(config),
 		);
 
-		ensureHasRunWithArgsStarting(root, hasRunFile, "--enable-vm-service=0");
+		ensureHasRunWithArgsStarting(root, hasRunFile, "--no-serve-devtools");
 	});
 
 	it("can replace all args using custom tool", async () => {
