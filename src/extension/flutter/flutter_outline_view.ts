@@ -267,7 +267,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 
 		this.description = FlutterWidgetItem.getDescription(outline);
 		if (isWidget(outline)) {
-			this.iconPath = vs.Uri.file(path.join(extensionPath, "media/icons/flutter_widget.svg"));
+			this.iconPath = vs.Uri.file(path.join(extensionPath, "media/icons/flutter_outline/widget.svg"));
 		} else if (outline.dartElement) {
 			const icon = getIconForSymbolKind(getSymbolKindForElementKind(nullLogger, outline.dartElement.kind));
 			this.iconPath = {

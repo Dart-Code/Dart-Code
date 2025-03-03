@@ -1576,17 +1576,17 @@
 				{
 					"id": "flutter",
 					"title": "Flutter",
-					"icon": "media/icons/flutter_activity_bar.svg"
+					"icon": "media/icons/sidebar/flutter.svg"
 				},
 				{
 					"id": "flutterPropertyEditor",
 					"title": "Flutter Property Editor",
-					"icon": "media/icons/property_editor_activity_bar.svg"
+					"icon": "media/icons/sidebar/property_editor.svg"
 				},
 				{
 					"id": "sidebarDevTools",
 					"title": "Flutter DevTools",
-					"icon": "media/icons/flutter_activity_bar.svg"
+					"icon": "media/icons/sidebar/flutter.svg"
 				}
 			]
 		},
@@ -1626,49 +1626,63 @@
 					"type": "webview",
 					"name": "Inspector",
 					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.inspector",
-					"visibility": "visible"
+					"visibility": "visible",
+					"icon": "media/icons/sidebar/inspector.svg",
+					"contextualTitle": "Flutter DevTools: Inspector"
 				},
 				{
 					"id": "sidebarDevToolsCpuProfiler",
 					"type": "webview",
 					"name": "CPU Profiler",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.cpuProfiler",
-					"visibility": "collapsed"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.cpu-profiler",
+					"visibility": "collapsed",
+					"icon": "media/icons/sidebar/cpu_profiler.svg",
+					"contextualTitle": "Flutter DevTools: CPU Profiler"
 				},
 				{
 					"id": "sidebarDevToolsMemory",
 					"type": "webview",
 					"name": "Memory View",
 					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.memory",
-					"visibility": "collapsed"
+					"visibility": "collapsed",
+					"icon": "media/icons/sidebar/memory.svg",
+					"contextualTitle": "Flutter DevTools: Memory"
 				},
 				{
 					"id": "sidebarDevToolsPerformance",
 					"type": "webview",
 					"name": "Performance",
 					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.performance",
-					"visibility": "collapsed"
+					"visibility": "collapsed",
+					"icon": "media/icons/sidebar/performance.svg",
+					"contextualTitle": "Flutter DevTools: Performance"
 				},
 				{
 					"id": "sidebarDevToolsNetwork",
 					"type": "webview",
 					"name": "Network",
 					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.network",
-					"visibility": "collapsed"
+					"visibility": "collapsed",
+					"icon": "media/icons/sidebar/network.svg",
+					"contextualTitle": "Flutter DevTools: Network"
 				},
 				{
 					"id": "sidebarDevToolsLogging",
 					"type": "webview",
 					"name": "Logging",
 					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.logging",
-					"visibility": "collapsed"
+					"visibility": "collapsed",
+					"icon": "media/icons/sidebar/logging.svg",
+					"contextualTitle": "Flutter DevTools: Logging"
 				},
 				{
 					"id": "sidebarDevToolsDeepLinks",
 					"type": "webview",
 					"name": "Deep Links",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.deepLinks",
-					"visibility": "collapsed"
+					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.deep-links",
+					"visibility": "collapsed",
+					"icon": "media/icons/sidebar/deep_links.svg",
+					"contextualTitle": "Flutter DevTools: Deep Links"
 				}
 			]
 		},
