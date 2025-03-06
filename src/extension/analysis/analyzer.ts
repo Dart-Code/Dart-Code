@@ -85,10 +85,8 @@ export class LspAnalyzer extends Analyzer {
 			});
 			this.onReadyCompleter.resolve();
 
-			// If we have DTD, send it to the server.
-			if (config.previewDtdLspIntegration && dtd !== null) {
-				// TODO(dantup): Switch from a preview flag to using a server-provided capability. That capability is not
-				//  yet available because we want to do more testing behind the preview flag first.
+			// If we have DTD and the SDK supports LSP-over-DTD, tell the server to connect.
+			if (dartCapabilities.supportsLspOverDtd && dtd !== null) {
 				const registerExperimentalHandlers = !!config.experimentalDtdHandlers;
 				dtd?.dtdUri
 					.then((uri) => uri ? this.client.sendRequest(ConnectToDtdRequest.type, { uri, registerExperimentalHandlers }) : undefined)

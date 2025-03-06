@@ -83,9 +83,8 @@ describe("dart tooling daemon", () => {
 	});
 
 	it("should expose LSP methods via the analyzer", async function () {
-		// TODO(dantup): Unskip when we have a version number of capability for this functionality
-		//  and an LSP method that is certainly registered.
-		this.skip();
+		if (!extApi.dartCapabilities.supportsLspOverDtd)
+			this.skip();
 
 		const daemon = extApi.toolingDaemon;
 		assert.ok(daemon);
@@ -103,7 +102,7 @@ describe("dart tooling daemon", () => {
 		await daemon.streamCancel("Service");
 		await servicesSub.dispose();
 
-		assert.ok(services.includes("Lsp.textDocument/hover"), `Did not find "Lsp.textDocument/hover" in ${services.join(", ")}`);
+		assert.ok(services.includes("Lsp.experimental/echo"), `Did not find "Lsp.experimental/echo" in ${services.join(", ")}`);
 	});
 });
 

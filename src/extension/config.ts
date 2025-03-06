@@ -170,9 +170,6 @@ class Config {
 	get openDevTools(): "never" | "flutter" | "always" { return this.getConfig<"never" | "flutter" | "always">("openDevTools", "never"); }
 	get openTestView(): Array<"testRunStart" | "testFailure"> { return this.getConfig<Array<"testRunStart" | "testFailure">>("openTestView", ["testRunStart"]); }
 	get previewCommitCharacters(): boolean { return this.getConfig<boolean>("previewCommitCharacters", false); }
-	// TODO(dantup): When removing this flag, be sure to update the test
-	// "should expose LSP methods via the analyzer"
-	get previewDtdLspIntegration(): boolean { return this.getConfig<boolean>("previewDtdLspIntegration", false); }
 	get experimentalDtdHandlers(): boolean { return this.getConfig<boolean>("experimentalDtdHandlers", false); }
 	get experimentalPropertyEditor(): boolean { return this.getConfig<boolean>("experimentalPropertyEditor", false); }
 	get experimentalSidebarDevTools(): boolean { return this.getConfig<boolean>("experimentalSidebarDevTools", false); }

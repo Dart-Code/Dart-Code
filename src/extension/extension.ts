@@ -286,7 +286,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Dart Tooling Daemon.
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
-		? new VsCodeDartToolingDaemon(context, logger, sdks, deviceManager)
+		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
 		: undefined;
 
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {

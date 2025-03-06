@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/unified-signatures */
 import * as path from "path";
 import * as ws from "ws";
+import { DartCapabilities } from "../capabilities/dart";
 import { dartVMPath, tenMinutesInMs } from "../constants";
 import { LogCategory } from "../enums";
 import { EventsEmitter } from "../events";
@@ -32,6 +33,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	constructor(
 		logger: Logger,
 		sdks: DartSdks,
+		protected readonly dartCapabilities: DartCapabilities,
 		additionalArgs: string[],
 		maxLogLineLength: number | undefined,
 		getToolEnv: () => any,

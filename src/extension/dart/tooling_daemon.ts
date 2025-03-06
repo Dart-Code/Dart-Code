@@ -1,4 +1,5 @@
 import { commands, env, ExtensionContext, TextEditor, window, workspace } from "vscode";
+import { DartCapabilities } from "../../shared/capabilities/dart";
 import { CommandSource, restartReasonManual } from "../../shared/constants";
 import { DTD_AVAILABLE } from "../../shared/constants.contexts";
 import { DebuggerType } from "../../shared/enums";
@@ -29,11 +30,13 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		context: ExtensionContext,
 		logger: Logger,
 		sdks: DartSdks,
+		dartCapabilities: DartCapabilities,
 		deviceManager: FlutterDeviceManager | undefined,
 	) {
 		super(
 			logger,
 			sdks,
+			dartCapabilities,
 			config.toolingDaemonAdditionalArgs,
 			config.maxLogLineLength,
 			getToolEnv,
@@ -114,8 +117,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	}
 
 	private queueActiveLocationChange(editor: TextEditor | undefined) {
-		// We currently assume we only want this when the preview flag for LSP is enabled.
-		if (!config.previewDtdLspIntegration) return;
+		// We currently assume we only want this when we're on an SDK with LSP over DTD support.
+		if (!this.dartCapabilities.supportsLspOverDtd) return;
 
 		if (this.sendActiveLocationDebounceTimer)
 			clearTimeout(this.sendActiveLocationDebounceTimer);
