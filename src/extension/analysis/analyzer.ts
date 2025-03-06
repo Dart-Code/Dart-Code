@@ -384,18 +384,25 @@ export class LspAnalyzer extends Analyzer {
 					const results = await next(params, token);
 
 					if (Array.isArray(results)) {
-						for (const result of results) {
-							// Replace any instance of enableSnippets with the value of enableServerSnippets.
-							result.enableSnippets = config.enableServerSnippets;
+						for (let i = 0; i < results.length; i++) {
+							const requestedSection = params.items[i].section;
+							const result = results[i];
 
-							// Set default documentation and maxCompletionItems based on whether we're running locally or not.
-							// When running locally, payload size is less of an issue so we include full docs and a large list.
-							if (isRunningLocally) {
-								result.maxCompletionItems = result.maxCompletionItems ?? 100000;
-								result.documentation = result.documentation ?? "full";
-							} else {
-								result.maxCompletionItems = result.maxCompletionItems ?? 1000;
-								result.documentation = result.documentation ?? "none";
+							// Only inject values into the Dart config. The server might ask for other values
+							// (such as "editor.formatOnSave") for diagnostic reports.
+							if (requestedSection === "dart") {
+								// Replace any instance of enableSnippets with the value of enableServerSnippets.
+								result.enableSnippets = config.enableServerSnippets;
+
+								// Set default documentation and maxCompletionItems based on whether we're running locally or not.
+								// When running locally, payload size is less of an issue so we include full docs and a large list.
+								if (isRunningLocally) {
+									result.maxCompletionItems = result.maxCompletionItems ?? 100000;
+									result.documentation = result.documentation ?? "full";
+								} else {
+									result.maxCompletionItems = result.maxCompletionItems ?? 1000;
+									result.documentation = result.documentation ?? "none";
+								}
 							}
 						}
 					}
