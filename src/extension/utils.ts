@@ -6,7 +6,7 @@ import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
-import { WorkspaceConfig } from "../shared/interfaces";
+import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
 import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
@@ -228,9 +228,12 @@ export function escapeShell(args: string[]) {
 	return ret.join(" ");
 }
 
-export async function promptToReloadExtension(prompt?: string, buttonText?: string, offerLog?: boolean, specificLog?: string, useError?: boolean): Promise<void> {
+export async function promptToReloadExtension(logger: Logger, prompt?: string, buttonText?: string, offerLog?: boolean, specificLog?: string, useError?: boolean): Promise<void> {
 	const restartAction = buttonText || "Reload";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
+
+	logger.warn(`Prompting to reload: (${prompt}) (actions: ${actions.join(", ")})`);
+
 	const ringLogContents = ringLog.toString();
 	let showPromptAgain = true;
 	const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);

@@ -456,7 +456,7 @@ export class LspAnalyzer extends Analyzer {
 	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
-			errorHandler: new DartErrorHandler(),
+			errorHandler: new DartErrorHandler(logger),
 			initializationOptions: {
 				allowOpenUri: true,
 				appHost: vs.env.appHost,
@@ -616,7 +616,7 @@ export class LspAnalyzer extends Analyzer {
 			if (typeof errorOutput === "string") {
 				if (!hasShownAnalysisServerVersionMismatchError && config.analyzerPath && errorOutput.includes("analysis_server.dart") && errorOutput.includes("The specified language version is too high")) {
 					hasShownAnalysisServerVersionMismatchError = true;
-					void promptToReloadExtension("Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?", undefined, true, undefined, true);
+					void promptToReloadExtension(logger, "Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?", undefined, true, undefined, true);
 				}
 			}
 
@@ -624,7 +624,7 @@ export class LspAnalyzer extends Analyzer {
 		});
 		process.on("exit", (code, signal) => {
 			if (code)
-				reportAnalyzerTerminatedWithError();
+				reportAnalyzerTerminatedWithError(logger);
 		});
 
 		return Promise.resolve({ reader, writer });
@@ -710,7 +710,10 @@ class DartErrorHandler implements ls.ErrorHandler {
 
 	readonly maxRestartCount = 4;
 
-	public error(_error: Error, _message: ls.Message, count: number): ls.ErrorHandlerResult {
+	constructor(private readonly logger: Logger) { }
+
+	public error(error: Error, message: ls.Message, count: number): ls.ErrorHandlerResult {
+		this.logger.warn(`LSP Client error: (error: ${error}, message: ${message}, count: ${count})`);
 		if (count && count <= 3) {
 			return { action: ls.ErrorAction.Continue };
 		}
@@ -719,13 +722,14 @@ class DartErrorHandler implements ls.ErrorHandler {
 
 	public closed(): ls.CloseHandlerResult {
 		this.restarts.push(Date.now());
+		this.logger.warn(`LSP Client closed (${this.restarts} recent restarts recorded)`);
 		if (this.restarts.length <= this.maxRestartCount) {
 			return { action: ls.CloseAction.Restart };
 		} else {
 			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
 			if (diff <= 3 * 60 * 1000) {
 				const message = `The Dart Analysis Server crashed ${this.maxRestartCount + 1} times in the last 3 minutes. See the log for more information.`;
-				void promptToReloadExtension(message, undefined, true, undefined, true);
+				void promptToReloadExtension(this.logger, message, undefined, true, undefined, true);
 				return {
 					action: ls.CloseAction.DoNotRestart,
 					handled: true,

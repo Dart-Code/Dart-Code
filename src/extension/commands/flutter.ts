@@ -136,7 +136,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		// Don't prompt to reload when the version changes, as we automatically reload here.
 		commandState.promptToReloadOnVersionChanges = false;
 		await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter", true);
-		await util.promptToReloadExtension();
+		await util.promptToReloadExtension(this.logger);
 	}
 
 	private async flutterCreate({ projectName, projectPath, triggerData, platform }: FlutterCreateCommandArgs) {

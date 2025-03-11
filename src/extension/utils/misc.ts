@@ -7,14 +7,14 @@ import { runToolProcess } from "./processes";
 
 let isShowingAnalyzerError = false;
 
-export function reportAnalyzerTerminatedWithError(duringStartup = false) {
+export function reportAnalyzerTerminatedWithError(logger: Logger, duringStartup = false) {
 	if (isShowingAnalyzerError)
 		return;
 	isShowingAnalyzerError = true;
 	const message = duringStartup
 		? "The Dart Analyzer could not be started."
 		: "The Dart Analyzer has terminated.";
-	void promptToReloadExtension(message, undefined, true, config.analyzerLogFile).then(() => isShowingAnalyzerError = false);
+	void promptToReloadExtension(logger, message, undefined, true, config.analyzerLogFile).then(() => isShowingAnalyzerError = false);
 }
 
 export async function getFlutterConfigValue<T>(logger: Logger, flutterSdkPath: string | undefined, folder: string, flutterConfigKey: string): Promise<T> {

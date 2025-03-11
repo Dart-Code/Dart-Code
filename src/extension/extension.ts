@@ -141,7 +141,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Wire up a reload command that will re-initialise everything.
 	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (reason?: string) => {
 		reason ??= "unknown reason";
-		logger.info(`Performing silent extension reload (${reason})...`);
+		logger.warn(`Performing silent extension reload (${reason})...`);
 		await deactivate(true);
 		disposeAll(context.subscriptions);
 		await activate(context, true);
@@ -243,7 +243,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			runIfNoDevices = () => {
 				if (!hasRunNoDevicesMessage) {
 					const instruction = workspaceContext.config.restartMacDaemonMessage;
-					void promptToReloadExtension(`${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
+					void promptToReloadExtension(logger, `${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
 					hasRunNoDevicesMessage = true;
 				}
 			};
@@ -387,7 +387,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
-	const extensionRecommendations = new ExtensionRecommentations(analytics, extContext);
+	const extensionRecommendations = new ExtensionRecommentations(logger, analytics, extContext);
 
 	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);
@@ -616,7 +616,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
 		) {
-			void util.promptToReloadExtension();
+			void util.promptToReloadExtension(logger);
 			return;
 		}
 
@@ -739,7 +739,8 @@ function handleConfigurationChange(sdks: Sdks) {
 		// Delay the restart slightly, because the config change may be transmitted to the LSP server
 		// and shutting the server down too quickly results in that trying to write to a closed
 		// stream.
-		setTimeout(util.promptToReloadExtension, 50);
+		logger.warn(`Configuration changed, reloading`);
+		setTimeout(() => util.promptToReloadExtension(logger), 50);
 	}
 }
 

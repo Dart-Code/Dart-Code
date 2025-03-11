@@ -76,7 +76,7 @@ export class SdkUtils {
 	}
 
 	public showFluttersDartSdkActivationFailure() {
-		void promptToReloadExtension("Could not find Dart in your Flutter SDK. " +
+		void promptToReloadExtension(this.logger, "Could not find Dart in your Flutter SDK. " +
 			"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 			"Reload", // eslint-disable-line @typescript-eslint/indent
 			true, // eslint-disable-line @typescript-eslint/indent
@@ -126,7 +126,7 @@ export class SdkUtils {
 					const matchingSdkFolder = search(selectedFolders.map((f) => fsPath(f)));
 					if (matchingSdkFolder.sdkPath) {
 						await saveSdkPath(matchingSdkFolder.sdkPath);
-						await promptToReloadExtension();
+						await promptToReloadExtension(this.logger);
 						if (commandToReRun) {
 							void commands.executeCommand(commandToReRun);
 						}

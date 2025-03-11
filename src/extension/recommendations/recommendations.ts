@@ -2,6 +2,7 @@ import * as vs from "vscode";
 import { flutterExtensionIdentifier, noThanksAction } from "../../shared/constants";
 import { Context } from "../../shared/vscode/workspace";
 
+import { Logger } from "../../shared/interfaces";
 import { Analytics, AnalyticsEvent } from "../analytics";
 import { promptToReloadExtension } from "../utils";
 import { ArbExtensionRecommentation } from "./arb";
@@ -9,7 +10,7 @@ import { ArbExtensionRecommentation } from "./arb";
 export class ExtensionRecommentations {
 	private readonly arb: ArbExtensionRecommentation;
 
-	constructor(private readonly analytics: Analytics, private readonly context: Context) {
+	constructor(private readonly logger: Logger, private readonly analytics: Analytics, private readonly context: Context) {
 		this.arb = new ArbExtensionRecommentation(this, context);
 	}
 
@@ -21,7 +22,7 @@ export class ExtensionRecommentations {
 		);
 		if (res === installExtension) {
 			await this.installExtensionWithProgress("Installing Flutter extension", flutterExtensionIdentifier);
-			void promptToReloadExtension();
+			void promptToReloadExtension(this.logger);
 		}
 
 		return false;

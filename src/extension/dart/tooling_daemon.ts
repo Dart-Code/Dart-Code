@@ -40,7 +40,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			config.toolingDaemonAdditionalArgs,
 			config.maxLogLineLength,
 			getToolEnv,
-			(prompt?: string, buttonText?: string, offerLog?: boolean) => promptToReloadExtension(prompt, buttonText, offerLog, config.toolingDaemonLogFile),
+			(prompt?: string, buttonText?: string, offerLog?: boolean) => promptToReloadExtension(logger, prompt, buttonText, offerLog, config.toolingDaemonLogFile),
 		);
 		context.subscriptions.push(this);
 
