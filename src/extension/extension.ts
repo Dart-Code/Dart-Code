@@ -111,9 +111,9 @@ let ringLogger: IAmDisposable | undefined;
 const logger = new EmittingLogger();
 let extensionLog: IAmDisposable | undefined;
 
-// Keep a running in-memory buffer of last 200 log events we can give to the
+// Keep a running in-memory buffer of last 500 log events we can give to the
 // user when something crashed even if they don't have disk-logging enabled.
-export const ringLog: RingLog = new RingLog(200);
+export const ringLog: RingLog = new RingLog(500);
 
 // A key used to access state tied to this "session" to work around a possible VS Code bug that persists
 // state unexpectedly accross sessions.
@@ -124,7 +124,7 @@ export const perSessionWebviewStateKey = `webviewState_${(new Date()).getTime()}
 export async function activate(context: vs.ExtensionContext, isRestart = false) {
 	// Ring logger is only set up once and presist over silent restarts.
 	if (!ringLogger)
-		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(500)));
+		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(800)));
 
 	if (isDevExtension)
 		context.subscriptions.push(logToConsole(logger));
