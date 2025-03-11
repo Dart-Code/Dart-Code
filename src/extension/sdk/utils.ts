@@ -225,7 +225,7 @@ export class SdkUtils {
 
 		await new AddSdkToPath(this.logger, this.context, this.analytics).promptToAddToPath("Flutter", flutterSdkFolder);
 
-		await commands.executeCommand("_dart.reloadExtension");
+		await commands.executeCommand("_dart.reloadExtension", "after Flutter clone");
 		if (commandToReRun)
 			void commands.executeCommand(commandToReRun);
 

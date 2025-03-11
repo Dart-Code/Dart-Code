@@ -105,6 +105,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		const statusBarItem = this.statusBarItem;
 		statusBarItem.text = "Dart Tooling Daemon Terminated";
 		statusBarItem.command = {
+			arguments: ["DTD terminated status bar item"],
 			command: "_dart.reloadExtension",
 			title: "restart",
 		};

@@ -245,7 +245,7 @@ export async function promptToReloadExtension(prompt?: string, buttonText?: stri
 			else
 				void openLogContents(undefined, ringLogContents, tempLogPath);
 		} else if (!prompt || chosenAction === restartAction) {
-			void commands.executeCommand("_dart.reloadExtension");
+			void commands.executeCommand("_dart.reloadExtension", prompt);
 		}
 	}
 }

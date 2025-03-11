@@ -301,7 +301,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			const restartAction = "Reload";
 			const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
 			if (chosenAction === restartAction) {
-				void vs.commands.executeCommand("_dart.reloadExtension");
+				void vs.commands.executeCommand("_dart.reloadExtension", "new platform enabled prompt");
 				return true;
 			}
 		}

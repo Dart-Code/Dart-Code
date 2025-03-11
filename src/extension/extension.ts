@@ -139,8 +139,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	util.logTime("Code called activate");
 
 	// Wire up a reload command that will re-initialise everything.
-	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async () => {
-		logger.info("Performing silent extension reload...");
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (reason?: string) => {
+		reason ??= "unknown reason";
+		logger.info(`Performing silent extension reload (${reason})...`);
 		await deactivate(true);
 		disposeAll(context.subscriptions);
 		await activate(context, true);
