@@ -60,7 +60,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 		} else if (element instanceof PackageDepProject) {
 			const rootPackageFolder = element.rootPackageFolder;
 			// Fetch dependencies with "pub deps --json".
-			const packageMap = this.packageMapLoader.loadForProject(rootPackageFolder);
+			const packageMap = this.packageMapLoader.loadForProject(rootPackageFolder, "DartPackagesProvider.getChildren() for PackageDepProject");
 			const root = await this.deps.getTree(rootPackageFolder);
 			const rootPackage = root?.roots.at(0); // TODO(dantup): Fix this!
 

@@ -191,7 +191,7 @@ function getPubPackageStatus(
 	// If we're a Flutter project and our SDK doesn't match the one used
 	// in the package file, we also need running.
 	if (sdks.flutter) {
-		const packageMap = PackageMap.loadForProject(logger, folder);
+		const packageMap = PackageMap.loadForProject(logger, folder, "getPubPackageStatus");
 		const flutterPackagePath = packageMap.getPackagePath("flutter");
 		if (flutterPackagePath && !isWithinPath(flutterPackagePath, sdks.flutter)) {
 			return { ...result, pubRequired: "GET", reason: `The referenced Flutter package (${flutterPackagePath}) does not match the current SDK in use (${sdks.flutter})` };

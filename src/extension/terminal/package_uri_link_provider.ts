@@ -28,7 +28,7 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 			const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 			this.packageMaps = {};
 			for (const projectFolder of projectFolders) {
-				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);
+				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder, "DartPackageUriLinkProvider.discoverPackageMaps");
 			}
 			resolve();
 		});
