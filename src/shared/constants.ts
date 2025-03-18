@@ -159,6 +159,7 @@ export abstract class CommandSource {
 	static onDebugAutomatic = "onDebugAutomatic"; // Configured to always run on debug session start
 	static onDebugPrompt = "onDebugPrompt"; // Responded to prompt when running a debug session
 	static languageStatus = "languageStatus"; // Launched from the language status popout
+	static onSidebarShown = "onSidebarShown"; // Showed this page specifically in the sidebar.
 }
 
 export const runFlutterCreatePrompt = (platformType: string, platformNeedsGloballyEnabling: boolean) =>

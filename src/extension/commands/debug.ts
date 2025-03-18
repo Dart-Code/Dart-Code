@@ -212,7 +212,7 @@ export class DebugCommands implements IAmDisposable {
 			const notify = !options || triggeredAutomatically !== true;
 
 			if (!session || session?.vmServiceUri) {
-				return this.devTools.spawn(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource, location, triggeredAutomatically });
+				return this.devTools.spawn(session as DartDebugSessionInformation & { vmServiceUri: string }, { notify, pageId, commandSource, location, triggeredAutomatically }, true);
 			} else if (session.session.configuration.noDebug) {
 				void vs.window.showInformationMessage("You must start your app with debugging in order to use DevTools.");
 			} else if (session.hasStarted && session.flutterMode && session.flutterDeviceId) {
@@ -873,6 +873,7 @@ export class DebugCommands implements IAmDisposable {
 						inspectorRef: data.inspectorReference,
 						pageId: widgetInspectorPage.id,
 					},
+					true,
 				);
 			} else if (choice === doNotAskAgainAction) {
 				void config.setShowInspectorNotificationsForWidgetErrors(false);

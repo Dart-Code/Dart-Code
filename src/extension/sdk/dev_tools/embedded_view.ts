@@ -118,12 +118,12 @@ export abstract class DevToolsEmbeddedViewOrSidebarView implements IAmDisposable
 
 	constructor(public session: DartDebugSessionInformation | undefined) { }
 
-	abstract setUrl(url: string): void;
+	abstract setUrl(url: string, forceShow: boolean): void;
 	abstract reload(): void;
 
-	public load(session: DartDebugSessionInformation | undefined, url: string): void {
+	public load(session: DartDebugSessionInformation | undefined, url: string, forceShow: boolean): void {
 		this.session = session;
-		this.setUrl(url);
+		this.setUrl(url, forceShow);
 	}
 
 	public dispose(): void {

@@ -56,6 +56,10 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		void this.webviewView?.webview.postMessage({ command: "_dart-code.setUrl", url });
 	}
 
+	public async setHtml(content: string | null) {
+		void this.webviewView?.webview.postMessage({ command: "_dart-code.setHtml", content });
+	}
+
 	public async reload() {
 		void this.webviewView?.webview.postMessage({ command: "refresh" });
 	}
@@ -96,20 +100,49 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		const devToolsFrame = document.getElementById('devToolsFrame');
 		const message = event.data;
 
+		const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
+		const background = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
+		const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
+		const fontFamily = getComputedStyle(document.documentElement).getPropertyValue('--vscode-font-family');
+		const fontSize = getComputedStyle(document.documentElement).getPropertyValue('--vscode-font-size');
+
 		// Handle any special commands first.
 		switch (message.command) {
 			case "_dart-code.setUrl":
-				const theme = document.body.classList.contains('vscode-light') ? 'light': 'dark';
-				const background = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
-				const foreground = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBarTitle-foreground');
 				const qsSep = message.url.includes("?") ? "&" : "?";
 				// Don't include # in colors
 				// https://github.com/flutter/flutter/issues/155992
 				let url = \`\${message.url}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(foreground?.replace('#', ''))}\`;
-				if (devToolsFrame.src !== url) {
+				if (devToolsFrame.src !== url || devToolsFrame.srcdoc) {
 					devToolsFrame.src = url;
+					devToolsFrame.removeAttribute('srcdoc');
 					vscode.setState({ ${perSessionWebviewStateKey}: { frameUrl: url } });
 				}
+				return;
+			case "_dart-code.setHtml":
+				const htmlContent = \`
+					<html>
+					<head>
+					<style>
+					body {
+						background-color: \${background};
+						color: \${foreground};
+						font-family: \${fontFamily};
+						font-size: \${fontSize};
+						text-align: center;
+						vertical-align: middle;
+					}
+					h1 {
+						margin-top: 50px;
+						font-size: 1.2em;
+					}
+					</style>
+					</head>
+					<body>\${message.content}</body>
+					</html>
+				\`;
+				devToolsFrame.srcdoc = htmlContent;
+				vscode.setState({ ${perSessionWebviewStateKey}: { frameUrl: undefined } });
 				return;
 		}
 	});
