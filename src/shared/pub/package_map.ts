@@ -29,7 +29,7 @@ export abstract class PackageMap {
 				? this.load(logger, packagesFile)
 				: new MissingPackageMap();
 		} catch (e) {
-			logger.error(`Failed to load package map at ${packagesFile}, continuing as if package map does not exist: ${e}`);
+			logger.warn(`Failed to load package map at ${packagesFile}, continuing as if package map does not exist: ${e}`);
 			return new MissingPackageMap();
 		}
 	}
@@ -151,7 +151,13 @@ class PackageConfigJsonPackageMap extends PackageMap {
 
 	private load() {
 		const json = fs.readFileSync(this.packageConfigPath, "utf8");
-		this.config = JSON.parse(json);
+		try {
+			this.config = JSON.parse(json);
+		} catch (e) {
+			this.logger.warn(`Failed to load package map at ${this.packageConfigPath}, continuing with empty map: ${e}`);
+			this.map = {};
+			return;
+		}
 
 		this.map = {};
 		for (const pkg of this.config.packages) {
