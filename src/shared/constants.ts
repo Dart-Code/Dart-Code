@@ -20,7 +20,7 @@ export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
 export const platformDisplayName = isWin ? "win" : isMac ? "mac" : isChromeOS ? "chromeos" : "linux";
 export const platformEol = isWin ? "\r\n" : "\n";
 
-export const androidStudioExecutableNames = isWin ? ["studio64.exe"] : ["studio.sh", "studio"];
+export const androidStudioExecutableNames = isWin ? ["studio64.exe"] : ["studio", "studio.sh"];
 export const executableNames = {
 	dart: isWin ? "dart.exe" : "dart",
 	dartdoc: isWin ? "dartdoc.bat" : "dartdoc",
