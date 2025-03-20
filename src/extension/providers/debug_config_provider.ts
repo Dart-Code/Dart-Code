@@ -17,7 +17,7 @@ import { isWebDevice, notNullOrUndefined } from "../../shared/utils";
 import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
-import { getAllProjectFolders, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
+import { envUtils, getAllProjectFolders, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config, ResourceConfig } from "../config";
@@ -262,6 +262,12 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			LastTestDebugSession.workspaceFolder = folder;
 			LastTestDebugSession.debugConfig = Object.assign({}, debugConfig);
 			void vs.commands.executeCommand("setContext", HAS_LAST_TEST_DEBUG_CONFIG, true);
+		}
+
+		if (Array.isArray(debugConfig.additionalExposedUrls)) {
+			for (const url of debugConfig.additionalExposedUrls) {
+				await envUtils.exposeUrl(url as string, this.logger);
+			}
 		}
 
 		return debugConfig;
