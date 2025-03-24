@@ -2758,7 +2758,7 @@
 					"dart.vmAdditionalArgs": {
 						"type": "array",
 						"default": [],
-						"markdownDescription": "Arguments to be passed to the Dart VM when running Dart CLI scripts.\n\nThese arguments appear between \"dart\" and \"run\":\n\n`dart (vmAdditionalArgs) run (toolArgs) bin/main.dart (args)`",
+						"markdownDescription": "Arguments to be passed to the Dart VM when running Dart CLI scripts/tests.\n\nThese arguments appear after \"dart\" but before subcommands like \"test\":\n\n`dart (vmAdditionalArgs) test (toolArgs) test/my_test.dart (args)`",
 						"scope": "resource",
 						"items": {
 							"type": "string"
