@@ -281,10 +281,6 @@ export interface CustomDevToolsConfig {
 	legacy?: boolean; // devtools_tool instead of dt
 }
 
-export interface ExtensionConfig {
-	get experimentalTestRunnerInSdk(): boolean;
-}
-
 export interface GetSDKCommandConfig {
 	executable: string;
 	args?: string[];

@@ -114,7 +114,6 @@ class Config {
 	get env(): object { return this.getConfig<object>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
-	get experimentalTestRunnerInSdk(): boolean { return this.getConfig<boolean>("experimentalTestRunnerInSdk", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("extensionLogFile", null)))); }
 	get flutterAdbConnectOnChromeOs(): boolean { return this.getConfig<boolean>("flutterAdbConnectOnChromeOs", false); }
 	get flutterCreateAndroidLanguage(): "java" | "kotlin" { return this.getConfig<"java" | "kotlin">("flutterCreateAndroidLanguage", "kotlin"); }
