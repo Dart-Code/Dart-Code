@@ -13,6 +13,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { fsPath } from "../../shared/utils/fs";
+import { AnalyzerUpdateDiagnosticInformationFeature } from "../../shared/vscode/analyzer_update_diagnostic_information";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { DartTextDocumentContentProviderFeature } from "../../shared/vscode/dart_text_document_content_provider";
 import { cleanDartdoc, createMarkdownString, extensionVersion } from "../../shared/vscode/extension_utils";
@@ -40,6 +41,7 @@ export class LspAnalyzer extends Analyzer {
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
 	public readonly dartTextDocumentContentProvider: DartTextDocumentContentProviderFeature | undefined;
+	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
 	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly dtd: DartToolingDaemon | undefined) {
@@ -47,23 +49,32 @@ export class LspAnalyzer extends Analyzer {
 
 		this.setupStatusItem();
 
-		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
-		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
+		this.disposables.push({ dispose: () => this.client.stop() });
+
 		if (this.dartCapabilities.supportsMacroGeneratedFiles) {
 			// Just because it's enabled doesn't mean the server actually supports it.
 			this.dartTextDocumentContentProvider = new DartTextDocumentContentProviderFeature(logger, this.client, dartCapabilities);
 			this.client.registerFeature(this.dartTextDocumentContentProvider.feature);
 			this.disposables.push(this.dartTextDocumentContentProvider);
 		}
-		this.fileTracker = new FileTracker(logger, this.client, wsContext);
+
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
-		this.client.registerFeature(this.snippetTextEdits.feature);
-		this.client.registerFeature(this.refactors.feature);
-		this.disposables.push({ dispose: () => this.client.stop() });
+
+		this.fileTracker = new FileTracker(logger, this.client, wsContext);
 		this.disposables.push(this.fileTracker);
-		this.disposables.push(this.snippetTextEdits);
+
+		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
+		this.client.registerFeature(this.refactors.feature);
 		this.disposables.push(this.refactors);
+
+		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
+		this.client.registerFeature(this.snippetTextEdits.feature);
+		this.disposables.push(this.snippetTextEdits);
+
+		this.updateDiagnosticInformation = new AnalyzerUpdateDiagnosticInformationFeature(logger, this.client);
+		this.client.registerFeature(this.updateDiagnosticInformation.feature);
+		this.disposables.push(this.updateDiagnosticInformation);
 
 		void this.client.start().then(() => {
 			this.statusItem.text = "Dart Analysis Server";
@@ -92,6 +103,8 @@ export class LspAnalyzer extends Analyzer {
 					.then((uri) => uri ? this.client.sendRequest(ConnectToDtdRequest.type, { uri, registerExperimentalHandlers }) : undefined)
 					.catch((e) => this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${e}`));
 			}
+
+			void this.updateDiagnosticInformation?.updateDiagnosticInformationIfSupported();
 		});
 	}
 
