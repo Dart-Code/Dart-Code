@@ -1586,7 +1586,7 @@
 				{
 					"id": "sidebarDevToolsContainer",
 					"title": "Flutter DevTools",
-					"icon": "media/icons/sidebar/flutter.svg"
+					"icon": "media/icons/sidebar/devtools.svg"
 				},
 				{
 					"id": "sidebarDevToolsInspectorContainer",
