@@ -49,32 +49,27 @@ export class LspAnalyzer extends Analyzer {
 
 		this.setupStatusItem();
 
+		// First set up the features that buildMiddleware() requires.
+		this.disposables.push(this.refactors = new InteractiveRefactors(logger, dartCapabilities));
+		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities));
+
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		this.disposables.push({ dispose: () => this.client.stop() });
 
-		if (this.dartCapabilities.supportsMacroGeneratedFiles) {
-			// Just because it's enabled doesn't mean the server actually supports it.
-			this.dartTextDocumentContentProvider = new DartTextDocumentContentProviderFeature(logger, this.client, dartCapabilities);
-			this.client.registerFeature(this.dartTextDocumentContentProvider.feature);
-			this.disposables.push(this.dartTextDocumentContentProvider);
-		}
 
+		// Set up other features that require the client.
+		if (this.dartCapabilities.supportsMacroGeneratedFiles) // Just because it's enabled doesn't mean the server actually supports it.
+			this.disposables.push(this.dartTextDocumentContentProvider = new DartTextDocumentContentProviderFeature(logger, this.client, dartCapabilities));
+		this.disposables.push(this.fileTracker = new FileTracker(logger, this.client, wsContext));
+		this.disposables.push(this.updateDiagnosticInformation = new AnalyzerUpdateDiagnosticInformationFeature(logger, this.client));
+
+		// Register all features from both sections above.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
-
-		this.fileTracker = new FileTracker(logger, this.client, wsContext);
-		this.disposables.push(this.fileTracker);
-
-		this.refactors = new InteractiveRefactors(logger, dartCapabilities);
 		this.client.registerFeature(this.refactors.feature);
-		this.disposables.push(this.refactors);
-
-		this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities);
 		this.client.registerFeature(this.snippetTextEdits.feature);
-		this.disposables.push(this.snippetTextEdits);
-
-		this.updateDiagnosticInformation = new AnalyzerUpdateDiagnosticInformationFeature(logger, this.client);
 		this.client.registerFeature(this.updateDiagnosticInformation.feature);
-		this.disposables.push(this.updateDiagnosticInformation);
+		if (this.dartTextDocumentContentProvider)
+			this.client.registerFeature(this.dartTextDocumentContentProvider.feature);
 
 		void this.client.start().then(() => {
 			this.statusItem.text = "Dart Analysis Server";
