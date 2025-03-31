@@ -72,8 +72,8 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 	public async setUrl(url: string, forceShow: boolean): Promise<void> {
 		this.targetUrl = url;
 
-		// If we're not loaded, we only store the URL for later.
-		if (!this.isLoaded)
+		// If we're not loaded and not force-showing, we only store the URL for later.
+		if (!this.isLoaded && !forceShow)
 			return;
 
 		await this.webViewProvider.setUrl(url);
