@@ -101,7 +101,10 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 					for (const setting of interestingSettings[section]) {
 						const vs = c.inspect(setting);
 						const v = vs?.workspaceFolderLanguageValue ?? vs?.workspaceFolderValue;
-						if (v !== undefined && v !== results.global[`${section}.${setting}`]) {
+						const thisValueJson = JSON.stringify(v);
+						const globalValueJson = JSON.stringify(results.global[`${section}.${setting}`]);
+						const isDifferentToGlobal = thisValueJson !== globalValueJson;
+						if (v !== undefined && isDifferentToGlobal) {
 							results[`folder_${i}`] ??= {};
 							results[`folder_${i}`][`${section}.${setting}`] = v;
 						}
