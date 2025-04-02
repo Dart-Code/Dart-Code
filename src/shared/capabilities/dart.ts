@@ -28,6 +28,7 @@ export class DartCapabilities {
 	get supportsFormatSpecifiers() { return versionIsAtLeast(this.version, "3.0.0-0"); }
 	get supportsDevToolsVsCodeExtensions() { return versionIsAtLeast(this.version, "3.3.0-247"); }
 	get supportsDevToolsDtdSidebar() { return versionIsAtLeast(this.version, "3.6.0-160"); }
+	get supportsDevToolsPropertyEditor() { return versionIsAtLeast(this.version, "3.8.0-171.2"); }
 	get supportsLspOverDtd() { return versionIsAtLeast(this.version, "3.8.0-0"); }
 	/**
 	 * Whether this version of the SDK supports DTD. This should be checked only for

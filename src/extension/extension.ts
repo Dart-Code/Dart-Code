@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
 import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName } from "../shared/constants";
-import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
+import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
@@ -547,11 +547,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	else
 		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
 
-	// When switching from config to capability, also update package.json "when" condition for the view
-	// and implement the Context flag
-	// (see "_whenForFutureWhenSwitchFromExperimentalFlagToCapabilities" and "FLUTTER_SIDEBAR_SUPPORTED_CONTEXT").
-	if (dartToolingDaemon /* && dartCapabilities.supportsPropertyEditor */ && config.experimentalPropertyEditor)
+
+	if (dartToolingDaemon && (dartCapabilities.supportsDevToolsPropertyEditor || config.experimentalPropertyEditor)) {
+		void vs.commands.executeCommand("setContext", FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, true);
 		context.subscriptions.push(new PropertyEditor(devTools, dartCapabilities));
+	} else {
+		void vs.commands.executeCommand("setContext", FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, false);
+	}
 
 	context.subscriptions.push(vs.commands.registerCommand("dart.package.openFile", (filePath: string) => {
 		if (!filePath) return;

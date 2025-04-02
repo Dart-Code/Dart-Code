@@ -1626,8 +1626,7 @@
 					"id": "flutterPropertyEditor",
 					"type": "webview",
 					"name": "Flutter Property Editor",
-					"_whenForFutureWhenSwitchFromExperimentalFlagToCapabilities": "dart-code:anyFlutterProjectLoaded && dart-code:flutterPropertyEditorSupported",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalPropertyEditor"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:flutterPropertyEditorSupported"
 				}
 			],
 			"sidebarDevToolsContainer": [
