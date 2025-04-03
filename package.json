@@ -2,7 +2,7 @@
 	"name": "dart-code",
 	"displayName": "Dart",
 	"description": "Dart language support and debugger for Visual Studio Code.",
-	"version": "3.110.0-dev",
+	"version": "3.108.1",
 	"publisher": "Dart-Code",
 	"engines": {
 		"vscode": "^1.96.0"
