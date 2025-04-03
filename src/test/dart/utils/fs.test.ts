@@ -47,15 +47,15 @@ describe("uriComparisonString", () => {
 		if (!isWin)
 			this.skip();
 
-		// Upper -> upper
+		// Upper
 		assert.equal(
 			uriComparisonString(Uri.file("C:\\test\\test")),
-			"file:C:\\test\\test",
+			"file:c:\\test\\test",
 		);
-		// Lower -> upper
+		// Lower
 		assert.equal(
 			uriComparisonString(Uri.file("c:\\test\\test")),
-			"file:C:\\test\\test",
+			"file:c:\\test\\test",
 		);
 	});
 
@@ -63,15 +63,15 @@ describe("uriComparisonString", () => {
 		if (!isWin)
 			this.skip();
 
-		// Upper -> upper
+		// Upper
 		assert.equal(
 			uriComparisonString(Uri.file("C:\\test\\test").with({ scheme: "dart-macro+file" })),
-			"dart-macro+file:C:\\test\\test",
+			"dart-macro+file:c:\\test\\test",
 		);
-		// Lower -> upper
+		// Lower
 		assert.equal(
 			uriComparisonString(Uri.file("c:\\test\\test").with({ scheme: "dart-macro+file" })),
-			"dart-macro+file:C:\\test\\test",
+			"dart-macro+file:c:\\test\\test",
 		);
 	});
 
