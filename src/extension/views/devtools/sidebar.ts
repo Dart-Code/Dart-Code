@@ -13,6 +13,7 @@ export class FlutterDtdSidebar implements IAmDisposable {
 		dartCapabilities: DartCapabilities,
 	) {
 		const webViewProvider = new MyWebViewProvider(devTools, dartCapabilities);
+		this.disposables.push(webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider("dartFlutterSidebar", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
 

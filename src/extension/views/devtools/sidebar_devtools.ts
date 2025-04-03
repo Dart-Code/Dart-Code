@@ -37,6 +37,7 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 
 		void vs.commands.executeCommand("setContext", `${SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX}${this.page.id}`, true);
 		this.webViewProvider = new MyWebViewProvider(this, this.page.title, devTools, dartCapabilities);
+		this.disposables.push(this.webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider(`sidebarDevTools${this.page.commandSuffix}`, this.webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 
 	}

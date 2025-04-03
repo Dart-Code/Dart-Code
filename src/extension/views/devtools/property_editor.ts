@@ -13,6 +13,7 @@ export class PropertyEditor implements IAmDisposable {
 		dartCapabilities: DartCapabilities,
 	) {
 		const webViewProvider = new MyWebViewProvider(devTools, dartCapabilities);
+		this.disposables.push(webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider("flutterPropertyEditor", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
 

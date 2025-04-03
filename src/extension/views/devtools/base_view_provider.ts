@@ -1,11 +1,14 @@
 import * as vs from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
+import { disposeAll } from "../../../shared/utils";
 import { envUtils } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
 
 export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
+	protected readonly disposables: vs.Disposable[] = [];
 	public webviewView: vs.WebviewView | undefined;
+
 	constructor(
 		protected readonly devTools: DevToolsManager,
 		protected readonly dartCapabilities: DartCapabilities,
@@ -15,7 +18,16 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 	abstract get pageUrl(): Promise<string | null | undefined>; // undefined = no DevTools, null = just no page to display yet (still set up iframe).
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, context: vs.WebviewViewResolveContext<unknown>, token: vs.CancellationToken): Promise<void> {
-		this.webviewView = webviewView;
+		if (this.webviewView !== webviewView) {
+			this.webviewView = webviewView;
+			this.disposables.push(this.webviewView.webview.onDidReceiveMessage(
+				async (message) => {
+					if (message.command === "launchUrl") {
+						await envUtils.openInBrowser(message.data.url as string);
+					}
+				},
+			));
+		}
 
 		await this.devTools.start();
 		const pageUrl = await this.pageUrl;
@@ -145,6 +157,21 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 				vscode.setState({ ${perSessionWebviewStateKey}: { frameUrl: undefined } });
 				return;
 		}
+
+		try {
+			const frameOrigin = new URL(devToolsFrame.src).origin;
+			if (event.origin == frameOrigin) {
+				// Messages from the frame go up to VS Code.
+				// console.log(\`FRAME: Code <-- DevTools: \${JSON.stringify(message)}\`);
+				vscode.postMessage(message);
+			} else {
+				// Messages not from the frame go to the frame.
+				// console.log(\`FRAME: Code --> DevTools: \${JSON.stringify(message)}\`);
+				devToolsFrame.contentWindow.postMessage(message, frameOrigin);
+			}
+		} catch (e) {
+		 	console.log(\`Failed to proxy message: \${e}\`);
+		}
 	});
 
 	function sendTheme() {
@@ -173,6 +200,10 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		}).observe(document.body, { attributeFilter : ['class'], attributeOldValue: true });
 	});
 			`;
+	}
+
+	public dispose(): any {
+		disposeAll(this.disposables);
 	}
 }
 
