@@ -60,6 +60,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
 		if (run?.shouldEndWithSession)
 			run.run.end();
+
+		this.testRuns[e.configuration.dartCodeDebugSessionID] = undefined;
 	}
 
 	public getLatestData(test: vs.TestItem): TreeNode | undefined {
