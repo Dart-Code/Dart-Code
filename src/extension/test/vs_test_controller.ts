@@ -58,9 +58,12 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public handleDebugSessionEnd(e: vs.DebugSession): void {
 		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
-		if (run?.shouldEndWithSession)
+		if (run?.shouldEndWithSession) {
+			console.log(`Ending run ${run.run.name} 5555`);
 			run.run.end();
-
+		} else {
+			console.log(`NOT ending run ${run?.run.name} 6666`);
+		}
 		this.testRuns[e.configuration.dartCodeDebugSessionID] = undefined;
 	}
 
@@ -85,6 +88,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.removeRedundantChildNodes(testsToExclude);
 
 		const run = this.controller.createTestRun(request);
+		console.log(`Created run ${run.name} 111`);
 		try {
 			// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
 			// suites), we can run the "fast path" in a single `dart test` invocation.
@@ -118,6 +122,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, run);
 			}
 		} finally {
+			console.log(`Ended run ${run.name} 111`);
 			run.end();
 		}
 	}
@@ -316,11 +321,13 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private getOrCreateTestRun(sessionID: string) {
 		let run = this.testRuns[sessionID]?.run;
 		if (!run) {
+			console.log(`Creating a new test run for ${sessionID}`);
 			const request = new vs.TestRunRequest();
 			(request as any).preserveFocus = false; // TODO(dantup): Remove this when we crank VS Code min version in future.
 			run = this.controller.createTestRun(request, undefined, true);
 			this.registerTestRun(sessionID, run, true);
 		}
+		console.log(`Reusing existing session for ${sessionID}`);
 		return run;
 	}
 
@@ -344,8 +351,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
-		if (run && item)
+		if (run && item) {
+			console.log(`Starting item ${item.label} of ${run.name} 3333`);
 			run.started(item);
+		}
 	}
 
 	public testOutput(sessionID: string, node: TestNode, message: string): void {
@@ -380,9 +389,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		if (run && item) {
 			switch (result) {
 				case "skipped":
+					console.log(`Skipping item ${item.label} of ${run.name} 3333`);
 					run.skipped(item);
 					break;
 				case "success":
+					console.log(`Passing item ${item.label} of ${run.name} 3333`);
 					run.passed(item, node.duration);
 					break;
 				default:
@@ -400,10 +411,13 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 						testMessage.actualOutput = typeof actual === "string" ? actual : undefined;
 					}
 
-					if (result === "failure")
+					if (result === "failure") {
+						console.log(`Failing item ${item.label} of ${run.name} 3333`);
 						run.failed(item, testMessage, node.duration);
-					else
+					} else {
+						console.log(`Erroring item ${item.label} of ${run.name} 3333`);
 						run.errored(item, testMessage, node.duration);
+					}
 					break;
 			}
 		}
