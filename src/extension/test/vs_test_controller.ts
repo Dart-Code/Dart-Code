@@ -57,6 +57,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public handleDebugSessionEnd(e: vs.DebugSession): void {
+		console.log(`##### Handling debug session end`);
 		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
 		if (run?.shouldEndWithSession) {
 			console.log(`Ending run ${run.run.name} 5555`);
@@ -436,6 +437,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public dispose(): any {
+		console.log(`##### Disposing VsCodeTestController`);
 		disposeAll(this.disposables);
 	}
 }
