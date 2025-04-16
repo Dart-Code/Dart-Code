@@ -381,10 +381,6 @@ export function buildHostKind({ appName, appHost, remoteName }: { appName?: stri
 	if (isKnownCloudIde(appName) && appHost === "desktop")
 		appHost = "web";
 
-	// Assume desktop by default.
-	if (appHost === "desktop")
-		appHost = undefined;
-
 	/// Clean up domains to only top level domains without ports and no
 	/// local domains.
 	function cleanString(input: string | undefined): string | undefined {
@@ -401,11 +397,30 @@ export function buildHostKind({ appName, appHost, remoteName }: { appName?: stri
 			input = undefined;
 		}
 
+		// Assume desktop by default.
+		if (input === "desktop")
+			input = undefined;
+
 		return input;
 	}
 
 	remoteName = cleanString(remoteName);
 	appHost = cleanString(appHost);
+
+	// Handle some white-listed strings as suffixes or prefixes so known cloud IDEs like
+	// Firebase Studio show up better.
+	const hostAllowlist = [
+		"cloudworkstations.dev", // Firebase Studio / IDX
+		"cloudshell.dev",
+		"coder.app",
+		"coding.net",
+		"server-distro", // Always after other values
+	];
+
+	for (const allowedHost of hostAllowlist) {
+		if (appHost === allowedHost || appHost?.endsWith(`.${allowedHost}`) || remoteName === allowedHost || remoteName?.endsWith(`.${allowedHost}`))
+			return allowedHost;
+	}
 
 	// There are a lot of uses of "server-distro" that have domains suffixed.
 	// We don't care too much about the specific domains for these, we should

@@ -26,12 +26,17 @@ describe("buildHostKind", () => {
 		verify("Foo", "web", "myapp.me.cloudthing.dev", "web-cloudthing.dev");
 	});
 
-	it("removes server-distro hostnames", () => {
+	it("removes unknown server-distro hostnames", () => {
 		verify("Foo", "server-distro", "my-ide.foo", "server-distro");
 		verify("Foo", "server-distro-my-ide.foo", "bar", "server-distro");
 		verify("Foo", "server-distro-my-ide.foo", "", "server-distro");
 		verify("Foo", "server-distro-my-ide.foo", undefined, "server-distro");
 		verify("Foo", "server-distro-my-ide.foo", "my-ide.foo", "server-distro");
+	});
+
+	it("retains known server-distro hostnames", () => {
+		verify("Foo", "server-distro", "my-flutter-app.cluster-12345.cloudworkstations.dev", "cloudworkstations.dev");
+		verify("Foo", "server-distro-my-ide.foo", "my-flutter-app.cluster-12345.cloudworkstations.dev", "cloudworkstations.dev");
 	});
 
 	it("removes local hosts", () => {
