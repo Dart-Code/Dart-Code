@@ -261,9 +261,16 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const suitePath = node.suiteData.path;
 		const wf = vs.workspace.getWorkspaceFolder(vs.Uri.file(suitePath));
 
-		return wf
-			? path.relative(fsPath(wf.uri), node.suiteData.path)
-			: path.basename(suitePath);
+		// No workspace folder, so can't show a relative path. Just show filename.
+		if (!wf)
+			return path.basename(suitePath);
+
+		// Multi-root workspace, include workspace folder name.
+		if ((vs.workspace.workspaceFolders?.length ?? 0) > 1)
+			return path.join(wf.name, path.relative(fsPath(wf.uri), node.suiteData.path));
+
+		// Single root, no need to show the folder name.
+		return path.relative(fsPath(wf.uri), node.suiteData.path);
 	}
 
 	private createTestItem(node: TreeNode): vs.TestItem {
