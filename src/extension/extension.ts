@@ -415,6 +415,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const testCoordinator = new TestSessionCoordinator(logger, testModel, analyzer.fileTracker);
 	context.subscriptions.push(
 		testCoordinator,
+		vs.debug.onDidStartDebugSession((session) => testCoordinator.handleDebugSessionStart(session.id, session.configuration.dartCodeDebugSessionID as string | undefined, session.configuration.cwd as string | undefined)),
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body)),
 		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID as string | undefined)),
 		vs.workspace.onDidChangeConfiguration((e) => testModel.handleConfigChange()),

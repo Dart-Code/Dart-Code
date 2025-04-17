@@ -1,3 +1,4 @@
+import * as path from "path";
 import { URI } from "vscode-uri";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { isWin } from "../constants";
@@ -21,6 +22,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 	/// For a given debug session, lookups by IDs to get back to the suite.
 	private debugSessionLookups: {
 		[key: string]: {
+			cwd: string | undefined,
 			suiteForID: { [key: string]: SuiteData | undefined },
 			suiteForTestID: { [key: string]: SuiteData | undefined },
 		} | undefined
@@ -36,9 +38,21 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined }) { }
 
+	public handleDebugSessionStart(debugSessionID: string, dartCodeDebugSessionID: string | undefined, cwd: string | undefined) {
+		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
+
+		let lookup = this.debugSessionLookups[dartCodeDebugSessionID];
+		if (!lookup)
+			lookup = this.debugSessionLookups[dartCodeDebugSessionID] = { cwd, suiteForID: {}, suiteForTestID: {} };
+
+		if (cwd)
+			lookup.cwd = cwd;
+	}
+
 	public handleDebugSessionCustomEvent(debugSessionID: string, dartCodeDebugSessionID: string | undefined, event: string, body?: any) {
+		dartCodeDebugSessionID ??= `untagged-session-${debugSessionID}`;
 		if (event === "dart.testNotification") {
-			void this.handleNotification(debugSessionID, dartCodeDebugSessionID ?? `untagged-session-${debugSessionID}`, body as Notification).catch((e) => this.logger.error(e));
+			void this.handleNotification(debugSessionID, dartCodeDebugSessionID, body as Notification).catch((e) => this.logger.error(e));
 		}
 	}
 
@@ -76,6 +90,13 @@ export class TestSessionCoordinator implements IAmDisposable {
 				if (isWin)
 					event.suite.path = normalizeSlashes(event.suite.path);
 
+				// pkg:test's suite paths can be either relative or absolute, but we expect them to always be absolute
+				// so fix them up before we do anything else.
+				const cwd = this.debugSessionLookups[dartCodeDebugSessionID]?.cwd;
+				if (!path.isAbsolute(event.suite.path) && cwd) {
+					event.suite.path = path.join(cwd, event.suite.path);
+				}
+
 				this.owningDebugSessions[event.suite.path] = debugSessionID;
 				this.handleSuiteNotification(dartCodeDebugSessionID, event);
 				break;
@@ -104,7 +125,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	private handleSuiteNotification(dartCodeDebugSessionID: string, evt: SuiteNotification) {
 		if (!this.debugSessionLookups[dartCodeDebugSessionID])
-			this.debugSessionLookups[dartCodeDebugSessionID] = { suiteForID: {}, suiteForTestID: {} };
+			this.debugSessionLookups[dartCodeDebugSessionID] = { cwd: undefined, suiteForID: {}, suiteForTestID: {} };
 
 		const suiteData = this.data.suiteDiscovered(dartCodeDebugSessionID, evt.suite.path);
 
