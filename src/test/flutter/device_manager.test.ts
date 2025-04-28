@@ -1,8 +1,6 @@
 import { strict as assert } from "assert";
-import * as sinon from "sinon";
-import { commands, window } from "vscode";
+import { commands } from "vscode";
 import { DaemonCapabilities } from "../../shared/capabilities/flutter";
-import { runFlutterCreatePrompt, yesAction } from "../../shared/constants";
 import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
@@ -236,7 +234,7 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, desktop);
 	});
 
-	it("shows unsupported platforms, prompts to run flutter create, and selects", async () => {
+	it("shows unsupported platforms, runs flutter create, and selects", async () => {
 		await daemon.connect(desktop, false);
 		const devices = dm.getPickableDevices(["android"]);
 		const d = devices.find((e) => "device" in e && e.device.type === "platform-enabler" && e.device.platformType === "macos") as PickableDevice | undefined;
@@ -246,18 +244,13 @@ describe("device_manager", () => {
 
 		assert.equal(d.label, `Enable macos for this project`);
 
-		const runCreatePrompt = sb.stub(window, "showInformationMessage")
-			.withArgs(runFlutterCreatePrompt(desktop.platformType, false), sinon.match.any)
-			.resolves(yesAction);
-
 		const flutterCreateCommand = sb.stub(commands, "executeCommand")
 			.callThrough()
 			.withArgs("_flutter.create").resolves();
 
 		await dm.selectDevice(d);
 
-		// Check we prompted, and when we said yes, we called the command.
-		assert.equal(runCreatePrompt.called, true);
+		// Check we called the command.
 		assert.equal(flutterCreateCommand.called, true);
 
 		// Also ensure we selected this device afterwards.

@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { disposeAll, flatMap, notNullOrUndefined, uniq, withTimeout } from "../../shared/utils";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
-import { cancelAction, runFlutterCreatePrompt, skipAction, yesAction } from "../constants";
+import { skipAction } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
 import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, FlutterCreateCommandArgs, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
@@ -283,14 +283,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public async enablePlatformType(platformType: string): Promise<boolean> {
 		const platformNeedsGloballyEnabling = await this.daemon.checkIfPlatformGloballyDisabled(platformType);
-		const action = await vs.window.showInformationMessage(
-			runFlutterCreatePrompt(platformType, platformNeedsGloballyEnabling),
-			yesAction,
-			cancelAction,
-		);
-		if (action !== yesAction)
-			return false;
-
 		if (platformNeedsGloballyEnabling)
 			await this.daemon.enablePlatformGlobally(platformType);
 
