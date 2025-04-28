@@ -147,14 +147,16 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 
 		const template = triggerData?.template;
-		const templateSupportsPlatform = template === undefined || !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === (template ?? "app"));
+		const templateAllowsPlatform = template === undefined || !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === (template ?? "app"));
 		const defaultPlatforms = config.flutterCreatePlatforms;
+		// Use "--empty" if either the user selected the empty option, or are we enabling a platform.
+		const useEmpty = (template && triggerData?.empty) || (templateAllowsPlatform && platform);
 
 		const args = ["create"];
 		if (config.flutterCreateOffline || config.offline) {
 			args.push("--offline");
 		}
-		if (templateSupportsPlatform) {
+		if (templateAllowsPlatform) {
 			if (platform) {
 				args.push("--platforms");
 				args.push(platform);
@@ -189,10 +191,10 @@ export class FlutterCommands extends BaseSdkCommands {
 		if (template) {
 			args.push("--template");
 			args.push(template);
-			if (triggerData?.empty)
-				args.push("--empty");
 			args.push("--overwrite");
 		}
+		if (useEmpty)
+			args.push("--empty");
 		args.push(".");
 
 		const exitCode = await this.runFlutterInFolder(projectPath, args, projectName);
