@@ -531,7 +531,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 				if (node && tree.visible) {
 					flutterOutlineTreeProvider!.isSelectingBecauseOfEditor = true;
 					await tree.reveal(node, { select: true, focus: false, expand: true });
-					flutterOutlineTreeProvider!.isSelectingBecauseOfEditor = false;
+					setTimeout(() => flutterOutlineTreeProvider!.isSelectingBecauseOfEditor = false, 1000);
 				}
 			}
 		}));
