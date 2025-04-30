@@ -139,20 +139,52 @@ export class DebugCommands implements IAmDisposable {
 			}
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.copyVmServiceUri", async () => {
-			const session = await this.getDebugSession();
-			if (!session) {
-				await vs.window.showInformationMessage("No Dart/Flutter debug session available");
+			const options: Array<vs.QuickPickItem & { session: DartDebugSessionInformation, vmServiceUri: string }> = [];
+
+			function addOption(s: DartDebugSessionInformation, vmServiceUri: string, vmServiceKindDescription: string | undefined) {
+				const description = [
+					s.session.workspaceFolder?.name,
+					s.session.configuration.deviceName,
+					`Started ${s.sessionStart.toLocaleTimeString()}`,
+				].filter((s) => s).join(", ");
+				options.push(
+					{
+						// TODO: add both vm service uri and description here somewhere
+						description,
+						detail: vmServiceKindDescription ? `${vmServiceUri} (${vmServiceKindDescription})` : vmServiceUri,
+						label: s.session.name,
+						session: s,
+						vmServiceUri,
+					}
+				);
+			}
+
+			for (const debugSession of debugSessions) {
+				const vmServiceUri = debugSession.vmServiceUri;
+				let exposedVmServiceUri = debugSession.clientVmServiceUri ?? (vmServiceUri ? await envUtils.exposeUrl(vmServiceUri) : undefined);
+				if (exposedVmServiceUri === vmServiceUri)
+					exposedVmServiceUri = undefined;
+
+				if (vmServiceUri)
+					addOption(debugSession, vmServiceUri, exposedVmServiceUri ? "Local URI on the remote machine" : undefined);
+				if (exposedVmServiceUri)
+					addOption(debugSession, exposedVmServiceUri, "The URI exposed to the client");
+			}
+
+			if (options.length === 0) {
+				await vs.window.showInformationMessage(
+					debugSessions.length === 0
+						? "No Dart/Flutter debug session available"
+						: "No running Dart/Flutter debug sessions have VM Service connections available"
+				);
 				return;
 			}
-			const vmUri = session?.vmServiceUri;
-			if (!vmUri) {
-				if (session?.hasStarted)
-					await vs.window.showInformationMessage("This debug session does not have a VM Service");
-				else
-					await vs.window.showInformationMessage("This debug session is not ready yet");
+
+			const selectedOption = options.length === 1 ? options[0] : await vs.window.showQuickPick(options, { placeHolder: "Which debug session / VM Service URI?" });
+			if (!selectedOption)
 				return;
-			}
-			await vs.env.clipboard.writeText(vmUri.toString());
+
+			await vs.env.clipboard.writeText(selectedOption.vmServiceUri);
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.openDevTools.external", () => vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.commandPalette, location: "external" as DevToolsLocation })));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDevTools.touchBar", () => vs.commands.executeCommand("dart.openDevTools", { commandSource: CommandSource.touchbar })));
