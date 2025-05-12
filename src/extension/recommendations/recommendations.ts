@@ -21,7 +21,7 @@ export class ExtensionRecommentations {
 			installExtension,
 		);
 		if (res === installExtension) {
-			await this.installExtensionWithProgress("Installing Flutter extension", flutterExtensionIdentifier);
+			await this.installExtension(flutterExtensionIdentifier);
 			void promptToReloadExtension(this.logger);
 		}
 
@@ -30,28 +30,29 @@ export class ExtensionRecommentations {
 
 	public async promoteExtension(extension: { identifier: string, message: string }) {
 		const identifier = extension.identifier;
-		const installPackage = `Install ${identifier}`;
+
+		// Never promote ignored extensions.
+		const ignoredExtensions = this.context.getIgnoredExtensionRecommendationIdentifiers();
+		if (ignoredExtensions.find((ignored) => ignored.trim().toLowerCase() === identifier.trim().toLowerCase()))
+			return;
+
+		// Never promote already-installed extensions.
+		if (vs.extensions.getExtension(identifier.trim()))
+			return;
+
+		const installPackage = `Install/Enable ${identifier}`;
 		this.analytics.logExtensionPromotion(AnalyticsEvent.ExtensionRecommendation_Shown, identifier);
 		const action = await vs.window.showInformationMessage(extension.message, installPackage, noThanksAction);
 		if (action === installPackage) {
 			this.analytics.logExtensionPromotion(AnalyticsEvent.ExtensionRecommendation_Accepted, identifier);
-			await this.installExtensionWithProgress(`Installing ${identifier}`, identifier);
+			await this.installExtension(identifier);
 		} else {
 			this.analytics.logExtensionPromotion(AnalyticsEvent.ExtensionRecommendation_Rejected, identifier);
 			this.context.ignoreExtensionRecommendation(extension.identifier);
 		}
 	}
 
-	public async installExtensionWithProgress(message: string, extensionIdentifier: string): Promise<void> {
-		await vs.window.withProgress({ location: vs.ProgressLocation.Notification },
-			(progress) => {
-				progress.report({ message });
-
-				return new Promise<void>((resolve) => {
-					vs.extensions.onDidChange((e) => resolve());
-					void vs.commands.executeCommand("workbench.extensions.installExtension", extensionIdentifier);
-				});
-			},
-		);
+	public async installExtension(identifier: string): Promise<void> {
+		await vs.commands.executeCommand("workbench.extensions.installExtension", identifier, { enable: true });
 	}
 }
