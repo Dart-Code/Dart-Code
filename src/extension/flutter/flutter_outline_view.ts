@@ -28,7 +28,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	protected onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;
 	protected lastSelectedWidget: FlutterWidgetItem | undefined;
-	public isSelectingBecauseOfEditor = false;
+	public numOutstandingSelectionEvents = 0;
 
 	constructor(private readonly analyzer: LspAnalyzer) {
 		this.analyzer.fileTracker.onFlutterOutline((n) => {
