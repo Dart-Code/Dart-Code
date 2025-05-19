@@ -1984,7 +1984,8 @@
 							]
 						},
 						"default": {
-							"default": "beside"
+							"default": "beside",
+							"inspector": "sidebar"
 						},
 						"markdownDescription": "Where to open [Dart DevTools](https://dart.dev/tools/dart-devtools) pages.",
 						"scope": "window"
