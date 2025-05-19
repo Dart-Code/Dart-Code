@@ -20,7 +20,7 @@ describe("devtools extensions recommendations", () => {
 
 		const installExtensionPrompt = sb.stub(vs.window, "showInformationMessage")
 			.withArgs("A third-party extension is available for package:my_package", sinon.match.any, sinon.match.any)
-			.resolves("Install ms-vscode.hexeditor");
+			.resolves("Install/Enable ms-vscode.hexeditor");
 
 		await extApi.devTools.start();
 		await extApi.devTools.promptForExtensionRecommendations();
