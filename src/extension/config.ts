@@ -3,7 +3,7 @@ import { CustomDevToolsConfig, GetSDKCommandConfig } from "../shared/interfaces"
 import { NullAsUndefined, nullToUndefined } from "../shared/utils";
 import { createFolderForFile } from "../shared/utils/fs";
 import { resolvePaths } from "../shared/vscode/utils";
-import { DevToolsLocation, DevToolsLocations } from "./sdk/dev_tools/manager";
+import { DevToolsLocations, DevToolsLocationsWithDefault } from "./sdk/dev_tools/manager";
 import { insertWorkspaceName } from "./utils";
 import { setupToolEnv } from "./utils/processes";
 
@@ -86,10 +86,10 @@ class Config {
 	get debugExternalPackageLibraries(): boolean { return this.getConfig<boolean>("debugExternalPackageLibraries", false); }
 	get debugSdkLibraries(): boolean { return this.getConfig<boolean>("debugSdkLibraries", false); }
 	get devToolsBrowser(): "chrome" | "default" { return this.getConfig<"chrome" | "default">("devToolsBrowser", "chrome"); }
-	get devToolsLocation(): DevToolsLocations & { default: DevToolsLocation } {
-		const defaultValue: DevToolsLocations = { default: "beside" };
+	get devToolsLocation(): DevToolsLocationsWithDefault {
+		const defaultValue: DevToolsLocationsWithDefault = { default: "beside" };
 		const configValue = this.getConfig<DevToolsLocations | "beside" | "active" | "external" | "sidebar">("devToolsLocation", defaultValue);
-		if (!defaultValue)
+		if (!configValue)
 			return defaultValue;
 
 		// Legacy string value.
@@ -171,7 +171,6 @@ class Config {
 	get previewCommitCharacters(): boolean { return this.getConfig<boolean>("previewCommitCharacters", false); }
 	get experimentalDtdHandlers(): boolean { return this.getConfig<boolean>("experimentalDtdHandlers", false); }
 	get experimentalPropertyEditor(): boolean { return this.getConfig<boolean>("experimentalPropertyEditor", false); }
-	get experimentalSidebarDevTools(): boolean { return this.getConfig<boolean>("experimentalSidebarDevTools", false); }
 	get dtdEditorActiveLocationDelay(): number { return this.getConfig<number>("dtdEditorActiveLocationDelay", 200); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }

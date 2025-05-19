@@ -461,7 +461,7 @@ export class DevToolsManager implements vs.Disposable {
 		// are for a session that has been stopped.
 		let frame = views.find((dtev) => {
 			// Don't use a Sidebar frame if we're not enabled/requested.
-			if (dtev instanceof SidebarDevTools && (!config.experimentalSidebarDevTools || location !== "sidebar"))
+			if (dtev instanceof SidebarDevTools && location !== "sidebar")
 				return false;
 
 			return !dtev.session || dtev.session === session || (dtev.session && dtev.session.hasEnded);
@@ -796,5 +796,9 @@ interface ExtensionResult {
 export type DevToolsLocation = "beside" | "active" | "external" | "sidebar";
 
 export interface DevToolsLocations {
-	[key: string]: DevToolsLocation | undefined
+	[key: string]: DevToolsLocation | undefined;
+}
+
+export interface DevToolsLocationsWithDefault extends DevToolsLocations {
+	default: DevToolsLocation;
 }

@@ -1641,7 +1641,7 @@
 					"type": "webview",
 					"name": "CPU Profiler",
 					"contextualTitle": "Flutter DevTools: CPU Profiler",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.cpu-profiler",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.cpu-profiler",
 					"visibility": "collapsed",
 					"icon": "media/icons/sidebar/cpu_profiler.svg"
 				},
@@ -1650,7 +1650,7 @@
 					"type": "webview",
 					"name": "Memory",
 					"contextualTitle": "Flutter DevTools: Memory",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.memory",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.memory",
 					"visibility": "collapsed",
 					"icon": "media/icons/sidebar/memory.svg"
 				},
@@ -1659,7 +1659,7 @@
 					"type": "webview",
 					"name": "Performance",
 					"contextualTitle": "Flutter DevTools: Performance",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.performance",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.performance",
 					"visibility": "collapsed",
 					"icon": "media/icons/sidebar/performance.svg"
 				},
@@ -1668,7 +1668,7 @@
 					"type": "webview",
 					"name": "Network",
 					"contextualTitle": "Flutter DevTools: Network",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.network",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.network",
 					"visibility": "collapsed",
 					"icon": "media/icons/sidebar/network.svg"
 				},
@@ -1677,7 +1677,7 @@
 					"type": "webview",
 					"name": "Logging",
 					"contextualTitle": "Flutter DevTools: Logging",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.logging",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.logging",
 					"visibility": "collapsed",
 					"icon": "media/icons/sidebar/logging.svg"
 				}
@@ -1687,7 +1687,7 @@
 					"id": "sidebarDevToolsInspector",
 					"type": "webview",
 					"name": "",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.inspector",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.inspector",
 					"visibility": "visible",
 					"icon": "media/icons/sidebar/inspector.svg"
 				}
@@ -1697,7 +1697,7 @@
 					"id": "sidebarDevToolsDeepLinks",
 					"type": "webview",
 					"name": "",
-					"when": "dart-code:anyFlutterProjectLoaded && config.dart.experimentalSidebarDevTools && dart-code:devToolsSidebar.deep-links",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.deep-links",
 					"visibility": "collapsed",
 					"icon": "media/icons/sidebar/deep_links.svg"
 				}
@@ -1874,84 +1874,98 @@
 								"enum": [
 									"beside",
 									"active",
-									"external"
+									"external",
+									"sidebar"
 								],
 								"enumDescriptions": [
 									"Open DevTools in beside the active editor",
 									"Open DevTools over the top of the active editor",
-									"Open DevTools externally in its own browser window"
+									"Open DevTools externally in its own browser window",
+									"Open DevTools in the sidebar (applies only to supported pages)"
 								]
 							},
 							"cpu-profiler": {
 								"enum": [
 									"beside",
 									"active",
-									"external"
+									"external",
+									"sidebar"
 								],
 								"enumDescriptions": [
 									"Open DevTools in beside the active editor",
 									"Open DevTools over the top of the active editor",
-									"Open DevTools externally in its own browser window"
+									"Open DevTools externally in its own browser window",
+									"Open DevTools in the sidebar (applies only to supported pages)"
 								]
 							},
 							"memory": {
 								"enum": [
 									"beside",
 									"active",
-									"external"
+									"external",
+									"sidebar"
 								],
 								"enumDescriptions": [
 									"Open DevTools in beside the active editor",
 									"Open DevTools over the top of the active editor",
-									"Open DevTools externally in its own browser window"
+									"Open DevTools externally in its own browser window",
+									"Open DevTools in the sidebar (applies only to supported pages)"
 								]
 							},
 							"performance": {
 								"enum": [
 									"beside",
 									"active",
-									"external"
+									"external",
+									"sidebar"
 								],
 								"enumDescriptions": [
 									"Open DevTools in beside the active editor",
 									"Open DevTools over the top of the active editor",
-									"Open DevTools externally in its own browser window"
+									"Open DevTools externally in its own browser window",
+									"Open DevTools in the sidebar (applies only to supported pages)"
 								]
 							},
 							"network": {
 								"enum": [
 									"beside",
 									"active",
-									"external"
+									"external",
+									"sidebar"
 								],
 								"enumDescriptions": [
 									"Open DevTools in beside the active editor",
 									"Open DevTools over the top of the active editor",
-									"Open DevTools externally in its own browser window"
+									"Open DevTools externally in its own browser window",
+									"Open DevTools in the sidebar (applies only to supported pages)"
 								]
 							},
 							"logging": {
 								"enum": [
 									"beside",
 									"active",
-									"external"
+									"external",
+									"sidebar"
 								],
 								"enumDescriptions": [
 									"Open DevTools in beside the active editor",
 									"Open DevTools over the top of the active editor",
-									"Open DevTools externally in its own browser window"
+									"Open DevTools externally in its own browser window",
+									"Open DevTools in the sidebar (applies only to supported pages)"
 								]
 							},
 							"default": {
 								"enum": [
 									"beside",
 									"active",
-									"external"
+									"external",
+									"sidebar"
 								],
 								"enumDescriptions": [
 									"Open DevTools in beside the active editor",
 									"Open DevTools over the top of the active editor",
-									"Open DevTools externally in its own browser window"
+									"Open DevTools externally in its own browser window",
+									"Open DevTools in the sidebar (applies only to supported pages)"
 								]
 							}
 						},
@@ -1959,18 +1973,20 @@
 							"enum": [
 								"beside",
 								"active",
-								"external"
+								"external",
+								"sidebar"
 							],
 							"enumDescriptions": [
 								"Open DevTools in beside the active editor",
 								"Open DevTools over the top of the active editor",
-								"Open DevTools externally in its own browser window"
+								"Open DevTools externally in its own browser window",
+								"Open DevTools in the sidebar (applies only to supported pages)"
 							]
 						},
 						"default": {
 							"default": "beside"
 						},
-						"markdownDescription": "Which editor/column to open [Dart DevTools](https://dart.dev/tools/dart-devtools) pages in.",
+						"markdownDescription": "Where to open [Dart DevTools](https://dart.dev/tools/dart-devtools) pages.",
 						"scope": "window"
 					},
 					"dart.openDevTools": {
