@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, extensions, ProgressLocation, window, workspace } from "vscode";
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
-import { GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
+import { DartSdks, GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
@@ -188,7 +188,7 @@ export class SdkUtils {
 					// Could be that Git extension is disabled or "git.enabled" setting is false.
 				}
 
-				const gitProc = await runToolProcess(this.logger, undefined, gitExecutable, ["--version"], undefined, cancellationToken);
+				const gitProc = await runToolProcess(this.logger, getDefaultWorkingDirectory(undefined), gitExecutable, ["--version"], undefined, cancellationToken);
 				if (cancellationToken.isCancellationRequested)
 					return GitOperationResult.cancelled;
 				if (gitProc.exitCode !== 0) {
@@ -779,3 +779,10 @@ function findRootContaining(folder: string, childName: string, expect: "FILE" | 
 }
 
 enum GitOperationResult { success, error, cancelled };
+
+export function getDefaultWorkingDirectory(sdks: DartSdks | undefined): string | undefined {
+	if (workspace.workspaceFolders?.length && workspace.workspaceFolders[0].uri.scheme === "file")
+		return fsPath(workspace.workspaceFolders[0].uri);
+	else
+		return sdks?.dart;
+}

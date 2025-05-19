@@ -16,6 +16,7 @@ import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { debugSessionChanged, debugSessions, debugSessionStarted, debugSessionStopped } from "../commands/debug";
 import { config } from "../config";
 import { DevToolsLocation } from "../sdk/dev_tools/manager";
+import { getDefaultWorkingDirectory } from "../sdk/utils";
 import { promptToReloadExtension } from "../utils";
 import { getToolEnv } from "../utils/processes";
 import { DartDebugSessionInformation } from "../utils/vscode/debug";
@@ -41,6 +42,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			config.maxLogLineLength,
 			getToolEnv,
 			(prompt?: string, buttonText?: string, offerLog?: boolean) => promptToReloadExtension(logger, prompt, buttonText, offerLog, config.toolingDaemonLogFile),
+			getDefaultWorkingDirectory(sdks),
 		);
 		context.subscriptions.push(this);
 

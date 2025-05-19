@@ -24,6 +24,7 @@ import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
+import { getDefaultWorkingDirectory } from "../sdk/utils";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { promptToReloadExtension } from "../utils";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
@@ -611,7 +612,9 @@ export class LspAnalyzer extends Analyzer {
 		const args = getAnalyzerArgs(logger);
 
 		logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
-		const process = safeToolSpawn(undefined, vmPath, args);
+		const cwd = getDefaultWorkingDirectory(sdks);
+		logger.info(`    CWD: ${cwd}`);
+		const process = safeToolSpawn(cwd, vmPath, args);
 		// Ensure we terminate the process when shutting down even if the graceful shutdown
 		// doesn't work. Wait a short period to give the graceful shutdown change.
 		this.disposables.push({ dispose: () => { setTimeout(() => process.kill(), 100); } });

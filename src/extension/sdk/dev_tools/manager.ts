@@ -30,6 +30,7 @@ import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
 import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 import { SidebarDevTools } from "../../views/devtools/sidebar_devtools";
+import { getDefaultWorkingDirectory } from "../utils";
 import { DevToolsEmbeddedView, DevToolsEmbeddedViewOrSidebarView } from "./embedded_view";
 
 const devtoolsPackageID = "devtools";
@@ -710,7 +711,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 		const binPath = executionInfo.executable;
 		const binArgs = [...executionInfo.args, ...devToolsArgs];
-		const binCwd = executionInfo.cwd;
+		const binCwd = executionInfo.cwd ?? getDefaultWorkingDirectory(workspaceContext.sdks);
 		const binEnv = executionInfo.env;
 
 		// Store the port we'll use for later so we can re-bind to the same port if we restart.
