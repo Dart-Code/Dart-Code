@@ -747,6 +747,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "_dart.settings.openDevToolsLocationSetting",
+				"title": "Change where DevTools appears",
+				"category": "Dart"
+			},
+			{
 				"command": "_dart.settings.openDartTestAdditionalArgs",
 				"title": "Edit additional 'dart test' arguments",
 				"category": "Dart"
@@ -1209,6 +1214,10 @@
 					"when": "false"
 				},
 				{
+					"command": "_dart.settings.openDevToolsLocationSetting",
+					"when": "false"
+				},
+				{
 					"command": "_dart.settings.openDartTestAdditionalArgs",
 					"when": "false"
 				},
@@ -1449,6 +1458,11 @@
 				}
 			],
 			"view/title": [
+				{
+					"when": "view =~ /^sidebarDevTools/",
+					"group": "dart@1",
+					"command": "_dart.settings.openDevToolsLocationSetting"
+				},
 				{
 					"when": "view == workbench.view.testing && dart-code:anyProjectLoaded",
 					"group": "dart@1",
