@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import * as fs from "fs";
 import { renameSync } from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -14,7 +15,7 @@ import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, rangeFor, sb, setConfigForTest, setTestContent, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
+import { activate, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, rangeFor, sb, setConfigForTest, setTestContent, tryDeleteDirectoryRecursive, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -88,6 +89,26 @@ describe("dart cli debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
 		);
+	});
+
+	it("runs for autolaunch file", async () => {
+		fs.mkdirSync(fsPath(helloWorldDotDartCodeFolder), { recursive: true });
+		defer("delete autolaunch.json", () => tryDeleteDirectoryRecursive(fsPath(helloWorldDotDartCodeFolder)));
+		fs.writeFileSync(fsPath(helloWorldAutoLaunchFile), JSON.stringify(
+			{
+				configurations: [
+					{
+						name: "Dart",
+						program: fsPath(helloWorldMainFile),
+						request: "launch",
+						type: "dart",
+					},
+				],
+			}
+		));
+		const session: vs.DebugSession = await new Promise((resolve) => vs.debug.onDidStartDebugSession(resolve));
+		await delay(1000);
+		await vs.debug.stopDebugging(session);
 	});
 
 	describe("prompts the user if trying to run with errors", () => {

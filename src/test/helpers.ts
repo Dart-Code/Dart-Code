@@ -47,6 +47,8 @@ const packageConfigPath = ".dart_tool/package_config.json";
 export const helloWorldFolder = vs.Uri.file(path.join(testProjectsFolder, "hello_world"));
 export const helloWorldPackageConfigFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), packageConfigPath));
 export const helloWorldMainFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/main.dart"));
+export const helloWorldDotDartCodeFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), ".dart_code"));
+export const helloWorldAutoLaunchFile = vs.Uri.file(path.join(fsPath(helloWorldDotDartCodeFolder), "autolaunch.json"));
 export const helloWorldInspectionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/inspect.dart"));
 export const helloWorldLongRunningFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/long_running.dart"));
 export const helloWorldMainLibFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/basic.dart"));
@@ -418,7 +420,7 @@ export function tryDelete(file: vs.Uri) {
 	tryDeleteFile(fsPath(file));
 }
 
-export function deleteDirectoryRecursive(folder: string) {
+export function tryDeleteDirectoryRecursive(folder: string) {
 	if (!fs.existsSync(folder))
 		return;
 	if (!fs.statSync(folder).isDirectory()) {
@@ -428,9 +430,9 @@ export function deleteDirectoryRecursive(folder: string) {
 		.map((item) => path.join(folder, item))
 		.forEach((item) => {
 			if (fs.statSync(item).isDirectory()) {
-				deleteDirectoryRecursive(item);
+				tryDeleteDirectoryRecursive(item);
 			} else
-				fs.unlinkSync(item);
+				tryDeleteFile(item);
 		});
 	fs.rmdirSync(folder);
 }

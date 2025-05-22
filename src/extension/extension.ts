@@ -14,6 +14,7 @@ import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq, withTimeout } from "../shared/utils";
 import { fsPath, getRandomInt } from "../shared/utils/fs";
+import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
@@ -630,6 +631,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(createWatcher("**/.packages", workspaceContext.events.onPackageMapChange));
 	context.subscriptions.push(createWatcher("**/.dart_tool/package_config.json", workspaceContext.events.onPackageMapChange));
 	workspaceContext.events.onPackageMapChange.fire();
+
+	context.subscriptions.push(new AutoLaunch(logger, deviceManager));
 
 	// TODO(dantup): We should only expose the private API required for testing when in test runs, however
 	//  some extensions are currently using this for access to the analyzer. We should provide a replacement

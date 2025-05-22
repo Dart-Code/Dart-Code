@@ -402,8 +402,8 @@ export function tryDeleteFile(filePath: string) {
 	if (fs.existsSync(filePath)) {
 		try {
 			fs.unlinkSync(filePath);
-		} catch {
-			console.warn(`Failed to delete file ${path}.`);
+		} catch (e: any) {
+			console.warn(`Failed to delete file ${filePath}: ${e}`);
 		}
 	}
 }

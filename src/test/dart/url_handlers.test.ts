@@ -9,15 +9,15 @@ import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from
 import { FlutterCreateTriggerData } from "../../shared/interfaces";
 import { getChildFolders } from "../../shared/utils/fs";
 import { DartUriHandler } from "../../shared/vscode/uri_handlers/uri_handler";
-import { activate, deleteDirectoryRecursive, extApi, sb } from "../helpers";
+import { activate, extApi, sb, tryDeleteDirectoryRecursive } from "../helpers";
 
 describe("URL handler", async () => {
 	const urlHandler = new DartUriHandler(new FlutterCapabilities("1.0.0"));
 	const tempPath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", "my.sample.id");
 
 	before(() => activate(null));
-	beforeEach("clear out sample folder", () => deleteDirectoryRecursive(tempPath));
-	afterEach("clear out sample folder", () => deleteDirectoryRecursive(tempPath));
+	beforeEach("clear out sample folder", () => tryDeleteDirectoryRecursive(tempPath));
+	afterEach("clear out sample folder", () => tryDeleteDirectoryRecursive(tempPath));
 
 	it("URL handler creates trigger file with sample ID in it", async () => {
 		// Intercept executeCommand for openFolder so we don't spawn a new instance of Code!
