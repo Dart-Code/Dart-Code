@@ -11,7 +11,7 @@ describe("completion_item_provider", () => {
 
 		const completions = await getCompletionsAt("show ^;");
 
-		const completion = ensureCompletion(completions, vs.CompletionItemKind.Function, "exit(…)", "exit");
+		const completion = ensureCompletion(completions, vs.CompletionItemKind.Function, "exit (…)", "exit");
 		assert.equal(completion.insertText, "exit");
 	});
 

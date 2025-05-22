@@ -910,7 +910,7 @@ export function ensureCompletion(items: vs.CompletionItem[], kind: vs.Completion
 		// We use startsWith because the new long labels may have return values that
 		// the tests do not (`exit(…) → Never`).
 		// TODO(dantup): Once stable is using label details, change these tests to verify the whole new object.
-		assert.ok(actualLabelLong.startsWith(expectedLabel));
+		assert.ok(actualLabelLong.startsWith(expectedLabel), `Expected label to start with "${expectedLabel}" but was "${actualLabelLong}"`);
 
 	const expectedResolvedFilterText = expectedFilterText ?? expectedLabel;
 	const actualResolvedFilterText = completion.filterText ?? actualLabel;
