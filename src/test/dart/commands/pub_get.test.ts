@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, delay, getPackages, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
+import { activate, delay, getPackages, helloWorldPubspec, logger, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("pub get", () => {
 	// Ensure pubspec.lock/package_config.json are consistent.
@@ -15,10 +15,13 @@ describe("pub get", () => {
 		const editor = await openFile(helloWorldPubspec);
 		const doc = editor.document;
 		await setTestContent(doc.getText() + " # test");
+		logger.info(`Saving pubspec file!`);
 		await doc.save();
+		logger.info(`Done saving pubspec file!`);
 
 		// Allow a short time for the command to be called because this is now a
 		// file system watcher.
+		logger.info(`Waiting for getPackagesCommand.calledOnce (currently ${getPackagesCommand.calledOnce})`);
 		await waitForResult(() => getPackagesCommand.calledOnce);
 	});
 

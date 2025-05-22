@@ -50,6 +50,7 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private async getPackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
+		this.logger.info(`Getting packages !`);
 		if (!config.enablePub)
 			return;
 
@@ -176,6 +177,7 @@ export class PackageCommands extends BaseSdkCommands {
 		this.disposables.push(vs.workspace.onWillSaveTextDocument((e) => {
 			const name = path.basename(fsPath(e.document.uri)).toLowerCase();
 			if (name === "pubspec.yaml" || name === "pubspec_overrides.yaml") {
+				this.logger.info(`pubspec was changed, storing reason`);
 				lastPubspecSaveReason = e.reason;
 				setTimeout(() => lastPubspecSaveReason = undefined, 1000);
 			}
@@ -187,6 +189,7 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
+		this.logger.info(`pubspec was changed, doing work`);
 		if (!config.enablePub)
 			return;
 
