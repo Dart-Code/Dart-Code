@@ -11,16 +11,21 @@ export class AutoLaunch implements IAmDisposable {
 	constructor(private readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined) {
 		const watcher = workspace.createFileSystemWatcher("**/.dart_code/autolaunch.json", false, true, true);
 		watcher.onDidCreate((uri) => {
+			this.logger.info(`file was created ${uri}`);
 			// If there are any existing debug sessions, don't spawn more because we don't know they don't overlap.
-			if (debug.activeDebugSession)
+			if (debug.activeDebugSession) {
+				this.logger.warn(`1. skipping because there is an active debug session already! ${debug.activeDebugSession.name}`);
 				return;
+			}
 			this.handleChange(uri);
 		});
 		this.disposables.push(watcher);
 
 		// If there are any existing debug sessions, don't spawn more because we don't know they don't overlap.
-		if (debug.activeDebugSession)
+		if (debug.activeDebugSession) {
+			this.logger.warn(`2. skipping because there is an active debug session already! ${debug.activeDebugSession.name}`);
 			return;
+		}
 		if (workspace.workspaceFolders) {
 			for (const wf of workspace.workspaceFolders) {
 				this.handleChange(Uri.joinPath(wf.uri, ".dart_code", "autolaunch.json"));
@@ -29,6 +34,7 @@ export class AutoLaunch implements IAmDisposable {
 	}
 
 	private handleChange(uri: Uri): void {
+		this.logger.info(`handling change for ${uri}`);
 		if (uri.scheme !== "file")
 			return;
 
@@ -56,6 +62,7 @@ export class AutoLaunch implements IAmDisposable {
 						continue;
 					}
 
+					this.logger.info(`trying to start debug session ${configuration.name}`);
 					void this.startDebugSession(wf, configuration as DebugConfiguration);
 				}
 			}

@@ -33,6 +33,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	constructor(private readonly logger: Logger, private readonly wsContext: DartWorkspaceContext, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly devTools: DevToolsManager, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+		this.logger.info(`resolveDebugConfiguration`);
 		ensureDebugLaunchUniqueId(debugConfig);
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
@@ -41,6 +42,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private warnOnUnresolvedVariables(property: string, input?: string): boolean {
+		this.logger.info(`warnOnUnresolvedVariables`);
 		if (!input) return false;
 		const v = this.getUnresolvedVariable(input);
 
@@ -54,12 +56,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	/** Gets the first unresolved variable from the given string. */
 	private getUnresolvedVariable(input?: string): string | undefined {
+		this.logger.info(`getUnresolvedVariable`);
 		if (!input) return undefined;
 		const matches = /\${\w+}/.exec(input);
 		return matches ? matches[0] : undefined;
 	}
 
 	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartLaunchArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+		this.logger.info(`resolveDebugConfigurationWithSubstitutedVariables`);
 		ensureDebugLaunchUniqueId(debugConfig);
 		const isAttachRequest = debugConfig.request === "attach";
 		const logger = this.logger;
