@@ -50,7 +50,7 @@ This folder contains all shared code that can be used by `extension`, `debug` an
 
 ### src/test
 
-Code for automated tests, including some test projects (in `src/test/test_projects`) required by the tests. Code here should not be imported into any files outside of this folder. Small classes are tested with unit tests, but classes that interact directly with VS Code are usually tested with integration tests, which allows the same tests to be used for both DAS+LSP and both Dart Code+SDK implementations of the DAP. There are launch configurations (`launch.json`) to run tests in either of these configurations.
+Code for automated tests, including some test projects (in `src/test/test_projects`) required by the tests. Code here should not be imported into any files outside of this folder. Small classes are tested with unit tests, but classes that interact directly with VS Code are usually tested with integration tests which can run with both Dart Code+SDK implementations of the DAP (via different launch configurations).
 
 ### src/tool
 
@@ -73,7 +73,9 @@ This will compile Dart Code and launch the Code **Extension Development Host** -
 
 ## Automated Tests
 
-Automated tests live in the `src/test` folder and each sub-folder has a launch configuration you can select form the Debug side bar to run them. You can also use `npm test` to run the whole suite in one go (without the debugging). Running the test suite may spawn Code windows multiple times during execution as multiple workspaces are tested.
+Automated tests live in the `src/test` folder and each sub-folder has a launch configuration you can select form the Debug side bar to run them (for example the `test/dart` folder can be run with the **Dart Tests** debug configuration ). You can also use `npm test` to run the whole suite in one go (without the debugging). Running the test suite may spawn Code windows multiple times during execution as multiple workspaces are tested.
+
+To run an individual test, add `.only()` to the end of the `describe()` or `it()` calls (such as `describe.only()` or `it.only()`).
 
 All tests will be run on all supported platforms via GitHub Actions periodically, and for a subset of platforms on the `master` branch and PRs.
 
