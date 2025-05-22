@@ -576,10 +576,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("can launch DevTools externally", async () => {
-		await setConfigForTest("dart", "devToolsLocation", "external");
-
-		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
-
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
@@ -587,6 +583,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			watchPromise("configurationSequence", dc.configurationSequence()),
 			watchPromise("launch", dc.launch(config)),
 		);
+
+		await setConfigForTest("dart", "devToolsLocation", "external");
+		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
 
 		const devTools: { url: string, dispose: () => void } = await watchPromise("executeCommand", await vs.commands.executeCommand("dart.openDevTools"));
 		assert.ok(openBrowserCommand.calledOnce);
