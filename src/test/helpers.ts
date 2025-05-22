@@ -300,7 +300,10 @@ export async function getPackages(uri?: vs.Uri) {
 		return;
 	}
 	await waitForNextAnalysis(async () => {
-		await vs.commands.executeCommand("dart.getPackages", uri || vs.workspace.workspaceFolders![0].uri);
+		if (uri)
+			await vs.commands.executeCommand("dart.getPackages", uri);
+		else
+			await vs.commands.executeCommand("dart.getPackages.all");
 	}, 60);
 }
 
