@@ -1,10 +1,11 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, delay, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
+import { activate, delay, getPackages, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("pub get", () => {
-
+	// Ensure pubspec.lock/package_config.json are consistent.
+	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
 	it("runs automatically when pubspec is saved", async () => {
