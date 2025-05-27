@@ -1,12 +1,14 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, delay, getPackages, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
+import { activate, delay, extApi, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("pub get", () => {
-	// Ensure pubspec.lock/package_config.json are consistent.
-	before("get packages", () => getPackages());
-	beforeEach("activate", () => activate());
+	before("activate", () => activate());
+	before("skip if Pub issue", function () {
+		if (extApi.dartCapabilities.hasPackageConfigTimestampIssue)
+			this.skip();
+	});
 
 	it("runs automatically when pubspec is saved", async () => {
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();

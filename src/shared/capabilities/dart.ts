@@ -38,4 +38,8 @@ export class DartCapabilities {
 	// TODO: Update these (along with Flutter) when supported.
 	get webSupportsHotReload() { return false; }
 	get workspaceSymbolSearchUsesFuzzy() { return versionIsAtLeast(this.version, "3.1.0"); }
+
+	// This seems like a Pub bug.. skip tests for this version.
+	// https://github.com/dart-lang/pub/issues/4588
+	get hasPackageConfigTimestampIssue() { return versionIsAtLeast(this.version, "3.8.0") && !versionIsAtLeast(this.version, "3.8.1"); }
 }
