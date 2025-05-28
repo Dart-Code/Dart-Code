@@ -105,9 +105,9 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		await super.handleOpen();
 
 		this.onServiceRegistered(async (e) => {
-			const serviceMethod = `${e.service}.${e.method}` as ServiceMethod;
+			const serviceMethod = e.service ? `${e.service}.${e.method}` : e.method;
 			try {
-				if (serviceMethod === ServiceMethod.registerVmService) {
+				if (serviceMethod as ServiceMethod === ServiceMethod.registerVmService) {
 					await this.setUpVmServiceRegistrations();
 				}
 			} catch (e) {
