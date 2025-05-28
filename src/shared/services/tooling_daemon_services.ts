@@ -47,6 +47,10 @@ export enum Stream {
 
 export enum ServiceMethod {
 	registerService = "registerService",
+	registerVmService = "ConnectedApp.registerVmService",
+	unregisterVmService = "ConnectedApp.unregisterVmService",
+	// TODO(dantup): Update this after https://dart-review.googlesource.com/c/sdk/+/430545 lands
+	getVmServiceUris = "ConnectedApp.getVmServiceUris",
 	setIDEWorkspaceRoots = "FileSystem.setIDEWorkspaceRoots",
 	getIDEWorkspaceRoots = "FileSystem.getIDEWorkspaceRoots",
 	readFileAsString = "FileSystem.readFileAsString",
@@ -218,3 +222,19 @@ export interface EditorPosition {
 	/// The zero-based character number of this position.
 	character: number;
 }
+
+export interface RegisterVmServiceParams {
+	secret: string;
+	uri: string;
+	exposedUri: string | undefined;
+	name: string | undefined;
+}
+export type RegisterVmServiceResult = DtdSuccess;
+
+export interface UnregisterVmServiceParams {
+	secret: string;
+	uri: string;
+}
+export type UnregisterVmServiceResult = DtdSuccess;
+
+export type GetVmServiceUrisResult = DtdResult & { value: string[]; };
