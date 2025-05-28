@@ -10,11 +10,11 @@ import { CategoryLogger } from "../logging";
 import { PromiseCompleter, PromiseOr, disposeAll } from "../utils";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
-import { ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult } from "./tooling_daemon_services";
+import { ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServiceUrisResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
-	private readonly logger: CategoryLogger;
+	protected readonly logger: CategoryLogger;
 
 	private readonly dtdProcess: DartToolingDaemonProcess;
 	private connection: ConnectionInfo | undefined;
@@ -29,6 +29,10 @@ export class DartToolingDaemon implements IAmDisposable {
 	public get connected() { return this.connectedCompleter.promise; }
 
 	private readonly notificationsEmitters: { [key: string]: EventsEmitter<any> } = {};
+
+	/// The set of services that have been seen registered over the Services stream
+	/// but not yet unregistered.
+	public readonly registeredServiceMethods = new Set<string>();
 
 	constructor(
 		logger: Logger,
@@ -67,9 +71,18 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.connection = { socket, dtdUri, dtdSecret };
 	}
 
-	private handleOpen() {
+	protected async handleOpen(): Promise<void> {
 		this.logger.info(`Connected to DTD`);
 		this.connectedCompleter.resolve(this.connection);
+
+		this.onServiceRegistered((e) => {
+			const serviceMethod = e.service ? `${e.service}.${e.method}` : e.method;
+			this.registeredServiceMethods.add(serviceMethod);
+		});
+		this.onServiceUnregistered((e) => {
+			const serviceMethod = e.service ? `${e.service}.${e.method}` : e.method;
+			this.registeredServiceMethods.delete(serviceMethod);
+		});
 	}
 
 	protected async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
@@ -161,6 +174,9 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.setIDEWorkspaceRoots, params: SetIDEWorkspaceRootsParams): Promise<SetIDEWorkspaceRootsResult>;
 	public callMethod(service: ServiceMethod.getIDEWorkspaceRoots, params: GetIDEWorkspaceRootsParams): Promise<GetIDEWorkspaceRootsResult>;
 	public callMethod(service: ServiceMethod.readFileAsString, params: ReadFileAsStringParams): Promise<ReadFileAsStringResult>;
+	public callMethod(service: ServiceMethod.registerVmService, params: RegisterVmServiceParams): Promise<RegisterVmServiceResult>;
+	public callMethod(service: ServiceMethod.unregisterVmService, params: UnregisterVmServiceParams): Promise<UnregisterVmServiceResult>;
+	public callMethod(service: ServiceMethod.getVmServiceUris): Promise<GetVmServiceUrisResult>;
 	public callMethod(service: ServiceMethod.streamListen, params: { streamId: string }): Promise<DtdResult>;
 	public callMethod(service: ServiceMethod.streamCancel, params: { streamId: string }): Promise<DtdResult>;
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
