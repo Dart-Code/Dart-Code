@@ -41,5 +41,5 @@ export class DartCapabilities {
 
 	// This seems like a Pub bug.. skip tests for this version.
 	// https://github.com/dart-lang/pub/issues/4588
-	get hasPackageConfigTimestampIssue() { return versionIsAtLeast(this.version, "3.8.0") && !versionIsAtLeast(this.version, "3.8.1"); }
+	get hasPackageConfigTimestampIssue() { return versionIsAtLeast(this.version, "3.7.0") && !versionIsAtLeast(this.version, "3.9.0"); }
 }
