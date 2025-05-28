@@ -30,6 +30,8 @@ export class DartCapabilities {
 	get supportsDevToolsDtdSidebar() { return versionIsAtLeast(this.version, "3.6.0-160"); }
 	get supportsDevToolsPropertyEditor() { return versionIsAtLeast(this.version, "3.8.0-171.2"); }
 	get supportsLspOverDtd() { return versionIsAtLeast(this.version, "3.8.0-0"); }
+	// TODO(dantup): Set this correctly after https://dart-review.googlesource.com/c/sdk/+/430545 lands and code is updated.
+	get supportsDtdRegisterVmService() { return versionIsAtLeast(this.version, "3.9.0-0"); }
 	/**
 	 * Whether this version of the SDK supports DTD. This should be checked only for
 	 * spawning DTD and not whether it's available within the extension.

@@ -396,6 +396,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Debug commands.
 	const debugCommands = new DebugCommands(logger, analyzer.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, devTools, loggingCommands);
 	context.subscriptions.push(debugCommands);
+	dartToolingDaemon?.debugCommandsCompleter.resolve(debugCommands);
 
 	// Task handlers.
 	context.subscriptions.push(vs.tasks.registerTaskProvider(DartTaskProvider.type, new DartTaskProvider(logger, context, sdks, dartCapabilities)));
