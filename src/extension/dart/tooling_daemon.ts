@@ -11,6 +11,7 @@ import { disposeAll, nullToUndefined } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
+import { DartDebugSessionInformation } from "../../shared/vscode/interfaces";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { debugSessionChanged, debugSessions, debugSessionStarted, debugSessionStopped } from "../commands/debug";
@@ -18,7 +19,6 @@ import { config } from "../config";
 import { DevToolsLocation } from "../sdk/dev_tools/manager";
 import { promptToReloadExtension } from "../utils";
 import { getToolEnv } from "../utils/processes";
-import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	private readonly statusBarItem = getLanguageStatusItem("dart.toolingDaemon", ANALYSIS_FILTERS);
@@ -294,5 +294,4 @@ class EditorServices implements IAmDisposable {
 			vmServiceUri: session.vmServiceUri,
 		};
 	}
-
 }

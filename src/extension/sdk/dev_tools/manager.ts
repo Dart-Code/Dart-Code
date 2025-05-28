@@ -18,6 +18,7 @@ import { disposeAll, usingCustomScript, versionIsAtLeast } from "../../../shared
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
+import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
 import { getLanguageStatusItem } from "../../../shared/vscode/status_bar";
 import { envUtils, getAllProjectFolders, isRunningLocally } from "../../../shared/vscode/utils";
 import { Context } from "../../../shared/vscode/workspace";
@@ -28,7 +29,6 @@ import { PubGlobal } from "../../pub/global";
 import { ExtensionRecommentations } from "../../recommendations/recommendations";
 import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
-import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 import { SidebarDevTools } from "../../views/devtools/sidebar_devtools";
 import { DevToolsEmbeddedView, DevToolsEmbeddedViewOrSidebarView } from "./embedded_view";
 

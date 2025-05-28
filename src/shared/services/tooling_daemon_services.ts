@@ -27,7 +27,7 @@ export interface DtdNotification {
 }
 
 export interface ServiceRegisteredEventData {
-	service: string,
+	service: string | undefined,
 	method: string,
 	capabilities?: any,
 }
@@ -38,13 +38,11 @@ export interface ServiceUnregisteredEventData {
 }
 
 export enum Service {
-	Editor,
+	Editor = "Editor",
 }
 
 export enum Stream {
-	Editor,
-	Service,
-	Lsp,
+	Editor = "Editor",
 }
 
 export enum ServiceMethod {

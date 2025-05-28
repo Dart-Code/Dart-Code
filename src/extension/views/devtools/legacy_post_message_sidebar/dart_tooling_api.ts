@@ -6,9 +6,9 @@ import { Device } from "../../../../shared/flutter/daemon_interfaces";
 import { IAmDisposable } from "../../../../shared/interfaces";
 import { disposeAll, nullToUndefined } from "../../../../shared/utils";
 import { FlutterDeviceManager } from "../../../../shared/vscode/device_manager";
+import { DartDebugSessionInformation } from "../../../../shared/vscode/interfaces";
 import { debugSessions, debugSessionsChanged } from "../../../commands/debug";
 import { DevToolsLocation } from "../../../sdk/dev_tools/manager";
-import { DartDebugSessionInformation } from "../../../utils/vscode/debug";
 import { VsCodeApi, VsCodeCapabilities, VsCodeDebugSession, VsCodeDebugSessionsEvent, VsCodeDevice, VsCodeDevicesEvent } from "./interface";
 
 const apiDebugMode = false;

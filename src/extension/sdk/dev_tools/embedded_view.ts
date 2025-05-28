@@ -1,9 +1,9 @@
 import * as vs from "vscode";
 import { Event, EventEmitter } from "../../../shared/events";
 import { IAmDisposable } from "../../../shared/interfaces";
+import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
 import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
-import { DartDebugSessionInformation } from "../../utils/vscode/debug";
 
 const pageScript = `
 const vscode = acquireVsCodeApi();

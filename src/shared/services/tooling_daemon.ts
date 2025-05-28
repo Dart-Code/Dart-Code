@@ -163,7 +163,6 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.readFileAsString, params: ReadFileAsStringParams): Promise<ReadFileAsStringResult>;
 	public callMethod(service: ServiceMethod.streamListen, params: { streamId: string }): Promise<DtdResult>;
 	public callMethod(service: ServiceMethod.streamCancel, params: { streamId: string }): Promise<DtdResult>;
-	public callMethod(service: string, params?: unknown): Promise<DtdResult>;
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
 		if (!this.connection)
 			return Promise.reject("DTD connection is unavailable");

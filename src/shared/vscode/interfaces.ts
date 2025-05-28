@@ -1,4 +1,5 @@
-import { CancellationToken, DebugAdapterDescriptor, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, OutputChannel, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, OutputChannel, Progress, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
@@ -12,10 +13,54 @@ import { PackageMapLoader } from "../pub/package_map";
 import { DartToolingDaemon } from "../services/tooling_daemon";
 import { TestSessionCoordinator } from "../test/coordinator";
 import { TestModel, TreeNode } from "../test/test_model";
+import { PromiseCompleter } from "../utils";
 import { FlutterDeviceManager } from "./device_manager";
 import { InteractiveRefactors } from "./interactive_refactors";
 import { ProjectFinder } from "./utils";
 import { Context } from "./workspace";
+
+export class DartDebugSessionInformation {
+	public observatoryUri?: string;
+
+	/*
+	* In some environments (for ex. g3), the VM Service/DDS could be running on
+	* the end user machine (eg. Mac) while the extension host is an SSH remote
+	* (eg. Linux).
+	*
+	* `vmServiceUri` indicates a URI that is accessible to the extension host.
+	* `clientVmServiceUri` indicates a URI that is already accessible on the end
+	* user machine without forwarding.
+	*/
+	public vmServiceUri?: string;
+	public clientVmServiceUri?: string;
+	public readonly sessionStart: Date = new Date();
+	public hasStarted = false;
+	public flutterMode: string | undefined;
+	public flutterDeviceId: string | undefined;
+	public supportsHotReload: boolean | undefined;
+	public hasEnded = false;
+	public progress: { [key: string]: ProgressMessage } = {};
+	public readonly loadedServiceExtensions: VmServiceExtension[] = [];
+	public readonly debuggerType: DebuggerType;
+	public readonly projectRootPath: string | undefined;
+	constructor(public readonly session: DebugSession, configuration: DebugConfiguration) {
+		configuration = configuration as unknown as DebugConfiguration & DartVsCodeLaunchArgs;
+		this.debuggerType = configuration.debuggerType as DebuggerType;
+		this.projectRootPath = configuration.projectRootPath;
+	}
+}
+
+export class ProgressMessage {
+	constructor(private readonly reporter: Progress<{ message?: string }>, private readonly completer: PromiseCompleter<void>) { }
+
+	public report(message: string): void {
+		this.reporter.report({ message });
+	}
+
+	public complete(): void {
+		this.completer.resolve();
+	}
+}
 
 export interface DebugCommandHandler {
 	vmServices: {
@@ -46,7 +91,7 @@ export interface InternalExtensionApi {
 	};
 	trackerFactories: any;
 	debugProvider: DebugConfigurationProvider;
-	debugSessions: Array<{ session: { name?: string }, loadedServiceExtensions: VmServiceExtension[] }>;
+	debugSessions: DartDebugSessionInformation[];
 	deviceManager: FlutterDeviceManager | undefined;
 	envUtils: {
 		openInBrowser(url: string): Promise<boolean>;

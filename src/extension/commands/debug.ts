@@ -10,6 +10,7 @@ import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
+import { DartDebugSessionInformation, ProgressMessage } from "../../shared/vscode/interfaces";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
@@ -20,7 +21,6 @@ import { VmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../fl
 import { locateBestProjectRoot } from "../project";
 import { DevToolsLocation, DevToolsManager } from "../sdk/dev_tools/manager";
 import { isDartFile, isValidEntryFile } from "../utils";
-import { DartDebugSessionInformation, ProgressMessage } from "../utils/vscode/debug";
 import { LoggingCommands } from "./logging";
 
 export const debugSessions: DartDebugSessionInformation[] = [];
@@ -646,8 +646,6 @@ export class DebugCommands implements IAmDisposable {
 		// Close any in-progress progress notifications.
 		for (const progressId of Object.keys(session.progress))
 			session.progress[progressId]?.complete();
-
-		const debugSessionEnd = new Date();
 
 		// If this was the last session terminating, then remove all the flags for which service extensions are supported.
 		// Really we should track these per-session, but the changes of them being different given we only support one

@@ -1,11 +1,11 @@
 import { strict as assert } from "assert";
-import * as path from "path";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
 import { waitFor } from "../../../shared/utils/promises";
 import { activate, delay, extApi, flutterHelloWorldMainFile, helloWorldMainFile } from "../../helpers";
 
+// These are basic tests for DTD. There are also some tests in `../dart_debug`.
 describe("dart tooling daemon", () => {
 	beforeEach("activate", () => activate());
 
@@ -105,13 +105,3 @@ describe("dart tooling daemon", () => {
 		assert.ok(services.includes("Lsp.experimental/echo"), `Did not find "Lsp.experimental/echo" in ${services.join(", ")}`);
 	});
 });
-
-export function forceWindowsDriveLetterToLowercase<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
-	if (typeof p !== "string")
-		return undefined as (undefined extends T ? undefined : never);
-
-	if (p && isWin && path.isAbsolute(p) && p.startsWith(p.charAt(0).toLowerCase()))
-		return p.substr(0, 1).toLowerCase() + p.substr(1);
-
-	return p;
-}

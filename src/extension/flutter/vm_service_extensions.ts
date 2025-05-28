@@ -5,10 +5,10 @@ import { SERVICE_CONTEXT_PREFIX, SERVICE_EXTENSION_CONTEXT_PREFIX } from "../../
 import { VmService, VmServiceExtension } from "../../shared/enums";
 import { Logger } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
+import { DartDebugSessionInformation } from "../../shared/vscode/interfaces";
 import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { DebugCommands, debugSessions } from "../commands/debug";
-import { DartDebugSessionInformation } from "../utils/vscode/debug";
 
 export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
 
