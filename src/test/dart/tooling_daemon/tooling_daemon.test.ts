@@ -2,7 +2,6 @@ import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
-import { waitFor } from "../../../shared/utils/promises";
 import { activate, delay, extApi, flutterHelloWorldMainFile, helloWorldMainFile } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
@@ -93,15 +92,8 @@ describe("dart tooling daemon", () => {
 		await daemon.connected;
 		await delay(50);
 
-		// Collect all available services.
-		const services: string[] = [];
-		const servicesSub = daemon.onServiceRegistered((e) => services.push(`${e.service}.${e.method}`));
-		await daemon.streamListen("Service");
-		await waitFor(() => services.length); // Wait until we start getting services.
-		await delay(100); // And then slightly more.
-		await daemon.streamCancel("Service");
-		await servicesSub.dispose();
-
-		assert.ok(services.includes("Lsp.experimental/echo"), `Did not find "Lsp.experimental/echo" in ${services.join(", ")}`);
+		// Ensure expected LSP services are registered.
+		const knownServices = daemon.registeredServiceMethods;
+		assert.ok(knownServices.has("Lsp.experimental/echo"), `Did not find "Lsp.experimental/echo" in ${[...knownServices].join(", ")}`);
 	});
 });

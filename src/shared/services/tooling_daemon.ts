@@ -30,6 +30,10 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	private readonly notificationsEmitters: { [key: string]: EventsEmitter<any> } = {};
 
+	/// The set of services that have been seen registered over the Services stream
+	/// but not yet unregistered.
+	public readonly registeredServiceMethods = new Set<string>();
+
 	constructor(
 		logger: Logger,
 		sdks: DartSdks,
@@ -70,6 +74,15 @@ export class DartToolingDaemon implements IAmDisposable {
 	protected async handleOpen(): Promise<void> {
 		this.logger.info(`Connected to DTD`);
 		this.connectedCompleter.resolve(this.connection);
+
+		this.onServiceRegistered((e) => {
+			const serviceMethod = e.service ? `${e.service}.${e.method}` : e.method;
+			this.registeredServiceMethods.add(serviceMethod);
+		});
+		this.onServiceUnregistered((e) => {
+			const serviceMethod = e.service ? `${e.service}.${e.method}` : e.method;
+			this.registeredServiceMethods.delete(serviceMethod);
+		});
 	}
 
 	protected async sendWorkspaceFolders(workspaceFolderUris: string[]): Promise<void> {
