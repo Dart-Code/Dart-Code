@@ -6,15 +6,15 @@ import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { DartSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
-import { ActiveLocationChangedEvent, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, SelectDeviceParams, Service, Stream } from "../../shared/services/tooling_daemon_services";
-import { disposeAll, nullToUndefined } from "../../shared/utils";
+import { ActiveLocationChangedEvent, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream } from "../../shared/services/tooling_daemon_services";
+import { disposeAll, nullToUndefined, PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { DartDebugSessionInformation } from "../../shared/vscode/interfaces";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
-import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
-import { debugSessionChanged, debugSessions, debugSessionStarted, debugSessionStopped } from "../commands/debug";
+import { envUtils, getDartWorkspaceFolders } from "../../shared/vscode/utils";
+import { DebugCommands, debugSessionChanged, debugSessions, debugSessionStarted, debugSessionStopped } from "../commands/debug";
 import { config } from "../config";
 import { DevToolsLocation } from "../sdk/dev_tools/manager";
 import { promptToReloadExtension } from "../utils";
@@ -25,6 +25,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	private readonly editorServices: EditorServices;
 	private sendActiveLocationDebounceTimer: NodeJS.Timeout | undefined;
 	private readonly activeLocationDebounceTimeMs = config.dtdEditorActiveLocationDelay;
+	public debugCommandsCompleter = new PromiseCompleter<DebugCommands>();
 
 	constructor(
 		context: ExtensionContext,
@@ -98,6 +99,90 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		await Promise.all([
 			this.editorServices.register(),
 		]);
+	}
+
+	protected async handleOpen() {
+		await super.handleOpen();
+
+		this.onServiceRegistered(async (e) => {
+			const serviceMethod = `${e.service}.${e.method}` as ServiceMethod;
+			try {
+				if (serviceMethod === ServiceMethod.registerVmService) {
+					await this.setUpVmServiceRegistrations();
+				}
+			} catch (e) {
+				this.logger.error(`Failed handling registration of ${serviceMethod} service method: ${e}`);
+			}
+		});
+
+		await this.streamListen("Service");
+	}
+
+	public async setUpVmServiceRegistrations() {
+		// Wait for debugCommands to be provided. This is almost certainly already available
+		// before this code ever runs, but the sequence of setup in extension.ts means we don't
+		// have a reference for it when this class is constructed.
+		const debugCommands = await this.debugCommandsCompleter.promise;
+
+		// Handle when VM Service URIs become available (this is not the same as a debug session starting
+		// because we cannot register until we have the VM Service URI).
+		this.disposables.push(debugCommands.onDebugSessionVmServiceAvailable(async (session) => {
+			const vmServiceUri = session.vmServiceUri;
+			if (vmServiceUri) {
+				const name = session.session.name;
+				await this.registerVmService({ vmServiceUri, name });
+			}
+		}));
+		// Handle when a debug session stops. It's possible DTD has already handled the VM Service closing
+		// but in the case of something like a detach, that might not happen.
+		this.disposables.push(debugSessionStopped(async (session) => {
+			const vmServiceUri = session?.vmServiceUri;
+			if (vmServiceUri) {
+				await this.unregisterVmService(vmServiceUri);
+			}
+		}));
+
+		// Also handle existing debug sessions that may have started prior to the service registration happening.
+		for (const session of debugSessions) {
+			const vmServiceUri = session.vmServiceUri;
+			if (vmServiceUri) {
+				const name = session.session.name;
+				await this.registerVmService({ vmServiceUri, name });
+			}
+		}
+	}
+
+
+	protected async registerVmService({ name, vmServiceUri }: { name: string, vmServiceUri: string }): Promise<void> {
+		try {
+			const connection = await this.connected;
+			if (connection) {
+				const secret = connection.dtdSecret;
+				await this.callMethod(ServiceMethod.registerVmService, {
+					exposedUri: await envUtils.exposeUrl(vmServiceUri),
+					name,
+					secret,
+					uri: vmServiceUri,
+				});
+			}
+		} catch (e) {
+			this.logger.error(`Failed to register VM Service ${vmServiceUri}: $e`);
+		}
+	}
+
+	protected async unregisterVmService(vmServiceUri: string): Promise<void> {
+		try {
+			const connection = await this.connected;
+			if (connection) {
+				const secret = connection.dtdSecret;
+				await this.callMethod(ServiceMethod.unregisterVmService, {
+					secret,
+					uri: vmServiceUri,
+				});
+			}
+		} catch (e) {
+			this.logger.error(`Failed to unregister VM Service ${vmServiceUri}: $e`);
+		}
 	}
 
 	protected handleClose() {

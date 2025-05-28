@@ -1,0 +1,64 @@
+import { strict as assert } from "assert";
+import { DebuggerType } from "../../../shared/enums";
+import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
+import { fsPath } from "../../../shared/utils/fs";
+import { createDebugClient, startDebugger } from "../../debug_helpers";
+import { activate, delay, extApi, helloWorldMainFile, positionOf } from "../../helpers";
+
+// These are debug-related tests for DTD. There are also some tests in `../dart`.
+describe("dart tooling daemon", () => {
+	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
+
+	beforeEach("skip if not supported", async function () {
+		if (!extApi.dartCapabilities.supportsToolingDaemon)
+			this.skip();
+	});
+
+	it("should register and unregister VM Services", async function () {
+		if (!extApi.dartCapabilities.supportsDtdRegisterVmService)
+			this.skip();
+
+		const daemon = extApi.toolingDaemon;
+		assert.ok(daemon);
+
+		// Wait for daemon to be up.
+		await daemon.connected;
+		await delay(50);
+
+		// Ensure we don't have any existing sessions.
+		assert.equal(extApi.debugSessions.length, 0);
+
+		// Ensure DTD also doesn't have any existing sessions.
+		let vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServiceUris);
+		assert.deepStrictEqual(vmServiceResponse.value, []);
+
+		// Start a debug session.
+		const dc = createDebugClient(DebuggerType.Dart);
+		const config = await startDebugger(dc, helloWorldMainFile);
+		await dc.hitBreakpoint(config, { // Stop at a breakpoint so the app won't quit while we're verifying.
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+		});
+
+		// Ensure we have a session with a URI.
+		const session = extApi.debugSessions[extApi.debugSessions.length - 1];
+		assert.ok(session.vmServiceUri);
+
+		// Ensure DTD has the VM Service URI.
+		vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServiceUris);
+		assert.deepStrictEqual(vmServiceResponse.value, [session.vmServiceUri]);
+
+		// Stop the debug session.
+		await Promise.all([
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		]);
+
+		// Ensure our session is gone.
+		assert.equal(extApi.debugSessions.length, 0);
+
+		// Ensure DTDs session is gone.
+		vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServiceUris);
+		assert.deepStrictEqual(vmServiceResponse.value, []);
+	});
+});
