@@ -49,8 +49,7 @@ export enum ServiceMethod {
 	registerService = "registerService",
 	registerVmService = "ConnectedApp.registerVmService",
 	unregisterVmService = "ConnectedApp.unregisterVmService",
-	// TODO(dantup): Update this after https://dart-review.googlesource.com/c/sdk/+/430545 lands
-	getVmServiceUris = "ConnectedApp.getVmServiceUris",
+	getVmServices = "ConnectedApp.getVmServices",
 	setIDEWorkspaceRoots = "FileSystem.setIDEWorkspaceRoots",
 	getIDEWorkspaceRoots = "FileSystem.getIDEWorkspaceRoots",
 	readFileAsString = "FileSystem.readFileAsString",
@@ -237,4 +236,4 @@ export interface UnregisterVmServiceParams {
 }
 export type UnregisterVmServiceResult = DtdSuccess;
 
-export type GetVmServiceUrisResult = DtdResult & { value: string[]; };
+export type GetVmServicesResult = DtdResult & { vmServices: Array<{ name?: string, uri: string, exposedUri?: string }>; };

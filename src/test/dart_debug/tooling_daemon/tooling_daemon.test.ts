@@ -29,12 +29,13 @@ describe("dart tooling daemon", () => {
 		assert.equal(extApi.debugSessions.length, 0);
 
 		// Ensure DTD also doesn't have any existing sessions.
-		let vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServiceUris);
-		assert.deepStrictEqual(vmServiceResponse.value, []);
+		let vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServices);
+		assert.deepStrictEqual(vmServiceResponse.vmServices, []);
 
 		// Start a debug session.
 		const dc = createDebugClient(DebuggerType.Dart);
-		const config = await startDebugger(dc, helloWorldMainFile);
+		const sessionName = "My Test Session";
+		const config = await startDebugger(dc, helloWorldMainFile, { name: sessionName });
 		await dc.hitBreakpoint(config, { // Stop at a breakpoint so the app won't quit while we're verifying.
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
 			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
@@ -45,8 +46,8 @@ describe("dart tooling daemon", () => {
 		assert.ok(session.vmServiceUri);
 
 		// Ensure DTD has the VM Service URI.
-		vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServiceUris);
-		assert.deepStrictEqual(vmServiceResponse.value, [session.vmServiceUri]);
+		vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServices);
+		assert.deepStrictEqual(vmServiceResponse.vmServices, [{ name: sessionName, uri: session.vmServiceUri }]);
 
 		// Stop the debug session.
 		await Promise.all([
@@ -58,7 +59,7 @@ describe("dart tooling daemon", () => {
 		assert.equal(extApi.debugSessions.length, 0);
 
 		// Ensure DTDs session is gone.
-		vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServiceUris);
-		assert.deepStrictEqual(vmServiceResponse.value, []);
+		vmServiceResponse = await daemon.callMethod(ServiceMethod.getVmServices);
+		assert.deepStrictEqual(vmServiceResponse.vmServices, []);
 	});
 });

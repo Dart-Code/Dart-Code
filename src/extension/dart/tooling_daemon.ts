@@ -158,8 +158,11 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			const connection = await this.connected;
 			if (connection) {
 				const secret = connection.dtdSecret;
+				let exposedUri: string | undefined = await envUtils.exposeUrl(vmServiceUri);
+				if (vmServiceUri === exposedUri)
+					exposedUri = undefined;
 				await this.callMethod(ServiceMethod.registerVmService, {
-					exposedUri: await envUtils.exposeUrl(vmServiceUri),
+					exposedUri,
 					name,
 					secret,
 					uri: vmServiceUri,
