@@ -94,7 +94,7 @@ describe("dart cli debugger", () => {
 	it("runs for autolaunch file", async () => {
 		fs.mkdirSync(fsPath(helloWorldDotDartCodeFolder), { recursive: true });
 		defer("delete autolaunch.json", () => tryDeleteDirectoryRecursive(fsPath(helloWorldDotDartCodeFolder)));
-		fs.writeFileSync(fsPath(helloWorldAutoLaunchFile), JSON.stringify(
+		await fs.promises.writeFile(fsPath(helloWorldAutoLaunchFile), JSON.stringify(
 			{
 				configurations: [
 					{
