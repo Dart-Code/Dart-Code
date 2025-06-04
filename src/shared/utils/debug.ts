@@ -1,8 +1,8 @@
 import { DebuggerType } from "../enums";
 
-export function getDebugAdapterName(debugType: DebuggerType) {
+export function getDebugAdapterName(debuggerType: DebuggerType) {
 	let debuggerName: string;
-	switch (debugType) {
+	switch (debuggerType) {
 		case DebuggerType.Flutter:
 			debuggerName = "flutter";
 			break;
@@ -22,7 +22,7 @@ export function getDebugAdapterName(debugType: DebuggerType) {
 			debuggerName = "dart_test";
 			break;
 		default:
-			throw new Error(`Unknown debugger type: ${debugType}`);
+			throw new Error(`Unknown debuggerType: ${debuggerType}`);
 	}
 
 	return debuggerName;

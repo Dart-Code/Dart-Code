@@ -29,8 +29,8 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 	return config as DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments;
 }
 
-export function createDebugClient(debugType: DebuggerType) {
-	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debugType);
+export function createDebugClient(debuggerType: DebuggerType) {
+	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debuggerType);
 	const trackerFactories = extApi.trackerFactories as DebugAdapterTrackerFactory[];
 	const dc = descriptor instanceof DebugAdapterServer
 		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactories, extApi.dartCapabilities)
@@ -63,7 +63,7 @@ export function createDebugClient(debugType: DebuggerType) {
 			try {
 				thisDc.terminateRequest().catch((e) => logger.warn(e));
 				// Tests may require a second terminateRequest because they first print "waiting for test to finish...".
-				if (debugType === DebuggerType.DartTest || debugType === DebuggerType.FlutterTest || debugType === DebuggerType.WebTest) {
+				if (debuggerType === DebuggerType.DartTest || debuggerType === DebuggerType.FlutterTest || debuggerType === DebuggerType.WebTest) {
 					await Promise.race([delay(300), terminatedEvent]);
 					// If we still hasn't termianted, send the second.
 					if (!thisDc.hasTerminated) {

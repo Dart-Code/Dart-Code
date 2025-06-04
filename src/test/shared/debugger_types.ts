@@ -6,11 +6,10 @@ import { DebuggerType } from "../../shared/enums";
 import { fsPath } from "../../shared/utils/fs";
 import { createTempTestFile, getResolvedDebugConfiguration, setConfigForTest } from "../helpers";
 
-
-export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string | undefined; debugger: DebuggerType; }>, defaultFolder: Uri): Promise<void> {
+export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string; debuggerType?: DebuggerType; expectedDebuggerType: DebuggerType; }>, defaultFolder: Uri): Promise<void> {
 	for (const test of tests) {
 		let program = test.program;
-		const { cwd, debugger: expectedDebuggerType } = test;
+		const { cwd, debuggerType, expectedDebuggerType } = test;
 
 		describe(program, async () => {
 			const isSpecialTestOutsideTest = program.endsWith("*");
@@ -31,6 +30,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 			it(`absolute: ${absolutePath} (cwd: ${absoluteCwd})`, async () => {
 				const resolvedConfig = await getResolvedDebugConfiguration({
 					cwd: absoluteCwd,
+					debuggerType,
 					program: absolutePath,
 				});
 				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
@@ -40,6 +40,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 				it(`absolute: ${absolutePath} (cwd: ${absoluteCwd})`, async () => {
 					const resolvedConfig = await getResolvedDebugConfiguration({
 						cwd: absoluteCwd,
+						debuggerType,
 						program: absolutePath,
 					});
 					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
@@ -48,6 +49,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 			it(`POSIX relative: ${program} (cwd: ${cwd})`, async () => {
 				const resolvedConfig = await getResolvedDebugConfiguration({
 					cwd,
+					debuggerType,
 					program,
 				});
 				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
@@ -58,6 +60,7 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 				it(`Windows relative: ${windowsProgram} (cwd: ${windowsCwd})`, async () => {
 					const resolvedConfig = await getResolvedDebugConfiguration({
 						cwd: windowsCwd,
+						debuggerType,
 						program: windowsProgram,
 					});
 					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);

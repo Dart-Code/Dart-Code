@@ -98,8 +98,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		const argsHaveTestFilter = (!!debugConfig.programQuery) || hasTestFilter((debugConfig.toolArgs ?? []).concat(debugConfig.args ?? []));
 		const isTest = !!debugConfig.program && isTestFileOrFolder(debugConfig.program);
-		const debugType = this.selectDebuggerType(debugConfig, argsHaveTestFilter, isTest, logger);
-		const isFlutter = debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterTest;
+		const debuggerType = this.selectDebuggerType(debugConfig, argsHaveTestFilter, isTest, logger);
+		const isFlutter = debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterTest;
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
 
 		// Handle detecting a Flutter app, but the extension has loaded in Dart-only mode.
@@ -110,7 +110,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		// Handle test_driver tests that can be pointed at an existing running instrumented app.
-		if (debugType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
+		if (debuggerType === DebuggerType.FlutterTest && isInsideFolderNamed(debugConfig.program, "test_driver") && !debugConfig.env?.VM_SERVICE_URL) {
 			const runningInstrumentedApps = debugSessions.filter((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver));
 			if (runningInstrumentedApps.length === 0) {
 				return this.errorWithoutOpeningLaunchConfig("Could not find a running Flutter app that was instrumented with enableFlutterDriverExtension. Run your instrumented app before running driver tests.");
@@ -129,7 +129,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		if (debugType === DebuggerType.WebTest) {
+		if (debuggerType === DebuggerType.WebTest) {
 			// TODO: IMPORTANT! When removing this if statement, add WebTest to
 			// the call to TestResultsProvider.flagSuiteStart below!
 			logger.error("Tests in web projects are not currently supported");
@@ -137,7 +137,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return undefined; // undefined means silent (don't open launch.json).
 		}
 
-		if (debugType === DebuggerType.FlutterTest && isTestFolder(debugConfig.program) && !debugConfig.noDebug) {
+		if (debuggerType === DebuggerType.FlutterTest && isTestFolder(debugConfig.program) && !debugConfig.noDebug) {
 			// When running `flutter test (folder)`, multiple debug sessions are created - one for each file. This is
 			// different to how `pub run test (folder)` works (one debug session, which each file in an isolate). The
 			// debugger does not currently support multiple VM service sessions so we have to downgrade this to noDebug.
@@ -164,7 +164,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Ensure we have a device if required.
 		let deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId as string | undefined) || this.deviceManager?.currentDevice;
-		const requiresDevice = (debugType === DebuggerType.Flutter && !isAttachRequest)
+		const requiresDevice = (debuggerType === DebuggerType.Flutter && !isAttachRequest)
 			|| (DebuggerType.FlutterTest && isIntegrationTest);
 		if (requiresDevice) {
 			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
@@ -204,15 +204,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// Ensure we have any require dependencies.
-		if (!(await this.installDependencies(debugType, this.pubGlobal))) {
+		if (!(await this.installDependencies(debuggerType, this.pubGlobal))) {
 			return undefined;
 		}
 
 		if (token && token.isCancellationRequested)
 			return;
 
-		// TODO: This cast feels nasty?
-		await this.setupDebugConfig(folder, debugConfig, debugType, isFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
+		await this.setupDebugConfig(folder, debugConfig, debuggerType, isFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
 
 		// Debugger always uses uppercase drive letters to ensure our paths have them regardless of where they came from.
 		debugConfig.program = forceWindowsDriveLetterToUppercase(debugConfig.program);
@@ -233,7 +232,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!didWarnAboutCwd && debugConfig.program && path.isAbsolute(debugConfig.program))
 			warnIfPathCaseMismatch(logger, debugConfig.program, "the launch script", "check the 'program' field in your launch configuration file (.vscode/launch.json)");
 
-		if (debugType === DebuggerType.FlutterTest /* || debugType === DebuggerType.WebTest */ || debugType === DebuggerType.DartTest) {
+		if (debuggerType === DebuggerType.FlutterTest /* || debuggerType === DebuggerType.WebTest */ || debuggerType === DebuggerType.DartTest) {
 			if (debugConfig.program) {
 				const suites = isTestFolder(debugConfig.program)
 					? Array.from(this.testModel.suites.values())
@@ -244,7 +243,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		debugConfig.debuggerType = debugType;
+		debugConfig.debuggerType = debuggerType;
 		if (debugConfig.programQuery) {
 			debugConfig.program += debugConfig.programQuery;
 			delete debugConfig.programQuery;
@@ -311,9 +310,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): DebuggerType {
+		if (debugConfig.debuggerType !== undefined) {
+			logger.info(`Debugger type is explicitly set in launch configuration as ${DebuggerType[debugConfig.debuggerType]}, using that.`);
+			return debugConfig.debuggerType;
+		}
+
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
 
-		let debugType = DebuggerType.Dart;
+		let debuggerType = DebuggerType.Dart;
 		let firstPathSegment: string | undefined;
 		const projectRoot: string | undefined = debugConfig.projectRootPath ?? debugConfig.cwd;
 		if (projectRoot && debugConfig.program && isWithinPath(debugConfig.program, projectRoot)) {
@@ -323,13 +327,13 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (firstPathSegment === "bin" || firstPathSegment === "tool" || firstPathSegment === ".dart_tool") {
 			logger.info(`Program is 'bin', 'tool', '.dart_tool' so will use Dart debugger`);
 		} else if (isFlutterProjectFolder(projectRoot) || this.wsContext.config.forceFlutterDebug) {
-			debugType = DebuggerType.Flutter;
+			debuggerType = DebuggerType.Flutter;
 		} else if (firstPathSegment === "web") {
-			debugType = DebuggerType.Web;
+			debuggerType = DebuggerType.Web;
 		} else {
 			logger.info(`Program (${debugConfig.program}) not recognised as Flutter or Web, will use Dart debugger`);
 		}
-		logger.info(`Detected launch project as ${DebuggerType[debugType]}`);
+		logger.info(`Detected launch project as ${DebuggerType[debuggerType]}`);
 
 		if (isTest)
 			logger.info(`Detected launch project as a Test project`);
@@ -337,40 +341,40 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (isTest && !canUsePackageTest)
 			logger.info(`Project does not appear to support 'pub run test', will use VM directly`);
 		if (isTest) {
-			switch (debugType) {
+			switch (debuggerType) {
 				case DebuggerType.Dart:
 					if (canUsePackageTest)
-						debugType = DebuggerType.DartTest;
+						debuggerType = DebuggerType.DartTest;
 					break;
 				case DebuggerType.Flutter:
 					if (isIntegrationTest) {
 						// Integration tests always use "flutter test".
-						debugType = DebuggerType.FlutterTest;
+						debuggerType = DebuggerType.FlutterTest;
 					} else if (debugConfig.runTestsOnDevice && argsHaveTestFilter) {
 						// TODO: Remove argsHaveTestFilter now that "flutter test" supports running tests on device (integration tests).
 						// Non-integration tests set to run on device but have a test name filter will also have
 						// to run with "flutter test".
 						void vs.window.showWarningMessage("Running with 'flutter test' as 'runTestsOnDevice' is not supported for individual tests.");
 						logger.info(`runTestsOnDevice is set but args have test filter so will still use Flutter`);
-						debugType = DebuggerType.FlutterTest;
+						debuggerType = DebuggerType.FlutterTest;
 					} else if (debugConfig.runTestsOnDevice) {
 						// Anything else (eg. Non-integration tests without a test name filter) is allowed to
 						// run on a device if specified.
 						logger.info(`runTestsOnDevice is set, so will use Flutter instead of FlutterTest`);
 					} else {
 						// Otherwise, default is to use "flutter test".
-						debugType = DebuggerType.FlutterTest;
+						debuggerType = DebuggerType.FlutterTest;
 					}
 					break;
 				case DebuggerType.Web:
-					debugType = DebuggerType.WebTest;
+					debuggerType = DebuggerType.WebTest;
 					break;
 				default:
-					logger.info("Unknown debugType, unable to switch to test debugger");
+					logger.info("Unknown debuggerType, unable to switch to test debugger");
 			}
 		}
-		logger.info(`Using ${DebuggerType[debugType]} debug adapter for this session`);
-		return debugType;
+		logger.info(`Using ${DebuggerType[debuggerType]} debug adapter for this session`);
+		return debuggerType;
 	}
 
 	protected configureProgramAndCwd(debugConfig: DartVsCodeLaunchArgs, folder: WorkspaceFolder | undefined, openFile: string | undefined) {
@@ -485,8 +489,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return undefined; // undefined means silent (don't open launch.json).
 	}
 
-	private installDependencies(debugType: DebuggerType, pubGlobal: PubGlobal) {
-		return debugType === DebuggerType.Web
+	private installDependencies(debuggerType: DebuggerType, pubGlobal: PubGlobal) {
+		return debuggerType === DebuggerType.Web
 			? new WebDev(pubGlobal).installIfRequired()
 			: true;
 	}
@@ -540,7 +544,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return vmServiceUriOrPort;
 	}
 
-	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: DartVsCodeLaunchArgs, debugType: DebuggerType, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager | undefined): Promise<void> {
+	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: DartVsCodeLaunchArgs, debuggerType: DebuggerType, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager | undefined): Promise<void> {
 		const conf = config.for(folder && folder.uri);
 
 		if (!debugConfig.name)
@@ -573,7 +577,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.additionalProjectPaths = debugConfig.additionalProjectPaths || vs.workspace.workspaceFolders?.map((wf) => fsPath(wf.uri));
 		debugConfig.args = debugConfig.args || [];
 		debugConfig.vmAdditionalArgs = debugConfig.vmAdditionalArgs || conf.vmAdditionalArgs;
-		debugConfig.toolArgs = await this.buildToolArgs(debugType, debugConfig, conf, deviceManager?.daemonPortOverride);
+		debugConfig.toolArgs = await this.buildToolArgs(debuggerType, debugConfig, conf, deviceManager?.daemonPortOverride);
 		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
 		debugConfig.vmServiceLogFile = insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
@@ -625,11 +629,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	/// All arguments built here should be things that user the recognises based on the app they are trying to launch
 	/// or settings they have configured. It should not include things that are specifically required by the debugger
 	/// (for example, enabling the VM Service or starting paused). Those items should be handled inside the Debug Adapter.
-	protected async buildToolArgs(debugType: DebuggerType, debugConfig: DartLaunchArgs, conf: ResourceConfig, portFromLocalExtension?: number): Promise<string[]> {
+	protected async buildToolArgs(debuggerType: DebuggerType, debugConfig: DartLaunchArgs, conf: ResourceConfig, portFromLocalExtension?: number): Promise<string[]> {
 		let args: string[] = [];
 		args = args.concat(debugConfig.toolArgs ?? []);
 
-		switch (debugType) {
+		switch (debuggerType) {
 			case DebuggerType.Dart:
 				args = args.concat(await this.buildDartToolArgs(debugConfig, conf));
 				break;

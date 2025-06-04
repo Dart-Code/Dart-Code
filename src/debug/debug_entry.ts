@@ -7,7 +7,7 @@ import { WebDebugSession } from "./web_debug_impl";
 import { WebTestDebugSession } from "./web_test_debug_impl";
 
 const args = process.argv.slice(2);
-const debugType = args.length ? args[0] : undefined;
+const debuggerType = args.length ? args[0] : undefined;
 
 const debuggers: { [key: string]: any } = {
 	// These IDs are passed as arguments so cannot be renamed to camelCase.
@@ -22,9 +22,9 @@ const debuggers: { [key: string]: any } = {
 	web_test: WebTestDebugSession,
 };
 
-const dbg = debugType ? debuggers[debugType] as typeof DebugSession : undefined;
+const dbg = debuggerType ? debuggers[debuggerType] as typeof DebugSession : undefined;
 if (dbg) {
 	DebugSession.run(dbg);
 } else {
-	throw new Error(`Debugger type must be one of ${Object.keys(debuggers).join(", ")} but got ${debugType}.\n  argv: ${process.argv.join("    ")}`);
+	throw new Error(`debuggerType must be one of ${Object.keys(debuggers).join(", ")} but got ${debuggerType}.\n  argv: ${process.argv.join("    ")}`);
 }
