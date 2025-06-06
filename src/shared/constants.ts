@@ -8,6 +8,18 @@ export const dartCodeExtensionIdentifier = "Dart-Code.dart-code";
 export const flutterExtensionIdentifier = "Dart-Code.flutter";
 export const debugAdapterPath = "out/dist/debug.js";
 
+/// The default location of the ".dart_code" folder that holds files like autolaunch.json.
+/// This can be overridden by setting the env variable named in `dartCodeConfigurationPathEnvironmentVariableName`.
+export const defaultDartCodeConfigurationPath = ".dart_code";
+
+/// The name of the environment variable that allows overriding the configuration path.
+///
+/// The path may be provided as a relative path (in which case it may exist within each workspace folder (not project),
+/// or an absolute path (in which case there is just one for the whole workspace).
+export const dartCodeConfigurationPathEnvironmentVariableName = "DART_CODE_CONFIGURATION_PATH";
+
+export const autoLaunchFilename = "autolaunch.json";
+
 export const isCI = !!process.env.CI;
 export const isDartCodeTestRun = !!process.env.DART_CODE_IS_TEST_RUN;
 export const isWin = process.platform.startsWith("win");

@@ -1,5 +1,7 @@
 import * as fs from "fs";
-import { debug, DebugConfiguration, Uri, workspace, WorkspaceFolder } from "vscode";
+import * as path from "path";
+import { debug, DebugConfiguration, RelativePattern, Uri, workspace, WorkspaceFolder } from "vscode";
+import { autoLaunchFilename } from "../constants";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
 import { fsPath } from "../utils/fs";
@@ -8,27 +10,38 @@ import { FlutterDeviceManager } from "./device_manager";
 export class AutoLaunch implements IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
 
-	constructor(private readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined) {
-		const watcher = workspace.createFileSystemWatcher("**/.dart_code/autolaunch.json", false, true, true);
-		watcher.onDidCreate((uri) => {
+	constructor(dartCodeConfigurationPath: string, readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined) {
+
+		const watcherPattern = path.isAbsolute(dartCodeConfigurationPath)
+			? new RelativePattern(dartCodeConfigurationPath, autoLaunchFilename)
+			: path.join("**", dartCodeConfigurationPath, autoLaunchFilename).replaceAll("\\", "/");
+
+		const watcher = workspace.createFileSystemWatcher(watcherPattern, false, true, true);
+		this.disposables.push(watcher);
+		this.disposables.push(watcher.onDidCreate((uri) => {
 			// If there are any existing debug sessions, don't spawn more because we don't know they don't overlap.
 			if (debug.activeDebugSession)
 				return;
-			this.handleChange(uri);
-		});
-		this.disposables.push(watcher);
+
+			void this.handleChange(uri);
+		}));
 
 		// If there are any existing debug sessions, don't spawn more because we don't know they don't overlap.
 		if (debug.activeDebugSession)
 			return;
-		if (workspace.workspaceFolders) {
-			for (const wf of workspace.workspaceFolders) {
-				this.handleChange(Uri.joinPath(wf.uri, ".dart_code", "autolaunch.json"));
+
+		if (path.isAbsolute(dartCodeConfigurationPath)) {
+			void this.handleChange(Uri.file(path.join(dartCodeConfigurationPath, autoLaunchFilename)));
+		} else {
+			if (workspace.workspaceFolders) {
+				for (const wf of workspace.workspaceFolders) {
+					void this.handleChange(Uri.joinPath(wf.uri, dartCodeConfigurationPath, autoLaunchFilename));
+				}
 			}
 		}
 	}
 
-	private handleChange(uri: Uri): void {
+	private async handleChange(uri: Uri): Promise<void> {
 		if (uri.scheme !== "file")
 			return;
 
@@ -56,11 +69,12 @@ export class AutoLaunch implements IAmDisposable {
 						continue;
 					}
 
-					void this.startDebugSession(wf, configuration as DebugConfiguration);
+					await this.startDebugSession(wf, configuration as DebugConfiguration);
 				}
 			}
 		} catch (e: any) {
 			if (e.code === "ENOENT") {
+				this.logger.warn(`Failed to process autolaunch file ${uri}: ${e}`);
 				// File not found, silently ignore
 				return;
 			}
@@ -68,7 +82,7 @@ export class AutoLaunch implements IAmDisposable {
 		}
 	}
 
-	private async startDebugSession(wf: WorkspaceFolder | undefined, configuration: DebugConfiguration): Promise<void> {
+	public async startDebugSession(wf: WorkspaceFolder | undefined, configuration: DebugConfiguration): Promise<void> {
 		// If this configuration targets a device, allow time for it to appear because starting the
 		// daemon and getting device events may take a little time.
 		try {

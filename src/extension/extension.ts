@@ -1,8 +1,9 @@
 import * as path from "path";
+import * as process from "process";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { dartPlatformName, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName } from "../shared/constants";
+import { dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
@@ -633,7 +634,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(createWatcher("**/.dart_tool/package_config.json", workspaceContext.events.onPackageMapChange));
 	workspaceContext.events.onPackageMapChange.fire();
 
-	context.subscriptions.push(new AutoLaunch(logger, deviceManager));
+	const dartCodeConfigurationPath = process.env[dartCodeConfigurationPathEnvironmentVariableName] || defaultDartCodeConfigurationPath;
+	context.subscriptions.push(new AutoLaunch(dartCodeConfigurationPath, logger, deviceManager));
 
 	// TODO(dantup): We should only expose the private API required for testing when in test runs, however
 	//  some extensions are currently using this for access to the analyzer. We should provide a replacement
