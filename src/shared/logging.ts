@@ -162,7 +162,7 @@ export class RingLog {
 
 	public get rawLines(): readonly string[] { return this.lines; }
 
-	constructor(private size: number) {
+	constructor(public readonly size: number) {
 		this.lines = new Array<string>(this.size);
 	}
 
