@@ -548,19 +548,20 @@ export class DartDebugSession extends DebugSession {
 		uri = uri.replace("[::]", "localhost");
 		this.log(`Initialising debugger for ${uri}`);
 		// Send the uri back to the editor so it can be used to launch browsers etc.
-		let browserFriendlyUri: string;
-		if (uri.endsWith("/ws")) {
+		let browserFriendlyUri = uri;
+		if (browserFriendlyUri.endsWith("/ws"))
 			browserFriendlyUri = uri.substring(0, uri.length - 2);
-			if (browserFriendlyUri.startsWith("ws:"))
-				browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
-		} else {
-			browserFriendlyUri = uri;
-		}
+		if (browserFriendlyUri.startsWith("ws:"))
+			browserFriendlyUri = "http:" + browserFriendlyUri.substring(3);
+
+		let vmServiceUri = uri;
+		if (vmServiceUri.startsWith("http:"))
+			vmServiceUri = "ws:" + browserFriendlyUri.substring(5);
 
 		const evt = new Event("dart.debuggerUris", {
 			// If we don't support Observatory, don't send its URL back to the editor.
 			observatoryUri: this.supportsObservatoryWebApp ? browserFriendlyUri.toString() : undefined,
-			vmServiceUri: browserFriendlyUri.toString(),
+			vmServiceUri: vmServiceUri.toString(),
 		});
 		this.logDapEvent(evt);
 		this.sendEvent(evt);
