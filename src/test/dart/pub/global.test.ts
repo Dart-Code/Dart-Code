@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { twoHoursInMs } from "../../../shared/constants";
+import { isCI, twoHoursInMs } from "../../../shared/constants";
 import { VersionStatus } from "../../../shared/enums";
 import { activate, defer, extApi, sb } from "../../helpers";
 
@@ -16,6 +16,12 @@ const definitelyNotInstalledPackage2 = "usage";
 
 describe("pub global", () => {
 	beforeEach("activate", () => activate(null));
+	beforeEach("skip if not CI because the right packages will not be set up", function () {
+		// CI sets up the right packages for these tests that verify we're invoking `pub global`
+		// correctly and verifying the results.
+		if (!isCI)
+			this.skip();
+	});
 
 	it("reports not-installed for a package that's not installed", async () => {
 		const installedVersion = await extApi.pubGlobal.getInstalledVersion(definitelyNotInstalledPackage1, definitelyNotInstalledPackage1);
