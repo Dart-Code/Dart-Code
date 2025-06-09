@@ -74,10 +74,10 @@ export class AutoLaunch implements IAmDisposable {
 			}
 		} catch (e: any) {
 			if (e.code === "ENOENT") {
-				this.logger.warn(`Failed to process autolaunch file ${uri}: ${e}`);
 				// File not found, silently ignore
 				return;
 			}
+			this.logger.warn(`Failed to process autolaunch file ${uri}: ${e}`);
 		}
 	}
 
