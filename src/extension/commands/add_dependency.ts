@@ -10,7 +10,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics, AnalyticsEvent } from "../analytics";
 import * as util from "../utils";
-import { getFolderToRunCommandIn } from "../utils/vscode/projects";
+import { getProjectSelection } from "../utils/vscode/projects";
 import { BaseSdkCommands } from "./sdk";
 
 const cacheFilename = "package_cache.json";
@@ -106,15 +106,6 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	private async promptAndAddDependency(uri: string | vs.Uri | undefined, isDevDependency: boolean) {
 		this.analytics.log(AnalyticsEvent.Command_AddDependency);
 
-		if (!uri || !(uri instanceof vs.Uri)) {
-			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to add the dependency to");
-			// If the user cancelled, bail out (otherwise we'll prompt them again below).
-			if (!uri)
-				return;
-		}
-		if (typeof uri === "string")
-			uri = vs.Uri.file(uri);
-
 		let selectedOption = await this.promptForPackageInfo();
 		if (!selectedOption)
 			return;
@@ -146,13 +137,23 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		if (!packageInfo)
 			return;
 
-		return this.addDependency(uri, packageInfo, isDevDependency);
+		let uris: vs.Uri[];
+		if (!uri || !(uri instanceof vs.Uri)) {
+			const projectFolders = await getProjectSelection(this.logger, "Select which project(s) to add the dependency to");
+			// If the user cancelled, bail out (otherwise we'll prompt them again below).
+			if (!projectFolders)
+				return;
+			uris = projectFolders.map((folder) => vs.Uri.file(folder));
+		} else {
+			uris = [uri];
+		}
+
+		return this.addDependency(uris, packageInfo, isDevDependency);
 	}
 
 	/// Note: This is called by quick-fix as well as directly from the command palette.
-	private async addDependency(uri: string | vs.Uri, selectedPackage: PackageInfo, isDevDependency: boolean) {
-		if (typeof uri === "string")
-			uri = vs.Uri.file(uri);
+	private async addDependency(urisOrPaths: Array<string | vs.Uri>, selectedPackage: PackageInfo, isDevDependency: boolean) {
+		const uris = urisOrPaths.map((uriOrPath) => typeof uriOrPath === "string" ? vs.Uri.file(uriOrPath) : uriOrPath);
 
 		const args = ["add"];
 		let packageName: string;
@@ -190,10 +191,12 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			args.push("flutter");
 		}
 
-		if (this.sdks.flutter && (isFlutterSdkPackage || util.isInsideFlutterProject(uri))) {
-			return this.runFlutter(["pub", ...args], uri);
-		} else {
-			return this.runPub(args, uri);
+		for (const uri of uris) {
+			if (this.sdks.flutter && (isFlutterSdkPackage || util.isInsideFlutterProject(uri))) {
+				await this.runFlutter(["pub", ...args], uri);
+			} else {
+				await this.runPub(args, uri);
+			}
 		}
 	}
 

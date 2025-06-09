@@ -69,6 +69,7 @@ export const helloWorldCreateMethodClassAFile = vs.Uri.file(path.join(fsPath(hel
 export const helloWorldCreateMethodClassBFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_b.dart"));
 export const helloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "example"));
 export const helloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "bin/main.dart"));
+export const helloWorldExampleSubFolderPubspecFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "pubspec.yaml"));
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
 export const missingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/missing.dart"));
 export const emptyFileInExcludedBySettingFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_by_setting/empty.dart"));

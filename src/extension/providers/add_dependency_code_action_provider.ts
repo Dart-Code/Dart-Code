@@ -105,7 +105,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 			const action = new CodeAction(title, CodeActionKind.QuickFix);
 			action.command = {
 				arguments: [
-					document.uri,
+					[document.uri],
 					{ packageNames: packageName } as PubPackage,
 					isDevDependency,
 				],
