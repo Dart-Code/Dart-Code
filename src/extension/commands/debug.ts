@@ -286,7 +286,9 @@ export class DebugCommands implements IAmDisposable {
 				const shouldReload = onlyDart
 					? (s.debuggerType === DebuggerType.Dart || s.debuggerType === DebuggerType.Web)
 					: onlyFlutter
-						? (s.debuggerType === DebuggerType.Flutter)
+						// When performing auto-hot-reloads for Flutter apps, only do so
+						// if the app has finished initializing.
+						? (s.debuggerType === DebuggerType.Flutter && s.hasStarted)
 						: true;
 				if (shouldReload)
 					await s.session.customRequest("hotReload", args);
@@ -574,7 +576,7 @@ export class DebugCommands implements IAmDisposable {
 		if (s.type !== "dart")
 			return;
 
-		const session = new DartDebugSessionInformation(s, s.configuration);
+		const session = new DartDebugSessionInformation(s);
 		// If we're the first fresh debug session, reset all settings to default.
 		// Subsequent launches will inherit the "current" values.
 		if (debugSessions.length === 0)

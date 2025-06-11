@@ -20,6 +20,8 @@ import { ProjectFinder } from "./utils";
 import { Context } from "./workspace";
 
 export class DartDebugSessionInformation {
+	public readonly configuration: DebugConfiguration & DartVsCodeLaunchArgs;
+
 	public observatoryUri?: string;
 
 	/*
@@ -34,6 +36,9 @@ export class DartDebugSessionInformation {
 	public vmServiceUri?: string;
 	public clientVmServiceUri?: string;
 	public readonly sessionStart: Date = new Date();
+
+	/// Whether the Flutter app has started (if appropriate).
+	// TODO(dantup): Decide if we should always set this for Dart too?
 	public hasStarted = false;
 	public flutterMode: string | undefined;
 	public flutterDeviceId: string | undefined;
@@ -43,8 +48,8 @@ export class DartDebugSessionInformation {
 	public readonly loadedServiceExtensions: VmServiceExtension[] = [];
 	public readonly debuggerType: DebuggerType;
 	public readonly projectRootPath: string | undefined;
-	constructor(public readonly session: DebugSession, configuration: DebugConfiguration) {
-		configuration = configuration as unknown as DebugConfiguration & DartVsCodeLaunchArgs;
+	constructor(public readonly session: DebugSession) {
+		const configuration = this.configuration = session.configuration as DebugConfiguration & DartVsCodeLaunchArgs;
 		this.debuggerType = configuration.debuggerType as DebuggerType;
 		this.projectRootPath = configuration.projectRootPath;
 	}
