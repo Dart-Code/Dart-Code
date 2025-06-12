@@ -3228,6 +3228,10 @@
 								"type": "string",
 								"description": "The ID of the device to launch your Flutter app on. If not supplied, will use the selected device shown in the status bar."
 							},
+							"emulatorId": {
+								"type": "string",
+								"description": "The ID of the emulator to launch your Flutter app on. If this emulator is not running, it will be started. This value overrides anything in `deviceId` or selected in the status bar."
+							},
 							"console": {
 								"enum": [
 									"debugConsole",

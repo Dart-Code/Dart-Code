@@ -326,8 +326,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	protected shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
 
-	public getDevice(id: string | undefined) {
+	public getDevice(id: string | undefined): f.Device | undefined {
 		return this.devices.find((d) => d.id === id);
+	}
+
+	public getDeviceByEmulatorId(id: string | undefined): f.Device | undefined {
+		return this.devices.find((d) => d.emulatorId === id);
 	}
 
 	public getDevicesSortedByName(): f.Device[] {
@@ -524,6 +528,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 	}
 
+	public async getEmulator(id: string | undefined): Promise<Emulator | undefined> {
+		const emulators = await this.getEmulators();
+		return emulators.find((e) => e.id === id);
+	}
+
 	private async getEmulators(): Promise<Emulator[]> {
 		try {
 			await this.daemon.daemonStarted;
@@ -689,7 +698,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return pickableEmulators;
 	}
 
-	private async launchEmulator(emulator: f.FlutterEmulator, coldBoot: boolean): Promise<boolean> {
+	public async launchEmulator(emulator: f.FlutterEmulator, coldBoot: boolean): Promise<boolean> {
 		try {
 			await vs.window.withProgress({
 				location: vs.ProgressLocation.Notification,
@@ -699,9 +708,10 @@ export class FlutterDeviceManager implements vs.Disposable {
 				progress.report({ message: `Waiting for ${emulator.name} to connect...` });
 				// Wait up to 60 seconds for emulator to launch.
 				for (let i = 0; i < 120; i++) {
-					await new Promise((resolve) => setTimeout(resolve, 500));
+					this.currentDevice = this.getDeviceByEmulatorId(emulator.id);
 					if (this.currentDevice)
 						return;
+					await new Promise((resolve) => setTimeout(resolve, 500));
 				}
 				throw new Error("Emulator didn't connect within 60 seconds");
 			});

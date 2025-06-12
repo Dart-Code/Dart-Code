@@ -163,7 +163,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return;
 
 		// Ensure we have a device if required.
-		let deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId as string | undefined) || this.deviceManager?.currentDevice;
+		let deviceToLaunchOn = await this.prepareLaunchDevice(debugConfig);
+
 		const requiresDevice = (debuggerType === DebuggerType.Flutter && !isAttachRequest)
 			|| (DebuggerType.FlutterTest && isIntegrationTest);
 		if (requiresDevice) {
@@ -264,6 +265,37 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		}
 
 		return debugConfig;
+	}
+
+	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartLaunchArgs): Promise<Device | undefined> {
+		const logger = this.logger;
+
+		// Default to current device.
+		let deviceToLaunchOn = this.deviceManager?.currentDevice;
+
+		// If the debug config has an emulatorId, use that emulator.
+		if (typeof debugConfig.emulatorId === "string") {
+			deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(debugConfig.emulatorId);
+
+			// If we didn't have such a device, try to launch the emulator.
+			if (!deviceToLaunchOn) {
+				const emulator = await this.deviceManager?.getEmulator(debugConfig.emulatorId);
+				if (!emulator) {
+					logger.warn(`Unable to launch because emulator ${debugConfig.emulatorId} could not be found`);
+					void window.showInformationMessage(`Emulator "${debugConfig.emulatorId}" was not found`);
+					return undefined;
+				}
+				await this.deviceManager?.launchEmulator(emulator, false);
+				deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(debugConfig.emulatorId);
+			}
+		} else if (debugConfig.deviceId) {
+			deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId as string | undefined);
+			logger.warn(`Unable to launch because device ${debugConfig.deviceId} could not be found`);
+			void window.showInformationMessage(`Device "${debugConfig.deviceId}" was not found`);
+			return undefined;
+		}
+
+		return deviceToLaunchOn;
 	}
 
 	private async checkIfProjectHasErrors(debugConfig: vs.DebugConfiguration & DartLaunchArgs) {
