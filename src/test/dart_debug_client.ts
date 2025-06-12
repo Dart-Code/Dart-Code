@@ -5,6 +5,7 @@ import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSes
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { tenMinutesInMs } from "../shared/constants";
 import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
+import { DebuggerType } from "../shared/enums";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";
 import { withTimeout } from "../shared/utils";
@@ -27,7 +28,7 @@ export class DartDebugClient extends DebugClient {
 	public readonly isDartDap: boolean;
 	public readonly isUsingUris: boolean;
 
-	constructor(daArgs: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
+	constructor(public readonly debuggerType: DebuggerType, daArgs: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
 		const useShell = daArgs.runtime?.endsWith(".sh") || daArgs.runtime?.endsWith(".bat");
 		const runtime = useShell ? `"${daArgs.runtime}"` : daArgs.runtime;
 		const executable = useShell ? `"${daArgs.executable}"` : daArgs.executable;

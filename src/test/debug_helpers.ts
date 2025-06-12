@@ -17,10 +17,12 @@ export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutte
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
 
 export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: { [key: string]: any }): Promise<DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments> {
-	extraConfiguration = Object.assign(
-		{ deviceId: flutterTestDeviceId },
-		extraConfiguration,
-	);
+	if (dc.debuggerType === DebuggerType.Flutter || dc.debuggerType === DebuggerType.FlutterTest) {
+		extraConfiguration = Object.assign(
+			{ deviceId: flutterTestDeviceId },
+			extraConfiguration,
+		);
+	}
 	const config = await getLaunchConfiguration(script, extraConfiguration);
 	if (!config)
 		throw new Error(`Could not get launch configuration (got ${config})`);
@@ -33,9 +35,10 @@ export function createDebugClient(debuggerType: DebuggerType) {
 	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debuggerType);
 	const trackerFactories = extApi.trackerFactories as DebugAdapterTrackerFactory[];
 	const dc = descriptor instanceof DebugAdapterServer
-		? new DartDebugClient({ port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactories, extApi.dartCapabilities)
+		? new DartDebugClient(debuggerType, { port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactories, extApi.dartCapabilities)
 		: descriptor instanceof DebugAdapterExecutable
 			? new DartDebugClient(
+				debuggerType,
 				{
 					args: descriptor.args.slice(1),
 					executable: descriptor.args[0],

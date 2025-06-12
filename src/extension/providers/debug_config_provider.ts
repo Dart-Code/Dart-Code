@@ -270,6 +270,9 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartLaunchArgs): Promise<Device | undefined | "UNABLE_TO_LAUNCH"> {
+		if (!this.deviceManager)
+			return;
+
 		const logger = this.logger;
 
 		// Default to current device.
