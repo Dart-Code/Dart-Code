@@ -164,6 +164,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// Ensure we have a device if required.
 		let deviceToLaunchOn = await this.prepareLaunchDevice(debugConfig);
+		if (deviceToLaunchOn === "UNABLE_TO_LAUNCH")
+			return undefined;
 
 		const requiresDevice = (debuggerType === DebuggerType.Flutter && !isAttachRequest)
 			|| (DebuggerType.FlutterTest && isIntegrationTest);
@@ -267,7 +269,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return debugConfig;
 	}
 
-	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartLaunchArgs): Promise<Device | undefined> {
+	private async prepareLaunchDevice(debugConfig: DebugConfiguration & DartLaunchArgs): Promise<Device | undefined | "UNABLE_TO_LAUNCH"> {
 		const logger = this.logger;
 
 		// Default to current device.
@@ -283,16 +285,18 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (!emulator) {
 					logger.warn(`Unable to launch because emulator ${debugConfig.emulatorId} could not be found`);
 					void window.showInformationMessage(`Emulator "${debugConfig.emulatorId}" was not found`);
-					return undefined;
+					return "UNABLE_TO_LAUNCH";
 				}
 				await this.deviceManager?.launchEmulator(emulator, false);
 				deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(debugConfig.emulatorId);
 			}
 		} else if (debugConfig.deviceId) {
 			deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId as string | undefined);
-			logger.warn(`Unable to launch because device ${debugConfig.deviceId} could not be found`);
-			void window.showInformationMessage(`Device "${debugConfig.deviceId}" was not found`);
-			return undefined;
+			if (!deviceToLaunchOn) {
+				logger.warn(`Unable to launch because device ${debugConfig.deviceId} could not be found`);
+				void window.showInformationMessage(`Device "${debugConfig.deviceId}" was not found`);
+				return "UNABLE_TO_LAUNCH";
+			}
 		}
 
 		return deviceToLaunchOn;
