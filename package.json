@@ -1331,6 +1331,11 @@
 					"when": "resourceExtname == .arb && dart-code:anyFlutterProjectLoaded",
 					"command": "flutter.task.genl10n",
 					"group": "navigation@1"
+				},
+				{
+					"when": "activeWebviewPanelId == dartDevTools",
+					"group": "dart@1",
+					"command": "_dart.settings.openDevToolsLocationSetting"
 				}
 			],
 			"editor/context": [
