@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { isDartCodeTestRun, runAnywayAction, showErrorsAction } from "../../shared/constants";
+import { fiveSecondsInMs, isDartCodeTestRun, runAnywayAction, showErrorsAction } from "../../shared/constants";
 import { HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG } from "../../shared/constants.contexts";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType, VmServiceExtension } from "../../shared/enums";
@@ -294,7 +294,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(debugConfig.emulatorId);
 			}
 		} else if (debugConfig.deviceId) {
-			deviceToLaunchOn = this.deviceManager?.getDevice(debugConfig.deviceId as string | undefined);
+			deviceToLaunchOn = await this.deviceManager?.waitForDevice(debugConfig.deviceId as string | undefined, fiveSecondsInMs);
 			if (!deviceToLaunchOn) {
 				logger.warn(`Unable to launch because device ${debugConfig.deviceId} could not be found`);
 				void window.showInformationMessage(`Device "${debugConfig.deviceId}" was not found`);

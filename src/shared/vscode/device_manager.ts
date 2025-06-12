@@ -326,6 +326,25 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	protected shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
 
+	/// Like [getDevice] but will wait up to [timeMs] for the device.
+	public async waitForDevice(id: string | undefined, timeMs: number): Promise<f.Device | undefined> {
+		let device = this.devices.find((d) => d.id === id);
+		if (device)
+			return device;
+
+		return vs.window.withProgress({
+			location: vs.ProgressLocation.Notification,
+			title: `Waiting for device...`,
+		}, async () => {
+			for (let i = 0; i < timeMs / 100; i++) {
+				device = this.devices.find((d) => d.id === id);
+				if (device)
+					return device;
+				await new Promise((resolve) => setTimeout(resolve, 100));
+			}
+		});
+	}
+
 	public getDevice(id: string | undefined): f.Device | undefined {
 		return this.devices.find((d) => d.id === id);
 	}

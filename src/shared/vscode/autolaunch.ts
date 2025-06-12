@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { debug, DebugConfiguration, RelativePattern, Uri, workspace, WorkspaceFolder } from "vscode";
-import { autoLaunchFilename } from "../constants";
+import { autoLaunchFilename, thirtySecondsInMs } from "../constants";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
 import { fsPath } from "../utils/fs";
@@ -87,11 +87,7 @@ export class AutoLaunch implements IAmDisposable {
 		try {
 			const deviceId = configuration.deviceId as string | undefined;
 			if (this.deviceManager && deviceId) {
-				for (let seconds = 0; seconds < 30; seconds++) {
-					if (this.deviceManager.getDevice(deviceId))
-						break;
-					await new Promise((resolve) => setTimeout(resolve, 1000));
-				}
+				await this.deviceManager.waitForDevice(deviceId, thirtySecondsInMs);
 				if (!this.deviceManager.getDevice(deviceId)) {
 					this.logger.warn(`Failed to autolaunch because device ${deviceId} was not found`);
 					return;
