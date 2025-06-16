@@ -31,6 +31,11 @@ export class DartCapabilities {
 	get supportsDevToolsPropertyEditor() { return versionIsAtLeast(this.version, "3.8.0-171.2"); }
 	get supportsLspOverDtd() { return versionIsAtLeast(this.version, "3.8.0-0"); }
 	get supportsDtdRegisterVmService() { return versionIsAtLeast(this.version, "3.9.0-0"); }
+
+	get supportsMcpServer() { return versionIsAtLeast(this.version, "3.9.0-0"); }
+	// TODO(dantup): Set this accordingly and consider a config.dartMcpServerAdditionalArgs?
+	get mcpServerRequiresExperimentalFlag() { return true; }
+
 	/**
 	 * Whether this version of the SDK supports DTD. This should be checked only for
 	 * spawning DTD and not whether it's available within the extension.

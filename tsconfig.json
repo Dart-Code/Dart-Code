@@ -12,6 +12,10 @@
 		"rootDir": "src",
 		"strict": true
 	},
+	"typeRoots": [
+		"./node_modules/@types",
+		"./src/extension/future_vs_code_api",
+	],
 	"exclude": [
 		".crash_dumps",
 		".dart_code_test_data_dir",

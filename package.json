@@ -780,6 +780,12 @@
 				"key": "ctrl+alt+d"
 			}
 		],
+		"mcpServerDefinitionProviders": [
+			{
+				"id": "dart-sdk-mcp-servers",
+				"label": "Dart SDK MCP Servers"
+			}
+		],
 		"menus": {
 			"commandPalette": [
 				{

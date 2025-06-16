@@ -113,6 +113,7 @@ class Config {
 	get enableSnippets(): boolean { return this.getConfig<boolean>("enableSnippets", true); }
 	get env(): object { return this.getConfig<object>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
+	get experimentalMcpServer(): boolean { return this.getConfig<boolean>("experimentalMcpServer", false); }
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("extensionLogFile", null)))); }
 	get flutterAdbConnectOnChromeOs(): boolean { return this.getConfig<boolean>("flutterAdbConnectOnChromeOs", false); }

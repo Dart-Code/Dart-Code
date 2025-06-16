@@ -75,6 +75,7 @@ import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_
 import { DartDebugAdapterRemoveErrorShowUserFactory } from "./providers/debug_adapter_remove_error_showUser_factory";
 import { DartDebugAdapterSupportsUrisFactory } from "./providers/debug_adapter_support_uris_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
+import { DartMcpServerDefinitionProvider } from "./providers/mcp_server_definition_provider";
 import { RankingCodeActionProvider } from "./providers/ranking_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { PubGlobal } from "./pub/global";
@@ -551,6 +552,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	else
 		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
 
+	if (vs.lm.registerMcpServerDefinitionProvider) {
+		const mcpServerProvider = new DartMcpServerDefinitionProvider(sdks, dartCapabilities);
+		context.subscriptions.push(mcpServerProvider);
+		context.subscriptions.push(vs.lm.registerMcpServerDefinitionProvider("dart-sdk-mcp-servers", mcpServerProvider));
+	}
 
 	if (dartToolingDaemon && (dartCapabilities.supportsDevToolsPropertyEditor || config.experimentalPropertyEditor)) {
 		void vs.commands.executeCommand("setContext", FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, true);
