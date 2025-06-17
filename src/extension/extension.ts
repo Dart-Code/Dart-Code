@@ -556,7 +556,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const mcpServerProvider = new DartMcpServerDefinitionProvider(sdks, dartCapabilities);
 		context.subscriptions.push(mcpServerProvider);
 		context.subscriptions.push(vs.lm.registerMcpServerDefinitionProvider("dart-sdk-mcp-servers", mcpServerProvider));
-
+	}
+	if (vs.lm.registerTool) {
 		context.subscriptions.push(vs.lm.registerTool("get_dart_tooling_daemon_dtd_uri", {
 			invoke: async () => {
 				if (!dartCapabilities.supportsToolingDaemon)
