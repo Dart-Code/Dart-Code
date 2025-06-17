@@ -559,6 +559,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 		context.subscriptions.push(vs.lm.registerTool("get_dart_tooling_daemon_dtd_uri", {
 			invoke: async () => {
+				if (!dartCapabilities.supportsToolingDaemon)
+					throw new Error("DTD is not available for this version of Flutter/Dart, please upgrade.");
 				const dtdUri = await dartToolingDaemon?.dtdUri;
 				return dtdUri
 					? new vs.LanguageModelToolResult([new vs.LanguageModelTextPart(dtdUri)])

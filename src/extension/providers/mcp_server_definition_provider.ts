@@ -35,9 +35,6 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 		const args = ["mcp-server"];
 		if (this.dartCapabilities.mcpServerRequiresExperimentalFlag)
 			args.push("--experimental-mcp-server");
-		// TODO(dantup): Pass DTD here or provide another mechanism for it to be requested
-		//  (so that if we restart DTD, the same running MCP server can re-request the updated
-		//  URI).
 
 		return [
 			new vs.McpStdioServerDefinition("Dart SDK MCP Server", binPath, args),
