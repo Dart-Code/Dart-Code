@@ -556,6 +556,15 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const mcpServerProvider = new DartMcpServerDefinitionProvider(sdks, dartCapabilities);
 		context.subscriptions.push(mcpServerProvider);
 		context.subscriptions.push(vs.lm.registerMcpServerDefinitionProvider("dart-sdk-mcp-servers", mcpServerProvider));
+
+		context.subscriptions.push(vs.lm.registerTool("get_dart_tooling_daemon_dtd_uri", {
+			invoke: async () => {
+				const dtdUri = await dartToolingDaemon?.dtdUri;
+				return dtdUri
+					? new vs.LanguageModelToolResult([new vs.LanguageModelTextPart(dtdUri)])
+					: undefined;
+			},
+		}));
 	}
 
 	if (dartToolingDaemon && (dartCapabilities.supportsDevToolsPropertyEditor || config.experimentalPropertyEditor)) {

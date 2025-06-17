@@ -786,6 +786,20 @@
 				"label": "Dart SDK MCP Servers"
 			}
 		],
+		"languageModelTools": [
+			{
+				"name": "get_dart_tooling_daemon_dtd_uri",
+				"displayName": "Get the Dart Tooling Daemon (DTD) URI",
+				"userDescription": "Gets the URI to connect to the Dart Tooling Daemon (DTD).",
+				"modelDescription": "Gets the URI to connect to the Dart Tooling Daemon (DTD).",
+				"canBeReferencedInPrompt": true,
+				"toolReferenceName": "dtdUri",
+				"inputSchema": {
+					"type": "object",
+					"properties": {}
+				}
+			}
+		],
 		"menus": {
 			"commandPalette": [
 				{
