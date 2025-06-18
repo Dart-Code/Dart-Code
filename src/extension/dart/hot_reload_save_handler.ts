@@ -12,6 +12,7 @@ import { isWithinWorkspace, shouldHotReloadFor } from "../utils";
 export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private dartHotReloadDelayTimer: NodeJS.Timeout | undefined;
+	private flutterHotReloadDelayTimer: NodeJS.Timeout | undefined;
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
 	private lastSaveReason: TextDocumentSaveReason | undefined;
@@ -127,7 +128,17 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 			reason: restartReasonSave,
 		};
 
-		void commands.executeCommand(commandToRun, args);
+		// We do a short debounce here to avoid many notifications when using Save All, since the debug adapter
+		// will show a notification for each reload still.
+		// https://github.com/Dart-Code/Dart-Code/issues/5552
+		if (this.flutterHotReloadDelayTimer) {
+			clearTimeout(this.flutterHotReloadDelayTimer);
+		}
+
+		this.flutterHotReloadDelayTimer = setTimeout(() => {
+			this.flutterHotReloadDelayTimer = undefined;
+			void commands.executeCommand(commandToRun, args);
+		}, 100);
 	}
 
 	public dispose(): void | Promise<void> {
