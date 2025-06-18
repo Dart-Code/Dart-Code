@@ -77,6 +77,12 @@ export class DebugCommands implements IAmDisposable {
 	public isInspectingWidget = false;
 	private autoCancelNextInspectWidgetMode = false;
 
+	/// The ID of the currently-shown hot reload progress indicator.
+	private currentHotReloadProgressId: string | undefined;
+
+	/// The ID of the currently-shown hot restart progress indicator.
+	private currentHotRestartProgressId: string | undefined;
+
 	constructor(
 		private readonly logger: Logger,
 		private readonly fileTracker: FileTracker,
@@ -843,17 +849,57 @@ export class DebugCommands implements IAmDisposable {
 				}
 			}
 		} else if (event === "dart.progressStart") {
+			const progressId = body.progressId as string | undefined;
+			if (!progressId) return;
+
 			// When a debug session is restarted by VS Code (eg. not handled by the DA), the session-end event
 			// will not fire so we need to clean up the "Terminating debug session" message manually. Doing it here
 			// means it will vanish at the same time as the new one appears, so there are no gaps in progress indicators.
-			if (body.progressId === debugLaunchProgressId) {
+			if (progressId === debugLaunchProgressId) {
 				session.progress[debugTerminatingProgressId]?.complete();
 				delete session.progress[debugTerminatingProgressId];
 			}
 
-			const progressId = body.progressId as string | undefined;
-			const isHotEvent = progressId?.toLowerCase()?.includes("reload") || progressId?.toLowerCase()?.includes("restart");
-			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
+			const isHotReload = progressId?.toLowerCase().includes("reload");
+			const isHotRestart = progressId?.toLowerCase().includes("restart");
+			const progressLocation = (isHotRestart || isHotReload) && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
+
+			// Complete any existing one with this ID.
+			session.progress[progressId]?.complete();
+
+			// For hot reload / hot restart because we show toast notifications, we want to collapse any
+			// overlapping notifications into a single one to avoid them stacking up when they are debounced
+			// by Flutter. To do this, we will keep the first one active, and just reassign it into the ID
+			// of the latest one, and not start a new progress notification.
+			if (isHotReload) {
+				if (this.currentHotReloadProgressId) {
+					const currentHotReload = session.progress[this.currentHotReloadProgressId];
+					if (currentHotReload && !currentHotReload.isComplete) {
+						// Take over the previous progress.
+						session.progress[progressId] = currentHotReload;
+						delete session.progress[this.currentHotReloadProgressId];
+
+						this.currentHotReloadProgressId = progressId;
+						return;
+					}
+					this.currentHotReloadProgressId = progressId;
+				}
+				this.currentHotReloadProgressId = progressId;
+			} else if (isHotRestart) {
+				if (this.currentHotRestartProgressId) {
+					const currentHotRestart = session.progress[this.currentHotRestartProgressId];
+					if (currentHotRestart && !currentHotRestart.isComplete) {
+						// Take over the previous progress.
+						session.progress[progressId] = currentHotRestart;
+						delete session.progress[this.currentHotRestartProgressId];
+
+						this.currentHotRestartProgressId = progressId;
+						return;
+					}
+					this.currentHotRestartProgressId = progressId;
+				}
+				this.currentHotRestartProgressId = progressId;
+			}
 
 			await vs.window.withProgress(
 				// TODO: This was previously Window to match what we'd get using DAP progress
@@ -864,25 +910,26 @@ export class DebugCommands implements IAmDisposable {
 				// is still displayed with additional description.
 				{ location: progressLocation, title: body.title },
 				(progress) => {
-					// Complete any existing one with this ID.
-					session.progress[body.progressId]?.complete();
-
 					// Build a new progress and store it in the session.
 					const completer = new PromiseCompleter<void>();
-					session.progress[body.progressId] = new ProgressMessage(progress, completer);
+					session.progress[progressId] = new ProgressMessage(progress, completer);
 					if (body.message)
-						session.progress[body.progressId]?.report(body.message as string);
+						session.progress[progressId]?.report(body.message as string);
 					return completer.promise;
 				},
 			);
 		} else if (event === "dart.progressUpdate") {
 			session.progress[body.progressId]?.report(body.message as string);
 		} else if (event === "dart.progressEnd") {
-			if (body.message) {
-				session.progress[body.progressId]?.report(body.message as string);
-				await new Promise((resolve) => setTimeout(resolve, 400));
+			const progress = session.progress[body.progressId];
+			if (progress) {
+				delete session.progress[body.progressId];
+				if (body.message) {
+					progress.report(body.message as string);
+					await new Promise((resolve) => setTimeout(resolve, 400));
+				}
+				progress.complete();
 			}
-			session.progress[body.progressId]?.complete();
 		} else if (event === "dart.flutter.widgetErrorInspectData") {
 			if (this.suppressFlutterWidgetErrors || !config.showInspectorNotificationsForWidgetErrors)
 				return;

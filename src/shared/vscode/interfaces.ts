@@ -56,13 +56,19 @@ export class DartDebugSessionInformation {
 }
 
 export class ProgressMessage {
+	private _isComplete = false;
 	constructor(private readonly reporter: Progress<{ message?: string }>, private readonly completer: PromiseCompleter<void>) { }
+
+	public get isComplete(): boolean {
+		return this._isComplete;
+	}
 
 	public report(message: string): void {
 		this.reporter.report({ message });
 	}
 
 	public complete(): void {
+		this._isComplete = true;
 		this.completer.resolve();
 	}
 }
