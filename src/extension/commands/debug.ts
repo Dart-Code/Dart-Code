@@ -852,7 +852,7 @@ export class DebugCommands implements IAmDisposable {
 			}
 
 			const progressId = body.progressId as string | undefined;
-			const isHotEvent = progressId?.includes("reload") || progressId?.includes("restart");
+			const isHotEvent = progressId?.toLowerCase()?.includes("reload") || progressId?.toLowerCase()?.includes("restart");
 			const progressLocation = isHotEvent && config.hotReloadProgress === "statusBar" ? vs.ProgressLocation.Window : vs.ProgressLocation.Notification;
 
 			await vs.window.withProgress(
