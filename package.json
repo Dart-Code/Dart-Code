@@ -797,7 +797,8 @@
 				"inputSchema": {
 					"type": "object",
 					"properties": {}
-				}
+				},
+				"when": "config.dart.experimentalMcpServer"
 			}
 		],
 		"menus": {
