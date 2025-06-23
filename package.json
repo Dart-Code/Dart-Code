@@ -1651,7 +1651,8 @@
 				{
 					"id": "dartDependencyTree",
 					"name": "Dependencies",
-					"when": "dart-code:anyProjectLoaded && config.dart.enablePub"
+					"when": "dart-code:anyProjectLoaded && config.dart.enablePub",
+					"icon": "$(package)"
 				}
 			],
 			"flutter": [
@@ -1659,12 +1660,14 @@
 					"id": "dartFlutterSidebar",
 					"type": "webview",
 					"name": "Flutter Sidebar",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:flutterSidebarSupported"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:flutterSidebarSupported",
+					"icon": "media/icons/sidebar/flutter.svg"
 				},
 				{
 					"id": "dartFlutterOutline",
 					"name": "Outline",
-					"when": "dart-code:anyFlutterProjectLoaded"
+					"when": "dart-code:anyFlutterProjectLoaded",
+					"icon": "media/icons/sidebar/flutter.svg"
 				}
 			],
 			"flutterPropertyEditor": [
@@ -1672,7 +1675,8 @@
 					"id": "flutterPropertyEditor",
 					"type": "webview",
 					"name": "Flutter Property Editor",
-					"when": "dart-code:anyFlutterProjectLoaded && dart-code:flutterPropertyEditorSupported"
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:flutterPropertyEditorSupported",
+					"icon": "media/icons/sidebar/property_editor.svg"
 				}
 			],
 			"sidebarDevToolsContainer": [
