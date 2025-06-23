@@ -64,6 +64,7 @@ describe("hot reloads on save", () => {
 
 		assert.equal(session.hotReloadCount, 0);
 		await doc.save();
+		await delay(210); // Flutter has 10ms debounce
 		assert.equal(session.hotReloadCount, 1);
 	});
 
