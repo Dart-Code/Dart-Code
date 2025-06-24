@@ -36,9 +36,9 @@ export class TestCommands implements vs.Disposable {
 		this.disposables.push(
 			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
-			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, treeNodes, true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, treeNodes, false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, undefined, testRun)),
-			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, testRun, isRunningAll)),
+			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, treeNodes, true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, undefined, testRun)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined) => this.runTestsForNode(suiteData, treeNodes, false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, undefined, testRun)),
+			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, includeCoverage, testRun, isRunningAll)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.commands.registerCommand("dart.findTestOrImplementationFile", () => this.findTestOrImplementationFile(), this),
@@ -49,7 +49,7 @@ export class TestCommands implements vs.Disposable {
 		this.updateEditorContexts(vs.window.activeTextEditor);
 	}
 
-	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, exclusions: TestNode[] | undefined, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<void> {
+	private async runAllTestsWithoutDebugging(suites: SuiteNode[] | undefined, exclusions: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean): Promise<void> {
 		// To run multiple folders/suites, we can pass the first as `program` and the rest as `args` which
 		// will be appended immediately after `program`. However, this only works for things in the same project
 		// as the first one that runs will be used for resolving package: URIs etc. We also can't mix and match
@@ -118,6 +118,7 @@ export class TestCommands implements vs.Disposable {
 		await Promise.all(
 			projectsWithTests.map((projectWithTests) => this.runTests({
 				debug: false,
+				includeCoverage,
 				isFlutter: undefined, // unknown, runTests will compute
 				launchTemplate: {
 					args: projectWithTests.relativeTestPaths.slice(1),
@@ -135,13 +136,15 @@ export class TestCommands implements vs.Disposable {
 		);
 	}
 
-	private async runTestsForNode(suiteData: SuiteData, nodes: TreeNode[], debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
+	private async runTestsForNode(suiteData: SuiteData, nodes: TreeNode[], debug: boolean, suppressPrompts: boolean, runSkippedTests: boolean, includeCoverage: boolean, token?: vs.CancellationToken, testRun?: vs.TestRun) {
+		// TODO(dantup): We accept a cancellation token here, but it appears never used. Can we remove it?
 		const testSelection = getTestSelectionForNodes(nodes);
 		const programPath = fsPath(URI.file(suiteData.path));
 		const isFlutter = isInsideFlutterProject(vs.Uri.file(suiteData.path));
 
 		return this.runTests({
 			debug,
+			includeCoverage,
 			isFlutter,
 			launchTemplate: undefined,
 			programPath,
@@ -154,7 +157,7 @@ export class TestCommands implements vs.Disposable {
 		});
 	}
 
-	private async runTests({ programPath, debug, testSelection, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate, isFlutter }: TestLaunchInfo): Promise<boolean> {
+	private async runTests({ includeCoverage, programPath, debug, testSelection, shouldRunSkippedTests, suppressPrompts, launchTemplate, testRun, token, useLaunchJsonTestTemplate, isFlutter }: TestLaunchInfo): Promise<boolean> {
 		if (useLaunchJsonTestTemplate) {
 			// Get the default Run/Debug template for running/debugging tests and use that as a base.
 			const template = getLaunchConfigDefaultTemplate(vs.Uri.file(programPath), debug);
@@ -162,10 +165,11 @@ export class TestCommands implements vs.Disposable {
 				launchTemplate = Object.assign({}, template, launchTemplate);
 		}
 
+		isFlutter = isFlutter ?? isPathInsideFlutterProject(programPath);
+
 		let shouldRunTestsByLine = false;
 		// Determine whether we can and should run tests by line number.
 		if (testSelection?.length && config.testInvocationMode === "line") {
-			isFlutter = isFlutter ?? isPathInsideFlutterProject(programPath);
 			if (isFlutter) {
 				shouldRunTestsByLine = true;
 			} else {
@@ -189,6 +193,8 @@ export class TestCommands implements vs.Disposable {
 				suppressPrompts,
 				...getLaunchConfig(
 					!debug,
+					!!includeCoverage,
+					!!isFlutter,
 					programPath,
 					testSelection,
 					shouldRunTestsByLine,
@@ -237,6 +243,7 @@ export class TestCommands implements vs.Disposable {
 
 		return this.runTests({
 			debug: !noDebug,
+			includeCoverage: false,
 			isFlutter,
 			launchTemplate,
 			programPath: test.file,
@@ -399,6 +406,7 @@ export class TestCommands implements vs.Disposable {
 }
 
 interface TestLaunchInfo {
+	includeCoverage: boolean | undefined;
 	programPath: string;
 	isFlutter: boolean | undefined;
 	debug: boolean;

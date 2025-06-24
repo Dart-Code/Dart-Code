@@ -267,7 +267,7 @@ describe("flutter test debugger", () => {
 				const testRequest = new vs.TestRunRequest(testItems);
 
 				// Capture all testStart notifications during the debug sessions that are spawned from running these tests.
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken), true);
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);
 				const testEvents = customEvents
 					.filter((e) => e.event === "dart.testNotification")
 					.filter((e) => e.body.type === "testStart")

@@ -2,6 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { CoverageParser, DartFileCoverageDetail } from "../../shared/test/coverage";
 import { GroupNode, NodeDidChangeEvent, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
@@ -16,13 +17,14 @@ const runnableTestTag = new vs.TestTag("DartRunnableTest");
 export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	public readonly controller: vs.TestController;
+	public readonly coverageParser: CoverageParser;
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
 	private testRuns: { [key: string]: { run: vs.TestRun, shouldEndWithSession: boolean } | undefined } = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, public readonly discoverer: TestDiscoverer | undefined) {
-		const controller = vs.tests.createTestController("dart", "Dart & Flutter");
-		this.controller = controller;
+		const controller = this.controller = vs.tests.createTestController("dart", "Dart & Flutter");
+		this.coverageParser = new CoverageParser(logger);
 		this.disposables.push(controller);
 		this.disposables.push(model.onDidChangeTreeData((node) => this.onDidChangeTreeData(node)));
 		this.disposables.push(vs.debug.onDidTerminateDebugSession((e) => this.handleDebugSessionEnd(e)));
@@ -32,10 +34,27 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			controller.resolveHandler = (item: vs.TestItem | undefined) => this.resolveTestItem(item);
 
 		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) =>
-			this.runTests(false, request, token), false, runnableTestTag);
+			this.runTests(false, false, request, token), false, runnableTestTag);
 
 		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) =>
-			this.runTests(true, request, token), true, runnableTestTag);
+			this.runTests(true, false, request, token), true, runnableTestTag);
+
+		// TODO(dantup): This needs to only apply to Flutter tests (for now).
+		const coverageProfile = controller.createRunProfile("Run with Coverage", vs.TestRunProfileKind.Coverage, (request, token) =>
+			this.runTests(false, true, request, token), true, runnableTestTag);
+
+		coverageProfile.loadDetailedCoverage = async (testRun: vs.TestRun, fileCoverage: vs.FileCoverage, token: vs.CancellationToken) => {
+			const dartFileCoverage = fileCoverage as DartFileCoverage;
+			const lineCoverage: vs.StatementCoverage[] = [];
+
+			dartFileCoverage.detail.lineHits.forEach((hits, lineNumber) => {
+				// LCOV files are one-based, but VS Code is zero-based.
+				const location = new vs.Position(lineNumber - 1, 0);
+				lineCoverage.push(new vs.StatementCoverage(hits, location));
+			});
+
+			return lineCoverage;
+		};
 	}
 
 	private async resolveTestItem(item: vs.TestItem | undefined): Promise<void> {
@@ -62,13 +81,37 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			run.run.end();
 
 		this.testRuns[e.configuration.dartCodeDebugSessionID] = undefined;
+
+		if (e.configuration.coverageFilePath && run)
+			this.parseCoverage(run.run, e.configuration.cwd as string | undefined, e.configuration.coverageFilePath as string);
+	}
+
+	private parseCoverage(run: vs.TestRun, cwd: string | undefined, coverageFilePath: string) {
+		if (!cwd) {
+			this.logger.error(`Unable to parse coverage file "${coverageFilePath}" because there is no cwd for the debug session`);
+			return;
+		}
+
+		try {
+			const coverage = this.coverageParser.parseLcovFile(coverageFilePath);
+			for (const fileCoverage of coverage) {
+				const absolutePath = path.isAbsolute(fileCoverage.sourceFilePath)
+					? fileCoverage.sourceFilePath
+					: path.join(cwd, fileCoverage.sourceFilePath);
+				const uri = vs.Uri.file(absolutePath);
+				const coverage = new DartFileCoverage(uri, fileCoverage);
+				run.addCoverage(coverage);
+			}
+		} catch (e) {
+			this.logger.error(`Failed to read expected coverage file "${coverageFilePath}": ${e}`);
+		}
 	}
 
 	public getLatestData(test: vs.TestItem): TreeNode | undefined {
 		return this.nodeForItem.get(test);
 	}
 
-	public async runTests(debug: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
+	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
 		await this.discoverer?.ensureSuitesDiscovered();
 
 		const testsToRun = new Set<vs.TestItem>();
@@ -91,7 +134,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			const nodesToRun = [...testsToRun].map((item) => this.nodeForItem.get(item));
 			const nodesToExclude = [...testsToExclude].map((item) => this.nodeForItem.get(item));
 			if (!debug && nodesToRun.every((item) => item instanceof SuiteNode) && nodesToExclude.every((item) => item instanceof SuiteNode)) {
-				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", nodesToRun, nodesToExclude, run, isRunningAll);
+				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", nodesToRun, nodesToExclude, includeCoverage, run, isRunningAll);
 				return;
 			}
 
@@ -115,7 +158,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				const command = debug
 					? "_dart.startDebuggingTestsFromVsTestController"
 					: "_dart.startWithoutDebuggingTestsFromVsTestController";
-				await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, run);
+				await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, includeCoverage, run);
 			}
 		} finally {
 			run.end();
@@ -435,5 +478,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	public dispose(): any {
 		disposeAll(this.disposables);
+	}
+}
+
+class DartFileCoverage extends vs.FileCoverage {
+	constructor(uri: vs.Uri, public readonly detail: DartFileCoverageDetail) {
+		super(uri, new vs.TestCoverageCount(detail.linesHit, detail.linesFound));
 	}
 }

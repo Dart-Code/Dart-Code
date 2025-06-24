@@ -109,17 +109,15 @@ export class TestSessionCoordinator implements IAmDisposable {
 			case "group":
 				this.handleGroupNotification(dartCodeDebugSessionID, evt as GroupNotification);
 				break;
-			// We won't get notifications that aren't directly tied to Suites because
-			// of how the DA works.
-			// case "done":
-			// 	this.handleDoneNotification(suite, evt as DoneNotification);
-			// 	break;
 			case "print":
 				this.handlePrintNotification(dartCodeDebugSessionID, evt as PrintNotification);
 				break;
 			case "error":
 				this.handleErrorNotification(dartCodeDebugSessionID, evt as ErrorNotification);
 				break;
+			// case "done":
+			// 	this.handleDoneNotification(dartCodeDebugSessionID, evt as DoneNotification);
+			// 	break;
 		}
 	}
 
