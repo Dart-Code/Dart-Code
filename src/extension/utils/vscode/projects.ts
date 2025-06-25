@@ -18,7 +18,7 @@ export async function getFolderToRunCommandIn(logger: Logger, placeHolder: strin
 		if (editor)
 			file = fsPath(editor.document.uri);
 	}
-	const folder = file && locateBestProjectRoot(file);
+	const folder = file && locateBestProjectRoot(file, !!selection);
 
 	if (folder)
 		return folder;

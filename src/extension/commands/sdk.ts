@@ -48,16 +48,13 @@ export class BaseSdkCommands implements IAmDisposable {
 			return;
 
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
-		if (!containingWorkspace) {
-			this.logger.error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
-			throw new Error(`Failed to get workspace folder for ${folderToRunCommandIn}`);
-		}
-		const containingWorkspacePath = fsPath(containingWorkspace.uri);
+		const containingWorkspacePath = containingWorkspace ? fsPath(containingWorkspace.uri) : undefined;
 
 		// Display the relative path from the workspace root to the folder we're running, or if they're
 		// the same then the folder name we're running in.
-		const shortPath = path.relative(containingWorkspacePath, folderToRunCommandIn)
-			|| path.basename(folderToRunCommandIn);
+		const shortPath = containingWorkspacePath
+			? path.relative(containingWorkspacePath, folderToRunCommandIn) || path.basename(folderToRunCommandIn)
+			: path.basename(folderToRunCommandIn);
 
 		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput);
 	}
