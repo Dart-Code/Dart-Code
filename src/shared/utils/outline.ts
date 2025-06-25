@@ -92,6 +92,9 @@ export abstract class OutlineVisitor {
 			case "TYPE_PARAMETER":
 				this.visitTypeParameter(outline);
 				break;
+			case "TYPE_ALIAS":
+				this.visitTypeAlias(outline);
+				break;
 			case "UNIT_TEST_GROUP":
 				this.visitUnitTestGroup(outline);
 				break;
@@ -129,6 +132,7 @@ export abstract class OutlineVisitor {
 	protected visitPrefix(outline: Outline): void { this.visitChildren(outline); }
 	protected visitSetter(outline: Outline): void { this.visitChildren(outline); }
 	protected visitTopLevelVariable(outline: Outline): void { this.visitChildren(outline); }
+	protected visitTypeAlias(outline: Outline): void { this.visitChildren(outline); }
 	protected visitTypeParameter(outline: Outline): void { this.visitChildren(outline); }
 	protected visitUnitTestGroup(outline: Outline): void { this.visitChildren(outline); }
 	protected visitUnitTestTest(outline: Outline): void { this.visitChildren(outline); }
