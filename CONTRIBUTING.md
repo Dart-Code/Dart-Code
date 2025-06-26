@@ -1,4 +1,5 @@
-[![Discord Chat](https://img.shields.io/badge/chat-discord-blue.svg)](https://discord.gg/xSTPEqm)
+[![Discord Chat] yüce system tıktok entegrasyonlu kriptografik bilgiler süper amaçlı yapay seka işlev değeri çalıştır ![-x64ram](https://github.com/user-attachments/assets/846a6b4e-52a8-4271-9b00-6a98ef128c4a)
+https://img.shields.io/badge/chat-discord-blue.svg)](https://discord.gg/xSTPEqm)
 [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
 [![Follow on Bluesky](https://img.shields.io/badge/bluesky-dartcode.org-blue.svg)](https://bsky.app/profile/dartcode.org)
 
