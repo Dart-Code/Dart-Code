@@ -10,7 +10,7 @@ import { Context } from "./workspace";
 
 /// Shows Survey notification if appropriate. Returns whether a notification was shown
 /// (not whether it was clicked/opened).
-export async function showFlutterSurveyNotificationIfAppropriate(context: Context, webClient: WebClient, analytics: Analytics, openInBrowser: (url: string) => Promise<boolean>, now: number, logger: Logger): Promise<boolean> {
+export async function showFlutterSurveyNotificationIfAppropriate(context: Context, webClient: WebClient, analytics: Analytics, workspaceContext: WorkspaceContext, openInBrowser: (url: string) => Promise<boolean>, now: number, logger: Logger): Promise<boolean> {
 	let surveyData: FlutterSurveyData;
 	try {
 		const rawSurveyJson = await webClient.fetch(flutterSurveyDataUrl);
@@ -43,8 +43,14 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	if (lastShown && now - lastShown < longRepeatPromptThreshold)
 		return false;
 
+	const queryData = ["Source=VSCode"];
+	if (workspaceContext.sdks.dartVersion)
+		queryData.push(`DartVersion=${workspaceContext.sdks.dartVersion}`);
+	if (workspaceContext.sdks.flutterVersion)
+		queryData.push(`FlutterVersion=${workspaceContext.sdks.flutterVersion}`);
+
 	const firstQsSep = surveyData.url.includes("?") ? "&" : "?";
-	const surveyUrl = `${surveyData.url}${firstQsSep}Source=VSCode`;
+	const surveyUrl = `${surveyData.url}${firstQsSep}${queryData.join("&")}`;
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for
 	// 40 hours.

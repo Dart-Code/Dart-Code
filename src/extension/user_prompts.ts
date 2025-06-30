@@ -81,7 +81,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 	}
 
 	if (workspaceContext.hasAnyFlutterProjects) {
-		if (await showFlutterSurveyNotificationIfAppropriate(context, webClient, analytics, envUtils.openInBrowser, Date.now(), logger))
+		if (await showFlutterSurveyNotificationIfAppropriate(context, webClient, analytics, workspaceContext, envUtils.openInBrowser, Date.now(), logger))
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
