@@ -15,7 +15,7 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 	constructor(private readonly sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) {
 		// Inform VS Code the MCP Server list changed if the experiment flag changes.
 		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration("dart.experimentalMcpServer")) {
+			if (e.affectsConfiguration("dart.experimentalMcpServer") || e.affectsConfiguration("dart.mcpServer")) {
 				this.onDidChangeMcpServerDefinitionsEmitter.fire();
 			}
 		}));
@@ -26,8 +26,8 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 		if (!this.dartCapabilities.supportsMcpServer)
 			return [];
 
-		// Not opted-in to experiment.
-		if (!config.experimentalMcpServer)
+		// Not enabled (and not using the original experiment flag).
+		if (!(config.experimentalMcpServer || config.mcpServer))
 			return [];
 
 

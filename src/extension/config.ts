@@ -114,8 +114,8 @@ class Config {
 	get env(): object { return this.getConfig<object>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
 
-	/// When removing `config.experimentalMcpServer`, be sure to remove "when" clause in package.json!
 	get experimentalMcpServer(): boolean { return this.getConfig<boolean>("experimentalMcpServer", false); }
+	get mcpServer(): boolean { return this.getConfig<boolean>("mcpServer", false); }
 
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("extensionLogFile", null)))); }
