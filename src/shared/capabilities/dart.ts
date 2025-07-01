@@ -32,7 +32,7 @@ export class DartCapabilities {
 	get supportsLspOverDtd() { return versionIsAtLeast(this.version, "3.8.0-0"); }
 	get supportsDtdRegisterVmService() { return versionIsAtLeast(this.version, "3.9.0-0"); }
 
-	get supportsMcpServer() { return versionIsAtLeast(this.version, "3.9.0-0"); }
+	get supportsMcpServer() { return versionIsAtLeast(this.version, "3.9.0-163"); } // https://github.com/dart-lang/ai/pull/206#issuecomment-3020314522
 	// TODO(dantup): Set this accordingly and consider a config.dartMcpServerAdditionalArgs?
 	get mcpServerRequiresExperimentalFlag() { return true; }
 
