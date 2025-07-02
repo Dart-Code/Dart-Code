@@ -791,7 +791,6 @@ function getSettingsThatRequireRestart() {
 	// It doesn't matter how these are combined; it just gets called on every config change and compared.
 	// Usually these are options that affect the analyzer and need a reload, but config options used at
 	// activation time will also need to be included.
-	// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 	return "CONF-"
 		+ config.sdkPath
 		+ config.sdkPaths?.length

@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 export interface Notification {
 	type: string;
 	time: number;

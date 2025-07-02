@@ -257,7 +257,6 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 		}, seconds * 1000);
 
 		// When the main promise completes (or rejects), cancel the timeout and return its result.
-		// eslint-disable-next-line @typescript-eslint/no-floating-promises
 		promise.then(
 			(result) => {
 				clearTimeout(timeoutTimer);

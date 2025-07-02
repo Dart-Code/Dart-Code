@@ -32,7 +32,6 @@ interface PubPackage {
 }
 
 interface PubPackageVersion {
-	// eslint-disable-next-line camelcase
 	archive_url: string;
 	version: string;
 	retracted?: boolean,

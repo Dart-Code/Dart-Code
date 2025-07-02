@@ -74,7 +74,6 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			logger.info("Running ADB Connect on Chrome OS");
 			const adbConnectProc = safeToolSpawn(undefined, "adb", ["connect", "100.115.92.2:5555"]);
 			logProcess(logger, LogCategory.General, adbConnectProc);
-
 		}
 	}
 
@@ -324,7 +323,6 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				}
 			}, twentySecondsInMs);
 
-			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			promise.then(
 				(result) => {
 					clearTimeout(timeoutTimer);

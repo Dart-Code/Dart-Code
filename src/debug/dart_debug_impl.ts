@@ -1666,7 +1666,6 @@ export class DartDebugSession extends DebugSession {
 			}, milliseconds);
 
 			// When the main promise completes (or rejects), cancel the timeout and return its result.
-			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			promise.then(
 				(result) => {
 					clearTimeout(timeoutTimer);

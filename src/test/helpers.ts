@@ -440,7 +440,6 @@ export function tryDeleteDirectoryRecursive(folder: string) {
 
 export let currentTestName = "unknown";
 export let fileSafeCurrentTestName = "unknown";
-// eslint-disable-next-line prefer-arrow-callback
 beforeEach("stash current test name", function () {
 	currentTestName = this.currentTest ? this.currentTest.fullTitle() : "unknown";
 	fileSafeCurrentTestName = filenameSafe(currentTestName);

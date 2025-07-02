@@ -111,17 +111,6 @@ export default defineConfig([
 				"always"
 			],
 			"guard-for-in": "error",
-			"id-blacklist": [
-				"error",
-				"any",
-				"Number",
-				"number",
-				"String",
-				"string",
-				"Boolean",
-				"boolean",
-				"Undefined",
-			],
 			"id-match": "error",
 			"new-parens": "error",
 			"no-bitwise": "error",
