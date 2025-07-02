@@ -553,9 +553,16 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
 
 	if (vs.lm.registerMcpServerDefinitionProvider) {
-		const mcpServerProvider = new DartMcpServerDefinitionProvider(sdks, dartCapabilities);
-		context.subscriptions.push(mcpServerProvider);
-		context.subscriptions.push(vs.lm.registerMcpServerDefinitionProvider("dart-sdk-mcp-servers", mcpServerProvider));
+		try {
+			const mcpServerProvider = new DartMcpServerDefinitionProvider(sdks, dartCapabilities);
+			context.subscriptions.push(mcpServerProvider);
+			context.subscriptions.push(vs.lm.registerMcpServerDefinitionProvider("dart-sdk-mcp-servers", mcpServerProvider));
+		} catch (e) {
+			// This is required to swallow the exception on VS Code v1.100 and prevent failure to activate.
+			// https://github.com/Dart-Code/Dart-Code/issues/5573
+			logger.warn("Failed to register MCP server provider, ignoring - see https://github.com/Dart-Code/Dart-Code/issues/5573");
+			logger.warn(e);
+		}
 	}
 	if (vs.lm.registerTool) {
 		try {
