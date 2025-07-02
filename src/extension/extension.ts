@@ -558,16 +558,24 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(vs.lm.registerMcpServerDefinitionProvider("dart-sdk-mcp-servers", mcpServerProvider));
 	}
 	if (vs.lm.registerTool) {
-		context.subscriptions.push(vs.lm.registerTool("get_dart_tooling_daemon_dtd_uri", {
-			invoke: async () => {
-				if (!dartCapabilities.supportsToolingDaemon)
-					throw new Error("DTD is not available for this version of Flutter/Dart, please upgrade.");
-				const dtdUri = await dartToolingDaemon?.dtdUri;
-				return dtdUri
-					? new vs.LanguageModelToolResult([new vs.LanguageModelTextPart(dtdUri)])
-					: undefined;
-			},
-		}));
+		try {
+			context.subscriptions.push(vs.lm.registerTool("get_dart_tooling_daemon_dtd_uri", {
+				invoke: async () => {
+					if (!dartCapabilities.supportsToolingDaemon)
+						throw new Error("DTD is not available for this version of Flutter/Dart, please upgrade.");
+					const dtdUri = await dartToolingDaemon?.dtdUri;
+					return dtdUri
+						? new vs.LanguageModelToolResult([new vs.LanguageModelTextPart(dtdUri)])
+						: undefined;
+				},
+			}));
+		} catch (e) {
+			// This is required to swallow the exception on Firebase Studio (older VS Code version)
+			// and prevent failure to activate.
+			// https://github.com/Dart-Code/Dart-Code/issues/5570
+			logger.warn("Failed to register LM Tool, ignoring - see https://github.com/Dart-Code/Dart-Code/issues/5570");
+			logger.warn(e);
+		}
 	}
 
 	if (dartToolingDaemon && (dartCapabilities.supportsDevToolsPropertyEditor || config.experimentalPropertyEditor)) {
