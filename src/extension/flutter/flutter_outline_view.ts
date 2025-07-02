@@ -245,10 +245,10 @@ export type CommonOutline = {
 		typeParameters?: string
 	};
 	kind: string;
-} & ( /* eslint-disable @typescript-eslint/indent */
+} & (
 		{ range: lsp.Range, codeRange: lsp.Range, dartElement?: { range?: lsp.Range } }
 		| { offset: number, length: number, codeOffset: number, codeLength: number, dartElement?: { location?: { offset?: number } } }
-	); /* eslint-enable */
+	);
 
 export class FlutterWidgetItem extends vs.TreeItem {
 	public children: FlutterWidgetItem[] = [];

@@ -467,7 +467,6 @@ export class DebugCommands implements IAmDisposable {
 		const newLaunchConfig = {
 			name,
 			type: "dart",
-			// eslint-disable-next-line @typescript-eslint/tslint/config
 			request: "launch",
 			cwd: relativeCwdPath ? relativeCwdPath : undefined,
 			program: relativeEntryScriptPath,

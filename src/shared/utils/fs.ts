@@ -12,7 +12,7 @@ import { nullToUndefined } from "../utils";
 import { sortBy } from "./array";
 
 export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: boolean; } = {}): string {
-	// tslint:disable-next-line:disallow-fspath
+	// eslint-disable-next-line no-restricted-properties
 	let newPath = typeof uri === "string" ? uri : uri.fsPath;
 
 	if (useRealCasing) {

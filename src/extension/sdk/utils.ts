@@ -78,8 +78,8 @@ export class SdkUtils {
 	public showFluttersDartSdkActivationFailure() {
 		void promptToReloadExtension(this.logger, "Could not find Dart in your Flutter SDK. " +
 			"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
-			"Reload", // eslint-disable-line @typescript-eslint/indent
-			true, // eslint-disable-line @typescript-eslint/indent
+			"Reload",
+			true,
 		);
 	}
 	public showFlutterActivationFailure(commandToReRun?: string) {

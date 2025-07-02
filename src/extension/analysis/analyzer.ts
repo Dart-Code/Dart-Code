@@ -528,8 +528,8 @@ export class LspAnalyzer extends Analyzer {
 		//       This can be removed when we have a better way to do this.
 		//       https://github.com/microsoft/vscode-languageserver-node/issues/1000
 		const p2c = (client as any)._p2c; // eslint-disable-line no-underscore-dangle
-		const originalAsWorkspaceEdit = p2c.asWorkspaceEdit as Function; // eslint-disable-line @typescript-eslint/ban-types
-		const originalAsCodeAction = p2c.asCodeAction as Function; // eslint-disable-line @typescript-eslint/ban-types
+		const originalAsWorkspaceEdit = p2c.asWorkspaceEdit as Function; // eslint-disable-line @typescript-eslint/no-unsafe-function-type
+		const originalAsCodeAction = p2c.asCodeAction as Function; // eslint-disable-line @typescript-eslint/no-unsafe-function-type
 
 		async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
 			const result = (await originalAsWorkspaceEdit(item, token)) as vs.WorkspaceEdit | undefined;

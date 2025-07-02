@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports
 import { version as codeVersion, env } from "vscode";
 import { isCloudShell, isKnownCloudIde, isTheia } from "../vscode/utils_cloud";
 

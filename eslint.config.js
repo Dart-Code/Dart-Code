@@ -4,8 +4,8 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig([
 	eslint.configs.recommended,
-	tseslint.configs.recommendedTypeChecked,
-	tseslint.configs.stylisticTypeChecked,
+	tseslint.configs.recommendedTypeChecked, // TODO(dantup): Consider strict.
+	// tseslint.configs.stylisticTypeChecked,
 	{
 		ignores: [
 			".vscode-test/**",
@@ -46,6 +46,30 @@ export default defineConfig([
 					"message": "Do not import debugger code because it is expected to run in another process."
 				}]
 			}],
+			"@typescript-eslint/no-base-to-string": "off",
+			"no-extra-boolean-cast": "off",
+			"@typescript-eslint/no-duplicate-type-constituents": "off",
+			"@typescript-eslint/no-empty-object-type": "off",
+			"@typescript-eslint/no-explicit-any": "off",
+			"@typescript-eslint/no-misused-promises": "off",
+			"@typescript-eslint/no-redundant-type-constituents": "off",
+			"@typescript-eslint/no-unsafe-assignment": "off",
+			"@typescript-eslint/no-unsafe-call": "off",
+			"@typescript-eslint/no-unsafe-member-access": "off",
+			"@typescript-eslint/no-unsafe-return": "off",
+			"@typescript-eslint/no-unsafe-return": "off",
+			"@typescript-eslint/no-unused-expressions": "off",
+			"@typescript-eslint/no-unused-vars": "off",
+			"@typescript-eslint/only-throw-error": "off",
+			"@typescript-eslint/prefer-promise-reject-errors": "off",
+			"@typescript-eslint/require-await": "off",
+			"@typescript-eslint/restrict-template-expressions": "off",
+			"@typescript-eslint/unbound-method": "off",
+			"no-async-promise-executor": "off",
+			"no-case-declarations": "off",
+			"no-constant-binary-expression": "off",
+			"no-empty": "off",
+			"no-useless-escape": "off",
 		}
 	},
 	{

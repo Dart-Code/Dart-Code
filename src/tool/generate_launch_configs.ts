@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/tslint/config */
 import * as fs from "fs";
 import { flatMap } from "../shared/utils";
 import { unique } from "../shared/utils/array";

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/tslint/config */
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";

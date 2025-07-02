@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/tslint/config */
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
