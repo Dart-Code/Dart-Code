@@ -41,7 +41,7 @@ export class DartTextDocumentContentProviderFeature implements IAmDisposable {
 						didChangeEmitter.fire(uri);
 					}));
 
-					for (const scheme of provider?.schemes) {
+					for (const scheme of (provider?.schemes ?? [])) {
 						const didChangeSchemeEmitter = new EventEmitter<Uri>();
 						disposables.push(didChangeEmitter.listen((uri) => {
 							if (uri.scheme.toLowerCase() === scheme.toLowerCase()) {

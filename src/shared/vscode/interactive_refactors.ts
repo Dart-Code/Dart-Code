@@ -117,7 +117,7 @@ export class InteractiveRefactors implements IAmDisposable {
 	///
 	/// If the type of `parameter` is not supported, its default value.
 	private async promptUser(parameter: Parameter): Promise<unknown | undefined> {
-		if (SaveUriParameter.is(parameter)) {
+		if (isSaveUriParameter(parameter)) {
 			return (await this.promptUserSaveUri(parameter))?.toString();
 		} else {
 			this.logger.warn(`Unknown parameter kind ${parameter.kind}. Using default value (${parameter.defaultValue})`);
@@ -162,10 +162,7 @@ interface SaveUriParameter extends Parameter {
 	filters?: { [key: string]: string[] };
 }
 
-namespace SaveUriParameter {
-	export function is(parameter: Parameter): parameter is SaveUriParameter {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-		return parameter.kind === SupportedParameterKind.saveUri;
-	}
+export function isSaveUriParameter(parameter: Parameter): parameter is SaveUriParameter {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+	return parameter.kind === SupportedParameterKind.saveUri;
 }
-

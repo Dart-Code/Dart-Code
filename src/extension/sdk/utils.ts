@@ -145,6 +145,7 @@ export class SdkUtils {
 						case CloneSdkResult.noGit:
 							if (await window.showErrorMessage("Unable to clone Flutter because Git was not found. Please clone or download the Flutter SDK manually.", "Setup Instructions"))
 								await envUtils.openInBrowser(downloadUrl);
+							break;
 						case CloneSdkResult.failed:
 							if (await window.showErrorMessage("Failed to clone Flutter using Git. Please clone or download the Flutter SDK manually.", "Setup Instructions"))
 								await envUtils.openInBrowser(downloadUrl);

@@ -320,7 +320,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Fire up the analyzer process.
 	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon);
-	maybeAnalyzer = maybeAnalyzer;
+	maybeAnalyzer = analyzer;
 	context.subscriptions.push(analyzer);
 
 	void analyzer.onReady.then(() => {

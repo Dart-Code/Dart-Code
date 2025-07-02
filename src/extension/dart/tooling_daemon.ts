@@ -316,7 +316,7 @@ class EditorServices implements IAmDisposable {
 					await this.deviceManager?.enablePlatformType(params.platformType);
 					return { type: "Success" };
 				})
-				: undefined, ,
+				: undefined,
 			this.daemon.registerService(Service.Editor, "hotReload", undefined, async (params: HotReloadParams) => {
 				const session = debugSessions.find((s) => s.session.id === params.debugSessionId);
 				if (session)
