@@ -14,9 +14,16 @@ export default defineConfig([
 			"lints/**",
 			"media/**",
 			"node_modules/**",
+			"src/debug/**", // This is legacy code going away soon.
 			"out/**",
 			"webpack.config.js",
 		],
+		linterOptions: {
+			// Temporarily ignore disable comments for rules that don't trigger.
+			// We have a bunch of ignores for things like "no-unsafe-assignment" but
+			// the rule is currently disabled below.
+			reportUnusedDisableDirectives: false,
+		},
 	},
 	{
 		files: ["**/*.js", "**/*.ts"],
