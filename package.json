@@ -3592,8 +3592,8 @@
 				],
 				"background": {
 					"activeOnStart": true,
-					"beginsPattern": "^\\[INFO\\] Starting Build",
-					"endsPattern": "^(\\[INFO\\] Succeeded|\\[SEVERE\\] Failed) after"
+					"beginsPattern": "^\\[INFO\\] Starting Build|^Building,",
+					"endsPattern": "^(\\[INFO\\] Succeeded|\\[SEVERE\\] Failed) after|^(Built|Failed to build) with build_runner"
 				}
 			}
 		]
