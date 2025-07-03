@@ -392,7 +392,7 @@ export class DevToolsManager implements vs.Disposable {
 		// Add the version to the querystring to avoid any caching of the index.html page.
 		let cacheBust = `dart-${this.dartCapabilities.version}-flutter-${this.flutterCapabilities.version}`;
 		// If using a custom version of DevTools, bust regardless of version.
-		if (!!config.customDevTools?.path) { // Don't just check config.customDevTools as it's a VS Code Proxy object
+		if (config.customDevTools?.path) { // Don't just check config.customDevTools as it's a VS Code Proxy object
 			cacheBust += `-custom-${new Date().getTime()}`;
 		}
 

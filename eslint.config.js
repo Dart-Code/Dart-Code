@@ -78,7 +78,6 @@ export default defineConfig([
 			"no-async-promise-executor": "off",
 			"no-case-declarations": "off",
 			"no-empty": "off",
-			"no-extra-boolean-cast": "off",
 			"no-useless-escape": "off",
 			// End temporary exclusions
 			"arrow-body-style": "error",
