@@ -265,7 +265,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			}
 			if (resultFromLocalExtension !== null) {
 				const resultMessage = resultFromLocalExtension.toString();
-				const results = resultMessage.match(/Device daemon is available on remote port: (\d+)/i);
+				const results = /Device daemon is available on remote port: (\d+)/i.exec(resultMessage);
 				if (results !== null && results?.length > 1) {
 					portFromLocalExtension = parseInt(results[1]);
 				} else if (resultMessage !== null) {

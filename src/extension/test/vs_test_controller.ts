@@ -451,7 +451,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					const testMessage = new vs.TestMessage(outputMessage);
 
 					// Attempt to extract Expected/Actual values if they are simple and on one line.
-					const valueMatch = outputMessage.replaceAll("\r\n", "\n").replaceAll("\r", "\n").match(/^Expected: (.*)\n\s*Actual: (.*)\n\n/);
+					const valueMatch = /^Expected: (.*)\n\s*Actual: (.*)\n\n/.exec(outputMessage.replaceAll("\r\n", "\n").replaceAll("\r", "\n"));
 					if (valueMatch) {
 						const expected = valueMatch[1];
 						const actual = valueMatch[2];
