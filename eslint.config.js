@@ -58,7 +58,6 @@ export default defineConfig([
 			"@typescript-eslint/no-base-to-string": "off",
 			"@typescript-eslint/no-empty-function": "off",
 			"@typescript-eslint/no-explicit-any": "off",
-			"@typescript-eslint/no-misused-promises": "off",
 			"@typescript-eslint/no-redundant-type-constituents": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
