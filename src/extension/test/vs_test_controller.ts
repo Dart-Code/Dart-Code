@@ -22,7 +22,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public readonly coverageParser: CoverageParser;
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
-	private testRuns: { [key: string]: { run: vs.TestRun, shouldEndWithSession: boolean } | undefined } = {};
+	private testRuns: Record<string, { run: vs.TestRun, shouldEndWithSession: boolean } | undefined> = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, public readonly discoverer: TestDiscoverer | undefined) {
 		const controller = this.controller = vs.tests.createTestController("dart", "Dart & Flutter");

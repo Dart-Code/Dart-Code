@@ -145,7 +145,7 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	}
 
 	public readonly tests: TestOutlineInfo[] = [];
-	public readonly testsByLine: { [key: number]: TestOutlineInfo[] } = {};
+	public readonly testsByLine: Record<number, TestOutlineInfo[]> = {};
 
 	private readonly names: string[] = [];
 

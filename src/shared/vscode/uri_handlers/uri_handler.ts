@@ -3,7 +3,7 @@ import { FlutterCapabilities } from "../../capabilities/flutter";
 import { FlutterSampleUriHandler } from "./flutter_sample_handler";
 
 export class DartUriHandler implements vs.UriHandler {
-	private readonly handlers: { [prefix: string]: { handle: (path: string) => void | Promise<void> } };
+	private readonly handlers: Record<string, { handle: (path: string) => void | Promise<void> }>;
 	public constructor(flutterCapabilities: FlutterCapabilities) {
 		this.handlers = {
 			"/flutter/sample/": new FlutterSampleUriHandler(flutterCapabilities),

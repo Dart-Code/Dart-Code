@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { SpawnedProcess } from "../../shared/interfaces";
 
-const channels: { [key: string]: vs.OutputChannel } = {};
+const channels: Record<string, vs.OutputChannel> = {};
 
 export function getOutputChannel(name: string, insertDivider = false): vs.OutputChannel {
 	if (!channels[name]) {

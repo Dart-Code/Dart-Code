@@ -14,7 +14,7 @@ export interface DartLaunchArgs {
 	debugExternalPackageLibraries: boolean;
 	debugSdkLibraries: boolean;
 	deleteServiceInfoFile?: boolean;
-	env?: { [key: string]: string | undefined };
+	env?: Record<string, string | undefined>;
 	evaluateGettersInDebugViews: boolean;
 	showGettersInDebugViews: boolean;
 	evaluateToStringInDebugViews: boolean;
@@ -34,7 +34,7 @@ export interface DartLaunchArgs {
 	sendCustomProgressEvents?: boolean;
 	showDartDeveloperLogs: boolean;
 	showMemoryUsage?: boolean;
-	toolEnv?: { [key: string]: string | undefined };
+	toolEnv?: Record<string, string | undefined>;
 	type: "dart";
 	useInspectorNotificationsForWidgetErrors?: boolean;
 	toolArgs?: string[];

@@ -82,7 +82,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 		const editor = findVisibleEditor(uri);
 		if (!editor) return;
 
-		const decorations: { [key: number]: vs.DecorationOptions & { renderOptions: { after: { contentText: string } } } } = [];
+		const decorations: Record<number, vs.DecorationOptions & { renderOptions: { after: { contentText: string } } }> = [];
 		for (const r of this.closingLabels.get(uri)?.labels ?? []) {
 			const labelRange = this.analyzer.protocol2CodeConverter.asRange(r.range);
 

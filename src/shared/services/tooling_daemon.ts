@@ -19,8 +19,8 @@ export class DartToolingDaemon implements IAmDisposable {
 	private readonly dtdProcess: DartToolingDaemonProcess;
 	private connection: ConnectionInfo | undefined;
 	private nextId = 1;
-	private completers: { [key: string]: PromiseCompleter<DtdResult> } = {};
-	private serviceHandlers: { [key: string]: (params?: object) => PromiseOr<DtdResult> } = {};
+	private completers: Record<string, PromiseCompleter<DtdResult>> = {};
+	private serviceHandlers: Record<string, (params?: object) => PromiseOr<DtdResult>> = {};
 
 	private hasShownTerminatedError = false;
 	private isShuttingDown = false;
@@ -28,7 +28,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	private connectedCompleter = new PromiseCompleter<ConnectionInfo | undefined>();
 	public get connected() { return this.connectedCompleter.promise; }
 
-	private readonly notificationsEmitters: { [key: string]: EventsEmitter<any> } = {};
+	private readonly notificationsEmitters: Record<string, EventsEmitter<any>> = {};
 
 	/// The set of services that have been seen registered over the Services stream
 	/// but not yet unregistered.

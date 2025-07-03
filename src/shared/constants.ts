@@ -41,7 +41,7 @@ export const executableNames = {
 	flutter: isWin ? "flutter.bat" : "flutter",
 	pub: isWin ? "pub.bat" : "pub",
 };
-export const getExecutableName = (cmd: string) => (executableNames as { [key: string]: string | undefined })[cmd] ?? cmd;
+export const getExecutableName = (cmd: string) => (executableNames as Record<string, string | undefined>)[cmd] ?? cmd;
 export const dartVMPath = "bin/" + executableNames.dart;
 export const devToolsToolPath = "tool/bin/" + executableNames.devToolsToolBinary;
 export const devToolsToolLegacyPath = "tool/bin/" + executableNames.devToolsToolLegacyBinary;

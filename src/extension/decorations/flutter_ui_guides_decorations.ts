@@ -53,7 +53,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 
 	protected renderGuides(editor: vs.TextEditor, guides: WidgetGuide[]) {
 		const color = new vs.ThemeColor("dart.flutterUiGuides");
-		const guidesByLine: { [key: number]: WidgetGuide[]; } = {};
+		const guidesByLine: Record<number, WidgetGuide[]> = {};
 		for (const guide of guides) {
 			for (let line = guide.start.line; line <= guide.end.line; line++) {
 				guidesByLine[line] = guidesByLine[line] || [];
@@ -64,7 +64,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		editor.setDecorations(this.borderDecoration, decorations);
 	}
 
-	private buildDecorations(doc: vs.TextDocument, tabSize: number, guidesByLine: { [key: number]: WidgetGuide[] }, color: vs.ThemeColor): vs.DecorationOptions[] {
+	private buildDecorations(doc: vs.TextDocument, tabSize: number, guidesByLine: Record<number, WidgetGuide[]>, color: vs.ThemeColor): vs.DecorationOptions[] {
 		const decorations: vs.DecorationOptions[] = [];
 		for (const line of Object.keys(guidesByLine).map((k) => parseInt(k, 10))) {
 			const lineInfo = doc.lineAt(line);

@@ -10,7 +10,7 @@ import { getExcludedFolders } from "../utils";
 
 
 export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartPackageUriLink>, vs.DocumentLinkProvider<vs.DocumentLink> {
-	packageMaps: { [key: string]: PackageMap } | undefined;
+	packageMaps: Record<string, PackageMap> | undefined;
 	packageMapDiscovery: Promise<void> | undefined;
 
 	constructor(private readonly logger: Logger, private readonly context: WorkspaceContext) {

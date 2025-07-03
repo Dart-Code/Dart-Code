@@ -10,7 +10,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 
 	constructor(private readonly dartCapabilities: DartCapabilities, filename: string, shouldRender: (uri: Uri) => boolean) {
 		this.shouldRender = shouldRender;
-		const snippets = readJson(path.join(extensionPath, filename)) as { [key: string]: { [key: string]: { prefix: string, description: string | undefined, body: string | string[] } } };
+		const snippets = readJson(path.join(extensionPath, filename)) as Record<string, Record<string, { prefix: string, description: string | undefined, body: string | string[] }>>;
 		for (const snippetType of Object.keys(snippets)) {
 			for (const snippetName of Object.keys(snippets[snippetType])) {
 				const snippet = snippets[snippetType][snippetName];

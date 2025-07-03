@@ -407,9 +407,7 @@ interface WorkspaceInfo {
 	files: FilesInfo,
 }
 
-interface FilesInfo {
-	[key: string]: FileInfo,
-}
+type FilesInfo = Record<string, FileInfo>;
 
 interface FileInfo {
 	mtime: number,

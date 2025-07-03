@@ -84,7 +84,7 @@ function fixVariant(variant: string): string {
 
 const identifierPrefixRewritePattern = new RegExp(`^(?:3d|\\d+)`);
 
-const identifierPrefixRewrites: { [key: string]: string | undefined } = {
+const identifierPrefixRewrites: Record<string, string | undefined> = {
 	// See identifierPrefixRewrites in
 	// https://github.com/flutter/flutter/blob/master/dev/tools/update_icons.dart
 	"1": "one_",
@@ -118,7 +118,7 @@ const identifierPrefixRewrites: { [key: string]: string | undefined } = {
 	"8": "eight_",
 	"9": "nine_",
 };
-const identifierExactRewrites: { [key: string]: string | undefined } = {
+const identifierExactRewrites: Record<string, string | undefined> = {
 	// See identifierExactRewrites in
 	// https://github.com/flutter/flutter/blob/master/dev/tools/update_icons.dart
 	class: "class_",

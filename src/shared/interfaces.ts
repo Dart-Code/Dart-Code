@@ -172,7 +172,7 @@ export interface CustomEmulator {
 	name: string;
 	executable: string;
 	args?: string[];
-	env?: { [key: string]: string };
+	env?: Record<string, string>;
 }
 
 export interface EmulatorCreator {
@@ -277,7 +277,7 @@ export interface MyCancellationToken {
 export interface CustomDevToolsConfig {
 	args?: string[];
 	path?: string;
-	env?: { [key: string]: string };
+	env?: Record<string, string>;
 	legacy?: boolean; // devtools_tool instead of dt
 }
 
@@ -285,7 +285,7 @@ export interface GetSDKCommandConfig {
 	executable: string;
 	args?: string[];
 	cwd?: string,
-	env?: { [key: string]: string };
+	env?: Record<string, string>;
 }
 
 export interface GetSDKCommandResult {

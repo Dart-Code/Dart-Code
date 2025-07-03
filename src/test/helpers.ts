@@ -1068,7 +1068,7 @@ export async function getResolvedDebugConfiguration(extraConfiguration?: { progr
 	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs;
 }
 
-export async function getLaunchConfiguration(script?: URI | string, extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
+export async function getLaunchConfiguration(script?: URI | string, extraConfiguration?: Record<string, any>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	if (script && typeof script !== "string")
 		script = getProgramString(script);
 	const launchConfig = Object.assign({}, {
@@ -1077,7 +1077,7 @@ export async function getLaunchConfiguration(script?: URI | string, extraConfigu
 	return await getResolvedDebugConfiguration(launchConfig);
 }
 
-export async function getAttachConfiguration(extraConfiguration?: { [key: string]: any }): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
+export async function getAttachConfiguration(extraConfiguration?: Record<string, any>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
 	const attachConfig = Object.assign({}, {
 		program: undefined,
 		request: "attach",

@@ -17,7 +17,7 @@ import { getExcludedFolders, isTestFile } from "../utils";
 export class TestDiscoverer implements IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
 
-	private readonly debounceTimers: { [key: string]: NodeJS.Timeout } = {};
+	private readonly debounceTimers: Record<string, NodeJS.Timeout> = {};
 	private readonly debounceDuration = 1500;
 
 	private hasSetupFileHandlers = false;

@@ -10,7 +10,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	public process?: SpawnedProcess;
 	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
-	private readonly activeRequests: { [key: string]: [(result: any) => void | Promise<void>, (error: any) => void | Promise<void>, string] | "CANCELLED" } = {};
+	private readonly activeRequests: Record<string, [(result: any) => void | Promise<void>, (error: any) => void | Promise<void>, string] | "CANCELLED"> = {};
 	private messageBuffers: Buffer[] = [];
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
@@ -27,7 +27,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		private logFile?: string) {
 	}
 
-	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides: { envOverrides?: { [key: string]: string | undefined }, toolEnv?: { [key: string]: string | undefined } }) {
+	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides: { envOverrides?: Record<string, string | undefined>, toolEnv?: Record<string, string | undefined> }) {
 		this.logTraffic(`Spawning ${binPath} with args ${JSON.stringify(args)}`);
 		this.description = binPath;
 		if (workingDirectory)

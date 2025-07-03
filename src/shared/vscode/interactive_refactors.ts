@@ -159,7 +159,7 @@ interface SaveUriParameter extends Parameter {
 	parameterTitle: string;
 	actionLabel: string;
 	kind: SupportedParameterKind.saveUri;
-	filters?: { [key: string]: string[] };
+	filters?: Record<string, string[]>;
 }
 
 export function isSaveUriParameter(parameter: Parameter): parameter is SaveUriParameter {

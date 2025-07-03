@@ -44,7 +44,7 @@ export class DartDebugSessionInformation {
 	public flutterDeviceId: string | undefined;
 	public supportsHotReload: boolean | undefined;
 	public hasEnded = false;
-	public progress: { [key: string]: ProgressMessage } = {};
+	public progress: Record<string, ProgressMessage> = {};
 	public readonly loadedServiceExtensions: VmServiceExtension[] = [];
 	public readonly debuggerType: DebuggerType;
 	public readonly projectRootPath: string | undefined;
@@ -129,7 +129,7 @@ export interface InternalExtensionApi {
 		getInstalledVersion(packageName: string, packageID: string): Promise<string | undefined>;
 		uninstall(packageID: string): Promise<void>;
 	};
-	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
+	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>) => SpawnedProcess;
 	testController: {
 		controller: TestController;
 		runTests(debug: boolean, includeCoverage: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>;

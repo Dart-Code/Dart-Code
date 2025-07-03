@@ -22,7 +22,7 @@ const keyValue = "value";
 ///     { enabled: true }
 ///
 /// This map tracks the name of the key for a given extension.
-const toggleExtensionStateKeys: { [key: string]: string } = {
+const toggleExtensionStateKeys: Record<string, string> = {
 	[VmServiceExtension.PlatformOverride]: keyValue,
 	[VmServiceExtension.DebugBanner]: keyEnabled,
 	[VmServiceExtension.DebugPaint]: keyEnabled,
@@ -41,12 +41,12 @@ export interface ServiceExtensionArgs { type: VmServiceExtension; params: any; }
 
 /// Manages state for (mostly Flutter) VM service extensions.
 export class VmServiceExtensions {
-	private registeredServices: { [x in VmService]?: string } = {};
+	private registeredServices: Partial<Record<VmService, string>> = {};
 	private loadedServiceExtensions: VmServiceExtension[] = [];
 	private readonly loadedServiceExtensionIsolateIds = new Map<VmServiceExtension, string>();
 	/// Extension values owned by us. If someone else updates a value, we should
 	/// remove it from here.
-	private currentExtensionValues: { [key: string]: any } = {};
+	private currentExtensionValues: Record<string, any> = {};
 
 	constructor(
 		private readonly logger: Logger,
@@ -69,7 +69,7 @@ export class VmServiceExtensions {
 
 			try {
 				if (e.body.extensionRPC === pubRootDirectoriesService) {
-					const params: { [key: string]: string } = {
+					const params: Record<string, string> = {
 						// TODO: Is this OK???
 						isolateId: e.body.isolateId,
 					};

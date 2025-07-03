@@ -42,7 +42,7 @@ const devtoolsPackageName = "Dart DevTools";
 let portToBind: number | undefined;
 
 // This is static because we want to track embedded views across restarts of DevToolsManager.
-const devToolsEmbeddedViews: { [key: string]: DevToolsEmbeddedViewOrSidebarView[] | undefined } = {};
+const devToolsEmbeddedViews: Record<string, DevToolsEmbeddedViewOrSidebarView[] | undefined> = {};
 
 /// Handles launching DevTools in the browser and managing the underlying service.
 export class DevToolsManager implements vs.Disposable {
@@ -352,7 +352,7 @@ export class DevToolsManager implements vs.Disposable {
 			return;
 		}
 
-		const queryParams: { [key: string]: string | undefined } = {
+		const queryParams: Record<string, string | undefined> = {
 			...this.getDefaultQueryParams(),
 			ideFeature: options.commandSource,
 			inspectorRef: options.inspectorRef,
@@ -399,21 +399,21 @@ export class DevToolsManager implements vs.Disposable {
 		return cacheBust;
 	}
 
-	private getDefaultQueryParams(): { [key: string]: string | undefined } {
+	private getDefaultQueryParams(): Record<string, string | undefined> {
 		return {
 			cacheBust: this.getCacheBust(),
 			ide: "VSCode",
 		};
 	}
 
-	private buildQueryString(queryParams: { [key: string]: string | undefined }): string {
+	private buildQueryString(queryParams: Record<string, string | undefined>): string {
 		return Object.keys(queryParams)
 			.filter((key) => queryParams[key] !== undefined)
 			.map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key] ?? "")}`)
 			.join("&");
 	}
 
-	private async buildDevToolsUrl(baseUrl: string, queryParams: { [key: string]: string | undefined }, vmServiceUri?: string, clientVmServiceUri?: string) {
+	private async buildDevToolsUrl(baseUrl: string, queryParams: Record<string, string | undefined>, vmServiceUri?: string, clientVmServiceUri?: string) {
 		queryParams = {
 			...this.getDefaultQueryParams(),
 			...queryParams,
@@ -487,7 +487,7 @@ export class DevToolsManager implements vs.Disposable {
 		params: {
 			notify?: boolean;
 			page?: string;
-			queryParams: { [key: string]: string | undefined };
+			queryParams: Record<string, string | undefined>;
 			reuseWindows?: boolean;
 		},
 	): Promise<boolean> {
@@ -758,7 +758,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 		return this.sendRequest("vm.register", request);
 	}
 
-	public async discoverExtensions(projectRoots: string[]): Promise<{ [key: string]: ProjectExtensionResults }> {
+	public async discoverExtensions(projectRoots: string[]): Promise<Record<string, ProjectExtensionResults>> {
 		return this.sendRequest("vscode.extensions.discover", {
 			rootPaths: projectRoots,
 		});
@@ -795,9 +795,7 @@ interface ExtensionResult {
 
 export type DevToolsLocation = "beside" | "active" | "external" | "sidebar";
 
-export interface DevToolsLocations {
-	[key: string]: DevToolsLocation | undefined;
-}
+export type DevToolsLocations = Record<string, DevToolsLocation | undefined>;
 
 export interface DevToolsLocationsWithDefault extends DevToolsLocations {
 	default: DevToolsLocation;

@@ -30,7 +30,7 @@ export class BaseSdkCommands implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
 
 	// A map of any in-progress commands so we can terminate them if we want to run another.
-	private runningCommands: { [workspaceUriAndCommand: string]: ChainedProcess | undefined } = {};
+	private runningCommands: Record<string, ChainedProcess | undefined> = {};
 
 	constructor(protected readonly logger: Logger, protected readonly context: Context, protected readonly workspace: DartWorkspaceContext, protected readonly dartCapabilities: DartCapabilities) {
 		this.sdks = workspace.sdks;

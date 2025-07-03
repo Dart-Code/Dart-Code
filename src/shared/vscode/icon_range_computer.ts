@@ -8,13 +8,13 @@ import { lspToRange } from "./utils";
 export class IconRangeComputerLsp {
 	constructor(private readonly logger: Logger) { }
 
-	public compute(outline: lsp.FlutterOutline): { [key: string]: vs.Range[] } {
+	public compute(outline: lsp.FlutterOutline): Record<string, vs.Range[]> {
 		const iconVisitor = new FlutterOutlineIconVisitorLsp(this.logger);
 		iconVisitor.visit(outline);
 
 		// Now build a map of all possible decorations, with those in this file. We need to include all
 		// icons so if any were removed, we will clear their decorations.
-		const decs: { [key: string]: vs.Range[] } = {};
+		const decs: Record<string, vs.Range[]> = {};
 		iconVisitor.icons.forEach((icon) => {
 			const iconFile = `${icon.type}/${icon.iconName}`;
 			if (!decs[iconFile])

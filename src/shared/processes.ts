@@ -9,7 +9,7 @@ import { nullToUndefined } from "./utils";
 
 const simpleCommandRegex = new RegExp("^[\\w\\-.]+$");
 
-export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: { [key: string]: string | undefined } | undefined): SpawnedProcess {
+export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: Record<string, string | undefined> | undefined): SpawnedProcess {
 	const customEnv = Object.assign({}, process.env, env);
 
 	// On Windows we need to use shell-execute for running `.bat` files.
@@ -44,7 +44,7 @@ export class RunProcessResult {
 	constructor(public readonly exitCode: number | undefined, public readonly stdout: string, public readonly stderr: string) { }
 }
 
-export function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: { [key: string]: string | undefined } | undefined, spawn: SpawnFunction, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
+export function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: Record<string, string | undefined> | undefined, spawn: SpawnFunction, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
 	return new Promise((resolve, reject) => {
 		logger.info(`Spawning ${binPath} with args ${JSON.stringify(args)} in ${workingDirectory} with env ${JSON.stringify(env)}`);
 		const proc = spawn(workingDirectory, binPath, args, env);
@@ -63,7 +63,7 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 	});
 }
 
-type SpawnFunction = (workingDirectory: string | undefined, binPath: string, args: string[], env: { [key: string]: string | undefined } | undefined) => SpawnedProcess;
+type SpawnFunction = (workingDirectory: string | undefined, binPath: string, args: string[], env: Record<string, string | undefined> | undefined) => SpawnedProcess;
 
 export function getPubExecutionInfo(dartCapabilities: DartCapabilities, dartSdkPath: string, args: string[]): ExecutionInfo {
 	// TODO(dantup): Inline this now there's no condition?
@@ -77,5 +77,5 @@ export interface ExecutionInfo {
 	executable: string;
 	args: string[];
 	cwd?: string;
-	env?: { [key: string]: string };
+	env?: Record<string, string>;
 }

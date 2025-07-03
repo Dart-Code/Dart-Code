@@ -50,7 +50,7 @@ export abstract class PackageMap {
 
 	public abstract reload(): void;
 
-	abstract get packages(): { [name: string]: string };
+	abstract get packages(): Record<string, string>;
 
 	public getPackagePath(name: string): string | undefined {
 		return this.packages[name];
@@ -79,7 +79,7 @@ export abstract class PackageMap {
 }
 
 export class MissingPackageMap extends PackageMap {
-	public get packages(): { [name: string]: string; } {
+	public get packages(): Record<string, string> {
 		return {};
 	}
 	public getPackagePath(name: string): string | undefined {
@@ -92,10 +92,10 @@ export class MissingPackageMap extends PackageMap {
 }
 
 class DotPackagesPackageMap extends PackageMap {
-	private map: { [name: string]: string } = {};
+	private map: Record<string, string> = {};
 	private readonly file: string | undefined;
 	private readonly localPackageRoot: string | undefined;
-	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
+	public get packages(): Record<string, string> { return Object.assign({}, this.map); }
 
 	constructor(file?: string) {
 		super();
@@ -137,7 +137,7 @@ class DotPackagesPackageMap extends PackageMap {
 }
 
 class PackageConfigJsonPackageMap extends PackageMap {
-	private map: { [name: string]: string } = {};
+	private map: Record<string, string> = {};
 	private config!: PackageJsonConfig;
 
 	constructor(private readonly logger: Logger, private readonly packageConfigPath: string) {
@@ -185,7 +185,7 @@ class PackageConfigJsonPackageMap extends PackageMap {
 		return parsedPath.endsWith(path.sep) ? parsedPath : `${parsedPath}${path.sep}`;
 	}
 
-	public get packages(): { [name: string]: string } { return Object.assign({}, this.map); }
+	public get packages(): Record<string, string> { return Object.assign({}, this.map); }
 
 	public getPackagePath(name: string): string | undefined {
 		return this.map[name];

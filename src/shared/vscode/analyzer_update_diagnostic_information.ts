@@ -5,7 +5,7 @@ import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
 import { hostKind } from "./utils";
 
-const interestingSettings: { [key: string]: string[] } = {
+const interestingSettings: Record<string, string[]> = {
 	dart: [
 		"onlyAnalyzeProjectsWithOpenFiles",
 	],

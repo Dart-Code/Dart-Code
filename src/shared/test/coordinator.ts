@@ -17,24 +17,22 @@ export class TestSessionCoordinator implements IAmDisposable {
 	/// A link between a suite path and the debug session ID that owns it, so we can ensure
 	/// it is correctly ended when the debug session ends, even if we don't get the correct
 	/// end events.
-	private owningDebugSessions: { [key: string]: string | undefined } = {};
+	private owningDebugSessions: Record<string, string | undefined> = {};
 
 	/// For a given debug session, lookups by IDs to get back to the suite.
-	private debugSessionLookups: {
-		[key: string]: {
+	private debugSessionLookups: Record<string, {
 			cwd: string | undefined,
-			suiteForID: { [key: string]: SuiteData | undefined },
-			suiteForTestID: { [key: string]: SuiteData | undefined },
-		} | undefined
-	} = {};
+			suiteForID: Record<string, SuiteData | undefined>,
+			suiteForTestID: Record<string, SuiteData | undefined>,
+		} | undefined> = {};
 
 	/// A link between a suite path and a visitor for visiting its latest outline data.
 	/// This data is refreshed when a test suite starts running.
-	private suiteOutlineVisitors: { [key: string]: TestOutlineVisitor | undefined } = {};
+	private suiteOutlineVisitors: Record<string, TestOutlineVisitor | undefined> = {};
 
 	/// For each debug session ID, stores a mapping of phantom (empty) groups and their parent IDs so we can
 	/// jump over them.
-	private phantomGroupParents: { [key: string]: { [key: number]: number | null | undefined } } = {};
+	private phantomGroupParents: Record<string, Record<number, number | null | undefined>> = {};
 
 	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined }) { }
 

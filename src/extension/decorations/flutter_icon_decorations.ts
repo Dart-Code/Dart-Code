@@ -11,7 +11,7 @@ import { isAnalyzable } from "../utils";
 export class FlutterIconDecorations implements vs.Disposable {
 	protected readonly subscriptions: vs.Disposable[] = [];
 	protected activeEditor?: vs.TextEditor;
-	private readonly decorationTypes: { [key: string]: vs.TextEditorDecorationType } = {};
+	private readonly decorationTypes: Record<string, vs.TextEditorDecorationType> = {};
 	private readonly computer: IconRangeComputerLsp;
 
 	constructor(logger: Logger, private readonly analyzer: LspAnalyzer) {
@@ -47,7 +47,7 @@ export class FlutterIconDecorations implements vs.Disposable {
 		this.render(results);
 	}
 
-	protected render(results: { [key: string]: vs.Range[]; }) {
+	protected render(results: Record<string, vs.Range[]>) {
 		if (!this.activeEditor)
 			return;
 

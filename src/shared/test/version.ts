@@ -6,7 +6,7 @@ import { DartSdks, Logger } from "../../shared/interfaces";
 import { runProcess, safeSpawn } from "../processes";
 import { WorkspaceContext } from "../workspace";
 
-const cachedTestCapabilities: { [key: string]: DartTestCapabilities } = {};
+const cachedTestCapabilities: Record<string, DartTestCapabilities> = {};
 
 export async function getPackageTestCapabilities(logger: Logger, workspaceContext: WorkspaceContext, folder: string): Promise<DartTestCapabilities> {
 	// Don't ever run the command below in places like the SDK.

@@ -23,7 +23,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 	protected activeEditor: vs.TextEditor | undefined;
 	protected flutterOutline: FlutterOutline | undefined;
 	protected rootNode: FlutterWidgetItem | undefined;
-	protected treeNodesByLine: { [key: number]: FlutterWidgetItem[]; } = [];
+	protected treeNodesByLine: Record<number, FlutterWidgetItem[]> = [];
 	protected updateTimeout: NodeJS.Timeout | undefined;
 	protected onDidChangeTreeDataEmitter: vs.EventEmitter<FlutterWidgetItem | undefined> = new vs.EventEmitter<FlutterWidgetItem | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<FlutterWidgetItem | undefined> = this.onDidChangeTreeDataEmitter.event;

@@ -20,7 +20,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public currentDevice?: f.Device;
 	private devices: f.Device[] = [];
 	private emulators: Emulator[] = [];
-	private readonly knownEmulatorNames: { [key: string]: string } = {};
+	private readonly knownEmulatorNames: Record<string, string> = {};
 	protected readonly onCurrentDeviceChangedEmitter = new vs.EventEmitter<f.Device | undefined>();
 	public readonly onCurrentDeviceChanged = this.onCurrentDeviceChangedEmitter.event;
 	protected readonly onDevicesChangedEmitter = new vs.EventEmitter<void>();
@@ -557,7 +557,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			await this.daemon.daemonStarted;
 			const emus = await this.daemon.getEmulators();
 
-			const allEmulatorsByID: { [key: string]: Emulator } = {};
+			const allEmulatorsByID: Record<string, Emulator> = {};
 			loop1:
 			for (const e of emus) {
 				// Exclude any bogus-looking emulators until a Flutter fix ships.

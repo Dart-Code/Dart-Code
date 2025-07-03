@@ -76,7 +76,7 @@ export class PubDeps {
 
 	private _buildTransitiveDependencies(pkg: PubDepsJsonPackage, packages: PubDepsJsonPackageLookup): PubDepsTreePackageTransitiveDependency[] {
 		const pkgDependencies = [...(pkg.dependencies ?? []), ...(pkg.devDependencies ?? [])].map((name) => packages[name]).filter((pkg) => pkg);
-		const results: { [key: string]: PubDepsTreePackageTransitiveDependency } = {};
+		const results: Record<string, PubDepsTreePackageTransitiveDependency> = {};
 
 		// Queue is a list of pairs of packages to process, and the first (shortest) paths to get to them.
 		const queue: Array<[string, PubDepsTreePackageTransitiveDependency]> = [];
@@ -182,7 +182,7 @@ export interface PubDepsJsonPackage {
 }
 
 /// A lookup of package name -> [PubDepsJsonPackage].
-export interface PubDepsJsonPackageLookup { [key: string]: PubDepsJsonPackage }
+export type PubDepsJsonPackageLookup = Record<string, PubDepsJsonPackage>;
 
 /// The results of parsing a [PubDepsJson] to compute a set of trees
 /// for dependencies, devDependencies, and transitiveDependencies with

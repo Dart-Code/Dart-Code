@@ -142,7 +142,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 
 	private buildUserProperties(data: AnalyticsData) {
 		const dataMap = data as Record<string, any>;
-		const userProperties: { [key: string]: any } = {};
+		const userProperties: Record<string, any> = {};
 
 		function add(name: string, value: any) {
 			if (value)

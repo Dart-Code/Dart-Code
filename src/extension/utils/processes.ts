@@ -5,7 +5,7 @@ import { RunProcessResult, runProcess, safeSpawn } from "../../shared/processes"
 
 // Environment used when spawning Dart and Flutter processes.
 let flutterRoot: string | undefined;
-let toolEnv: { [key: string]: string } = {};
+let toolEnv: Record<string, string> = {};
 let globalFlutterArgs: string[] = [];
 
 export function getToolEnv() {
@@ -39,12 +39,12 @@ export function setupToolEnv(envOverrides?: any) {
 		toolEnv.FLUTTER_ROOT = flutterRoot;
 }
 
-export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }): SpawnedProcess {
-	const env = Object.assign({}, toolEnv, envOverrides) as { [key: string]: string | undefined } | undefined;
+export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>): SpawnedProcess {
+	const env = Object.assign({}, toolEnv, envOverrides) as Record<string, string | undefined> | undefined;
 	return safeSpawn(workingDirectory, binPath, args, env);
 }
 
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
-export function runToolProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
+export function runToolProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
 	return runProcess(logger, binPath, args, workingDirectory, envOverrides, safeToolSpawn, cancellationToken);
 }

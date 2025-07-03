@@ -16,7 +16,7 @@ import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
 
-export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: { [key: string]: any }): Promise<DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments> {
+export async function startDebugger(dc: DartDebugClient, script?: Uri | string, extraConfiguration?: Record<string, any>): Promise<DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments> {
 	if (dc.debuggerType === DebuggerType.Flutter || dc.debuggerType === DebuggerType.FlutterTest) {
 		extraConfiguration = Object.assign(
 			{ deviceId: flutterTestDeviceId },

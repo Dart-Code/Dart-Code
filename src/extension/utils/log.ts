@@ -10,7 +10,7 @@ export function getExtensionLogPath() {
 	extensionLogPath = extensionLogPath || config.extensionLogFile || path.join(process.env.DC_TEST_LOGS || os.tmpdir(), `dart-code-startup-log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
 	return extensionLogPath;
 }
-export const userSelectableLogCategories: { [key: string]: LogCategory } = {
+export const userSelectableLogCategories: Record<string, LogCategory> = {
 	"Analysis Server": LogCategory.Analyzer,
 	"Analysis Server Timings": LogCategory.AnalyzerTiming,
 	"Command Processes": LogCategory.CommandProcesses,

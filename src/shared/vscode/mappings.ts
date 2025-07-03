@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 
-const iconsForKind: { [key in vs.SymbolKind]: string } = {
+const iconsForKind: Record<vs.SymbolKind, string> = {
 	[vs.SymbolKind.Array]: "indexer",
 	[vs.SymbolKind.Boolean]: "boolean",
 	[vs.SymbolKind.Class]: "class",

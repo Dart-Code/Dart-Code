@@ -15,7 +15,7 @@ const apiDebugMode = false;
 
 export class DartApi implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
-	private apis: { [key: string]: ToolApi } = {};
+	private apis: Record<string, ToolApi> = {};
 
 	constructor(readonly commandSource: string, onReceiveMessage: vs.Event<any>, private readonly post: (message: any) => void, private readonly deviceManager: FlutterDeviceManager | undefined) {
 		const addApi = (api: ToolApi) => this.apis[api.apiName] = api;
