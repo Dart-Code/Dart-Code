@@ -3605,6 +3605,7 @@
 		"watch": "webpack --mode development --watch",
 		"build-tests": "tsc -p ./tsconfig.build.json",
 		"watch-non-ext": "tsc -p ./tsconfig.build.json --watch --extendedDiagnostics",
+		"lint-fix": "eslint . --fix",
 		"lint": "eslint .",
 		"test": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument && npm run test-only && npm run report_lcov && npm run report_screen",
 		"instrument-dist": "cd out/dist && nyc instrument --compact false --in-place . . && cd ../..",
