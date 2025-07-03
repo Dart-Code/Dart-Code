@@ -18,8 +18,12 @@ describe("dart tasks", () => {
 		assert.ok(!fs.existsSync(dartDocOutputPath));
 		await new Promise<void>(async (resolve, reject) => {
 			vs.tasks.onDidEndTaskProcess((task) => {
-				if (task.execution === taskExecution)
-					task.exitCode ? reject(new Error(`Task quit with code ${task.exitCode}`)) : resolve();
+				if (task.execution === taskExecution) {
+					if (task.exitCode)
+						reject(new Error(`Task quit with code ${task.exitCode}`));
+					else
+						resolve();
+				}
 			});
 			const taskExecution = await vs.commands.executeCommand<vs.TaskExecution>("dart.task.dartdoc");
 		});

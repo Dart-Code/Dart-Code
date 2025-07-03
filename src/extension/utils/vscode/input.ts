@@ -43,7 +43,10 @@ export async function showInputBoxWithSettings(
 			// Don't accept while there's a validation error.
 			if (input.validationMessage)
 				return;
-			input.value ? resolve({ value: input.value }) : resolve(undefined);
+			if (input.value)
+				resolve({ value: input.value });
+			else
+				resolve(undefined);
 		});
 		input.onDidHide(() => {
 			resolve(undefined);
