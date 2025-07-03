@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import { CoverageParser } from "../../../shared/test/coverage";
 import { activate, extApi } from "../../helpers";
 
-describe.only("coverage", () => {
+describe("coverage", () => {
 	beforeEach("activate", () => activate());
 
 	it("parses line and branch data correctly", async () => {
