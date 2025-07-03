@@ -144,7 +144,6 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
-	// tslint:disable-next-line:no-empty
 	protected async processUnhandledMessage(message: string): Promise<void> { }
 
 	public async handleMessage(message: string): Promise<void> {
@@ -193,7 +192,6 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract handleNotification(evt: T): Promise<void>;
-	// tslint:disable-next-line: no-empty
 	protected async handleRequest(method: string, args: any): Promise<any> { }
 	protected isNotification(msg: any): boolean { return !!msg.event; }
 	protected isRequest(msg: any): boolean { return !!msg.method && !!msg.id; }

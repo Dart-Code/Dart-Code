@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 export default defineConfig([
 	eslint.configs.recommended,
 	tseslint.configs.recommendedTypeChecked, // TODO(dantup): Consider strict.
-	// tseslint.configs.stylisticTypeChecked,
+	tseslint.configs.stylisticTypeChecked,
 	{
 		ignores: [
 			".vscode-test/**",
@@ -54,8 +54,11 @@ export default defineConfig([
 				}]
 			}],
 			// Temporary exclusions after tslint -> eslint migration
+			"@typescript-eslint/class-literal-property-style": "off",
+			"@typescript-eslint/consistent-indexed-object-style": "off",
 			"@typescript-eslint/no-base-to-string": "off",
 			"@typescript-eslint/no-duplicate-type-constituents": "off",
+			"@typescript-eslint/no-empty-function": "off",
 			"@typescript-eslint/no-empty-object-type": "off",
 			"@typescript-eslint/no-explicit-any": "off",
 			"@typescript-eslint/no-misused-promises": "off",
@@ -67,8 +70,14 @@ export default defineConfig([
 			"@typescript-eslint/no-unsafe-return": "off",
 			"@typescript-eslint/no-unused-expressions": "off",
 			"@typescript-eslint/no-unused-vars": "off",
+			"@typescript-eslint/non-nullable-type-assertion-style": "off",
+			"@typescript-eslint/non-nullable-type-assertion-style": "off",
 			"@typescript-eslint/only-throw-error": "off",
+			"@typescript-eslint/prefer-nullish-coalescing": "off",
+			"@typescript-eslint/prefer-optional-chain": "off",
+			"@typescript-eslint/prefer-optional-chain": "off",
 			"@typescript-eslint/prefer-promise-reject-errors": "off",
+			"@typescript-eslint/prefer-regexp-exec": "off",
 			"@typescript-eslint/require-await": "off",
 			"@typescript-eslint/restrict-template-expressions": "off",
 			"@typescript-eslint/unbound-method": "off",

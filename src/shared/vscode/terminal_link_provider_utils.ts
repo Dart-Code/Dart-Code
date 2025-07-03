@@ -7,7 +7,6 @@ export async function findPackageUriLinks(content: string, isKnownPackage: (pack
 	const results: DartPackageUriLink[] = [];
 	packageUriPattern.lastIndex = -1;
 	let result: RegExpExecArray | null;
-	// tslint:disable-next-line: no-conditional-assignment
 	while ((result = packageUriPattern.exec(content)) && result.groups) {
 		let uri: vs.Uri | undefined;
 		try {
@@ -44,7 +43,6 @@ export async function findFileUriLinks(line: string): Promise<DartFileUriLink[]>
 	const results: DartFileUriLink[] = [];
 	fileUriPattern.lastIndex = -1;
 	let result: RegExpExecArray | null;
-	// tslint:disable-next-line: no-conditional-assignment
 	while ((result = fileUriPattern.exec(line)) && result.groups) {
 		let uri: vs.Uri | undefined;
 		try {

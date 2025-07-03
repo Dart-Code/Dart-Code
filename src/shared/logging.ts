@@ -78,11 +78,8 @@ export class CategoryLogger implements Logger {
 }
 
 class NullLogger implements Logger {
-	// tslint:disable-next-line: no-empty
 	public info(message: string, category?: LogCategory): void { }
-	// tslint:disable-next-line: no-empty
 	public warn(message: any, category?: LogCategory): void { }
-	// tslint:disable-next-line: no-empty
 	public error(error: any, category?: LogCategory): void { }
 }
 

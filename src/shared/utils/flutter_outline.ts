@@ -51,7 +51,6 @@ export abstract class FlutterOutlineVisitor {
 	protected visitInvocation(outline: FlutterOutline): void { this.visitChildren(outline); }
 	protected visitVariable(outline: FlutterOutline): void { this.visitChildren(outline); }
 	protected visitPlaceholder(outline: FlutterOutline): void { this.visitChildren(outline); }
-	// tslint:disable-next-line: no-empty
 	protected visitAttribute(attribute: FlutterOutlineAttribute): void { }
 }
 
@@ -105,6 +104,5 @@ export abstract class FlutterOutlineVisitorLsp {
 	protected visitInvocation(outline: FlutterOutline): void { this.visitChildren(outline); }
 	protected visitVariable(outline: FlutterOutline): void { this.visitChildren(outline); }
 	protected visitPlaceholder(outline: FlutterOutline): void { this.visitChildren(outline); }
-	// tslint:disable-next-line: no-empty
 	protected visitAttribute(attribute: FlutterOutlineAttribute): void { }
 }

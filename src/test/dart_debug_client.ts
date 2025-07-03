@@ -288,7 +288,7 @@ export class DartDebugClient extends DebugClient {
 
 	public assertOutputContains(category: string | undefined, text: string): Promise<DebugProtocol.OutputEvent> {
 		let output = "";
-		let cleanup = () => { }; // tslint:disable-line: no-empty
+		let cleanup = () => { };
 		const textLF = text.replace(/\r/g, "");
 		const textCRLF = textLF.replace(/\n/g, "\r\n");
 		return withTimeout(
