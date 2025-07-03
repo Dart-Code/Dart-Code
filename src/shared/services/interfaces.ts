@@ -11,11 +11,11 @@ export interface Response<T> {
 	result: T;
 }
 
-export interface UnknownResponse extends Response<any> { }
+export type UnknownResponse = Response<any>;
 
 export interface Notification<T> {
 	event: string;
 	params: T;
 }
 
-export interface UnknownNotification extends Notification<any> { }
+export type UnknownNotification = Notification<any>;
