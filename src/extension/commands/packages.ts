@@ -256,7 +256,7 @@ export class PackageCommands extends BaseSdkCommands {
 		// TODO: Extract this into a Pub class with the things in pub.ts.
 
 		try {
-			const forcePrompt = options && options.alwaysPrompt;
+			const forcePrompt = options?.alwaysPrompt;
 			// We debounced so we might get here and have multiple projects to fetch for
 			// for ex. when we change Git branch we might change many files at once. So
 			// check how many there are, and if there are:

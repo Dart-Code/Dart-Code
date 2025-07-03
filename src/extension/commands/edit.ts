@@ -81,7 +81,7 @@ export class EditCommands implements vs.Disposable {
 
 	private async toggleLineComment(onlyDartdoc = false) {
 		const editor = getActiveRealFileEditor();
-		if (!editor || !editor.selections.length)
+		if (!editor?.selections.length)
 			return;
 		const document = editor.document;
 		const selections = editor.selections;

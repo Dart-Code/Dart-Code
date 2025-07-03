@@ -33,9 +33,9 @@ export class WorkspaceContext implements IAmDisposable {
 		// If we didn't detect any projects, record as unknown, but include info
 		// on the type of SDK we had found.
 		if (types.length === 0) {
-			if (this.sdks && this.sdks.dartSdkIsFromFlutter)
+			if (this.sdks?.dartSdkIsFromFlutter)
 				types.push("Unknown (Flutter SDK)");
-			else if (this.sdks && this.sdks.dart)
+			else if (this.sdks?.dart)
 				types.push("Unknown (Dart SDK)");
 			else
 				types.push("Unknown (No SDK)");

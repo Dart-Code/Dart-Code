@@ -261,7 +261,7 @@ export class FlutterCommands extends BaseSdkCommands {
 	}
 
 	private async createFlutterProject(options?: { commandSource?: string }): Promise<vs.Uri | undefined> {
-		if (!this.sdks || !this.sdks.flutter) {
+		if (!this.sdks?.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
 		}
@@ -286,7 +286,7 @@ export class FlutterCommands extends BaseSdkCommands {
 	}
 
 	private async createFlutterProjectForTemplate(template: FlutterProjectTemplate): Promise<vs.Uri | undefined> {
-		if (!this.sdks || !this.sdks.flutter) {
+		if (!this.sdks?.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("flutter.createProject");
 			return;
 		}
@@ -363,7 +363,7 @@ export class FlutterCommands extends BaseSdkCommands {
 	}
 
 	private async createFlutterSampleProject(): Promise<vs.Uri | undefined> {
-		if (!this.sdks || !this.sdks.flutter) {
+		if (!this.sdks?.flutter) {
 			this.sdkUtils.showFlutterActivationFailure("_dart.flutter.createSampleProject");
 			return;
 		}

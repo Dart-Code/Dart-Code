@@ -122,8 +122,8 @@ export async function getChildFolders(logger: Logger, parent: string, options?: 
 	const files = await readDirAsync(logger, parent);
 
 	return files.filter((f) => f.isDirectory())
-		.filter((f) => f.name !== "bin" || (options && options.allowBin)) // Don't look in bin folders
-		.filter((f) => f.name !== "cache" || (options && options.allowCache)) // Don't look in cache folders
+		.filter((f) => f.name !== "bin" || (options?.allowBin)) // Don't look in bin folders
+		.filter((f) => f.name !== "cache" || (options?.allowCache)) // Don't look in cache folders
 		.map((item) => path.join(parent, item.name));
 }
 
@@ -306,7 +306,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 		.filter((f) => !f.includes(dartToolFolderName) && excludedFolders.every((ef) => !isWithinPathOrEqual(f, ef)));
 
 	const projectFolderPromises = allPossibleFolders.map(async (folder) => ({
-		exists: options && options.requirePubspec
+		exists: options?.requirePubspec
 			? await hasPubspecAsync(folder)
 			: options.onlyWorkspaceRoots || await hasPubspecAsync(folder) || await hasCreateTriggerFileAsync(folder) || await isFlutterRepoAsync(folder),
 		folder,
@@ -316,7 +316,7 @@ export async function findProjectFolders(logger: Logger, roots: string[], exclud
 		.filter((res) => res.exists)
 		.map((res) => res.folder);
 
-	return options && options.sort
+	return options?.sort
 		? sortBy(projectFolders, (p) => p.toLowerCase())
 		: projectFolders;
 }

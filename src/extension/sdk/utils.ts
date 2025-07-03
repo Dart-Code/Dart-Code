@@ -181,7 +181,7 @@ export class SdkUtils {
 					const gitExtension = extensions.getExtension("vscode.git");
 					// If the extension isn't already activated, probably it's disabled or the user isn't
 					// using it.
-					if (gitExtension && gitExtension.isActive) {
+					if (gitExtension?.isActive) {
 						const gitApi = gitExtension.exports.getAPI(1);
 						const gitApiPath = gitApi?.git.path;
 						if (gitApiPath)

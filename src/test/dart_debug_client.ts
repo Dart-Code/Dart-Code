@@ -191,7 +191,7 @@ export class DartDebugClient extends DebugClient {
 		// all the existing methods that provide useful functionality but assume launching
 		// (for ex. hitBreakpoint) can be used in attach tests.
 		const response = await watchPromise("launch->initializeRequest", this.initializeRequest());
-		if (response.body && response.body.supportsConfigurationDoneRequest) {
+		if (response.body?.supportsConfigurationDoneRequest) {
 			this._supportsConfigurationDoneRequest = true;
 		}
 		// Attach will be paused by default and issue a step when we connect; but our tests

@@ -37,7 +37,7 @@ export class DartCommands extends BaseSdkCommands {
 		const triggerFilename = DART_CREATE_PROJECT_TRIGGER_FILE;
 		const autoPickIfSingleItem = false;
 
-		if (!this.sdks || !this.sdks.dart) {
+		if (!this.sdks?.dart) {
 			this.sdkUtils.showDartActivationFailure(command);
 			return;
 		}

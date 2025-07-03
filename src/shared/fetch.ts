@@ -40,17 +40,17 @@ export class WebClient {
 	}
 
 	private handleResponse(headers: http.OutgoingHttpHeaders, resp: http.IncomingMessage, resolve: (value: string | PromiseLike<string>) => void, reject: (reason?: any) => void, path: string | undefined): void {
-		if (!resp || !resp.statusCode) {
-			reject({ message: `Failed to get ${path}: ${resp && resp.statusMessage}` });
+		if (!resp?.statusCode) {
+			reject({ message: `Failed to get ${path}: ${resp?.statusMessage}` });
 		} else if (resp.statusCode >= 301 && resp.statusCode <= 302) {
 			const newLocation = resp.headers.location;
 			if (!newLocation) {
-				reject({ message: `Redirect with no 'location' header for ${path}: ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
+				reject({ message: `Redirect with no 'location' header for ${path}: ${resp?.statusCode}: ${resp?.statusMessage}` });
 			} else {
 				resolve(this.fetch(newLocation, headers));
 			}
 		} else if (resp.statusCode < 200 || resp.statusCode > 300) {
-			reject({ message: `Bad status code for ${path}: ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
+			reject({ message: `Bad status code for ${path}: ${resp?.statusCode}: ${resp?.statusMessage}` });
 		} else {
 			const chunks: any[] = [];
 			resp.on("data", (b) => chunks.push(b));

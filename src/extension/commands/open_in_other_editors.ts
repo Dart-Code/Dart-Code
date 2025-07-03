@@ -52,7 +52,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 			.filter((item) => item.name.endsWith(".xcworkspace") || item.name.endsWith(".xcodeproj"))
 			.sort((f1, f2) => f1.name.endsWith(".xcworkspace") ? -1 : 1);
 
-		if (!files || !files.length) {
+		if (!files?.length) {
 			const basename = path.basename(folder);
 			void vs.window.showErrorMessage(`Unable to find an Xcode project in your '${basename}' folder`);
 			return;

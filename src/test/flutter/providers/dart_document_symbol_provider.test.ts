@@ -13,7 +13,7 @@ describe("dart_document_symbol_provider", () => {
 		await openFile(flutterHelloWorldMainFile);
 		const symbols = await waitFor(() => getDocumentSymbols());
 
-		assert.ok(symbols && symbols.length, "Didn't get any symbols");
+		assert.ok(symbols?.length, "Didn't get any symbols");
 
 		ensureDocumentSymbol(symbols, "main", vs.SymbolKind.Function);
 		ensureDocumentSymbol(symbols, "MyApp", vs.SymbolKind.Class);

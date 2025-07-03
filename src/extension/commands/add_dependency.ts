@@ -90,7 +90,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		} catch (e) {
 			this.logger.error(`Failed to fetch Pub package names: ${e}`);
 		}
-		if (results && results.packages) {
+		if (results?.packages) {
 			try {
 				this.cache = PackageCacheData.fromPackageNames(results.packages);
 				await this.savePackageCache();

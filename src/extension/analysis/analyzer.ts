@@ -243,7 +243,7 @@ export class LspAnalyzer extends Analyzer {
 
 				const parameterHintsEnabled = !!vs.workspace.getConfiguration("editor").get("parameterHints.enabled");
 				for (const item of items) {
-					if (!item || !item.label) {
+					if (!item?.label) {
 						console.warn(`Got completion item with no label: ${JSON.stringify(item)}\n\nItem count: ${items.length}\nDocument: ${document.uri}\nPosition: ${position.line}:${position.character}`);
 					}
 

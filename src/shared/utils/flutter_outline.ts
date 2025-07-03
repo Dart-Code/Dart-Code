@@ -17,7 +17,7 @@ export abstract class FlutterOutlineVisitor {
 	}
 
 	private visitNode(outline: FlutterOutline) {
-		switch (outline && outline.kind) {
+		switch (outline?.kind) {
 			case "DART_ELEMENT":
 				this.visitDartElement(outline);
 				break;
@@ -37,7 +37,7 @@ export abstract class FlutterOutlineVisitor {
 				this.visitPlaceholder(outline);
 				break;
 			default:
-				this.logger.error(`Unknown Flutter Outline item! ${outline && outline.kind}`);
+				this.logger.error(`Unknown Flutter Outline item! ${outline?.kind}`);
 		}
 		if (outline.attributes) {
 			for (const attribute of outline.attributes)
@@ -70,7 +70,7 @@ export abstract class FlutterOutlineVisitorLsp {
 	}
 
 	private visitNode(outline: FlutterOutline) {
-		switch (outline && outline.kind) {
+		switch (outline?.kind) {
 			case "DART_ELEMENT":
 				this.visitDartElement(outline);
 				break;
@@ -90,7 +90,7 @@ export abstract class FlutterOutlineVisitorLsp {
 				this.visitPlaceholder(outline);
 				break;
 			default:
-				this.logger.error(`Unknown Flutter Outline item! ${outline && outline.kind}`);
+				this.logger.error(`Unknown Flutter Outline item! ${outline?.kind}`);
 		}
 		if (outline.attributes) {
 			for (const attribute of outline.attributes)

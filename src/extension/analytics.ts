@@ -115,9 +115,9 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 						const json = chunks.join("");
 						try {
 							const gaDebugResp = JSON.parse(json);
-							if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
+							if (gaDebugResp?.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
 								this.logger.info("Sent OK!");
-							else if (gaDebugResp && gaDebugResp.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
+							else if (gaDebugResp?.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
 								this.logger.warn(json);
 							else
 								this.logger.warn(`Unexpected GA debug response: ${json}`);
@@ -127,8 +127,8 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 					});
 				}
 
-				if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-					this.logger.info(`Failed to send analytics ${resp && resp.statusCode}: ${resp && resp.statusMessage}`);
+				if (!resp?.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+					this.logger.info(`Failed to send analytics ${resp?.statusCode}: ${resp?.statusMessage}`);
 				}
 				resolve();
 			});

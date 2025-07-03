@@ -331,7 +331,7 @@ export class TestCommands implements vs.Disposable {
 		isInTestFileThatHasImplementation = false;
 		isInImplementationFileThatCanHaveTest = false;
 
-		if (e && e.document && isDartDocument(e.document)) {
+		if (e?.document && isDartDocument(e.document)) {
 			const filePath = fsPath(e.document.uri);
 			if (isTestFile(filePath)) {
 				// Implementation files must exist.

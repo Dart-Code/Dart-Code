@@ -19,7 +19,7 @@ export abstract class OutlineVisitor {
 	}
 
 	private visitNode(outline: Outline) {
-		switch (outline && outline.element && outline.element.kind) {
+		switch (outline?.element?.kind) {
 			case "CLASS":
 				this.visitClass(outline);
 				break;
@@ -105,7 +105,7 @@ export abstract class OutlineVisitor {
 				this.visitUnknown(outline);
 				break;
 			default:
-				this.logger.error(`Unknown Outline item! ${outline && outline.element && outline.element.kind}`);
+				this.logger.error(`Unknown Outline item! ${outline?.element?.kind}`);
 		}
 	}
 
@@ -213,7 +213,7 @@ export class ClassOutlineVisitor extends OutlineVisitor {
 	}
 
 	private addClass(outline: Outline) {
-		if (!outline.element || !outline.element.range || !outline.element.name)
+		if (!outline.element?.range || !outline.element.name)
 			return;
 		this.classes.push({
 			className: outline.element.name,

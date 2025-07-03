@@ -27,10 +27,10 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 
 		// If we were only asked for specific action types and that doesn't include
 		// quickfix (which is all we supply), bail out.
-		if (context && context.only && !CodeActionKind.QuickFix.contains(context.only))
+		if (context?.only && !CodeActionKind.QuickFix.contains(context.only))
 			return;
 
-		if (!context || !context.diagnostics || !context.diagnostics.length)
+		if (!context?.diagnostics?.length)
 			return;
 
 		const projectRoot = locateBestProjectRoot(fsPath(document.uri));

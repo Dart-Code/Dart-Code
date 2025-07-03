@@ -24,7 +24,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		// if its length matches the document exactly.
 		const expectedLength = document.getText().length;
 		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document, expectedLength, token);
-		if (!outline || !outline.children || !outline.children.length)
+		if (!outline?.children?.length)
 			return;
 
 		const fileType = isTestFile(fsPath(document.uri)) ? "test-file" : "file";

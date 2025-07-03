@@ -326,7 +326,7 @@ export class DevToolsManager implements vs.Disposable {
 				continue;
 
 			// We'll only reload panels that are either connected, or don't have a session (static tools).
-			const connectedPanels = panels.filter((p) => !p.session || !p.session.hasEnded);
+			const connectedPanels = panels.filter((p) => !p.session?.hasEnded);
 			for (const panel of connectedPanels) {
 				panel.reload();
 			}
@@ -464,7 +464,7 @@ export class DevToolsManager implements vs.Disposable {
 			if (dtev instanceof SidebarDevTools && location !== "sidebar")
 				return false;
 
-			return !dtev.session || dtev.session === session || (dtev.session && dtev.session.hasEnded);
+			return !dtev.session || dtev.session === session || dtev.session?.hasEnded;
 		});
 		if (!frame) {
 			if (location === "sidebar")

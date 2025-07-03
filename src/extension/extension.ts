@@ -225,7 +225,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		logger.error(e);
 	}
 
-	const isVirtualWorkspace = vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.every((f) => f.uri.scheme !== "file");
+	const isVirtualWorkspace = vs.workspace.workspaceFolders?.every((f) => f.uri.scheme !== "file");
 
 	// Build log headers now we know analyzer type.
 	rebuildLogHeaders();
@@ -530,7 +530,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		});
 
 		context.subscriptions.push(vs.window.onDidChangeTextEditorSelection(async (e) => {
-			if (e.selections && e.selections.length) {
+			if (e.selections?.length) {
 				const node = flutterOutlineTreeProvider!.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
 				if (node && tree.visible) {
 					flutterOutlineTreeProvider!.numOutstandingSelectionEvents++;
@@ -601,7 +601,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}));
 
 	// Warn the user if they've opened a folder with mismatched casing.
-	if (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length) {
+	if (vs.workspace.workspaceFolders?.length) {
 		for (const wf of vs.workspace.workspaceFolders) {
 			if (warnIfPathCaseMismatch(logger, fsPath(wf.uri), "the open workspace folder", "re-open the folder using the File Open dialog"))
 				break;
@@ -848,9 +848,9 @@ export async function deactivate(isRestart = false): Promise<void> {
 
 function setCommandVisiblity(enable: boolean, workspaceContext?: WorkspaceContext) {
 	void vs.commands.executeCommand("setContext", PROJECT_LOADED, enable);
-	void vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyStandardDartProjects);
-	void vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyFlutterProjects);
-	void vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext && workspaceContext.hasAnyWebProjects);
+	void vs.commands.executeCommand("setContext", DART_PROJECT_LOADED, enable && workspaceContext?.hasAnyStandardDartProjects);
+	void vs.commands.executeCommand("setContext", FLUTTER_PROJECT_LOADED, enable && workspaceContext?.hasAnyFlutterProjects);
+	void vs.commands.executeCommand("setContext", WEB_PROJECT_LOADED, enable && workspaceContext?.hasAnyWebProjects);
 }
 
 /// Calls a cleanup function in a try/catch to ensure we never throw and logs any error to the logger

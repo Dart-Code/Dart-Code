@@ -25,8 +25,7 @@ export class FileChangeWarnings implements vs.Disposable {
 
 		const filePath = fsPath(e.document.uri);
 
-		if (vs.workspace.workspaceFolders
-			&& vs.workspace.workspaceFolders.length // Only prompt if we actually have workspace folders open
+		if (vs.workspace.workspaceFolders?.length // Only prompt if we actually have workspace folders open
 			&& !util.isWithinWorkspace(filePath)
 			&& !this.filesWarnedAbout.has(filePath)) {
 

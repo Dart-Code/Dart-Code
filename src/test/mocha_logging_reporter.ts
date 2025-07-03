@@ -5,8 +5,8 @@ import { InternalExtensionApi } from "../shared/vscode/interfaces";
 function getLogger() {
 	// TODO: Make a logger that buffers then flushes when it gets the real one.
 	// eslint-disable-next-line @typescript-eslint/no-require-imports
-	const extApi: InternalExtensionApi = require("./helpers").extApi;
-	return extApi && extApi.logger;
+	const extApi: InternalExtensionApi | undefined = require("./helpers").extApi;
+	return extApi?.logger;
 }
 
 export class LoggingReporter extends reporters.Base {

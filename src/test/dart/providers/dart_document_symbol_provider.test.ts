@@ -10,7 +10,7 @@ describe("dart_document_symbol_provider", () => {
 	it("returns expected items for 'everything.dart'", async () => {
 		const symbols = await waitFor(() => getDocumentSymbols());
 
-		assert.ok(symbols && symbols.length, "Didn't get any symbols");
+		assert.ok(symbols?.length, "Didn't get any symbols");
 
 		ensureDocumentSymbol(symbols, "MyTestClass", vs.SymbolKind.Class);
 		ensureDocumentSymbol(symbols, "myTestNumField", vs.SymbolKind.Field, "MyTestClass");

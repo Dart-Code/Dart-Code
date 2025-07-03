@@ -143,7 +143,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			if (this.devices.length) {
 				const supportedPlatforms = await this.getSupportedPlatformsForWorkspace();
 				const supportedDevices = this.devices.filter((d) => this.isSupported(supportedPlatforms, d));
-				if (supportedDevices && supportedDevices.length)
+				if (supportedDevices?.length)
 					nextDevice = supportedDevices[0];
 			}
 
@@ -406,7 +406,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		}
 
 		// If we've got emulators, add them to the list.
-		if (emulatorDevices && emulatorDevices.length) {
+		if (emulatorDevices?.length) {
 			// Fliter out any emulators we know are running.
 			const emulatorIdsAlreadyRunning = this.devices.map((d) => d.emulatorId).filter((id) => id);
 			const emulatorDevicesNotRunning = emulatorDevices.filter((e) => !emulatorIdsAlreadyRunning.includes(e.device.id));

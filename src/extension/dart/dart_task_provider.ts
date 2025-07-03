@@ -90,7 +90,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		);
 		newTask.detail = task.detail;
 
-		newTask.problemMatchers = (newTask.problemMatchers && newTask.problemMatchers.length ? newTask.problemMatchers : options?.problemMatchers) ?? [];
+		newTask.problemMatchers = (newTask.problemMatchers?.length ? newTask.problemMatchers : options?.problemMatchers) ?? [];
 		newTask.group = task.group ?? options?.group;
 		newTask.isBackground = task.isBackground || (options?.isBackground ?? false);
 
@@ -216,7 +216,7 @@ export class DartTaskProvider extends BaseTaskProvider {
 	}
 
 	protected createPubTask(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri, args: string[]) {
-		if (args && args.length && args[0] === "run")
+		if (args?.length && args[0] === "run")
 			return this.createTask(workspaceFolder, projectFolder, "dart", [...args]);
 		else
 			return this.createTask(workspaceFolder, projectFolder, "dart", ["pub", ...args]);

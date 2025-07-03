@@ -41,7 +41,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		// update that too.
 		this.disposables.push(this.analyzer.fileTracker.onFlutterOutline((op) => {
 			const editor = vs.window.activeTextEditor;
-			if (editor && editor.document && fsPath(editor.document.uri) === fsPath(vs.Uri.parse(op.uri)))
+			if (editor?.document && fsPath(editor.document.uri) === fsPath(vs.Uri.parse(op.uri)))
 				this.buildFromOutline(editor, op.outline);
 		}));
 	}
@@ -146,14 +146,14 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	}
 
 	protected buildForTextEditor(editor: vs.TextEditor | undefined): void {
-		if (editor && editor.document)
+		if (editor?.document)
 			this.buildFromOutline(editor, this.analyzer.fileTracker.getFlutterOutlineFor(editor.document.uri));
 	}
 
 	private buildFromOutline(editor: vs.TextEditor, outline: lsp.FlutterOutline | undefined): void {
 		if (this.tracker)
 			this.tracker.clear();
-		if (!editor || !editor.document || !outline)
+		if (!editor?.document || !outline)
 			return;
 
 		// Check that the outline we got looks like it still matches the document.
@@ -173,9 +173,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 		let guides: WidgetGuide[] = [];
 		if (node.kind === "NEW_INSTANCE") {
 			const parentLine = node.codeRange.start.line;
-			const childLines = node.children && node.children
-				.map((c) => c.codeRange.start.line)
-				.filter((cl) => cl > parentLine);
+			const childLines = node.children?.map((c) => c.codeRange.start.line).filter((cl) => cl > parentLine);
 			if (childLines) {
 				const startPos = this
 					.firstNonWhitespace(document, parentLine);

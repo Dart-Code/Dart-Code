@@ -158,7 +158,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		if (token && token.isCancellationRequested)
+		if (token?.isCancellationRequested)
 			return;
 
 		// Ensure we have a device if required.
@@ -202,7 +202,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 
-		if (token && token.isCancellationRequested)
+		if (token?.isCancellationRequested)
 			return;
 
 		// Ensure we have any require dependencies.
@@ -210,7 +210,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			return undefined;
 		}
 
-		if (token && token.isCancellationRequested)
+		if (token?.isCancellationRequested)
 			return;
 
 		await this.setupDebugConfig(folder, debugConfig, debuggerType, isFlutter, isAttachRequest, isTest, deviceToLaunchOn, this.deviceManager);
@@ -225,7 +225,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				return undefined; // undefined means silent (don't open launch.json).
 		}
 
-		if (token && token.isCancellationRequested)
+		if (token?.isCancellationRequested)
 			return;
 
 		const didWarnAboutCwd = debugConfig.cwd && path.isAbsolute(debugConfig.cwd)
@@ -572,7 +572,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	private async getFullVmServiceUri(vmServiceUriOrPort: string | undefined): Promise<string | undefined> {
 		vmServiceUriOrPort = vmServiceUriOrPort || await vs.commands.executeCommand("dart.promptForVmService");
-		vmServiceUriOrPort = vmServiceUriOrPort && vmServiceUriOrPort.trim();
+		vmServiceUriOrPort = vmServiceUriOrPort?.trim();
 
 		// If the input is just a number, treat is as a localhost port.
 		if (vmServiceUriOrPort && /^[0-9]+$/.exec(vmServiceUriOrPort)) {
@@ -583,7 +583,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	private async setupDebugConfig(folder: WorkspaceFolder | undefined, debugConfig: DartVsCodeLaunchArgs, debuggerType: DebuggerType, isFlutter: boolean, isAttach: boolean, isTest: boolean, device: Device | undefined, deviceManager: FlutterDeviceManager | undefined): Promise<void> {
-		const conf = config.for(folder && folder.uri);
+		const conf = config.for(folder?.uri);
 
 		if (!debugConfig.name)
 			debugConfig.name = isFlutter ? "Flutter" : "Dart";

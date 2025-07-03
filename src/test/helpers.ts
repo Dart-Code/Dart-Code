@@ -236,7 +236,7 @@ function setupTestLogging(): boolean {
 		const logPath = path.join(logFolder, logFile);
 
 		// For debugger tests, the analyzer log is just noise, so we filter it out.
-		const excludeLogCategories = process.env.BOT && process.env.BOT.includes("debug")
+		const excludeLogCategories = process.env.BOT?.includes("debug")
 			? [LogCategory.Analyzer]
 			: [];
 		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000, excludeLogCategories, true);
@@ -296,7 +296,7 @@ export async function activate(file?: vs.Uri | null): Promise<void> {
 
 export async function getPackages(uri?: vs.Uri) {
 	await activateWithoutAnalysis();
-	if (!(uri || (vs.workspace.workspaceFolders && vs.workspace.workspaceFolders.length))) {
+	if (!(uri || (vs.workspace.workspaceFolders?.length))) {
 		logger.error("Cannot getPackages because there is no workspace folder and no URI was supplied");
 		return;
 	}
@@ -307,7 +307,7 @@ export async function getPackages(uri?: vs.Uri) {
 
 function logOpenEditors() {
 	logger.info(`Current open editors are:`);
-	if (vs.window.visibleTextEditors && vs.window.visibleTextEditors.length) {
+	if (vs.window.visibleTextEditors?.length) {
 		for (const editor of vs.window.visibleTextEditors) {
 			logger.info(`  - ${editor.document.uri}`);
 		}
@@ -655,7 +655,7 @@ export function rangesOf(searchText: string): vs.Range[] {
 
 export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }> | undefined> {
 	const documentSymbolResult = await vs.commands.executeCommand<vs.DocumentSymbol[]>("vscode.executeDocumentSymbolProvider", currentDoc().uri);
-	if (!documentSymbolResult || !documentSymbolResult.length)
+	if (!documentSymbolResult?.length)
 		return undefined;
 
 	// Return a flattened list with references to parent for simplified testing.
@@ -678,7 +678,7 @@ export async function getCodeLens(document: vs.TextDocument): Promise<vs.CodeLen
 
 export async function getDefinition(position: vs.Position): Promise<vs.Location | vs.DefinitionLink> {
 	const defs = await getDefinitions(position);
-	assert.ok(defs && defs.length);
+	assert.ok(defs?.length);
 	return defs[0];
 }
 
@@ -1237,7 +1237,7 @@ export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<
 export async function setConfigForTest(section: string, key: string, value: any): Promise<void> {
 	const conf = vs.workspace.getConfiguration(section);
 	const values = conf.inspect(key);
-	const oldValue = values && values.globalValue;
+	const oldValue = values?.globalValue;
 	await conf.update(key, value, vs.ConfigurationTarget.Global);
 	defer("Restore test config", () => conf.update(key, oldValue, vs.ConfigurationTarget.Global));
 }

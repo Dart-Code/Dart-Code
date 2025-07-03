@@ -75,7 +75,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 
 	private async createTreeNode(parent: FlutterWidgetItem | undefined, outline: FlutterOutline, editor: vs.TextEditor | undefined): Promise<FlutterWidgetItem | undefined> {
 		// Ensure we're still active editor before trying to use.
-		if (editor && editor.document && !editor.document.isClosed && this.activeEditor === editor) {
+		if (editor?.document && !editor.document.isClosed && this.activeEditor === editor) {
 			const node = new FlutterWidgetItem(parent, outline, editor);
 
 			// Add this node to a lookup by line so we can quickly find it as the user moves around the doc.
@@ -139,7 +139,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		if (this.activeEditor && selection && selection.length === 1 && isWidget(selection[0].outline)) {
 			const fixes = (await getFixes(this.activeEditor, selection[0].outline))
 				.filter((f): f is vs.CodeAction => f instanceof vs.CodeAction)
-				.filter((ca) => ca.kind && ca.kind.value && flutterOutlineCommands.includes(ca.kind.value));
+				.filter((ca) => ca.kind?.value && flutterOutlineCommands.includes(ca.kind.value));
 
 			// Stash the fixes, as we may need to call them later.
 			selection[0].fixes = fixes;
@@ -260,7 +260,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 	) {
 		super(
 			FlutterWidgetItem.getLabel(outline),
-			(outline.children && outline.children.length)
+			(outline.children?.length)
 				? vs.TreeItemCollapsibleState.Expanded
 				: vs.TreeItemCollapsibleState.None,
 		);
@@ -294,7 +294,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 			? outline.dartElement && outline.dartElement.range
 				? lspToPosition(outline.dartElement.range.start)
 				: lspToPosition(outline.range.start)
-			: outline.dartElement && outline.dartElement.location && outline.dartElement.location.offset
+			: outline.dartElement && outline.dartElement.location?.offset
 				? editor.document.positionAt(outline.dartElement.location.offset)
 				: editor.document.positionAt(outline.offset);
 
@@ -313,7 +313,7 @@ export class FlutterWidgetItem extends vs.TreeItem {
 		};
 
 		this.tooltip = treeLabel(this);
-		if (outline.attributes && outline.attributes.length) {
+		if (outline.attributes?.length) {
 			this.tooltip += "\n  " + outline.attributes.map((a) => `${a.name}: ${a.label}`).join("\n   ");
 		}
 	}

@@ -218,7 +218,7 @@ export class DebugCommands implements IAmDisposable {
 			// we know to _not_ be static).
 			// Ideally we'll never fall into this, because the call will always have a requiresDebugSession
 			const page = devToolsPages.find((p) => p.id === pageId);
-			const isKnownStaticPage = page && page.isStaticTool;
+			const isKnownStaticPage = page?.isStaticTool;
 			requiresDebugSession = requiresDebugSession ?? (!!pageId && !isKnownStaticPage);
 
 			// Also, _prefer_ a debug session if we haven't been told but we know we're not a static page.
@@ -515,7 +515,7 @@ export class DebugCommands implements IAmDisposable {
 
 			const selectedItem = await vs.window.showQuickPick(sessions, { placeHolder: "Which debug session?" });
 
-			return selectedItem && selectedItem.session;
+			return selectedItem?.session;
 		}
 	}
 

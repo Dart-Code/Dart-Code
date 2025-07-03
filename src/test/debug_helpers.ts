@@ -109,7 +109,7 @@ export function waitAllThrowIfTerminates(dc: DartDebugClient, ...promises: Array
 }
 
 export function ensureVariable(variables: DebugProtocol.Variable[], evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
-	assert.ok(variables && variables.length, "No variables given to search");
+	assert.ok(variables?.length, "No variables given to search");
 	const v = variables.find((v) => v.name === name);
 	assert.ok(
 		v,
@@ -134,7 +134,7 @@ export function ensureNoVariable(variables: DebugProtocol.Variable[], name: stri
 }
 
 export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], index: number, evaluateName: string | undefined, name: string, value: string | { starts?: string, ends?: string }) {
-	assert.ok(variables && variables.length, "No variables given to search");
+	assert.ok(variables?.length, "No variables given to search");
 	const foundIndex = variables.findIndex((v) => v.name === name);
 	assert.equal(index, foundIndex, `Found variable ${name} at index ${foundIndex} but expected ${index}`);
 	ensureVariable(variables, evaluateName, name, value);
@@ -301,15 +301,15 @@ export async function killFlutterTester(): Promise<void> {
 }
 
 export function isSdkFrame(frame: DebugProtocol.StackFrame) {
-	return frame.source && frame.source.name && frame.source.name.startsWith("dart:");
+	return frame.source?.name?.startsWith("dart:");
 }
 
 export function isExternalPackage(frame: DebugProtocol.StackFrame) {
-	return frame.source && frame.source.name && frame.source.name.startsWith("package:") && !isLocalPackage(frame);
+	return frame.source?.name && frame.source.name.startsWith("package:") && !isLocalPackage(frame);
 }
 
 export function isLocalPackage(frame: DebugProtocol.StackFrame) {
-	return frame.source && frame.source.name && frame.source.name.startsWith("package:") &&
+	return frame.source?.name && frame.source.name.startsWith("package:") &&
 		// Packages known to be local (from our test projects).
 		(frame.source.name.includes("my_package")
 			|| frame.source.name.includes("hello_world")
@@ -317,8 +317,7 @@ export function isLocalPackage(frame: DebugProtocol.StackFrame) {
 }
 
 export function isUserCode(frame: DebugProtocol.StackFrame) {
-	return frame.source
-		&& frame.source.name
+	return frame.source?.name
 		&& !frame.source.name.startsWith("dart:")
 		&& (!frame.source.name.startsWith("package:") || isLocalPackage(frame));
 }

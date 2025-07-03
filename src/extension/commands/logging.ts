@@ -40,7 +40,7 @@ export class LoggingCommands implements vs.Disposable {
 				placeHolder: "Select which categories to include in the log",
 			},
 		);
-		if (!selectedLogCategories || !selectedLogCategories.length)
+		if (!selectedLogCategories?.length)
 			return;
 
 		return this.startLogging(selectedLogCategories.map((s) => s.logCategory));

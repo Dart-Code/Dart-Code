@@ -16,7 +16,7 @@ describe("flutter_outline", () => {
 		// Wait until we get some child nodes so we know the outline has been processed.
 		await waitFor(async () => {
 			const res = await extApi.flutterOutlineTreeProvider!.getChildren(undefined);
-			return res && res.length;
+			return res?.length;
 		});
 
 		const expectedResults = getExpectedResults();

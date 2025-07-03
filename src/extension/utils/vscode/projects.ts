@@ -27,7 +27,7 @@ export async function getFolderToRunCommandIn(logger: Logger, placeHolder: strin
 	const selectableFolders = (await getAllProjectFolders(logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth }))
 		.filter(flutterOnly ? isFlutterProjectFolder : () => true);
 
-	if (!selectableFolders || !selectableFolders.length) {
+	if (!selectableFolders?.length) {
 		const projectTypes = flutterOnly ? "Flutter" : "Dart/Flutter";
 		void vs.window.showWarningMessage(`No ${projectTypes} project roots were found. Do you have a pubspec.yaml file?`);
 		return undefined;
@@ -45,7 +45,7 @@ export async function getProjectSelection(logger: Logger, placeHolder: string): 
 
 	// Find all possible projects.
 	const selectableProjectFolders = (await getAllProjectFolders(logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth }));
-	if (!selectableProjectFolders || !selectableProjectFolders.length) {
+	if (!selectableProjectFolders?.length) {
 		void vs.window.showWarningMessage(`No project roots were found. Does your project have a pubspec.yaml file?`);
 		return undefined;
 	}

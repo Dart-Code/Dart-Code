@@ -195,8 +195,8 @@ export function getLatestSdkVersion(): Promise<string> {
 		};
 
 		const req = https.request(options, (resp) => {
-			if (!resp || !resp.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
-				reject({ message: `Failed to get Dart SDK Version ${resp && resp.statusCode}: ${resp && resp.statusMessage}` });
+			if (!resp?.statusCode || resp.statusCode < 200 || resp.statusCode > 300) {
+				reject({ message: `Failed to get Dart SDK Version ${resp?.statusCode}: ${resp?.statusMessage}` });
 			} else {
 				resp.on("data", (d: Buffer | string) => {
 					try {
