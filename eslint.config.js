@@ -77,7 +77,6 @@ export default defineConfig([
 			"@typescript-eslint/unbound-method": "off",
 			"no-async-promise-executor": "off",
 			"no-case-declarations": "off",
-			"no-constant-binary-expression": "off",
 			"no-empty": "off",
 			"no-extra-boolean-cast": "off",
 			"no-useless-escape": "off",

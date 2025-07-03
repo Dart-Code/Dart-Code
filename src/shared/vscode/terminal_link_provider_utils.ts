@@ -74,7 +74,7 @@ export async function findFileUriLinks(line: string): Promise<DartFileUriLink[]>
 export function formatLineColFragment(link: { line: number | undefined, col: number | undefined }) {
 	if (link.line !== undefined && link.col !== undefined)
 		return `${link.line},${link.col}`;
-	else if (!link.line !== undefined)
+	else if (link.line !== undefined)
 		return `${link.line}`;
 	else
 		return "";
