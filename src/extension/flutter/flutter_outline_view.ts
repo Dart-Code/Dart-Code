@@ -180,7 +180,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		return currentBest;
 	}
 
-	public refresh(item?: FlutterWidgetItem | undefined): void {
+	public refresh(item?: FlutterWidgetItem): void {
 		this.onDidChangeTreeDataEmitter.fire(item);
 	}
 

@@ -158,7 +158,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		this.onDebugSessionsChanged();
 	}
 
-	public async executeCommand(command: string, args?: object[] | undefined): Promise<object | undefined> {
+	public async executeCommand(command: string, args?: object[]): Promise<object | undefined> {
 		return await vs.commands.executeCommand(command, { commandSource: this.commandSource, ...args });
 	}
 

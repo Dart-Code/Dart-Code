@@ -383,7 +383,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		);
 	}
 
-	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[] | undefined): Array<PickableDevice | DeviceSeparator> {
+	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[]): Array<PickableDevice | DeviceSeparator> {
 		const sortedDevices = this.getDevicesSortedByCurrentAndName();
 
 		let pickableItems: Array<PickableDevice | DeviceSeparator> = [];

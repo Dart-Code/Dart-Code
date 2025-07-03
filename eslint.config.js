@@ -56,7 +56,6 @@ export default defineConfig([
 			// Temporary exclusions after tslint -> eslint migration
 			"@typescript-eslint/class-literal-property-style": "off",
 			"@typescript-eslint/no-base-to-string": "off",
-			"@typescript-eslint/no-duplicate-type-constituents": "off",
 			"@typescript-eslint/no-empty-function": "off",
 			"@typescript-eslint/no-empty-object-type": "off",
 			"@typescript-eslint/no-explicit-any": "off",

@@ -265,7 +265,7 @@ function setupTestLogging(): boolean {
 	return true;
 }
 
-export async function activate(file?: vs.Uri | null | undefined): Promise<void> {
+export async function activate(file?: vs.Uri | null): Promise<void> {
 	await activateWithoutAnalysis();
 	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
 		file = getDefaultFile();
