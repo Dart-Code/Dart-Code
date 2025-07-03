@@ -132,7 +132,7 @@ export interface InternalExtensionApi {
 	safeToolSpawn: (workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: { [key: string]: string | undefined }) => SpawnedProcess;
 	testController: {
 		controller: TestController;
-		runTests(debug: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>;
+		runTests(debug: boolean, includeCoverage: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>;
 		getLatestData(test: TestItem): TreeNode | undefined,
 		handleDebugSessionEnd(e: DebugSession): void,
 		discoverer?: { ensureSuitesDiscovered(): Promise<void> }

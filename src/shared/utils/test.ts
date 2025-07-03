@@ -1,14 +1,15 @@
+import * as os from "os";
 import * as path from "path";
 import { URI } from "vscode-uri";
 import { BasicDebugConfiguration } from "../../shared/debug/interfaces";
 import { escapeRegExp } from "../../shared/utils";
 import { OpenedFileInformation, Position } from "../interfaces";
 import { GroupNode, SuiteNode, TestNode, TreeNode } from "../test/test_model";
-import { fsPath } from "./fs";
+import { fsPath, getRandomInt } from "./fs";
 import { TestOutlineInfo } from "./outline";
 
-export function getLaunchConfig(noDebug: boolean, path: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests?: boolean, template?: any | undefined): { program: string } & BasicDebugConfiguration {
-	let programString = path;
+export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFlutter: boolean, programPath: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests: boolean | undefined, template: any | undefined): { program: string } & BasicDebugConfiguration {
+	let programString = programPath;
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
 		toolArgs = toolArgs.concat(template?.toolArgs as []);
@@ -19,6 +20,15 @@ export function getLaunchConfig(noDebug: boolean, path: string, testSelection: T
 	}
 	if (runSkippedTests)
 		toolArgs.push("--run-skipped");
+	if (includeCoverage && isFlutter) {
+		const coverageFilePath = path.join(os.tmpdir(), `flutter-coverage-${getRandomInt(0x1000, 0x10000).toString(16)}.lcov`);
+		toolArgs.push("--coverage");
+		toolArgs.push("--branch-coverage");
+		toolArgs.push("--coverage-path");
+		toolArgs.push(coverageFilePath);
+		template ??= {};
+		template.coverageFilePath = coverageFilePath;
+	}
 
 	return Object.assign(
 		{

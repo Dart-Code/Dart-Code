@@ -295,10 +295,13 @@ describe("dart test debugger", () => {
 				const config = await getResolvedDebugConfiguration(
 					testUtils.getLaunchConfig(
 						true,
+						false,
+						false,
 						fsPath(helloWorldTestDupeNameFile),
 						[{ name: "group test", isGroup: false, position: undefined }],
 						runByLine,
 						false,
+						undefined,
 					),
 				);
 				await dc.start();
@@ -407,7 +410,7 @@ describe("dart test debugger", () => {
 				if (!testNode)
 					throw Error(`Unable to find ${suiteID}!`);
 				const testRequest = new vs.TestRunRequest([testNode]);
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken));
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken));
 				const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
 				const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
 
@@ -434,7 +437,7 @@ describe("dart test debugger", () => {
 				const testRequest = new vs.TestRunRequest(testItems);
 
 				// Capture all testStart notifications during the debug sessions that are spawned from running these tests.
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken), true);
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);
 				const testEvents = customEvents
 					.filter((e) => e.event === "dart.testNotification")
 					.filter((e) => e.body.type === "testStart")
@@ -461,7 +464,7 @@ describe("dart test debugger", () => {
 				if (!testNode)
 					throw Error(`Unable to find ${suiteID}!`);
 				const testRequest = new vs.TestRunRequest([testNode]);
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(true, testRequest, fakeCancellationToken));
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(true, false, testRequest, fakeCancellationToken));
 				const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
 				const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
 

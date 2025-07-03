@@ -1,14 +1,16 @@
 import { strict as assert } from "assert";
 import * as path from "path";
+import { SinonStub } from "sinon";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { TestDoneNotification, TestStartNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
+import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -267,7 +269,7 @@ describe("flutter test debugger", () => {
 				const testRequest = new vs.TestRunRequest(testItems);
 
 				// Capture all testStart notifications during the debug sessions that are spawned from running these tests.
-				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, testRequest, fakeCancellationToken), true);
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);
 				const testEvents = customEvents
 					.filter((e) => e.event === "dart.testNotification")
 					.filter((e) => e.body.type === "testStart")
@@ -494,5 +496,31 @@ describe("flutter test debugger", () => {
 			});
 		});
 	}
+
+	it("can run tests with coverage", async () => {
+		// Discover tests.
+		await openFile(flutterTestMainFile);
+		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
+		const controller = extApi.testController;
+
+		const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterTestMainFile)}`)!;
+		const testRequest = new vs.TestRunRequest([suiteNode]);
+
+		const createTestRunOriginal = controller.controller.createTestRun;
+		const createTestRunStub = sb.stub(controller.controller, "createTestRun");
+		let addCoverageStub: SinonStub | undefined;
+		createTestRunStub.callsFake((request) => {
+			const originalResult = createTestRunOriginal.call(controller.controller, request);
+			addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
+			return originalResult;
+		});
+		await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+		assert(addCoverageStub?.calledOnce);
+		const coverage = addCoverageStub.firstCall.args[0] as DartFileCoverage;
+		assert.equal(fsPath(coverage.uri), fsPath(flutterHelloWorldMainFile)); // App file, not test file.
+		assert.ok(coverage.statementCoverage.covered > 0);
+		assert.ok(coverage.statementCoverage.total > 0);
+	});
 });
 
