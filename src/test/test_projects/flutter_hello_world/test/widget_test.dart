@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/main.dart' as hello_world;
+import 'package:flutter_hello_world/main.dart' as hello_world;
 
 // This comment is extracted by the test and compared to a text representation
 // built from the tree provider in the test. It must be maintained to match
@@ -14,18 +14,18 @@ import '../lib/main.dart' as hello_world;
 
 void main() {
   testWidgets('Hello world test', (WidgetTester tester) async {
-    hello_world.main(); // BREAKPOINT1
-    await tester.pump();
+    await tester.pumpWidget(hello_world.MyApp()); // BREAKPOINT1
     expect(find.text('Hello, world!'), findsOneWidget);
   });
+
   testWidgets('''multi
 line
 test''', (WidgetTester tester) async {
     expect(1, 1);
   });
+
   testWidgets('Skipped test', (WidgetTester tester) async {
-    hello_world.main();
-    await tester.pump();
+    await tester.pumpWidget(hello_world.MyApp());
     expect(find.text('Hello, world!'), findsOneWidget);
   }, skip: true);
 }
