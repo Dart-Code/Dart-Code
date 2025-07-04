@@ -15,7 +15,7 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 	constructor(private readonly sdks: DartSdks, private readonly dartCapabilities: DartCapabilities) {
 		// Inform VS Code the MCP Server list changed if the experiment flag changes.
 		this.disposables.push(vs.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration("dart.experimentalMcpServer") || e.affectsConfiguration("dart.mcpServer")) {
+			if (e.affectsConfiguration("dart.experimentalMcpServer") || e.affectsConfiguration("dart.mcpServer") || e.affectsConfiguration("dart.mcpServerLogFile")) {
 				this.onDidChangeMcpServerDefinitionsEmitter.fire();
 			}
 		}));
@@ -35,6 +35,10 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 		const args = ["mcp-server"];
 		if (this.dartCapabilities.mcpServerRequiresExperimentalFlag)
 			args.push("--experimental-mcp-server");
+		
+		// Add log file flag if configured
+		if (config.mcpServerLogFile)
+			args.push(`--log-file=${config.mcpServerLogFile}`);
 
 		return [
 			new vs.McpStdioServerDefinition("Dart SDK MCP Server", binPath, args),
