@@ -116,6 +116,7 @@ class Config {
 
 	get experimentalMcpServer(): boolean { return this.getConfig<boolean>("experimentalMcpServer", false); }
 	get mcpServer(): boolean { return this.getConfig<boolean>("mcpServer", false); }
+	get mcpServerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("mcpServerLogFile", null)))); }
 
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("extensionLogFile", null)))); }
