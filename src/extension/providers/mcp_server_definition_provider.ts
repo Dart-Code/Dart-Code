@@ -35,7 +35,7 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 		const args = ["mcp-server"];
 		if (this.dartCapabilities.mcpServerRequiresExperimentalFlag)
 			args.push("--experimental-mcp-server");
-		
+
 		// Add log file flag if configured and supported
 		if (config.mcpServerLogFile && this.dartCapabilities.supportsMcpServerLogFile)
 			args.push("--log-file", config.mcpServerLogFile);
