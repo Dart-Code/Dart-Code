@@ -1,0 +1,44 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+    
+      - uses: actions/checkout@v4
+    
+      - name: Setup Node v22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+    
+      - name: Install npm dependencies
+        run: npm install
+    
+      - name: Setup Dart stable
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - run: dart --disable-analytics
+
+      - name: Install global Dart deps for Pub tests
+        run: |
+          dart pub global activate --no-executables crypto
+          dart pub global activate --no-executables webdev
+          dart pub global activate --no-executables args 2.3.0
+          dart pub global activate --no-executables meta 1.7.0
+          dart pub global activate --no-executables lints 1.0.0
+          dart pub global activate --no-executables json_annotation 4.0.1
