@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { activate, checkTreeNodeResults, delay, extApi, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, makeTestTextTree, openFile, setTestContent, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, delay, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -11,7 +11,7 @@ describe("dart tests", () => {
 
 		// Open the file and allow time for the outline.
 		await openFile(helloWorldTestDiscoveryFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryFile));
 
 		await delay(1500); // Account for debounce.
 
@@ -30,7 +30,7 @@ import "package:test/test.dart";
 
 void main() => test("test 1", () {});
 		`);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
 		await delay(1500); // Account for debounce.
 
 		let actualResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
@@ -44,7 +44,7 @@ import "package:test/test.dart";
 
 void main() => test("test 2", () {});
 		`);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
 		await delay(1500); // Account for debounce.
 
 		actualResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
@@ -62,7 +62,7 @@ test/rename_test.dart [0/1 passed] Unknown
 		// Open the file and allow time for the outline.
 		const startTime = process.hrtime();
 		await openFile(helloWorldTestDiscoveryLargeFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryLargeFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryLargeFile));
 
 		await delay(1500); // Account for debounce.
 
@@ -77,7 +77,7 @@ test/rename_test.dart [0/1 passed] Unknown
 	});
 
 	it("does not discover tests in folders excluded by settings", async () => {
-		await extApi.testController?.discoverer?.ensureSuitesDiscovered();
+		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
 		const results = makeTestTextTree();
 		// Ensure results are valid.
 		assert.equal(!!results.find((suite) => suite.includes("basic_test")), true, "basic_test was missing from the test list");
@@ -86,7 +86,7 @@ test/rename_test.dart [0/1 passed] Unknown
 	});
 
 	it("does not discover tests in folders excluded by analysis_options", async () => {
-		await extApi.testController?.discoverer?.ensureSuitesDiscovered();
+		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
 		const results = makeTestTextTree();
 		// Ensure results are valid.
 		assert.equal(!!results.find((suite) => suite.includes("basic_test")), true);

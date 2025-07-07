@@ -2,19 +2,19 @@ import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
-import { activate, delay, extApi, flutterHelloWorldMainFile, helloWorldMainFile } from "../../helpers";
+import { activate, delay, flutterHelloWorldMainFile, helloWorldMainFile, privateApi } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
 describe("dart tooling daemon", () => {
 	beforeEach("activate", () => activate());
 
 	beforeEach("skip if not supported", async function () {
-		if (!extApi.dartCapabilities.supportsToolingDaemon)
+		if (!privateApi.dartCapabilities.supportsToolingDaemon)
 			this.skip();
 	});
 
 	it("should respond with the correct set of IDE workspace roots", async () => {
-		const daemon = extApi.toolingDaemon;
+		const daemon = privateApi.toolingDaemon;
 		assert.ok(daemon);
 
 		// Wait for daemon to be up and allow time for the extension to send roots.
@@ -29,10 +29,10 @@ describe("dart tooling daemon", () => {
 
 	it("should be able to read files inside the workspace root", async function () {
 		// https://github.com/Dart-Code/Dart-Code/issues/5210
-		if (extApi.dartCapabilities.version.startsWith("3.5."))
+		if (privateApi.dartCapabilities.version.startsWith("3.5."))
 			this.skip();
 
-		const daemon = extApi.toolingDaemon;
+		const daemon = privateApi.toolingDaemon;
 		assert.ok(daemon);
 
 		// Wait for daemon to be up and allow time for the extension to send roots.
@@ -65,7 +65,7 @@ describe("dart tooling daemon", () => {
 	});
 
 	it("should not be able to read files outside the workspace root", async () => {
-		const daemon = extApi.toolingDaemon;
+		const daemon = privateApi.toolingDaemon;
 		assert.ok(daemon);
 
 		// Wait for daemon to be up and allow time for the extension to send roots.
@@ -82,10 +82,10 @@ describe("dart tooling daemon", () => {
 	});
 
 	it("should expose LSP methods via the analyzer", async function () {
-		if (!extApi.dartCapabilities.supportsLspOverDtd)
+		if (!privateApi.dartCapabilities.supportsLspOverDtd)
 			this.skip();
 
-		const daemon = extApi.toolingDaemon;
+		const daemon = privateApi.toolingDaemon;
 		assert.ok(daemon);
 
 		// Wait for daemon to be up.

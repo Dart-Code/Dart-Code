@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { PubDeps, PubDepsJson, PubDepsTree, PubDepsTreePackageDependency, PubDepsTreePackageTransitiveDependency } from "../../../shared/pub/deps";
-import { activate, extApi } from "../../helpers";
+import { activate, privateApi } from "../../helpers";
 
 export const fakePreWorkspacePubDepsJsonBasic: PubDepsJson = {
 	packages: [
@@ -56,7 +56,7 @@ describe("pub deps", () => {
 
 	describe("pub deps (pre-workspace format)", () => {
 		it("builds the correct tree", async () => {
-			const deps = new PubDeps(extApi.logger, extApi.workspaceContext, extApi.dartCapabilities);
+			const deps = new PubDeps(privateApi.logger, privateApi.workspaceContext, privateApi.dartCapabilities);
 			const dependenciesTree = deps.buildTree(fakePreWorkspacePubDepsJsonSinglePackage, "my_package_2");
 			const textTree = makeTextTree(dependenciesTree);
 			assert.equal(textTree, `
@@ -77,7 +77,7 @@ my_package_2 (1.2.3)
 
 	describe("pub deps (post-workspace format)", () => {
 		it("builds the correct tree for a single (non-workspace) package", async () => {
-			const deps = new PubDeps(extApi.logger, extApi.workspaceContext, extApi.dartCapabilities);
+			const deps = new PubDeps(privateApi.logger, privateApi.workspaceContext, privateApi.dartCapabilities);
 			const dependenciesTree = deps.buildTree(fakePreWorkspacePubDepsJsonSinglePackage, "my_package_2");
 			const textTree = makeTextTree(dependenciesTree);
 			assert.equal(textTree, `
@@ -96,7 +96,7 @@ my_package_2 (1.2.3)
 		});
 
 		it("builds the correct tree for a workspace", async () => {
-			const deps = new PubDeps(extApi.logger, extApi.workspaceContext, extApi.dartCapabilities);
+			const deps = new PubDeps(privateApi.logger, privateApi.workspaceContext, privateApi.dartCapabilities);
 			let dependenciesTree = deps.buildTree(fakePostWorkspacePubDepsJsonWorkspace, "my_package_1");
 			assert.equal(makeTextTree(dependenciesTree), `
 my_package_1 (1.2.3)

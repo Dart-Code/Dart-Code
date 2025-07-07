@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, completionLabel, ensureCompletion, extApi, flutterHelloWorldMainFile, getCompletionsAt, getPackages, openFile, setTestContent } from "../../helpers";
+import { activate, completionLabel, ensureCompletion, flutterHelloWorldMainFile, getCompletionsAt, getPackages, openFile, privateApi, setTestContent } from "../../helpers";
 
 describe("completion_item_provider", () => {
 
@@ -10,7 +10,7 @@ describe("completion_item_provider", () => {
 
 	it("includes expected completions", async () => {
 		await openFile(flutterHelloWorldMainFile);
-		await extApi.currentAnalysis();
+		await privateApi.currentAnalysis();
 		const completions = await getCompletionsAt("return T^ext");
 
 		ensureCompletion(completions, vs.CompletionItemKind.Constructor, "Text(…)", "Text");

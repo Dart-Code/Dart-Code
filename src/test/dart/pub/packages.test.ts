@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
 import { getPubWorkspaceStatus } from "../../../shared/vscode/pub";
-import { activate, extApi } from "../../helpers";
+import { activate, privateApi } from "../../helpers";
 
 describe("pub package status", () => {
 	before("activate", () => activate());
@@ -380,7 +380,7 @@ describe("pub package status", () => {
 				dartVersion: workspace.sdkVersion ?? "1.2.3",
 				isPreReleaseSdk: false,
 			},
-			extApi.logger,
+			privateApi.logger,
 			projectFolders.map(vs.Uri.file),
 			false,
 			existsSync,

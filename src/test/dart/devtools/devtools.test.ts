@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, defer, extApi, sb } from "../../helpers";
+import { activate, defer, privateApi, sb } from "../../helpers";
 
 describe("DevTools", async () => {
 	beforeEach("activate", () => activate());
@@ -16,8 +16,8 @@ describe("DevTools", async () => {
 			id: "fake-session",
 			type: "dart",
 		} as vs.DebugSession;
-		extApi.debugCommands.handleDebugSessionStart(debugSession);
-		defer("Remove fake debug session", () => extApi.debugCommands.handleDebugSessionEnd(debugSession));
+		privateApi.debugCommands.handleDebugSessionStart(debugSession);
+		defer("Remove fake debug session", () => privateApi.debugCommands.handleDebugSessionEnd(debugSession));
 
 		return debugSession;
 	}
@@ -35,14 +35,14 @@ describe("DevTools", async () => {
 		const debuggerUrisEvent = {
 			vmServiceUri: "ws://fake-host:123/ws",
 		};
-		extApi.debugCommands.handleDebugSessionCustomEvent({
+		privateApi.debugCommands.handleDebugSessionCustomEvent({
 			body: debuggerUrisEvent,
 			event: "dart.debuggerUris",
 			session: debugSession,
 		});
 
 		// Stub out openInBrowser so we don't really open and can capture the arguments.
-		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").resolves();
 
 		// Trigger opening DevTools.
 		await vs.commands.executeCommand("dart.openDevTools.external");
@@ -59,14 +59,14 @@ describe("DevTools", async () => {
 			clientVmServiceUri: "ws://fake-client:456/ws",
 			vmServiceUri: "ws://fake-host:123/ws",
 		};
-		extApi.debugCommands.handleDebugSessionCustomEvent({
+		privateApi.debugCommands.handleDebugSessionCustomEvent({
 			body: debuggerUrisEvent,
 			event: "dart.debuggerUris",
 			session: debugSession,
 		});
 
 		// Stub out openInBrowser so we don't really open and can capture the arguments.
-		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").resolves();
 
 		// Trigger opening DevTools.
 		await vs.commands.executeCommand("dart.openDevTools.external");

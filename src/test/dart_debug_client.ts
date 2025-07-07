@@ -13,7 +13,7 @@ import { getRandomInt } from "../shared/utils/fs";
 import { waitFor } from "../shared/utils/promises";
 import { DebugCommandHandler } from "../shared/vscode/interfaces";
 import { DebugClient, ILocation, IPartialLocation } from "./debug_client_ms";
-import { delay, extApi, logger, watchPromise } from "./helpers";
+import { delay, logger, privateApi, watchPromise } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl", "flutter.appStart", "flutter.appStarted", "dart.toolEvent"];
 
@@ -183,7 +183,7 @@ export class DartDebugClient extends DebugClient {
 		this.waitForEvent("terminated", "for handleDebugSessionEnd", tenMinutesInMs)
 			.then(() => {
 				this.debugCommands.handleDebugSessionEnd(currentSession);
-				extApi.testController.handleDebugSessionEnd(currentSession);
+				privateApi.testController.handleDebugSessionEnd(currentSession);
 			})
 			.catch((e) => console.error(`Error while waiting for termination: ${e}`));
 

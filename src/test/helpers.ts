@@ -24,7 +24,7 @@ import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/uti
 import { Context } from "../shared/vscode/workspace";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
-export let extApi: InternalExtensionApi;
+export let privateApi: InternalExtensionApi;
 export let logger: Logger = new BufferedLogger();
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 export const fakeCancellationToken: vs.CancellationToken = {
@@ -186,7 +186,7 @@ export let documentEol: string;
 
 function getDefaultFile(): vs.Uri {
 	// TODO: Web?
-	if (extApi.workspaceContext.hasAnyFlutterProjects)
+	if (privateApi.workspaceContext.hasAnyFlutterProjects)
 		return flutterEmptyFile;
 	else
 		return emptyFile;
@@ -196,7 +196,7 @@ export async function activateWithoutAnalysis(): Promise<void> {
 	// TODO: Should we do this, or should we just check that it has been activated?
 	await ext.activate();
 	if (ext.exports) {
-		extApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
+		privateApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
 		setupTestLogging();
 	} else
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
@@ -225,8 +225,8 @@ function setupTestLogging(): boolean {
 	if (!ext.isActive || !ext.exports)
 		return false;
 
-	extApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
-	const emittingLogger = extApi.logger;
+	privateApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
+	const emittingLogger = privateApi.logger;
 
 	if (fileSafeCurrentTestName) {
 		const logFolder = process.env.DC_TEST_LOGS || path.join(ext.extensionPath, ".dart_code_test_logs");
@@ -239,7 +239,7 @@ function setupTestLogging(): boolean {
 		const excludeLogCategories = process.env.BOT?.includes("debug")
 			? [LogCategory.Analyzer]
 			: [];
-		const testLogger = captureLogs(emittingLogger, logPath, extApi.getLogHeader(), 20000, excludeLogCategories, true);
+		const testLogger = captureLogs(emittingLogger, logPath, privateApi.getLogHeader(), 20000, excludeLogCategories, true);
 
 		deferUntilLast("Remove log file if test passed", async (testResult?: "passed" | "failed" | "pending") => {
 			// Put a new buffered logger back to capture any logging output happening
@@ -277,12 +277,12 @@ export async function activate(file?: vs.Uri | null): Promise<void> {
 		logger.info(`Not opening any file`);
 	}
 	logger.info(`Waiting for initial analysis`);
-	await extApi.initialAnalysis;
+	await privateApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
 	await delay(200);
 	logger.info(`Waiting for in-progress analysis`);
-	await extApi.currentAnalysis();
+	await privateApi.currentAnalysis();
 
 	logger.info(`Ready to start test`);
 	const cpuLoad = os.loadavg();
@@ -319,7 +319,7 @@ function logOpenEditors() {
 export function captureOutput(name: string) {
 	// Create a channel that buffers its output.
 	const buffer: string[] = [];
-	const channel = extApi.getOutputChannel(name);
+	const channel = privateApi.getOutputChannel(name);
 
 	sb.stub(channel, "append").callsFake((s: string) => buffer.push(s));
 	sb.stub(channel, "appendLine").callsFake((s: string) => buffer.push(`${s}\n`));
@@ -373,11 +373,11 @@ export async function closeAllOpenFiles(): Promise<void> {
 
 export async function clearTestTree(): Promise<void> {
 	logger.info(`Clearing test tree...`);
-	extApi.testModel.suites.clear();
-	extApi.testModel.updateNode();
+	privateApi.testModel.suites.clear();
+	privateApi.testModel.updateNode();
 	await delay(50); // Allow tree to be updated.
-	if (extApi.testDiscoverer)
-		extApi.testDiscoverer.testDiscoveryPerformed = undefined;
+	if (privateApi.testDiscoverer)
+		privateApi.testDiscoverer.testDiscoveryPerformed = undefined;
 	logger.info(`Done clearing test tree!`);
 }
 
@@ -527,7 +527,7 @@ export async function setTestContent(content: string): Promise<void> {
 	// HACK: Add a small delay to try and reduce the chance of a "Requested result
 	// might be inconsistent with previously returned results" error.
 	await delay(300);
-	await extApi.currentAnalysis();
+	await privateApi.currentAnalysis();
 }
 
 export function enableLint(project: string, lintName: string): void {
@@ -1050,9 +1050,9 @@ export async function waitForEditorChange(action: () => Thenable<void>): Promise
 
 export async function waitForNextAnalysis(action: () => void | Thenable<void>, timeoutSeconds?: number): Promise<void> {
 	logger.info("Waiting for any in-progress analysis to complete");
-	await extApi.currentAnalysis();
+	await privateApi.currentAnalysis();
 	// Get a new completer for the next analysis.
-	const nextAnalysis = extApi.nextAnalysis();
+	const nextAnalysis = privateApi.nextAnalysis();
 	logger.info("Running requested action");
 	await action();
 	logger.info(`Waiting for analysis to complete`);
@@ -1065,7 +1065,7 @@ export async function getResolvedDebugConfiguration(extraConfiguration?: { progr
 		request: "launch",
 		type: "dart",
 	}, extraConfiguration);
-	return await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs;
+	return await privateApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(vs.workspace.workspaceFolders![0], debugConfig) as vs.DebugConfiguration & DartLaunchArgs;
 }
 
 export async function getLaunchConfiguration(script?: URI | string, extraConfiguration?: Record<string, any>): Promise<vs.DebugConfiguration & DartLaunchArgs | undefined | null> {
@@ -1086,13 +1086,13 @@ export async function getAttachConfiguration(extraConfiguration?: Record<string,
 }
 
 export async function writeBrokenDartCodeIntoFileForTest(file: vs.Uri): Promise<void> {
-	const nextAnalysis = extApi.nextAnalysis();
+	const nextAnalysis = privateApi.nextAnalysis();
 	fs.writeFileSync(fsPath(file), "this is broken dart code");
 	await nextAnalysis;
 	// HACK: Sometimes we see analysis the analysis flag toggle quickly and we get an empty error list
 	// so we need to add a small delay here and then wait for any in progress analysis.
 	await delay(500);
-	await extApi.currentAnalysis();
+	await privateApi.currentAnalysis();
 	defer("Remove broken Dart file", () => tryDelete(file));
 }
 
@@ -1313,8 +1313,8 @@ export function isTestDoneSuccessNotification(e: vs.DebugSessionCustomEvent) {
 
 export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffer = [], indent = 0, onlyFailures, onlyActive, sortByLabel }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean, sortByLabel?: boolean } = {}): string[] {
 	const collection = items instanceof vs.Uri
-		? extApi.testController.controller.items
-		: items ?? extApi.testController.controller.items;
+		? privateApi.testController.controller.items
+		: items ?? privateApi.testController.controller.items;
 	const parentResourceUri = items instanceof vs.Uri ? items : undefined;
 
 	const testItems: vs.TestItem[] = [];
@@ -1331,7 +1331,7 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 	sortBy(testItems, sortByLabel ? (item) => item.label : getSourceLine);
 
 	for (const item of testItems) {
-		const lastResult = extApi.testController.getLatestData(item);
+		const lastResult = privateApi.testController.getLatestData(item);
 		const lastResultTestNode = lastResult as TestNode;
 
 		let nodeString = item.label;

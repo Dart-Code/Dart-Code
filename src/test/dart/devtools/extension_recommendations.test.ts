@@ -2,16 +2,16 @@ import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { noThanksAction } from "../../../shared/constants";
-import { activate, extApi, sb } from "../../helpers";
+import { activate, privateApi, sb } from "../../helpers";
 
 describe("devtools extensions recommendations", () => {
 	beforeEach("activate", () => activate());
 
 	beforeEach("skip if not supported", async function () {
-		if (!extApi.dartCapabilities.supportsDevToolsVsCodeExtensions)
+		if (!privateApi.dartCapabilities.supportsDevToolsVsCodeExtensions)
 			this.skip();
 
-		await extApi.context.context.globalState.update(`ignoredExtensionRecommendations`, undefined);
+		await privateApi.context.context.globalState.update(`ignoredExtensionRecommendations`, undefined);
 	});
 
 	it("prompts and installs", async () => {
@@ -22,8 +22,8 @@ describe("devtools extensions recommendations", () => {
 			.withArgs("A third-party extension is available for package:my_package", sinon.match.any, sinon.match.any)
 			.resolves("Install/Enable ms-vscode.hexeditor");
 
-		await extApi.devTools.start();
-		await extApi.devTools.promptForExtensionRecommendations();
+		await privateApi.devTools.start();
+		await privateApi.devTools.promptForExtensionRecommendations();
 
 		// Ensure we were prompted.
 		assert.equal(installExtensionPrompt.calledOnce, true);
@@ -39,8 +39,8 @@ describe("devtools extensions recommendations", () => {
 			.withArgs("A third-party extension is available for package:my_package", sinon.match.any, sinon.match.any)
 			.resolves(noThanksAction);
 
-		await extApi.devTools.start();
-		await extApi.devTools.promptForExtensionRecommendations();
+		await privateApi.devTools.start();
+		await privateApi.devTools.promptForExtensionRecommendations();
 
 		// Ensure we were prompted.
 		assert.equal(installExtensionPrompt.calledOnce, true);

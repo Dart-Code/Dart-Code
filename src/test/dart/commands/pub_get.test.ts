@@ -1,12 +1,12 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, delay, extApi, helloWorldPubspec, openFile, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
+import { activate, delay, helloWorldPubspec, openFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("pub get", () => {
 	before("activate", () => activate());
 	before("skip if Pub issue", function () {
-		if (extApi.dartCapabilities.hasPackageConfigTimestampIssue)
+		if (privateApi.dartCapabilities.hasPackageConfigTimestampIssue)
 			this.skip();
 	});
 

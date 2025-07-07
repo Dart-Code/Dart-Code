@@ -5,7 +5,7 @@ import { DebuggerType, VmService } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureVariable, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, extApi, getLaunchConfiguration, getPackages, logger, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
+import { activate, closeAllOpenFiles, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, getLaunchConfiguration, getPackages, logger, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 describe("web debugger", () => {
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
@@ -66,14 +66,14 @@ describe("web debugger", () => {
 			dc.launch(config),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false); // TODO: Make true when supported!
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false); // TODO: Make true when supported!
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
 	});
 
 	it("expected debugger services are available in noDebug mode", async () => {
@@ -84,14 +84,14 @@ describe("web debugger", () => {
 			dc.launch(config),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false); // TODO: Make true when supported!
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false); // TODO: Make true when supported!
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false);
 	});
 
 	// Skipped because this is super-flaky. If we quit to early, the processes are not
@@ -126,7 +126,7 @@ describe("web debugger", () => {
 	});
 
 	it("hot reloads successfully", async function () {
-		if (!extApi.dartCapabilities.webSupportsHotReload) {
+		if (!privateApi.dartCapabilities.webSupportsHotReload) {
 			this.skip();
 			return;
 		}
@@ -183,7 +183,7 @@ describe("web debugger", () => {
 	it("can launch DevTools externally", async () => {
 		await setConfigForTest("dart", "devToolsLocation", "external");
 
-		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").resolves();
 
 		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		await waitAllThrowIfTerminates(dc,
@@ -198,7 +198,7 @@ describe("web debugger", () => {
 		assert.ok(devTools.url);
 		defer("Dispose DevTools", devTools.dispose);
 
-		const serverResponse = await extApi.webClient.fetch(devTools.url);
+		const serverResponse = await privateApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
 		await waitAllThrowIfTerminates(dc,
@@ -209,7 +209,7 @@ describe("web debugger", () => {
 
 	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (!extApi.dartCapabilities.webSupportsHotReload) {
+		if (!privateApi.dartCapabilities.webSupportsHotReload) {
 			this.skip();
 			return;
 		}

@@ -11,7 +11,7 @@ import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, setConfigForTest, waitForResult } from "../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -32,7 +32,7 @@ describe("dart test debugger", () => {
 	/// nodes to verify trees.
 	async function openFile(file: vs.Uri): Promise<vs.TextEditor> {
 		const editor = await openFileBasic(file);
-		extApi.testDiscoverer?.forceUpdate(file);
+		privateApi.testDiscoverer?.forceUpdate(file);
 		return editor;
 	}
 
@@ -64,7 +64,7 @@ describe("dart test debugger", () => {
 				program: fsPath(helloWorldTestMainFile),
 			});
 
-			const testCapabilities = await getPackageTestCapabilities(extApi.logger, extApi.workspaceContext, resolvedConfig.cwd!);
+			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, resolvedConfig.cwd!);
 			if (testCapabilities.supportsIgnoreTimeouts)
 				ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--ignore-timeouts"]);
 			else
@@ -403,9 +403,9 @@ describe("dart test debugger", () => {
 
 			it("can run tests through test controller using default launch template", async () => {
 				const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
-				await extApi.testDiscoverer?.ensureSuitesDiscovered();
+				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
-				const controller = extApi.testController;
+				const controller = privateApi.testController;
 				const testNode = controller.controller.items.get(suiteID);
 				if (!testNode)
 					throw Error(`Unable to find ${suiteID}!`);
@@ -421,9 +421,9 @@ describe("dart test debugger", () => {
 				// Discover tests in these files.
 				await openFile(helloWorldTestSelective1File);
 				await openFile(helloWorldTestSelective2File);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestSelective1File));
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestSelective2File));
-				const controller = extApi.testController;
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective1File));
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective2File));
+				const controller = privateApi.testController;
 
 				const testItems: vs.TestItem[] = [];
 
@@ -457,9 +457,9 @@ describe("dart test debugger", () => {
 
 			it("allows more-specific default launch template using noDebug flag", async () => {
 				const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
-				await extApi.testDiscoverer?.ensureSuitesDiscovered();
+				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
-				const controller = extApi.testController;
+				const controller = privateApi.testController;
 				const testNode = controller.controller.items.get(suiteID);
 				if (!testNode)
 					throw Error(`Unable to find ${suiteID}!`);
@@ -491,7 +491,7 @@ describe("dart test debugger", () => {
 				let numRuns = 1;
 				await checkResults(`After initial run`);
 				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestTreeFile));
-				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
+				const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestTreeFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestTreeFile}`);
 				visitor.visit(outline);
@@ -524,7 +524,7 @@ describe("dart test debugger", () => {
 				await runWithoutDebugging(helloWorldTestDupeNameFile);
 				await checkResults(`After initial run`);
 				const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestDupeNameFile));
-				const outline = extApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
+				const outline = privateApi.fileTracker.getOutlineFor(helloWorldTestDupeNameFile);
 				if (!outline)
 					throw new Error(`Did not get outline for ${helloWorldTestDupeNameFile}`);
 				visitor.visit(outline);
@@ -614,7 +614,7 @@ test/tree_test.dart [6/8 passed] Failed
 
 	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, lineDelta = 0) {
 		const editor = await openFile(fileUri);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(fileUri));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(fileUri));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(search);

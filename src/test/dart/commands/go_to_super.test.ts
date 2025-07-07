@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, currentEditor, ensureIsRange, extApi, helloWorldFolder, positionOf, rangeOf, waitForResult } from "../../helpers";
+import { activate, currentDoc, currentEditor, ensureIsRange, helloWorldFolder, positionOf, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/super.dart"));
 const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/derived.dart"));
@@ -10,7 +10,7 @@ const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_s
 describe("go_to_super", () => {
 	beforeEach("activate and wait for outline", async () => {
 		await activate(derivedFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(derivedFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(derivedFile));
 	});
 
 	it("navigates to base class within the same file", async () => {

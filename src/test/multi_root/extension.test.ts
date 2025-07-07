@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, flutterHelloWorldFolder, helloWorldFolder, helloWorldMainFile } from "../helpers";
+import { activateWithoutAnalysis, ext, flutterHelloWorldFolder, helloWorldFolder, helloWorldMainFile, privateApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -27,24 +27,24 @@ describe("extension", () => {
 	});
 	it("found the Dart and Flutter SDK", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi);
+		assert.ok(privateApi);
 		// TODO: Add tests for the workspaceContext flags (here and elsewhere).
-		const sdks: Sdks = extApi.workspaceContext.sdks;
+		const sdks: Sdks = privateApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.ok(sdks.flutter);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi);
-		const sdks: Sdks = extApi.workspaceContext.sdks;
+		assert.ok(privateApi);
+		const sdks: Sdks = privateApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.notEqual(sdks.dart.toLowerCase().indexOf("flutter"), -1);
 	});
 	it("resolves the correct debug config for a nested project", async () => {
 		await activateWithoutAnalysis();
-		const resolvedConfig = await extApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(
+		const resolvedConfig = await privateApi.debugProvider.resolveDebugConfigurationWithSubstitutedVariables!(
 			vs.workspace.workspaceFolders![1],
 			{
 				name: "Dart",

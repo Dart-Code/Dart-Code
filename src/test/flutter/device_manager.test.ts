@@ -5,7 +5,7 @@ import * as f from "../../shared/flutter/daemon_interfaces";
 import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../shared/interfaces";
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
-import { activateWithoutAnalysis, delay, extApi, logger, sb } from "../helpers";
+import { activateWithoutAnalysis, delay, logger, privateApi, sb } from "../helpers";
 import { FakeProcessStdIOService } from "../services/fake_stdio_service";
 
 describe("device_manager", () => {
@@ -14,7 +14,7 @@ describe("device_manager", () => {
 
 	beforeEach(() => activateWithoutAnalysis());
 	beforeEach(() => {
-		extApi.context.workspaceLastFlutterDeviceId = undefined;
+		privateApi.context.workspaceLastFlutterDeviceId = undefined;
 		daemon = new FakeFlutterDaemon();
 		// TODO: Tests for custom emulators.
 		dm = new FlutterDeviceManager(
@@ -27,8 +27,8 @@ describe("device_manager", () => {
 				flutterShowEmulators: "local",
 				projectSearchDepth: 3,
 			},
-			extApi.workspaceContext,
-			extApi.context,
+			privateApi.workspaceContext,
+			privateApi.context,
 		);
 	});
 
@@ -229,7 +229,7 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, physicalAndroidMobile);
 
 		// Connecting desktop does change the selected device.
-		extApi.context.workspaceLastFlutterDeviceId = desktop.id;
+		privateApi.context.workspaceLastFlutterDeviceId = desktop.id;
 		await daemon.connect(desktop, true);
 		assert.deepStrictEqual(dm.currentDevice, desktop);
 	});

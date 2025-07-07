@@ -1,7 +1,7 @@
 import { DebuggerType } from "../../shared/enums";
 import { waitFor } from "../../shared/utils/promises";
 import { flutterTestDeviceId, flutterTestDeviceIsWeb } from "../debug_helpers";
-import { activate, extApi, flutterHelloWorldFolder } from "../helpers";
+import { activate, flutterHelloWorldFolder, privateApi } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
 describe(`flutter debugger type`, async () => {
@@ -13,7 +13,7 @@ describe(`flutter debugger type`, async () => {
 		// session in the test. This is not required for flutter-tester as that
 		// bypasses the device check.
 		if (flutterTestDeviceIsWeb)
-			await waitFor(() => extApi.deviceManager!.getDevice(flutterTestDeviceId));
+			await waitFor(() => privateApi.deviceManager!.getDevice(flutterTestDeviceId));
 	});
 
 	const tests: Array<{ program: string, cwd?: string, debuggerType?: DebuggerType, expectedDebuggerType: DebuggerType }> = [

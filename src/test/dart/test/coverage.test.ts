@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import { CoverageParser } from "../../../shared/test/coverage";
-import { activate, extApi } from "../../helpers";
+import { activate, privateApi } from "../../helpers";
 
 describe("coverage", () => {
 	beforeEach("activate", () => activate());
@@ -31,7 +31,7 @@ DA:4,0
 end_of_record
 		`.trim();
 
-		const parser = new CoverageParser(extApi.logger);
+		const parser = new CoverageParser(privateApi.logger);
 		const results = parser.parseLcovContent(content);
 
 		assert.equal(results.length, 2);

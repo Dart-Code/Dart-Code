@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
-import { activate, defer, extApi, flutterHelloWorldFolder, flutterHelloWorldPubspec, sb } from "../../helpers";
+import { activate, defer, flutterHelloWorldFolder, flutterHelloWorldPubspec, privateApi, sb } from "../../helpers";
 
 describe("pub add", () => {
 	const pubspecPath = fsPath(flutterHelloWorldPubspec);
@@ -20,7 +20,7 @@ describe("pub add", () => {
 
 	it("can add a dependency using command", async () => {
 		assert.equal(pubspecContains("collection"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
+		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(flutterHelloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDependency");
@@ -30,7 +30,7 @@ describe("pub add", () => {
 
 	it("can add a dev-dependency using command", async () => {
 		assert.equal(pubspecContains("collection"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
+		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(flutterHelloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDevDependency");
@@ -40,7 +40,7 @@ describe("pub add", () => {
 
 	it("can add a Flutter SDK dependency using command", async () => {
 		assert.equal(pubspecContains("flutter_localizations"), false);
-		sb.stub(extApi.addDependencyCommand, "promptForPackageInfo").resolves("flutter_localizations");
+		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("flutter_localizations");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(flutterHelloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDevDependency");

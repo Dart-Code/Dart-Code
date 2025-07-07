@@ -3,7 +3,7 @@ import { DART_DEP_PROJECT_NODE_CONTEXT } from "../../../shared/constants.context
 import { PubDeps } from "../../../shared/pub/deps";
 import { MissingPackageMap, PackageMapLoader } from "../../../shared/pub/package_map";
 import { ProjectFinder } from "../../../shared/vscode/utils";
-import { activate, ensurePackageTreeNode, extApi, makeTextTreeUsingCustomTree, sb } from "../../helpers";
+import { activate, ensurePackageTreeNode, makeTextTreeUsingCustomTree, privateApi, sb } from "../../helpers";
 import { fakePostWorkspacePubDepsJsonWorkspace, fakePreWorkspacePubDepsJsonBasic, fakePreWorkspacePubDepsJsonSinglePackage } from "./deps.test";
 
 describe("packages tree data", () => {
@@ -15,9 +15,9 @@ describe("packages tree data", () => {
 	before("activate", () => activate());
 
 	beforeEach("setup deps + mocks", () => {
-		deps = extApi.packagesTreeProvider.deps!;
-		packageMapLoader = extApi.packagesTreeProvider.packageMapLoader!;
-		projectFinder = extApi.packagesTreeProvider.projectFinder!;
+		deps = privateApi.packagesTreeProvider.deps!;
+		packageMapLoader = privateApi.packagesTreeProvider.packageMapLoader!;
+		projectFinder = privateApi.packagesTreeProvider.projectFinder!;
 		sb.stub(dummyPackageMap, "getPackagePath").callsFake((name) => `/path/to/${name}`);
 	});
 
@@ -29,7 +29,7 @@ describe("packages tree data", () => {
 				.callsFake((projectPath: string) => projectPath.endsWith("my_package_2") ? fakePreWorkspacePubDepsJsonSinglePackage : fakePreWorkspacePubDepsJsonBasic);
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 
-			const textTree = (await makeTextTreeUsingCustomTree(undefined, extApi.packagesTreeProvider)).join("\n");
+			const textTree = (await makeTextTreeUsingCustomTree(undefined, privateApi.packagesTreeProvider)).join("\n");
 
 			assert.equal(textTree.trim(), `
 my_package_1
@@ -53,7 +53,7 @@ my_package_2
 	});
 
 	it("includes multiple projects from single workspace folder", async () => {
-		const topLevel = await extApi.packagesTreeProvider.getChildren(undefined);
+		const topLevel = await privateApi.packagesTreeProvider.getChildren(undefined);
 
 		ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
 		ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "example", "hello_world");
@@ -67,7 +67,7 @@ my_package_2
 				.callsFake((projectPath: string) => fakePostWorkspacePubDepsJsonWorkspace);
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 
-			const textTree = (await makeTextTreeUsingCustomTree(undefined, extApi.packagesTreeProvider)).join("\n");
+			const textTree = (await makeTextTreeUsingCustomTree(undefined, privateApi.packagesTreeProvider)).join("\n");
 
 			assert.equal(textTree.trim(), `
 workspace

@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldMainFile, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, getCodeLens, getPackages, helloWorldMainFile, helloWorldTestMainFile, openFile, positionOf, privateApi, waitForResult } from "../../helpers";
 
 describe("main_code_lens", () => {
 	before("get packages", () => getPackages());
@@ -9,7 +9,7 @@ describe("main_code_lens", () => {
 
 	it("includes run/debug actions for main function", async function () {
 		const editor = await openFile(helloWorldMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldMainFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const mainFunctionPos = positionOf(`main^() async {`);
@@ -36,7 +36,7 @@ describe("main_code_lens", () => {
 
 	it("uses default templates for run/debug actions for main function", async function () {
 		const editor = await openFile(helloWorldMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldMainFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const mainFunctionPos = positionOf(`main^() async {`);
@@ -85,7 +85,7 @@ describe("main_code_lens", () => {
 				);
 
 				const editor = await openFile(testConfig.fileUri);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const mainFunctionPos = positionOf(testConfig.lensLocation);
@@ -125,7 +125,7 @@ describe("main_code_lens", () => {
 				);
 
 				const editor = await openFile(testConfig.fileUri);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const mainFunctionPos = positionOf(testConfig.lensLocation);
@@ -181,7 +181,7 @@ describe("main_code_lens", () => {
 				);
 
 				const editor = await openFile(testConfig.fileUri);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(testConfig.fileUri));
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const mainFunctionPos = positionOf(testConfig.lensLocation);

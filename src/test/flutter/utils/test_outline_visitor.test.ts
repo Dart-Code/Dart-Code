@@ -1,17 +1,17 @@
 import { strict as assert } from "assert";
 import { fsPath } from "../../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../../shared/utils/outline";
-import { activate, extApi, flutterTestOtherFile, getPackages, logger, waitForResult } from "../../helpers";
+import { activate, flutterTestOtherFile, getPackages, logger, privateApi, waitForResult } from "../../helpers";
 
 describe("test_outline_visitor", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate and wait for outline", async () => {
 		await activate(flutterTestOtherFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestOtherFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestOtherFile));
 	});
 
 	it("reads the correct groups and tests", () => {
-		const outline = extApi.fileTracker.getOutlineFor(flutterTestOtherFile)!;
+		const outline = privateApi.fileTracker.getOutlineFor(flutterTestOtherFile)!;
 
 		const visitor = new TestOutlineVisitor(logger, fsPath(flutterTestOtherFile));
 		visitor.visit(outline);

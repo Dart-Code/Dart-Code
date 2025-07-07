@@ -11,7 +11,7 @@ import { withTimeout } from "../shared/utils";
 import { faint } from "../shared/utils/colors";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
-import { currentTestName, defer, delay, extApi, getLaunchConfiguration, logger, watchPromise } from "./helpers";
+import { currentTestName, defer, delay, getLaunchConfiguration, logger, privateApi, watchPromise } from "./helpers";
 
 export const flutterTestDeviceId = process.env.FLUTTER_TEST_DEVICE_ID || "flutter-tester";
 export const flutterTestDeviceIsWeb = flutterTestDeviceId === "chrome" || flutterTestDeviceId === "web-server";
@@ -32,10 +32,10 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 }
 
 export function createDebugClient(debuggerType: DebuggerType) {
-	const descriptor = extApi.debugAdapterDescriptorFactory.descriptorForType(debuggerType);
-	const trackerFactories = extApi.trackerFactories as DebugAdapterTrackerFactory[];
+	const descriptor = privateApi.debugAdapterDescriptorFactory.descriptorForType(debuggerType);
+	const trackerFactories = privateApi.trackerFactories as DebugAdapterTrackerFactory[];
 	const dc = descriptor instanceof DebugAdapterServer
-		? new DartDebugClient(debuggerType, { port: descriptor.port }, extApi.debugCommands, extApi.testCoordinator, trackerFactories, extApi.dartCapabilities)
+		? new DartDebugClient(debuggerType, { port: descriptor.port }, privateApi.debugCommands, privateApi.testCoordinator, trackerFactories, privateApi.dartCapabilities)
 		: descriptor instanceof DebugAdapterExecutable
 			? new DartDebugClient(
 				debuggerType,
@@ -44,10 +44,10 @@ export function createDebugClient(debuggerType: DebuggerType) {
 					executable: descriptor.args[0],
 					runtime: descriptor.command,
 				},
-				extApi.debugCommands,
-				extApi.testCoordinator,
+				privateApi.debugCommands,
+				privateApi.testCoordinator,
 				trackerFactories,
-				extApi.dartCapabilities,
+				privateApi.dartCapabilities,
 			)
 			: undefined;
 	if (!dc)
@@ -57,7 +57,7 @@ export function createDebugClient(debuggerType: DebuggerType) {
 	const thisDc = dc;
 	defer("Terminate and clean up debug client/adapter", async () => {
 		if (!thisDc.hasStarted) {
-			extApi.logger.info(`Skipping shutdown because it never started`);
+			privateApi.logger.info(`Skipping shutdown because it never started`);
 			return;
 		}
 		if (!thisDc.hasTerminated) {
@@ -195,7 +195,7 @@ export async function getVariablesTree(dc: DartDebugClient, variablesReference: 
 export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string[]): DartProcess {
 	const programPath = fsPath(program);
 	const cwdPath = fsPath(cwd);
-	const dartPath = path.join(extApi.workspaceContext.sdks.dart, dartVMPath);
+	const dartPath = path.join(privateApi.workspaceContext.sdks.dart, dartVMPath);
 	const debugArgs = [
 		"--enable-vm-service=0",
 		"--pause_isolates_on_start=true",
@@ -206,7 +206,7 @@ export function spawnDartProcessPaused(program: Uri, cwd: Uri, ...vmArgs: string
 		programPath,
 	];
 	logger.info(`Spawning ${dartPath} in ${cwdPath} with args ${JSON.stringify(allArgs)}`);
-	const process = extApi.safeToolSpawn(
+	const process = privateApi.safeToolSpawn(
 		cwdPath,
 		dartPath,
 		allArgs,
@@ -231,7 +231,7 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 		config.deviceId as string,
 		"--start-paused",
 	];
-	const process = extApi.safeToolSpawn(config.cwd, binPath, args);
+	const process = privateApi.safeToolSpawn(config.cwd, binPath, args);
 	logger.info(`(PROC ${process.pid}) Spawned ${binPath} ${args.join(" ")} in ${config.cwd}`, LogCategory.CommandProcesses);
 	logProcess(logger, LogCategory.CI, process);
 	const flutterProcess = new DartProcess(process);
@@ -265,16 +265,16 @@ export class DartProcess {
 }
 
 export async function killFlutterTester(): Promise<void> {
-	// extApi may be unavailable if the test was skipped (eg. Flutter Bazel on
-	// Windows), so we can't call extApi.safeToolSpawn here (though also should
+	// privateApi may be unavailable if the test was skipped (eg. Flutter Bazel on
+	// Windows), so we can't call privateApi.safeToolSpawn here (though also should
 	// not need to).
-	if (!extApi)
+	if (!privateApi)
 		return;
 
 	await new Promise<void>((resolve) => {
 		const proc = isWin
-			? extApi.safeToolSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
-			: extApi.safeToolSpawn(undefined, "pkill", ["flutter_tester"]);
+			? privateApi.safeToolSpawn(undefined, "taskkill", ["/IM", "flutter_tester.exe", "/F"])
+			: privateApi.safeToolSpawn(undefined, "pkill", ["flutter_tester"]);
 		proc.on("exit", (code: number) => {
 			if (isWin ? code !== 128 : code === 0) {
 				logger.warn(`flutter_tester process(s) remained after test (${currentTestName}). These have been terminated to avoid affecting future tests, ` +
@@ -286,7 +286,7 @@ export async function killFlutterTester(): Promise<void> {
 
 	if (!isWin) {
 		await new Promise<void>((resolve) => {
-			const proc2 = extApi.safeToolSpawn(undefined, "ps", ["-x"]);
+			const proc2 = privateApi.safeToolSpawn(undefined, "ps", ["-x"]);
 
 			proc2.stdout.setEncoding("utf8");
 			proc2.stdout.on("data", (data: Buffer | string) => logger.info(data.toString()));
@@ -331,13 +331,13 @@ export function ensureFrameCategories(frames: DebugProtocol.StackFrame[], presen
 }
 
 export async function ensureServiceExtensionValue(id: VmServiceExtension, expected: unknown, dc: DartDebugClient) {
-	const value = await extApi.debugCommands.vmServices.getCurrentServiceExtensionValue(dc.currentSession, id);
+	const value = await privateApi.debugCommands.vmServices.getCurrentServiceExtensionValue(dc.currentSession, id);
 	assert.equal(value, expected);
 }
 
 export function sdkPathForSdkDap(dc: DartDebugClient, file: string) {
 	if (dc.isDartDap)
-		return path.join(extApi.workspaceContext.sdks.dart, isWin ? file.replace(/\//g, "\\") : file);
+		return path.join(privateApi.workspaceContext.sdks.dart, isWin ? file.replace(/\//g, "\\") : file);
 	// When not using the new DAPs, we don't translate SDK paths back to the local file paths.
 	return undefined;
 }

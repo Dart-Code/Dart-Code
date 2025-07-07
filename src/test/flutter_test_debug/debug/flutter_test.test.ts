@@ -10,7 +10,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -75,7 +75,7 @@ describe("flutter test debugger", () => {
 
 			it("can run tests from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const testPos = positionOf(`test^Widgets('Hello world test`);
@@ -108,7 +108,7 @@ describe("flutter test debugger", () => {
 
 			it("can run test with multiline name from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const testPos = positionOf(`test^Widgets('''multi`);
@@ -141,7 +141,7 @@ describe("flutter test debugger", () => {
 
 			it("can run skipped tests from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile), "Outline for main file");
 
 				const fileCodeLens = await getCodeLens(editor.document);
 				const testPos = positionOf(`test^Widgets('Skipped test`);
@@ -253,9 +253,9 @@ describe("flutter test debugger", () => {
 				// Discover tests in these files.
 				await openFile(flutterTestSelective1File);
 				await openFile(flutterTestSelective2File);
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestSelective1File));
-				await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestSelective2File));
-				const controller = extApi.testController;
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective1File));
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective2File));
+				const controller = privateApi.testController;
 
 				const testItems: vs.TestItem[] = [];
 
@@ -445,7 +445,7 @@ describe("flutter test debugger", () => {
 				// Allow some time for the debug service to register its Driver extension so we can find it when
 				// looking for the app debug session later.
 				await waitFor(
-					() => extApi.debugSessions.find((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver)),
+					() => privateApi.debugSessions.find((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver)),
 					100, // checkEveryMilliseconds
 					30000, // tryForMilliseconds
 				);
@@ -500,8 +500,8 @@ describe("flutter test debugger", () => {
 	it("can run tests with coverage", async () => {
 		// Discover tests.
 		await openFile(flutterTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(flutterTestMainFile));
-		const controller = extApi.testController;
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile));
+		const controller = privateApi.testController;
 
 		const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterTestMainFile)}`)!;
 		const testRequest = new vs.TestRunRequest([suiteNode]);

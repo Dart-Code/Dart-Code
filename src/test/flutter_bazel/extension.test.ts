@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { isWin, MAX_VERSION } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, flutterBazelRoot, logger } from "../helpers";
+import { activateWithoutAnalysis, ext, flutterBazelRoot, logger, privateApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folders", () => {
@@ -33,9 +33,9 @@ describe("extension", () => {
 	});
 	it("loaded the Flutter config file", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi);
+		assert.ok(privateApi);
 
-		const workspaceContext = extApi.workspaceContext;
+		const workspaceContext = privateApi.workspaceContext;
 
 		assert.ok(workspaceContext.sdks);
 		assert.ok(workspaceContext.sdks.dart);
@@ -69,9 +69,9 @@ describe("extension", () => {
 	// to force the Dart SDK download.
 	it.skip("used Bazel's Flutter version", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi);
+		assert.ok(privateApi);
 
-		const sdks: Sdks = extApi.workspaceContext.sdks;
+		const sdks: Sdks = privateApi.workspaceContext.sdks;
 
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
@@ -81,9 +81,9 @@ describe("extension", () => {
 	});
 	it.skip("used Bazel's Flutter's Dart version", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi);
+		assert.ok(privateApi);
 
-		const sdks: Sdks = extApi.workspaceContext.sdks;
+		const sdks: Sdks = privateApi.workspaceContext.sdks;
 
 		assert.ok(sdks);
 		assert.ok(sdks.dart);

@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isLinux } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
-import { activate, extApi, logger } from "../helpers";
+import { activate, logger, privateApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -26,7 +26,7 @@ describe("extension", () => {
 	it("initializes the snap and locates the SDK", async () => {
 		await activate();
 
-		const workspaceContext = extApi.workspaceContext;
+		const workspaceContext = privateApi.workspaceContext;
 
 		assert.ok(workspaceContext.sdks);
 		assert.ok(workspaceContext.sdks.dart);

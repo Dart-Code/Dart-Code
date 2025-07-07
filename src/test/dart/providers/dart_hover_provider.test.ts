@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, everythingFile, extApi, getPackages, positionOf, rangeOf } from "../../helpers";
+import { activate, currentDoc, everythingFile, getPackages, positionOf, privateApi, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
 
@@ -47,7 +47,7 @@ describe("dart_hover_provider", () => {
 	}
 
 	function getExpectedSignature(method: string, returnType: string): string {
-		return extApi.dartCapabilities.omitsVoidForSetters && method.startsWith("set ") && returnType === "void"
+		return privateApi.dartCapabilities.omitsVoidForSetters && method.startsWith("set ") && returnType === "void"
 			? method
 			: `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`;
 	}

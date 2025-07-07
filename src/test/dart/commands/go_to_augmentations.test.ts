@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, mkDirRecursive } from "../../../shared/utils/fs";
-import { activate, currentEditor, ensureIsRange, extApi, helloWorldFolder, helloWorldPubspec, openFile, rangeOf, waitForResult } from "../../helpers";
+import { activate, currentEditor, ensureIsRange, helloWorldFolder, helloWorldPubspec, openFile, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const libFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib.dart"));
 const augmentationFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib_augmentation.dart"));
@@ -26,7 +26,7 @@ describe("go to", () => {
 	});
 
 	beforeEach("skip if not supported", function () {
-		if (!extApi.dartCapabilities.supportsAugmentations)
+		if (!privateApi.dartCapabilities.supportsAugmentations)
 			this.skip();
 	});
 
@@ -37,13 +37,13 @@ describe("go to", () => {
 		fs.writeFileSync(fsPath(augmentationFile), augmentationContent);
 
 		// Modifying pubspec will trigger analysis.
-		await extApi.nextAnalysis();
+		await privateApi.nextAnalysis();
 	});
 
 	describe("augmentation", () => {
 		beforeEach("wait for outline", async () => {
 			await openFile(libFile);
-			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(libFile));
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(libFile));
 		});
 
 		it("navigates to augmented class", async () => {
@@ -97,7 +97,7 @@ describe("go to", () => {
 	describe("augmented", () => {
 		beforeEach("wait for outline", async () => {
 			await openFile(augmentationFile);
-			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(libFile));
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(libFile));
 		});
 
 		it("navigates to augmented class", async () => {

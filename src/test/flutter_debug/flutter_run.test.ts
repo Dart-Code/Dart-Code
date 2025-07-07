@@ -10,7 +10,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
+import { activate, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -23,19 +23,19 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// session in the test. This is not required for flutter-tester as that
 		// bypasses the device check.
 		if (flutterTestDeviceIsWeb)
-			await waitFor(() => extApi.deviceManager!.getDevice(flutterTestDeviceId));
+			await waitFor(() => privateApi.deviceManager!.getDevice(flutterTestDeviceId));
 	});
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;
 	beforeEach("create debug client", () => {
-		if (extApi.debugSessions.length > 0) {
-			extApi.logger.warn(`Some debug sessions are already running before test started:`);
-			for (const debugSession of extApi.debugSessions) {
-				extApi.logger.warn(`  Session: ${debugSession.session.name}`);
+		if (privateApi.debugSessions.length > 0) {
+			privateApi.logger.warn(`Some debug sessions are already running before test started:`);
+			for (const debugSession of privateApi.debugSessions) {
+				privateApi.logger.warn(`  Session: ${debugSession.session.name}`);
 			}
-			extApi.logger.warn(`Resetting to avoid them affecting future tests`);
-			extApi.debugSessions.length = 0;
+			privateApi.logger.warn(`Resetting to avoid them affecting future tests`);
+			privateApi.debugSessions.length = 0;
 		}
 
 		dc = createDebugClient(DebuggerType.Flutter);
@@ -162,18 +162,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
 
 	it("expected debugger services/extensions are available in noDebug mode", async () => {
@@ -189,18 +189,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const expectHotReload = true;
 		const expectOtherServices = !dc.isDartDap;
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === expectHotReload, "Hot reload registered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === expectOtherServices, "Debug paint loaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === expectOtherServices, "Debug banner loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === expectHotReload, "Hot reload registered");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === expectOtherServices, "Debug paint loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === expectOtherServices, "Debug banner loaded");
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
 
 	it("expected debugger services/extensions are available after a hot restart", async () => {
@@ -211,9 +211,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
 
 		await delayBeforeRestart();
 		await waitAllThrowIfTerminates(dc,
@@ -221,18 +221,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			vs.commands.executeCommand("flutter.hotRestart") as Promise<void>,
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered 2");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded 2");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded 2");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered 2");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded 2");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded 2");
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
 
 	describe("inspector can navigate", () => {
@@ -287,7 +287,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		// Wait for Platform extension before trying to call it.
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.PlatformOverride), "Platform override loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.PlatformOverride), "Platform override loaded");
 
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
 		for (const platform of ["iOS", "android", "macOS", "linux"]) {
@@ -311,7 +311,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		// Wait for Brightness extension before trying to call it.
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
 
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
 		await vs.commands.executeCommand("flutter.toggleBrightness");
@@ -333,7 +333,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
 
 		// Set the brightness to Dark through our toggle. This leaves us in control so we should
 		// we-transmit it.
@@ -343,7 +343,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		// Hot restart, and wait for the service extension to come back.
 		await vs.commands.executeCommand("flutter.hotRestart");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
 		await delay(100); // Allow time for the values to be re-sent.
 
 		// Ensure the current value is still Dark (ie. we re-sent it).
@@ -363,7 +363,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
 
 		// First toggle the brightness ourselves, so we have a local override value.
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
@@ -373,12 +373,12 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
 
 		// Now set it directly (emulating another tool). This should drop our override so we would not re-send it.
-		await extApi.debugCommands.vmServices.sendExtensionValue(dc.currentSession, VmServiceExtension.BrightnessOverride, "Brightness.dark");
+		await privateApi.debugCommands.vmServices.sendExtensionValue(dc.currentSession, VmServiceExtension.BrightnessOverride, "Brightness.dark");
 		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
 
 		// Hot restart, and wait for the service extension to come back.
 		await vs.commands.executeCommand("flutter.hotRestart");
-		await waitForResult(() => extApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
+		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
 		await delay(100); // Allow time for the values to be re-sent.
 
 		// Ensure the current value has reverted (since it was the other tools job to re-send it, but in
@@ -571,8 +571,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	it("automatically spawns DevTools at startup", async () => {
-		assert.ok(extApi.devTools.devtoolsUrl);
-		assert.ok((await extApi.devTools.devtoolsUrl).startsWith("http://"));
+		assert.ok(privateApi.devTools.devtoolsUrl);
+		assert.ok((await privateApi.devTools.devtoolsUrl).startsWith("http://"));
 	});
 
 	it("can launch DevTools externally", async () => {
@@ -585,17 +585,17 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		await setConfigForTest("dart", "devToolsLocation", "external");
-		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").resolves();
+		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").resolves();
 
 		const devTools: { url: string, dispose: () => void } = await watchPromise("executeCommand", await vs.commands.executeCommand("dart.openDevTools"));
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.ok(devTools);
 		// Clean up DevTools if it wasn't being eagerly spawned.
-		if (!extApi.workspaceContext.config.startDevToolsServerEagerly)
+		if (!privateApi.workspaceContext.config.startDevToolsServerEagerly)
 			defer("Dispose DevTools", devTools.dispose);
 		assert.ok(devTools.url);
 
-		const serverResponse = await watchPromise("fetch", extApi.webClient.fetch(devTools.url));
+		const serverResponse = await watchPromise("fetch", privateApi.webClient.fetch(devTools.url));
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
 		await waitAllThrowIfTerminates(dc,
@@ -654,7 +654,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (!dc.isDartDap && extApi.flutterCapabilities?.version.startsWith("3.19")) {
+		if (!dc.isDartDap && privateApi.flutterCapabilities?.version.startsWith("3.19")) {
 			// This is known broken in Flutter 3.19 (for legacy DAP) so skip for this version and re-enable
 			// for the next version.
 			// https://github.com/dart-lang/sdk/issues/54925
@@ -662,7 +662,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		}
 
 		// https://github.com/Dart-Code/Dart-Code/issues/5211
-		if (flutterTestDeviceIsWeb && (extApi.dartCapabilities.version.startsWith("3.5.") || extApi.dartCapabilities.version.startsWith("3.6.") || extApi.dartCapabilities.version.startsWith("3.7.") || extApi.dartCapabilities.version.startsWith("3.8.")))
+		if (flutterTestDeviceIsWeb && (privateApi.dartCapabilities.version.startsWith("3.5.") || privateApi.dartCapabilities.version.startsWith("3.6.") || privateApi.dartCapabilities.version.startsWith("3.7.") || privateApi.dartCapabilities.version.startsWith("3.8.")))
 			this.skip();
 
 		await openFile(flutterHelloWorldMainFile);
@@ -1033,7 +1033,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("can fetch slices of stack frames", async () => {
 		// TODO: This might be unreliable until dev channel gets this.
-		const expectFullCount = !versionIsAtLeast(extApi.dartCapabilities.version, "2.12.0-0");
+		const expectFullCount = !versionIsAtLeast(privateApi.dartCapabilities.version, "2.12.0-0");
 
 		await openFile(flutterHelloWorldStack60File);
 		const config = await startDebugger(dc, flutterHelloWorldStack60File);
@@ -1758,7 +1758,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const timingRegex = new RegExp("\[[ \d]+\] ", "g");
 		stdErrLines = stdErrLines.map((line) => line.replace(timingRegex, ""));
 
-		const expectedErrorLines = dc.isDartDap && extApi.flutterCapabilities.hasSdkDapWithStructuredErrors
+		const expectedErrorLines = dc.isDartDap && privateApi.flutterCapabilities.hasSdkDapWithStructuredErrors
 			? [
 				`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
 				`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,

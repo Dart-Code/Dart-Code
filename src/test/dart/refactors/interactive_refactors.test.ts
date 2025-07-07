@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { InteractiveRefactors, SupportedParameterKind } from "../../../shared/vscode/interactive_refactors";
-import { activate, emptyFile, extApi, helloWorldMainFile, sb } from "../../helpers";
+import { activate, emptyFile, helloWorldMainFile, privateApi, sb } from "../../helpers";
 
 describe("interactive refactors", () => {
 
@@ -12,7 +12,7 @@ describe("interactive refactors", () => {
 	beforeEach("activate", () => activate());
 
 	it("does not rewrite unrelated code actions", async () => {
-		const refactors = extApi.interactiveRefactors!;
+		const refactors = privateApi.interactiveRefactors!;
 
 		const codeActionWithCommand = new vs.CodeAction("e");
 		codeActionWithCommand.command = {
@@ -76,7 +76,7 @@ describe("interactive refactors", () => {
 	}
 
 	it("rewrites interactive refactor code actions", async () => {
-		const refactors = extApi.interactiveRefactors!;
+		const refactors = privateApi.interactiveRefactors!;
 		const kind = "unknown_kind";
 		const defaultValue = "aaa";
 
@@ -94,7 +94,7 @@ describe("interactive refactors", () => {
 	});
 
 	it("runs using original values for unknown kinds", async () => {
-		const refactors = extApi.interactiveRefactors!;
+		const refactors = privateApi.interactiveRefactors!;
 		const kind = "unknown_kind";
 		const defaultValue = "aaa";
 
@@ -105,7 +105,7 @@ describe("interactive refactors", () => {
 	});
 
 	it("handles 'saveUri' parameters", async () => {
-		const refactors = extApi.interactiveRefactors!;
+		const refactors = privateApi.interactiveRefactors!;
 		const kind = SupportedParameterKind.saveUri;
 
 		// Use emptyFile as the default.
@@ -126,7 +126,7 @@ describe("interactive refactors", () => {
 		if (!isWin)
 			this.skip();
 
-		const refactors = extApi.interactiveRefactors!;
+		const refactors = privateApi.interactiveRefactors!;
 		const kind = SupportedParameterKind.saveUri;
 
 		// Use emptyFile as the default.

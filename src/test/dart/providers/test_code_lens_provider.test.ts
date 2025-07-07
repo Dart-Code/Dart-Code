@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldTestMainFile, openFile, positionOf, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, getCodeLens, getPackages, helloWorldTestMainFile, openFile, positionOf, privateApi, waitForResult } from "../../helpers";
 
 describe("test_code_lens", () => {
 	before("get packages", () => getPackages());
@@ -8,7 +8,7 @@ describe("test_code_lens", () => {
 
 	it("includes run/debug actions for tests", async function () {
 		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const testPos = positionOf(`test^(".split() splits`);
@@ -37,7 +37,7 @@ describe("test_code_lens", () => {
 
 	it("includes run/debug actions for groups", async () => {
 		const editor = await openFile(helloWorldTestMainFile);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const groupPos = positionOf("group^(");
@@ -76,7 +76,7 @@ describe("test_code_lens", () => {
 			await addLaunchConfigsForTest(vs.workspace.workspaceFolders![0].uri, launchConfigs);
 
 			const editor = await openFile(helloWorldTestMainFile);
-			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 			const fileCodeLens = await getCodeLens(editor.document);
 			const testPos = positionOf(`test^(".split() splits`);
@@ -103,7 +103,7 @@ describe("test_code_lens", () => {
 			await addLaunchConfigsForTest(vs.workspace.workspaceFolders![0].uri, launchConfigs);
 
 			const editor = await openFile(helloWorldTestMainFile);
-			await waitForResult(() => !!extApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 
 			const fileCodeLens = await getCodeLens(editor.document);
 			const groupPos = positionOf("group^(");

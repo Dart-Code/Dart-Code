@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { activate, extApi, getCodeLens, getPackages, openFile, positionOf, sb, waitForResult } from "../../helpers";
+import { activate, getCodeLens, getPackages, openFile, positionOf, privateApi, sb, waitForResult } from "../../helpers";
 
 describe("test_flutter_dartpad_samples", () => {
 	before("get packages", () => getPackages());
@@ -35,9 +35,9 @@ describe("test_flutter_dartpad_samples", () => {
 	});
 
 	async function verifySampleLink(test: Mocha.Context, p: TestParams) {
-		const sourceFileUri = vs.Uri.file(path.join(extApi.workspaceContext.sdks.flutter!, p.sourceFilePath));
+		const sourceFileUri = vs.Uri.file(path.join(privateApi.workspaceContext.sdks.flutter!, p.sourceFilePath));
 		const editor = await openFile(sourceFileUri);
-		await waitForResult(() => !!extApi.fileTracker.getOutlineFor(sourceFileUri));
+		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(sourceFileUri));
 
 		const fileCodeLens = await getCodeLens(editor.document);
 		const appBarClassPos = positionOf(p.sourceCodeLocation);
@@ -64,7 +64,7 @@ describe("test_flutter_dartpad_samples", () => {
 		assert.equal(sampleInfo.className, p.className);
 
 		// Execute the command and ensure it tried to open the correct URL.
-		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
+		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
 		await vs.commands.executeCommand(codeLens.command.command, ...codeLens.command.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
 		assert.ok(openBrowserCommand.calledOnce);
 		assert.equal(openBrowserCommand.args[0][0], p.expectedUrl);

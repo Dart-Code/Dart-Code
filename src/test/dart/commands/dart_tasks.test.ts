@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, extApi, helloWorldFolder, tryDeleteDirectoryRecursive } from "../../helpers";
+import { activate, helloWorldFolder, privateApi, tryDeleteDirectoryRecursive } from "../../helpers";
 
 describe("dart tasks", () => {
 	beforeEach("activate", () => activate());
@@ -12,7 +12,7 @@ describe("dart tasks", () => {
 
 	it("dart.task.dartdoc causes documentation to be generated", async function () {
 		// https://github.com/dart-lang/dartdoc/issues/3823
-		if (extApi.dartCapabilities.version.startsWith("3.5."))
+		if (privateApi.dartCapabilities.version.startsWith("3.5."))
 			this.skip();
 
 		assert.ok(!fs.existsSync(dartDocOutputPath));

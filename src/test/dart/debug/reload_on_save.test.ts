@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import { DebugSession } from "vscode";
 import { DebuggerType } from "../../../shared/enums";
 import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
-import { activate, currentDoc, delay, extApi, setConfigForTest, setTestContent } from "../../helpers";
+import { activate, currentDoc, delay, privateApi, setConfigForTest, setTestContent } from "../../helpers";
 
 describe("hot reloads on save", () => {
 	beforeEach("activate emptyFile", () => activate());
@@ -39,7 +39,7 @@ describe("hot reloads on save", () => {
 		await setConfigForTest("dart", "flutterHotReloadOnSave", "never");
 
 		const session = buildSession(DebuggerType.Dart);
-		extApi.debugSessions.push(new DartDebugSessionInformation(session));
+		privateApi.debugSessions.push(new DartDebugSessionInformation(session));
 
 		const doc = currentDoc();
 		await setTestContent(doc.getText() + "// 1 ");
@@ -57,7 +57,7 @@ describe("hot reloads on save", () => {
 		const session = buildSession(DebuggerType.Flutter);
 		const dartSession = new DartDebugSessionInformation(session);
 		dartSession.hasStarted = true;
-		extApi.debugSessions.push(dartSession);
+		privateApi.debugSessions.push(dartSession);
 
 		const doc = currentDoc();
 		await setTestContent(doc.getText() + "// 1 ");
@@ -73,7 +73,7 @@ describe("hot reloads on save", () => {
 		await setConfigForTest("dart", "flutterHotReloadOnSave", "manual");
 
 		const session = buildSession(DebuggerType.Flutter);
-		extApi.debugSessions.push(new DartDebugSessionInformation(session));
+		privateApi.debugSessions.push(new DartDebugSessionInformation(session));
 
 		const doc = currentDoc();
 		await setTestContent(doc.getText() + "// 1 ");

@@ -9,7 +9,7 @@ import { dartCodeExtensionIdentifier, FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from
 import { FlutterCreateTriggerData } from "../../shared/interfaces";
 import { getChildFolders } from "../../shared/utils/fs";
 import { DartUriHandler } from "../../shared/vscode/uri_handlers/uri_handler";
-import { activate, extApi, sb, tryDeleteDirectoryRecursive } from "../helpers";
+import { activate, privateApi, sb, tryDeleteDirectoryRecursive } from "../helpers";
 
 describe("URL handler", async () => {
 	const urlHandler = new DartUriHandler(new FlutterCapabilities("1.0.0"));
@@ -27,7 +27,7 @@ describe("URL handler", async () => {
 		await urlHandler.handleUri(vs.Uri.parse(`vscode://Dart-Code.dart-code/flutter/sample/my.sample.id`));
 
 		// Expect a single folder, which is out sample app.
-		const childFolders = await getChildFolders(extApi.logger, tempPath);
+		const childFolders = await getChildFolders(privateApi.logger, tempPath);
 		assert.equal(childFolders.length, 1);
 
 		const projectFolder = childFolders[0];

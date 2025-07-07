@@ -5,7 +5,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { createFolderForFile, fsPath, tryDeleteFile } from "../../../shared/utils/fs";
 import { createTestFileAction, defaultDartTestFileContents } from "../../../shared/utils/test";
-import { activate, createTempTestFile, currentDoc, currentEditor, defer, emptyFile, extApi, helloWorldFolder, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, sb, tryDelete, waitForResult } from "../../helpers";
+import { activate, createTempTestFile, currentDoc, currentEditor, defer, emptyFile, helloWorldFolder, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, privateApi, sb, tryDelete, waitForResult } from "../../helpers";
 
 for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOrImplementationFile"] as const) {
 	describe(commandName, () => {
@@ -23,7 +23,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			await openFile(helloWorldGoToLibFile);
 
 			// Allow some time to check, because of async stuff.
-			await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+			await waitForResult(() => privateApi.isInTestFileThatHasImplementation === false && privateApi.isInImplementationFileThatCanHaveTest === true);
 
 			await vs.commands.executeCommand(commandName);
 
@@ -40,7 +40,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			await openFile(helloWorldGoToLibSrcFile);
 
 			// Allow some time to check, because of async stuff.
-			await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+			await waitForResult(() => privateApi.isInTestFileThatHasImplementation === false && privateApi.isInImplementationFileThatCanHaveTest === true);
 
 			await vs.commands.executeCommand(commandName);
 
@@ -58,7 +58,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			await openFile(helloWorldGoToLibSrcFile);
 
 			// Allow some time to check, because of async stuff.
-			await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+			await waitForResult(() => privateApi.isInTestFileThatHasImplementation === false && privateApi.isInImplementationFileThatCanHaveTest === true);
 
 			await vs.commands.executeCommand(commandName);
 
@@ -75,7 +75,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			await openFile(helloWorldGoToTestFile);
 
 			// Allow some time to check, because of async stuff.
-			await waitForResult(() => extApi.isInTestFileThatHasImplementation === true && extApi.isInImplementationFileThatCanHaveTest === false);
+			await waitForResult(() => privateApi.isInTestFileThatHasImplementation === true && privateApi.isInImplementationFileThatCanHaveTest === false);
 
 			await vs.commands.executeCommand(commandName);
 
@@ -92,7 +92,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			await openFile(helloWorldGoToTestFile);
 
 			// Allow some time to check, because of async stuff.
-			await waitForResult(() => extApi.isInTestFileThatHasImplementation === true && extApi.isInImplementationFileThatCanHaveTest === false);
+			await waitForResult(() => privateApi.isInTestFileThatHasImplementation === true && privateApi.isInImplementationFileThatCanHaveTest === false);
 
 			await vs.commands.executeCommand(commandName);
 
@@ -109,7 +109,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			await openFile(helloWorldGoToTestSrcFile);
 
 			// Allow some time to check, because of async stuff.
-			await waitForResult(() => extApi.isInTestFileThatHasImplementation === true && extApi.isInImplementationFileThatCanHaveTest === false);
+			await waitForResult(() => privateApi.isInTestFileThatHasImplementation === true && privateApi.isInImplementationFileThatCanHaveTest === false);
 
 			await vs.commands.executeCommand(commandName);
 
@@ -123,7 +123,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 				await openFile(helloWorldMainLibFile);
 
 				// Allow some time to check, because of async stuff.
-				await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+				await waitForResult(() => privateApi.isInTestFileThatHasImplementation === false && privateApi.isInImplementationFileThatCanHaveTest === true);
 
 				// Also ensure the command exists.
 				const command = (await vs.commands.getCommands(true)).filter((id) => id === commandName);
@@ -135,7 +135,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 				await openFile(helloWorldTestMainFile);
 
 				// Allow some time to check, because of async stuff.
-				await waitForResult(() => extApi.isInTestFileThatHasImplementation === true && extApi.isInImplementationFileThatCanHaveTest === false);
+				await waitForResult(() => privateApi.isInTestFileThatHasImplementation === true && privateApi.isInImplementationFileThatCanHaveTest === false);
 
 				// Also ensure the command exists.
 				const command = (await vs.commands.getCommands(true)).filter((id) => id === commandName);
@@ -147,7 +147,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 				await openFile(helloWorldTestTreeFile);
 
 				// Allow some time to check, because of async stuff.
-				await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === false);
+				await waitForResult(() => privateApi.isInTestFileThatHasImplementation === false && privateApi.isInImplementationFileThatCanHaveTest === false);
 
 				// Also ensure the command exists.
 				const command = (await vs.commands.getCommands(true)).filter((id) => id === commandName);
@@ -159,7 +159,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 				await openFile(emptyFile);
 
 				// Allow some time to check, because of async stuff.
-				await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+				await waitForResult(() => privateApi.isInTestFileThatHasImplementation === false && privateApi.isInImplementationFileThatCanHaveTest === true);
 
 				// Also ensure the command exists.
 				const command = (await vs.commands.getCommands(true)).filter((id) => id === commandName);
@@ -180,7 +180,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 				await openFile(emptyFile);
 
 				// Allow some time to check, because of async stuff.
-				await waitForResult(() => extApi.isInTestFileThatHasImplementation === false && extApi.isInImplementationFileThatCanHaveTest === true);
+				await waitForResult(() => privateApi.isInTestFileThatHasImplementation === false && privateApi.isInImplementationFileThatCanHaveTest === true);
 
 				// Also ensure the file doesn't already exist.
 				assert.ok(!fs.existsSync(testFilePath));

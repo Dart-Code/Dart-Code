@@ -15,7 +15,7 @@ import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, extApi, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, rangeFor, sb, setConfigForTest, setTestContent, tryDeleteDirectoryRecursive, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
+import { activate, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, rangeFor, sb, setConfigForTest, setTestContent, tryDeleteDirectoryRecursive, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -313,7 +313,7 @@ void printSomething() {
 		// TODO(dantup): Tests for embedded DevTools.
 		await setConfigForTest("dart", "devToolsLocation", "external");
 
-		const openBrowserCommand = sb.stub(extApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
+		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").withArgs(sinon.match.any).resolves(true);
 
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(dc, helloWorldMainFile);
@@ -329,7 +329,7 @@ void printSomething() {
 		defer("Dispose DevTools", devTools.dispose);
 		assert.ok(devTools.url);
 
-		const serverResponse = await extApi.webClient.fetch(devTools.url);
+		const serverResponse = await privateApi.webClient.fetch(devTools.url);
 		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
 
 		await dc.terminateRequest();
@@ -704,7 +704,7 @@ void printSomething() {
 
 	it("can fetch slices of stack frames", async () => {
 		// TODO: This might be unreliable until dev channel gets this.
-		const expectFullCount = !versionIsAtLeast(extApi.dartCapabilities.version, "2.12.0-0");
+		const expectFullCount = !versionIsAtLeast(privateApi.dartCapabilities.version, "2.12.0-0");
 
 		await openFile(helloWorldStack60File);
 		const config = await startDebugger(dc, helloWorldStack60File);
@@ -904,7 +904,7 @@ void printSomething() {
 	});
 
 	it("formats local variables as hex when configured", async function () {
-		if (!dc.isDartDap || !extApi.dartCapabilities.supportsFormatSpecifiers)
+		if (!dc.isDartDap || !privateApi.dartCapabilities.supportsFormatSpecifiers)
 			this.skip();
 
 		await setConfigForTest("dart", "showDebuggerNumbersAsHex", true);
@@ -1085,7 +1085,7 @@ void printSomething() {
 		});
 
 		it("with format specifiers", async function () {
-			if (!dc.isDartDap || !extApi.dartCapabilities.supportsFormatSpecifiers)
+			if (!dc.isDartDap || !privateApi.dartCapabilities.supportsFormatSpecifiers)
 				this.skip();
 
 			await openFile(helloWorldMainFile);

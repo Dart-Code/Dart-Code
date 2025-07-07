@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, logger } from "../helpers";
+import { activateWithoutAnalysis, ext, logger, privateApi } from "../helpers";
 
 
 describe("test environment", () => {
@@ -24,16 +24,16 @@ describe("extension", () => {
 	});
 	it("found the Dart SDK", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi);
-		const sdks: Sdks = extApi.workspaceContext.sdks;
+		assert.ok(privateApi);
+		const sdks: Sdks = privateApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		logger.info("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi);
-		const sdks: Sdks = extApi.workspaceContext.sdks;
+		assert.ok(privateApi);
+		const sdks: Sdks = privateApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
 		assert.equal(sdks.dartSdkIsFromFlutter, false);
