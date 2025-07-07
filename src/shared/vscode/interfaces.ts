@@ -140,7 +140,7 @@ export interface InternalExtensionApi {
 	testCoordinator: TestSessionCoordinator;
 	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined } | undefined,
 	testModel: TestModel;
-	toolingDaemon: DartToolingDaemon;
+	toolingDaemon: DartToolingDaemon | undefined;
 	webClient: WebClient;
 	workspaceContext: DartWorkspaceContext;
 	// Only available in test runs.
