@@ -115,7 +115,7 @@ export class DartToolingDaemon implements IAmDisposable {
 			const serviceHandler = this.serviceHandlers[method];
 			if (serviceHandler) {
 				const result = await serviceHandler(request.params);
-				await this.send({
+				this.send({
 					id,
 					jsonrpc: "2.0",
 					result,
@@ -187,7 +187,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		const completer = new PromiseCompleter<DtdResult>();
 		this.completers[id] = completer;
 
-		await this.send({
+		this.send({
 			id,
 			jsonrpc: "2.0",
 			method,
@@ -212,7 +212,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		if (!this.connection)
 			throw Error("DTD connection is unavailable");
 
-		void this.send({
+		this.send({
 			jsonrpc: "2.0",
 			method: "postEvent",
 			params: {
@@ -223,9 +223,9 @@ export class DartToolingDaemon implements IAmDisposable {
 		});
 	}
 
-	private send(json: DtdMessage) {
+	private send(json: DtdMessage): void {
 		if (!this.connection)
-			return Promise.reject("DTD connection is unavailable");
+			throw new Error("DTD connection is unavailable");
 
 		const str = JSON.stringify(json);
 		this.logTraffic(`==> ${str}\n`);
