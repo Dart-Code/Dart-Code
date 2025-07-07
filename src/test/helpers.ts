@@ -22,9 +22,12 @@ import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
+// eslint-disable-next-line no-restricted-imports
+import { PublicDartExtensionApi } from "../extension/api/interfaces";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let privateApi: InternalExtensionApi;
+export let extApi: PublicDartExtensionApi;
 export let logger: Logger = new BufferedLogger();
 export const threeMinutesInMilliseconds = 1000 * 60 * 3;
 export const fakeCancellationToken: vs.CancellationToken = {
@@ -197,6 +200,7 @@ export async function activateWithoutAnalysis(): Promise<void> {
 	await ext.activate();
 	if (ext.exports) {
 		privateApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
+		extApi = ext.exports as PublicDartExtensionApi;
 		setupTestLogging();
 	} else
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
@@ -226,6 +230,7 @@ function setupTestLogging(): boolean {
 		return false;
 
 	privateApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
+	extApi = ext.exports as PublicDartExtensionApi;
 	const emittingLogger = privateApi.logger;
 
 	if (fileSafeCurrentTestName) {

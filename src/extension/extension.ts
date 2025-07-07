@@ -27,7 +27,7 @@ import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
-import { DartExtensionApi } from "./api/extension_api";
+import { PublicDartExtensionApiImpl, extensionApiData } from "./api/extension_api";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
@@ -158,6 +158,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	analytics = new Analytics(logger);
 	const sdkUtils = new SdkUtils(logger, context, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
+	extensionApiData.setSdks(workspaceContextUnverified.sdks);
 	analytics.workspaceContext = workspaceContextUnverified;
 	util.logTime("initWorkspace");
 
@@ -292,6 +293,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
 		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
 		: undefined;
+	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiData.setDtdUri(uri));
 
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {
 		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
@@ -674,7 +676,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	//  some extensions are currently using this for access to the analyzer. We should provide a replacement
 	//  before removing this to avoid breaking them.
 	// if (!isDartCodeTestRun) {
-	// 	return new DartExtensionApi();
+	// 	return new PublicDartExtensionApiImpl();
 	// } else {
 	const privateApi = {
 		addDependencyCommand,
@@ -715,10 +717,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		workspaceContext,
 	} as InternalExtensionApi;
 
-	return {
-		...new DartExtensionApi(),
-		[internalApiSymbol]: Object.assign(privateApi, isDartCodeTestRun ? { sdkUtils } : {}),
-	};
+	// Use Object.create to preserve getters from PublicDartExtensionApiImpl
+	const publicApi = Object.create(PublicDartExtensionApiImpl.prototype);
+	return Object.assign(
+		publicApi,
+		{
+			[internalApiSymbol]: Object.assign(privateApi, isDartCodeTestRun ? { sdkUtils } : {}),
+		},
+	);
 	// }
 }
 

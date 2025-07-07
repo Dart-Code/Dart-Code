@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { isWin } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, logger, privateApi } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi, logger, privateApi } from "../helpers";
 
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
 const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
@@ -22,6 +22,7 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("activated", async () => {
+		assert.equal(privateApi, undefined);
 		await activateWithoutAnalysis();
 		assert.equal(ext.isActive, true);
 	});
@@ -31,7 +32,10 @@ describe("extension", () => {
 		const sdks: Sdks = privateApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
+		assert.ok(sdks.dartVersion);
 		logger.info("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		assert.equal(extApi.sdks.dart, sdks.dart);
+		assert.equal(extApi.sdks.dartVersion, sdks.dartVersion);
 	});
 	it("did not try to use Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();
