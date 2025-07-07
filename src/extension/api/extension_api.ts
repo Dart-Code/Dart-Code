@@ -31,8 +31,8 @@ export const extensionApiData = new DartExtensionApiData();
 const data = extensionApiData;
 
 export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
-// Important: Don't use "this" in this class because the public API object is created
-// by inheriting from this class's prototype, not by instantiating it.
+	// Important: Don't use "this" in this class because the public API object is created
+	// by inheriting from this class's prototype, not by instantiating it.
 
 	public get version() { return extensionApiData.version; };
 
