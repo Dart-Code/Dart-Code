@@ -5,7 +5,7 @@ import { activateWithoutAnalysis, extApi, waitForResult } from "../helpers";
 describe("extension api", () => {
 	it("provides the DTD Uri and notifies of changes", async () => {
 		await activateWithoutAnalysis();
-		assert.ok(extApi.dtdUri);
+		await waitForResult(() => !!extApi.dtdUri);
 
 		let didChange = false;
 		const sub = extApi.onDtdUriChanged(() => didChange = true);
