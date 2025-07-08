@@ -718,9 +718,12 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		webClient,
 		workspaceContext,
 	};
-	// Replace the fields in the exported API, but don't replace the field because it seems to not
-	// work with the VS Code proxy object.
-	(exportedApi as any)[internalApiSymbol] = Object.assign((exportedApi as any)[internalApiSymbol] ?? {}, privateApi);
+	// Copy all fields and getters from privateApi into the existing object so that it works
+	// correctly through exports.
+	Object.defineProperties(
+		(exportedApi as any)[internalApiSymbol] ??= {},
+		Object.getOwnPropertyDescriptors(privateApi)
+	);
 
 	return exportedApi;
 	// }
