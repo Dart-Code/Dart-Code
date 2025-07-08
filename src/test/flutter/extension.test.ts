@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, logger, privateApi } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi, logger, privateApi } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -18,6 +18,7 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("activated", async () => {
+		assert.equal(privateApi, undefined);
 		await activateWithoutAnalysis();
 		assert.equal(ext.isActive, true);
 	});
@@ -27,8 +28,14 @@ describe("extension", () => {
 		const sdks: Sdks = privateApi.workspaceContext.sdks;
 		assert.ok(sdks);
 		assert.ok(sdks.dart);
+		assert.ok(sdks.dartVersion);
 		assert.ok(sdks.flutter);
+		assert.ok(sdks.flutterVersion);
 		logger.info("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
+		assert.equal(extApi.sdks.dart, sdks.dart);
+		assert.equal(extApi.sdks.dartVersion, sdks.dartVersion);
+		assert.equal(extApi.sdks.flutter, sdks.flutter);
+		assert.equal(extApi.sdks.flutterVersion, sdks.flutterVersion);
 	});
 	it("used Flutter's version of the Dart SDK", async () => {
 		await activateWithoutAnalysis();

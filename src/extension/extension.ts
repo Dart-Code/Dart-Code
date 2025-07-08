@@ -19,7 +19,6 @@ import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
-import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
@@ -27,7 +26,8 @@ import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
-import { DartExtensionApi } from "./api/extension_api";
+import { PublicDartExtensionApiImpl, extensionApiData } from "./api/extension_api";
+import { PublicDartExtensionApi } from "./api/interfaces";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
@@ -113,6 +113,7 @@ const loggers: IAmDisposable[] = [];
 let ringLogger: IAmDisposable | undefined;
 const logger = new EmittingLogger();
 let extensionLog: IAmDisposable | undefined;
+const exportedApi: PublicDartExtensionApi & { [internalApiSymbol]?: any } = new PublicDartExtensionApiImpl();
 
 // Keep a running in-memory buffer of last 500 log events we can give to the
 // user when something crashed even if they don't have disk-logging enabled.
@@ -158,6 +159,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	analytics = new Analytics(logger);
 	const sdkUtils = new SdkUtils(logger, context, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
+	extensionApiData.setSdks(workspaceContextUnverified.sdks);
 	analytics.workspaceContext = workspaceContextUnverified;
 	util.logTime("initWorkspace");
 
@@ -169,7 +171,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	if (!workspaceContextUnverified.sdks.dart || (workspaceContextUnverified.hasAnyFlutterProjects && !workspaceContextUnverified.sdks.flutter)) {
 		// Don't set anything else up; we can't work like this!
-		return sdkUtils.handleMissingSdks(workspaceContextUnverified);
+		sdkUtils.handleMissingSdks(workspaceContextUnverified);
+		return;
 	}
 
 	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;
@@ -292,6 +295,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
 		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
 		: undefined;
+	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiData.setDtdUri(uri));
 
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {
 		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
@@ -674,7 +678,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	//  some extensions are currently using this for access to the analyzer. We should provide a replacement
 	//  before removing this to avoid breaking them.
 	// if (!isDartCodeTestRun) {
-	// 	return new DartExtensionApi();
+	// 	return exportedApi;
 	// } else {
 	const privateApi = {
 		addDependencyCommand,
@@ -705,6 +709,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		packagesTreeProvider: dartPackagesProvider,
 		pubGlobal,
 		safeToolSpawn,
+		sdkUtils: isDartCodeTestRun ? sdkUtils : undefined,
 		testController: vsCodeTestController,
 		testCoordinator,
 		testDiscoverer,
@@ -713,12 +718,15 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		trackerFactories,
 		webClient,
 		workspaceContext,
-	} as InternalExtensionApi;
-
-	return {
-		...new DartExtensionApi(),
-		[internalApiSymbol]: Object.assign(privateApi, isDartCodeTestRun ? { sdkUtils } : {}),
 	};
+	// Copy all fields and getters from privateApi into the existing object so that it works
+	// correctly through exports.
+	Object.defineProperties(
+		(exportedApi as any)[internalApiSymbol] ??= {},
+		Object.getOwnPropertyDescriptors(privateApi)
+	);
+
+	return exportedApi;
 	// }
 }
 
