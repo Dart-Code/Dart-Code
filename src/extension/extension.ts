@@ -709,6 +709,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		packagesTreeProvider: dartPackagesProvider,
 		pubGlobal,
 		safeToolSpawn,
+		sdkUtils: isDartCodeTestRun ? sdkUtils : undefined,
 		testController: vsCodeTestController,
 		testCoordinator,
 		testDiscoverer,
