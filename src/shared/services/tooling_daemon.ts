@@ -181,7 +181,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.streamCancel, params: { streamId: string }): Promise<DtdResult>;
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
 		if (!this.connection)
-			return Promise.reject("DTD connection is unavailable");
+			return Promise.reject(`Unable to call ${method}, DTD connection is unavailable`);
 
 		const id = `${this.nextId++}`;
 		const completer = new PromiseCompleter<DtdResult>();
@@ -210,7 +210,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public sendEvent(stream: Stream.Editor, params: ActiveLocationChangedEvent): void;
 	public sendEvent(stream: Stream, params: Event): void {
 		if (!this.connection)
-			throw Error("DTD connection is unavailable");
+			throw new Error(`Unable to send event to ${stream}, DTD connection is unavailable`);
 
 		this.send({
 			jsonrpc: "2.0",
@@ -225,7 +225,7 @@ export class DartToolingDaemon implements IAmDisposable {
 
 	private send(json: DtdMessage): void {
 		if (!this.connection)
-			throw new Error("DTD connection is unavailable");
+			throw new Error("Unable to send message, DTD connection is unavailable");
 
 		const str = JSON.stringify(json);
 		this.logTraffic(`==> ${str}\n`);

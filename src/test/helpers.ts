@@ -196,14 +196,15 @@ function getDefaultFile(): vs.Uri {
 }
 
 export async function activateWithoutAnalysis(): Promise<void> {
-	// TODO: Should we do this, or should we just check that it has been activated?
-	await ext.activate();
+	if (!ext.isActive)
+		await ext.activate();
 	if (ext.exports) {
 		privateApi = ext.exports[internalApiSymbol] as InternalExtensionApi;
 		extApi = ext.exports as PublicDartExtensionApi;
 		setupTestLogging();
-	} else
+	} else {
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
+	}
 }
 
 export function attachLoggingWhenExtensionAvailable(attempt = 1) {

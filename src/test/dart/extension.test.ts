@@ -22,7 +22,6 @@ describe("test environment", () => {
 
 describe("extension", () => {
 	it("activated", async () => {
-		assert.equal(privateApi, undefined);
 		await activateWithoutAnalysis();
 		assert.equal(ext.isActive, true);
 	});
