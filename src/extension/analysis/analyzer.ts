@@ -503,22 +503,27 @@ export class LspAnalyzer extends Analyzer {
 			"dartAnalysisLSP",
 			"Dart Analysis Server",
 			async () => {
-				const streamInfo = await this.spawnServer(logger, sdks);
-				const jsonEncoder = ls.RAL().applicationJson.encoder;
+				try {
+					const streamInfo = await this.spawnServer(logger, sdks);
+					const jsonEncoder = ls.RAL().applicationJson.encoder;
 
-				return {
-					detached: streamInfo.detached,
-					reader: new StreamMessageReader(streamInfo.reader),
-					writer: new StreamMessageWriter(streamInfo.writer, {
-						contentTypeEncoder: {
-							encode: (msg, options) => {
-								(msg as any).clientRequestTime = Date.now();
-								return jsonEncoder.encode(msg, options);
+					return {
+						detached: streamInfo.detached,
+						reader: new StreamMessageReader(streamInfo.reader),
+						writer: new StreamMessageWriter(streamInfo.writer, {
+							contentTypeEncoder: {
+								encode: (msg, options) => {
+									(msg as any).clientRequestTime = Date.now();
+									return jsonEncoder.encode(msg, options);
+								},
+								name: "withTiming",
 							},
-							name: "withTiming",
-						},
-					}),
-				};
+						}),
+					};
+				} catch (e) {
+					vs.window.showErrorMessage(`Unable to start the Dart Analysis Server. Please verify your SDK. ${e}`);
+					throw e;
+				}
 			},
 			clientOptions,
 		);

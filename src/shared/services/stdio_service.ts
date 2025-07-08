@@ -36,14 +36,22 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			this.logTraffic(`..  with ${JSON.stringify(envOverrides)}`);
 
 		const env = Object.assign({}, envOverrides.toolEnv, envOverrides.envOverrides);
-		this.process = safeSpawn(workingDirectory, binPath, args, env);
+		try {
+			this.process = safeSpawn(workingDirectory, binPath, args, env);
+		} catch (e) {
+			this.logger.error(`Failed to spawn process! ${e}`);
+			this.handleError(e);
+			this.handleExit(null, null);
+		}
 
-		this.logTraffic(`    PID: ${process.pid}`);
+		if (this.process) {
+			this.logTraffic(`    PID: ${process.pid}`);
 
-		this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
-		this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
-		this.process.on("exit", (code, signal) => this.handleExit(code, signal));
-		this.process.on("error", (error) => this.handleError(error));
+			this.process.stdout.on("data", (data: Buffer | string) => this.handleStdOut(data));
+			this.process.stderr.on("data", (data: Buffer | string) => this.handleStdErr(data));
+			this.process.on("exit", (code, signal) => this.handleExit(code, signal));
+			this.process.on("error", (error) => this.handleError(error));
+		}
 	}
 
 	/// Flutter may send only \r as a line terminator for improved terminal output
@@ -79,7 +87,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.processExited = true;
 	}
 
-	protected handleError(error: Error) {
+	protected handleError(error: unknown) {
 		this.logTraffic(`Process errored! ${error}`);
 	}
 
