@@ -27,12 +27,15 @@ class DartExtensionApiData {
 	}
 }
 
+/// Use a single global static to store data exposed by the extension so that we don't
+/// need to worry about different API objects being created during the lifetime of the
+/// extension (for example during internal restarts).
 export const extensionApiData = new DartExtensionApiData();
 const data = extensionApiData;
 
 export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
-	// Important: Don't use "this" in this class because the public API object is created
-	// by inheriting from this class's prototype, not by instantiating it.
+	// All data returned from this class should be immutable/copies so that
+	// callers cannot modify the values read by other extensions.
 
 	public get version() { return extensionApiData.version; };
 
