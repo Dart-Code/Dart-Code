@@ -110,7 +110,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 		const shortestPath = "shortestPath" in dependency ? dependency.shortestPath : undefined;
 		const node = new PackageDepPackage(`${dependency.name}`, vs.Uri.file(dependencyPath), rootPackageFolder, shortestPath);
 		node.contextValue = contextValue;
-		if (fsPath(node.resourceUri!).includes(path.join("hosted", "pub.dev")))
+		if (node.resourceUri?.path.includes(`/hosted/`))
 			node.contextValue += ` ${DART_DEP_PUB_HOSTED_PACKAGE_NODE_CONTEXT}`;
 		return node;
 	}

@@ -1271,7 +1271,7 @@ export function ensurePackageTreeNode(items: vs.TreeItem[] | undefined | null, n
 		throw new Error("No tree nodes found to check");
 
 	const item = items.find((item) =>
-		item.contextValue === nodeContext
+		item.contextValue?.includes(nodeContext)
 		&& renderedItemLabel(item) === label,
 	);
 	if (!item)
