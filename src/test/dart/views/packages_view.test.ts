@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT } from "../../../shared/constants.contexts";
+import { DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_PUB_HOSTED_PACKAGE_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT } from "../../../shared/constants.contexts";
 import { fsPath } from "../../../shared/utils/fs";
 import { ensurePackageTreeNode, getPackages, myPackageThingFile, privateApi, renderedItemLabel } from "../../helpers";
 
@@ -27,6 +27,26 @@ describe("packages tree", () => {
 		ensurePackageTreeNode(directDependencies, DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, "my_package");
 		ensurePackageTreeNode(devDependencies, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, "test");
 		ensurePackageTreeNode(transitiveDependencies, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT, "file");
+	});
+
+	it("includes pub-hosted context for appropriate packages", async () => {
+		const topLevel = await privateApi.packagesTreeProvider.getChildren(undefined);
+
+		const packageNode = ensurePackageTreeNode(topLevel, DART_DEP_PROJECT_NODE_CONTEXT, "hello_world");
+
+		const dependencyGroups = await privateApi.packagesTreeProvider.getChildren(packageNode);
+		const directDependencies = await privateApi.packagesTreeProvider.getChildren(dependencyGroups?.find((node) => node.label === "direct dependencies"));
+		const devDependencies = await privateApi.packagesTreeProvider.getChildren(dependencyGroups?.find((node) => node.label === "dev dependencies"));
+
+		const myPackage = ensurePackageTreeNode(directDependencies, DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, "my_package");
+		const testPackage = ensurePackageTreeNode(devDependencies, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, "test");
+
+		assert.ok(myPackage.contextValue);
+		assert.ok(testPackage.contextValue);
+		// Not pub hosted
+		assert.ok(!myPackage.contextValue.includes(DART_DEP_PUB_HOSTED_PACKAGE_NODE_CONTEXT));
+		// Pub hosted
+		assert.ok(testPackage.contextValue.includes(DART_DEP_PUB_HOSTED_PACKAGE_NODE_CONTEXT));
 	});
 
 	it("does not include own package", async () => {
