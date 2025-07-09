@@ -43,6 +43,7 @@ export class TestCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
 			vs.commands.registerCommand("dart.findTestOrImplementationFile", () => this.findTestOrImplementationFile(), this),
 			vs.window.onDidChangeActiveTextEditor((e) => this.updateEditorContexts(e)),
+			vs.workspace.onDidRenameFiles((e) => this.handleFileRenames(e)),
 		);
 
 		// Run for current open editor.
@@ -398,6 +399,67 @@ export class TestCommands implements vs.Disposable {
 		candidates.push(pathSegments.join(path.sep));
 
 		return candidates;
+	}
+
+	private async handleFileRenames(event: vs.FileRenameEvent): Promise<void> {
+		if (!config.renameTestFiles)
+			return;
+
+		for (const fileRename of event.files) {
+			const oldPath = fsPath(fileRename.oldUri);
+			const newPath = fsPath(fileRename.newUri);
+
+			// Only handle Dart files that are not test files.
+			if (!oldPath.endsWith(".dart") || !newPath.endsWith(".dart") || isTestFile(oldPath))
+				continue;
+
+			// Find candidate test files for the old implementation file.
+			const candidateTestFiles = this.getCandidateTestFiles(oldPath);
+			const existingTestFiles = candidateTestFiles.filter(fs.existsSync);
+
+			// Only proceed if there's exactly one existing test file.
+			if (existingTestFiles.length !== 1)
+				continue;
+
+			const oldTestPath = existingTestFiles[0];
+
+			// Generate the new test file path based on the new implementation file name.
+			const newCandidateTestFiles = this.getCandidateTestFiles(newPath);
+
+			// Try to find the best candidate by comparing relative positions.
+			let newTestPath: string | undefined;
+			const oldTestRelativeToOld = path.dirname(path.relative(path.dirname(oldPath), oldTestPath));
+			for (const candidate of newCandidateTestFiles) {
+				const candidateRelativeToNew = path.dirname(path.relative(path.dirname(newPath), candidate));
+				if (candidateRelativeToNew === oldTestRelativeToOld) {
+					newTestPath = candidate;
+					break;
+				}
+			}
+
+			// If we couldn't find an exact match, don't rename.
+			if (!newTestPath)
+				continue;
+
+			// Don't rename if the target already exists.
+			if (fs.existsSync(newTestPath)) {
+				continue;
+			}
+
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+
+			try {
+				// Ensure the target directory exists.
+				mkDirRecursive(path.dirname(newTestPath));
+
+				// Rename the test file.
+				fs.renameSync(oldTestPath, newTestPath);
+
+				this.logger.info(`Automatically renamed test file from ${oldTestPath} to ${newTestPath}`);
+			} catch (error) {
+				this.logger.warn(`Failed to rename test file from ${oldTestPath} to ${newTestPath}: ${error}`);
+			}
+		}
 	}
 
 	public dispose(): any {

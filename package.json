@@ -2259,6 +2259,12 @@
 						"markdownDescription": "Whether to rename files when renaming classes with matching names (for example renaming 'class Person' inside 'person.dart'). If set to 'prompt', will ask each time before renaming. If set to 'always', the file will automatically be renamed. This setting requires using LSP and a Dart SDK of at least v2.15.",
 						"scope": "window"
 					},
+					"dart.renameTestFiles": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to automatically rename corresponding test files when implementation files are renamed. When enabled, if an implementation file with exactly one matching test file is renamed, the test file will be renamed to match.",
+						"scope": "window"
+					},
 					"dart.showDartPadSampleCodeLens": {
 						"type": "boolean",
 						"default": true,

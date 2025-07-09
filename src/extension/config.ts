@@ -182,6 +182,7 @@ class Config {
 	get projectSearchDepth(): number { return this.getConfig<number>("projectSearchDepth", 5); }
 	get promptToRunIfErrors(): boolean { return this.getConfig<boolean>("promptToRunIfErrors", true); }
 	get renameFilesWithClasses(): "never" | "prompt" | "always" { return this.getConfig<"never" | "prompt" | "always">("renameFilesWithClasses", "never"); }
+	get renameTestFiles(): boolean { return this.getConfig<boolean>("renameTestFiles", true); }
 	get runPubGetOnNestedProjects(): "none" | "both" | "above" | "below" { return this.getConfig<"none" | "both" | "above" | "below">("runPubGetOnNestedProjects", "none"); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
