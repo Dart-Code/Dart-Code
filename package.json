@@ -172,6 +172,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "_dart.openDependencyPageFromTreeNode",
+				"title": "Open on pub.dev",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.toggleLineComment",
 				"title": "Toggle Line Comment Kind",
 				"category": "Dart"
@@ -1583,16 +1588,21 @@
 					"command": "_flutter.outline.refactor.flutter.removeWidget"
 				},
 				{
-					"when": "view == dartDependencyTree && viewItem == dart-code:depDependenciesNode",
+					"when": "view == dartDependencyTree && viewItem =~ /dart-code:depDependenciesNode/",
 					"command": "dart.addDependency"
 				},
 				{
-					"when": "view == dartDependencyTree && viewItem == dart-code:depDevDependenciesNode",
+					"when": "view == dartDependencyTree && viewItem =~ /dart-code:depDevDependenciesNode/",
 					"command": "dart.addDevDependency"
 				},
 				{
-					"when": "viewItem == dart-code:depDependencyPackageNode || viewItem == dart-code:depDevDependencyPackageNode",
+					"when": "view == dartDependencyTree && viewItem =~ /dart-code:dep(Dev)?DependencyPackageNode/",
 					"command": "_dart.removeDependencyFromTreeNode"
+				},
+				{
+					"when": "view == dartDependencyTree && viewItem =~ /dart-code:depPubHostedPackageNode/",
+					"command": "_dart.openDependencyPageFromTreeNode",
+					"group": "navigation@1"
 				}
 			]
 		},
