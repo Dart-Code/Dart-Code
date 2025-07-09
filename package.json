@@ -793,7 +793,7 @@
 		],
 		"languageModelTools": [
 			{
-				"NOTE": "is is currently required for Firebase Studio - https://github.com/Dart-Code/Dart-Code/issues/5569",
+				"NOTE": "This id currently required for Firebase Studio, despite producing a warning in VS Code - https://github.com/Dart-Code/Dart-Code/issues/5569",
 				"id": "get_dart_tooling_daemon_dtd_uri",
 				"name": "get_dart_tooling_daemon_dtd_uri",
 				"displayName": "Get the Dart Tooling Daemon (DTD) URI",
