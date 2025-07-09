@@ -3025,7 +3025,7 @@
 					},
 					"dart.mcpServer": {
 						"type": "boolean",
-						"default": false,
+						"default": true,
 						"description": "Whether to register the Dart SDK's MCP server with VS Code. This only applies to Dart SDKs >= v3.9.0 which added the server.",
 						"scope": "window"
 					}

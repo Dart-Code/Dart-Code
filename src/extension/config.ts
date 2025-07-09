@@ -114,8 +114,7 @@ class Config {
 	get env(): object { return this.getConfig<object>("env", {}); }
 	get evaluateToStringInDebugViews(): boolean { return this.getConfig<boolean>("evaluateToStringInDebugViews", true); }
 
-	get experimentalMcpServer(): boolean { return this.getConfig<boolean>("experimentalMcpServer", false); }
-	get mcpServer(): boolean { return this.getConfig<boolean>("mcpServer", false); }
+	get mcpServer(): boolean { return this.getConfig<boolean>("mcpServer", true); }
 	get mcpServerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("mcpServerLogFile", null)))); }
 
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
