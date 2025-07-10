@@ -231,11 +231,17 @@ export class FlutterCommands extends BaseSdkCommands {
 				label: "Empty Application",
 				template: { id: "app", empty: true },
 			},
-			{
+		];
+
+		if (this.flutterCapabilities.supportsSkeleton) {
+			templates.push({
 				detail: "A List View / Detail View Flutter application that follows community best practices.",
 				label: "Skeleton Application",
 				template: { id: "skeleton" },
-			},
+			});
+		}
+
+		templates.push(
 			{
 				kind: vs.QuickPickItemKind.Separator,
 				label: "Other Project Types",
@@ -255,7 +261,7 @@ export class FlutterCommands extends BaseSdkCommands {
 				label: "Plugin",
 				template: { id: "plugin" },
 			},
-		];
+		);
 
 		return templates;
 	}

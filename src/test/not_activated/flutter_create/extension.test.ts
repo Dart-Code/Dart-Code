@@ -7,7 +7,7 @@ import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { FlutterCreateTriggerData } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../../shared/vscode/interfaces";
-import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, sb, stubCreateInputBox } from "../../helpers";
+import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, privateApi, sb, stubCreateInputBox } from "../../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -46,7 +46,13 @@ describe("command", () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "plugin", "plugin");
 	});
 
-	it("Flutter: New Project can be invoked and creates skeleton trigger file", async () => {
+	it("Flutter: New Project can be invoked and creates skeleton trigger file", async function () {
+		// Skip this test if skeleton template is not supported
+		if (!privateApi?.flutterCapabilities?.supportsSkeleton) {
+			this.skip();
+			return;
+		}
+
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "skeleton", "application");
 	});
 

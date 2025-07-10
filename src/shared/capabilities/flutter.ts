@@ -15,6 +15,7 @@ export class FlutterCapabilities {
 	get supportsIOSLanguage() { return !versionIsAtLeast(this.version, "3.23.0"); } // https://github.com/flutter/flutter/issues/148586#issuecomment-2137140743
 	get supportsAddPubRootDirectories() { return versionIsAtLeast(this.version, "3.19.0"); }
 	get requiresForcedDebugModeForNoDebug() { return versionIsAtLeast(this.version, "3.13.0-0"); } // TODO(dantup): Add upper bound when we don't need this.
+	get supportsSkeleton() { return !versionIsAtLeast(this.version, "3.29.0"); }
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
