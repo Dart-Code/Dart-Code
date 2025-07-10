@@ -1,5 +1,5 @@
 import * as path from "path";
-import { commands, DiagnosticSeverity, languages, TextDocumentSaveReason, Uri, workspace } from "vscode";
+import { commands, DiagnosticSeverity, languages, ProgressLocation, TextDocumentSaveReason, Uri, window, workspace } from "vscode";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { restartReasonSave } from "../../shared/constants";
 import { IAmDisposable } from "../../shared/interfaces";
@@ -13,6 +13,7 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 	private dartHotReloadDelayTimer: NodeJS.Timeout | undefined;
 	private flutterHotReloadDelayTimer: NodeJS.Timeout | undefined;
+	private hideErrorNotification?: () => void;
 
 	// Track save reason so we can avoid hot reloading on auto-saves.
 	private lastSaveReason: TextDocumentSaveReason | undefined;
@@ -62,14 +63,37 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		if (!this.isReloadableFile(file))
 			return;
 
+		// If we were showing an error, hide it as we're now proceeding.
+		if (this.hideErrorNotification) {
+			this.hideErrorNotification();
+			this.hideErrorNotification = undefined;
+		}
+
 		const isDirty = this.isSavingDirtyFile;
 		this.isSavingDirtyFile = false;
 
 		// Don't do if we have errors for the saved file.
 		const errors = languages.getDiagnostics(file.uri);
 		const hasErrors = errors && !!errors.find((d) => d.source === "dart" && d.severity === DiagnosticSeverity.Error);
-		if (hasErrors)
+		if (hasErrors) {
+			// Don't show if one is already showing.
+			if (this.hideErrorNotification)
+				return;
+
+			void window.withProgress(
+				{ location: ProgressLocation.Notification, title: "Hot Reloading skipped due to code errors" },
+				() => new Promise<void>((resolve) => {
+					this.hideErrorNotification = resolve;
+					setTimeout(() => {
+						if (this.hideErrorNotification === resolve) {
+							this.hideErrorNotification = undefined;
+							resolve();
+						}
+					}, 3000);
+				}),
+			);
 			return;
+		}
 
 		this.reloadDart({ isAutoSave, isDirty });
 		this.reloadFlutter({ isAutoSave, isDirty });
@@ -144,6 +168,9 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 	public dispose(): void | Promise<void> {
 		if (this.dartHotReloadDelayTimer)
 			clearTimeout(this.dartHotReloadDelayTimer);
+
+		if (this.hideErrorNotification)
+			this.hideErrorNotification();
 
 		disposeAll(this.disposables);
 	}
