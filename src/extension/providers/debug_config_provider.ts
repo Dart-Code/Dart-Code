@@ -686,6 +686,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				break;
 		}
 
+		// // TOOD(dantup): Tidy this up. Should we do it only if we know there are symlinks?
+		// if (debugType === DebuggerType.Flutter || debugType === DebuggerType.FlutterTest) {
+		// 	const programPath = debugConfig.program ?? debugConfig.cwd;
+		// 	const packageFile = PackageMap.findPackagesFile(programPath);
+		// 	if (packageFile) {
+		// 		this.addArgsIfNotExist(args, "--packages", packageFile);
+		// 	}
+		// }
+
 		return args;
 	}
 
