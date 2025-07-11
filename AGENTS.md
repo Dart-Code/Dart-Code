@@ -13,11 +13,9 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 
 ## Project Structure
 
-The project is structured as a typical VS Code extension.
-
 - `src/extension/`: Contains the main extension logic.
 - `src/extension/extension.ts`: The main entry point to the extension (`activate()`).
-- `src/debug/`: Legacy implementations of the debug adapters that should not be modified. ADP debug adapters now live inside the Dart and Flutter SDKs.
+- `src/debug/`: Legacy debug adapters that should not be modified. DAP debug adapters now live inside the Dart and Flutter SDKs.
 - `src/shared/`: Contains code that may be shared between the extension code, legacy debug adapters and tests. Any code that uses the VS Code APIs must be inside a `vscode` sub-folder.
 - `src/test/`: Contains automated tests for the extension, shared into tests for different areas.
 - `src/test/test_projects/`: Sample Dart/Flutter projects that are used by the automated tests.
