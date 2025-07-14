@@ -95,7 +95,7 @@ export class BaseSdkCommands implements IAmDisposable {
 		return this.runCommandInFolder(shortPath, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput);
 	}
 
-	protected runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Promise<RunProcessResult | undefined> {
+	protected async runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Promise<RunProcessResult | undefined> {
 		shortPath = shortPath || path.basename(folder);
 		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
@@ -113,7 +113,7 @@ export class BaseSdkCommands implements IAmDisposable {
 			return Promise.resolve(undefined);
 		}
 
-		return Promise.resolve(vs.window.withProgress({
+		return await vs.window.withProgress({
 			cancellable: true,
 			location: vs.ProgressLocation.Notification,
 			title: `${commandName} ${args.join(" ")}`,
@@ -148,7 +148,7 @@ export class BaseSdkCommands implements IAmDisposable {
 			token.onCancellationRequested(() => process.cancel());
 
 			return process.completed;
-		}));
+		});
 	}
 
 	public dispose(): any {
