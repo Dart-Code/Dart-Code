@@ -44,6 +44,15 @@ export interface PublicWorkspace {
 	 * Will wait for a short period if no outline is available yet.
 	 */
 	getOutline(document: vs.TextDocument, token?: vs.CancellationToken): Promise<PublicOutline | undefined>;
+
+	/**
+	 * Finds all project folders in the workspace.
+	 *
+	 * This searches for Dart/Flutter project folders by looking for pubspec.yaml files
+	 * and applies any configured exclusions. Will only walk down the tree as far as the
+	 * user has configured with `projectSearchDepth`.
+	 */
+	findProjectFolders(): Promise<string[]>;
 }
 
 export interface PublicOutline {
