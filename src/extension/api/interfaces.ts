@@ -30,6 +30,74 @@ export interface PublicDartExtensionApi {
 	 * An event does not necessarily mean the URI has changed, only that it _might_ have.
 	 */
 	readonly onDtdUriChanged: vs.Event<string | undefined>;
+
+	/**
+	 * APIs related to the project(s) open in the workspace.
+	 */
+	readonly workspace: PublicWorkspace;
+}
+
+export interface PublicWorkspace {
+	/**
+	 * Gets the current outline for a document.
+	 *
+	 * Will wait for a short period if no outline is available yet.
+	 */
+	getOutline(document: vs.TextDocument, token?: vs.CancellationToken): Promise<PublicOutline | undefined>;
+}
+
+export interface PublicOutline {
+	/**
+	 * The element information for this outline node.
+	 */
+	readonly element: PublicElement;
+
+	/**
+	 * The range that represents the entire outline element including its body.
+	 */
+	readonly range: vs.Range;
+
+	/**
+	 * The range that represents just the code portion of the element.
+	 */
+	readonly codeRange: vs.Range;
+
+	/**
+	 * Child outline elements, if any.
+	 */
+	readonly children: PublicOutline[] | undefined;
+}
+
+export interface PublicElement {
+	/**
+	 * The element's name.
+	 */
+	readonly name: string;
+
+	/**
+	 * The range of the element's name.
+	 */
+	readonly range: vs.Range | undefined;
+
+	/**
+	 * The kind of element (e.g., "CLASS", "METHOD", "FUNCTION").
+	 */
+	readonly kind: string;
+
+	/**
+	 * The parameters of the element, if applicable.
+	 */
+	readonly parameters?: string;
+
+	/**
+	 * The type parameters of the element, if applicable.
+	 */
+	readonly typeParameters?: string;
+
+	/**
+	 * The return type of the element, if applicable.
+	 */
+	readonly returnType?: string;
 }
 
 export interface PublicSdks {
