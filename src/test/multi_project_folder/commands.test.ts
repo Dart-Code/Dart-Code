@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
 import { fiveMinutesInMs } from "../../shared/constants";
+import { RunProcessResult } from "../../shared/processes";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, deleteFileIfExists, flutterHelloWorldMainFile, flutterHelloWorldPackageConfigFile, helloWorldMainFile, helloWorldPackageConfigFile, waitForResult } from "../helpers";
 
@@ -13,8 +14,8 @@ describe("dart.getPackages", () => {
 		await activate();
 		// Normally this fires with the pubspec.yaml file, but as long as it's a file in
 		// the correct folder, it'll do the same.
-		const res = await vs.commands.executeCommand("dart.getPackages", helloWorldMainFile);
-		assert.equal(res, 0); // If we run the wrong command, we'll get an error code.
+		const res: RunProcessResult = await vs.commands.executeCommand("dart.getPackages", helloWorldMainFile);
+		assert.equal(res.exitCode, 0); // If we run the wrong command, we'll get an error code.
 
 		// Verify the package config now exists.
 		await waitForResult(() => fs.existsSync(packageFile), ".dart_tool/package_config.json did not exist", 10000);
@@ -27,8 +28,8 @@ describe("dart.getPackages", () => {
 		await activate();
 		// Normally this fires with the pubspec.yaml file, but as long as it's a file in
 		// the correct folder, it'll do the same.
-		const res = await vs.commands.executeCommand("dart.getPackages", flutterHelloWorldMainFile);
-		assert.equal(res, 0); // If we run the wrong command, we'll get an error code.
+		const res: RunProcessResult = await vs.commands.executeCommand("dart.getPackages", flutterHelloWorldMainFile);
+		assert.equal(res.exitCode, 0); // If we run the wrong command, we'll get an error code.
 
 		// Verify the package config now exists.
 		await waitForResult(() => fs.existsSync(packageFile), ".dart_tool/package_config.json did not exist", 10000);
