@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { RunProcessResult } from "../../../shared/processes";
 import { activate, captureOutput, getPackages } from "../../helpers";
 
 describe("pub outdated", () => {
@@ -8,8 +9,8 @@ describe("pub outdated", () => {
 
 	it("runs and prints output", async () => {
 		const buffer = captureOutput("dart (hello_world)");
-		const exitCode = await vs.commands.executeCommand("pub.outdated");
-		assert.equal(exitCode, 0);
+		const result: RunProcessResult = await vs.commands.executeCommand("pub.outdated");
+		assert.equal(result.exitCode, 0);
 
 		const output = buffer.join("").trim();
 		assert.equal(output.startsWith(`--\n\n[hello_world] dart pub outdated`), true);

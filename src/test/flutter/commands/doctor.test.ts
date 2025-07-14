@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { RunProcessResult } from "../../../shared/processes";
 import { activate, captureOutput } from "../../helpers";
 
 describe("flutter doctor", () => {
@@ -8,8 +9,8 @@ describe("flutter doctor", () => {
 
 	it("runs and prints output", async () => {
 		const buffer = captureOutput("flutter (flutter)");
-		const exitCode = await vs.commands.executeCommand("flutter.doctor");
-		assert.equal(exitCode, 0);
+		const result: RunProcessResult = await vs.commands.executeCommand("flutter.doctor");
+		assert.equal(result.exitCode, 0);
 
 		const output = buffer.join("").trim();
 		assert.equal(output.startsWith(`--\n\n[flutter] flutter --suppress-analytics doctor -v`), true);
