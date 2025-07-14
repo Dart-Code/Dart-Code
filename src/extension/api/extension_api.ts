@@ -4,9 +4,10 @@ import { Element, Outline } from "../../shared/analysis/lsp/custom_protocol";
 import { Sdks } from "../../shared/interfaces";
 import { ProjectFinder } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
+import { SdkCommands } from "../commands/sdk";
 import { config } from "../config";
 import { getExcludedFolders } from "../utils";
-import { PublicDartExtensionApi, PublicElement, PublicOutline, PublicSdks, PublicWorkspace } from "./interfaces";
+import { PublicDartExtensionApi, PublicElement, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicWorkspace } from "./interfaces";
 
 /// A single instance of this class is created (below) that is used internally to modify the data
 /// provided by the API.
@@ -17,6 +18,7 @@ class DartExtensionApiModel {
 	public dtdUri: string | undefined;
 	public analyzer: LspAnalyzer | undefined;
 	public projectFinder: ProjectFinder | undefined;
+	public sdkCommands: SdkCommands | undefined;
 
 	private onSdksChangedEmitter = new vs.EventEmitter<Sdks | undefined>();
 	public readonly onSdksChanged = this.onSdksChangedEmitter.event;
@@ -42,11 +44,16 @@ class DartExtensionApiModel {
 		this.projectFinder = projectFinder;
 	}
 
+	public setSdkCommands(sdkCommands: SdkCommands | undefined) {
+		this.sdkCommands = sdkCommands;
+	}
+
 	public clear(): void {
 		this.setSdks(undefined);
 		this.setDtdUri(undefined);
 		this.setAnalyzer(undefined);
 		this.projectFinder = undefined;
+		this.sdkCommands = undefined;
 	}
 }
 
@@ -61,6 +68,7 @@ export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
 	// callers cannot modify the values read by other extensions.
 
 	private readonly workspaceImpl = new PublicWorkspaceImpl();
+	private readonly sdkImpl = new PublicSdkImpl();
 
 	public get version() { return extensionApiModel.version; };
 
@@ -86,6 +94,10 @@ export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
 
 	public get workspace(): PublicWorkspace {
 		return this.workspaceImpl;
+	}
+
+	public get sdk(): PublicSdk {
+		return this.sdkImpl;
 	}
 }
 
@@ -146,5 +158,21 @@ class PublicWorkspaceImpl implements PublicWorkspace {
 			position.line,
 			position.character,
 		);
+	}
+}
+
+class PublicSdkImpl implements PublicSdk {
+	// All data returned from this class should be immutable/copies so that
+	// callers cannot modify the values read by other extensions.
+
+	public async runDart(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicRunResult | undefined> {
+		if (!data.sdkCommands || !data.sdks?.dart)
+			throw new Error("Dart SDK not available");
+
+		return data.sdkCommands.runDartCommand(folder, args, options);
+	}
+
+	public async runPub(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicRunResult | undefined> {
+		return this.runDart(folder, ["pub", ...args], options);
 	}
 }
