@@ -41,7 +41,7 @@ function quoteAndEscapeArg(arg: string) {
 }
 
 export class RunProcessResult {
-	constructor(public readonly exitCode: number | undefined, public readonly stdout: string, public readonly stderr: string) { }
+	constructor(public readonly exitCode: number, public readonly stdout: string, public readonly stderr: string) { }
 }
 
 export function runProcess(logger: Logger, binPath: string, args: string[], workingDirectory: string | undefined, env: Record<string, string | undefined> | undefined, spawn: SpawnFunction, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
@@ -56,7 +56,7 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
 		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
 		proc.on("exit", (code) => {
-			resolve(new RunProcessResult(nullToUndefined(code), out.join(""), err.join("")));
+			resolve(new RunProcessResult(nullToUndefined(code) ?? 0, out.join(""), err.join("")));
 		});
 		// Handle things like ENOENT which are async and come via error, but mean exit will never fire.
 		proc.on("error", (e) => reject(e));

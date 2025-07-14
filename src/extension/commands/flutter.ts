@@ -7,6 +7,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../shared/capabilities/vscode";
 import { CommandSource, defaultLaunchJson, flutterCreateAvailablePlatforms, flutterCreateTemplatesSupportingPlatforms } from "../../shared/constants";
 import { DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, FlutterProjectTemplate, Logger } from "../../shared/interfaces";
+import { RunProcessResult } from "../../shared/processes";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { fsPath, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
@@ -43,8 +44,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
 	}
 
-
-	private async flutterClean(selection: vs.Uri | undefined): Promise<number | undefined> {
+	private async flutterClean(selection: vs.Uri | undefined): Promise<RunProcessResult | undefined> {
 		if (!selection) {
 			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, selection, true);
 			if (!path)

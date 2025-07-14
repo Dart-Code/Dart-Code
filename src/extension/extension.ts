@@ -331,6 +331,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Set up the the extension API.
 	extensionApiModel.setAnalyzer(analyzer);
 	extensionApiModel.setProjectFinder(projectFinder);
+	extensionApiModel.setSdkCommands(sdkCommands);
 
 	void analyzer.onReady.then(() => {
 		if (config.analyzerVmServicePort) {

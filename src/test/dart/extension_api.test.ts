@@ -50,4 +50,20 @@ describe("extension api", () => {
 		const projects = await extApi.workspace.findProjectFolders();
 		assert.deepStrictEqual(projects, [fsPath(helloWorldFolder), fsPath(helloWorldExampleSubFolder)]);
 	});
+
+	it("sdk.runDart with --help", async () => {
+		await activate();
+
+		const result = (await extApi.sdk.runDart(fsPath(helloWorldFolder), ["--help"]))!;
+		assert.equal(result.exitCode, 0);
+		assert.ok(result.stdout.includes("A command-line utility for Dart development"));
+	});
+
+	it("sdk.runPub with --help", async () => {
+		await activate();
+
+		const result = (await extApi.sdk.runPub(fsPath(helloWorldFolder), ["--help"]))!;
+		assert.equal(result.exitCode, 0);
+		assert.ok(result.stdout.includes("Work with packages."));
+	});
 });

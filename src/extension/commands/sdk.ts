@@ -2,12 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { flutterPath } from "../../shared/constants";
+import { dartVMPath, flutterPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
-import { getPubExecutionInfo } from "../../shared/processes";
-import { PromiseCompleter, disposeAll, nullToUndefined, usingCustomScript } from "../../shared/utils";
+import { getPubExecutionInfo, RunProcessResult } from "../../shared/processes";
+import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
@@ -37,12 +37,12 @@ export class BaseSdkCommands implements IAmDisposable {
 	}
 
 	protected async runCommandForWorkspace(
-		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean) => Thenable<number | undefined>,
+		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean) => Promise<RunProcessResult | undefined>,
 		placeHolder: string,
 		args: string[],
 		selection: vs.Uri | undefined,
 		alwaysShowOutput = false,
-	): Promise<number | undefined> {
+	): Promise<RunProcessResult | undefined> {
 		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, selection);
 		if (!folderToRunCommandIn)
 			return;
@@ -59,11 +59,11 @@ export class BaseSdkCommands implements IAmDisposable {
 		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput);
 	}
 
-	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
+	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Promise<RunProcessResult | undefined> {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
 	}
 
-	protected runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, customScript?: CustomScript): Thenable<number | undefined> {
+	protected runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, customScript?: CustomScript): Promise<RunProcessResult | undefined> {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 
@@ -80,11 +80,11 @@ export class BaseSdkCommands implements IAmDisposable {
 		return this.runCommandInFolder(shortPath, folder, execution.executable, allArgs, alwaysShowOutput);
 	}
 
-	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Thenable<number | undefined> {
+	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Promise<RunProcessResult | undefined> {
 		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
 	}
 
-	protected runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Thenable<number | undefined> {
+	protected runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Promise<RunProcessResult | undefined> {
 		if (!this.sdks.dart)
 			throw new Error("Dart SDK not available");
 
@@ -95,7 +95,7 @@ export class BaseSdkCommands implements IAmDisposable {
 		return this.runCommandInFolder(shortPath, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput);
 	}
 
-	protected runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Thenable<number | undefined> {
+	protected runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Promise<RunProcessResult | undefined> {
 		shortPath = shortPath || path.basename(folder);
 		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
@@ -113,7 +113,7 @@ export class BaseSdkCommands implements IAmDisposable {
 			return Promise.resolve(undefined);
 		}
 
-		return vs.window.withProgress({
+		return Promise.resolve(vs.window.withProgress({
 			cancellable: true,
 			location: vs.ProgressLocation.Notification,
 			title: `${commandName} ${args.join(" ")}`,
@@ -148,7 +148,7 @@ export class BaseSdkCommands implements IAmDisposable {
 			token.onCancellationRequested(() => process.cancel());
 
 			return process.completed;
-		});
+		}));
 	}
 
 	public dispose(): any {
@@ -168,6 +168,17 @@ export class SdkCommands extends BaseSdkCommands {
 
 		// Monitor version files for SDK upgrades.
 		void this.setupVersionWatcher();
+	}
+
+	/// Public wrapper used by the extension API.
+	public async runDartCommand(folder: string, args: string[], options?: { alwaysShowOutput?: boolean }): Promise<RunProcessResult | undefined> {
+		if (!this.sdks.dart)
+			throw new Error("Dart SDK not available");
+
+		const alwaysShowOutput = options?.alwaysShowOutput ?? false;
+		const dartExecutable = path.join(this.sdks.dart, dartVMPath);
+
+		return this.runCommandInFolder(undefined, folder, dartExecutable, args, alwaysShowOutput);
 	}
 
 	private async setupVersionWatcher() {
@@ -224,9 +235,9 @@ export function markProjectCreationEnded(): void {
 class ChainedProcess {
 	private static processNumber = 1;
 	public processNumber = ChainedProcess.processNumber++;
-	private completer: PromiseCompleter<number | undefined> = new PromiseCompleter<number | undefined>();
+	private completer: PromiseCompleter<RunProcessResult | undefined> = new PromiseCompleter<RunProcessResult | undefined>();
 	public readonly completed = this.completer.promise;
-	public process: SpawnedProcess | undefined;
+	private process: SpawnedProcess | undefined;
 	private isCancelled = false;
 	public get hasStarted() {
 		return this.process !== undefined;
@@ -249,7 +260,23 @@ class ChainedProcess {
 			return;
 		}
 		this.process = this.spawn();
-		this.process.on("close", (code) => this.completer.resolve(nullToUndefined(code)));
+		this.process.stdout?.setEncoding("utf8");
+		this.process.stderr?.setEncoding("utf8");
+
+		const stdoutChunks: string[] = [];
+		const stderrChunks: string[] = [];
+
+		this.process.stdout?.on("data", (data: string) => stdoutChunks.push(data));
+		this.process.stderr?.on("data", (data: string) => stderrChunks.push(data));
+
+		this.process.on("close", (code) => {
+			const result: RunProcessResult = {
+				stdout: stdoutChunks.join(""),
+				stderr: stderrChunks.join(""),
+				exitCode: nullToUndefined(code) ?? 0,
+			};
+			this.completer.resolve(result);
+		});
 	}
 
 	public cancel(): void {

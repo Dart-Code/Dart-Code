@@ -35,6 +35,11 @@ export interface PublicDartExtensionApi {
 	 * APIs related to the project(s) open in the workspace.
 	 */
 	readonly workspace: PublicWorkspace;
+
+	/**
+	 * APIs related to the SDK.
+	 */
+	readonly sdk: PublicSdk;
 }
 
 export interface PublicWorkspace {
@@ -129,4 +134,42 @@ export interface PublicSdks {
 	 * The Flutter SDK version string, as read from the Flutter SDK's version file.
 	 */
 	readonly flutterVersion?: string;
+}
+
+export interface PublicSdk {
+	/**
+	 * Runs a Dart command in the specified folder.
+	 */
+	runDart(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicRunResult | undefined>;
+
+	/**
+	 * Runs a pub command in the specified folder.
+	 */
+	runPub(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicRunResult | undefined>;
+}
+
+export interface PublicRunOptions {
+	/**
+	 * Whether to always show the output channel.
+	 *
+	 * If false or undefined, the output will only be shown if the command fails or takes longer than 10 seconds.
+	 */
+	alwaysShowOutput?: boolean;
+}
+
+export interface PublicRunResult {
+	/**
+	 * The stdout text from the command.
+	 */
+	stdout: string;
+
+	/**
+	 * The stderr text from the command.
+	 */
+	stderr: string;
+
+	/**
+	 * The exit code of the command.
+	 */
+	exitCode: number;
 }
