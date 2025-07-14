@@ -20,13 +20,13 @@ import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants"
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { ProjectFinder, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
 import { FileChangeWarnings } from "./analysis/file_change_warnings";
 import { Analytics } from "./analytics";
-import { PublicDartExtensionApiImpl, extensionApiData } from "./api/extension_api";
+import { PublicDartExtensionApiImpl, extensionApiModel } from "./api/extension_api";
 import { PublicDartExtensionApi } from "./api/interfaces";
 import { FlutterDartPadSamplesCodeLensProvider } from "./code_lens/flutter_dartpad_samples";
 import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
@@ -159,7 +159,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	analytics = new Analytics(logger);
 	const sdkUtils = new SdkUtils(logger, context, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
-	extensionApiData.setSdks(workspaceContextUnverified.sdks);
+	extensionApiModel.setSdks(workspaceContextUnverified.sdks);
 	analytics.workspaceContext = workspaceContextUnverified;
 	util.logTime("initWorkspace");
 
@@ -295,13 +295,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
 		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
 		: undefined;
-	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiData.setDtdUri(uri));
+	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
 
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {
 		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
 	}
 
 	context.subscriptions.push(new AddSdkToPathCommands(logger, context, workspaceContext, analytics));
+	const projectFinder = new ProjectFinder(logger);
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, dartCapabilities, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, dartCapabilities);
@@ -327,8 +328,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	maybeAnalyzer = analyzer;
 	context.subscriptions.push(analyzer);
 
-	// Set the file tracker for the public API.
-	extensionApiData.setAnalyzer(analyzer);
+	// Set up the the extension API.
+	extensionApiModel.setAnalyzer(analyzer);
+	extensionApiModel.setProjectFinder(projectFinder);
 
 	void analyzer.onReady.then(() => {
 		if (config.analyzerVmServicePort) {
@@ -519,7 +521,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	// Register our view providers.
-	const dartPackagesProvider = new DartPackagesProvider(logger, workspaceContext, dartCapabilities);
+	const dartPackagesProvider = new DartPackagesProvider(logger, projectFinder, workspaceContext, dartCapabilities);
 	context.subscriptions.push(dartPackagesProvider);
 	const packagesTreeView = vs.window.createTreeView("dartDependencyTree", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(packagesTreeView);
@@ -827,7 +829,7 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart = false): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
-	extensionApiData.clear();
+	extensionApiModel.clear();
 
 	const loggersToDispose = [...loggers];
 	loggers.length = 0;

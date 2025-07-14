@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import { commands, workspace } from "vscode";
-import { activate, activateWithoutAnalysis, extApi, helloWorldMainFile, waitForResult } from "../helpers";
+import { fsPath } from "../../shared/utils/fs";
+import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, waitForResult } from "../helpers";
 
 describe("extension api", () => {
 	it("provides the DTD Uri and notifies of changes", async () => {
@@ -25,7 +26,7 @@ describe("extension api", () => {
 		sub.dispose();
 	});
 
-	it("provides outlines for Dart files", async () => {
+	it("workspace.getOutline", async () => {
 		await activate();
 
 		const doc = await workspace.openTextDocument(helloWorldMainFile);
@@ -41,5 +42,12 @@ describe("extension api", () => {
 		assert.equal(main.element.kind, "FUNCTION");
 		assert.ok(main.range);
 		assert.ok(main.codeRange);
+	});
+
+	it("workspace.findProjectFolders", async () => {
+		await activate();
+
+		const projects = await extApi.workspace.findProjectFolders();
+		assert.deepStrictEqual(projects, [fsPath(helloWorldFolder), fsPath(helloWorldExampleSubFolder)]);
 	});
 });

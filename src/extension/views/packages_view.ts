@@ -19,11 +19,10 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 	public readonly deps: PubDeps;
 	public readonly packageMapLoader: PackageMapLoader;
-	public readonly projectFinder: ProjectFinder;
 
 	private processPackageMapChangeEvents = true;
 
-	constructor(private readonly logger: Logger, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) {
+	constructor(private readonly logger: Logger, private readonly projectFinder: ProjectFinder, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) {
 		this.disposables.push(vs.commands.registerCommand("_dart.removeDependencyFromTreeNode", this.removeDependency, this));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDependencyPageFromTreeNode", this.openDependencyPage, this));
 		context.events.onPackageMapChange.listen(() => {
@@ -41,7 +40,6 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 		});
 		this.deps = new PubDeps(logger, context, dartCapabilities);
 		this.packageMapLoader = new PackageMapLoader(logger);
-		this.projectFinder = new ProjectFinder(logger);
 	}
 
 	public getTreeItem(element: PackageDep): vs.TreeItem {

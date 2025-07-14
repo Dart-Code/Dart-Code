@@ -2,17 +2,21 @@ import * as vs from "vscode";
 import { Range } from "vscode-languageclient";
 import { Element, Outline } from "../../shared/analysis/lsp/custom_protocol";
 import { Sdks } from "../../shared/interfaces";
+import { ProjectFinder } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
+import { config } from "../config";
+import { getExcludedFolders } from "../utils";
 import { PublicDartExtensionApi, PublicElement, PublicOutline, PublicSdks, PublicWorkspace } from "./interfaces";
 
 /// A single instance of this class is created (below) that is used internally to modify the data
 /// provided by the API.
-class DartExtensionApiData {
+class DartExtensionApiModel {
 	public readonly version = 2;
 
 	public sdks: Sdks | undefined;
 	public dtdUri: string | undefined;
 	public analyzer: LspAnalyzer | undefined;
+	public projectFinder: ProjectFinder | undefined;
 
 	private onSdksChangedEmitter = new vs.EventEmitter<Sdks | undefined>();
 	public readonly onSdksChanged = this.onSdksChangedEmitter.event;
@@ -34,18 +38,23 @@ class DartExtensionApiData {
 		this.analyzer = analyzer;
 	}
 
+	public setProjectFinder(projectFinder: ProjectFinder) {
+		this.projectFinder = projectFinder;
+	}
+
 	public clear(): void {
 		this.setSdks(undefined);
 		this.setDtdUri(undefined);
 		this.setAnalyzer(undefined);
+		this.projectFinder = undefined;
 	}
 }
 
 /// Use a single global static to store data exposed by the extension so that we don't
 /// need to worry about different API objects being created during the lifetime of the
 /// extension (for example during internal restarts).
-export const extensionApiData = new DartExtensionApiData();
-const data = extensionApiData;
+export const extensionApiModel = new DartExtensionApiModel();
+const data = extensionApiModel;
 
 export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
 	// All data returned from this class should be immutable/copies so that
@@ -53,7 +62,7 @@ export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
 
 	private readonly workspaceImpl = new PublicWorkspaceImpl();
 
-	public get version() { return extensionApiData.version; };
+	public get version() { return extensionApiModel.version; };
 
 	public get sdks(): PublicSdks {
 		return data.sdks ? { ...data.sdks } : {};
@@ -90,6 +99,19 @@ class PublicWorkspaceImpl implements PublicWorkspace {
 
 		const outline = await data.analyzer.fileTracker.waitForOutline(document, token);
 		return outline ? this.convertToPublicOutline(outline) : undefined;
+	}
+
+	public async findProjectFolders(): Promise<string[]> {
+		if (!data.projectFinder)
+			return [];
+
+		const searchOptions = {
+			sort: true,
+			requirePubspec: true,
+			searchDepth: config.projectSearchDepth,
+		};
+
+		return data.projectFinder.findAllProjectFolders(getExcludedFolders, searchOptions);
 	}
 
 	private convertToPublicOutline(outline: Outline): PublicOutline {
