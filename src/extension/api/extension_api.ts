@@ -40,7 +40,7 @@ class DartExtensionApiModel {
 		this.analyzer = analyzer;
 	}
 
-	public setProjectFinder(projectFinder: ProjectFinder) {
+	public setProjectFinder(projectFinder: ProjectFinder | undefined) {
 		this.projectFinder = projectFinder;
 	}
 
@@ -52,8 +52,8 @@ class DartExtensionApiModel {
 		this.setSdks(undefined);
 		this.setDtdUri(undefined);
 		this.setAnalyzer(undefined);
-		this.projectFinder = undefined;
-		this.sdkCommands = undefined;
+		this.setProjectFinder(undefined);
+		this.setSdkCommands(undefined);
 	}
 }
 

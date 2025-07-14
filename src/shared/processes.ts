@@ -56,7 +56,11 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 		proc.stdout.on("data", (data: Buffer) => out.push(data.toString()));
 		proc.stderr.on("data", (data: Buffer) => err.push(data.toString()));
 		proc.on("exit", (code) => {
-			resolve(new RunProcessResult(nullToUndefined(code) ?? 0, out.join(""), err.join("")));
+			resolve(new RunProcessResult(
+				nullToUndefined(code) ?? 1 // null means terminated by signal
+				, out.join(""),
+				err.join(""),
+			));
 		});
 		// Handle things like ENOENT which are async and come via error, but mean exit will never fire.
 		proc.on("error", (e) => reject(e));

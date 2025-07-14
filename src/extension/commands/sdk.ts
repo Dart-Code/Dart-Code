@@ -273,7 +273,7 @@ class ChainedProcess {
 			const result: RunProcessResult = {
 				stdout: stdoutChunks.join(""),
 				stderr: stderrChunks.join(""),
-				exitCode: nullToUndefined(code) ?? 0,
+				exitCode: nullToUndefined(code) ?? 1, // null means terminated by signal
 			};
 			this.completer.resolve(result);
 		});
