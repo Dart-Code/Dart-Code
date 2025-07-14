@@ -328,7 +328,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	maybeAnalyzer = analyzer;
 	context.subscriptions.push(analyzer);
 
-	// Set up the the extension API.
+	// Set up the extension API.
 	extensionApiModel.setAnalyzer(analyzer);
 	extensionApiModel.setProjectFinder(projectFinder);
 	extensionApiModel.setSdkCommands(sdkCommands);
