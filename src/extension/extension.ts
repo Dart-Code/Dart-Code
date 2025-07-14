@@ -327,6 +327,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	maybeAnalyzer = analyzer;
 	context.subscriptions.push(analyzer);
 
+	// Set the file tracker for the public API.
+	extensionApiData.setAnalyzer(analyzer);
+
 	void analyzer.onReady.then(() => {
 		if (config.analyzerVmServicePort) {
 			void vs.window.showInformationMessage("The Dart Analysis server is running with the debugger accessible. Unset the dart.analyzerVmServicePort setting when no longer required.");
@@ -824,6 +827,7 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart = false): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
+	extensionApiData.clear();
 
 	const loggersToDispose = [...loggers];
 	loggers.length = 0;
