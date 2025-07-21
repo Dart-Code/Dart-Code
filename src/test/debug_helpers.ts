@@ -140,6 +140,13 @@ export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], ind
 	ensureVariable(variables, evaluateName, name, value);
 }
 
+// export function ensureSourceName(source: DebugProtocol.Source | undefined, packageDisplayName: string, relativeDisplayName: string) {
+// 	if (source!.name?.startsWith("package:"))
+// 		assert.equal(source!.name, packageDisplayName);
+// 	else
+// 		assert.equal(source!.name, relativeDisplayName);
+// }
+
 export interface MapEntry {
 	key: {
 		evaluateName: string | undefined;

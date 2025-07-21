@@ -131,6 +131,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	it("runs and remains active until told to quit", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			// dc.assertOutputContains("console", `lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.flutterAppStarted(),
 			dc.configurationSequence(),
@@ -579,6 +580,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
+			// watchPromise("assertOutputContains", dc.assertOutputContains("console", `lib${path.sep}main.dart on ${deviceName} in debug mode...\n`)),
 			watchPromise("assertOutputContains", dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`)),
 			watchPromise("configurationSequence", dc.configurationSequence()),
 			watchPromise("launch", dc.launch(config)),
@@ -614,6 +616,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			// dc.assertOutputContains("console", `lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.flutterAppStarted(),
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -639,6 +642,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			// dc.assertOutputContains("console", `lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
 			dc.flutterAppStarted(),
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -682,6 +686,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.equal(frames[0].name, "build");
 		dc.assertPath(frames[0].source!.path, expectedLocation.path);
 		assert.equal(frames[0].source!.name, "package:flutter_hello_world/main.dart");
+		// ensureSourceName(frames[0].source, "package:flutter_hello_world/main.dart", "lib/main.dart");
 
 		await watchPromise("stops_at_a_breakpoint->resume", dc.resume());
 
@@ -709,6 +714,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 							assert.equal(frames[0].name, "build");
 						dc.assertPath(frames[0].source!.path, expectedLocation.path);
 						assert.equal(frames[0].source!.name, "package:flutter_hello_world/main.dart");
+						// ensureSourceName(frames[0].source, "package:flutter_hello_world/main.dart", "lib/main.dart");
 					})
 					.then(() => watchPromise(`stops_at_a_breakpoint->reload:${i}->resume`, dc.resume())),
 				watchPromise(`stops_at_a_breakpoint->reload:${i}->hotReload:breakpoint`, dc.hotReload()),
@@ -1686,6 +1692,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				dc.assertOutputContains(undefined, "_throwAnException")
 					.then((event) => {
 						assert.equal(event.body.source!.name, "package:flutter_hello_world/broken.dart");
+						// ensureSourceName(event.body.source, "package:flutter_hello_world/broken.dart", "lib/broken.dart");
 						dc.assertPath(event.body.source!.path, dc.isUsingUris ? flutterHelloWorldBrokenFile.toString() : fsPath(flutterHelloWorldBrokenFile));
 						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
 						assert.equal(event.body.column, 5);
