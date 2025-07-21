@@ -1533,6 +1533,7 @@ insp=<inspected variable>
 
 		const expectedPath = dc.isDartDap ? fsPath(helloWorldMainFile) : path.join("bin", "main.dart");
 		ensureHasRunWithArgsStarting(root, hasRunFile, `${expectedPath}`);
+		// ensureHasRunWithArgsStarting(root, hasRunFile, fsPath(helloWorldMainFile));
 	});
 
 	describe("attaches", () => {

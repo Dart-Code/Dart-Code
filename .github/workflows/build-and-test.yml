@@ -137,6 +137,14 @@ jobs:
       - name: npm build
         run: npm run build
 
+      - name: move test_projects to test_projects_real
+        run: Move-Item -Path src/test/test_projects -Destination src/test/test_projects_real
+        shell: pwsh
+
+      - name: symlink test_projects to test_projects_real
+        run: New-Item -ItemType SymbolicLink -Path src/test/test_projects -Target $PWD/src/test/test_projects_real
+        shell: pwsh
+
       - name: dart pub get (hello_world)
         if: startsWith(matrix.bot, 'dart')
         run: dart pub get
