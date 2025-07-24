@@ -29,10 +29,28 @@ module.exports = {
 
 		return new Promise(async (resolve, reject) => {
 			try {
-				const files = await glob("**/**.test.js", { cwd: testsRoot });
+				let testPattern = "**/**.test.js";
+
+				// Apply test filter if provided
+				const testFilter = process.env.DART_CODE_TEST_FILTER;
+				if (testFilter) {
+					// Create a pattern that matches files containing the filter string
+					testPattern = `**/*${testFilter}*.test.js`;
+					console.log(`Filtering tests with pattern: ${testPattern}`);
+				}
+
+				const files = await glob(testPattern, { cwd: testsRoot });
 
 				// Add files to the test suite
 				files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
+
+				if (files.length === 0) {
+					console.log(`No test files found matching pattern: ${testPattern}`);
+					resolve();
+					return;
+				}
+
+				console.log(`Found ${files.length} test file(s):`, files);
 
 				// Run the mocha test
 				mocha.run((failures) => {

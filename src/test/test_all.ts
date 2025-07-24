@@ -6,6 +6,13 @@ let exitCode = 0;
 const cwd = process.cwd();
 const testEnv = Object.create(process.env) as NodeJS.Dict<string>;
 
+// Read command line arguments for test filtering
+const testFilterArgs = process.argv.slice(2);
+if (testFilterArgs.length > 0) {
+	testEnv.DART_CODE_TEST_FILTER = testFilterArgs.join(" ");
+	console.log(`Running tests with filter: ${testEnv.DART_CODE_TEST_FILTER}`);
+}
+
 async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
 	console.log(`Running ${testFolder} tests folder in workspace ${workspaceFolder}`);
 
