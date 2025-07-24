@@ -165,7 +165,7 @@ async function runAllTests(): Promise<void> {
 		try {
 			console.log("Running grammar tests...");
 			const { spawn } = await import("child_process");
-			const grammarTestProcess = spawn("npm", ["run", "test-grammar"], { stdio: "inherit" });
+			const grammarTestProcess = spawn("npm", ["run", "test-grammar"], { stdio: "inherit", shell: true });
 
 			await new Promise<void>((resolve, reject) => {
 				grammarTestProcess.on("close", (code) => {
