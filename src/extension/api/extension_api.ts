@@ -1,13 +1,16 @@
+import path from "path";
 import * as vs from "vscode";
 import { Range } from "vscode-languageclient";
 import { Element, Outline } from "../../shared/analysis/lsp/custom_protocol";
+import { dartVMPath } from "../../shared/constants";
 import { Sdks } from "../../shared/interfaces";
 import { ProjectFinder } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { SdkCommands } from "../commands/sdk";
 import { config } from "../config";
 import { getExcludedFolders } from "../utils";
-import { PublicDartExtensionApi, PublicElement, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicWorkspace } from "./interfaces";
+import { safeToolSpawn } from "../utils/processes";
+import { PublicDartExtensionApi, PublicElement, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "./interfaces";
 
 /// A single instance of this class is created (below) that is used internally to modify the data
 /// provided by the API.
@@ -174,5 +177,13 @@ class PublicSdkImpl implements PublicSdk {
 
 	public async runPub(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicRunResult | undefined> {
 		return this.runDart(folder, ["pub", ...args], options);
+	}
+
+	public async startDart(folder: string, args: string[]): Promise<PublicStartResult> {
+		if (!data.sdks?.dart)
+			throw new Error("Dart SDK not available");
+		const dartExecutable = path.join(data.sdks.dart, dartVMPath);
+
+		return safeToolSpawn(folder, dartExecutable, args);
 	}
 }

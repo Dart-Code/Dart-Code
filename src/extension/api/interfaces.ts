@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { SpawnedProcess } from "../../shared/interfaces";
 
 export interface PublicDartExtensionApi {
 	/**
@@ -139,13 +140,32 @@ export interface PublicSdks {
 export interface PublicSdk {
 	/**
 	 * Runs a Dart command in the specified folder.
+	 *
+	 * A toast notification may be shown to the user while this command runs. It is intended for
+	 * small user-initiated commands that would be expected by the user.
+	 *
+	 * If there is already a running command of the same kind with the same args, will return `undefined`.
 	 */
 	runDart(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicRunResult | undefined>;
 
 	/**
 	 * Runs a pub command in the specified folder.
+	 *
+	 * A toast notification may be shown to the user while this command runs. It is intended for
+	 * small user-initiated commands that would be expected by the user.
+	 *
+	 * If there is already a running command of the same kind with the same args, will return `undefined`.
 	 */
 	runPub(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicRunResult | undefined>;
+
+	/**
+	 * Starts running a background Dart command in the specified folder.
+	 *
+	 * This is just a convenience wrapper around `child_process.spawn()` that handles using the correct SDK path
+	 * and argument escaping. It is up to the client to handle stdout/stderr/stdin for this process, as well as
+	 * terminating it once it is done with (or when the extension deactivates).
+	 */
+	startDart(folder: string, args: string[], options?: PublicRunOptions): Promise<PublicStartResult | undefined>;
 }
 
 export interface PublicRunOptions {
@@ -173,3 +193,5 @@ export interface PublicRunResult {
 	 */
 	exitCode: number;
 }
+
+export type PublicStartResult = SpawnedProcess;

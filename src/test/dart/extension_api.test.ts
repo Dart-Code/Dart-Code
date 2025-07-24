@@ -66,4 +66,18 @@ describe("extension api", () => {
 		assert.equal(result.exitCode, 0);
 		assert.ok(result.stdout.includes("Work with packages."));
 	});
+
+	it("sdk.startDart with --help", async () => {
+		await activate();
+
+		const proc = (await extApi.sdk.startDart(fsPath(helloWorldFolder), ["--help"]))!;
+
+		const stdout = await new Promise<string>((resolve) => {
+			const stdoutChunks: string[] = [];
+			proc.stdout?.on("data", (data: string) => stdoutChunks.push(data));
+			proc.on("close", () => resolve(stdoutChunks.join("")));
+		});
+
+		assert.ok(stdout.includes("A command-line utility for Dart development"));
+	});
 });
