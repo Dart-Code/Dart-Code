@@ -29,23 +29,39 @@ module.exports = {
 
 		return new Promise(async (resolve, reject) => {
 			try {
-				let testPattern = "**/**.test.js";
+				let testPatterns = ["**/**.test.js"];
 
-				// Apply test filter if provided
+				// Apply test filters if provided
 				const testFilter = process.env.DART_CODE_TEST_FILTER;
 				if (testFilter) {
-					// Create a pattern that matches files containing the filter string
-					testPattern = `**/*${testFilter}*.test.js`;
-					console.log(`Filtering tests with pattern: ${testPattern}`);
+					try {
+						const filters = JSON.parse(testFilter);
+						if (Array.isArray(filters) && filters.length > 0) {
+							// Create patterns for each filter
+							testPatterns = filters.map((filter) => `**/*${filter}*.test.js`);
+							console.log(`Filtering tests with patterns: ${testPatterns.join(", ")}`);
+						}
+					} catch (e) {
+						// Fallback to single filter for backward compatibility
+						testPatterns = [`**/*${testFilter}*.test.js`];
+						console.log(`Filtering tests with pattern: ${testPatterns[0]}`);
+					}
 				}
 
-				const files = await glob(testPattern, { cwd: testsRoot });
+				// Collect all matching files from all patterns
+				const allFiles = new Set<string>();
+				for (const pattern of testPatterns) {
+					const files = await glob(pattern, { cwd: testsRoot });
+					files.forEach((f) => allFiles.add(f));
+				}
+
+				const files = Array.from(allFiles).sort();
 
 				// Add files to the test suite
 				files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
 
 				if (files.length === 0) {
-					console.log(`No test files found matching pattern: ${testPattern}`);
+					console.log(`No test files found matching patterns: ${testPatterns.join(", ")}`);
 					resolve();
 					return;
 				}

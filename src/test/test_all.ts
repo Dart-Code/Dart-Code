@@ -9,8 +9,8 @@ const testEnv = Object.create(process.env) as NodeJS.Dict<string>;
 // Read command line arguments for test filtering
 const testFilterArgs = process.argv.slice(2);
 if (testFilterArgs.length > 0) {
-	testEnv.DART_CODE_TEST_FILTER = testFilterArgs.join(" ");
-	console.log(`Running tests with filter: ${testEnv.DART_CODE_TEST_FILTER}`);
+	testEnv.DART_CODE_TEST_FILTER = JSON.stringify(testFilterArgs);
+	console.log(`Running tests with filter(s): ${testFilterArgs.join(", ")}`);
 }
 
 async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
@@ -158,6 +158,35 @@ async function runAllTests(): Promise<void> {
 	} catch (e) {
 		exitCode = 1;
 		console.error(e);
+	}
+
+	// Run grammar tests unless filters are provided
+	if (testFilterArgs.length === 0) {
+		try {
+			console.log("Running grammar tests...");
+			const { spawn } = await import("child_process");
+			const grammarTestProcess = spawn("npm", ["run", "test-grammar"], { stdio: "inherit" });
+
+			await new Promise<void>((resolve, reject) => {
+				grammarTestProcess.on("close", (code) => {
+					if (code !== 0) {
+						console.error(`Grammar tests failed with exit code ${code}`);
+						exitCode = exitCode || (code ?? 1);
+					}
+					resolve();
+				});
+				grammarTestProcess.on("error", (err) => {
+					console.error("Failed to run grammar tests:", err);
+					exitCode = exitCode || 1;
+					resolve();
+				});
+			});
+		} catch (e) {
+			console.error("Error running grammar tests:", e);
+			exitCode = exitCode || 1;
+		}
+	} else {
+		console.log("Skipping grammar tests when filter provided");
 	}
 }
 
