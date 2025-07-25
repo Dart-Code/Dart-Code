@@ -8,25 +8,17 @@ import { MultiReporter } from "./mocha_multi_reporter";
 
 /**
  * Normalizes a filter path for cross-platform glob pattern matching.
- * Handles Windows paths and extracts meaningful filter terms.
+ * Preserves path structure and handles test file suffixes.
  */
 function normalizeFilterPath(filter: string): string {
-	// Remove .test.js suffix if present
-	let cleanFilter = filter.replace(/\.test\.js$/, "");
+	// Remove test suffixes if present (.test.ts, .test.js, or partial .test)
+	let cleanFilter = filter.replace(/\.test(\.ts|\.js)?$/, "");
 
 	// Convert backslashes to forward slashes for cross-platform compatibility
 	cleanFilter = cleanFilter.replace(/\\/g, "/");
 
-	// If it looks like a path, extract the last meaningful component
-	// e.g., "./src/test/dart/dartdoc" -> "dartdoc"
-	if (cleanFilter.includes("/")) {
-		const parts = cleanFilter.split("/");
-		// Get the last non-empty part
-		const lastPart = parts.filter((part) => part && part !== ".").pop();
-		if (lastPart) {
-			return lastPart;
-		}
-	}
+	// Remove leading "./" if present
+	cleanFilter = cleanFilter.replace(/^\.\//, "");
 
 	return cleanFilter;
 }
