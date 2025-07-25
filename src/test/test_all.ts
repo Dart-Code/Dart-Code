@@ -7,7 +7,21 @@ const cwd = process.cwd();
 const testEnv = Object.create(process.env) as NodeJS.Dict<string>;
 
 // Read command line arguments for test filtering
-const testFilterArgs = process.argv.slice(2);
+let testFilterArgs: string[] = [];
+
+// First check if arguments were passed via environment variable (from npm test)
+if (process.env.DART_CODE_TEST_FILTER) {
+	try {
+		testFilterArgs = JSON.parse(process.env.DART_CODE_TEST_FILTER);
+	} catch (e) {
+		// Fallback to treating it as a single string
+		testFilterArgs = [process.env.DART_CODE_TEST_FILTER];
+	}
+} else {
+	// Fall back to direct command line arguments (from npm run test-only)
+	testFilterArgs = process.argv.slice(2);
+}
+
 if (testFilterArgs.length > 0) {
 	testEnv.DART_CODE_TEST_FILTER = JSON.stringify(testFilterArgs);
 	console.log(`Running tests with filter(s): ${testFilterArgs.join(", ")}`);

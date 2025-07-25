@@ -3626,7 +3626,7 @@
 		"watch-non-ext": "tsc -p ./tsconfig.build.json --watch --extendedDiagnostics",
 		"lint-fix": "eslint . --fix",
 		"lint": "eslint .",
-		"test": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument && npm run test-only && npm run report_lcov && npm run report_screen",
+		"test": "node scripts/test-wrapper.js",
 		"instrument-dist": "cd out/dist && nyc instrument --compact false --in-place . . && cd ../..",
 		"instrument": "cd out/src && nyc instrument --compact false --in-place . . && cd ../..",
 		"test-only": "node ./out/src/test/test_all.js",

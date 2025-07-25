@@ -14,6 +14,7 @@ export default defineConfig([
 			"lints/**",
 			"media/**",
 			"node_modules/**",
+			"scripts/**",
 			"src/debug/**", // This is legacy code going away soon.
 			"out/**",
 			"webpack.config.js",

@@ -37,13 +37,17 @@ module.exports = {
 					try {
 						const filters = JSON.parse(testFilter);
 						if (Array.isArray(filters) && filters.length > 0) {
-							// Create patterns for each filter
-							testPatterns = filters.map((filter) => `**/*${filter}*.test.js`);
+							// Create patterns for each filter, stripping .test.js suffix if present
+							testPatterns = filters.map((filter) => {
+								const cleanFilter = filter.replace(/\.test\.js$/, "");
+								return `**/*${cleanFilter}*.test.js`;
+							});
 							console.log(`Filtering tests with patterns: ${testPatterns.join(", ")}`);
 						}
 					} catch (e) {
 						// Fallback to single filter for backward compatibility
-						testPatterns = [`**/*${testFilter}*.test.js`];
+						const cleanFilter = testFilter.replace(/\.test\.js$/, "");
+						testPatterns = [`**/*${cleanFilter}*.test.js`];
 						console.log(`Filtering tests with pattern: ${testPatterns[0]}`);
 					}
 				}
