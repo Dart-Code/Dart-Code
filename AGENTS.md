@@ -63,6 +63,7 @@ Here are some useful commands when working on the project.
 - `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints.
 - `npm run lint-fix`: Fixes lints that can be fixed automatically.
 - `npm run build`: Builds the extension.
-- `npm test`: Runs all automatic tests. This should first be run with the `BOT` env variable set to `"dart"` to run only a subset of basic Dart tests. If all of those tests, the whole test suite should be run.
+- `npm run test <...test-file-globs>`: Runs tests for the given glob (or file path). This should be used while working on an individual feature because it is faster than running all tests.
+- `npm run test`: Runs _all_ automatic tests for _all_ bots. This can be run with the `BOT` env variable set to (as defined in `test_all.ts`, for example to `"dart"`) to run only a single bots tests. The test suite is large and this can be slow.
 - `npm run test-grammar`: Runs snapshot tests for the textmate grammar.
 - `npm run update-grammar-snapshots`: Updates the textmate grammar snapshots.
