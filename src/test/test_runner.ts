@@ -6,6 +6,31 @@ import * as path from "path";
 import { isCI } from "../shared/constants";
 import { MultiReporter } from "./mocha_multi_reporter";
 
+/**
+ * Normalizes a filter path for cross-platform glob pattern matching.
+ * Handles Windows paths and extracts meaningful filter terms.
+ */
+function normalizeFilterPath(filter: string): string {
+	// Remove .test.js suffix if present
+	let cleanFilter = filter.replace(/\.test\.js$/, "");
+
+	// Convert backslashes to forward slashes for cross-platform compatibility
+	cleanFilter = cleanFilter.replace(/\\/g, "/");
+
+	// If it looks like a path, extract the last meaningful component
+	// e.g., "./src/test/dart/dartdoc" -> "dartdoc"
+	if (cleanFilter.includes("/")) {
+		const parts = cleanFilter.split("/");
+		// Get the last non-empty part
+		const lastPart = parts.filter((part) => part && part !== ".").pop();
+		if (lastPart) {
+			return lastPart;
+		}
+	}
+
+	return cleanFilter;
+}
+
 module.exports = {
 	async run(testsRoot: string): Promise<void> {
 		// Create the mocha test
@@ -37,17 +62,17 @@ module.exports = {
 					try {
 						const filters = JSON.parse(testFilter);
 						if (Array.isArray(filters) && filters.length > 0) {
-							// Create patterns for each filter, stripping .test.js suffix if present
+							// Create patterns for each filter, normalizing paths and stripping .test.js suffix if present
 							testPatterns = filters.map((filter) => {
-								const cleanFilter = filter.replace(/\.test\.js$/, "");
-								return `**/*${cleanFilter}*.test.js`;
+								const normalizedFilter = normalizeFilterPath(String(filter));
+								return `**/*${normalizedFilter}*.test.js`;
 							});
 							console.log(`Filtering tests with patterns: ${testPatterns.join(", ")}`);
 						}
 					} catch (e) {
 						// Fallback to single filter for backward compatibility
-						const cleanFilter = testFilter.replace(/\.test\.js$/, "");
-						testPatterns = [`**/*${cleanFilter}*.test.js`];
+						const normalizedFilter = normalizeFilterPath(testFilter);
+						testPatterns = [`**/*${normalizedFilter}*.test.js`];
 						console.log(`Filtering tests with pattern: ${testPatterns[0]}`);
 					}
 				}
