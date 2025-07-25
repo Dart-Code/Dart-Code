@@ -173,35 +173,6 @@ async function runAllTests(): Promise<void> {
 		exitCode = 1;
 		console.error(e);
 	}
-
-	// Run grammar tests unless filters are provided
-	if (testFilterArgs.length === 0) {
-		try {
-			console.log("Running grammar tests...");
-			const { spawn } = await import("child_process");
-			const grammarTestProcess = spawn("npm", ["run", "test-grammar"], { stdio: "inherit", shell: true });
-
-			await new Promise<void>((resolve, reject) => {
-				grammarTestProcess.on("close", (code) => {
-					if (code !== 0) {
-						console.error(`Grammar tests failed with exit code ${code}`);
-						exitCode = exitCode || (code ?? 1);
-					}
-					resolve();
-				});
-				grammarTestProcess.on("error", (err) => {
-					console.error("Failed to run grammar tests:", err);
-					exitCode = exitCode || 1;
-					resolve();
-				});
-			});
-		} catch (e) {
-			console.error("Error running grammar tests:", e);
-			exitCode = exitCode || 1;
-		}
-	} else {
-		console.log("Skipping grammar tests when filter provided");
-	}
 }
 
 void runAllTests().then(() => process.exit(exitCode));

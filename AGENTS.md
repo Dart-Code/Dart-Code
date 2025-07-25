@@ -30,7 +30,8 @@ Here are some useful commands when working on the project.
 - `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints.
 - `npm run lint-fix`: Fixes lints that can be fixed automatically.
 - `npm run build`: Builds the extension.
-- `npm test`: Runs all automatic tests. This should first be run with the `BOT` env variable set to `"dart"` to run only a subset of basic Dart tests. If all of those tests, the whole test suite should be run.
+- `npm run test <...test-file-globs>`: Runs tests for the given glob (or file path). This should be used while working on an individual feature because it is faster than running all tests.
+- `npm run test`: Runs _all_ automatic tests for _all_ bots. This can be run with the `BOT` env variable set to (as defined in `test_all.ts`, for example to `"dart"`) to run only a single bots tests. The test suite is larged and this can be slow.
 - `npm run test-grammar`: Runs snapshot tests for the textmate grammar.
 - `npm run update-grammar-snapshots`: Updates the textmate grammar snapshots.
 
@@ -62,8 +63,9 @@ All extension settings use the format `dart.*` or `dart.flutter*` and are access
 
 1. Run `npm run lint` to ensure no lint errors.
 2. Run `npm run build` to ensure no build errors.
-3. Run basic tests with `npm test` with env variable `BOT` set to `"dart"`.
-4. Run all tests with `npm test` and env variable `BOT` unset.
+3. Run affected tests with `npm run test <...test-file-globs>`.
+4. If all affected tests pass, run the affected bot with `npm run test` and the env variable `BOT` set accordingly.
+4. Run all tests for all bots with `npm run test` and env variable `BOT` unset.
 5. Run textmate grammar tests with `npm run test-grammar`.
 
 ### File Organization

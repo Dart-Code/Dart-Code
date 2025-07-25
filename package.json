@@ -3624,15 +3624,20 @@
 		"watch": "webpack --mode development --watch",
 		"build-tests": "tsc -p ./tsconfig.build.json",
 		"watch-non-ext": "tsc -p ./tsconfig.build.json --watch --extendedDiagnostics",
-		"lint-fix": "eslint . --fix",
+
 		"lint": "eslint .",
-		"test": "node scripts/test-wrapper.js",
+		"lint-fix": "eslint . --fix",
+
+		"pretest": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument",
+		"test": "node ./out/src/test/test_all.js",
+		"posttest": "npm run report_lcov && npm run report_screen",
+		"test-grammar": "vscode-tmgrammar-snap --expandDiff src/test/test_projects/grammar_testing/**/*.dart",
+		"test-all": "npm run test && npm run test-grammar",
+
 		"instrument-dist": "cd out/dist && nyc instrument --compact false --in-place . . && cd ../..",
 		"instrument": "cd out/src && nyc instrument --compact false --in-place . . && cd ../..",
-		"test-only": "node ./out/src/test/test_all.js",
 		"report_lcov": "nyc report -r lcovonly --report-dir coverage/$BOT",
 		"report_screen": "nyc report",
-		"test-grammar": "vscode-tmgrammar-snap --expandDiff src/test/test_projects/grammar_testing/**/*.dart",
 		"update-grammar-snapshots": "vscode-tmgrammar-snap --updateSnapshot \"src/test/test_projects/grammar_testing/**/*.dart\""
 	},
 	"dependencies": {
