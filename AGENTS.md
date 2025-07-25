@@ -4,7 +4,7 @@ This document provides an overview of the Dart-Code VS Code extension project fo
 
 ## Project Overview
 
-This project is the source code for the **Dart-Code** Visual Studio Code extension, which provides rich support for the [Dart](https://dart.dev) and [Flutter](https://flutter.dev) frameworks.
+This project is the source code for the **Dart** and **Flutter** Visual Studio Code extensions, which provides rich support for the [Dart](https://dart.dev) and [Flutter](https://flutter.dev) frameworks.
 
 The extension is written in **TypeScript** and interacts with the Dart SDK and Flutter SDK tools to provide features to the user.
 
@@ -22,17 +22,28 @@ The owner and repository name are both **Dart-Code** with the repository hosted 
 - `out/`: Compiled TypeScript output that should not be examined or modified.
 
 
-## Useful Commands
+## Rules
 
-Here are some useful commands when working on the project.
+### General Project Rules
 
-- `npm install`: Installs dependencies. This may need to be run if dependencies appear to be missing.
-- `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints.
-- `npm run lint-fix`: Fixes lints that can be fixed automatically.
-- `npm run build`: Builds the extension.
-- `npm test`: Runs all automatic tests. This should first be run with the `BOT` env variable set to `"dart"` to run only a subset of basic Dart tests. If all of those tests, the whole test suite should be run.
-- `npm run test-grammar`: Runs snapshot tests for the textmate grammar.
-- `npm run update-grammar-snapshots`: Updates the textmate grammar snapshots.
+- All code must be cross-platform, working on Windows, macOS and Linux. This means using things like `path.join()` and taking care when spawning processes.
+- Code in `src/extension/` must not be imported outside of that folder (enforce by lints).
+- All extension settings use the format `dart.*` or `dart.flutter*` and are accessed through a wrapper in `src/extension/config.ts`.
+
+### Code Style
+
+- Use double quotes for strings.
+- No trailing spaces.
+- Include full stops on comment sentences.
+- Avoid braces for simple one-line if/else blocks.
+
+
+## Existing Errors / Warnings
+
+There are some existing lint warnings that are expected and should be ignored:
+
+- "Property NOTE is not allowed.": This is a note about the following item.
+- "Property id is not allowed.": This is for backwards compatibility with older versions of VS Code.
 
 
 ## Components
@@ -44,39 +55,14 @@ Here are some useful commands when working on the project.
 - **Pub**: The package managed for Dart, used to manage dependencies.
 
 
-## Configuration & Settings
+## Useful Commands
 
-All extension settings use the format `dart.*` or `dart.flutter*` and are accessed through a wrapper in `src/extension/config.ts`.
+Here are some useful commands when working on the project.
 
-
-## Best Practices for AI Agents
-
-### Code Style
-
-- Use double quotes for strings.
-- No trailing spaces.
-- Include full stops on comment sentences.
-- Avoid braces for simple one-line if/else blocks.
-
-### When Making Changes
-
-1. Run `npm run lint` to ensure no lint errors.
-2. Run `npm run build` to ensure no build errors.
-3. Run basic tests with `npm test` with env variable `BOT` set to `"dart"`.
-4. Run all tests with `npm test` and env variable `BOT` unset.
-5. Run textmate grammar tests with `npm run test-grammar`.
-
-### File Organization
-
-- Extension-specific code stays in `src/extension/`.
-- Shared code goes in `src/shared/`.
-- Don't import `src/extension/` code from outside that folder.
-- Use appropriate subfolder structure (`dart/`, `flutter/`, `commands/`, etc.).
-
-
-## Existing Errors / Warnings
-
-There are some existing lint warnings that are expected and should be ignored:
-
-- "Property NOTE is not allowed.": This is a note about the following item.
-- "Property id is not allowed.": This is for backwards compatibility with older versions of VS Code.
+- `npm install`: Installs dependencies. This may need to be run if dependencies appear to be missing.
+- `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints.
+- `npm run lint-fix`: Fixes lints that can be fixed automatically.
+- `npm run build`: Builds the extension.
+- `npm test`: Runs all automatic tests. This should first be run with the `BOT` env variable set to `"dart"` to run only a subset of basic Dart tests. If all of those tests, the whole test suite should be run.
+- `npm run test-grammar`: Runs snapshot tests for the textmate grammar.
+- `npm run update-grammar-snapshots`: Updates the textmate grammar snapshots.
