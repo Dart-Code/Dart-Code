@@ -80,7 +80,7 @@ export interface DebugCommandHandler {
 		getCurrentServiceExtensionValue(session: unknown, id: VmServiceExtension): Promise<unknown>;
 		sendExtensionValue(session: unknown, id: VmServiceExtension, value: unknown): Promise<void>;
 	};
-	handleDebugSessionStart(session: DebugSession): void;
+	handleDebugSessionStart(session: DebugSession): DartDebugSessionInformation | undefined;
 	handleDebugSessionEnd(session: DebugSession): void;
 	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
 }

@@ -576,7 +576,7 @@ export class DebugCommands implements IAmDisposable {
 		};
 	}
 
-	public handleDebugSessionStart(s: vs.DebugSession): void {
+	public handleDebugSessionStart(s: vs.DebugSession): DartDebugSessionInformation | undefined {
 		if (s.type !== "dart")
 			return;
 
@@ -620,6 +620,8 @@ export class DebugCommands implements IAmDisposable {
 		});
 
 		this.debugOptions.show();
+
+		return session;
 	}
 
 	public handleDebugSessionCustomEvent(e: vs.DebugSessionCustomEvent): void {

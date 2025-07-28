@@ -9,7 +9,7 @@ describe("DevTools", async () => {
 		// Set up a fake debug session.
 		const debugSession = {
 			configuration: {
-				name: "Dart",
+				name: "Fake Debug Session (DevTools tests)",
 				request: "launch",
 				type: "dart",
 			},

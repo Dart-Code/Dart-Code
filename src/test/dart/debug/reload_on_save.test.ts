@@ -1,35 +1,37 @@
 import { strict as assert } from "assert";
 import { DebugSession } from "vscode";
 import { DebuggerType } from "../../../shared/enums";
-import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
-import { activate, currentDoc, delay, privateApi, setConfigForTest, setTestContent } from "../../helpers";
+import { activate, currentDoc, defer, delay, privateApi, setConfigForTest, setTestContent } from "../../helpers";
 
 describe("hot reloads on save", () => {
 	beforeEach("activate emptyFile", () => activate());
 
-	function buildSession(debuggerType: DebuggerType): DebugSession & { hotReloadCount: number } {
+	function startSession(debuggerType: DebuggerType): DebugSession & { hotReloadCount: number } {
 		const configuration = {
 			debuggerType,
-			name: "Fake Debug Session",
+			name: "Fake Debug Session (hot reloads on save tests)",
 			request: "launch",
 			type: "dart",
-
 		};
 
+		let hotReloadCount = 0;
 		const session = {
 			configuration,
-			hotReloadCount: 0,
 			id: "foo",
 			name: configuration.name,
 			type: configuration.type,
 			workspaceFolder: undefined,
 			async getDebugProtocolBreakpoint() { return undefined; },
+			async customRequest(command: string) {
+				if (command === "hotReload")
+					hotReloadCount++;
+			},
+			get hotReloadCount() { return hotReloadCount; }
 		};
 
-		(session as unknown as DebugSession).customRequest = async (command) => {
-			if (command === "hotReload")
-				session.hotReloadCount++;
-		};
+		const dartSession = privateApi.debugCommands.handleDebugSessionStart(session)!;
+		dartSession.hasStarted = true;
+		defer("Remove fake debug session", () => privateApi.debugCommands.handleDebugSessionEnd(session));
 
 		return session as any;
 	}
@@ -38,8 +40,7 @@ describe("hot reloads on save", () => {
 		await setConfigForTest("dart", "hotReloadOnSave", "manual");
 		await setConfigForTest("dart", "flutterHotReloadOnSave", "never");
 
-		const session = buildSession(DebuggerType.Dart);
-		privateApi.debugSessions.push(new DartDebugSessionInformation(session));
+		const session = startSession(DebuggerType.Dart);
 
 		const doc = currentDoc();
 		await setTestContent(doc.getText() + "// 1 ");
@@ -54,10 +55,7 @@ describe("hot reloads on save", () => {
 		await setConfigForTest("dart", "hotReloadOnSave", "never");
 		await setConfigForTest("dart", "flutterHotReloadOnSave", "manual");
 
-		const session = buildSession(DebuggerType.Flutter);
-		const dartSession = new DartDebugSessionInformation(session);
-		dartSession.hasStarted = true;
-		privateApi.debugSessions.push(dartSession);
+		const session = startSession(DebuggerType.Flutter);
 
 		const doc = currentDoc();
 		await setTestContent(doc.getText() + "// 1 ");
@@ -72,8 +70,7 @@ describe("hot reloads on save", () => {
 		await setConfigForTest("dart", "hotReloadOnSave", "never");
 		await setConfigForTest("dart", "flutterHotReloadOnSave", "manual");
 
-		const session = buildSession(DebuggerType.Flutter);
-		privateApi.debugSessions.push(new DartDebugSessionInformation(session));
+		const session = startSession(DebuggerType.Flutter);
 
 		const doc = currentDoc();
 		await setTestContent(doc.getText() + "// 1 ");
