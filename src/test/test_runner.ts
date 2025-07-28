@@ -20,7 +20,7 @@ export async function getTestSuites(testsRoot: string, filters: string[] | undef
 	allFiles = allFiles.map((f) => path.resolve(testsRoot, f));
 	allFiles.sort();
 
-	if (!filters)
+	if (!filters?.length)
 		return allFiles;
 
 	// If there are filters, return those that match any of them.
