@@ -378,7 +378,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			"The daemon did not respond to getSupportedPlatforms",
 			this.unresponsiveTimeoutPeriodSeconds,
 		).then(
-			(result) => result.platforms ?? Object.keys(result.platformTypes ?? {}),
+			(result) => result.platforms ?? Object.entries(result.platformTypes ?? {}).filter(([, details]) => details.isSupported).map(([platform]) => platform),
 			() => undefined,
 		);
 	}
