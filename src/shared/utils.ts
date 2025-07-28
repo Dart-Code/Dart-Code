@@ -168,24 +168,24 @@ export class BufferedLogger implements Logger {
 	}
 
 	public flushTo(logger: Logger) {
-		if (!this.buffer.length)
-			return;
+		// if (!this.buffer.length)
+		// 	return;
 
-		logger.info("Flushing log messages...");
-		for (const log of this.buffer) {
-			switch (log.type) {
-				case "info":
-					logger.info(log.message, log.category);
-					break;
-				case "warn":
-					logger.warn(log.message, log.category);
-					break;
-				case "error":
-					logger.error(log.message, log.category);
-					break;
-			}
-		}
-		logger.info("Done flushing log messages...");
+		// logger.info("Flushing log messages...");
+		// for (const log of this.buffer) {
+		// 	switch (log.type) {
+		// 		case "info":
+		// 			logger.info(log.message, log.category);
+		// 			break;
+		// 		case "warn":
+		// 			logger.warn(log.message, log.category);
+		// 			break;
+		// 		case "error":
+		// 			logger.error(log.message, log.category);
+		// 			break;
+		// 	}
+		// }
+		// logger.info("Done flushing log messages...");
 	}
 }
 

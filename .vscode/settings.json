@@ -32,7 +32,4 @@
 		"**/lib/comments.dart"
 	],
 	"eslint.lintTask.enable": true,
-	"explorer.fileNesting.patterns": {
-		"AGENT.md": "AGENTS.md",
-	}
 }

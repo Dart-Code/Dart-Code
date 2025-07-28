@@ -1,30 +1,16 @@
 import * as vstest from "@vscode/test-electron";
 import * as fs from "fs";
 import * as path from "path";
-import { getTestSuites } from "./test_runner";
 
 let exitCode = 0;
 const cwd = process.cwd();
 const testEnv = Object.create(process.env) as NodeJS.Dict<string>;
 
-// Read command line arguments for test filtering
-const testFilterArgs = process.argv.slice(2);
-if (testFilterArgs.length > 0) {
-	testEnv.DART_CODE_TEST_FILTER = JSON.stringify(testFilterArgs);
-	console.log(`Running tests with filter(s): ${testFilterArgs.join(", ")}`);
-}
-
-async function runTests(testFolderName: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
-	const testFolder = path.join(cwd, "out", "src", "test", testFolderName);
-	const files = await getTestSuites(testFolder, testFilterArgs);
-	if (!files.length)
-		return;
-
-	console.log("\n\n");
-	console.log(`Starting "${testFolderName}" tests folder in workspace "${workspaceFolder}"...`);
+async function runTests(testFolder: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
+	console.log(`Running ${testFolder} tests folder in workspace ${workspaceFolder}`);
 
 	const logsName = process.env.LOGS_NAME;
-	const testRunName = `${testFolderName.replace(/\//g, "_")}${logSuffix ? `_${logSuffix}` : ""}_${logsName}`;
+	const testRunName = `${testFolder.replace(/\//g, "_")}${logSuffix ? `_${logSuffix}` : ""}_${logsName}`;
 	const logPath = path.join(cwd, ".dart_code_test_logs", `${testRunName}`);
 
 	testEnv.TEST_RUN_NAME = testRunName;
@@ -37,11 +23,6 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 
 	const codeVersion = (!process.env.BUILD_VERSION || process.env.BUILD_VERSION === "stable") ? "stable" : "insiders";
 
-	const reporter = {
-		report: () => { },
-		error: console.error
-	};
-
 	// The VS Code download is often flaky on GH Actions, so we want to retry
 	// if required - however we don't want to re-run tests if they fail, so do
 	// the download step separately.
@@ -49,8 +30,8 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 	const maxAttempts = 5;
 	while (currentAttempt <= maxAttempts) {
 		try {
-			// console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
-			await vstest.downloadAndUnzipVSCode({ version: codeVersion, reporter, });
+			console.log(`Attempting to download VS Code attempt #${currentAttempt}`);
+			await vstest.downloadAndUnzipVSCode(codeVersion);
 			break;
 		} catch (e) {
 			if (currentAttempt >= maxAttempts)
@@ -61,18 +42,19 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		}
 	}
 
+	console.log("Running tests with pre-downloaded VS Code");
 	try {
 		const res = await vstest.runTests({
 			extensionDevelopmentPath: cwd,
 			extensionTestsEnv: { ...testEnv, ...env },
-			extensionTestsPath: testFolder,
+			extensionTestsPath: path.join(cwd, "out", "src", "test", testFolder),
 			launchArgs: [
 				path.isAbsolute(workspaceFolder)
 					? workspaceFolder
 					: path.join(cwd, "src", "test", "test_projects", workspaceFolder),
 				"--profile-temp",
 				"--crash-reporter-directory",
-				path.join(cwd, ".crash_dumps", testFolderName),
+				path.join(cwd, ".crash_dumps", testFolder),
 				// Disable the Git extensions as these may be causing test failures on GitHub Actions:
 				// https://github.com/Dart-Code/Dart-Code/runs/2297610200?check_suite_focus=true#step:23:121
 				"--disable-extension",
@@ -80,33 +62,24 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 				"--disable-extension",
 				"vscode.git-ui",
 				"--disable-extension",
-				"vscode.git-base",
-				"--disable-extension",
 				"vscode.github",
 				"--disable-extension",
 				"vscode.github-authentication",
 				"--disable-workspace-trust",
-				"--log",
-				"info",
-				"--sync",
-				"off",
 			],
 			version: codeVersion,
-			reporter,
 		});
 		exitCode = exitCode || res;
 	} catch (e) {
 		console.error(e);
 		exitCode = exitCode || 999;
 	}
+
+	console.log("############################################################");
+	console.log("\n\n");
 }
 
 async function runAllTests(): Promise<void> {
-	console.log("\n\n");
-	console.log("#############################");
-	console.log("## Dart-Code Tests         ##");
-	console.log("#############################");
-
 	testEnv.DART_CODE_IS_TEST_RUN = "true";
 	testEnv.MOCHA_FORBID_ONLY = "true";
 

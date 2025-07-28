@@ -1,5 +1,5 @@
 {
-	"contextFileName": "AGENT.md",
+	"contextFileName": "AGENTS.md",
 	"mcpServers": {
 		"github": {
 			"command": "npx",

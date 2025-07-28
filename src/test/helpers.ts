@@ -245,7 +245,7 @@ function setupTestLogging(): boolean {
 		const excludeLogCategories = process.env.BOT?.includes("debug")
 			? [LogCategory.Analyzer]
 			: [];
-		const testLogger = captureLogs(emittingLogger, logPath, privateApi.getLogHeader(), 20000, excludeLogCategories, true);
+		const testLogger = captureLogs(emittingLogger, logPath, "", 20000, excludeLogCategories, true);
 
 		deferUntilLast("Remove log file if test passed", async (testResult?: "passed" | "failed" | "pending") => {
 			// Put a new buffered logger back to capture any logging output happening

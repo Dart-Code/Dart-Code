@@ -1,43 +1,13 @@
+console.log("Starting test runner...");
+
 import { glob } from "glob";
-import { minimatch } from "minimatch";
 import { default as Mocha } from "mocha";
 import * as path from "path";
 import { isCI } from "../shared/constants";
 import { MultiReporter } from "./mocha_multi_reporter";
 
-function normalizeTestFilter(filter: string): string {
-	return filter
-		// Convert backslashes to forward slashes for glob.
-		.replace(/\\/g, "/")
-		// Remove leading "./" if present.
-		.replace(/^\.\//, "")
-		// Replace any .ts with .js.
-		.replace(/\.ts$/, ".js");
-}
-
-export async function getTestSuites(testsRoot: string, filters: string[] | undefined): Promise<string[]> {
-	let allFiles = await glob("**/**.test.js", { cwd: testsRoot });
-	allFiles = allFiles.map((f) => path.resolve(testsRoot, f));
-	allFiles.sort();
-
-	if (!filters?.length)
-		return allFiles;
-
-	// If there are filters, return those that match any of them.
-	const files = new Set<string>();
-	for (let filter of filters.map(normalizeTestFilter)) {
-		filter = `**/*${filter}*`;
-		allFiles.filter((file) => minimatch(file, filter)).forEach((f) => files.add(f));
-	}
-	return [...files].sort();
-}
-
 module.exports = {
-	getTestSuites,
-
 	async run(testsRoot: string): Promise<void> {
-		console.log("\nStarting test runner...\n");
-
 		// Create the mocha test
 		const mocha = new Mocha({
 			color: true,
@@ -59,18 +29,11 @@ module.exports = {
 
 		return new Promise(async (resolve, reject) => {
 			try {
-				const testFilter = process.env.DART_CODE_TEST_FILTER;
-				const filters: string[] | undefined = testFilter ? JSON.parse(testFilter) : undefined;
-				const files = await getTestSuites(testsRoot, filters);
+				const files = await glob("**/**.test.js", { cwd: testsRoot });
+				files.sort();
 
 				// Add files to the test suite
-				files.forEach((f) => mocha.addFile(f));
-
-				if (files.length === 0) {
-					console.log(`No test files found.`);
-					resolve();
-					return;
-				}
+				files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
 
 				// Run the mocha test
 				mocha.run((failures) => {

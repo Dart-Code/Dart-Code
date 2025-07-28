@@ -1,12 +1,8 @@
 import { EventEmitter } from "events";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
-import { platformEol } from "./constants";
 import { LogCategory, LogSeverity } from "./enums";
 import { IAmDisposable, LogMessage, Logger, SpawnedProcess } from "./interfaces";
+import { MemoryTracker } from "./memory_tracker";
 import { errorString } from "./utils";
-import { createFolderForFile } from "./utils/fs";
 
 class LogEmitter extends EventEmitter {
 	public fire(msg: LogMessage): void {
@@ -105,50 +101,50 @@ export function logToConsole(logger: EmittingLogger): IAmDisposable {
 }
 
 export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories: LogCategory[], excludeLogCategories = false): ({ dispose: () => Promise<void> | void }) {
-	if (!file || !path.isAbsolute(file))
-		throw new Error("Path passed to logTo must be an absolute path");
-	const time = (detailed = false) => detailed ? `[${(new Date()).toTimeString()}] ` : `[${(new Date()).toLocaleTimeString()}] `;
-	createFolderForFile(file);
-	let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
-	if (header)
-		logStream.write(header);
+	// if (!file || !path.isAbsolute(file))
+	// 	throw new Error("Path passed to logTo must be an absolute path");
+	// const time = (detailed = false) => detailed ? `[${(new Date()).toTimeString()}] ` : `[${(new Date()).toLocaleTimeString()}] `;
+	// createFolderForFile(file);
+	// let logStream: fs.WriteStream | undefined = fs.createWriteStream(file);
+	// if (header)
+	// 	logStream.write(header);
 
-	const categoryNames = logCategories.map((c) => LogCategory[c]);
-	logStream.write(`${excludeLogCategories ? "Not " : ""}Logging Categories:${platformEol}    ${categoryNames.join(", ")}${platformEol}${platformEol}`);
+	// const categoryNames = logCategories.map((c) => LogCategory[c]);
+	// logStream.write(`${excludeLogCategories ? "Not " : ""}Logging Categories:${platformEol}    ${categoryNames.join(", ")}${platformEol}${platformEol}`);
 
-	logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file started${platformEol}`);
-	let fileLogger: IAmDisposable | undefined = logger.onLog((e) => {
-		if (!logStream)
-			return;
+	// logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file started${platformEol}`);
+	// let fileLogger: IAmDisposable | undefined = logger.onLog((e) => {
+	// 	if (!logStream)
+	// 		return;
 
-		// We should log this event if:
-		// - We don't have a category filter; or
-		// - The category filter includes this category; or
-		// - The log is WARN/ERROR (they get logged everywhere).
-		const shouldLog = (excludeLogCategories
-			? !logCategories.includes(e.category)
-			: logCategories.includes(e.category))
-			|| e.severity === LogSeverity.Warn
-			|| e.severity === LogSeverity.Error;
-		if (!shouldLog)
-			return;
+	// 	// We should log this event if:
+	// 	// - We don't have a category filter; or
+	// 	// - The category filter includes this category; or
+	// 	// - The log is WARN/ERROR (they get logged everywhere).
+	// 	const shouldLog = (excludeLogCategories
+	// 		? !logCategories.includes(e.category)
+	// 		: logCategories.includes(e.category))
+	// 		|| e.severity === LogSeverity.Warn
+	// 		|| e.severity === LogSeverity.Error;
+	// 	if (!shouldLog)
+	// 		return;
 
-		logStream.write(`${e.toLine(maxLogLineLength)}${os.EOL}`);
-	});
+	// 	logStream.write(`${e.toLine(maxLogLineLength)}${os.EOL}`);
+	// });
 	return {
 		async dispose(): Promise<void> {
-			if (fileLogger) {
-				await fileLogger.dispose();
-				fileLogger = undefined;
-			}
-			return new Promise((resolve) => {
-				if (logStream) {
-					logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file ended${os.EOL}`);
-					logStream.once("finish", resolve);
-					logStream.end();
-					logStream = undefined;
-				}
-			});
+			// if (fileLogger) {
+			// 	await fileLogger.dispose();
+			// 	fileLogger = undefined;
+			// }
+			// return new Promise((resolve) => {
+			// 	if (logStream) {
+			// 		logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file ended${os.EOL}`);
+			// 		logStream.once("finish", resolve);
+			// 		logStream.end();
+			// 		logStream = undefined;
+			// 	}
+			// });
 		},
 	};
 }
@@ -171,4 +167,21 @@ export class RingLog {
 	public toString(): string {
 		return this.lines.slice(this.pointer, this.size).concat(this.lines.slice(0, this.pointer)).filter((l) => l).join("\n");
 	}
+}
+
+export function createMemoryTrackingLogger(baseLogger: Logger): Logger & { memoryTracker: MemoryTracker } {
+	const memoryTracker = new MemoryTracker(baseLogger);
+
+	return {
+		memoryTracker,
+		info(message: string, category?: LogCategory): void {
+			baseLogger.info(message, category);
+		},
+		warn(errorOrMessage: any, category?: LogCategory): void {
+			baseLogger.warn(errorOrMessage, category);
+		},
+		error(errorOrMessage: any, category?: LogCategory): void {
+			baseLogger.error(errorOrMessage, category);
+		},
+	};
 }

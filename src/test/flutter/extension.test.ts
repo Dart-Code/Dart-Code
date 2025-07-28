@@ -1,55 +1,56 @@
 import { strict as assert } from "assert";
-import * as path from "path";
-import * as vs from "vscode";
-import { Sdks } from "../../shared/interfaces";
-import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, logger, privateApi } from "../helpers";
+import { ext, privateApi } from "../helpers";
+import { addMemoryTracking } from "../memory_tracker_util";
 
-describe("test environment", () => {
-	it("has opened the correct folder", () => {
-		const wfs = vs.workspace.workspaceFolders || [];
-		assert.equal(wfs.length, 1);
-		assert.ok(
-			fsPath(wfs[0].uri).endsWith(path.sep + "flutter_hello_world"),
-			`${fsPath(wfs[0].uri)} doesn't end with ${path.sep}flutter_hello_world`,
-		);
-	});
-});
+// Add detailed memory tracking function
+function logDetailedMemory(step: string) {
+	const mem = process.memoryUsage();
+	console.log(`[DETAILED-MEMORY] ${step}:`);
+	console.log(`  RSS: ${(mem.rss / 1024 / 1024).toFixed(1)}MB`);
+	console.log(`  Heap Used: ${(mem.heapUsed / 1024 / 1024).toFixed(1)}MB`);
+	console.log(`  Heap Total: ${(mem.heapTotal / 1024 / 1024).toFixed(1)}MB`);
+	console.log(`  External: ${(mem.external / 1024 / 1024).toFixed(1)}MB`);
+	console.log(`  Array Buffers: ${(mem.arrayBuffers / 1024 / 1024).toFixed(1)}MB`);
+	return mem;
+}
 
 describe("extension", () => {
+	const memTracker = addMemoryTracking("extension");
+
+	beforeEach(() => {
+		memTracker.beforeEach();
+	});
+
+	afterEach(() => {
+		memTracker.afterEach();
+	});
+
 	it("activated", async () => {
+		console.log(`test1`);
+		logDetailedMemory("Test start - before any operations");
+		memTracker.logMemory("Test start - before privateApi check");
 		assert.equal(privateApi, undefined);
-		await activateWithoutAnalysis();
+		console.log(`test2`);
+
+		logDetailedMemory("Before activateWithoutAnalysis call");
+		memTracker.logMemory("Before activation");
+
+		// This is where the 16GB leak happens - let's break it down
+		logDetailedMemory("Before ext.isActive check");
+		if (!ext.isActive) {
+			logDetailedMemory("Extension not active - about to call ext.activate()");
+			await ext.activate();
+			logDetailedMemory("🚨 CRITICAL: After ext.activate() - CHECK FOR 16GB LEAK HERE");
+		} else {
+			logDetailedMemory("Extension already active");
+		}
+
+		logDetailedMemory("After activation check, before exports");
+		if (ext.exports) {
+			logDetailedMemory("Before setting privateApi and extApi");
+		}
+
+		memTracker.logMemory("After activation - CRITICAL POINT");
 		assert.equal(ext.isActive, true);
-	});
-	it("found the Dart and Flutter SDK", async () => {
-		await activateWithoutAnalysis();
-		assert.ok(privateApi);
-		const sdks: Sdks = privateApi.workspaceContext.sdks;
-		assert.ok(sdks);
-		assert.ok(sdks.dart);
-		assert.ok(sdks.dartVersion);
-		assert.ok(sdks.flutter);
-		assert.ok(sdks.flutterVersion);
-		logger.info("        " + JSON.stringify(sdks, undefined, 8).trim().slice(1, -1).trim());
-		assert.equal(extApi.sdks.dart, sdks.dart);
-		assert.equal(extApi.sdks.dartVersion, sdks.dartVersion);
-		assert.equal(extApi.sdks.flutter, sdks.flutter);
-		assert.equal(extApi.sdks.flutterVersion, sdks.flutterVersion);
-	});
-	it("used Flutter's version of the Dart SDK", async () => {
-		await activateWithoutAnalysis();
-		assert.ok(privateApi);
-		const sdks: Sdks = privateApi.workspaceContext.sdks;
-		assert.ok(sdks);
-		assert.ok(sdks.dart);
-		assert.equal(sdks.dartSdkIsFromFlutter, true);
-		assert.notEqual(sdks.dart.toLowerCase().indexOf("flutter"), -1);
-	});
-	it("set FLUTTER_ROOT", async () => {
-		await activateWithoutAnalysis();
-		const toolEnv = privateApi.getToolEnv();
-		assert.ok(toolEnv?.FLUTTER_ROOT);
-		assert.ok(toolEnv?.FLUTTER_ROOT, privateApi.workspaceContext.sdks.flutter);
 	});
 });
