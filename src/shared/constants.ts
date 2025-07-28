@@ -18,6 +18,10 @@ export const defaultDartCodeConfigurationPath = ".dart_code";
 /// or an absolute path (in which case there is just one for the whole workspace).
 export const dartCodeConfigurationPathEnvironmentVariableName = "DART_CODE_CONFIGURATION_PATH";
 
+/// The name of the environment variable that allows forcing a delay before starting any services
+/// that must be exposed to the front-end client.
+export const dartCodeServiceActivationDelayEnvironmentVariableName = "DART_CODE_SERVICE_ACTIVATION_DELAY";
+
 export const autoLaunchFilename = "autolaunch.json";
 
 export const isCI = !!process.env.CI;

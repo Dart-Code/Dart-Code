@@ -3,7 +3,7 @@ import * as process from "process";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName } from "../shared/constants";
+import { dartCodeConfigurationPathEnvironmentVariableName, dartCodeServiceActivationDelayEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
@@ -291,12 +291,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
 	}
 
-	// Dart Tooling Daemon.
-	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
-		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
-		: undefined;
-	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
-
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {
 		void vs.window.showInformationMessage(workspaceContext.config.localMacWarningMessage.toString());
 	}
@@ -324,7 +318,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		await handleNewProjects(logger, extContext);
 
 	// Fire up the analyzer process.
-	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon);
+	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext);
 	maybeAnalyzer = analyzer;
 	context.subscriptions.push(analyzer);
 
@@ -401,6 +395,23 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
 	const extensionRecommendations = new ExtensionRecommentations(logger, analytics, extContext);
+
+	// If configured, wait for some period before spawning any external services.
+	// Config overrides the env var to allow for testing different values.
+	// See https://github.com/Dart-Code/Dart-Code/issues/5613.
+	const serviceActivationDelayMsRaw = config.serviceActivationDelayMs ?? process.env[dartCodeServiceActivationDelayEnvironmentVariableName];
+	const serviceActivationDelayMs = Number(serviceActivationDelayMsRaw);
+	if (!isNaN(serviceActivationDelayMs)) {
+		logger.info(`Service activation delay is configured, waiting ${serviceActivationDelayMs}ms`);
+		await new Promise((resolve) => setTimeout(resolve, serviceActivationDelayMs));
+	}
+
+	// Dart Tooling Daemon.
+	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
+		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
+		: undefined;
+	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
+	void analyzer.connectToDtd(dartToolingDaemon);
 
 	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);

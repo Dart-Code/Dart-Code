@@ -44,7 +44,7 @@ export class LspAnalyzer extends Analyzer {
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 
-	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly dtd: DartToolingDaemon | undefined) {
+	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 
 		this.setupStatusItem();
@@ -91,16 +91,25 @@ export class LspAnalyzer extends Analyzer {
 			});
 			this.onReadyCompleter.resolve();
 
-			// If we have DTD and the SDK supports LSP-over-DTD, tell the server to connect.
-			if (dartCapabilities.supportsLspOverDtd && dtd !== null) {
-				const registerExperimentalHandlers = !!config.experimentalDtdHandlers;
-				dtd?.dtdUri
-					.then((uri) => uri ? this.client.sendRequest(ConnectToDtdRequest.type, { uri, registerExperimentalHandlers }) : undefined)
-					.catch((e) => this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${e}`));
-			}
-
 			void this.updateDiagnosticInformation?.updateDiagnosticInformationIfSupported();
 		});
+	}
+
+	public async connectToDtd(dtd: DartToolingDaemon | undefined): Promise<void> {
+		if (!dtd)
+			return;
+
+		// If we have DTD and the SDK supports LSP-over-DTD, tell the server to connect.
+		if (this.dartCapabilities.supportsLspOverDtd) {
+			const registerExperimentalHandlers = !!config.experimentalDtdHandlers;
+			try {
+				const dtdUri = await dtd?.dtdUri;
+				if (dtdUri)
+					await this.client.sendRequest(ConnectToDtdRequest.type, { uri: dtdUri, registerExperimentalHandlers });
+			} catch (e) {
+				this.logger.error(`Failed to call connectToDtd. Does this version of the SDK support it? ${e}`);
+			}
+		}
 	}
 
 	private setupStatusItem() {
