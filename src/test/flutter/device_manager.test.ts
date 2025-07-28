@@ -257,22 +257,22 @@ describe("device_manager", () => {
 		assert.deepStrictEqual(dm.currentDevice, desktop);
 	});
 
-	it("tryGetSupportedPlatforms returns platforms", async () => {
+	it("tryGetSupportedPlatforms returns platformTypess", async () => {
 		daemon.supportedPlatforms = ["a", "b"];
-		const platforms = await dm.tryGetSupportedPlatforms("fake");
-		assert.deepStrictEqual(platforms?.platforms, ["a", "b"]);
+		const platforms = await dm.tryGetSupportedPlatformTypes("fake");
+		assert.deepStrictEqual(platforms, ["a", "b"]);
 	});
 
 	it("handles errors in tryGetSupportedPlatforms", async () => {
 		daemon.supportedPlatforms = ["a", "b"];
-		const platforms = await dm.tryGetSupportedPlatforms(""); // throws because falsy path
+		const platforms = await dm.tryGetSupportedPlatformTypes(""); // throws because falsy path
 		assert.equal(platforms, undefined);
 	});
 
 	it("handles unresponsive tryGetSupportedPlatforms", async () => {
 		daemon.supportedPlatforms = ["a", "b"];
 		daemon.supportedPlatformsDelaySeconds = 10;
-		const platforms = await dm.tryGetSupportedPlatforms("fake");
+		const platforms = await dm.tryGetSupportedPlatformTypes("fake");
 		assert.equal(platforms, undefined);
 	});
 });
@@ -335,7 +335,10 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 		if (this.supportedPlatformsDelaySeconds)
 			await delay(this.supportedPlatformsDelaySeconds * 1000);
 
-		return { platforms: this.supportedPlatforms ?? ["android", "ios"] };
+		const platformTypes = Object.fromEntries(
+			(this.supportedPlatforms ?? ["android", "ios"]).map((p) => [p, { isSupported: true }])
+		);
+		return { platformTypes };
 	}
 
 	public async serveDevTools(): Promise<f.ServeDevToolsResponse> {

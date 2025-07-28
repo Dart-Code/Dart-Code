@@ -76,7 +76,8 @@ export interface ShowMessage {
 }
 
 export interface SupportedPlatformsResponse {
-	platforms: PlatformType[];
+	platforms?: PlatformType[]; // Legacy, removed in https://github.com/flutter/flutter/issues/140473
+	platformTypes: Record<PlatformType, { isSupported: boolean }> | undefined; // Supported since 2023
 }
 
 export interface ServeDevToolsResponse {
