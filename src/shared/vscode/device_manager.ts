@@ -364,7 +364,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	public async getValidDevicesForProject(projectFolder: string): Promise<f.Device[]> {
 		const sortedDevices = this.getDevicesSortedByCurrentAndName();
 		const supportedPlatforms = this.daemon.capabilities.providesPlatformTypes
-			? (await this.tryGetSupportedPlatforms(projectFolder))?.platforms
+			? (await this.tryGetSupportedPlatformTypes(projectFolder))
 			: undefined;
 
 		return sortedDevices.filter((d) => this.isSupported(supportedPlatforms, d));
@@ -372,13 +372,13 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	/// Calls the daemon's getSupportedPlatforms, but returns undefined if any error occurs (such as the process
 	/// having exited) or there is no response within 5 seconds.
-	public async tryGetSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse | undefined> {
+	public async tryGetSupportedPlatformTypes(projectRoot: string): Promise<string[] | undefined> {
 		return withTimeout(
 			this.daemon.daemonStarted.then(() => this.daemon.getSupportedPlatforms(projectRoot)),
 			"The daemon did not respond to getSupportedPlatforms",
 			this.unresponsiveTimeoutPeriodSeconds,
 		).then(
-			(result) => result,
+			(result) => result.platforms ?? Object.entries(result.platformTypes ?? {}).filter(([, details]) => details.isSupported).map(([platform]) => platform),
 			() => undefined,
 		);
 	}
@@ -464,11 +464,11 @@ export class FlutterDeviceManager implements vs.Disposable {
 			this.logger.info(`Checking ${projectFolders.length} projects for supported platforms`);
 
 
-			const tryGet = (folder: string) => this.tryGetSupportedPlatforms(folder);
+			const tryGet = (folder: string) => this.tryGetSupportedPlatformTypes(folder);
 			const getPlatformPromises = projectFolders.map(async (folder: string): Promise<f.PlatformType[]> => {
 				try {
 					const platforms = await tryGet(folder);
-					return platforms?.platforms ?? [];
+					return platforms ?? [];
 				} catch (e) {
 					this.logger.error(e);
 					return [];
