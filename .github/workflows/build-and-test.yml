@@ -47,10 +47,7 @@ jobs:
         os: [ubuntu-latest]
         node-version: [22]
         build-version: [stable]
-        bot: [dart, flutter]
-        include:
-          - os: ubuntu-latest
-            bot: flutter_snap
+        bot: [flutter]
         exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
 
     steps:

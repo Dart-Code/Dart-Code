@@ -11,7 +11,7 @@ import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
 import { Analytics } from "./analytics";
-import { PublicDartExtensionApiImpl, extensionApiModel } from "./api/extension_api";
+import { PublicDartExtensionApiImpl } from "./api/extension_api";
 import { PublicDartExtensionApi } from "./api/interfaces";
 import { config } from "./config";
 import { VsCodeDartToolingDaemon } from "./dart/tooling_daemon";
@@ -45,7 +45,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	analytics = new Analytics(logger);
 	const sdkUtils = new SdkUtils(logger, context, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
-	extensionApiModel.setSdks(workspaceContextUnverified.sdks);
 	analytics.workspaceContext = workspaceContextUnverified;
 
 	const workspaceContext = workspaceContextUnverified as DartWorkspaceContext;
@@ -78,7 +77,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
 		? new VsCodeDartToolingDaemon(context, logger, sdks, dartCapabilities, deviceManager)
 		: undefined;
-	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
+	// void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
 
 	// Fire up the analyzer process.
 	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext, dartToolingDaemon);
@@ -99,7 +98,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 export async function deactivate(isRestart = false): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
-	extensionApiModel.clear();
+	// extensionApiModel.clear();
 
 	const loggersToDispose = [...loggers];
 	loggers.length = 0;
