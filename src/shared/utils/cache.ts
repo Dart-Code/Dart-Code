@@ -22,6 +22,11 @@ export class SimpleTimeBasedCache<T> {
 			},
 		);
 	}
+
+	public clear() {
+		this.data.clear();
+	}
+
 }
 
 interface CacheItem<T> {
