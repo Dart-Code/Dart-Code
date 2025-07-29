@@ -90,27 +90,22 @@ export class AutoLaunch implements IAmDisposable {
 		while (Date.now() - startTime < timeoutMs) {
 			try {
 				await new Promise<void>((resolve, reject) => {
-					const socket = new ws.WebSocket(vmServiceUri);
+					// Use a 2-second timeout for each connection attempt.
+					const connectionAttemptTimeoutMs = 2000;
+					const socket = new ws.WebSocket(vmServiceUri, { handshakeTimeout: connectionAttemptTimeoutMs });
 
 					const cleanup = () => {
+						// To avoid race conditions, ensure we only close if it's not already closed.
 						if (socket.readyState === ws.OPEN || socket.readyState === ws.CONNECTING)
 							socket.close();
 					};
 
-					// 5 second timeout per attempt.
-					const timeout = setTimeout(() => {
-						cleanup();
-						reject(new Error("Connection timeout"));
-					}, 2000);
-
 					socket.on("open", () => {
-						clearTimeout(timeout);
 						cleanup();
 						resolve();
 					});
 
 					socket.on("error", (error) => {
-						clearTimeout(timeout);
 						cleanup();
 						reject(error);
 					});
@@ -137,7 +132,7 @@ export class AutoLaunch implements IAmDisposable {
 	}
 
 	public async startDebugSession(wf: WorkspaceFolder | undefined, configuration: DebugConfiguration): Promise<void> {
-		// If configuration has vmServiceUri and waitForVmServiceMs, prob the VM Service to ensure we can connect first.
+		// If configuration has vmServiceUri and waitForVmServiceMs, probe the VM Service to ensure we can connect first.
 		const vmServiceUri = configuration.vmServiceUri as string | undefined;
 		const waitForVmServiceMs = configuration.waitForVmServiceMs as number | undefined;
 		if (vmServiceUri && waitForVmServiceMs) {

@@ -113,7 +113,7 @@ describe("debug autolaunch", () => {
 
 		it("should start debugging immediately if waitForVmServiceMs is provided but vmServiceUri is not", async () => {
 			const { wf, filePath, startDebugSession } = createTestEnvironment();
-			const launchConfig = createLaunchConfig("No VM Service Test", undefined,);
+			const launchConfig = createLaunchConfig("No VM Service Test", undefined);
 
 			await triggerAutoLaunch(filePath, launchConfig);
 
