@@ -82,7 +82,7 @@ export class AutoLaunch implements IAmDisposable {
 	}
 
 	private async waitForVmService(vmServiceUri: string, timeoutMs: number): Promise<boolean> {
-		this.logger.info(`Waiting for VM Service at ${vmServiceUri} to become accessible (timeout: ${timeoutMs}ms)...`);
+		this.logger.info(`[AutoLaunch] Waiting for VM Service at ${vmServiceUri} to become accessible (timeout: ${timeoutMs}ms)...`);
 
 		const startTime = Date.now();
 		const retryDelayMs = 1000; // Wait 1s between attempts.
@@ -117,7 +117,7 @@ export class AutoLaunch implements IAmDisposable {
 				});
 
 				// If we get here, the connection succeeded.
-				this.logger.info(`Successfully connected to VM Service at ${vmServiceUri}`);
+				this.logger.info(`[AutoLaunch] Successfully connected to VM Service at ${vmServiceUri}, will launch debug session!`);
 				return true;
 			} catch (error) {
 				// Stop if we've hit the timeout.
@@ -128,7 +128,7 @@ export class AutoLaunch implements IAmDisposable {
 				}
 
 				// Otherwise, retry.
-				this.logger.info(`Failed to connect to VM Service, will retry: ${error}`);
+				this.logger.info(`[AutoLaunch] Failed to connect to VM Service, will retry: ${error}`);
 				await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
 			}
 		}
