@@ -20,7 +20,7 @@ import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants"
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
-import { ProjectFinder, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { ProjectFinder, clearCaches, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
@@ -57,6 +57,7 @@ import { KnownExperiments, getExperiments } from "./experiments";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
 import { FlutterOutlineProvider, FlutterWidgetItem } from "./flutter/flutter_outline_view";
+import { FlutterProjectWatcher } from "./flutter/flutter_project_watcher";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
 import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizations_on_save_handler";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
@@ -132,6 +133,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	if (isDevExtension)
 		context.subscriptions.push(logToConsole(logger));
+
+	// Clear any caches, for example projects that we detected. We might be reloading because
+	// a Flutter project was added to a Dart-only workspace.
+	clearCaches();
 
 	void vs.commands.executeCommand("setContext", IS_RUNNING_LOCALLY_CONTEXT, isRunningLocally);
 	buildLogHeaders();
@@ -645,6 +650,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		void packageCommands.fetchPackagesOrPrompt(undefined, { alwaysPrompt: true, upgradeOnSdkChange: true });
 	}
 	checkForPackages();
+
+	// If we're not already in Flutter mode, watch for Flutter projects being added.
+	if (!workspaceContext.hasAnyFlutterProjects)
+		context.subscriptions.push(new FlutterProjectWatcher(logger, workspaceContext));
 
 	// Begin activating dependant packages.
 	if (workspaceContext.shouldLoadFlutterExtension) {

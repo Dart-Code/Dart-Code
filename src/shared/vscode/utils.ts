@@ -25,6 +25,10 @@ export interface ProjectFolderSearchResults { projectFolders: string[], excluded
 const projectFolderCache = new SimpleTimeBasedCache<ProjectFolderSearchResults>();
 let inProgressProjectFolderSearch: Promise<void> | undefined;
 
+export function clearCaches() {
+	projectFolderCache.clear();
+}
+
 // The extension kind is declared as Workspace, but VS Code will return UI in the
 // case that there is no remote extension host.
 export const isRunningLocally =
