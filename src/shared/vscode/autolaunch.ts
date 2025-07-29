@@ -57,15 +57,15 @@ export class AutoLaunch implements IAmDisposable {
 					const type = configuration.type;
 					const request = configuration.request;
 					if (!name) {
-						this.logger.warn(`Ignoring configuration without name in autolaunch file ${uri}`);
+						this.logger.warn(`[AutoLaunch] Ignoring configuration without name in autolaunch file ${uri}`);
 						continue;
 					}
 					if (type !== "dart") {
-						this.logger.warn(`Ignoring non-dart configuration in autolaunch file ${uri}`);
+						this.logger.warn(`[AutoLaunch] Ignoring non-dart configuration in autolaunch file ${uri}`);
 						continue;
 					}
 					if (request !== "launch" && request !== "attach") {
-						this.logger.warn(`Ignoring configuration with invalid request (${request}) in autolaunch file ${uri}`);
+						this.logger.warn(`[AutoLaunch] Ignoring configuration with invalid request (${request}) in autolaunch file ${uri}`);
 						continue;
 					}
 
@@ -77,7 +77,7 @@ export class AutoLaunch implements IAmDisposable {
 				// File not found, silently ignore
 				return;
 			}
-			this.logger.warn(`Failed to process autolaunch file ${uri}: ${e}`);
+			this.logger.warn(`[AutoLaunch] Failed to process autolaunch file ${uri}: ${e}`);
 		}
 	}
 
@@ -118,7 +118,7 @@ export class AutoLaunch implements IAmDisposable {
 				// Stop if we've hit the timeout.
 				const elapsedTime = Date.now() - startTime;
 				if (elapsedTime >= timeoutMs) {
-					this.logger.warn(`Failed to connect to VM Service at ${vmServiceUri} after ${timeoutMs}ms: ${error}`);
+					this.logger.warn(`[AutoLaunch] Failed to connect to VM Service at ${vmServiceUri} after ${timeoutMs}ms: ${error}`);
 					return false;
 				}
 
@@ -138,7 +138,7 @@ export class AutoLaunch implements IAmDisposable {
 		if (vmServiceUri && waitForVmServiceMs) {
 			const isVmServiceReady = await this.waitForVmService(vmServiceUri, waitForVmServiceMs);
 			if (!isVmServiceReady) {
-				this.logger.warn(`Failed to autolaunch because VM Service at ${vmServiceUri} was not accessible within ${waitForVmServiceMs}ms`);
+				this.logger.warn(`[AutoLaunch] Failed to autolaunch because VM Service at ${vmServiceUri} was not accessible within ${waitForVmServiceMs}ms`);
 				return;
 			}
 		}
@@ -150,14 +150,14 @@ export class AutoLaunch implements IAmDisposable {
 			if (this.deviceManager && deviceId) {
 				await this.deviceManager.waitForDevice(deviceId, thirtySecondsInMs);
 				if (!this.deviceManager.getDevice(deviceId)) {
-					this.logger.warn(`Failed to autolaunch because device ${deviceId} was not found`);
+					this.logger.warn(`[AutoLaunch] Failed to autolaunch because device ${deviceId} was not found`);
 					return;
 				}
 			}
 
 			await debug.startDebugging(wf, configuration);
 		} catch (e: any) {
-			this.logger.warn(`Failed to start debugging session from autolaunch file: ${e}`);
+			this.logger.warn(`[AutoLaunch] Failed to start debugging session from autolaunch file: ${e}`);
 		}
 	}
 
