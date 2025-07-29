@@ -9,13 +9,16 @@ import { waitFor } from "../../../shared/utils/promises";
 import { AutoLaunch } from "../../../shared/vscode/autolaunch";
 import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryDeleteDirectoryRecursive } from "../../helpers";
 
+/// Use a unique named config folder so we don't trigger the built-in AutoLaunch for the main extension that's running.
+const testDartCodeConfigFolder = ".test_dart_code";
+
 describe("debug autolaunch", () => {
 	for (const alreadyExists of [true, false]) {
 
 		const groupName = alreadyExists ? "with existing file" : "with file created later";
 		describe(groupName, () => {
 
-			for (const overridePath of [".test_dart_code", getRandomTempFolder()]) {
+			for (const overridePath of [testDartCodeConfigFolder, getRandomTempFolder()]) {
 				const testName = `with config path set to "${overridePath}"`;
 				it(testName, async () => {
 					const { wf, baseUri, filePath, startDebugSession } = createTestEnvironment(overridePath);
@@ -26,7 +29,7 @@ describe("debug autolaunch", () => {
 						await waitFor(() => startDebugSession.called);
 						assert.ok(startDebugSession.calledOnceWith(baseUri ? wf : undefined, launchConfig));
 					} else {
-						createAutoLaunch(overridePath ?? ".test_dart_code");
+						createAutoLaunch(overridePath);
 						await delay(500);
 
 						const launchConfigs = { configurations: [launchConfig] };
@@ -151,7 +154,7 @@ function createTestEnvironment(overridePath?: string) {
 		? baseUri
 			? fsPath(Uri.joinPath(baseUri, overridePath ?? defaultDartCodeConfigurationPath))
 			: overridePath
-		: fsPath(Uri.joinPath(wf.uri, ".test_dart_code"));
+		: fsPath(Uri.joinPath(wf.uri, testDartCodeConfigFolder));
 	const filePath = path.join(folderPath, autoLaunchFilename);
 
 	fs.mkdirSync(folderPath, { recursive: true });
@@ -166,10 +169,10 @@ async function triggerAutoLaunch(filePath: string, launchConfig: any, overridePa
 	await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
 	await delay(100); // Small delay to ensure file exists before we create AutoLaunch.
 
-	createAutoLaunch(overridePath ?? ".test_dart_code");
+	createAutoLaunch(overridePath);
 }
 
-function createAutoLaunch(overridePath: string) {
-	const autoLaunch = new AutoLaunch(overridePath ?? ".test_dart_code", logger, undefined);
+function createAutoLaunch(overridePath?: string) {
+	const autoLaunch = new AutoLaunch(overridePath ?? testDartCodeConfigFolder, logger, undefined);
 	defer("dispose AutoLaunch", () => autoLaunch.dispose());
 }
