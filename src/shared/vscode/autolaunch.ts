@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { debug, DebugConfiguration, RelativePattern, Uri, workspace, WorkspaceFolder } from "vscode";
+import * as ws from "ws";
 import { autoLaunchFilename, thirtySecondsInMs } from "../constants";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
@@ -11,7 +12,6 @@ export class AutoLaunch implements IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
 
 	constructor(dartCodeConfigurationPath: string, readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined) {
-
 		const watcherPattern = path.isAbsolute(dartCodeConfigurationPath)
 			? new RelativePattern(dartCodeConfigurationPath, autoLaunchFilename)
 			: path.join("**", dartCodeConfigurationPath, autoLaunchFilename).replaceAll("\\", "/");
@@ -81,7 +81,73 @@ export class AutoLaunch implements IAmDisposable {
 		}
 	}
 
+	private async waitForVmService(vmServiceUri: string, timeoutMs: number): Promise<boolean> {
+		this.logger.info(`Waiting for VM Service at ${vmServiceUri} to become accessible (timeout: ${timeoutMs}ms)...`);
+
+		const startTime = Date.now();
+		const retryDelayMs = 1000; // Wait 1s between attempts.
+
+		while (Date.now() - startTime < timeoutMs) {
+			try {
+				await new Promise<void>((resolve, reject) => {
+					const socket = new ws.WebSocket(vmServiceUri);
+
+					const cleanup = () => {
+						if (socket.readyState === ws.OPEN || socket.readyState === ws.CONNECTING)
+							socket.close();
+					};
+
+					// 5 second timeout per attempt.
+					const timeout = setTimeout(() => {
+						cleanup();
+						reject(new Error("Connection timeout"));
+					}, 2000);
+
+					socket.on("open", () => {
+						clearTimeout(timeout);
+						cleanup();
+						resolve();
+					});
+
+					socket.on("error", (error) => {
+						clearTimeout(timeout);
+						cleanup();
+						reject(error);
+					});
+				});
+
+				// If we get here, the connection succeeded.
+				this.logger.info(`Successfully connected to VM Service at ${vmServiceUri}`);
+				return true;
+			} catch (error) {
+				// Stop if we've hit the timeout.
+				const elapsedTime = Date.now() - startTime;
+				if (elapsedTime >= timeoutMs) {
+					this.logger.warn(`Failed to connect to VM Service at ${vmServiceUri} after ${timeoutMs}ms: ${error}`);
+					return false;
+				}
+
+				// Otherwise, retry.
+				this.logger.info(`Failed to connect to VM Service, will retry: ${error}`);
+				await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+			}
+		}
+
+		return false;
+	}
+
 	public async startDebugSession(wf: WorkspaceFolder | undefined, configuration: DebugConfiguration): Promise<void> {
+		// If configuration has vmServiceUri and waitForVmServiceMs, prob the VM Service to ensure we can connect first.
+		const vmServiceUri = configuration.vmServiceUri as string | undefined;
+		const waitForVmServiceMs = configuration.waitForVmServiceMs as number | undefined;
+		if (vmServiceUri && waitForVmServiceMs) {
+			const isVmServiceReady = await this.waitForVmService(vmServiceUri, waitForVmServiceMs);
+			if (!isVmServiceReady) {
+				this.logger.warn(`Failed to autolaunch because VM Service at ${vmServiceUri} was not accessible within ${waitForVmServiceMs}ms`);
+				return;
+			}
+		}
+
 		// If this configuration targets a device, allow time for it to appear because starting the
 		// daemon and getting device events may take a little time.
 		try {
