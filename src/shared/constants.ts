@@ -22,6 +22,9 @@ export const dartCodeConfigurationPathEnvironmentVariableName = "DART_CODE_CONFI
 /// that must be exposed to the front-end client.
 export const dartCodeServiceActivationDelayEnvironmentVariableName = "DART_CODE_SERVICE_ACTIVATION_DELAY";
 
+/// The name of an environment variable set by Firebase Studio.
+export const firebaseStudioEnvironmentVariableName = "MONOSPACE_ENV";
+
 export const autoLaunchFilename = "autolaunch.json";
 
 export const isCI = !!process.env.CI;

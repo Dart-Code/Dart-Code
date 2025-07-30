@@ -21,6 +21,7 @@ import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { ProjectFinder, clearCaches, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
+import { isFirebaseStudio } from "../shared/vscode/utils_cloud";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
@@ -405,7 +406,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Config overrides the env var to allow for testing different values.
 	// See https://github.com/Dart-Code/Dart-Code/issues/5613.
 	const serviceActivationDelayMsRaw = config.serviceActivationDelayMs ?? process.env[dartCodeServiceActivationDelayEnvironmentVariableName];
-	const serviceActivationDelayMs = Number(serviceActivationDelayMsRaw);
+	let serviceActivationDelayMs = Number(serviceActivationDelayMsRaw);
+	// Default to a 5s delay on Firebase Studio if no other config is set.
+	if (!serviceActivationDelayMs && isFirebaseStudio()) {
+		serviceActivationDelayMs = 5000;
+	}
 	if (!isNaN(serviceActivationDelayMs)) {
 		logger.info(`Service activation delay is configured, waiting ${serviceActivationDelayMs}ms`);
 		await new Promise((resolve) => setTimeout(resolve, serviceActivationDelayMs));
