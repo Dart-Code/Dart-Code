@@ -43,6 +43,51 @@ describe("debug autolaunch", () => {
 		});
 	}
 
+	describe("file modifications", () => {
+		it("should handle file modifications", async () => {
+			const { wf, filePath, startDebugSession } = createTestEnvironment();
+			const launchConfig = createLaunchConfig("File Modification Test");
+
+			createAutoLaunch();
+
+			// Create file initially with empty config.
+			await writeAutoLaunch(filePath);
+			await delay(600); // Wait for initial debounce.
+
+			assert.ok(!startDebugSession.called, "Should not have called startDebugSession for empty config");
+
+			// Now modify the file with a valid configuration.
+			await writeAutoLaunch(filePath, launchConfig);
+
+			await waitFor(() => startDebugSession.called);
+			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
+		});
+
+		it("should debounce rapid file changes", async () => {
+			const { wf, filePath, startDebugSession } = createTestEnvironment();
+			const launchConfig1 = createLaunchConfig("Debounce Test 1");
+			const launchConfig2 = createLaunchConfig("Debounce Test 2");
+
+			createAutoLaunch();
+
+			// Rapidly write multiple configs
+			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
+			await delay(100);
+			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig2] }));
+			await delay(100);
+			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig1] }));
+			await delay(100);
+			await fs.promises.writeFile(filePath, JSON.stringify({ configurations: [launchConfig2] }));
+
+			// Wait for debounce a session to start, and then for the debounce time.
+			await waitFor(() => startDebugSession.called);
+			await delay(600);
+
+			// Should only be called once with the final configuration.
+			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig2));
+		});
+	});
+
 	describe("VM Service probing", () => {
 		let mockServer: ws.WebSocketServer | undefined;
 		let serverPort: number;
@@ -164,15 +209,19 @@ function createTestEnvironment(overridePath?: string) {
 	return { wf, baseUri, filePath, startDebugSession };
 }
 
-async function triggerAutoLaunch(filePath: string, launchConfig: any, overridePath?: string) {
-	const launchConfigs = { configurations: [launchConfig] };
+async function writeAutoLaunch(filePath: string, launchConfig?: any) {
+	const launchConfigs = launchConfig ? { configurations: [launchConfig] } : { configurations: [] };
 	await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
-	await delay(100); // Small delay to ensure file exists before we create AutoLaunch.
-
-	createAutoLaunch(overridePath);
 }
 
 function createAutoLaunch(overridePath?: string) {
 	const autoLaunch = new AutoLaunch(overridePath ?? testDartCodeConfigFolder, logger, undefined);
 	defer("dispose AutoLaunch", () => autoLaunch.dispose());
+}
+
+async function triggerAutoLaunch(filePath: string, launchConfig?: any, overridePath?: string) {
+	await writeAutoLaunch(filePath, launchConfig);
+	await delay(100); // Small delay to ensure file exists before we create AutoLaunch.
+
+	createAutoLaunch(overridePath);
 }
