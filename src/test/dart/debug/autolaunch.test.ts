@@ -209,7 +209,7 @@ function createTestEnvironment(overridePath?: string) {
 	return { wf, baseUri, filePath, startDebugSession };
 }
 
-async function writeAutoLaunch(filePath: string, launchConfig?: any, overridePath?: string) {
+async function writeAutoLaunch(filePath: string, launchConfig?: any) {
 	const launchConfigs = launchConfig ? { configurations: [launchConfig] } : { configurations: [] };
 	await fs.promises.writeFile(filePath, JSON.stringify(launchConfigs));
 }
@@ -220,7 +220,7 @@ function createAutoLaunch(overridePath?: string) {
 }
 
 async function triggerAutoLaunch(filePath: string, launchConfig?: any, overridePath?: string) {
-	await writeAutoLaunch(filePath, launchConfig, overridePath);
+	await writeAutoLaunch(filePath, launchConfig);
 	await delay(100); // Small delay to ensure file exists before we create AutoLaunch.
 
 	createAutoLaunch(overridePath);
