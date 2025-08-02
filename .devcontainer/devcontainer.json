@@ -6,7 +6,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "esbenp.prettier-vscode",
+        "amodio.tsl-problem-matcher",
         "dbaeumer.vscode-eslint"
       ]
     }
