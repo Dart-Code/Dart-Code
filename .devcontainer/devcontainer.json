@@ -1,8 +1,6 @@
 {
   "name": "Dart-Code Dev Container",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+  "image": "ghcr.io/dart-code/dart-code/devcontainer",
   "customizations": {
     "vscode": {
       "extensions": [
