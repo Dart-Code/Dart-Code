@@ -3629,7 +3629,7 @@
 		"lint-fix": "eslint . --fix",
 
 		"pretest": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument",
-		"test": "node ./out/src/test/test_all.js",
+		"test": "xvfb-maybe node ./out/src/test/test_all.js",
 		"posttest": "npm run report_lcov && npm run report_screen",
 		"test-grammar": "vscode-tmgrammar-snap --expandDiff src/test/test_projects/grammar_testing/**/*.dart",
 		"test-all": "npm run test && npm run test-grammar",
@@ -3676,7 +3676,8 @@
 		"typescript": "^5.8.3",
 		"vscode-tmgrammar-test": "^0.1.3",
 		"webpack-cli": "^6.0.1",
-		"webpack": "^5.99.9"
+		"webpack": "^5.99.9",
+		"xvfb-maybe": "^0.2.1"
 	},
 	"optionalDependencies": {
 		"bufferutil": "^4.0.9",
