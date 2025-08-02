@@ -11,9 +11,6 @@ on:
   schedule:
     - cron:  '0 4 * * 1' # 4am Monday
 
-env:
-  IMAGE_NAME: ${{ github.repository }}/devcontainer
-
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
@@ -37,4 +34,4 @@ jobs:
         with:
           context: .devcontainer
           push: true
-          tags: ghcr.io/${{ env.IMAGE_NAME }}:latest
+          tags: ghcr.io/dart-code/dart-code/devcontainer:latest
