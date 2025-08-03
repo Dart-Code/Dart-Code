@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 # Install deps.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    apt-transport-https ca-certificates curl git git-lfs gnupg gpg libasound2t64 libglib2.0-0 libgtk-3-0 libnss3 libsecret-1-0 libxkbcommon0 lsb-release python3 unzip wget x11-utils xvfb xz-utils
+    apt-transport-https ca-certificates curl git git-lfs gnupg gpg libasound2t64 libglib2.0-0 libgtk-3-0 libnss3 libxkbcommon0 unzip wget xvfb xz-utils
 
 # Install Node.
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
