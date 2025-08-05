@@ -1,0 +1,3 @@
+void printHello() {
+  print('Hello!');
+}

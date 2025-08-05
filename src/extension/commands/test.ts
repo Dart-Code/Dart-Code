@@ -167,6 +167,13 @@ export class TestCommands implements vs.Disposable {
 
 		isFlutter = isFlutter ?? isPathInsideFlutterProject(programPath);
 
+		// Get all workspace packages for coverage
+		let workspacePackageNames: string[] | undefined;
+		if (includeCoverage && isFlutter) {
+			const workspacePackagePaths = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+			workspacePackageNames = workspacePackagePaths.map((packagePath) => path.basename(packagePath));
+		}
+
 		let shouldRunTestsByLine = false;
 		// Determine whether we can and should run tests by line number.
 		if (testSelection?.length && config.testInvocationMode === "line") {
@@ -200,6 +207,7 @@ export class TestCommands implements vs.Disposable {
 					shouldRunTestsByLine,
 					shouldRunSkippedTests,
 					launchTemplate,
+					workspacePackageNames,
 				),
 				name: launchTemplate?.name ?? `${path.basename(programPath)} tests`,
 			};

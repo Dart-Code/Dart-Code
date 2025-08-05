@@ -10,7 +10,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -497,30 +497,53 @@ describe("flutter test debugger", () => {
 		});
 	}
 
-	it("can run tests with coverage", async () => {
-		// Discover tests.
-		await openFile(flutterTestMainFile);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile));
-		const controller = privateApi.testController;
-
-		const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterTestMainFile)}`)!;
-		const testRequest = new vs.TestRunRequest([suiteNode]);
-
-		const createTestRunOriginal = controller.controller.createTestRun;
-		const createTestRunStub = sb.stub(controller.controller, "createTestRun");
+	describe("collects coverage", () => {
 		let addCoverageStub: SinonStub | undefined;
-		createTestRunStub.callsFake((request) => {
-			const originalResult = createTestRunOriginal.call(controller.controller, request);
-			addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
-			return originalResult;
-		});
-		await controller.runTests(false, true, testRequest, fakeCancellationToken);
 
-		assert(addCoverageStub?.calledOnce);
-		const coverage = addCoverageStub.firstCall.args[0] as DartFileCoverage;
-		assert.equal(fsPath(coverage.uri), fsPath(flutterHelloWorldMainFile)); // App file, not test file.
-		assert.ok(coverage.statementCoverage.covered > 0);
-		assert.ok(coverage.statementCoverage.total > 0);
+		beforeEach(() => {
+			const controller = privateApi.testController;
+			const createTestRunOriginal = controller.controller.createTestRun;
+			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
+			createTestRunStub.callsFake((request) => {
+				const originalResult = createTestRunOriginal.call(controller.controller, request);
+				addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
+				return originalResult;
+			});
+		});
+
+		it("for a basic test", async () => {
+			// Discover tests.
+			await openFile(flutterTestMainFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile));
+			const controller = privateApi.testController;
+
+			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterTestMainFile)}`)!;
+			const testRequest = new vs.TestRunRequest([suiteNode]);
+
+			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			assert(addCoverageStub?.calledOnce);
+			const coverage = addCoverageStub.firstCall.args[0] as DartFileCoverage;
+			assert.equal(fsPath(coverage.uri), fsPath(flutterHelloWorldMainFile)); // App file, not test file.
+			assert.ok(coverage.statementCoverage.covered > 0);
+			assert.ok(coverage.statementCoverage.total > 0);
+		});
+
+		it("and includes dependencies", async () => {
+			// Discover tests.
+			await openFile(flutterHelloWorldExampleTestFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
+
+			const controller = privateApi.testController;
+			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterHelloWorldExampleTestFile)}`)!;
+			const testRequest = new vs.TestRunRequest([suiteNode]);
+
+			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			assert(addCoverageStub?.called);
+			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+			assert.deepStrictEqual(coverageFiles, [fsPath(flutterHelloWorldExamplePrinterFile), fsPath(flutterHelloWorldPrinterFile)]);
+		});
 	});
 });
 
