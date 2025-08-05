@@ -28,8 +28,7 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 		toolArgs.push(coverageFilePath);
 		if (workspacePackageNames) {
 			for (const packageName of workspacePackageNames) {
-				toolArgs.push("--coverage-package");
-				toolArgs.push(packageName);
+				toolArgs.push("--coverage-package", packageName);
 			}
 		}
 

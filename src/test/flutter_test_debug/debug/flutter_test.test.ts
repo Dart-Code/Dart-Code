@@ -498,6 +498,19 @@ describe("flutter test debugger", () => {
 	}
 
 	describe("collects coverage", () => {
+		let addCoverageStub: SinonStub | undefined;
+
+		beforeEach(() => {
+			const controller = privateApi.testController;
+			const createTestRunOriginal = controller.controller.createTestRun;
+			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
+			createTestRunStub.callsFake((request) => {
+				const originalResult = createTestRunOriginal.call(controller.controller, request);
+				addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
+				return originalResult;
+			});
+		});
+
 		it("for a basic test", async () => {
 			// Discover tests.
 			await openFile(flutterTestMainFile);
@@ -507,14 +520,6 @@ describe("flutter test debugger", () => {
 			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterTestMainFile)}`)!;
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
-			const createTestRunOriginal = controller.controller.createTestRun;
-			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
-			let addCoverageStub: SinonStub | undefined;
-			createTestRunStub.callsFake((request) => {
-				const originalResult = createTestRunOriginal.call(controller.controller, request);
-				addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
-				return originalResult;
-			});
 			await controller.runTests(false, true, testRequest, fakeCancellationToken);
 
 			assert(addCoverageStub?.calledOnce);
@@ -533,14 +538,6 @@ describe("flutter test debugger", () => {
 			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterHelloWorldExampleTestFile)}`)!;
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
-			const createTestRunOriginal = controller.controller.createTestRun;
-			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
-			let addCoverageStub: SinonStub | undefined;
-			createTestRunStub.callsFake((request) => {
-				const originalResult = createTestRunOriginal.call(controller.controller, request);
-				addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
-				return originalResult;
-			});
 			await controller.runTests(false, true, testRequest, fakeCancellationToken);
 
 			assert(addCoverageStub?.called);
