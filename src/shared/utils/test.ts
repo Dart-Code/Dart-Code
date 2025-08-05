@@ -8,7 +8,7 @@ import { GroupNode, SuiteNode, TestNode, TreeNode } from "../test/test_model";
 import { fsPath, getRandomInt } from "./fs";
 import { TestOutlineInfo } from "./outline";
 
-export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFlutter: boolean, programPath: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests: boolean | undefined, template: any | undefined): { program: string } & BasicDebugConfiguration {
+export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFlutter: boolean, programPath: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests: boolean | undefined, template: any | undefined, workspacePackageNames?: string[]): { program: string } & BasicDebugConfiguration {
 	let programString = programPath;
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
@@ -26,6 +26,13 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 		toolArgs.push("--branch-coverage");
 		toolArgs.push("--coverage-path");
 		toolArgs.push(coverageFilePath);
+		if (workspacePackageNames) {
+			for (const packageName of workspacePackageNames) {
+				toolArgs.push("--coverage-package");
+				toolArgs.push(packageName);
+			}
+		}
+
 		template ??= {};
 		template.coverageFilePath = coverageFilePath;
 	}

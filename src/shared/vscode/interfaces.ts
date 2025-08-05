@@ -12,6 +12,7 @@ import { PubDeps } from "../pub/deps";
 import { PackageMapLoader } from "../pub/package_map";
 import { DartToolingDaemon } from "../services/tooling_daemon";
 import { TestSessionCoordinator } from "../test/coordinator";
+import { CoverageParser } from "../test/coverage";
 import { TestModel, TreeNode } from "../test/test_model";
 import { PromiseCompleter } from "../utils";
 import { FlutterDeviceManager } from "./device_manager";
@@ -135,6 +136,7 @@ export interface InternalExtensionApi {
 		runTests(debug: boolean, includeCoverage: boolean, request: TestRunRequest, token: CancellationToken): Promise<void>;
 		getLatestData(test: TestItem): TreeNode | undefined,
 		handleDebugSessionEnd(e: DebugSession): void,
+		coverageParser: CoverageParser,
 		discoverer?: { ensureSuitesDiscovered(): Promise<void> }
 	};
 	testCoordinator: TestSessionCoordinator;

@@ -1,0 +1,19 @@
+name: flutter_hello_world_example
+description: A test Flutter project example.
+publish_to: none
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.14.0 <4.0.0"
+
+dependencies:
+  flutter_hello_world:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
