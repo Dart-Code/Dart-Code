@@ -1,13 +1,15 @@
 {
-  "name": "Dart-Code Dev Container",
-  "image": "ghcr.io/dart-code/dart-code/devcontainer",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "amodio.tsl-problem-matcher",
-        "dbaeumer.vscode-eslint"
-      ]
-    }
-  },
-  "postCreateCommand": "npm install"
+	"name": "Dart-Code Dev Container",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"amodio.tsl-problem-matcher",
+				"dbaeumer.vscode-eslint"
+			]
+		}
+	},
+	"postCreateCommand": "npm install"
 }
