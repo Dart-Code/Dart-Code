@@ -1,4 +1,4 @@
-import { CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, OutputChannel, Progress, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
@@ -146,6 +146,7 @@ export interface InternalExtensionApi {
 	webClient: WebClient;
 	workspaceContext: DartWorkspaceContext;
 	// Only available in test runs.
+	mcpServerProvider?: McpServerDefinitionProvider;
 	sdkUtils?: {
 		runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult>
 	},

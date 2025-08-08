@@ -22,7 +22,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 
 	private processPackageMapChangeEvents = true;
 
-	constructor(private readonly logger: Logger, private readonly projectFinder: ProjectFinder, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) {
+	constructor(private readonly logger: Logger, public readonly projectFinder: ProjectFinder, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) {
 		this.disposables.push(vs.commands.registerCommand("_dart.removeDependencyFromTreeNode", this.removeDependency, this));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDependencyPageFromTreeNode", this.openDependencyPage, this));
 		context.events.onPackageMapChange.listen(() => {

@@ -19,6 +19,7 @@ import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
+import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { ProjectFinder, clearCaches, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { isFirebaseStudio } from "../shared/vscode/utils_cloud";
@@ -583,9 +584,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	else
 		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
 
+	let mcpServerProvider: DartMcpServerDefinitionProvider | undefined;
 	if (vs.lm.registerMcpServerDefinitionProvider) {
 		try {
-			const mcpServerProvider = new DartMcpServerDefinitionProvider(sdks, dartCapabilities);
+			mcpServerProvider = new DartMcpServerDefinitionProvider(sdks, dartCapabilities);
 			context.subscriptions.push(mcpServerProvider);
 			context.subscriptions.push(vs.lm.registerMcpServerDefinitionProvider("dart-sdk-mcp-servers", mcpServerProvider));
 		} catch (e) {
@@ -736,6 +738,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		initialAnalysis: analyzer.onInitialAnalysis,
 		interactiveRefactors: analyzer.refactors,
 		logger,
+		mcpServerProvider: isDartCodeTestRun ? mcpServerProvider : undefined,
 		nextAnalysis: () => analyzer?.onNextAnalysisComplete,
 		packagesTreeProvider: dartPackagesProvider,
 		pubGlobal,
@@ -749,7 +752,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		trackerFactories,
 		webClient,
 		workspaceContext,
-	};
+	} as InternalExtensionApi;
 	// Copy all fields and getters from privateApi into the existing object so that it works
 	// correctly through exports.
 	Object.defineProperties(
