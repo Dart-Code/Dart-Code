@@ -331,7 +331,7 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	let jsonVersionFileContent: string | undefined;
 	try {
 		jsonVersionFileContent = fs.readFileSync(jsonVersionFile, "utf8").trim();
-	} catch (e) {
+	} catch {
 	}
 
 	if (jsonVersionFileContent) {
@@ -402,8 +402,9 @@ export function tryDeleteFile(filePath: string) {
 	if (fs.existsSync(filePath)) {
 		try {
 			fs.unlinkSync(filePath);
-		} catch (e: any) {
-			console.warn(`Failed to delete file ${filePath}: ${e}`);
+		} catch {
+			// TODO: Find a way to log this that doesn't cause issues with circular dependencies.
+			// https://github.com/Dart-Code/Dart-Code/issues/4595
 		}
 	}
 }

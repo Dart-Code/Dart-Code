@@ -1566,7 +1566,7 @@ insp=<inspected variable>
 			const vmArgs = [
 				`--write-service-info=${vs.Uri.file(tempVmServiceInfoFile)}`,
 			];
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
+			spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 
 			const config = await attachDebugger(undefined, { program: undefined, vmServiceInfoFile: tempVmServiceInfoFile });
 			await waitAllThrowIfTerminates(dc,

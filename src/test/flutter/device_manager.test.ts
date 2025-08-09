@@ -456,18 +456,6 @@ const androidBogusEmulatorId: f.FlutterEmulator = {
 	platformType: "android",
 };
 
-const physicaliOSMobile: f.Device = {
-	category: "mobile",
-	emulator: false,
-	emulatorId: undefined,
-	ephemeral: true,
-	id: "my-iphone",
-	name: "My iPhone",
-	platform: "ios-x64",
-	platformType: "ios",
-	type: "device",
-};
-
 const emulatediOSMobile: f.Device = {
 	category: "mobile",
 	emulator: true,
@@ -478,13 +466,6 @@ const emulatediOSMobile: f.Device = {
 	platform: "ios-something",
 	platformType: "ios",
 	type: "device",
-};
-
-const iOSEmulator: f.FlutterEmulator = {
-	category: "mobile",
-	id: "my_emulator_id",
-	name: "My Cool iOS Emulator!",
-	platformType: "ios",
 };
 
 const customEmulator1: CustomEmulatorDefinition = {

@@ -691,7 +691,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	protected async buildDartToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
 		const args: string[] = [];
-		const isDebug = debugConfig.noDebug !== true;
 
 		this.addArgsIfNotExist(args, ...conf.cliAdditionalArgs);
 

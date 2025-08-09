@@ -310,6 +310,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			try {
 				this.logTraffic(`Process ${this.description} is terminating process ${pid}`);
 				process.kill(pid);
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			} catch (e: any) {
 				// TODO: Logger knows the category!
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -332,7 +333,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 					this.logTraffic(`Process ${this.description} skipped terminating because 🤷‍♂️`);
 				}
 			}
-		} catch (e) {
+		} catch {
 			// This tends to throw a lot because the shell process quit when we terminated the related
 			// process above, so just swallow the error.
 		}
