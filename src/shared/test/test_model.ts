@@ -304,7 +304,7 @@ export class TestModel {
 	}
 
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
-		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
+		const [suite] = this.getOrCreateSuite(suitePath);
 		this.updateNode({ node: suite.node });
 
 		this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));

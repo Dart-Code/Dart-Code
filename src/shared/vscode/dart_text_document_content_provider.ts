@@ -15,7 +15,6 @@ export class DartTextDocumentContentProviderFeature implements IAmDisposable {
 
 	public get feature(): StaticFeature {
 		const client = this.client;
-		const dartCapabilities = this.dartCapabilities;
 		const disposables = this.disposables;
 		return {
 			dispose() {

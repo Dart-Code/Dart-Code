@@ -762,7 +762,7 @@ export class DebugCommands implements IAmDisposable {
 			if (!launched && !session.session.configuration.suppressWebServerDeviceBrowserLaunch) {
 				try {
 					await envUtils.openInBrowser(body.url as string, this.logger);
-				} catch (e: any) {
+				} catch {
 					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${body.url}`);
 				}
 			}
@@ -785,7 +785,7 @@ export class DebugCommands implements IAmDisposable {
 					if (!launched && !session.session.configuration.suppressWebServerDeviceBrowserLaunch) {
 						try {
 							await envUtils.openInBrowser(url, this.logger);
-						} catch (e: any) {
+						} catch {
 							this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${url}`);
 						}
 					}

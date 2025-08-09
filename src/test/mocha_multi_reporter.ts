@@ -12,7 +12,7 @@ export class MultiReporter extends reporters.Base {
 		reporterConstructors.push(CoverageReporter);
 
 		// Create all reporters; they'll subscribe to the events on runner.
-		const rs = reporterConstructors.map((r) => new r(runner, options));
+		reporterConstructors.map((r) => new r(runner, options));
 		super(runner);
 	}
 }

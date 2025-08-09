@@ -24,7 +24,7 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 				channel.show();
 				channels.runProcessInOutputChannel(proc, channel);
 
-				cancellationToken.onCancellationRequested((e) => {
+				cancellationToken.onCancellationRequested(() => {
 					logger.info(`User canceled!`);
 					proc.kill();
 				});
@@ -47,7 +47,7 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 			},
 		);
 		logger.info(`Flutter initialized!`);
-	} catch (e) {
+	} catch {
 		logger.warn(`Flutter initialization failed, proceeding without!`);
 	}
 }

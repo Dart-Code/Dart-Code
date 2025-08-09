@@ -85,7 +85,7 @@ function getWorkspaceFolderPaths(
 			logger.error(`Failed to parse pubspec workspaces, items are not all strings`);
 			return [];
 		}
-	} catch (e) {
+	} catch {
 		logger.error(`Failed to parse pubspec workspaces`);
 		return [];
 	}
