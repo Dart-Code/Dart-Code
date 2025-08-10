@@ -23,7 +23,7 @@ export class FlutterTaskProvider extends BaseTaskProvider {
 		context.subscriptions.push(vs.commands.registerCommand("flutter.task.genl10n", (uri: vs.Uri) => this.runProjectTask(uri, "flutter", ["gen-l10n"])));
 	}
 
-	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
+	public async provideTasks(_token?: vs.CancellationToken): Promise<vs.Task[]> {
 		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 
 		const promises: Array<Promise<vs.Task>> = [];

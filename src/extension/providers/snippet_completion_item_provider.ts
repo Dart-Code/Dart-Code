@@ -49,7 +49,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		return this.completions;
 	}
 
-	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
+	private shouldAllowCompletion(line: string, _context: CompletionContext): boolean {
 		line = line.trim();
 
 		// Don't provide completions after comment markers. This isn't perfect since it'll

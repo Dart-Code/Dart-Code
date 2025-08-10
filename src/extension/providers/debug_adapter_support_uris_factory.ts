@@ -4,7 +4,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 export class DartDebugAdapterSupportsUrisFactory implements vs.DebugAdapterTrackerFactory {
 	constructor(private readonly dartCapabilities: DartCapabilities) { }
 
-	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker {
+	createDebugAdapterTracker(_session: vs.DebugSession): vs.DebugAdapterTracker {
 		return new DartDebugAdapterSupportsUris(this.dartCapabilities);
 	}
 }
