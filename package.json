@@ -3625,8 +3625,8 @@
 		"build-tests": "tsc -p ./tsconfig.build.json",
 		"watch-non-ext": "tsc -p ./tsconfig.build.json --watch --extendedDiagnostics",
 
-		"lint": "eslint .",
-		"lint-fix": "eslint . --fix",
+		"lint": "eslint",
+		"lint:fix": "eslint --fix",
 
 		"pretest": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument",
 		"test": "xvfb-maybe node ./out/src/test/test_all.js",

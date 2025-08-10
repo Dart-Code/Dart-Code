@@ -60,8 +60,8 @@ There are some existing lint warnings that are expected and should be ignored:
 Here are some useful commands when working on the project.
 
 - `npm install`: Installs dependencies. This may need to be run if dependencies appear to be missing.
-- `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints.
-- `npm run lint-fix`: Fixes lints that can be fixed automatically.
+- `npm run lint`: Run the linter (`eslint`) to ensure code conforms to enabled lints. Pass a relative file path to lint only that file.
+- `npm run lint:fix`: Fixes lints that can be fixed automatically.
 - `npm run build`: Builds the extension.
 - `npm run test <...test-file-globs>`: Runs tests for the given glob (or file path). This should be used while working on an individual feature because it is faster than running all tests.
 - `npm run test`: Runs _all_ automatic tests for _all_ bots. This can be run with the `BOT` env variable set to (as defined in `test_all.ts`, for example to `"dart"`) to run only a single bots tests. The test suite is large and this can be slow.
