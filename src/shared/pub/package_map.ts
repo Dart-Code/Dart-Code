@@ -8,8 +8,8 @@ import { normalizeSlashes } from "../utils/fs";
 export class PackageMapLoader {
 	constructor(private readonly logger: Logger) { }
 
-	public loadForProject(projectFolder: string, reason: string): PackageMap {
-		return PackageMap.loadForProject(this.logger, projectFolder, reason);
+	public loadForProject(projectFolder: string, _reason: string): PackageMap {
+		return PackageMap.loadForProject(this.logger, projectFolder);
 	}
 }
 

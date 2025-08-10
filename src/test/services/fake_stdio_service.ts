@@ -22,7 +22,7 @@ export class FakeProcessStdIOService<T> extends StdIOService<T> {
 		this.notifications.push(notification);
 	}
 
-	protected createProcess(workingDirectory: string | undefined, binPath: string, args: string[], env: { envOverrides?: Record<string, string | undefined>, toolEnv?: Record<string, string | undefined> }) {
+	protected createProcess(_workingDirectory: string | undefined, _binPath: string, _args: string[], _env: { envOverrides?: Record<string, string | undefined>, toolEnv?: Record<string, string | undefined> }) {
 		// Don't really spawn a process.
 	}
 

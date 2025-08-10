@@ -63,14 +63,14 @@ export class DartDebugClient extends DebugClient {
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			logger.info(`[${event.body.category}] ${event.body.output}`);
 		});
-		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
+		this.on("terminated", (_event: DebugProtocol.TerminatedEvent) => {
 			this.hasTerminated = true;
 			logger.info(`[terminated]`);
 		});
 		this.on("stopped", (event: DebugProtocol.StoppedEvent) => {
 			logger.info(`[stopped] ${event.body.reason}`);
 		});
-		this.on("initialized", (event: DebugProtocol.InitializedEvent) => {
+		this.on("initialized", (_event: DebugProtocol.InitializedEvent) => {
 			logger.info(`[initialized]`);
 		});
 		this.on("runInTerminal", (request: DebugProtocol.RunInTerminalRequest) => {
@@ -94,7 +94,7 @@ export class DartDebugClient extends DebugClient {
 		// debug session.
 		if (testCoordinator) {
 			this.on("dart.testNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body));
-			this.on("terminated", (e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID as string | undefined));
+			this.on("terminated", (_e: DebugProtocol.TerminatedEvent) => testCoordinator.handleDebugSessionEnd(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID as string | undefined));
 		}
 	}
 
@@ -172,7 +172,7 @@ export class DartDebugClient extends DebugClient {
 					tracker.onWillStartSession();
 			}
 		}
-		this.on("terminated", (e: DebugProtocol.TerminatedEvent) => {
+		this.on("terminated", (_e: DebugProtocol.TerminatedEvent) => {
 			for (const tracker of this.currentTrackers) {
 				if (tracker.onWillStopSession)
 					tracker.onWillStopSession();

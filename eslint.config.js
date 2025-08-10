@@ -143,6 +143,7 @@ export default defineConfig([
 				"error",
 				{
 					"allowAfterThis": true,
+					"allow": ["_showTodos", "_dartCapabilities", "_sampleFileUri", "_process", "_physicaliOSMobile", "_iOSEmulator", "_rs"],
 				}
 			],
 			"no-unsafe-finally": "error",

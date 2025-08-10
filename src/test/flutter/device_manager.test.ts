@@ -283,14 +283,14 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	public supportedPlatformsDelaySeconds: number | undefined;
 	public daemonStarted = Promise.resolve();
 
-	public async enablePlatformGlobally(platformType: string): Promise<void> { }
+	public async enablePlatformGlobally(_platformType: string): Promise<void> { }
 
 	public async enablePlatform(platformType: string): Promise<void> {
 		this.supportedPlatforms = this.supportedPlatforms ?? [];
 		this.supportedPlatforms.push(platformType);
 	}
 
-	public async checkIfPlatformGloballyDisabled(platformType: string): Promise<boolean> {
+	public async checkIfPlatformGloballyDisabled(_platformType: string): Promise<boolean> {
 		return false;
 	}
 
@@ -322,10 +322,10 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
 		return [androidEmulator, androidBogusEmulatorId, androidBogusEmulatorName, androidEmulatorToOverride];
 	}
-	public launchEmulator(emulatorId: string): Thenable<void> {
+	public launchEmulator(_emulatorId: string): Thenable<void> {
 		throw new Error("Method not implemented.");
 	}
-	public createEmulator(name?: string): Thenable<{ success: boolean; emulatorName: string; error: string; }> {
+	public createEmulator(_name?: string): Thenable<{ success: boolean; emulatorName: string; error: string; }> {
 		throw new Error("Method not implemented.");
 	}
 	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
@@ -456,7 +456,7 @@ const androidBogusEmulatorId: f.FlutterEmulator = {
 	platformType: "android",
 };
 
-const physicaliOSMobile: f.Device = {
+const _physicaliOSMobile: f.Device = {
 	category: "mobile",
 	emulator: false,
 	emulatorId: undefined,
@@ -480,7 +480,7 @@ const emulatediOSMobile: f.Device = {
 	type: "device",
 };
 
-const iOSEmulator: f.FlutterEmulator = {
+const _iOSEmulator: f.FlutterEmulator = {
 	category: "mobile",
 	id: "my_emulator_id",
 	name: "My Cool iOS Emulator!",

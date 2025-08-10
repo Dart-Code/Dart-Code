@@ -33,7 +33,7 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 			dispose() {
 				disposeAll(disposables);
 			},
-			fillClientCapabilities(capabilities: ClientCapabilities) { },
+			fillClientCapabilities(_capabilities: ClientCapabilities) { },
 			getState(): FeatureState {
 				return { kind: "static" };
 			},

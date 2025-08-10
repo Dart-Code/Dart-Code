@@ -7,7 +7,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { activateWithoutAnalysis, ext, extApi, logger, privateApi } from "../helpers";
 
 const sampleFilePath = (isWin ? "X:\\" : "/tmp/") + "sample.dart";
-const sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
+const _sampleFileUri = vs.Uri.parse(`untitled:${sampleFilePath}`);
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {

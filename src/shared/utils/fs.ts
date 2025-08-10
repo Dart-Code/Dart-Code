@@ -220,7 +220,7 @@ export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): st
 	if (!fs.existsSync(projectFolder))
 		return undefined;
 
-	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder, "extractFlutterSdkPathFromPackagesFile").getPackagePath("flutter");
+	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder).getPackagePath("flutter");
 
 	if (!packagePath)
 		return undefined;
@@ -331,7 +331,7 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	let jsonVersionFileContent: string | undefined;
 	try {
 		jsonVersionFileContent = fs.readFileSync(jsonVersionFile, "utf8").trim();
-	} catch (e) {
+	} catch {
 	}
 
 	if (jsonVersionFileContent) {
