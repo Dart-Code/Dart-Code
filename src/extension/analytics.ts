@@ -61,7 +61,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		this.send(data as AnalyticsData).catch((e) => this.handleError(e));
 	}
 
-	sendErrorData(error: Error, data?: Record<string, any>): void {
+	sendErrorData(_error: Error, _data?: Record<string, any>): void {
 		// No errors are collected.
 	}
 
@@ -429,7 +429,7 @@ interface AnalyticsData {
 
 export class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {
 	public lastTracker: DebugAdapterExceptionSettingTracker | undefined;
-	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
+	createDebugAdapterTracker(_session: DebugSession): DebugAdapterTracker {
 		this.lastTracker = new DebugAdapterExceptionSettingTracker();
 		return this.lastTracker;
 	}
