@@ -7,7 +7,7 @@ import * as vs from "vscode";
  * See https://github.com/Dart-Code/Dart-Code/issues/5302 and https://github.com/microsoft/vscode/pull/227729.
  */
 export class DartDebugForcedAnsiColorSupportFactory implements vs.DebugAdapterTrackerFactory {
-	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker | undefined {
+	createDebugAdapterTracker(_session: vs.DebugSession): vs.DebugAdapterTracker | undefined {
 		return new DartDebugForcedAnsiColorSupport();
 	}
 }

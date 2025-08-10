@@ -187,7 +187,7 @@ export class SdkUtils {
 						if (gitApiPath)
 							gitExecutable = gitApiPath;
 					}
-				} catch (e) {
+				} catch (_e) {
 					// Could be that Git extension is disabled or "git.enabled" setting is false.
 				}
 
@@ -201,10 +201,10 @@ export class SdkUtils {
 						+ `stderr: ${gitProc.stderr}\n`);
 					return GitOperationResult.error;
 				}
-			} catch (e) {
+			} catch (_e) {
 				if (cancellationToken.isCancellationRequested)
 					return GitOperationResult.cancelled;
-				this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow: ${e}`);
+				this.logger.error(`Failed to run "git --version" to detect git, so skipping "Clone Flutter SDK" workflow: ${_e}`);
 				return GitOperationResult.error;
 			}
 			return GitOperationResult.success;
@@ -289,10 +289,10 @@ export class SdkUtils {
 				}
 
 				return GitOperationResult.success;
-			} catch (e) {
+			} catch (_e) {
 				if (cancellationToken.isCancellationRequested)
 					return GitOperationResult.cancelled;
-				this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow: ${e}`);
+				this.logger.error(`Failed to run "git clone" to download Flutter, so skipping "clone Flutter SDK" workflow: ${_e}`);
 				return GitOperationResult.error;
 			}
 		});
@@ -737,15 +737,15 @@ export class SdkUtils {
 	}
 }
 
-async function findFuchsiaRoot(logger: Logger, folder: string): Promise<string | undefined> {
+async function findFuchsiaRoot(_logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".jiri_root", "DIRECTORY");
 }
 
-async function findBazelWorkspaceRoot(logger: Logger, folder: string): Promise<string | undefined> {
+async function findBazelWorkspaceRoot(_logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, "WORKSPACE", "FILE");
 }
 
-async function findGitRoot(logger: Logger, folder: string): Promise<string | undefined> {
+async function findGitRoot(_logger: Logger, folder: string): Promise<string | undefined> {
 	return findRootContaining(folder, ".git", "ANY");
 }
 

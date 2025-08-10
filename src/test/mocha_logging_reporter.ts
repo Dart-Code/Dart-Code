@@ -10,7 +10,7 @@ function getLogger() {
 }
 
 export class LoggingReporter extends reporters.Base {
-	constructor(runner: Runner, options: any) {
+	constructor(runner: Runner, _options: any) {
 		super(runner);
 		runner.on("start", () => {
 

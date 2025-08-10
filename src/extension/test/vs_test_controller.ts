@@ -44,7 +44,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const coverageProfile = controller.createRunProfile("Run with Coverage", vs.TestRunProfileKind.Coverage, (request, token) =>
 			this.runTests(false, true, request, token), true, runnableWithCoverageTestTag);
 
-		coverageProfile.loadDetailedCoverage = async (testRun: vs.TestRun, fileCoverage: vs.FileCoverage, token: vs.CancellationToken) => {
+		coverageProfile.loadDetailedCoverage = async (_testRun: vs.TestRun, fileCoverage: vs.FileCoverage, _token: vs.CancellationToken) => {
 			const dartFileCoverage = fileCoverage as DartFileCoverage;
 			const lineCoverage: vs.StatementCoverage[] = [];
 
@@ -112,7 +112,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return this.nodeForItem.get(test);
 	}
 
-	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
+	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, _token: vs.CancellationToken): Promise<void> {
 		await this.discoverer?.ensureSuitesDiscovered();
 
 		const testsToRun = new Set<vs.TestItem>();
@@ -383,17 +383,17 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return run;
 	}
 
-	public suiteDiscovered(sessionID: string | undefined, node: SuiteNode): void {
+	public suiteDiscovered(_sessionID: string | undefined, _node: SuiteNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
 	}
 
-	public groupDiscovered(sessionID: string | undefined, node: GroupNode): void {
+	public groupDiscovered(_sessionID: string | undefined, _node: GroupNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
 	}
 
-	public testDiscovered(sessionID: string | undefined, node: TestNode): void {
+	public testDiscovered(_sessionID: string | undefined, _node: TestNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
 	}
@@ -414,7 +414,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			this.appendTestOutputLines(run, item, message);
 	}
 
-	public testErrorOutput(sessionID: string, node: TestNode, message: string, isFailure: boolean, stack: string): void {
+	public testErrorOutput(sessionID: string, node: TestNode, message: string, _isFailure: boolean, stack: string): void {
 		const run = this.getOrCreateTestRun(sessionID);
 		const item = this.itemForNode.get(node);
 		if (run && item) {
@@ -468,7 +468,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
-	public suiteDone(sessionID: string, node: SuiteNode): void { }
+	public suiteDone(_sessionID: string, _node: SuiteNode): void { }
 
 	private formatNotification(error: ErrorNotification | PrintNotification) {
 		if (!("error" in error))

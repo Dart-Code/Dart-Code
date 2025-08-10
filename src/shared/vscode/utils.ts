@@ -157,7 +157,7 @@ export async function getAllProjectFoldersAndExclusions(
 					cancellable: true,
 					location: vs.ProgressLocation.Notification,
 					title: projectSearchProgressText,
-				}, (progress, token) => {
+				}, (_progress, token) => {
 					token.onCancellationRequested(() => {
 						tokenSource.cancel();
 						logger.info(`Project search was cancelled after ${new Date().getTime() - startTimeMs}ms (was searching ${options.searchDepth} levels)`);
@@ -235,7 +235,7 @@ export function toRangeOnLine(location: Location): Range {
 	return new Range(startPos, startPos.translate(0, location.length));
 }
 
-export function showCode(editor: TextEditor, displayRange: Range, highlightRange: Range, selectionRange?: Range): void {
+export function showCode(editor: TextEditor, displayRange: Range, _highlightRange: Range, selectionRange?: Range): void {
 	if (selectionRange)
 		editor.selection = new Selection(selectionRange.start, selectionRange.end);
 

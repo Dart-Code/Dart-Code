@@ -200,7 +200,7 @@ export class SdkCommands extends BaseSdkCommands {
 		if (!lastModifiedTime)
 			return;
 
-		const watcher = fs.watch(versionFile, { persistent: false }, async (eventType: string) => {
+		const watcher = fs.watch(versionFile, { persistent: false }, async (_eventType: string) => {
 			if (!commandState.promptToReloadOnVersionChanges)
 				return;
 

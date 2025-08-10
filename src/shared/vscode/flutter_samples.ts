@@ -7,7 +7,7 @@ import { FlutterCreateTriggerData } from "../interfaces";
 import { getRandomInt, mkDirRecursive } from "../utils/fs";
 import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../utils/projects";
 
-export function createFlutterSampleInTempFolder(flutterCapabilities: FlutterCapabilities, sampleID: string, flutterSdkOverride?: string): vs.Uri | undefined {
+export function createFlutterSampleInTempFolder(_flutterCapabilities: FlutterCapabilities, sampleID: string, flutterSdkOverride?: string): vs.Uri | undefined {
 	// Create a temp folder for the sample.
 	const tempSamplePath = path.join(os.tmpdir(), dartCodeExtensionIdentifier, "flutter", "sample", sampleID, getRandomInt(0x1000, 0x10000).toString(16));
 

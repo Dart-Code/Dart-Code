@@ -45,7 +45,7 @@ export function forceWindowsDriveLetterToUppercaseInUriString<T extends string |
 	if (typeof uriString !== "string")
 		return undefined as (undefined extends T ? undefined : never);
 
-	return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (match, scheme, authority, driveLetter, colon) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
+	return uriString.replace(/^([\w+-.]+):(\/\/\w*)?\/(\w)(:|%3A)\//, (_match, scheme, authority, driveLetter, colon) => `${scheme}:${authority ?? ""}/${driveLetter.toUpperCase()}${colon}/`);
 }
 
 /**
@@ -220,7 +220,7 @@ export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): st
 	if (!fs.existsSync(projectFolder))
 		return undefined;
 
-	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder, "extractFlutterSdkPathFromPackagesFile").getPackagePath("flutter");
+	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder).getPackagePath("flutter");
 
 	if (!packagePath)
 		return undefined;
@@ -331,15 +331,15 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	let jsonVersionFileContent: string | undefined;
 	try {
 		jsonVersionFileContent = fs.readFileSync(jsonVersionFile, "utf8").trim();
-	} catch (e) {
+	} catch (_e) {
 	}
 
 	if (jsonVersionFileContent) {
 		let versionData: any;
 		try {
 			versionData = JSON.parse(jsonVersionFileContent);
-		} catch (e) {
-			logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON (${e}): ${jsonVersionFileContent}, falling back to legacy file`);
+		} catch (_e) {
+			logger.error(`${jsonVersionFile} existed, but could not be parsed as JSON: ${jsonVersionFileContent}, falling back to legacy file`);
 		}
 
 		if (versionData) {
@@ -373,14 +373,14 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 					.trim()
 			)
 		);
-	} catch (e) {
-		logger.error(e);
+	} catch (_e) {
+		// Failed to parse version file.
 		return undefined;
 	}
 }
 
 export function getPubGeneratorVersion(
-	logger: Logger,
+	_logger: Logger,
 	packageMapPath: string,
 	existsSync: (itemPath: string) => boolean,
 	readFileSync: (itemPath: string) => string,
@@ -392,8 +392,8 @@ export function getPubGeneratorVersion(
 		const data = JSON.parse(content);
 		const version = data.generatorVersion as string | undefined | null;
 		return nullToUndefined(semver.valid(version));
-	} catch (e) {
-		logger.error(e);
+	} catch (_e) {
+		// Failed to parse generatorVersion.
 		return undefined;
 	}
 }

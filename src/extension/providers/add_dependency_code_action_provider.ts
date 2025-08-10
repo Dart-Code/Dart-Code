@@ -21,7 +21,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
+	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, _token: CancellationToken): CodeAction[] | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
 			return;
 
@@ -98,7 +98,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		return match[1];
 	}
 
-	private createActions(document: TextDocument, diagnostic: Diagnostic, packageName: string): CodeAction[] {
+	private createActions(document: TextDocument, _diagnostic: Diagnostic, packageName: string): CodeAction[] {
 		const createAction = (isDevDependency: boolean) => {
 			const dependencyTypeName = isDevDependency ? "dev_dependencies" : "dependencies";
 			const title = `Add '${packageName}' to ${dependencyTypeName}`;

@@ -136,7 +136,7 @@ export class PubGlobal {
 		return installedVersion;
 	}
 
-	private runCommandWithProgress(packageName: string, title: string, args: string[], customScript?: CustomScript): Thenable<string> {
+	private runCommandWithProgress(packageName: string, title: string, args: string[], _customScript?: CustomScript): Thenable<string> {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title,

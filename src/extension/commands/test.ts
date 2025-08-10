@@ -191,7 +191,7 @@ export class TestCommands implements vs.Disposable {
 		}
 
 		const subs: vs.Disposable[] = [];
-		return new Promise<boolean>(async (resolve, reject) => {
+		return new Promise<boolean>(async (resolve, _reject) => {
 			let testsName = path.basename(programPath);
 			// Handle when running whole test folder.
 			if (testsName === "test")

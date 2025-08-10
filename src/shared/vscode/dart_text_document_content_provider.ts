@@ -10,12 +10,11 @@ import { disposeAll } from "../utils";
 export class DartTextDocumentContentProviderFeature implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
-	constructor(private readonly logger: Logger, private readonly client: LanguageClient, private readonly dartCapabilities: DartCapabilities) {
+	constructor(private readonly logger: Logger, private readonly client: LanguageClient, private readonly _dartCapabilities: DartCapabilities) {
 	}
 
 	public get feature(): StaticFeature {
 		const client = this.client;
-		const dartCapabilities = this.dartCapabilities;
 		const disposables = this.disposables;
 		return {
 			dispose() {

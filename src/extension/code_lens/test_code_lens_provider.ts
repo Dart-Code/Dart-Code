@@ -58,11 +58,11 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		);
 	}
 
-	private createCodeLens(document: TextDocument, test: TestOutlineInfo, name: string, debug: boolean, template?: { name: string }): CodeLens {
+	private createCodeLens(_document: TextDocument, test: TestOutlineInfo, name: string, debug: boolean, _template?: { name: string }): CodeLens {
 		return new CodeLens(
 			lspToRange(test.range),
 			{
-				arguments: template ? [test, template] : [test],
+				arguments: _template ? [test, _template] : [test],
 				command: debug ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline",
 				title: name,
 			}

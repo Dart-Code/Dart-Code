@@ -30,7 +30,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 	/// else will allow the prompt to appear again next time.
 	function showPrompt(key: string, prompt: () => Thenable<boolean>): void {
 		const stateKey = `${userPromptContextPrefix}${key}`;
-		prompt().then((res) => context.update(stateKey, res), error);
+		prompt().then((res) => context.update(stateKey, res), (_error) => error(_error));
 	}
 
 	if (await showSdkDeprecationNoticeIfAppropriate(logger, context, workspaceContext, dartCapabilities))
@@ -133,7 +133,7 @@ function error(err: any) {
 	void vs.window.showErrorMessage(`${err.message ?? err}`);
 }
 
-export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
+export async function handleNewProjects(logger: Logger, _context: Context): Promise<void> {
 	await Promise.all(getDartWorkspaceFolders().map(async (wf) => {
 		try {
 			await handleDartCreateTrigger(logger, wf, DART_CREATE_PROJECT_TRIGGER_FILE);
@@ -248,7 +248,7 @@ export async function checkForLargeNumberOfTodos(diagnostics: vs.DiagnosticColle
 
 	const threshold = 100;
 	let numTodos = 0;
-	diagnostics?.forEach((uri, diagnostics) => {
+	diagnostics?.forEach((_uri, diagnostics) => {
 		if (numTodos >= threshold)
 			return;
 		for (const diagnostic of diagnostics) {

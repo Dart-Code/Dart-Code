@@ -56,7 +56,7 @@ export class PackageCacheData {
 		);
 	}
 
-	private static mapReplacer(key: unknown, value: unknown) {
+	private static mapReplacer(_key: unknown, value: unknown) {
 		return value instanceof Map
 			? {
 				dataType: "Map",
@@ -65,7 +65,7 @@ export class PackageCacheData {
 			: value;
 	}
 
-	private static mapReviver(key: unknown, value: any): unknown {
+	private static mapReviver(_key: unknown, value: any): unknown {
 		return typeof value === "object" && value?.dataType === "Map"
 			? new Map(value.value) // eslint-disable-line @typescript-eslint/no-unsafe-argument
 			: value;

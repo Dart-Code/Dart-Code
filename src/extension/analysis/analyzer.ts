@@ -437,7 +437,7 @@ export class LspAnalyzer extends Analyzer {
 	public async forceReanalyze(): Promise<void> {
 		try {
 			return await this.client.sendRequest(ReanalyzeRequest.type);
-		} catch (e) {
+		} catch (_e) {
 			void vs.window.showErrorMessage("Reanalyze is not supported by this version of the Dart SDK's LSP server.");
 		}
 	}
@@ -470,7 +470,7 @@ export class LspAnalyzer extends Analyzer {
 		);
 	}
 
-	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
+	private createClient(logger: Logger, sdks: DartSdks, _dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
 			errorHandler: new DartErrorHandler(logger),
@@ -648,7 +648,7 @@ export class LspAnalyzer extends Analyzer {
 
 			logger.error(errorOutput);
 		});
-		process.on("exit", (code, signal) => {
+		process.on("exit", (code, _signal) => {
 			if (code)
 				reportAnalyzerTerminatedWithError(logger);
 		});

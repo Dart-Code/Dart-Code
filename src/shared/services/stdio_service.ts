@@ -99,7 +99,11 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		};
 	}
 
-	protected notifyRequestAfterExit() { }
+	/**
+	 * Called when a request is attempted after the underlying process has exited.
+	 * Base implementation is a no-op; subclasses may override to surface errors to users.
+	 */
+	protected notifyRequestAfterExit(): void { }
 
 	protected sendRequest<TReq, TResp>(method: string, params?: TReq): Promise<TResp> {
 		// Generate an ID for this request so we can match up the response.
@@ -152,7 +156,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
-	protected async processUnhandledMessage(message: string): Promise<void> { }
+	protected async processUnhandledMessage(_message: string): Promise<void> { }
 
 	public async handleMessage(message: string): Promise<void> {
 		this.logTraffic(`<== ${message.trimRight()}\r\n`);
@@ -200,7 +204,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract handleNotification(evt: T): Promise<void>;
-	protected async handleRequest(method: string, args: any): Promise<any> { }
+	protected async handleRequest(_method: string, _args: any): Promise<any> { }
 	protected isNotification(msg: any): boolean { return !!msg.event; }
 	protected isRequest(msg: any): boolean { return !!msg.method && !!msg.id; }
 	protected isResponse(msg: any): boolean { return !!msg.id; }
@@ -332,7 +336,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 					this.logTraffic(`Process ${this.description} skipped terminating because 🤷‍♂️`);
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			// This tends to throw a lot because the shell process quit when we terminated the related
 			// process above, so just swallow the error.
 		}

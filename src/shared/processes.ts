@@ -69,7 +69,7 @@ export function runProcess(logger: Logger, binPath: string, args: string[], work
 
 type SpawnFunction = (workingDirectory: string | undefined, binPath: string, args: string[], env: Record<string, string | undefined> | undefined) => SpawnedProcess;
 
-export function getPubExecutionInfo(dartCapabilities: DartCapabilities, dartSdkPath: string, args: string[]): ExecutionInfo {
+export function getPubExecutionInfo(_dartCapabilities: DartCapabilities, dartSdkPath: string, args: string[]): ExecutionInfo {
 	// TODO(dantup): Inline this now there's no condition?
 	return {
 		args: ["pub", ...args],

@@ -2,7 +2,7 @@ import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Progress
 import { PromiseCompleter } from "../../shared/utils";
 
 export class DartDebugAdapterLaunchStatusFactory implements DebugAdapterTrackerFactory {
-	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
+	createDebugAdapterTracker(_session: DebugSession): DebugAdapterTracker {
 		return new DartDebugAdapterLaunchStatus();
 	}
 }
@@ -29,7 +29,7 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		this.startProgress();
 	}
 
-	public onDidSendMessage(message: any): void {
+	public onDidSendMessage(_message: any): void {
 		this.endProgress();
 	}
 
@@ -37,7 +37,7 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		this.endProgress();
 	}
 
-	public onExit(code: number | undefined, signal: string | undefined): void {
+	public onExit(_code: number | undefined, _signal: string | undefined): void {
 		this.endProgress();
 	}
 }

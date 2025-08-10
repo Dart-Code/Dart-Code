@@ -78,9 +78,9 @@ export class CategoryLogger implements Logger {
 }
 
 class NullLogger implements Logger {
-	public info(message: string, category?: LogCategory): void { }
-	public warn(message: any, category?: LogCategory): void { }
-	public error(error: any, category?: LogCategory): void { }
+	public info(_message: string, _category?: LogCategory): void { }
+	public warn(_message: any, _category?: LogCategory): void { }
+	public error(_error: any, _category?: LogCategory): void { }
 }
 
 export const nullLogger = new NullLogger();

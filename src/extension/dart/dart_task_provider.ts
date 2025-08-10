@@ -34,7 +34,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 
 	abstract get type(): string;
 
-	public abstract provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]>;
+	public abstract provideTasks(_token?: vs.CancellationToken): Promise<vs.Task[]>;
 
 	/// Tasks that will either be run by Dart or Flutter depending on the project type.
 	protected createSharedTasks(workspaceFolder: vs.WorkspaceFolder, projectFolder: vs.Uri): Array<Promise<vs.Task>> {
@@ -54,7 +54,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		return promises;
 	}
 
-	public async resolveTask(task: DartTask, token?: vs.CancellationToken): Promise<vs.Task> {
+	public async resolveTask(task: DartTask, _token?: vs.CancellationToken): Promise<vs.Task> {
 		const scope: any = task.scope;
 		const workspaceFolderPath = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
 		const definitionCwd = task.definition.cwd;
@@ -194,7 +194,7 @@ export class DartTaskProvider extends BaseTaskProvider {
 
 	get type() { return DartTaskProvider.type; }
 
-	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
+	public async provideTasks(_token?: vs.CancellationToken): Promise<vs.Task[]> {
 		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 
 		const promises: Array<Promise<vs.Task>> = [];

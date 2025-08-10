@@ -8,8 +8,8 @@ import { normalizeSlashes } from "../utils/fs";
 export class PackageMapLoader {
 	constructor(private readonly logger: Logger) { }
 
-	public loadForProject(projectFolder: string, reason: string): PackageMap {
-		return PackageMap.loadForProject(this.logger, projectFolder, reason);
+	public loadForProject(projectFolder: string, _reason: string): PackageMap {
+		return PackageMap.loadForProject(this.logger, projectFolder);
 	}
 }
 
@@ -22,7 +22,7 @@ export abstract class PackageMap {
 		return file;
 	}
 
-	public static loadForProject(logger: Logger, projectFolder: string, reason: string): PackageMap {
+	public static loadForProject(logger: Logger, projectFolder: string): PackageMap {
 		const packagesFile = PackageMap.findPackagesFile(projectFolder);
 		try {
 			return packagesFile
@@ -82,10 +82,10 @@ export class MissingPackageMap extends PackageMap {
 	public get packages(): Record<string, string> {
 		return {};
 	}
-	public getPackagePath(name: string): string | undefined {
+	public getPackagePath(_name: string): string | undefined {
 		return undefined;
 	}
-	public resolvePackageUri(uri: string): string | undefined {
+	public resolvePackageUri(_uri: string): string | undefined {
 		return undefined;
 	}
 	public reload() { }

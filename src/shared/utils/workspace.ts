@@ -3,12 +3,12 @@ import * as path from "path";
 import { isWin, MAX_VERSION } from "../constants";
 import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
-export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, dartSdkRoot: string) {
+export function processDartSdkRepository(_logger: Logger, config: WritableWorkspaceConfig, _dartSdkRoot: string) {
 	config.disableAutomaticPub = true;
 	config.supportsDartRunTest = false;
 }
 
-export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
+export function processFuchsiaWorkspace(_logger: Logger, config: WritableWorkspaceConfig, _fuchsiaRoot: string) {
 	config.disableAutomaticPub = true;
 	config.disableSdkUpdateChecks = true;
 	config.disableDartToolingDaemon = true;

@@ -30,7 +30,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private pingIntervalId?: NodeJS.Timeout;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 
-	constructor(logger: Logger, private readonly analytics: Analytics, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
+	constructor(logger: Logger, private readonly analytics: Analytics, private readonly workspaceContext: FlutterWorkspaceContext, _flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
 
 		const folder = workspaceContext.sdks.flutter;
@@ -151,7 +151,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		super.dispose();
 	}
 
-	protected sendMessage<T>(json: string) {
+	protected sendMessage(json: string) {
 		try {
 			super.sendMessage(json);
 		} catch (e) {

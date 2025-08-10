@@ -809,7 +809,7 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(dc, helloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized").then((event) => dc.setBreakpointsRequest({
+			dc.waitForEvent("initialized").then((_event) => dc.setBreakpointsRequest({
 				// positionOf is 0-based, but seems to want 1-based
 				breakpoints: [{
 					line: positionOf("^// BREAKPOINT1").line + 1,
@@ -818,7 +818,7 @@ void printSomething() {
 					logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
 				}],
 				source: { path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile) },
-			})).then((response) => dc.configurationDoneRequest()),
+			})).then((_response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
 			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 			dc.launch(config),
@@ -1537,8 +1537,7 @@ insp=<inspected variable>
 
 	describe("attaches", () => {
 		it("to a paused Dart script and can unpause to run it to completion", async () => {
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder);
-			const observatoryUri = await process.vmServiceUri;
+			const observatoryUri = await spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder).vmServiceUri;
 
 			const config = await attachDebugger(observatoryUri);
 			await waitAllThrowIfTerminates(dc,
@@ -1566,7 +1565,7 @@ insp=<inspected variable>
 			const vmArgs = [
 				`--write-service-info=${vs.Uri.file(tempVmServiceInfoFile)}`,
 			];
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
+			spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 
 			const config = await attachDebugger(undefined, { program: undefined, vmServiceInfoFile: tempVmServiceInfoFile });
 			await waitAllThrowIfTerminates(dc,

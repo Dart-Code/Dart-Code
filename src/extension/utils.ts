@@ -202,7 +202,7 @@ export function getLatestSdkVersion(): Promise<string> {
 					try {
 						const latestVersion = JSON.parse(d.toString()).version as string;
 						resolve(latestVersion);
-					} catch (e) {
+					} catch (_e) {
 						reject({ message: `Failed to parse latest Dart SDK Version from JSON: ${d.toString()}` });
 					}
 				});

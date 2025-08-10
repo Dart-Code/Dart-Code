@@ -407,7 +407,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				dc.waitForEvent("terminated"),
 				dc.terminateRequest(),
 			]),
-			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete terminateRequest within 5s")), 5000)),
+			new Promise((_resolve, reject) => setTimeout(() => reject(new Error("Did not complete terminateRequest within 5s")), 5000)),
 		]);
 	});
 

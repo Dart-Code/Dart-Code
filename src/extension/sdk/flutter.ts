@@ -16,7 +16,7 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 				location: ProgressLocation.Notification,
 				title: initializingFlutterMessage,
 			},
-			async (progress, cancellationToken) => {
+			async (_progress, cancellationToken) => {
 				const proc = safeToolSpawn(undefined, flutterScript, ["doctor", "-v"]);
 
 				// Show the output in an output channel so if it gets stuck the user can see it.
@@ -24,7 +24,7 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 				channel.show();
 				channels.runProcessInOutputChannel(proc, channel);
 
-				cancellationToken.onCancellationRequested((e) => {
+				cancellationToken.onCancellationRequested((_e) => {
 					logger.info(`User canceled!`);
 					proc.kill();
 				});
@@ -47,7 +47,7 @@ export async function initializeFlutterSdk(logger: Logger, flutterScript: string
 			},
 		);
 		logger.info(`Flutter initialized!`);
-	} catch (e) {
+	} catch (_e) {
 		logger.warn(`Flutter initialization failed, proceeding without!`);
 	}
 }

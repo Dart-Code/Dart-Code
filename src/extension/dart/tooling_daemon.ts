@@ -110,7 +110,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 				if (serviceMethod as ServiceMethod === ServiceMethod.registerVmService) {
 					await this.setUpVmServiceRegistrations();
 				}
-			} catch (e) {
+			} catch (_e) {
 				this.logger.error(`Failed handling registration of ${serviceMethod} service method: ${e}`);
 			}
 		});
@@ -168,7 +168,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 					uri: vmServiceUri,
 				});
 			}
-		} catch (e) {
+		} catch (_e) {
 			this.logger.error(`Failed to register VM Service ${vmServiceUri}: $e`);
 		}
 	}
@@ -183,7 +183,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 					uri: vmServiceUri,
 				});
 			}
-		} catch (e) {
+		} catch (_e) {
 			this.logger.error(`Failed to unregister VM Service ${vmServiceUri}: $e`);
 		}
 	}

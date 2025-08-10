@@ -13,7 +13,7 @@ export class DiagnosticReport implements IAmDisposable {
 
 	private readonly output: string[] = [];
 
-	private readonly emptyReporter = (message: string | undefined) => { };
+	private readonly emptyReporter = (_message: string | undefined) => { };
 	private report = this.emptyReporter;
 
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly rebuildLogHeaders: () => void) {
@@ -28,9 +28,9 @@ export class DiagnosticReport implements IAmDisposable {
 				location: vs.ProgressLocation.Notification,
 				title: "Collecting Diagnostic Information",
 			},
-			async (progress, token) => {
-				this.report = (message: string | undefined) => progress.report({ message });
-				await this.generateDiagnosticReport(progress, token);
+			async (_progress, token) => {
+				this.report = (message: string | undefined) => _progress.report({ message });
+				await this.generateDiagnosticReport(_progress, token);
 				this.report = this.emptyReporter;
 			}
 		);
@@ -40,7 +40,7 @@ export class DiagnosticReport implements IAmDisposable {
 		this.output.push(message.trimEnd());
 	}
 
-	private async generateDiagnosticReport(progress: vs.Progress<{ message?: string; increment?: number }>, token: vs.CancellationToken) {
+	private async generateDiagnosticReport(_progress: vs.Progress<{ message?: string; increment?: number }>, token: vs.CancellationToken) {
 		this.rebuildLogHeaders();
 		this.append("**!! ⚠️ PLEASE REVIEW THIS REPORT FOR SENSITIVE INFORMATION BEFORE SHARING ⚠️ !!**");
 		try {
@@ -59,8 +59,8 @@ export class DiagnosticReport implements IAmDisposable {
 			if (this.workspaceContext.hasAnyFlutterProjects) {
 				await this.appendFlutterCommandOutput("flutter doctor", ["doctor", "-v"]);
 			}
-		} catch (e) {
-			this.append(`Failed to generate log: ${e}`);
+		} catch (_e) {
+			this.append(`Failed to generate log: ${_e}`);
 		}
 
 		if (token.isCancellationRequested) return;

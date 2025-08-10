@@ -177,7 +177,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 			if (childLines) {
 				const startPos = this
 					.firstNonWhitespace(document, parentLine);
-				childLines.forEach((childLine, i) => {
+				childLines.forEach((childLine, _i) => {
 					const firstCodeChar = this.firstNonWhitespace(document, childLine);
 					guides.push(new WidgetGuide(startPos, firstCodeChar));
 				});
