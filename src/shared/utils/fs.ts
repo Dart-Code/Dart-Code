@@ -331,7 +331,7 @@ export function getSdkVersion(logger: Logger, { sdkRoot }: { sdkRoot?: string })
 	let jsonVersionFileContent: string | undefined;
 	try {
 		jsonVersionFileContent = fs.readFileSync(jsonVersionFile, "utf8").trim();
-	} catch (e) {
+	} catch {
 	}
 
 	if (jsonVersionFileContent) {

@@ -85,7 +85,7 @@ function getWorkspaceFolderPaths(
 			logger.error(`Failed to parse pubspec workspaces, items are not all strings`);
 			return [];
 		}
-	} catch (e) {
+	} catch {
 		logger.error(`Failed to parse pubspec workspaces`);
 		return [];
 	}
@@ -163,6 +163,7 @@ function getPubPackageStatus(
 	const tryMtimeSync = (f: string) => { try { return mtimeSync(f); } catch { return undefined; } };
 	const maybeDate = includeDatesAndFullPaths
 		? (d: Date) => ` (${d})`
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		: (_: Date) => "";
 	const displayPath = includeDatesAndFullPaths
 		? (p: string) => p

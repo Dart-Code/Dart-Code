@@ -56,6 +56,7 @@ class DartDebugAdapterHexView implements vs.DebugAdapterTracker {
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onExit(code: number | undefined, signal: string | undefined): void {
 		this.factory.hexFormatters.delete(this);
 	}

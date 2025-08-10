@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
+import { CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { PubPackage } from "../commands/add_dependency";
@@ -21,7 +21,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
+	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext): CodeAction[] | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
 			return;
 

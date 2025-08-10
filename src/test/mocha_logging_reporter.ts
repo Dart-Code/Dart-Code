@@ -10,6 +10,7 @@ function getLogger() {
 }
 
 export class LoggingReporter extends reporters.Base {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	constructor(runner: Runner, options: any) {
 		super(runner);
 		runner.on("start", () => {

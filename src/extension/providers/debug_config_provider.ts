@@ -31,7 +31,7 @@ import { getGlobalFlutterArgs, getToolEnv } from "../utils/processes";
 export class DebugConfigProvider implements DebugConfigurationProvider {
 	constructor(private readonly logger: Logger, private readonly wsContext: DartWorkspaceContext, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly devTools: DevToolsManager, private readonly flutterCapabilities: FlutterCapabilities) { }
 
-	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration): ProviderResult<DebugConfiguration> {
 		ensureDebugLaunchUniqueId(debugConfig);
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
@@ -58,6 +58,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return matches ? matches[0] : undefined;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartLaunchArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
 		ensureDebugLaunchUniqueId(debugConfig);
 		const isAttachRequest = debugConfig.request === "attach";
@@ -667,6 +668,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	/// All arguments built here should be things that user the recognises based on the app they are trying to launch
 	/// or settings they have configured. It should not include things that are specifically required by the debugger
 	/// (for example, enabling the VM Service or starting paused). Those items should be handled inside the Debug Adapter.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected async buildToolArgs(debuggerType: DebuggerType, debugConfig: DartLaunchArgs, conf: ResourceConfig, portFromLocalExtension?: number): Promise<string[]> {
 		let args: string[] = [];
 		args = args.concat(debugConfig.toolArgs ?? []);
@@ -691,7 +693,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 	protected async buildDartToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
 		const args: string[] = [];
-		const isDebug = debugConfig.noDebug !== true;
 
 		this.addArgsIfNotExist(args, ...conf.cliAdditionalArgs);
 
@@ -823,7 +824,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationProvider {
 	constructor(private readonly logger: Logger) { }
 
-	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
+	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined): Promise<DebugConfiguration[]> {
 		const results: DebugConfiguration[] = [];
 
 		const projectFolders = folder
@@ -883,7 +884,7 @@ export class InitialLaunchJsonDebugConfigProvider implements DebugConfigurationP
 export class DynamicDebugConfigProvider implements DebugConfigurationProvider {
 	constructor(private readonly logger: Logger, private readonly deviceManager: FlutterDeviceManager | undefined) { }
 
-	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[]> {
+	public async provideDebugConfigurations(folder: WorkspaceFolder | undefined): Promise<DebugConfiguration[]> {
 		const results: DebugConfiguration[] = [];
 
 		const rootFolder = folder ? fsPath(folder.uri) : undefined;

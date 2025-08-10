@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { strict as assert } from "assert";
 import * as path from "path";
 import { SinonStub } from "sinon";

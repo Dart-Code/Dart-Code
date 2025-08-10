@@ -707,6 +707,7 @@ export async function getWorkspaceSymbols(query: string): Promise<vs.SymbolInfor
 }
 
 export function waitForDiagnosticChange(resource?: vs.Uri): Promise<void> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	return new Promise((resolve, reject) => {
 		const disposable = vs.languages.onDidChangeDiagnostics((e) => {
 			if (!resource || e.uris.find((r) => fsPath(r) === fsPath(resource))) {

@@ -318,6 +318,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		this.dtdUriCompleter.resolve(undefined);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected shouldHandleMessage(_message: string): boolean {
 		// DTD only emits one thing we care about but it's not in the same format
 		// as our other things, so we treat every message as unhandled and extract
@@ -325,6 +326,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return false;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected async handleNotification(_evt: UnknownNotification): Promise<void> {
 		// We never get here because shouldHandleMessage is always false.
 	}

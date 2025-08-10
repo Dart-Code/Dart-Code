@@ -43,6 +43,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		disposeAll(this.disposables);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public async resolveWebviewView(webviewView: vs.WebviewView, context: vs.WebviewViewResolveContext<unknown>, token: vs.CancellationToken): Promise<void> {
 		this.webviewView = webviewView;
 		this.api?.dispose();

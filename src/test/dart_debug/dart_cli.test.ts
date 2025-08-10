@@ -809,6 +809,7 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		const config = await startDebugger(dc, helloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			dc.waitForEvent("initialized").then((event) => dc.setBreakpointsRequest({
 				// positionOf is 0-based, but seems to want 1-based
 				breakpoints: [{
@@ -818,6 +819,7 @@ void printSomething() {
 					logMessage: '${s} The \\{year} is """{(new DateTime.now()).year}"""',
 				}],
 				source: { path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile) },
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			})).then((response) => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
 			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
@@ -1566,7 +1568,7 @@ insp=<inspected variable>
 			const vmArgs = [
 				`--write-service-info=${vs.Uri.file(tempVmServiceInfoFile)}`,
 			];
-			const process = spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
+			spawnDartProcessPaused(helloWorldMainFile, helloWorldFolder, ...vmArgs);
 
 			const config = await attachDebugger(undefined, { program: undefined, vmServiceInfoFile: tempVmServiceInfoFile });
 			await waitAllThrowIfTerminates(dc,

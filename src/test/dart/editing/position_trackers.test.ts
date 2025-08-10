@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { strict as assert } from "assert";
 import { Position, Range } from "vscode";
 import { DocumentOffsetTracker, DocumentPositionTracker } from "../../../shared/vscode/trackers";
@@ -16,6 +17,7 @@ describe("offset tracker", () => {
 		tracker.trackDoc(doc, [originalOffset]);
 
 		let updatedValues: Map<number, number> | undefined;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
 
 		// Insert a character before our position.

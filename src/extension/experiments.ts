@@ -72,6 +72,7 @@ class Experiment {
 
 	/// Activates the experiment. If returns false, resets the hasActivated flag so it
 	/// is not considered to have run.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected async activate(isFirstActivation: boolean): Promise<undefined | false> { return; }
 }
 

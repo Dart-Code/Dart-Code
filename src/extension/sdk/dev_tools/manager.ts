@@ -32,6 +32,7 @@ import { getToolEnv } from "../../utils/processes";
 import { SidebarDevTools } from "../../views/devtools/sidebar_devtools";
 import { DevToolsEmbeddedView, DevToolsEmbeddedViewOrSidebarView } from "./embedded_view";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const devtoolsPackageID = "devtools";
 const devtoolsPackageName = "Dart DevTools";
 
@@ -558,6 +559,7 @@ export class DevToolsManager implements vs.Disposable {
 				// by the user to allow testing the whole flow before being shipped in the list.
 				//
 				// Adding "*" to the list allows all extension identifiers, useful for testing.
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const defaultAllowList: string[] = [
 					"serverpod.serverpod",
 				];
@@ -668,6 +670,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	public async connect(): Promise<void> {
 		const workspaceContext = this.workspaceContext;
 		const toolingDaemon = this.toolingDaemon;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const dartCapabilities = this.dartCapabilities;
 
 		const dartVm = path.join(workspaceContext.sdks.dart, dartVMPath);

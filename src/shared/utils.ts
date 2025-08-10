@@ -62,6 +62,7 @@ export function findFileInAncestor(files: string[], startLocation: string) {
 }
 
 /// Converts a file URI to file path without a dependency on vs.Uri.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function maybeUriToFilePath(uri: string | undefined, returnWindowsPath: boolean = isWin): string | undefined {
 	return uri === undefined ? uri : uriToFilePath(uri);
 }

@@ -78,8 +78,11 @@ export class CategoryLogger implements Logger {
 }
 
 class NullLogger implements Logger {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public info(message: string, category?: LogCategory): void { }
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public warn(message: any, category?: LogCategory): void { }
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public error(error: any, category?: LogCategory): void { }
 }
 

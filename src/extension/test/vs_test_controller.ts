@@ -35,16 +35,16 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		if (discoverer)
 			controller.resolveHandler = (item: vs.TestItem | undefined) => this.resolveTestItem(item);
 
-		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request, token) =>
-			this.runTests(false, false, request, token), false, runnableTestTag);
+		controller.createRunProfile("Run", vs.TestRunProfileKind.Run, (request) =>
+			this.runTests(false, false, request), false, runnableTestTag);
 
-		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request, token) =>
-			this.runTests(true, false, request, token), true, runnableTestTag);
+		controller.createRunProfile("Debug", vs.TestRunProfileKind.Debug, (request) =>
+			this.runTests(true, false, request), true, runnableTestTag);
 
-		const coverageProfile = controller.createRunProfile("Run with Coverage", vs.TestRunProfileKind.Coverage, (request, token) =>
-			this.runTests(false, true, request, token), true, runnableWithCoverageTestTag);
+		const coverageProfile = controller.createRunProfile("Run with Coverage", vs.TestRunProfileKind.Coverage, (request) =>
+			this.runTests(false, true, request), true, runnableWithCoverageTestTag);
 
-		coverageProfile.loadDetailedCoverage = async (testRun: vs.TestRun, fileCoverage: vs.FileCoverage, token: vs.CancellationToken) => {
+		coverageProfile.loadDetailedCoverage = async (testRun: vs.TestRun, fileCoverage: vs.FileCoverage) => {
 			const dartFileCoverage = fileCoverage as DartFileCoverage;
 			const lineCoverage: vs.StatementCoverage[] = [];
 
@@ -112,7 +112,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return this.nodeForItem.get(test);
 	}
 
-	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, token: vs.CancellationToken): Promise<void> {
+	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest): Promise<void> {
 		await this.discoverer?.ensureSuitesDiscovered();
 
 		const testsToRun = new Set<vs.TestItem>();
@@ -383,16 +383,19 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return run;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public suiteDiscovered(sessionID: string | undefined, node: SuiteNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public groupDiscovered(sessionID: string | undefined, node: GroupNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public testDiscovered(sessionID: string | undefined, node: TestNode): void {
 		// const run = this.getOrCreateTestRun(sessionID);
 		// const item = this.itemForNode.get(node);
@@ -468,6 +471,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public suiteDone(sessionID: string, node: SuiteNode): void { }
 
 	private formatNotification(error: ErrorNotification | PrintNotification) {

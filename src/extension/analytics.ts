@@ -61,6 +61,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		this.send(data as AnalyticsData).catch((e) => this.handleError(e));
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	sendErrorData(error: Error, data?: Record<string, any>): void {
 		// No errors are collected.
 	}
@@ -429,6 +430,7 @@ interface AnalyticsData {
 
 export class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {
 	public lastTracker: DebugAdapterExceptionSettingTracker | undefined;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
 		this.lastTracker = new DebugAdapterExceptionSettingTracker();
 		return this.lastTracker;

@@ -3,11 +3,13 @@ import * as path from "path";
 import { isWin, MAX_VERSION } from "../constants";
 import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, dartSdkRoot: string) {
 	config.disableAutomaticPub = true;
 	config.supportsDartRunTest = false;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, fuchsiaRoot: string) {
 	config.disableAutomaticPub = true;
 	config.disableSdkUpdateChecks = true;

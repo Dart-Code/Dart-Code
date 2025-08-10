@@ -54,7 +54,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		return promises;
 	}
 
-	public async resolveTask(task: DartTask, token?: vs.CancellationToken): Promise<vs.Task> {
+	public async resolveTask(task: DartTask): Promise<vs.Task> {
 		const scope: any = task.scope;
 		const workspaceFolderPath = "uri" in scope ? fsPath((scope as vs.WorkspaceFolder).uri) : undefined;
 		const definitionCwd = task.definition.cwd;
@@ -97,6 +97,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		return newTask;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected injectArgs(_: DartTaskDefinition): void | Promise<void> {
 	}
 
@@ -194,7 +195,7 @@ export class DartTaskProvider extends BaseTaskProvider {
 
 	get type() { return DartTaskProvider.type; }
 
-	public async provideTasks(token?: vs.CancellationToken): Promise<vs.Task[]> {
+	public async provideTasks(): Promise<vs.Task[]> {
 		const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 
 		const promises: Array<Promise<vs.Task>> = [];

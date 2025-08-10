@@ -22,6 +22,7 @@ export abstract class PackageMap {
 		return file;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public static loadForProject(logger: Logger, projectFolder: string, reason: string): PackageMap {
 		const packagesFile = PackageMap.findPackagesFile(projectFolder);
 		try {
@@ -82,9 +83,11 @@ export class MissingPackageMap extends PackageMap {
 	public get packages(): Record<string, string> {
 		return {};
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public getPackagePath(name: string): string | undefined {
 		return undefined;
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public resolvePackageUri(uri: string): string | undefined {
 		return undefined;
 	}

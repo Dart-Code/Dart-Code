@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import { Writable } from "stream";
@@ -60,9 +61,11 @@ export class DartDebugClient extends DebugClient {
 		customEventsToForward.forEach((evt) => this.on(evt, (e: DebugSessionCustomEvent) => this.handleCustomEvent(e)));
 
 		// Log important events to make troubleshooting tests easier.
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		this.on("output", (event: DebugProtocol.OutputEvent) => {
 			logger.info(`[${event.body.category}] ${event.body.output}`);
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		this.on("terminated", (event: DebugProtocol.TerminatedEvent) => {
 			this.hasTerminated = true;
 			logger.info(`[terminated]`);

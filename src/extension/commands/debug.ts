@@ -263,9 +263,9 @@ export class DebugCommands implements IAmDisposable {
 		}));
 
 		// Misc custom debug commands.
-		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.touchBar", (args: any) => vs.commands.executeCommand("_dart.hotReload.withSave", args)));
+		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.touchBar", () => vs.commands.executeCommand("_dart.hotReload.withSave")));
 		this.disposables.push(vs.commands.registerCommand("flutter.hotReload", (args: any) => vs.commands.executeCommand("dart.hotReload", args)));
-		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.withSave", async (args?: any) => {
+		this.disposables.push(vs.commands.registerCommand("_dart.hotReload.withSave", async () => {
 			try {
 				const hasDirtyFiles = !!vs.workspace.textDocuments.find((td) => td.isDirty);
 				if (hasDirtyFiles) {
@@ -762,7 +762,7 @@ export class DebugCommands implements IAmDisposable {
 			if (!launched && !session.session.configuration.suppressWebServerDeviceBrowserLaunch) {
 				try {
 					await envUtils.openInBrowser(body.url as string, this.logger);
-				} catch (e: any) {
+				} catch {
 					this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${body.url}`);
 				}
 			}
@@ -785,7 +785,7 @@ export class DebugCommands implements IAmDisposable {
 					if (!launched && !session.session.configuration.suppressWebServerDeviceBrowserLaunch) {
 						try {
 							await envUtils.openInBrowser(url, this.logger);
-						} catch (e: any) {
+						} catch {
 							this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${url}`);
 						}
 					}

@@ -152,6 +152,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected async processUnhandledMessage(message: string): Promise<void> { }
 
 	public async handleMessage(message: string): Promise<void> {
@@ -200,6 +201,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract handleNotification(evt: T): Promise<void>;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	protected async handleRequest(method: string, args: any): Promise<any> { }
 	protected isNotification(msg: any): boolean { return !!msg.event; }
 	protected isRequest(msg: any): boolean { return !!msg.method && !!msg.id; }
@@ -332,7 +334,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 					this.logTraffic(`Process ${this.description} skipped terminating because 🤷‍♂️`);
 				}
 			}
-		} catch (e) {
+		} catch {
 			// This tends to throw a lot because the shell process quit when we terminated the related
 			// process above, so just swallow the error.
 		}

@@ -64,6 +64,7 @@ my_package_2
 			sb.stub(projectFinder, "findAllProjectFolders")
 				.returns(["/path/to/workspace", "/path/to/workspace/my_package_1", "/path/to/workspace/my_package_2"]);
 			sb.stub(deps, "getJson")
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				.callsFake((projectPath: string) => fakePostWorkspacePubDepsJsonWorkspace);
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 

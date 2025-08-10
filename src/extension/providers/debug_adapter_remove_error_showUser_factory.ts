@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 
 export class DartDebugAdapterRemoveErrorShowUserFactory implements vs.DebugAdapterTrackerFactory {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker {
 		return new DartDebugAdapterRemoveErrorShowUser();
 	}

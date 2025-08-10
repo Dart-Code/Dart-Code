@@ -49,6 +49,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		return this.completions;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
 		line = line.trim();
 

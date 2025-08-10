@@ -3,6 +3,7 @@ import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/util
 import { getActiveRealFileEditor, isDartDocument } from "../editors";
 
 export class DartDebugAdapterGlobalEvaluationContextFactory implements vs.DebugAdapterTrackerFactory {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker {
 		return new DartDebugAdapterGlobalEvaluationContext();
 	}

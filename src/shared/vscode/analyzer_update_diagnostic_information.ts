@@ -33,6 +33,7 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 			dispose() {
 				disposeAll(disposables);
 			},
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			fillClientCapabilities(capabilities: ClientCapabilities) { },
 			getState(): FeatureState {
 				return { kind: "static" };

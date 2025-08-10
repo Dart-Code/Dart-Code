@@ -18,6 +18,7 @@ import { getToolEnv } from "../utils/processes";
 export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptorFactory {
 	constructor(private readonly analytics: Analytics, private readonly sdks: DartSdks, private readonly logger: Logger, private readonly extensionContext: Context, private readonly dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly workspaceContext: WorkspaceContext, private readonly experiments: KnownExperiments) { }
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): DebugAdapterDescriptor {
 		return this.descriptorForType(session.configuration.debuggerType as DebuggerType, !!session.configuration.noDebug);
 	}

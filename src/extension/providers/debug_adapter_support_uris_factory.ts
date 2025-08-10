@@ -4,6 +4,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 export class DartDebugAdapterSupportsUrisFactory implements vs.DebugAdapterTrackerFactory {
 	constructor(private readonly dartCapabilities: DartCapabilities) { }
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker {
 		return new DartDebugAdapterSupportsUris(this.dartCapabilities);
 	}

@@ -168,8 +168,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 					uri: vmServiceUri,
 				});
 			}
-		} catch (e) {
-			this.logger.error(`Failed to register VM Service ${vmServiceUri}: $e`);
+		} catch {
+			this.logger.error(`Failed to register VM Service ${vmServiceUri}`);
 		}
 	}
 
@@ -183,8 +183,8 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 					uri: vmServiceUri,
 				});
 			}
-		} catch (e) {
-			this.logger.error(`Failed to unregister VM Service ${vmServiceUri}: $e`);
+		} catch {
+			this.logger.error(`Failed to unregister VM Service ${vmServiceUri}`);
 		}
 	}
 

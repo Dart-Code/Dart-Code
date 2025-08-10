@@ -7,6 +7,7 @@ import * as vs from "vscode";
  * See https://github.com/Dart-Code/Dart-Code/issues/5302 and https://github.com/microsoft/vscode/pull/227729.
  */
 export class DartDebugForcedAnsiColorSupportFactory implements vs.DebugAdapterTrackerFactory {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker | undefined {
 		return new DartDebugForcedAnsiColorSupport();
 	}

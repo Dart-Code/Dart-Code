@@ -13,6 +13,7 @@ export class DiagnosticReport implements IAmDisposable {
 
 	private readonly output: string[] = [];
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private readonly emptyReporter = (message: string | undefined) => { };
 	private report = this.emptyReporter;
 

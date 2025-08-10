@@ -251,6 +251,7 @@ export class DartProcess {
 	private exited = false;
 
 	constructor(public readonly process: SpawnedProcess) {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		this.vmServiceUri = new Promise((resolve, reject) => {
 			process.stdout.on("data", (data: Buffer | string) => {
 				const match = vmServiceListeningBannerPattern.exec(data.toString());
@@ -258,6 +259,7 @@ export class DartProcess {
 					resolve(match[1]);
 			});
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		this.exitCode = new Promise<number | null>((resolve, reject) => {
 			process.on("exit", (code) => { this.exited = true; resolve(code); });
 		});

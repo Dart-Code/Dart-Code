@@ -40,6 +40,7 @@ describe("DartFileUriTerminalLinkProvider", () => {
 
 	async function expectLink(lineText: string, filePath: string, line?: number, col?: number) {
 		const results = await findFileUriLinks(lineText)
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			?? findPackageUriLinks(lineText, (_) => true);
 		assert.equal(results.length, 1);
 		const result = results[0];

@@ -106,6 +106,7 @@ const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
 let analytics: Analytics;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let showTodos: boolean | string[] | undefined;
 let previousSettings: string;
 
@@ -233,8 +234,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	} catch (e) {
 		logger.error(e);
 	}
-
-	const isVirtualWorkspace = vs.workspace.workspaceFolders?.every((f) => f.uri.scheme !== "file");
 
 	// Build log headers now we know analyzer type.
 	rebuildLogHeaders();
@@ -453,7 +452,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		vs.debug.onDidStartDebugSession((session) => testCoordinator.handleDebugSessionStart(session.id, session.configuration.dartCodeDebugSessionID as string | undefined, session.configuration.cwd as string | undefined)),
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body)),
 		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID as string | undefined)),
-		vs.workspace.onDidChangeConfiguration((e) => testModel.handleConfigChange()),
+		vs.workspace.onDidChangeConfiguration(() => testModel.handleConfigChange()),
 	);
 	const testDiscoverer = new TestDiscoverer(logger, analyzer.fileTracker, testModel);
 	context.subscriptions.push(testDiscoverer);
@@ -463,6 +462,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
@@ -575,6 +575,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 
 		// TODO: This doesn't work for LSP!
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
 	}
 
@@ -682,7 +683,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Handle changes to the workspace.
 	// Set the roots, handling project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(async (f) => {
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(async () => {
 		// First check if something changed that will affect our SDK, in which case
 		// we'll perform a silent restart so that we do new SDK searches.
 		const newWorkspaceContext = await sdkUtils.scanWorkspace();
@@ -805,10 +806,10 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 }
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function handleConfigurationChange(sdks: Sdks) {
 	// TODOs
 	const newShowTodoSetting = config.showTodos;
-	const todoSettingChanged = JSON.stringify(showTodos) !== JSON.stringify(newShowTodoSetting);
 	showTodos = newShowTodoSetting;
 
 	// SDK

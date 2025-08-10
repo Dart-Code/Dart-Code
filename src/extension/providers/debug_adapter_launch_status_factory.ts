@@ -2,6 +2,7 @@ import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Progress
 import { PromiseCompleter } from "../../shared/utils";
 
 export class DartDebugAdapterLaunchStatusFactory implements DebugAdapterTrackerFactory {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
 		return new DartDebugAdapterLaunchStatus();
 	}
@@ -29,6 +30,7 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		this.startProgress();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public onDidSendMessage(message: any): void {
 		this.endProgress();
 	}
@@ -37,6 +39,7 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		this.endProgress();
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	public onExit(code: number | undefined, signal: string | undefined): void {
 		this.endProgress();
 	}

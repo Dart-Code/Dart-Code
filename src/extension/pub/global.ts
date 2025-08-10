@@ -136,6 +136,7 @@ export class PubGlobal {
 		return installedVersion;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	private runCommandWithProgress(packageName: string, title: string, args: string[], customScript?: CustomScript): Thenable<string> {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,

@@ -5,6 +5,7 @@ import { reporters, Runner } from "mocha";
 declare const __coverage__: any;
 
 export class CoverageReporter extends reporters.Base {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	constructor(runner: Runner, options: any) {
 		super(runner);
 

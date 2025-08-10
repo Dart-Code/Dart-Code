@@ -304,7 +304,7 @@ export class TestModel {
 	}
 
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
-		const [suite, didCreate] = this.getOrCreateSuite(suitePath);
+		const [suite] = this.getOrCreateSuite(suitePath);
 		this.updateNode({ node: suite.node });
 
 		this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
@@ -312,7 +312,7 @@ export class TestModel {
 		return suite;
 	}
 
-	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, hasStarted = false): GroupNode {
+	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined): GroupNode {
 		groupPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingGroup = suite.reuseMatchingGroup(groupName);

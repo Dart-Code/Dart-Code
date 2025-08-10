@@ -187,7 +187,7 @@ export class SdkUtils {
 						if (gitApiPath)
 							gitExecutable = gitApiPath;
 					}
-				} catch (e) {
+				} catch {
 					// Could be that Git extension is disabled or "git.enabled" setting is false.
 				}
 
@@ -717,7 +717,7 @@ export class SdkUtils {
 		for (const p of sdkPaths)
 			this.logger.info(`        ${this.sdkDisplayString(p)}`);
 		if (!postFilter)
-			postFilter = ((_: string) => true);
+			postFilter = (() => true);
 		const sdkPath = sdkPaths.find((pathInfo) => postFilter(pathInfo.sdkPath));
 
 		if (sdkPath)

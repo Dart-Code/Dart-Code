@@ -363,10 +363,12 @@ describe("dart test debugger", () => {
 				let startedSessions = 0;
 				let runningSessions = 0;
 
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const startSub = vs.debug.onDidStartDebugSession((s) => {
 					startedSessions++;
 					runningSessions++;
 				});
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const endSub = vs.debug.onDidTerminateDebugSession((s) => {
 					runningSessions--;
 				});

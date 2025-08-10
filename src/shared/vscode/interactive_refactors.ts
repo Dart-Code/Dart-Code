@@ -17,7 +17,6 @@ export class InteractiveRefactors implements IAmDisposable {
 	}
 
 	public get feature(): StaticFeature {
-		const dartCapabilities = this.dartCapabilities;
 		return {
 			dispose() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {

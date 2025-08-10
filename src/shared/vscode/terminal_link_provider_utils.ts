@@ -11,7 +11,7 @@ export async function findPackageUriLinks(content: string, isKnownPackage: (pack
 		let uri: vs.Uri | undefined;
 		try {
 			uri = vs.Uri.parse(result.groups.uri, true);
-		} catch (e) {
+		} catch {
 			continue;
 		}
 		if (!uri)
@@ -47,7 +47,7 @@ export async function findFileUriLinks(line: string): Promise<DartFileUriLink[]>
 		let uri: vs.Uri | undefined;
 		try {
 			uri = vs.Uri.parse(result.groups.uri, true);
-		} catch (e) {
+		} catch {
 			continue;
 		}
 		if (!uri)
