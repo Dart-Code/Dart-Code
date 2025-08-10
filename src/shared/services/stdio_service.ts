@@ -152,7 +152,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract shouldHandleMessage(message: string): boolean;
-	protected async processUnhandledMessage(_message: string): Promise<void> { }
+	protected async processUnhandledMessage(): Promise<void> { }
 
 	public async handleMessage(message: string): Promise<void> {
 		this.logTraffic(`<== ${message.trimRight()}\r\n`);
@@ -200,7 +200,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected abstract handleNotification(evt: T): Promise<void>;
-	protected async handleRequest(_method: string, _args: any): Promise<any> { }
+	protected async handleRequest(): Promise<any> { }
 	protected isNotification(msg: any): boolean { return !!msg.event; }
 	protected isRequest(msg: any): boolean { return !!msg.method && !!msg.id; }
 	protected isResponse(msg: any): boolean { return !!msg.id; }

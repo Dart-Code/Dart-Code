@@ -62,7 +62,7 @@ export function findFileInAncestor(files: string[], startLocation: string) {
 }
 
 /// Converts a file URI to file path without a dependency on vs.Uri.
-export function maybeUriToFilePath(uri: string | undefined, returnWindowsPath: boolean = isWin): string | undefined {
+export function maybeUriToFilePath(uri: string | undefined, _returnWindowsPath: boolean = isWin): string | undefined {
 	return uri === undefined ? uri : uriToFilePath(uri);
 }
 

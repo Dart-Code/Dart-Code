@@ -22,7 +22,7 @@ export abstract class PackageMap {
 		return file;
 	}
 
-	public static loadForProject(logger: Logger, projectFolder: string, _reason: string): PackageMap {
+	public static loadForProject(logger: Logger, projectFolder: string): PackageMap {
 		const packagesFile = PackageMap.findPackagesFile(projectFolder);
 		try {
 			return packagesFile

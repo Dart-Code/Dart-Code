@@ -34,13 +34,13 @@ import { MainCodeLensProvider } from "./code_lens/main_code_lens_provider";
 import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { AddDependencyCommand } from "./commands/add_dependency";
 import { AddSdkToPathCommands } from "./commands/add_sdk_to_path";
-import { AnalyzerCommands } from "./commands/analyzer";
+// import { AnalyzerCommands } from "./commands/analyzer";
 import { getOutputChannel } from "./commands/channels";
 import { DartCommands } from "./commands/dart";
 import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { FlutterCommands } from "./commands/flutter";
-import { FlutterOutlineCommands } from "./commands/flutter_outline";
+// import { FlutterOutlineCommands } from "./commands/flutter_outline";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
@@ -106,7 +106,7 @@ const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
 let analytics: Analytics;
 
-let showTodos: boolean | string[] | undefined;
+let _showTodos: boolean | string[] | undefined;
 let previousSettings: string;
 
 let experiments: KnownExperiments;
@@ -158,7 +158,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		logger.info("Done!");
 	}));
 
-	showTodos = config.showTodos;
+	_showTodos = config.showTodos;
 	previousSettings = getSettingsThatRequireRestart();
 
 	util.logTime();
@@ -808,8 +808,8 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 function handleConfigurationChange(_sdks: Sdks) {
 	// TODOs
 	const newShowTodoSetting = config.showTodos;
-	// const todoSettingChanged = JSON.stringify(showTodos) !== JSON.stringify(newShowTodoSetting);
-	showTodos = newShowTodoSetting;
+	// const todoSettingChanged = JSON.stringify(_showTodos) !== JSON.stringify(newShowTodoSetting);
+	_showTodos = newShowTodoSetting;
 
 	// SDK
 	const newSettings = getSettingsThatRequireRestart();
