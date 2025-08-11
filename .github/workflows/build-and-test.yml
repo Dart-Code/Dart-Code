@@ -311,7 +311,7 @@ jobs:
       contents: none
     name: Notify Discord of Failure
     needs: build
-    if: failure() && github.event_name == 'push' || failure() && github.event_name == 'schedule'
+    if: failure() && (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/master' && github.repository == 'Dart-Code/Dart-Code'
     runs-on: ubuntu-latest
 
     steps:
