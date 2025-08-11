@@ -7,7 +7,7 @@ import * as vs from "vscode";
  * See https://github.com/Dart-Code/Dart-Code/issues/5252 and https://github.com/microsoft/vscode/issues/224832.
  */
 export class DartDebugForcedSingleThreadFactory implements vs.DebugAdapterTrackerFactory {
-	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker | undefined {
+	createDebugAdapterTracker(): vs.DebugAdapterTracker {
 		return new DartDebugForcedSingleThread();
 	}
 }

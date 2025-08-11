@@ -28,7 +28,7 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 			const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 			this.packageMaps = {};
 			for (const projectFolder of projectFolders) {
-				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder, "DartPackageUriLinkProvider.discoverPackageMaps");
+				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);
 			}
 			resolve();
 		});
@@ -50,7 +50,7 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 		return undefined;
 	}
 
-	public provideTerminalLinks(context: vs.TerminalLinkContext, token: vs.CancellationToken): Promise<DartPackageUriLink[]> {
+	public provideTerminalLinks(context: vs.TerminalLinkContext, _token: vs.CancellationToken): Promise<DartPackageUriLink[]> {
 		return this.getLinks(context.line);
 	}
 
@@ -71,7 +71,7 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 		void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePath), link.line, link.col);
 	}
 
-	public async provideDocumentLinks(document: vs.TextDocument, token: vs.CancellationToken): Promise<vs.DocumentLink[]> {
+	public async provideDocumentLinks(document: vs.TextDocument, _token: vs.CancellationToken): Promise<vs.DocumentLink[]> {
 		const links = await this.getLinks(document.getText());
 
 		return links.map((link) => {

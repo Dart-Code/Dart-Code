@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { moreInfoAction, noRepeatPromptThreshold, pubGlobalDocsUrl } from "../../shared/constants";
 import { LogCategory, VersionStatus } from "../../shared/enums";
-import { CustomScript, DartSdks, Logger } from "../../shared/interfaces";
+import { DartSdks, Logger } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
 import { getPubExecutionInfo } from "../../shared/processes";
 import { PubApi } from "../../shared/pub/api";
@@ -136,7 +136,7 @@ export class PubGlobal {
 		return installedVersion;
 	}
 
-	private runCommandWithProgress(packageName: string, title: string, args: string[], customScript?: CustomScript): Thenable<string> {
+	private runCommandWithProgress(packageName: string, title: string, args: string[]): Thenable<string> {
 		return vs.window.withProgress({
 			location: vs.ProgressLocation.Notification,
 			title,

@@ -183,8 +183,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.catch((e) => console.error(e));
 
 		// If new devices are attached while the list is open, add them to the end.
-		const deviceAddedSubscription = this.daemon.registerForDeviceAdded((d) => updatePickableDeviceList());
-		const deviceRemovedSubscription = this.daemon.registerForDeviceRemoved((d) => updatePickableDeviceList());
+		const deviceAddedSubscription = this.daemon.registerForDeviceAdded(() => updatePickableDeviceList());
+		const deviceRemovedSubscription = this.daemon.registerForDeviceRemoved(() => updatePickableDeviceList());
 
 		// Build the initial list.
 		updatePickableDeviceList();

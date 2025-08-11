@@ -64,7 +64,7 @@ my_package_2
 			sb.stub(projectFinder, "findAllProjectFolders")
 				.returns(["/path/to/workspace", "/path/to/workspace/my_package_1", "/path/to/workspace/my_package_2"]);
 			sb.stub(deps, "getJson")
-				.callsFake((projectPath: string) => fakePostWorkspacePubDepsJsonWorkspace);
+				.callsFake((_projectPath: string) => fakePostWorkspacePubDepsJsonWorkspace);
 			sb.stub(packageMapLoader, "loadForProject").returns(dummyPackageMap);
 
 			const textTree = (await makeTextTreeUsingCustomTree(undefined, privateApi.packagesTreeProvider)).join("\n");

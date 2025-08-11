@@ -30,7 +30,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 	}
 
 	public provideCompletionItems(
-		document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext,
+		document: TextDocument, position: Position, _token: CancellationToken, _context: CompletionContext,
 	): CompletionList | undefined {
 		if (!config.enableSnippets)
 			return;
@@ -40,7 +40,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 
 		const line = document.lineAt(position.line).text.slice(0, position.character);
 
-		if (!this.shouldAllowCompletion(line, context))
+		if (!this.shouldAllowCompletion(line))
 			return;
 
 		if (!this.shouldRender(document.uri))
@@ -49,7 +49,7 @@ export class SnippetCompletionItemProvider implements CompletionItemProvider {
 		return this.completions;
 	}
 
-	private shouldAllowCompletion(line: string, context: CompletionContext): boolean {
+	private shouldAllowCompletion(line: string): boolean {
 		line = line.trim();
 
 		// Don't provide completions after comment markers. This isn't perfect since it'll

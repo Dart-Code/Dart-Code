@@ -133,7 +133,7 @@ function error(err: any) {
 	void vs.window.showErrorMessage(`${err.message ?? err}`);
 }
 
-export async function handleNewProjects(logger: Logger, context: Context): Promise<void> {
+export async function handleNewProjects(logger: Logger): Promise<void> {
 	await Promise.all(getDartWorkspaceFolders().map(async (wf) => {
 		try {
 			await handleDartCreateTrigger(logger, wf, DART_CREATE_PROJECT_TRIGGER_FILE);

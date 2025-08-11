@@ -21,7 +21,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, token: CancellationToken): CodeAction[] | undefined {
+	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, _token: CancellationToken): CodeAction[] | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
 			return;
 

@@ -13,7 +13,7 @@ export class DiagnosticReport implements IAmDisposable {
 
 	private readonly output: string[] = [];
 
-	private readonly emptyReporter = (message: string | undefined) => { };
+	private readonly emptyReporter = (_message: string | undefined) => { };
 	private report = this.emptyReporter;
 
 	constructor(private readonly logger: Logger, private readonly workspaceContext: DartWorkspaceContext, private readonly rebuildLogHeaders: () => void) {

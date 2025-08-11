@@ -363,11 +363,11 @@ describe("dart test debugger", () => {
 				let startedSessions = 0;
 				let runningSessions = 0;
 
-				const startSub = vs.debug.onDidStartDebugSession((s) => {
+				const startSub = vs.debug.onDidStartDebugSession((_s) => {
 					startedSessions++;
 					runningSessions++;
 				});
-				const endSub = vs.debug.onDidTerminateDebugSession((s) => {
+				const endSub = vs.debug.onDidTerminateDebugSession((_s) => {
 					runningSessions--;
 				});
 
