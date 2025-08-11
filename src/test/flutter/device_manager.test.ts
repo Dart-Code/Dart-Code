@@ -285,9 +285,9 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 
 	public async enablePlatformGlobally(_platformType: string): Promise<void> { }
 
-	public async enablePlatform(_platformType: string): Promise<void> {
+	public async enablePlatform(platformType: string): Promise<void> {
 		this.supportedPlatforms = this.supportedPlatforms ?? [];
-		this.supportedPlatforms.push(_platformType);
+		this.supportedPlatforms.push(platformType);
 	}
 
 	public async checkIfPlatformGloballyDisabled(_platformType: string): Promise<boolean> {
