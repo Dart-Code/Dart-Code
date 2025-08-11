@@ -459,7 +459,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
 
-	context.subscriptions.push(new AnalyzerCommands(context, logger, analyzer, analytics));
+	new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(logger, workspaceContext, pubGlobal, testModel, flutterDaemon, deviceManager, devTools, flutterCapabilities);
@@ -571,7 +571,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 
 		// TODO: This doesn't work for LSP!
-		context.subscriptions.push(new FlutterOutlineCommands(tree, context));
+		new FlutterOutlineCommands(tree, context);
 	}
 
 	if (dartToolingDaemon && dartCapabilities.supportsDevToolsDtdSidebar)
