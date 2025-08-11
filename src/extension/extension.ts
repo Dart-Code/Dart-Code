@@ -320,7 +320,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// https://github.com/Dart-Code/Dart-Code/issues/2793 which occur if the analyzer
 	// is created too early.
 	if (!isRestart)
-		await handleNewProjects(logger, extContext);
+		await handleNewProjects(logger);
 
 	// Fire up the analyzer process.
 	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext);

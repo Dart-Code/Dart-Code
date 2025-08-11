@@ -21,10 +21,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	/// For a given debug session, lookups by IDs to get back to the suite.
 	private debugSessionLookups: Record<string, {
-			cwd: string | undefined,
-			suiteForID: Record<string, SuiteData | undefined>,
-			suiteForTestID: Record<string, SuiteData | undefined>,
-		} | undefined> = {};
+		cwd: string | undefined,
+		suiteForID: Record<string, SuiteData | undefined>,
+		suiteForTestID: Record<string, SuiteData | undefined>,
+	} | undefined> = {};
 
 	/// A link between a suite path and a visitor for visiting its latest outline data.
 	/// This data is refreshed when a test suite starts running.
@@ -204,7 +204,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		const line = evt.group.root_line || evt.group.line;
 		const character = evt.group.root_column || evt.group.column;
 		const range = this.getRangeForNode(suite, line, character);
-		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
+		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range);
 	}
 
 	private getRealGroupId(dartCodeDebugSessionID: string, groupID: number | undefined) {
