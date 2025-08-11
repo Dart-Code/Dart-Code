@@ -56,7 +56,7 @@ class DartDebugAdapterHexView implements vs.DebugAdapterTracker {
 		}
 	}
 
-	onExit(code: number | undefined, signal: string | undefined): void {
+	onExit(): void {
 		this.factory.hexFormatters.delete(this);
 	}
 

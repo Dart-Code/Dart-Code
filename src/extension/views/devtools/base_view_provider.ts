@@ -17,7 +17,7 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 	abstract get pageName(): string;
 	abstract get pageUrl(): Promise<string | null | undefined>; // undefined = no DevTools, null = just no page to display yet (still set up iframe).
 
-	public async resolveWebviewView(webviewView: vs.WebviewView, context: vs.WebviewViewResolveContext<unknown>, token: vs.CancellationToken): Promise<void> {
+	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
 		if (this.webviewView !== webviewView) {
 			this.webviewView = webviewView;
 			this.disposables.push(this.webviewView.webview.onDidReceiveMessage(

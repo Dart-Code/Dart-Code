@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 
 export class DartDebugAdapterRemoveErrorShowUserFactory implements vs.DebugAdapterTrackerFactory {
-	createDebugAdapterTracker(session: vs.DebugSession): vs.DebugAdapterTracker {
+	createDebugAdapterTracker(): vs.DebugAdapterTracker {
 		return new DartDebugAdapterRemoveErrorShowUser();
 	}
 }

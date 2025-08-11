@@ -5,7 +5,7 @@ import { reporters, Runner } from "mocha";
 declare const __coverage__: any;
 
 export class CoverageReporter extends reporters.Base {
-	constructor(runner: Runner, options: any) {
+	constructor(runner: Runner, _options: any) {
 		super(runner);
 
 		runner.once("end", () => {

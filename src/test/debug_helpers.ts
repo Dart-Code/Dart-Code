@@ -251,14 +251,14 @@ export class DartProcess {
 	private exited = false;
 
 	constructor(public readonly process: SpawnedProcess) {
-		this.vmServiceUri = new Promise((resolve, reject) => {
+		this.vmServiceUri = new Promise((resolve) => {
 			process.stdout.on("data", (data: Buffer | string) => {
 				const match = vmServiceListeningBannerPattern.exec(data.toString());
 				if (match)
 					resolve(match[1]);
 			});
 		});
-		this.exitCode = new Promise<number | null>((resolve, reject) => {
+		this.exitCode = new Promise<number | null>((resolve) => {
 			process.on("exit", (code) => { this.exited = true; resolve(code); });
 		});
 	}

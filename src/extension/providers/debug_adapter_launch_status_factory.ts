@@ -1,8 +1,8 @@
-import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProgressLocation, window } from "vscode";
+import { DebugAdapterTracker, DebugAdapterTrackerFactory, ProgressLocation, window } from "vscode";
 import { PromiseCompleter } from "../../shared/utils";
 
 export class DartDebugAdapterLaunchStatusFactory implements DebugAdapterTrackerFactory {
-	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
+	createDebugAdapterTracker(): DebugAdapterTracker {
 		return new DartDebugAdapterLaunchStatus();
 	}
 }
@@ -29,7 +29,7 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		this.startProgress();
 	}
 
-	public onDidSendMessage(message: any): void {
+	public onDidSendMessage(_message: any): void {
 		this.endProgress();
 	}
 
@@ -37,7 +37,7 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 		this.endProgress();
 	}
 
-	public onExit(code: number | undefined, signal: string | undefined): void {
+	public onExit(): void {
 		this.endProgress();
 	}
 }

@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
-import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, env, TelemetryLogger, TelemetrySender } from "vscode";
+import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, env, TelemetryLogger, TelemetrySender } from "vscode";
 import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { disposeAll } from "../shared/utils";
@@ -61,7 +61,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		this.send(data as AnalyticsData).catch((e) => this.handleError(e));
 	}
 
-	sendErrorData(error: Error, data?: Record<string, any>): void {
+	sendErrorData(): void {
 		// No errors are collected.
 	}
 
@@ -429,7 +429,7 @@ interface AnalyticsData {
 
 export class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {
 	public lastTracker: DebugAdapterExceptionSettingTracker | undefined;
-	createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
+	createDebugAdapterTracker(): DebugAdapterTracker {
 		this.lastTracker = new DebugAdapterExceptionSettingTracker();
 		return this.lastTracker;
 	}

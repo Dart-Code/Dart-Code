@@ -187,7 +187,7 @@ export class SdkUtils {
 						if (gitApiPath)
 							gitExecutable = gitApiPath;
 					}
-				} catch (e) {
+				} catch {
 					// Could be that Git extension is disabled or "git.enabled" setting is false.
 				}
 

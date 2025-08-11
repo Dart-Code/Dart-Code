@@ -151,7 +151,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		super.dispose();
 	}
 
-	protected sendMessage<T>(json: string) {
+	protected sendMessage(json: string) {
 		try {
 			super.sendMessage(json);
 		} catch (e) {

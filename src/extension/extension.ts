@@ -7,7 +7,7 @@ import { dartCodeConfigurationPathEnvironmentVariableName, dartCodeServiceActiva
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, Sdks, WritableWorkspaceConfig } from "../shared/interfaces";
+import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, WritableWorkspaceConfig } from "../shared/interfaces";
 import { EmittingLogger, RingLog, captureLogs, logToConsole } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
@@ -106,7 +106,7 @@ const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
 let analytics: Analytics;
 
-let showTodos: boolean | string[] | undefined;
+
 let previousSettings: string;
 
 let experiments: KnownExperiments;
@@ -158,7 +158,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		logger.info("Done!");
 	}));
 
-	showTodos = config.showTodos;
 	previousSettings = getSettingsThatRequireRestart();
 
 	util.logTime();
@@ -234,7 +233,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		logger.error(e);
 	}
 
-	const isVirtualWorkspace = vs.workspace.workspaceFolders?.every((f) => f.uri.scheme !== "file");
 
 	// Build log headers now we know analyzer type.
 	rebuildLogHeaders();
@@ -321,7 +319,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// https://github.com/Dart-Code/Dart-Code/issues/2793 which occur if the analyzer
 	// is created too early.
 	if (!isRestart)
-		await handleNewProjects(logger, extContext);
+		await handleNewProjects(logger);
 
 	// Fire up the analyzer process.
 	const analyzer = new LspAnalyzer(logger, sdks, dartCapabilities, workspaceContext);
@@ -453,7 +451,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		vs.debug.onDidStartDebugSession((session) => testCoordinator.handleDebugSessionStart(session.id, session.configuration.dartCodeDebugSessionID as string | undefined, session.configuration.cwd as string | undefined)),
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body)),
 		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID as string | undefined)),
-		vs.workspace.onDidChangeConfiguration((e) => testModel.handleConfigChange()),
+		vs.workspace.onDidChangeConfiguration(() => testModel.handleConfigChange()),
 	);
 	const testDiscoverer = new TestDiscoverer(logger, analyzer.fileTracker, testModel);
 	context.subscriptions.push(testDiscoverer);
@@ -463,7 +461,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (vsCodeTestController)
 		context.subscriptions.push(vsCodeTestController);
 
-	const analyzerCommands = new AnalyzerCommands(context, logger, analyzer, analytics);
+	new AnalyzerCommands(context, logger, analyzer, analytics);
 
 	// Set up debug stuff.
 	const debugProvider = new DebugConfigProvider(logger, workspaceContext, pubGlobal, testModel, flutterDaemon, deviceManager, devTools, flutterCapabilities);
@@ -507,7 +505,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		context.subscriptions.push(new FlutterIconDecorations(logger, analyzer));
 
 	// Handle config changes so we can reanalyze if necessary.
-	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange(sdks)));
+	context.subscriptions.push(vs.workspace.onDidChangeConfiguration(() => handleConfigurationChange()));
 
 	// Wire up handling of On-Save handlers.
 	context.subscriptions.push(new HotReloadOnSaveHandler(debugCommands, flutterCapabilities));
@@ -575,7 +573,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 
 		// TODO: This doesn't work for LSP!
-		const flutterOutlineCommands = new FlutterOutlineCommands(tree, context);
+		new FlutterOutlineCommands(tree, context);
 	}
 
 	if (dartToolingDaemon && dartCapabilities.supportsDevToolsDtdSidebar)
@@ -682,7 +680,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Handle changes to the workspace.
 	// Set the roots, handling project changes that might affect SDKs.
-	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(async (f) => {
+	context.subscriptions.push(vs.workspace.onDidChangeWorkspaceFolders(async () => {
 		// First check if something changed that will affect our SDK, in which case
 		// we'll perform a silent restart so that we do new SDK searches.
 		const newWorkspaceContext = await sdkUtils.scanWorkspace();
@@ -805,12 +803,8 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 }
 
 
-function handleConfigurationChange(sdks: Sdks) {
+function handleConfigurationChange() {
 	// TODOs
-	const newShowTodoSetting = config.showTodos;
-	const todoSettingChanged = JSON.stringify(showTodos) !== JSON.stringify(newShowTodoSetting);
-	showTodos = newShowTodoSetting;
-
 	// SDK
 	const newSettings = getSettingsThatRequireRestart();
 	const settingsChanged = previousSettings !== newSettings;
