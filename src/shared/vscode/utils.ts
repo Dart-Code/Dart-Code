@@ -247,7 +247,7 @@ export function showCode(editor: TextEditor, displayRange: Range, highlightRange
 }
 
 export function trimTrailingSlashes(s: string) {
-	return s.replace(/[\/\\]+$/, "");
+	return s.replace(/[/\\]+$/, "");
 }
 
 export function warnIfPathCaseMismatch(logger: Logger, p: string, pathDescription: string, helpText: string) {

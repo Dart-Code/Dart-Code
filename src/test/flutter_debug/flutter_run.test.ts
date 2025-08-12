@@ -1755,7 +1755,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		stdErrLines = stdErrLines.slice(0, lastErrorLine + 1);
 
 		// Because we run in verbose mode, there may be timings on the front, so trim them off.
-		const timingRegex = new RegExp("\[[ \d]+\] ", "g");
+		const timingRegex = /\[[ \d]+\] /g;
 		stdErrLines = stdErrLines.map((line) => line.replace(timingRegex, ""));
 
 		const expectedErrorLines = dc.isDartDap && privateApi.flutterCapabilities.hasSdkDapWithStructuredErrors

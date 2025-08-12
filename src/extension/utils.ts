@@ -218,7 +218,7 @@ export function getLatestSdkVersion(): Promise<string> {
 export function escapeShell(args: string[]) {
 	const ret: string[] = [];
 	args.forEach((arg) => {
-		if (/[^A-Za-z0-9_\/:=-]/.test(arg)) {
+		if (/[^A-Za-z0-9_/:=-]/.test(arg)) {
 			arg = "'" + arg.replace(/'/g, "'\\''") + "'";
 			arg = arg.replace(/^(?:'')+/g, "") // unduplicate single-quote at the beginning
 				.replace(/\\'''/g, "\\'"); // remove non-escaped single-quote if there are enclosed between 2 escaped
