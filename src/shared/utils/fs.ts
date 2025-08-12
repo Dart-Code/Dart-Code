@@ -134,6 +134,7 @@ export function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[
 			// We will generate errors if we don't have access to this folder
 			// so just skip over it.
 			if (err) {
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				logger.warn(`Skipping folder ${folder} due to error: ${err}`);
 				resolve([]);
 			} else {

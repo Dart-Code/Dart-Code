@@ -597,7 +597,7 @@ export async function getCodeActions({ kind, title, requireExactlyOne = false }:
 	matchingActions ??= [];
 
 	if (requireExactlyOne && matchingActions.length !== 1)
-		throw new Error(`Expected to find "${kind?.value}/${title}", but found ${codeActions.map((ca) => `"${ca.kind}/${ca.title}"`).join(", ")}`);
+		throw new Error(`Expected to find "${kind?.value}/${title}", but found ${codeActions.map((ca) => `"${ca.kind?.value}/${ca.title}"`).join(", ")}`);
 
 	return matchingActions;
 }
@@ -767,7 +767,7 @@ export function ensureArrayContainsArray<T>(haystack: T[], needle: T[]) {
 	);
 }
 
-export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string | undefined, uriOrMatch: vs.Uri | { endsWith?: string }): void {
+export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: string, kind: vs.SymbolKind, containerName: string | undefined, uriOrMatch: vs.Uri | { endsWith: string }): void {
 	const symbol = symbols.find((f) =>
 		f.name === name
 		&& f.kind === kind
@@ -784,16 +784,10 @@ export function ensureWorkspaceSymbol(symbols: vs.SymbolInformation[], name: str
 			fsPath(uriOrMatch),
 			`${fsPath(symbol.location.uri)} should equal ${fsPath(uriOrMatch)}`
 		);
-	else if (uriOrMatch.endsWith)
+	else
 		assert.ok(
 			fsPath(symbol.location.uri).endsWith(uriOrMatch.endsWith),
 			`${fsPath(symbol.location.uri)} should end with ${uriOrMatch.endsWith})`,
-		);
-	else
-		assert.equal(
-			symbol.location.uri,
-			uriOrMatch,
-			`${symbol.location.uri} should equal ${uriOrMatch})`,
 		);
 	assert.ok(symbol.location);
 	assert.ok(symbol.location.range);
@@ -1280,7 +1274,7 @@ export function ensurePackageTreeNode(items: vs.TreeItem[] | undefined | null, n
 		&& renderedItemLabel(item) === label,
 	);
 	if (!item)
-		throw new Error(`Did not find item matching ${label} in:\n${items.map((item) => `    ${renderedItemLabel(item)} (${item.label}, ${item.contextValue})`).join("\n")}`);
+		throw new Error(`Did not find item matching ${label} in:\n${items.map((item) => `    ${renderedItemLabel(item)} (${typeof item.label === "string" ? item.label : item.label?.label ?? "<unnamed>"}, ${item.contextValue})`).join("\n")}`);
 
 	if (description)
 		assert.equal(item.description, description);
@@ -1390,6 +1384,7 @@ export async function makeTextTreeUsingCustomTree(parent: vs.TreeItem | vs.Uri |
 			continue;
 
 		const label = treeItem.label;
+		const labelString = typeof label === "string" ? label : label?.label ?? "<unnamed>";
 		const description = treeItem.description ? ` [${treeItem.description}]` : "";
 		const iconUri = treeItem.iconPath ? treeItem.iconPath instanceof vs.Uri
 			? treeItem.iconPath
@@ -1399,7 +1394,7 @@ export async function makeTextTreeUsingCustomTree(parent: vs.TreeItem | vs.Uri |
 			: undefined;
 		const iconFile = iconUri instanceof vs.Uri ? path.basename(fsPath(iconUri)).replace("-dark", "") : undefined;
 		const iconSuffix = iconFile ? ` (${iconFile})` : "";
-		buffer.push(`${" ".repeat(indent * 4)}${label}${description}${iconSuffix}`);
+		buffer.push(`${" ".repeat(indent * 4)}${labelString}${description}${iconSuffix}`);
 		await makeTextTreeUsingCustomTree(item, provider, { buffer, indent: indent + 1 });
 	}
 	return buffer;

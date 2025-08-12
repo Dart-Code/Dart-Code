@@ -739,7 +739,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 	constructor(private readonly logger: Logger) { }
 
 	public error(error: Error, message: ls.Message, count: number): ls.ErrorHandlerResult {
-		this.logger.warn(`LSP Client error: (error: ${error}, message: ${message}, count: ${count})`);
+		this.logger.warn(`LSP Client error: (error: ${error}, count: ${count})`);
 		if (count && count <= 3) {
 			return { action: ls.ErrorAction.Continue };
 		}

@@ -64,6 +64,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.logger.info(`Connecting to DTD at ${dtdUri}...`);
 		const socket = new ws.WebSocket(dtdUri, { followRedirects: true });
 		socket.on("open", () => this.handleOpen());
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		socket.on("message", (data) => this.handleData(data.toString()));
 		socket.on("close", () => this.handleClose());
 		socket.on("error", (e) => this.handleError(e));

@@ -92,7 +92,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 		} else if (element instanceof PackageDepFile) {
 			return [];
 		} else {
-			this.logger.warn(`Don't know how to show children of ${element.label}/${element.resourceUri}`);
+			this.logger.warn(`Don't know how to show children of ${typeof element.label === "string" ? element.label : element.label?.label ?? "<unknown>"}/${element.resourceUri}`);
 			return [];
 		}
 	}
