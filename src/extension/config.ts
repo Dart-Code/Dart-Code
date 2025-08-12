@@ -10,6 +10,8 @@ import { setupToolEnv } from "./utils/processes";
 class Config {
 	private config: WorkspaceConfiguration;
 
+	// TODO(dantup): We might not need defaults here, they are read from package.json!
+
 	constructor() {
 		workspace.onDidChangeConfiguration(() => this.reloadConfig());
 		this.config = workspace.getConfiguration("dart");
@@ -116,6 +118,8 @@ class Config {
 
 	get mcpServer(): boolean { return this.getConfig<boolean>("mcpServer", true); }
 	get mcpServerLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("mcpServerLogFile", null)))); }
+	// eslint-disable-next-line camelcase
+	get mcpServerTools(): Record<string, boolean> { return this.getConfig<Record<string, boolean>>("mcpServerTools", {/* defaults from package.json */ }); }
 
 	get experimentalRefactors(): boolean { return this.getConfig<boolean>("experimentalRefactors", false); }
 	get extensionLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("extensionLogFile", null)))); }
