@@ -169,7 +169,7 @@ export function ensureDebugLaunchUniqueId(config: BasicDebugConfiguration): stri
 		const dartCodeDebugSessionID = `session-${getRandomInt(0x10000, 0x100000).toString(16)}`;
 		conf.dartCodeDebugSessionID = dartCodeDebugSessionID;
 	}
-	return conf.dartCodeDebugSessionID;
+	return conf.dartCodeDebugSessionID as string;
 }
 
 export function isValidEntryFile(file: string | undefined) {

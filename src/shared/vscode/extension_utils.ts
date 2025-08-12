@@ -18,12 +18,12 @@ export function readJson(file: string): any {
 
 function getExtensionVersion(): string {
 	const packageJson = readJson(path.join(extensionPath, "package.json"));
-	return packageJson.version;
+	return packageJson.version as string;
 }
 
 function getVsCodeVersionConstraint(): string {
 	const packageJson = readJson(path.join(extensionPath, "package.json"));
-	return packageJson.engines.vscode;
+	return packageJson.engines.vscode as string;
 }
 
 function checkIsDevExtension() {

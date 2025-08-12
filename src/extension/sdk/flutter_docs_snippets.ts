@@ -23,7 +23,7 @@ export async function getFlutterSnippets(logger: Logger, sdks: Sdks): Promise<Fl
 
 		const json = fs.readFileSync(tempPath, { encoding: "utf8" });
 
-		return JSON.parse(json);
+		return JSON.parse(json) as FlutterSampleSnippet[];
 	} finally {
 		tryDeleteFile(tempPath);
 	}

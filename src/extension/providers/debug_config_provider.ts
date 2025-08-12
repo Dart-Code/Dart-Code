@@ -347,7 +347,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return false;
 	}
 
-	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): DebuggerType {
+	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs & { debuggerType?: DebuggerType }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): DebuggerType {
 		if (debugConfig.debuggerType !== undefined) {
 			logger.info(`Debugger type is explicitly set in launch configuration as ${DebuggerType[debugConfig.debuggerType]}, using that.`);
 			return debugConfig.debuggerType;

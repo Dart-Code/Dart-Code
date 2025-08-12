@@ -155,7 +155,7 @@ export class DartDebugClient extends DebugClient {
 		);
 		const currentSession = this.currentSession = {
 			configuration,
-			customRequest: async (cmd, args) => (await this.customRequest(cmd, args)).body,
+			customRequest: async (cmd, args) => (await this.customRequest(cmd, args)).body as unknown,
 			getDebugProtocolBreakpoint: () => { throw new Error("Not implemented for tests"); },
 			id: `INTEGRATION-TEST-${getRandomInt(0x1000, 0x10000).toString(16)}`,
 			name: configuration.name,

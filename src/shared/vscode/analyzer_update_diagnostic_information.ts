@@ -80,7 +80,7 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 		}
 	}
 
-	private getInterestingSettings() {
+	private getInterestingSettings(): unknown {
 		const results: any = {};
 
 		for (const section of Object.keys(interestingSettings)) {

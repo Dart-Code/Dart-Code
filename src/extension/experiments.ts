@@ -41,7 +41,7 @@ class Experiment {
 			context.update(contextHasActivatedKey, undefined);
 		}
 
-		this.randomNumber = context.get(contextKey);
+		this.randomNumber = context.get(contextKey) as number;
 		if (!this.randomNumber) {
 			this.randomNumber = getRandomInt(1, 100);
 			context.update(contextKey, this.randomNumber);

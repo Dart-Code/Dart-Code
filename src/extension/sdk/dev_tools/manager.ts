@@ -640,7 +640,7 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		this.isShuttingDown = true;
 		disposeAll(this.disposables);
 	}
@@ -732,7 +732,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 	// TODO: Remove this if we fix the DevTools server (and rev min version) to not use method for
 	// the server.started event.
-	protected isNotification(msg: any): boolean { return msg.event || msg.method === "server.started"; }
+	protected isNotification(msg: any): boolean { return !!(msg.event || msg.method === "server.started"); }
 
 	protected async handleNotification(evt: UnknownNotification): Promise<void> {
 		switch ((evt as any).method || evt.event) {

@@ -12,7 +12,7 @@ export class DartCreate {
 
 	public async getTemplates(): Promise<DartProjectTemplate[]> {
 		const json = await this.getTemplateJson();
-		return JSON.parse(json);
+		return JSON.parse(json) as DartProjectTemplate[];
 	}
 
 	private async getTemplateJson(): Promise<string> {

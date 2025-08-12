@@ -147,11 +147,11 @@ export class DartToolingDaemon implements IAmDisposable {
 	}
 
 	public onServiceRegistered(listener: (e: ServiceRegisteredEventData) => any, thisArgs?: any): IAmDisposable {
-		return this.onNotification("Service", "ServiceRegistered", (e) => listener(e as ServiceRegisteredEventData), thisArgs);
+		return this.onNotification("Service", "ServiceRegistered", (e) => void listener(e as ServiceRegisteredEventData), thisArgs);
 	}
 
 	public onServiceUnregistered(listener: (e: ServiceUnregisteredEventData) => any, thisArgs?: any): IAmDisposable {
-		return this.onNotification("Service", "ServiceUnregistered", (e) => listener(e as ServiceUnregisteredEventData), thisArgs);
+		return this.onNotification("Service", "ServiceUnregistered", (e) => void listener(e as ServiceUnregisteredEventData), thisArgs);
 	}
 
 	public async registerService(service: Service.Editor, method: "getDevices", capabilities: object | undefined, f: () => PromiseOr<DtdResult & GetDevicesResult>): Promise<void>;

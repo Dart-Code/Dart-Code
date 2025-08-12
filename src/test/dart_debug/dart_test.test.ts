@@ -645,7 +645,7 @@ test/tree_test.dart [6/8 passed] Failed
 		const testDoneNotifications = customEvents.filter(isTestDoneSuccessNotification);
 		assert.equal(testDoneNotifications.length, 1);
 		const testDoneNotification = testDoneNotifications[0];
-		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+		assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
 	}
 
 	async function runWithoutDebugging(file: vs.Uri, args?: string[], ...otherEvents: Array<Promise<any>>): Promise<void> {

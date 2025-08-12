@@ -82,7 +82,7 @@ export class InteractiveRefactors implements IAmDisposable {
 	/// For new refactors, command arguments are always a single object in the list
 	/// which has named values (like 'file' and 'offset') as well as a well-known
 	/// 'arguments' list which is updated by the interactive parameters.
-	private getCommandArgumentObject(args: any[] | undefined): Arguments | undefined {
+	private getCommandArgumentObject(args: Arguments[] | undefined): Arguments | undefined {
 		if (Array.isArray(args) && args.length === 1 && Array.isArray(args[0].arguments)) {
 			return args[0];
 		}

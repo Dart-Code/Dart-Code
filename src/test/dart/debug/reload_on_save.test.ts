@@ -27,13 +27,13 @@ describe("hot reloads on save", () => {
 					hotReloadCount++;
 			},
 			get hotReloadCount() { return hotReloadCount; }
-		};
+		} as DebugSession & { hotReloadCount: number };
 
 		const dartSession = privateApi.debugCommands.handleDebugSessionStart(session)!;
 		dartSession.hasStarted = true;
 		defer("Remove fake debug session", () => privateApi.debugCommands.handleDebugSessionEnd(session));
 
-		return session as any;
+		return session;
 	}
 
 	it("for Dart", async () => {

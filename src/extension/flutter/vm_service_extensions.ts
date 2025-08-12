@@ -37,7 +37,7 @@ const toggleExtensionStateKeys: Record<string, string> = {
 export const timeDilationNormal = 1.0;
 export const timeDilationSlow = 5.0;
 
-export interface ServiceExtensionArgs { type: VmServiceExtension; params: any; }
+export interface ServiceExtensionArgs { type: VmServiceExtension; params: unknown; }
 
 /// Manages state for (mostly Flutter) VM service extensions.
 export class VmServiceExtensions {
@@ -46,7 +46,7 @@ export class VmServiceExtensions {
 	private readonly loadedServiceExtensionIsolateIds = new Map<VmServiceExtension, string>();
 	/// Extension values owned by us. If someone else updates a value, we should
 	/// remove it from here.
-	private currentExtensionValues: Record<string, any> = {};
+	private currentExtensionValues: Record<string, unknown> = {};
 
 	constructor(
 		private readonly logger: Logger,
@@ -81,7 +81,7 @@ export class VmServiceExtensions {
 
 					await this.callServiceExtension(e.session, pubRootDirectoriesService, params);
 				}
-			} catch (e: any) {
+			} catch (e) {
 				if (!this.shouldSilenceError(e)) {
 					this.logger.error(e);
 				}
@@ -93,13 +93,13 @@ export class VmServiceExtensions {
 		}
 	}
 
-	private shouldSilenceError(e: any) {
-		return isDartCodeTestRun && "message" in e && typeof e.message === "string" && e.message.includes("Service connection disposed");
+	private shouldSilenceError(e: any): boolean {
+		return !!(isDartCodeTestRun && "message" in e && typeof e.message === "string" && e.message.includes("Service connection disposed"));
 	}
 
 	private formatPathForPubRootDirectories(path: string): string {
 		if (isWin) {
-			return path && `file:///${path.replace(/\\/g, "/")}`;
+			return `file:///${path.replace(/\\/g, "/")}`;
 		}
 
 		// TODO(helin24): Use DDS for this translation.
@@ -129,7 +129,7 @@ export class VmServiceExtensions {
 
 	/// Toggles between two values. Always picks the value1 if the current value
 	/// is not already value1 (eg. if it's neither of those, it'll pick val1).
-	public async toggle(id: VmServiceExtension, val1: any = true, val2: any = false): Promise<void> {
+	public async toggle(id: VmServiceExtension, val1: unknown = true, val2: unknown = false): Promise<void> {
 		/// Helper that toggles for one session.
 		const toggleForSession = async (session: DartDebugSessionInformation) => {
 			const newValue = val1 === val2
@@ -144,7 +144,7 @@ export class VmServiceExtensions {
 		await Promise.all(debugSessions.map((session) => toggleForSession(session).catch((e) => this.logger.error(e))));
 	}
 
-	public async getCurrentServiceExtensionValue(session: vs.DebugSession, method: VmServiceExtension) {
+	public async getCurrentServiceExtensionValue(session: vs.DebugSession, method: VmServiceExtension): Promise<unknown> {
 		const responseBody = await this.callServiceExtension(session, method);
 		return this.extractServiceValue(responseBody[toggleExtensionStateKeys[method]]);
 	}
@@ -154,7 +154,7 @@ export class VmServiceExtensions {
 		await this.callServiceExtension(session, method, params);
 	}
 
-	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: any) {
+	private async callServiceExtension(session: vs.DebugSession, method: VmServiceExtension, params?: any): Promise<any> {
 		if (!params?.isolateId) {
 			params = params || {};
 			params.isolateId = this.loadedServiceExtensionIsolateIds.get(method);
@@ -162,7 +162,7 @@ export class VmServiceExtensions {
 		return await session.customRequest("callService", { method, params });
 	}
 
-	private syncContextStates(id: string, value: any) {
+	private syncContextStates(id: string, value: unknown) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 		if (id === VmServiceExtension.InspectorSelectMode) {
 			/// Keep the context in sync so that the "Cancel Inspect Widget" command is enabled/disabled.
@@ -172,7 +172,7 @@ export class VmServiceExtensions {
 	}
 
 	/// Handles updates that come from the VM (eg. were updated by another tool).
-	private handleRemoteValueUpdate(id: string, value: any) {
+	private handleRemoteValueUpdate(id: string, value: unknown) {
 		this.syncContextStates(id, value);
 
 		// Don't try to process service extension we don't know about.
@@ -187,7 +187,7 @@ export class VmServiceExtensions {
 			delete this.currentExtensionValues[id];
 	}
 
-	private extractServiceValue(value: any) {
+	private extractServiceValue(value: unknown): unknown {
 		// HACK: Everything comes through as strings, but we need bools/ints and sometimes strings,
 		// so attempt to parse it, but keep the original string in the case of failure.
 		if (typeof value === "string") {

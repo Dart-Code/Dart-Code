@@ -50,10 +50,10 @@ export class Context {
 	public getIgnoredExtensionRecommendationIdentifiers(): string[] { return this.context.globalState.get(`ignoredExtensionRecommendations`) ?? []; }
 	public ignoreExtensionRecommendation(extension: string) { void this.context.globalState.update(`ignoredExtensionRecommendations`, [...this.getIgnoredExtensionRecommendationIdentifiers(), extension]); }
 
-	public update(key: string, value: any): any {
+	public update(key: string, value: any): Thenable<void> {
 		return this.context.globalState.update(key, value);
 	}
-	public get(key: string): any {
+	public get(key: string): unknown | undefined {
 		return this.context.globalState.get(key);
 	}
 

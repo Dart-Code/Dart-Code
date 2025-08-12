@@ -51,7 +51,7 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 			program: programString,
 			toolArgs,
 		},
-	);
+	) as { program: string } & BasicDebugConfiguration;
 }
 
 export interface TestSelection { name: string, isGroup: boolean, position: Position | undefined }

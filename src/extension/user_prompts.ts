@@ -30,7 +30,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 	/// else will allow the prompt to appear again next time.
 	function showPrompt(key: string, prompt: () => Thenable<boolean>): void {
 		const stateKey = `${userPromptContextPrefix}${key}`;
-		prompt().then((res) => context.update(stateKey, res), error);
+		void prompt().then((res) => context.update(stateKey, res), error);
 	}
 
 	if (await showSdkDeprecationNoticeIfAppropriate(logger, context, workspaceContext, dartCapabilities))
@@ -129,7 +129,7 @@ async function promptToShowReleaseNotes(versionDisplay: string, versionLink: str
 	return true; // Always mark this as done; we don't want to prompt the user multiple times.
 }
 
-function error(err: any) {
+function error(err: any): void {
 	void vs.window.showErrorMessage(`${err.message ?? err}`);
 }
 

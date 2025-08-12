@@ -54,14 +54,10 @@ export default defineConfig([
 				}]
 			}],
 			// Temporary exclusions after tslint -> eslint migration
-			"@typescript-eslint/class-literal-property-style": "off",
-			"@typescript-eslint/no-empty-function": "off",
 			"@typescript-eslint/no-explicit-any": "off",
-			"@typescript-eslint/no-redundant-type-constituents": "off",
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/no-unsafe-member-access": "off",
-			"@typescript-eslint/no-unsafe-return": "off",
 			"@typescript-eslint/non-nullable-type-assertion-style": "off",
 			"@typescript-eslint/only-throw-error": "off",
 			"@typescript-eslint/prefer-nullish-coalescing": "off",
@@ -200,6 +196,7 @@ export default defineConfig([
 					"default": "array-simple"
 				}
 			],
+			"@typescript-eslint/class-literal-property-style": "off",
 			"@typescript-eslint/consistent-type-definitions": "error",
 			"@typescript-eslint/member-delimiter-style": [
 				// TODO: Set this back to "error" when fixed.
@@ -215,6 +212,7 @@ export default defineConfig([
 					}
 				}
 			],
+			"@typescript-eslint/no-empty-function": "off",
 			"@typescript-eslint/no-inferrable-types": "warn",
 			"@typescript-eslint/no-misused-promises": [
 				"error",
@@ -222,6 +220,7 @@ export default defineConfig([
 					"checksVoidReturn": false
 				}
 			],
+			"@typescript-eslint/no-redundant-type-constituents": "off",
 			"@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
 			"@typescript-eslint/prefer-for-of": "error",
 			"@typescript-eslint/prefer-function-type": "error",

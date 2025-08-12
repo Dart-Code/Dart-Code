@@ -142,7 +142,7 @@ export function errorString(error: any): string {
 	else if (error instanceof Error)
 		return error.message + (error.stack ? `\n${error.stack}` : "");
 	else if (error.message)
-		return error.message;
+		return error.message as string;
 	else if (typeof error === "string")
 		return error;
 	else
@@ -236,7 +236,7 @@ export function isWebDevice(deviceId: string | undefined): boolean {
 	return !!(deviceId?.startsWith("web") || deviceId === "chrome" || deviceId === "edge");
 }
 
-export function disposeAll(disposables: IAmDisposable[]) {
+export function disposeAll(disposables: IAmDisposable[]): void {
 	const toDispose = disposables.slice();
 	disposables.length = 0;
 	for (const d of toDispose) {

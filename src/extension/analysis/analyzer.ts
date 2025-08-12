@@ -316,7 +316,7 @@ export class LspAnalyzer extends Analyzer {
 				return res;
 			},
 
-			executeCommand: async (command: string, args: any[], next: ls.ExecuteCommandSignature) => {
+			executeCommand: async (command: string, args: any[], next: ls.ExecuteCommandSignature): Promise<any> => {
 				const validateCommand = command === "refactor.perform"
 					? "refactor.validate"
 					: command === "dart.refactor.perform"
@@ -563,11 +563,11 @@ export class LspAnalyzer extends Analyzer {
 		}
 
 		function asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>> {
-			return Promise.all(items.map(async (item) => {
+			return Promise.all(items.map(async (item): Promise<vs.Command | vs.CodeAction> => {
 				if (ls.Command.is(item)) {
-					return p2c.asCommand(item);
+					return p2c.asCommand(item) as vs.Command;
 				} else {
-					return asCodeAction(item, token);
+					return (await asCodeAction(item, token)) as vs.CodeAction;
 				}
 			}));
 		}

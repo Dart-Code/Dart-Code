@@ -103,7 +103,7 @@ describe("flutter test debugger", () => {
 
 				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
 				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
-				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
 			});
 
 			it("can run test with multiline name from codelens", async function () {
@@ -136,7 +136,7 @@ describe("flutter test debugger", () => {
 
 				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
 				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
-				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
 			});
 
 			it("can run skipped tests from codelens", async function () {
@@ -169,7 +169,7 @@ describe("flutter test debugger", () => {
 
 				// Ensure we got at least a "testDone" notification so we know the test run started correctly.
 				const testDoneNotification = customEvents.find(isTestDoneSuccessNotification);
-				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e) => e.body), undefined, 4));
+				assert.ok(testDoneNotification, JSON.stringify(customEvents.map((e: any) => e.body as unknown), undefined, 4));
 
 				const testDone = testDoneNotification.body as TestDoneNotification;
 				assert.equal(testDone.skipped, false); // Test should have run.
