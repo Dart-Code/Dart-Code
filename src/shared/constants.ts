@@ -56,10 +56,10 @@ export const devToolsToolLegacyPath = "tool/bin/" + executableNames.devToolsTool
 export const dartDocPath = "bin/" + executableNames.dartdoc;
 export const pubPath = "bin/" + executableNames.pub;
 
+export let flutterPath = "bin/" + executableNames.flutter;
 export function setFlutterDev(useFlutterDev: boolean) {
 	flutterPath = "bin/" + (useFlutterDev ? executableNames.flutterDev : executableNames.flutter);
 }
-export let flutterPath = "bin/" + executableNames.flutter;
 
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/" + s);
