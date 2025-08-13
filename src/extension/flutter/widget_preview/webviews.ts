@@ -114,7 +114,7 @@ export class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider 
 		private readonly previewUrl: string
 	) { }
 
-	public async resolveWebviewView(webviewView: vs.WebviewView, context: vs.WebviewViewResolveContext<unknown>, token: vs.CancellationToken): Promise<void> {
+	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
 		if (this.webviewView !== webviewView) {
 			this.webviewView = webviewView;
 		}
