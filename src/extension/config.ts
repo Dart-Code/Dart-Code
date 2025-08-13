@@ -206,6 +206,7 @@ class Config {
 	get toolingDaemonAdditionalArgs(): string[] { return this.getConfig<string[]>("toolingDaemonAdditionalArgs", []); }
 	get updateDevTools(): boolean { return this.getConfig<boolean>("updateDevTools", true); }
 	get updateImportsOnRename(): boolean { return this.getConfig<boolean>("updateImportsOnRename", true); }
+	get useFlutterDev(): boolean { return this.getConfig<boolean>("useFlutterDev", false); }
 	get useLegacyDebugAdapters(): undefined | boolean { return this.getConfig<null | boolean>("useLegacyDebugAdapters", null); }
 	get vmServiceLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("vmServiceLogFile", null)))); }
 	get warnWhenEditingFilesInPubCache(): boolean { return this.getConfig<boolean>("warnWhenEditingFilesInPubCache", true); }

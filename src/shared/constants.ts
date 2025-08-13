@@ -46,6 +46,7 @@ export const executableNames = {
 	devToolsToolBinary: isWin ? "dt.bat" : "dt",
 	devToolsToolLegacyBinary: isWin ? "devtools_tool.bat" : "devtools_tool",
 	flutter: isWin ? "flutter.bat" : "flutter",
+	flutterDev: isWin ? "flutter-dev.bat" : "flutter-dev",
 	pub: isWin ? "pub.bat" : "pub",
 };
 export const getExecutableName = (cmd: string) => (executableNames as Record<string, string | undefined>)[cmd] ?? cmd;
@@ -54,7 +55,12 @@ export const devToolsToolPath = "tool/bin/" + executableNames.devToolsToolBinary
 export const devToolsToolLegacyPath = "tool/bin/" + executableNames.devToolsToolLegacyBinary;
 export const dartDocPath = "bin/" + executableNames.dartdoc;
 export const pubPath = "bin/" + executableNames.pub;
-export const flutterPath = "bin/" + executableNames.flutter;
+
+export let flutterPath = "bin/" + executableNames.flutter;
+export function setFlutterDev(useFlutterDev: boolean) {
+	flutterPath = "bin/" + (useFlutterDev ? executableNames.flutterDev : executableNames.flutter);
+}
+
 export const analyzerSnapshotPath = "bin/snapshots/analysis_server.dart.snapshot";
 export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/" + s);
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
