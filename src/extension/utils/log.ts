@@ -22,6 +22,7 @@ export const userSelectableLogCategories: Record<string, LogCategory> = {
 	"Flutter Device Daemon": LogCategory.FlutterDaemon,
 	"Flutter Run": LogCategory.FlutterRun,
 	"Flutter Test": LogCategory.FlutterTest,
+	"Flutter Widget Preview": LogCategory.FlutterWidgetPreview,
 	"Web Daemon": LogCategory.WebDaemon,
 };
 

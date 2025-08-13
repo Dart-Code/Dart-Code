@@ -558,6 +558,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.showWidgetPreview",
+				"title": "Show Widget Preview",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.hotRestart",
 				"title": "Hot Restart",
 				"category": "Flutter"
@@ -1233,6 +1238,10 @@
 					"when": "false"
 				},
 				{
+					"command": "flutter.showWidgetPreview",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:flutterWidgetPreviewSupported"
+				},
+				{
 					"command": "_dart.showDebuggerNumbersAsHex",
 					"when": "false"
 				},
@@ -1654,6 +1663,11 @@
 					"id": "sidebarDevToolsDeepLinksContainer",
 					"title": "Flutter DevTools: Deep Links",
 					"icon": "media/icons/sidebar/deep_links.svg"
+				},
+				{
+					"id": "sidebarWidgetPreviewContainer",
+					"title": "Flutter: Widget Preview",
+					"icon": "media/icons/sidebar/flutter.svg"
 				}
 			]
 		},
@@ -1743,7 +1757,6 @@
 					"type": "webview",
 					"name": "",
 					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.inspector",
-					"visibility": "visible",
 					"icon": "media/icons/sidebar/inspector.svg"
 				}
 			],
@@ -1753,7 +1766,15 @@
 					"type": "webview",
 					"name": "",
 					"when": "dart-code:anyFlutterProjectLoaded && dart-code:devToolsSidebar.deep-links",
-					"visibility": "collapsed",
+					"icon": "media/icons/sidebar/deep_links.svg"
+				}
+			],
+			"sidebarWidgetPreviewContainer": [
+				{
+					"id": "sidebarWidgetPreview",
+					"type": "webview",
+					"name": "",
+					"when": "dart-code:anyFlutterProjectLoaded && dart-code:sidebar.widgetPreview",
 					"icon": "media/icons/sidebar/deep_links.svg"
 				}
 			]
@@ -2616,6 +2637,15 @@
 						"markdownDescription": "The path to a log file for the `flutter daemon` service, which provides information about connected devices accessible from the status bar. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
 					},
+					"dart.flutterWidgetPreviewLogFile": {
+						"type": [
+							"null",
+							"string"
+						],
+						"default": null,
+						"markdownDescription": "The path to a log file for the `flutter widget-preview` service. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
+						"scope": "machine-overridable"
+					},
 					"dart.mcpServerLogFile": {
 						"type": [
 							"null",
@@ -3164,6 +3194,26 @@
 						"type": "boolean",
 						"default": false,
 						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) LSP handlers through DTD. This setting is passed to the analysis server in the connectToDtd request and therefore relies on DTD being supported and enabled for the analysis server (requires restart).",
+						"scope": "window"
+					},
+					"dart.experimentalFlutterWidgetPreview": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "EXPERIMENTAL: Whether to enable the Flutter Widget Preview experimental feature. This feature requires an unreleased version of Flutter from the `master` branch.",
+						"scope": "window"
+					},
+					"dart.experimentalFlutterWidgetPreviewLocation": {
+						"type": "string",
+						"enum": [
+							"beside",
+							"sidebar"
+						],
+						"enumDescriptions": [
+							"Open the Flutter Widget Preview beside the active editor",
+							"Open the Flutter Widget Preview in the sidebar"
+						],
+						"default": "sidebar",
+						"markdownDescription": "Where to display the Flutter Widget Preview.",
 						"scope": "window"
 					}
 				}

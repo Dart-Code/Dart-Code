@@ -156,6 +156,7 @@ class Config {
 	get flutterShowWebServerDevice(): "remote" | "always" { return this.getConfig<"remote" | "always">("flutterShowWebServerDevice", "remote"); }
 	get flutterTestLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterTestLogFile", null)))); }
 	get flutterWebRenderer(): "flutter-default" | "canvaskit" | "html" | "auto" { return this.getConfig<"flutter-default" | "canvaskit" | "html" | "auto">("flutterWebRenderer", "flutter-default"); }
+	get flutterWidgetPreviewLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("flutterWidgetPreviewLogFile", null)))); }
 	get getDartSdkCommand(): undefined | GetSDKCommandConfig { return this.getConfig<null | GetSDKCommandConfig>("getDartSdkCommand", null); }
 	get getFlutterSdkCommand(): undefined | GetSDKCommandConfig { return this.getConfig<null | GetSDKCommandConfig>("getFlutterSdkCommand", null); }
 	get hotReloadOnSave(): "never" | "manual" | "manualIfDirty" | "all" | "allIfDirty" {
@@ -179,6 +180,8 @@ class Config {
 	get previewCommitCharacters(): boolean { return this.getConfig<boolean>("previewCommitCharacters", false); }
 	get experimentalDtdHandlers(): boolean { return this.getConfig<boolean>("experimentalDtdHandlers", false); }
 	get experimentalPropertyEditor(): boolean { return this.getConfig<boolean>("experimentalPropertyEditor", false); }
+	get experimentalFlutterWidgetPreview(): boolean { return this.getConfig<boolean>("experimentalFlutterWidgetPreview", false); }
+	get experimentalFlutterWidgetPreviewLocation(): "beside" | "sidebar" { return this.getConfig<"beside" | "sidebar">("experimentalFlutterWidgetPreviewLocation", "sidebar"); }
 	get dtdEditorActiveLocationDelay(): number { return this.getConfig<number>("dtdEditorActiveLocationDelay", 200); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }
 	get previewFlutterUiGuidesCustomTracking(): boolean { return this.getConfig<boolean>("previewFlutterUiGuidesCustomTracking", false); }

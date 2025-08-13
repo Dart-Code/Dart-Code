@@ -14,6 +14,7 @@ export const SDK_IS_PRE_RELEASE = "dart-code:isPreReleaseSdk";
 export const GO_TO_IMPORTS_SUPPORTED_CONTEXT = "dart-code:goToImportsSupported";
 export const FLUTTER_SIDEBAR_SUPPORTED_CONTEXT = "dart-code:flutterSidebarSupported";
 export const FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT = "dart-code:flutterPropertyEditorSupported";
+export const FLUTTER_WIDGET_PREVIEW_SUPPORTED_CONTEXT = "dart-code:flutterWidgetPreviewSupported";
 export const SUPPORTS_DEBUG_VALUE_FORMAT = "dart-code:supportsDebugValueFormat";
 export const DTD_AVAILABLE = "dart-code:dtdAvailable";
 export const LSP_COMMAND_CONTEXT_PREFIX = "dart-code:lsp.command.";
@@ -43,5 +44,7 @@ export const DART_DEP_FOLDER_NODE_CONTEXT = "dart-code:depFolderNode";
 export const DART_DEP_FILE_NODE_CONTEXT = "dart-code:depFileNode";
 export const DART_DEP_PUB_HOSTED_PACKAGE_NODE_CONTEXT = "dart-code:depPubHostedPackageNode";
 
-// DevTools in Sidebar.
+// Sidebars.
 export const SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX = "dart-code:devToolsSidebar.";
+export const SIDEBAR_AVAILABLE_PREFIX = "dart-code:sidebar.";
+
