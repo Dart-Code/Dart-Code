@@ -164,7 +164,7 @@ describe("dart_hover_provider", () => {
 			assert.equal(hover.displayText, "abstract interface class Future<T>");
 		else
 			assert.equal(hover.displayText, "abstract class Future<T>");
-		assert.ok(hover.documentation!.startsWith("*dart:async*"));
+		assert.ok(hover.documentation!.startsWith("Declared in _dart:async_"));
 		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
 

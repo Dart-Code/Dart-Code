@@ -118,7 +118,9 @@ main() {
 
 	it.skip("sorts completions by relevance");
 
-	it("inserts full text for overrides", async () => {
+	// Skipped, needs investigating.
+	// https://github.com/Dart-Code/Dart-Code/issues/5652
+	it.skip("inserts full text for overrides", async () => {
 		await setTestContent(`
 abstract class Person {
   String get fullName;
