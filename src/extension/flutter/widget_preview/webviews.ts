@@ -101,7 +101,7 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 		this.webViewProvider.webviewView?.show(true);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }
@@ -127,7 +127,7 @@ export class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider 
 		webviewView.webview.html = getPageHtmlSource(this.previewUrl);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

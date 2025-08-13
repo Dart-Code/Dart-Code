@@ -1775,7 +1775,7 @@
 					"type": "webview",
 					"name": "",
 					"when": "dart-code:anyFlutterProjectLoaded && dart-code:sidebar.widgetPreview",
-					"icon": "media/icons/sidebar/deep_links.svg"
+					"icon": "media/icons/sidebar/flutter.svg"
 				}
 			]
 		},
