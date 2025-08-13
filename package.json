@@ -2546,6 +2546,12 @@
 						"default": "flutter-default",
 						"markdownDescription": "Sets the [Web renderer](https://flutter.dev/to/web-renderers) used for Flutter web apps.",
 						"scope": "window"
+					},
+					"dart.useFlutterDev": {
+						"default": false,
+						"type": "boolean",
+						"description": "Whether to use `flutter-dev` instead of `flutter`. This is a script for developers of the `flutter` tool to run from source and will run more slowly than the compiled tool.",
+						"scope": "window"
 					}
 				}
 			},
