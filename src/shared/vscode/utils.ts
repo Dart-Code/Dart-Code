@@ -98,13 +98,15 @@ function getAnalysisOptionsExcludedFolders(
 }
 
 export class ProjectFinder {
-	constructor(private readonly logger: Logger) { }
+	constructor(
+		private readonly logger: Logger,
+		private readonly getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
+	) { }
 
 	public async findAllProjectFolders(
-		getExcludedFolders: ((f: WorkspaceFolder | undefined) => string[]) | undefined,
 		options: { sort?: boolean; requirePubspec?: boolean, searchDepth: number, workspaceFolders?: WorkspaceFolder[], onlyWorkspaceRoots?: boolean },
 	) {
-		return getAllProjectFolders(this.logger, getExcludedFolders, options);
+		return getAllProjectFolders(this.logger, this.getExcludedFolders, options);
 	}
 }
 

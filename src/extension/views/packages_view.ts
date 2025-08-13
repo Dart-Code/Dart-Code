@@ -11,7 +11,6 @@ import { sortBy } from "../../shared/utils/array";
 import { areSameFolder, fsPath } from "../../shared/utils/fs";
 import { envUtils, ProjectFinder } from "../../shared/vscode/utils";
 import { config } from "../config";
-import { getExcludedFolders } from "../utils";
 
 export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
@@ -48,7 +47,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 
 	public async getChildren(element?: PackageDep): Promise<PackageDep[]> {
 		if (!element) {
-			const allProjects = await this.projectFinder.findAllProjectFolders(getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
+			const allProjects = await this.projectFinder.findAllProjectFolders({ requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
 
 			const nodes = allProjects.map((folder) => new PackageDepProject(vs.Uri.file(folder)));
 			// If there's only one, just skip over to the deps.

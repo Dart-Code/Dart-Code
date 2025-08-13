@@ -14,7 +14,7 @@ import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq, withTimeout } from "../shared/utils";
-import { fsPath, getRandomInt } from "../shared/utils/fs";
+import { fsPath, getRandomInt, isFlutterProjectFolder } from "../shared/utils/fs";
 import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -62,6 +62,7 @@ import { FlutterOutlineProvider, FlutterWidgetItem } from "./flutter/flutter_out
 import { FlutterProjectWatcher } from "./flutter/flutter_project_watcher";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
 import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizations_on_save_handler";
+import { FlutterWidgetPreviewManager } from "./flutter/widget_preview/widget_preview_manager";
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToImportsCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
@@ -175,6 +176,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Set up log files.
 	setupLog(config.analyzerLogFile, LogCategory.Analyzer);
 	setupLog(config.flutterDaemonLogFile, LogCategory.FlutterDaemon);
+	setupLog(config.flutterWidgetPreviewLogFile, LogCategory.FlutterWidgetPreview);
 	setupLog(config.toolingDaemonLogFile, LogCategory.DartToolingDaemon);
 	setupLog(config.devToolsLogFile, LogCategory.DevTools);
 
@@ -304,7 +306,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	context.subscriptions.push(new AddSdkToPathCommands(logger, context, workspaceContext, analytics));
-	const projectFinder = new ProjectFinder(logger);
+	const projectFinder = new ProjectFinder(logger, util.getExcludedFolders);
 	const pubApi = new PubApi(webClient);
 	const pubGlobal = new PubGlobal(logger, dartCapabilities, extContext, sdks, pubApi);
 	const sdkCommands = new SdkCommands(logger, extContext, workspaceContext, dartCapabilities);
@@ -424,6 +426,28 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		: undefined;
 	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
 	void analyzer.connectToDtd(dartToolingDaemon);
+
+	// Initialize Widget Preview if enabled+supported.
+	const flutterSdk = workspaceContext.sdks.flutter;
+	if (
+		// IMPORTANT! IMPORTANT! IMPORTANT!
+		// Before removing the EXPERIMENTAL flag, we must ensure that supportsWidgetPreview capability is set correctly
+		// for the version that includes all necessary flags. Currently it is just set to the "current" master to allow
+		// for testing with the experimental flag because the --machine flag has not landed yet and the version is not
+		// available.
+		// IMPORTANT! IMPORTANT! IMPORTANT!
+		config.experimentalFlutterWidgetPreview
+		// IMPORTANT! IMPORTANT! IMPORTANT! ^^
+		&& flutterCapabilities.supportsWidgetPreview && flutterSdk && vs.workspace.workspaceFolders?.length) {
+		void dartToolingDaemon?.dtdUri.then(async (uri) => {
+			// TODO(dantup): Support multiple projects better.
+			// https://github.com/flutter/flutter/issues/173550
+			const projectFolders = await projectFinder.findAllProjectFolders({ requirePubspec: true, searchDepth: config.projectSearchDepth });
+			const firstFlutterProject = projectFolders.find(isFlutterProjectFolder);
+			if (firstFlutterProject)
+				context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, uri, firstFlutterProject, config.experimentalFlutterWidgetPreviewLocation));
+		});
+	}
 
 	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);

@@ -8,7 +8,6 @@ import { ProjectFinder } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { SdkCommands } from "../commands/sdk";
 import { config } from "../config";
-import { getExcludedFolders } from "../utils";
 import { safeToolSpawn } from "../utils/processes";
 import { PublicDartExtensionApi, PublicElement, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "./interfaces";
 
@@ -126,7 +125,7 @@ class PublicWorkspaceImpl implements PublicWorkspace {
 			searchDepth: config.projectSearchDepth,
 		};
 
-		return data.projectFinder.findAllProjectFolders(getExcludedFolders, searchOptions);
+		return data.projectFinder.findAllProjectFolders(searchOptions);
 	}
 
 	private convertToPublicOutline(outline: Outline): PublicOutline {
