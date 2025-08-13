@@ -311,9 +311,10 @@ export async function getPackages(uri?: vs.Uri) {
 		logger.error("Cannot getPackages because there is no workspace folder and no URI was supplied");
 		return;
 	}
-	await waitForNextAnalysis(async () => {
-		await vs.commands.executeCommand("dart.getPackages", uri || vs.workspace.workspaceFolders![0].uri);
-	}, 60);
+	// It's not guaranteed that this will trigger new analysis, because we might already have all packages
+	// up-to-date, so just wait a bit.
+	await vs.commands.executeCommand("dart.getPackages", uri || vs.workspace.workspaceFolders![0].uri);
+	await delay(1000);
 }
 
 function logOpenEditors() {
