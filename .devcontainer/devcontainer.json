@@ -3,6 +3,8 @@
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/Dart-Code,type=bind",
+	"workspaceFolder": "/workspaces/Dart-Code",
 	"customizations": {
 		"vscode": {
 			"extensions": [
