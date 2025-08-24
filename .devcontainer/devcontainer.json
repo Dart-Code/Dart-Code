@@ -9,7 +9,8 @@
 		"vscode": {
 			"extensions": [
 				"amodio.tsl-problem-matcher",
-				"dbaeumer.vscode-eslint"
+				"dbaeumer.vscode-eslint",
+				"ms-vscode.powershell"
 			]
 		}
 	},
