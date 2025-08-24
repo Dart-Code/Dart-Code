@@ -34,5 +34,8 @@
 	"eslint.lintTask.enable": true,
 	"explorer.fileNesting.patterns": {
 		"AGENT.md": "AGENTS.md",
+	},
+	"files.readonlyInclude": {
+		"{**/.c4z/.extsrcs/*.PROTSYM.cbl,**/.c4z/.extsrcs/*.PROTSYM.listing}": true
 	}
 }
