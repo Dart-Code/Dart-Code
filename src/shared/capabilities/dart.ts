@@ -13,8 +13,9 @@ export class DartCapabilities {
 	// https://groups.google.com/g/flutter-announce/c/JQHzM3FbBGI
 	get isUnsupportedNow() { return !versionIsAtLeast(this.version, "3.0.0"); }
 
-	// No SDKs are becoming unsupported soon.
-	get isUnsupportedSoon() { return false; }
+	// Support for Dart prior to 3.1 will end soon.
+	// https://medium.com/flutter/whats-new-in-flutter-3-35-c58ef72e3766#:~:text=Deprecated%20IDE%20support%20for%20older%20Flutter%20SDKs
+	get isUnsupportedSoon() { return !versionIsAtLeast(this.version, "3.1.0"); }
 
 	get needsNoExampleForPubGet() { return versionIsAtLeast(this.version, "3.1.0"); }
 	get omitsVoidForSetters() { return versionIsAtLeast(this.version, "3.3.0-0"); }
