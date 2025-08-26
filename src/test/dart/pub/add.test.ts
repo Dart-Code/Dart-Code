@@ -62,18 +62,20 @@ describe("pub add", () => {
 		assert.equal(pubspec2ContainsPackage("collection"), true);
 	});
 
-	it("can add multiple dependencies using command", async () => {
-		assert.equal(pubspecContainsPackage("path"), false);
-		assert.equal(pubspecContainsPackage("crypto"), false);
-		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("path, crypto");
-		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
+	for (const separator of [",", " ", ", "]) {
+		it(`can add multiple dependencies separated by "${separator}" using command`, async () => {
+			assert.equal(pubspecContainsPackage("path"), false);
+			assert.equal(pubspecContainsPackage("crypto"), false);
+			sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves(`path${separator}crypto`);
+			sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
 
-		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContainsPackage("path"));
-		await waitFor(() => pubspecContainsPackage("crypto"));
-		assert.equal(pubspecContainsPackage("path"), true);
-		assert.equal(pubspecContainsPackage("crypto"), true);
-	});
+			await vs.commands.executeCommand("dart.addDependency");
+			await waitFor(() => pubspecContainsPackage("path"));
+			await waitFor(() => pubspecContainsPackage("crypto"));
+			assert.equal(pubspecContainsPackage("path"), true);
+			assert.equal(pubspecContainsPackage("crypto"), true);
+		});
+	}
 
 	it("can add a dependency with trailing whitespace using command", async () => {
 		assert.equal(pubspecContainsPackage("collection"), false);

@@ -172,7 +172,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			args.push(packageName);
 			args.push(`--path=${selectedPackage.path}`);
 		} else {
-			const packageNames = selectedPackage.packageNames.split(",").map((p) => p.trim());
+			const packageNames = selectedPackage.packageNames.split(/[\s,]+/).map((p) => p.trim()).filter((p) => p);
 			for (const packageName of packageNames) {
 				args.push(packageName);
 			}
@@ -217,7 +217,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	/// which case they must also provide package name etc).
 	private async promptForPackageInfo(): Promise<string | PickablePackage | undefined> {
 		const quickPick = vs.window.createQuickPick<PickablePackage>();
-		quickPick.placeholder = "package name (can be comma separated), URL or path";
+		quickPick.placeholder = "package name(s), URL or path (use commas or spaces to separate multiple package names)";
 		quickPick.title = "Enter package name(s), URL or local path";
 		quickPick.items = this.getPackageEntries();
 		quickPick.onDidChangeValue((userInput) => {
