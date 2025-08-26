@@ -52,7 +52,7 @@ export class DevToolsManager implements vs.Disposable {
 
 	/// Resolves to the DevTools URL. This is created immediately when a new process is being spawned so that
 	/// concurrent launches can wait on the same promise.
-	public devtoolsUrl: Thenable<string> | undefined;
+	public devtoolsUrl: Promise<string> | undefined;
 
 	private isShuttingDown = false;
 
@@ -182,10 +182,10 @@ export class DevToolsManager implements vs.Disposable {
 			if (silent && !isCustomDevTools) {
 				this.devtoolsUrl = this.startServer();
 			} else {
-				this.devtoolsUrl = vs.window.withProgress({
+				this.devtoolsUrl = Promise.resolve(vs.window.withProgress({
 					location: vs.ProgressLocation.Notification,
 					title: startingTitle,
-				}, async () => this.startServer());
+				}, async () => this.startServer()));
 			}
 
 			// Allow us to override the URL for DevTools as a simple hack for running from a

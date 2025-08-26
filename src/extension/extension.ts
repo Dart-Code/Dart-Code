@@ -427,6 +427,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
 	void analyzer.connectToDtd(dartToolingDaemon);
 
+	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
+	context.subscriptions.push(devTools);
+
 	// Initialize Widget Preview if enabled+supported.
 	const flutterSdk = workspaceContext.sdks.flutter;
 	if (
@@ -439,18 +442,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		config.experimentalFlutterWidgetPreview
 		// IMPORTANT! IMPORTANT! IMPORTANT! ^^
 		&& flutterCapabilities.supportsWidgetPreview && flutterSdk && vs.workspace.workspaceFolders?.length) {
-		void dartToolingDaemon?.dtdUri.then(async (uri) => {
-			// TODO(dantup): Support multiple projects better.
-			// https://github.com/flutter/flutter/issues/173550
-			const projectFolders = await projectFinder.findAllProjectFolders({ requirePubspec: true, searchDepth: config.projectSearchDepth });
-			const firstFlutterProject = projectFolders.find(isFlutterProjectFolder);
-			if (firstFlutterProject)
-				context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, uri, firstFlutterProject, config.experimentalFlutterWidgetPreviewLocation));
-		});
+		// TODO(dantup): Support multiple projects better.
+		// https://github.com/flutter/flutter/issues/173550
+		const projectFolders = await projectFinder.findAllProjectFolders({ requirePubspec: true, searchDepth: config.projectSearchDepth });
+		const firstFlutterProject = projectFolders.find(isFlutterProjectFolder);
+		if (firstFlutterProject)
+			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, firstFlutterProject, config.experimentalFlutterWidgetPreviewLocation));
 	}
-
-	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
-	context.subscriptions.push(devTools);
 
 	// Debug commands.
 	const debugCommands = new DebugCommands(logger, analyzer.fileTracker, extContext, workspaceContext, dartCapabilities, flutterCapabilities, devTools, loggingCommands);

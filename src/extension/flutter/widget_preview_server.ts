@@ -14,23 +14,37 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 	public readonly previewUrl = this.previewUrlCompleter.promise;
 
 	constructor(
-		readonly logger: Logger,
+		logger: Logger,
 		readonly flutterSdkPath: string,
-		readonly dtdUri: string | undefined,
+		readonly dtdUri: Promise<string | undefined> | undefined,
+		readonly devToolsServerUri: Promise<string | undefined> | undefined,
 		readonly tempWorkingDirectory: string,
 	) {
 		super(new CategoryLogger(logger, LogCategory.FlutterWidgetPreview), config.maxLogLineLength, true, true);
 
-		const flutterExecutable = path.join(this.flutterSdkPath, flutterPath);
-		const args = getGlobalFlutterArgs();
-		args.push("widget-preview", "start", "--machine", "--web-server");
-		// TODO(dantup): Pass DTD + DevTools server
-		// https://github.com/flutter/flutter/issues/173617
-		// if (dtdUri)
-		// 	args.push("--dtd-uri", dtdUri);
-		// if (devToolsServerUri)
-		// 	args.push("--devtools-server-address", devToolsServerUri);
-		this.createProcess(tempWorkingDirectory, flutterExecutable, args, { toolEnv: getToolEnv() });
+		void Promise.all([
+			dtdUri ?? Promise.resolve(),
+			devToolsServerUri ?? Promise.resolve(),
+		]).then(() => this.start());
+	}
+
+	private async start(): Promise<void> {
+		try {
+			const flutterExecutable = path.join(this.flutterSdkPath, flutterPath);
+			const args = getGlobalFlutterArgs();
+			args.push("widget-preview", "start", "--machine", "--web-server");
+
+			const dtdUri = await this.dtdUri;
+			const devToolsServerUri = await this.devToolsServerUri;
+
+			if (dtdUri)
+				args.push("--dtd-url", dtdUri);
+			if (devToolsServerUri)
+				args.push("--devtools-server-address", devToolsServerUri);
+			this.createProcess(this.tempWorkingDirectory, flutterExecutable, args, { toolEnv: getToolEnv() });
+		} catch (e) {
+			this.logger.error(`Failed to start Widget Preview server: ${e}`);
+		}
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
