@@ -236,7 +236,7 @@ describe("device_manager", () => {
 
 	it("shows unsupported platforms, runs flutter create, and selects", async () => {
 		await daemon.connect(desktop, false);
-		const devices = dm.getPickableDevices(["android"]);
+		const devices = dm.getPickableDevices(["android"], undefined, undefined);
 		const d = devices.find((e) => "device" in e && e.device.type === "platform-enabler" && e.device.platformType === "macos") as PickableDevice | undefined;
 
 		if (!d)

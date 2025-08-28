@@ -155,7 +155,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		this.onDevicesChangedEmitter.fire();
 	}
 
-	public async showDevicePicker(supportedTypes?: f.PlatformType[]): Promise<f.Device | undefined> {
+	public async showDevicePicker(supportedTypes: f.PlatformType[] | undefined, projectRoot: string | undefined): Promise<f.Device | undefined> {
 		// If we weren't passed any supported types, we should try to get them for
 		// the whole workspace.
 		if (!supportedTypes && this.daemon.capabilities.providesPlatformTypes) {
@@ -172,7 +172,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			if (!quickPickIsValid)
 				return;
 
-			quickPick.items = this.getPickableDevices(supportedTypes, emulatorDevices);
+			quickPick.items = this.getPickableDevices(supportedTypes, emulatorDevices, projectRoot);
 		};
 
 		// Kick off a request to get emulators only once.
@@ -267,7 +267,8 @@ export class FlutterDeviceManager implements vs.Disposable {
 				break;
 			case "platform-enabler":
 				const platformType = selection.device.platformType;
-				if (!await this.enablePlatformType(platformType))
+				const projectRoot = selection.device.projectRoot;
+				if (!await this.enablePlatformType(platformType, projectRoot))
 					return false;
 				// Attempt to select a device of this type that might now be valid.
 				await this.selectDeviceByPlatformType(platformType);
@@ -281,12 +282,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return true;
 	}
 
-	public async enablePlatformType(platformType: string): Promise<boolean> {
+	public async enablePlatformType(platformType: string, projectRoot: string | undefined): Promise<boolean> {
 		const platformNeedsGloballyEnabling = await this.daemon.checkIfPlatformGloballyDisabled(platformType);
 		if (platformNeedsGloballyEnabling)
 			await this.daemon.enablePlatformGlobally(platformType);
 
-		const createArgs = { platform: platformType } as FlutterCreateCommandArgs;
+		const createArgs = { platform: platformType, projectPath: projectRoot } as FlutterCreateCommandArgs;
 		await vs.commands.executeCommand("_flutter.create", createArgs);
 
 		if (platformNeedsGloballyEnabling) {
@@ -383,7 +384,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		);
 	}
 
-	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices?: PickableDevice[]): Array<PickableDevice | DeviceSeparator> {
+	public getPickableDevices(supportedTypes: string[] | undefined, emulatorDevices: PickableDevice[] | undefined, projectRoot: string | undefined): Array<PickableDevice | DeviceSeparator> {
 		const sortedDevices = this.getDevicesSortedByCurrentAndName();
 
 		let pickableItems: Array<PickableDevice | DeviceSeparator> = [];
@@ -440,7 +441,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 					label: "Other Available Platforms",
 				},
 				...potentialPlatformTypes.map((p) => ({
-					device: { type: "platform-enabler", platformType: p },
+					device: { type: "platform-enabler", platformType: p, projectRoot },
 					label: `Enable ${p} for this project`,
 				}) as PickableDevice),
 			]);

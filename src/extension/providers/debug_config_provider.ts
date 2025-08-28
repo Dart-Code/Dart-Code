@@ -97,7 +97,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		const argsHaveTestFilter = (!!debugConfig.programQuery) || hasTestFilter((debugConfig.toolArgs ?? []).concat(debugConfig.args ?? []));
 		const isTest = !!debugConfig.program && isTestFileOrFolder(debugConfig.program);
-		const debuggerType = this.selectDebuggerType(debugConfig, argsHaveTestFilter, isTest, logger);
+		const { debuggerType, projectRoot } = this.selectDebuggerType(debugConfig, argsHaveTestFilter, isTest, logger);
 		const isFlutter = debuggerType === DebuggerType.Flutter || debuggerType === DebuggerType.FlutterTest;
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
 
@@ -177,7 +177,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				if (!debugConfig.suppressPrompts) {
 					// If the current device is not valid, prompt the user.
 					if (!this.deviceManager.isSupported(supportedPlatforms, deviceToLaunchOn))
-						deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms);
+						deviceToLaunchOn = await this.deviceManager.showDevicePicker(supportedPlatforms, projectRoot);
 
 					// Refresh the supported platforms, as the we may have enabled new platforms during
 					// the call to showDevicePicker.
@@ -347,10 +347,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return false;
 	}
 
-	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs & { debuggerType?: DebuggerType }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): DebuggerType {
+	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs & { debuggerType?: DebuggerType }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): { debuggerType: DebuggerType, projectRoot: string | undefined } {
 		if (debugConfig.debuggerType !== undefined) {
 			logger.info(`Debugger type is explicitly set in launch configuration as ${DebuggerType[debugConfig.debuggerType]}, using that.`);
-			return debugConfig.debuggerType;
+			return { debuggerType: debugConfig.debuggerType, projectRoot: undefined };
 		}
 
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
@@ -412,7 +412,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 		}
 		logger.info(`Using ${DebuggerType[debuggerType]} debug adapter for this session`);
-		return debuggerType;
+		return { debuggerType, projectRoot };
 	}
 
 	protected configureProgramAndCwd(debugConfig: DartVsCodeLaunchArgs, folder: WorkspaceFolder | undefined, openFile: string | undefined) {

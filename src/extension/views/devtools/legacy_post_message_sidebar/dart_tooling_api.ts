@@ -167,7 +167,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	}
 
 	public async enablePlatformType(platformType: string): Promise<boolean> {
-		return this.deviceManager?.enablePlatformType(platformType) ?? false;
+		return this.deviceManager?.enablePlatformType(platformType, undefined) ?? false;
 	}
 
 	public async openDevToolsPage(

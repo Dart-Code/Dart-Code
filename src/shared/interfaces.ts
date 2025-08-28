@@ -185,6 +185,7 @@ export interface PlatformEnabler {
 	id?: undefined;
 	type: "platform-enabler";
 	platformType: f.PlatformType;
+	projectRoot: string;
 }
 
 export interface FlutterCreateCommandArgs {

@@ -313,7 +313,7 @@ class EditorServices implements IAmDisposable {
 				: undefined,
 			this.deviceManager
 				? this.daemon.registerService(Service.Editor, "enablePlatformType", undefined, async (params: EnablePlatformTypeParams) => {
-					await this.deviceManager?.enablePlatformType(params.platformType);
+					await this.deviceManager?.enablePlatformType(params.platformType, undefined);
 					return { type: "Success" };
 				})
 				: undefined,
