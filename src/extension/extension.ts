@@ -433,15 +433,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Initialize Widget Preview if enabled+supported.
 	const flutterSdk = workspaceContext.sdks.flutter;
 	if (
-		// IMPORTANT! IMPORTANT! IMPORTANT!
-		// Before removing the EXPERIMENTAL flag, we must ensure that supportsWidgetPreview capability is set correctly
-		// for the version that includes all necessary flags. Currently it is just set to the "current" master to allow
-		// for testing with the experimental flag because the --machine flag has not landed yet and the version is not
-		// available.
-		// IMPORTANT! IMPORTANT! IMPORTANT!
 		config.experimentalFlutterWidgetPreview
-		// IMPORTANT! IMPORTANT! IMPORTANT! ^^
-		&& flutterCapabilities.supportsWidgetPreview && flutterSdk && vs.workspace.workspaceFolders?.length) {
+		&& flutterCapabilities.supportsWidgetPreview
+		&& flutterSdk
+		&& vs.workspace.workspaceFolders?.length) {
 		// TODO(dantup): Support multiple projects better.
 		// https://github.com/flutter/flutter/issues/173550
 		const projectFolders = await projectFinder.findAllProjectFolders({ requirePubspec: true, searchDepth: config.projectSearchDepth });

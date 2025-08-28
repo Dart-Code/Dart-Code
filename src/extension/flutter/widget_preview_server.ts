@@ -32,6 +32,9 @@ export class FlutterWidgetPreviewServer extends StdIOService<UnknownNotification
 		try {
 			const flutterExecutable = path.join(this.flutterSdkPath, flutterPath);
 			const args = getGlobalFlutterArgs();
+			// If we add new flags here, we must use capabilities to ensure we only pass them
+			// to SDKs that support them, since users may have the preview enabled on earlier
+			// versions now.
 			args.push("widget-preview", "start", "--machine", "--web-server");
 
 			const dtdUri = await this.dtdUri;
