@@ -653,17 +653,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	const numReloads = 1;
-	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (!dc.isDartDap && privateApi.flutterCapabilities?.version.startsWith("3.19")) {
-			// This is known broken in Flutter 3.19 (for legacy DAP) so skip for this version and re-enable
+	it.only(`stops at a breakpoint after each reload (${numReloads})`, async function () {
+		if (!dc.isDartDap && flutterTestDeviceIsWeb && (privateApi.flutterCapabilities?.version.startsWith("3.19") || privateApi.flutterCapabilities?.version.startsWith("3.20"))) {
+			// This is known broken in Flutter 3.19+3.20 (for legacy DAP) so skip for this version and re-enable
 			// for the next version.
 			// https://github.com/dart-lang/sdk/issues/54925
 			this.skip();
 		}
 
-		// https://github.com/Dart-Code/Dart-Code/issues/5211
-		if (flutterTestDeviceIsWeb && (privateApi.dartCapabilities.version.startsWith("3.5.") || privateApi.dartCapabilities.version.startsWith("3.6.") || privateApi.dartCapabilities.version.startsWith("3.7.") || privateApi.dartCapabilities.version.startsWith("3.8.")))
-			this.skip();
 
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
