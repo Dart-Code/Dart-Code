@@ -3,7 +3,7 @@ import { DebuggerType } from "../../../shared/enums";
 import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
 import { fsPath } from "../../../shared/utils/fs";
 import { createDebugClient, startDebugger } from "../../debug_helpers";
-import { activate, delay, helloWorldMainFile, positionOf, privateApi } from "../../helpers";
+import { activate, dapLineOf, delay, helloWorldMainFile, privateApi } from "../../helpers";
 
 // These are debug-related tests for DTD. There are also some tests in `../dart`.
 describe("dart tooling daemon", () => {
@@ -37,7 +37,7 @@ describe("dart tooling daemon", () => {
 		const sessionName = "My Test Session";
 		const config = await startDebugger(dc, helloWorldMainFile, { name: sessionName });
 		await dc.hitBreakpoint(config, { // Stop at a breakpoint so the app won't quit while we're verifying.
-			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			line: dapLineOf("// BREAKPOINT1"),
 			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
 		});
 

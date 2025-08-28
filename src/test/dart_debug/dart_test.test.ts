@@ -11,7 +11,7 @@ import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, waitForResult } from "../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, dapLineOf, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -173,7 +173,7 @@ describe("dart test debugger", () => {
 				await openFile(helloWorldTestMainFile);
 				const config = await startDebugger(dc, helloWorldTestMainFile);
 				await dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+					line: dapLineOf("// BREAKPOINT1"),
 					path: dc.isUsingUris ? helloWorldTestMainFile.toString() : fsPath(helloWorldTestMainFile),
 				});
 			});
@@ -196,7 +196,7 @@ describe("dart test debugger", () => {
 				await waitAllThrowIfTerminates(dc,
 					dc.configurationSequence(),
 					dc.assertStoppedLocation("exception", {
-						line: positionOf("^expect(1, equals(2))").line + 1, // positionOf is 0-based, but seems to want 1-based
+						line: dapLineOf("expect(1, equals(2))"), // positionOf is 0-based, but seems to want 1-based
 						path: dc.isUsingUris ? helloWorldTestBrokenFile.toString() : fsPath(helloWorldTestBrokenFile),
 					}),
 					dc.launch(config),

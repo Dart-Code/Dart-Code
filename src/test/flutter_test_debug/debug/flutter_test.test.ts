@@ -10,7 +10,7 @@ import { waitFor } from "../../../shared/utils/promises";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, dapLineOf, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
@@ -373,7 +373,7 @@ describe("flutter test debugger", () => {
 				await openFile(flutterTestMainFile);
 				const config = await startDebugger(dc, flutterTestMainFile);
 				await dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+					line: dapLineOf("// BREAKPOINT1"),
 					path: dc.isUsingUris ? flutterTestMainFile.toString() : fsPath(flutterTestMainFile),
 				});
 			});
@@ -396,7 +396,7 @@ describe("flutter test debugger", () => {
 				await waitAllThrowIfTerminates(dc,
 					dc.configurationSequence(),
 					dc.assertStoppedLocation("exception", {
-						line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
+						line: dapLineOf("won't find this"),
 						path: dc.isUsingUris ? flutterTestBrokenFile.toString() : fsPath(flutterTestBrokenFile),
 					}),
 					dc.launch(config),
@@ -477,7 +477,7 @@ describe("flutter test debugger", () => {
 
 				await waitAllThrowIfTerminates(dc,
 					dc.hitBreakpoint(config, {
-						line: positionOf("^// BREAKPOINT1").line,
+						line: dapLineOf("// BREAKPOINT1"),
 						path: dc.isUsingUris ? flutterIntegrationTestFile.toString() : fsPath(flutterIntegrationTestFile),
 					}),
 				);
@@ -489,7 +489,7 @@ describe("flutter test debugger", () => {
 
 				await waitAllThrowIfTerminates(dc,
 					dc.hitBreakpoint(config, {
-						line: positionOf("^// BREAKPOINT1").line,
+						line: dapLineOf("// BREAKPOINT1"),
 						path: dc.isUsingUris ? flutterHelloWorldCounterAppFile.toString() : fsPath(flutterHelloWorldCounterAppFile),
 					}),
 				);

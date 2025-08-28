@@ -618,11 +618,28 @@ export function positionOf(searchText: string, doc?: vs.TextDocument): vs.Positi
 	logger.info(`Searching for "${searchText}" in ${doc.uri}`);
 	const caretOffset = searchText.indexOf("^");
 	assert.notEqual(caretOffset, -1, `Couldn't find a ^ in search text (${searchText})`);
+
+	// Remove the initial ^ from the search text.
+	searchText = removeCharAt(searchText, caretOffset);
+
 	const docText = doc.getText();
-	const matchedTextIndex = docText.indexOf(searchText.replace("^", ""));
-	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace("^", "")} in the document to get position of. Document contained:\n${docText}`);
+	const matchedTextIndex = docText.indexOf(searchText);
+	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText} in the document to get position of. Document contained:\n${docText}`);
 
 	return doc.positionAt(matchedTextIndex + caretOffset);
+}
+
+function removeCharAt(input: string, index: number): string {
+	const chars = input.split("");
+	chars.splice(index, 1);
+	return chars.join("");
+}
+
+export function dapLineOf(searchText: string): number {
+	// Our convention is that if the search text ends with ^, we want the line above.
+	const offset = searchText.endsWith("^") ? -1 : 0;
+	// positionOf returns a zero-based VS Code line, but DAP is one-based.
+	return positionOf(`^${searchText}`).line + 1 + offset;
 }
 
 export function rangeOf(searchText: string, inside: vs.Range | undefined, allowMissing: true): vs.Range | undefined;

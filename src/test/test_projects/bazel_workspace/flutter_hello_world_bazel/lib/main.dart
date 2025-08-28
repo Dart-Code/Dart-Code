@@ -23,7 +23,7 @@ class MyHomePage extends StatelessWidget {
     final s = "Hello!";
     final l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     final longStrings = <String>[
-      "This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string!!!"
+      "This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string that is 300 characters! This is a long string!!!",
     ];
     final tenDates = List.generate(10, (i) => DateTime(2005, 1, 1));
     final hundredDates = List.generate(100, (i) => DateTime(2005, 1, 1));
