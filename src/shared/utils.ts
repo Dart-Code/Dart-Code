@@ -185,6 +185,7 @@ export class BufferedLogger implements Logger {
 					break;
 			}
 		}
+		this.buffer.length = 0;
 		logger.info("Done flushing log messages...");
 	}
 }
