@@ -595,7 +595,7 @@ export class VmServiceConnection {
 			const callback = this.eventListeners[streamId];
 			// Responses to requests (above) are processed by completing a promise
 			// which will be processed asynchronously. If we call callback here
-			// synchronously then it may trigger before a response that was recieved
+			// synchronously then it may trigger before a response that was received
 			// before it. The setTimeout forces it to go into the queue to be
 			// processed in order.
 			// TODO: Try to find a better way.

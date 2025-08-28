@@ -1046,7 +1046,7 @@ export class DartDebugSession extends DebugSession {
 
 				const stack: VMStack = result.result as VMStack;
 				let vmFrames = stack.asyncCausalFrames || stack.frames;
-				const framesRecieved = vmFrames.length;
+				const framesReceived = vmFrames.length;
 				isTruncated = stack.truncated ?? false;
 
 				let firstAsyncMarkerIndex = vmFrames.findIndex((f) => f.kind === "AsyncSuspensionMarker");
@@ -1066,9 +1066,9 @@ export class DartDebugSession extends DebugSession {
 
 				totalFrames = supportsGetStackLimit
 					// If the stack was truncated, we should say there are 20(stackFrameBatch) more frames, otherwise use the real count.
-					? isTruncated ? framesRecieved + stackFrameBatch : framesRecieved
-					// If we don't support limit, the number recieved is always correct.
-					: framesRecieved;
+					? isTruncated ? framesReceived + stackFrameBatch : framesReceived
+					// If we don't support limit, the number received is always correct.
+					: framesReceived;
 			}
 
 
@@ -2262,7 +2262,7 @@ export class DartDebugSession extends DebugSession {
 		this.logToUserBuffered(message, "stdout");
 	}
 
-	/// Buffers text and sends to the user when a newline is recieved. This is to handle stderr/stdout which
+	/// Buffers text and sends to the user when a newline is received. This is to handle stderr/stdout which
 	/// might arrive in chunks but we need to process in lines.
 	///    [5:01:50 PM] [General] [Info] [stderr] tion: Oop
 	///    [5:01:50 PM] [General] [Info] [stderr] s
