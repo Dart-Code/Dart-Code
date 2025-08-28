@@ -30,7 +30,15 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 	}
 
 	public onDidSendMessage(_message: any): void {
-		this.endProgress();
+		// Things that trigger hiding the progress status:
+		// - Output events
+		// - Progress events
+
+		const event: string | undefined = _message?.event;
+		const stopProgress = event === "output" || event?.startsWith("dart.progress");
+
+		if (stopProgress)
+			this.endProgress();
 	}
 
 	public onWillStopSession(): void {
