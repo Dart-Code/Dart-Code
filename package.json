@@ -3089,6 +3089,15 @@
 						"markdownDescription": "Whether to consider files ending `_test.dart` that are outside of the test directory as tests. This should be enabled if you put tests inside the `lib` directory of your Flutter app so they will be run with `flutter test` and not `flutter run`.",
 						"scope": "window"
 					},
+					"dart.coverageExcludePatterns": {
+						"type": "array",
+						"default": [],
+						"markdownDescription": "An array of glob patterns to exclude from code coverage results. Paths matching any of these patterns will still be collected by the Dart VM but not be included in coverage reported to VS Code.",
+						"items": {
+							"type": "string"
+						},
+						"scope": "window"
+					},
 					"dart.openTestView": {
 						"type": "array",
 						"items": {

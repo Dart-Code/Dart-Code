@@ -1,3 +1,4 @@
+import { minimatch } from "minimatch";
 import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
@@ -94,11 +95,14 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 
 		try {
+			const coverageExcludePatterns = config.coverageExcludePatterns;
 			const coverage = this.coverageParser.parseLcovFile(coverageFilePath);
 			for (const fileCoverage of coverage) {
 				const absolutePath = path.isAbsolute(fileCoverage.sourceFilePath)
 					? fileCoverage.sourceFilePath
 					: path.join(cwd, fileCoverage.sourceFilePath);
+				if (coverageExcludePatterns.some((p: string) => minimatch(absolutePath, p, { dot: true })))
+					continue;
 				const uri = vs.Uri.file(absolutePath);
 				const coverage = new DartFileCoverage(uri, fileCoverage);
 				run.addCoverage(coverage);

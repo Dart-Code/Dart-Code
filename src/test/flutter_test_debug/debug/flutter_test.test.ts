@@ -544,6 +544,24 @@ describe("flutter test debugger", () => {
 			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
 			assert.deepStrictEqual(coverageFiles, [fsPath(flutterHelloWorldExamplePrinterFile), fsPath(flutterHelloWorldPrinterFile)]);
 		});
+
+		it("and excludes configured paths", async () => {
+			await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
+
+			// Discover tests.
+			await openFile(flutterHelloWorldExampleTestFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
+
+			const controller = privateApi.testController;
+			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterHelloWorldExampleTestFile)}`)!;
+			const testRequest = new vs.TestRunRequest([suiteNode]);
+
+			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			assert(addCoverageStub?.called);
+			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+			assert.deepStrictEqual(coverageFiles, [fsPath(flutterHelloWorldPrinterFile)]);
+		});
 	});
 });
 

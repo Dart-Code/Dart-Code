@@ -77,6 +77,7 @@ class Config {
 	get closingLabelsPrefix(): string { return this.getConfig<string>("closingLabelsPrefix", " // "); }
 	get closingLabelsTextStyle(): string { return this.getConfig<string>("closingLabelsTextStyle", "normal"); }
 	get completionBudgetMilliseconds(): number | undefined { return this.getConfig<number | undefined>("completionBudgetMilliseconds", undefined); }
+	get coverageExcludePatterns(): string[] { return this.getConfig<string[]>("coverageExcludePatterns", []); }
 	get customDartDapPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("customDartDapPath", null)); }
 	get customDevToolsUri(): undefined | string { return this.getConfig<undefined | string>("customDevToolsUri", undefined); }
 	get customDevTools(): undefined | CustomDevToolsConfig { return this.getConfig<null | CustomDevToolsConfig>("customDevTools", null); }
