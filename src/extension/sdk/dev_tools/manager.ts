@@ -6,7 +6,6 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtools_server";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
-import { vsCodeVersion } from "../../../shared/capabilities/vscode";
 import { CommandSource, cpuProfilerPage, dartVMPath, devToolsHomePage, devToolsPages, devToolsToolLegacyPath, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger } from "../../../shared/interfaces";
@@ -222,8 +221,6 @@ export class DevToolsManager implements vs.Disposable {
 
 		if (options.location === undefined)
 			options.location = this.getDevToolsLocation(options.pageId);
-		if (!vsCodeVersion.supportsEmbeddedDevTools)
-			options.location = "external";
 		if (options.reuseWindows === undefined)
 			options.reuseWindows = config.devToolsReuseWindows;
 
