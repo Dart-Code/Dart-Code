@@ -6,7 +6,7 @@
 ## Introduction
 
 Dart Code extends [VS Code](https://code.visualstudio.com/) with support for the
-[Dart](https://www.dartlang.org/) programming language, and provides tools for
+[Dart](https://dart.dev/) programming language, and provides tools for
 effectively editing, refactoring, running, and reloading [Flutter](https://flutter.dev/)
 mobile apps.
 
