@@ -32,6 +32,10 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	constructor(private readonly logger: Logger, private readonly wsContext: DartWorkspaceContext, private readonly pubGlobal: PubGlobal, private readonly testModel: TestModel, private readonly daemon: IFlutterDaemon | undefined, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly devTools: DevToolsManager, private readonly flutterCapabilities: FlutterCapabilities) { }
 
 	public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration, _token?: CancellationToken): ProviderResult<DebugConfiguration> {
+		this.logger.info(`DEBUG5670: resolveDebugConfiguration():`);
+		this.logger.info(`           folder: ${folder?.uri}`);
+		this.logger.info(`           debugConfig: ${JSON.stringify(debugConfig)}`);
+
 		ensureDebugLaunchUniqueId(debugConfig);
 		debugConfig.type = debugConfig.type || "dart";
 		debugConfig.request = debugConfig.request || "launch";
@@ -59,10 +63,16 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 	}
 
 	public async resolveDebugConfigurationWithSubstitutedVariables(folder: WorkspaceFolder | undefined, debugConfig: DebugConfiguration & DartLaunchArgs, token?: CancellationToken): Promise<DebugConfiguration | undefined | null> {
+		this.logger.info(`DEBUG5670: resolveDebugConfigurationWithSubstitutedVariables():`);
+		this.logger.info(`           folder: ${folder?.uri}`);
+		this.logger.info(`           debugConfig: ${JSON.stringify(debugConfig)}`);
+
+
 		ensureDebugLaunchUniqueId(debugConfig);
 		const isAttachRequest = debugConfig.request === "attach";
 		const logger = this.logger;
 		const editor = getActiveRealFileEditor();
+		this.logger.info(`DEBUG5670: active real editor: ${editor?.document?.uri}`);
 		const openFile = editor
 			? fsPath(editor.document.uri)
 			: undefined;
