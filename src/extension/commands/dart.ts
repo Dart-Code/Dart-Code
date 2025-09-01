@@ -19,8 +19,8 @@ export class DartCommands extends BaseSdkCommands {
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, private readonly pubGlobal: PubGlobal, dartCapabilities: DartCapabilities, private readonly analytics: Analytics) {
 		super(logger, context, workspace, dartCapabilities);
 
-		this.disposables.push(vs.commands.registerCommand("dart.createProject", this.createDartProject, this));
-		this.disposables.push(vs.commands.registerCommand("_dart.create", this.dartCreate, this));
+		this.disposables.push(vs.commands.registerCommand("dart.createProject", this.createDartProject.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("_dart.create", this.dartCreate.bind(this)));
 	}
 
 	private dartCreate(projectPath: string, templateName: string) {

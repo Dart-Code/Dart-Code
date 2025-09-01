@@ -297,8 +297,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		// Exposed for use in user-tasks.
 		context.subscriptions.push(vs.commands.registerCommand("flutter.getSelectedDeviceId", () => deviceManager?.currentDevice?.id));
 
-		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker, deviceManager));
-		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator, deviceManager));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.selectDevice", deviceManager.showDevicePicker.bind(deviceManager)));
+		context.subscriptions.push(vs.commands.registerCommand("flutter.launchEmulator", deviceManager.promptForAndLaunchEmulator.bind(deviceManager)));
 	}
 
 	if (workspaceContext.config.forceFlutterWorkspace && isRunningLocally && isMac && workspaceContext.config.localMacWarningMessage) {

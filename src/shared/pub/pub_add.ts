@@ -33,7 +33,7 @@ export class PackageCacheData {
 	}
 
 	static fromJson(json: string): PackageCacheData | undefined {
-		const data = JSON.parse(json, PackageCacheData.mapReviver) as PackageCache;
+		const data = JSON.parse(json, (k, v) => PackageCacheData.mapReviver(k, v)) as PackageCache;
 
 		if (data.version !== PackageCacheData.cacheVersion)
 			return undefined;
@@ -51,7 +51,7 @@ export class PackageCacheData {
 				packages: this.packages,
 				version: PackageCacheData.cacheVersion,
 			} as PackageCache,
-			PackageCacheData.mapReplacer,
+			(key, value) => PackageCacheData.mapReplacer(key, value),
 			2,
 		);
 	}

@@ -40,7 +40,7 @@ export class DartDebugClient extends DebugClient {
 
 		// HACK to handle incoming requests..
 		const me = (this as unknown as { dispatch(body: string): void });
-		const oldDispatch = me.dispatch;
+		const oldDispatch = me.dispatch.bind(this);
 		me.dispatch = (body: string) => {
 			const rawData = JSON.parse(body);
 			for (const tracker of this.currentTrackers) {
@@ -51,7 +51,7 @@ export class DartDebugClient extends DebugClient {
 				const request = rawData as DebugProtocol.Request;
 				this.emit(request.command, request);
 			} else {
-				oldDispatch.bind(this)(body);
+				oldDispatch(body);
 			}
 		};
 

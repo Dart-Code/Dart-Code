@@ -9,7 +9,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
 	constructor(private readonly dartCapabilities: DartCapabilities) {
-		this.disposables.push(vs.commands.registerCommand("_dart.applySnippetTextEdit", this.applySnippetTextEdit, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.applySnippetTextEdit", this.applySnippetTextEdit.bind(this)));
 	}
 
 	public get feature(): StaticFeature {

@@ -41,8 +41,8 @@ export class HotReloadOnSaveHandler implements IAmDisposable {
 		// TODO: Make this support everything that shouldHotReloadFor() does.
 		const watcher = workspace.createFileSystemWatcher("**/*.dart");
 		this.disposables.push(watcher);
-		watcher.onDidChange(this.handleFileSystemChange, this);
-		watcher.onDidCreate(this.handleFileSystemChange, this);
+		watcher.onDidChange(this.handleFileSystemChange.bind(this));
+		watcher.onDidCreate(this.handleFileSystemChange.bind(this));
 	}
 
 	private handleFileSystemChange(uri: Uri) {

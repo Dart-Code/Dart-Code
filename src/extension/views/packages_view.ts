@@ -21,8 +21,8 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 	private processPackageMapChangeEvents = true;
 
 	constructor(private readonly logger: Logger, public readonly projectFinder: ProjectFinder, context: DartWorkspaceContext) {
-		this.disposables.push(vs.commands.registerCommand("_dart.removeDependencyFromTreeNode", this.removeDependency, this));
-		this.disposables.push(vs.commands.registerCommand("_dart.openDependencyPageFromTreeNode", this.openDependencyPage, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.removeDependencyFromTreeNode", this.removeDependency.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("_dart.openDependencyPageFromTreeNode", this.openDependencyPage.bind(this)));
 		context.events.onPackageMapChange.listen(() => {
 			// Calling "pub deps --json" modifies .dart_tool/package_config.json which
 			// causes a loop here. The file is modified, we rebuild the tree, which triggers

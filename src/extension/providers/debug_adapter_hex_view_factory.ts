@@ -11,7 +11,7 @@ export class DartDebugAdapterHexViewFactory implements vs.DebugAdapterTrackerFac
 	public supportsFormatting = false;
 
 	constructor(private readonly logger: Logger) {
-		this.disposables.push(vs.workspace.onDidChangeConfiguration(this.handleConfigChange, this));
+		this.disposables.push(vs.workspace.onDidChangeConfiguration(this.handleConfigChange.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("_dart.showDebuggerNumbersAsHex", () => this.setFormatHex(true)));
 		this.disposables.push(vs.commands.registerCommand("_dart.showDebuggerNumbersAsDecimal", () => this.setFormatHex(false)));
 	}

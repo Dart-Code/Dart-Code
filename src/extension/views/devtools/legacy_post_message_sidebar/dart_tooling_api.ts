@@ -21,7 +21,7 @@ export class DartApi implements IAmDisposable {
 		const addApi = (api: ToolApi) => this.apis[api.apiName] = api;
 		addApi(new VsCodeApiHandler(this, commandSource, deviceManager));
 
-		this.disposables.push(onReceiveMessage(this.handleMessage, this));
+		this.disposables.push(onReceiveMessage(this.handleMessage.bind(this)));
 	}
 
 	public postMessage(message: any): void {
@@ -135,9 +135,9 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 
 	constructor(private readonly commandSource: string, private readonly deviceManager: FlutterDeviceManager | undefined) {
 		if (deviceManager) {
-			this.disposables.push(deviceManager?.onCurrentDeviceChanged(this.onDevicesChanged, this));
-			this.disposables.push(deviceManager?.onDevicesChanged(this.onDevicesChanged, this));
-			this.disposables.push(debugSessionsChanged(this.onDebugSessionsChanged, this));
+			this.disposables.push(deviceManager?.onCurrentDeviceChanged(this.onDevicesChanged.bind(this)));
+			this.disposables.push(deviceManager?.onDevicesChanged(this.onDevicesChanged.bind(this)));
+			this.disposables.push(debugSessionsChanged(this.onDebugSessionsChanged.bind(this)));
 		}
 	}
 

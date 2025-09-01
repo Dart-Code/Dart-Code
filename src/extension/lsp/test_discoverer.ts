@@ -179,10 +179,10 @@ class TestDiscoveryVisitor extends OutlineVisitor {
 	}
 
 	protected visitUnitTestTest(outline: Outline) {
-		this.handleItem(outline, false, super.visitUnitTestTest);
+		this.handleItem(outline, false, super.visitUnitTestTest.bind(this));
 	}
 	protected visitUnitTestGroup(outline: Outline) {
-		this.handleItem(outline, true, super.visitUnitTestGroup);
+		this.handleItem(outline, true, super.visitUnitTestGroup.bind(this));
 	}
 
 	private handleItem(outline: Outline, isGroup: boolean, base: (outline: Outline) => void) {

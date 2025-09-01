@@ -343,7 +343,7 @@ export class DebugCommands implements IAmDisposable {
 			);
 			await vs.debug.startDebugging(vs.workspace.getWorkspaceFolder(resource), launchConfig as vs.DebugConfiguration);
 		}));
-		this.disposables.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration, this));
+		this.disposables.push(vs.commands.registerCommand("dart.createLaunchConfiguration", this.createLaunchConfiguration.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("dart.rerunLastDebugSession", async () => {
 			if (LastDebugSession.debugConfig) {
 				await vs.debug.startDebugging(LastDebugSession.workspaceFolder, LastDebugSession.debugConfig);
@@ -436,7 +436,7 @@ export class DebugCommands implements IAmDisposable {
 			this.currentDebugOption = DebugOption.MyCodeSdk;
 		else if (config.debugExternalPackageLibraries)
 			this.currentDebugOption = DebugOption.MyCodePackages;
-		this.disposables.push(vs.commands.registerCommand("_dart.toggleDebugOptions", this.toggleDebugOptions, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.toggleDebugOptions", this.toggleDebugOptions.bind(this)));
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
 		this.debugOptions.tooltip = `Controls whether to step into or stop at breakpoints in only files in this workspace or also those in SDK and/or external Pub packages`;
 		this.debugOptions.command = "_dart.toggleDebugOptions";

@@ -62,7 +62,6 @@ export default defineConfig([
 			"@typescript-eslint/prefer-promise-reject-errors": "off",
 			"@typescript-eslint/require-await": "off",
 			"@typescript-eslint/restrict-template-expressions": "off",
-			"@typescript-eslint/unbound-method": "off",
 			"no-async-promise-executor": "off",
 			"no-case-declarations": "off",
 			"no-empty": "off",

@@ -381,7 +381,7 @@ describe("pub package status", () => {
 				isPreReleaseSdk: false,
 			},
 			privateApi.logger,
-			projectFolders.map(vs.Uri.file),
+			projectFolders.map((p) => vs.Uri.file(p)),
 			false,
 			existsSync,
 			readFileSync,

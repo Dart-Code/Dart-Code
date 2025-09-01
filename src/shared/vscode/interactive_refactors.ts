@@ -12,7 +12,7 @@ export class InteractiveRefactors implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
 	constructor(private readonly logger: Logger) {
-		this.disposables.push(commands.registerCommand(InteractiveRefactors.commandName, this.handleRefactor, this));
+		this.disposables.push(commands.registerCommand(InteractiveRefactors.commandName, this.handleRefactor.bind(this)));
 	}
 
 	public get feature(): StaticFeature {

@@ -31,17 +31,17 @@ export class FlutterCommands extends BaseSdkCommands {
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, private readonly sdkUtils: SdkUtils, dartCapabilities: DartCapabilities, private readonly flutterCapabilities: FlutterCapabilities, private readonly deviceManager: FlutterDeviceManager | undefined, private readonly analytics: Analytics) {
 		super(logger, context, workspace, dartCapabilities);
 
-		this.disposables.push(vs.commands.registerCommand("flutter.clean", this.flutterClean, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.clean", this.flutterClean.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
-		this.disposables.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot, this));
-		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("flutter.doctor.sidebar", () => this.flutterDoctor({ commandSource: CommandSource.sidebarTitle })));
-		this.disposables.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade, this));
-		this.disposables.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject, this));
+		this.disposables.push(vs.commands.registerCommand("flutter.upgrade", this.flutterUpgrade.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("flutter.createProject", this.createFlutterProject.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("flutter.createProject.sidebar", () => this.createFlutterProject({ commandSource: CommandSource.sidebarTitle })));
-		this.disposables.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject, this));
-		this.disposables.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate, this));
-		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.flutter.createSampleProject", this.createFlutterSampleProject.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("_flutter.create", this.flutterCreate.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean.bind(this)));
 	}
 
 	private async flutterClean(selection: vs.Uri | undefined): Promise<RunProcessResult | undefined> {

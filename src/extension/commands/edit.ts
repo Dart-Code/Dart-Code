@@ -9,12 +9,12 @@ export class EditCommands implements vs.Disposable {
 
 	constructor() {
 		this.commands.push(
-			vs.commands.registerCommand("_dart.jumpToLineColInUri", this.jumpToLineColInUri, this),
-			vs.commands.registerCommand("_dart.showCode", showCode, this),
-			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings, this),
-			vs.commands.registerCommand("dart.printSelectionToTerminal", this.printSelectionToTerminal, this),
-			vs.commands.registerCommand("dart.toggleLineComment", this.toggleLineComment, this),
-			vs.commands.registerCommand("dart.toggleDartdocComment", this.toggleDartdocComment, this),
+			vs.commands.registerCommand("_dart.jumpToLineColInUri", this.jumpToLineColInUri.bind(this)),
+			vs.commands.registerCommand("_dart.showCode", showCode),
+			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings.bind(this)),
+			vs.commands.registerCommand("dart.printSelectionToTerminal", this.printSelectionToTerminal.bind(this)),
+			vs.commands.registerCommand("dart.toggleLineComment", this.toggleLineComment.bind(this)),
+			vs.commands.registerCommand("dart.toggleDartdocComment", this.toggleDartdocComment.bind(this)),
 			vs.commands.registerCommand("dart.sortMembers", () => this.runCodeAction("source.sortMembers")),
 		);
 	}

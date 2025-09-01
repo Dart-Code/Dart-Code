@@ -159,10 +159,10 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	}
 
 	protected visitUnitTestTest(outline: Outline) {
-		this.addTest(outline, super.visitUnitTestTest);
+		this.addTest(outline, super.visitUnitTestTest.bind(this));
 	}
 	protected visitUnitTestGroup(outline: Outline) {
-		this.addTest(outline, super.visitUnitTestGroup);
+		this.addTest(outline, super.visitUnitTestGroup.bind(this));
 	}
 
 	private addTest(outline: Outline, base: (outline: Outline) => void) {

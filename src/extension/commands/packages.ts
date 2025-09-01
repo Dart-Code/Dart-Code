@@ -25,11 +25,11 @@ let lastPubspecSaveReason: vs.TextDocumentSaveReason | undefined;
 export class PackageCommands extends BaseSdkCommands {
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities) {
 		super(logger, context, workspace, dartCapabilities);
-		this.disposables.push(vs.commands.registerCommand("dart.getPackages", this.getPackages, this));
-		this.disposables.push(vs.commands.registerCommand("dart.getPackages.all", this.getPackagesForAllProjects, this));
-		this.disposables.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages, this));
-		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages, this));
-		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages.majorVersions", this.upgradePackagesMajorVersions, this));
+		this.disposables.push(vs.commands.registerCommand("dart.getPackages", this.getPackages.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("dart.getPackages.all", this.getPackagesForAllProjects.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("dart.listOutdatedPackages", this.listOutdatedPackages.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages", this.upgradePackages.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("dart.upgradePackages.majorVersions", this.upgradePackagesMajorVersions.bind(this)));
 
 		// Pub commands.
 		this.disposables.push(vs.commands.registerCommand("pub.get", (selection) => vs.commands.executeCommand("dart.getPackages", selection)));
@@ -182,8 +182,8 @@ export class PackageCommands extends BaseSdkCommands {
 		}));
 		const watcher = vs.workspace.createFileSystemWatcher("**/pubspec{,_overrides}.yaml");
 		this.disposables.push(watcher);
-		watcher.onDidChange(this.handlePubspecChange, this);
-		watcher.onDidCreate(this.handlePubspecChange, this);
+		watcher.onDidChange(this.handlePubspecChange.bind(this));
+		watcher.onDidCreate(this.handlePubspecChange.bind(this));
 	}
 
 	private handlePubspecChange(uri: vs.Uri) {
@@ -267,7 +267,7 @@ export class PackageCommands extends BaseSdkCommands {
 			const pubStatuses = getPubWorkspaceStatus(
 				this.sdks,
 				this.logger,
-				uniq(projectFolders).map(vs.Uri.file).filter((uri) => config.for(uri).promptToGetPackages)
+				uniq(projectFolders).map((p) => vs.Uri.file(p)).filter((uri) => config.for(uri).promptToGetPackages)
 			)
 				.filter((result) => result.pubRequired);
 			this.logger.info(`Found pub status for ${pubStatuses.length} folders:${pubStatuses.map((result) => `\n    ${fsPath(result.folderUri)} (pubRequired?: ${result.pubRequired}, reason: ${result.reason})`).join("")}`);

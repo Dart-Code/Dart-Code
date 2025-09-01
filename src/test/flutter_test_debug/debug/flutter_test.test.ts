@@ -502,10 +502,10 @@ describe("flutter test debugger", () => {
 
 		beforeEach(() => {
 			const controller = privateApi.testController;
-			const createTestRunOriginal = controller.controller.createTestRun;
+			const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
 			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
-			createTestRunStub.callsFake((request) => {
-				const originalResult = createTestRunOriginal.call(controller.controller, request);
+			createTestRunStub.callsFake((request: vs.TestRunRequest) => {
+				const originalResult = createTestRunOriginal(request);
 				addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
 				return originalResult;
 			});

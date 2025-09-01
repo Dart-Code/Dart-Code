@@ -22,8 +22,8 @@ export class FlutterProjectWatcher implements IAmDisposable {
 	) {
 		const watcher = workspace.createFileSystemWatcher("**/pubspec.yaml");
 		this.disposables.push(watcher);
-		this.disposables.push(watcher.onDidCreate(this.handlePubspecChange, this));
-		this.disposables.push(watcher.onDidChange(this.handlePubspecChange, this));
+		this.disposables.push(watcher.onDidCreate(this.handlePubspecChange.bind(this)));
+		this.disposables.push(watcher.onDidChange(this.handlePubspecChange.bind(this)));
 	}
 
 	private handlePubspecChange(uri: Uri): void {

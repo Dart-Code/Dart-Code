@@ -32,8 +32,8 @@ export class AddDependencyCommand extends BaseSdkCommands {
 
 		this.disposables.push(vs.commands.registerCommand("dart.addDependency", (uri: string | vs.Uri | undefined) => this.promptAndAddDependency(uri, false)));
 		this.disposables.push(vs.commands.registerCommand("dart.addDevDependency", (uri: string | vs.Uri | undefined) => this.promptAndAddDependency(uri, true)));
-		this.disposables.push(vs.commands.registerCommand("_dart.addDependency", this.addDependency, this));
-		this.disposables.push(vs.commands.registerCommand("_dart.removeDependency", this.removeDependency, this));
+		this.disposables.push(vs.commands.registerCommand("_dart.addDependency", this.addDependency.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("_dart.removeDependency", this.removeDependency.bind(this)));
 
 		this.extensionStorageUri = context.extensionStorageUri;
 		// Kick off async work to fetch then queue a new check.

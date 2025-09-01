@@ -18,13 +18,13 @@ export class LoggingCommands implements vs.Disposable {
 
 	constructor(private readonly logger: EmittingLogger, private extensionLogPath: string) {
 		this.disposables.push(
-			vs.commands.registerCommand("dart.startLogging", this.startLoggingViaPicker, this),
-			vs.commands.registerCommand("dart.startLoggingDebugging", this.startLoggingDebugging, this),
-			vs.commands.registerCommand("dart.startLoggingAnalysisServer", this.startLoggingAnalysisServer, this),
-			vs.commands.registerCommand("dart.startLoggingAnalysisServerTimings", this.startLoggingAnalysisServerTimings, this),
-			vs.commands.registerCommand("dart.startLoggingExtensionOnly", this.startLoggingExtensionOnly, this),
-			vs.commands.registerCommand("dart.openExtensionLog", this.openExtensionLog, this),
-			vs.commands.registerCommand("dart.stopLogging", this.stopLogging, this),
+			vs.commands.registerCommand("dart.startLogging", this.startLoggingViaPicker.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingDebugging", this.startLoggingDebugging.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingAnalysisServer", this.startLoggingAnalysisServer.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingAnalysisServerTimings", this.startLoggingAnalysisServerTimings.bind(this)),
+			vs.commands.registerCommand("dart.startLoggingExtensionOnly", this.startLoggingExtensionOnly.bind(this)),
+			vs.commands.registerCommand("dart.openExtensionLog", this.openExtensionLog.bind(this)),
+			vs.commands.registerCommand("dart.stopLogging", this.stopLogging.bind(this)),
 		);
 	}
 

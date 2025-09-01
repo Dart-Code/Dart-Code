@@ -13,8 +13,8 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 	constructor(private readonly logger: Logger, private readonly sdks: Sdks) {
 
 		this.disposables.push(
-			vs.commands.registerCommand("flutter.openInAndroidStudio", this.openInAndroidStudio, this),
-			vs.commands.registerCommand("flutter.openInXcode", this.openInXcode, this),
+			vs.commands.registerCommand("flutter.openInAndroidStudio", this.openInAndroidStudio.bind(this)),
+			vs.commands.registerCommand("flutter.openInXcode", this.openInXcode.bind(this)),
 		);
 	}
 
