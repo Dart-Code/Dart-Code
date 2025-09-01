@@ -567,7 +567,7 @@ export class LspAnalyzer extends Analyzer {
 				if (ls.Command.is(item)) {
 					return p2c.asCommand(item) as vs.Command;
 				} else {
-					return (await asCodeAction(item, token)) as vs.CodeAction;
+					return (await asCodeAction(item, token))!;
 				}
 			}));
 		}

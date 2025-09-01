@@ -21,13 +21,13 @@ export class Context {
 		return this.context.globalStorageUri;
 	}
 
-	get devToolsNotificationLastShown(): number | undefined { return this.context.globalState.get("devToolsNotificationLastShown") as number; }
+	get devToolsNotificationLastShown(): number | undefined { return this.context.globalState.get<number>("devToolsNotificationLastShown"); }
 	set devToolsNotificationLastShown(value: number | undefined) { void this.context.globalState.update("devToolsNotificationLastShown", value); }
 	get devToolsNotificationDoNotShow(): boolean | undefined { return !!this.context.globalState.get("devToolsNotificationDoNotShowAgain"); }
 	set devToolsNotificationDoNotShow(value: boolean | undefined) { void this.context.globalState.update("devToolsNotificationDoNotShowAgain", value); }
 	get breakpointInNonDebuggableFileDoNotShowAgain(): boolean | undefined { return !!this.context.globalState.get("breakpointInNonDebuggableFileDoNotShowAgain"); }
 	set breakpointInNonDebuggableFileDoNotShowAgain(value: boolean | undefined) { void this.context.globalState.update("breakpointInNonDebuggableFileDoNotShowAgain", value); }
-	public getFlutterSurveyNotificationLastShown(id: string): number | undefined { return this.context.globalState.get(`flutterSurvey${id}NotificationLastShown`) as number; }
+	public getFlutterSurveyNotificationLastShown(id: string): number | undefined { return this.context.globalState.get<number>(`flutterSurvey${id}NotificationLastShown`); }
 	public setFlutterSurveyNotificationLastShown(id: string, value: number | undefined) { void this.context.globalState.update(`flutterSurvey${id}NotificationLastShown`, value); }
 	public getFlutterSurveyNotificationDoNotShow(id: string): boolean | undefined { return !!this.context.globalState.get(`flutterSurvey${id}NotificationDoNotShowAgain`); }
 	public setFlutterSurveyNotificationDoNotShow(id: string, value: boolean | undefined) { void this.context.globalState.update(`flutterSurvey${id}NotificationDoNotShowAgain`, value); }
@@ -44,7 +44,7 @@ export class Context {
 	get lastUsedNewProjectPath(): string | undefined { return this.context.globalState.get("lastUsedNewProjectPath"); }
 	set lastUsedNewProjectPath(value: string | undefined) { void this.context.globalState.update("lastUsedNewProjectPath", value); }
 
-	public getPackageLastCheckedForUpdates(packageID: string): number | undefined { return this.context.globalState.get(`packageLastCheckedForUpdates:${packageID}`) as number; }
+	public getPackageLastCheckedForUpdates(packageID: string): number | undefined { return this.context.globalState.get<number>(`packageLastCheckedForUpdates:${packageID}`); }
 	public setPackageLastCheckedForUpdates(packageID: string, value: number | undefined) { void this.context.globalState.update(`packageLastCheckedForUpdates:${packageID}`, value); }
 
 	public getIgnoredExtensionRecommendationIdentifiers(): string[] { return this.context.globalState.get(`ignoredExtensionRecommendations`) ?? []; }

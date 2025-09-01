@@ -58,8 +58,6 @@ export default defineConfig([
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/no-unsafe-member-access": "off",
-			"@typescript-eslint/non-nullable-type-assertion-style": "off",
-			"@typescript-eslint/only-throw-error": "off",
 			"@typescript-eslint/prefer-nullish-coalescing": "off",
 			"@typescript-eslint/prefer-promise-reject-errors": "off",
 			"@typescript-eslint/require-await": "off",

@@ -482,7 +482,7 @@ const deferredItems: DeferredFunction[] = [];
 const deferredToLastItems: DeferredFunction[] = [];
 afterEach("run deferred functions", async function () {
 	logger.info(`Running deferred functions!`);
-	let firstError: unknown;
+	let firstError: Error | undefined;
 	for (const deferredFunction of [...deferredItems.reverse(), ...deferredToLastItems.reverse()]) {
 		const description = deferredFunction.description;
 		const callback = deferredFunction.callback;
@@ -491,7 +491,8 @@ afterEach("run deferred functions", async function () {
 			await watchPromise(`afterEach->deferred->${description}`, callback(this.currentTest ? this.currentTest.state : undefined));
 		} catch (e) {
 			logger.error(`Error running deferred function ${description}: ${e}`);
-			firstError = firstError || e;
+			if (!firstError)
+				firstError = e instanceof Error ? e : new Error(`${e}`);
 		}
 		logger.info(`    done!`);
 	}
