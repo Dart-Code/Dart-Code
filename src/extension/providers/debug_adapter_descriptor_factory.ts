@@ -32,35 +32,8 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		const isDartTest = debuggerType === DebuggerType.DartTest;
 		const isFlutterTest = debuggerType === DebuggerType.FlutterTest;
 
-		let isPreReleaseSdk = false;
-		let isInSdkDapExperiment = false;
-		if (isDartOrDartTest) {
-			isPreReleaseSdk = this.dartCapabilities.version.includes("-");
-			isInSdkDapExperiment = this.experiments.dartSdkDaps.applies;
-		} else if (isFlutterOrFlutterTest) {
-			isPreReleaseSdk = this.flutterCapabilities.version.includes("-");
-			isInSdkDapExperiment = this.flutterCapabilities.useLegacyDapExperiment
-				? this.experiments.flutterSdkDapsLegacy.applies
-				: this.experiments.flutterSdkDaps.applies;
-		}
-
-		let useSdkDap: boolean;
-		let sdkDapReason: string;
-		if (this.workspaceContext.config.forceFlutterWorkspace) {
-			useSdkDap = true;
-			sdkDapReason = "workspaceContext.config.forceFlutterWorkspace";
-		} else if (config.useLegacyDebugAdapters !== undefined) {
-			useSdkDap = !config.useLegacyDebugAdapters;
-			sdkDapReason = "config.useLegacyDebugAdapters";
-		} else if (isPreReleaseSdk) {
-			useSdkDap = true;
-			sdkDapReason = "canDefaultToSdkDap and using pre-release SDK";
-		} else {
-			useSdkDap = isInSdkDapExperiment;
-			sdkDapReason = "sdkDaps experiment";
-		}
-		this.logger.info(`SDK DAP setting is ${useSdkDap}, set by ${sdkDapReason}`);
-
+		const useSdkDap = this.workspaceContext.config.forceFlutterWorkspace || isDartOrDartTest || isFlutterOrFlutterTest;
+		this.logger.info(`SDK DAP setting is ${useSdkDap}for debugger ${debuggerType}`);
 
 		const analytics = this.analytics;
 		function logDebuggerStart(sdkDap: boolean) {
@@ -124,7 +97,7 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 		}
 
 		const args = [this.extensionContext.asAbsolutePath(debugAdapterPath), debuggerName];
-		this.logger.info(`Running debugger via node with ${args.join("    ")}`);
+		this.logger.info(`Running legacy debug adapter via node with ${args.join("    ")}`);
 		logDebuggerStart(false);
 		return new DebugAdapterExecutable("node", args);
 	}

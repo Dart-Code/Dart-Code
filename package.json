@@ -3267,15 +3267,6 @@
 						},
 						"scope": "resource"
 					},
-					"dart.useLegacyDebugAdapters": {
-						"type": [
-							"null",
-							"boolean"
-						],
-						"default": null,
-						"markdownDescription": "**LEGACY SETTING: Legacy debug adapters are not recommended since Dart v3.4.**\n\nWhether to use the legacy debug adapters even if the new debug adapters are available in the current Dart/Flutter SDKs contain. Setting the value to `true` will force use of the legacay adapters. Setting to `false` will force use of the SDK adapters. Leaving as `null` will allow the extension to decide which debug adapters to use depending on the SDK version and rollout progress.",
-						"scope": "window"
-					},
 					"dart.updateDevTools": {
 						"type": "boolean",
 						"default": true,
