@@ -662,13 +662,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		}
 
 		// Also broken in SDK DAP for web because of https://github.com/dart-lang/webdev/issues/1416
-		if (flutterTestDeviceIsWeb) {
-			// This is known broken in Flutter 3.19+3.20 (for legacy DAP) so skip for this version and re-enable
-			// for the next version.
-			// https://github.com/dart-lang/sdk/issues/54925
+		if (flutterTestDeviceIsWeb)
 			this.skip();
-		}
-
 
 		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
