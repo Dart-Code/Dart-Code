@@ -33,7 +33,6 @@ export interface DartLaunchArgs {
 	sendLogsToClient?: boolean;
 	sendCustomProgressEvents?: boolean;
 	showDartDeveloperLogs: boolean;
-	showMemoryUsage?: boolean;
 	toolEnv?: Record<string, string | undefined>;
 	type: "dart";
 	useInspectorNotificationsForWidgetErrors?: boolean;

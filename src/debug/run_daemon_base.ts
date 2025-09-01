@@ -6,7 +6,6 @@ import { StdIOService } from "../shared/services/stdio_service";
 
 export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	constructor(
-		public readonly mode: RunMode,
 		public readonly dartCapabilities: DartCapabilities,
 		logFile: string | undefined,
 		logger: Logger,
@@ -101,10 +100,6 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 		return this.sendRequest("app.restart", { appId, fullRestart: hotRestart === true, pause, reason: args?.reason, debounce: args?.debounce });
 	}
 
-	public detach(appId: string): Thenable<UnknownResponse> {
-		return this.sendRequest("app.detach", { appId });
-	}
-
 	public stop(appId: string): Thenable<UnknownResponse> {
 		return this.sendRequest("app.stop", { appId });
 	}
@@ -160,7 +155,3 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	}
 }
 
-export enum RunMode {
-	Run,
-	Attach,
-}

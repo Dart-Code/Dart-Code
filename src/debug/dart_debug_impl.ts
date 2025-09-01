@@ -2,7 +2,6 @@
 import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
@@ -10,12 +9,12 @@ import { dartVMPath, debugLaunchProgressId, debugTerminatingProgressId, pleaseRe
 import { DartLaunchArgs, FileLocation } from "../shared/debug/interfaces";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
-import { ExecutionInfo, safeSpawn } from "../shared/processes";
+import { ExecutionInfo } from "../shared/processes";
 import { PackageMap } from "../shared/pub/package_map";
 import { PromiseCompleter, errorString, notUndefined, uniq, uriToFilePath, usingCustomScript } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
 import { applyColor, faint } from "../shared/utils/colors";
-import { getRandomInt, getSdkVersion } from "../shared/utils/fs";
+import { getSdkVersion } from "../shared/utils/fs";
 import { mayContainStackFrame, parseStackFrame } from "../shared/utils/stack_trace";
 import { DebuggerResult, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMStack, VMTypeRef, VMWriteEvent, Version, VmExceptionMode, VmServiceConnection } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
@@ -37,7 +36,7 @@ const threadExceptionExpression = "$_threadException";
 // stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void;
 // restartFrameRequest(response: DebugProtocol.RestartFrameResponse, args: DebugProtocol.RestartFrameArguments): void;
 // completionsRequest(response: DebugProtocol.CompletionsResponse, args: DebugProtocol.CompletionsArguments): void;
-export class DartDebugSession extends DebugSession {
+export abstract class DartDebugSession extends DebugSession {
 	// TODO: Tidy all this up
 	protected childProcess?: SpawnedProcess | RemoteEditorTerminalProcess;
 
@@ -50,9 +49,6 @@ export class DartDebugSession extends DebugSession {
 
 	protected expectAdditionalPidToTerminate = false;
 	private additionalPidCompleter = new PromiseCompleter<void>();
-	// We normally track the pid from the VM service to terminate the VM afterwards, but for Flutter Run it's
-	// a remote PID and therefore doesn't make sense to try and terminate.
-	protected allowTerminatingVmServicePid = true;
 	// Normally we don't connect to the VM when running no noDebug mode, but for
 	// Flutter, this means we can't call service extensions (for ex. toggling
 	// debug modes) so we allow it to override this (and then we skip things
@@ -61,7 +57,6 @@ export class DartDebugSession extends DebugSession {
 	// potential VM services come and go.
 	// https://github.com/Dart-Code/Dart-Code/issues/1673
 	protected connectVmEvenForNoDebug = false;
-	protected allowWriteServiceInfo = true;
 	protected processExited = false;
 	public vmService?: VmServiceConnection;
 	protected cwd?: string;
@@ -79,8 +74,6 @@ export class DartDebugSession extends DebugSession {
 	protected evaluateToStringInDebugViews = false;
 	public readonly dartCapabilities = DartCapabilities.empty;
 	public readonly vmServiceCapabilities = VmServiceCapabilities.empty;
-	private useWriteServiceInfo = false;
-	protected vmServiceInfoFile?: string;
 	private serviceInfoPollTimer?: NodeJS.Timeout;
 	protected deleteServiceFileAfterRead = false;
 	private remoteEditorTerminalLaunched?: Promise<RemoteEditorTerminalProcess>;
@@ -91,7 +84,6 @@ export class DartDebugSession extends DebugSession {
 	protected supportsObservatoryWebApp = true;
 	protected parseVmServiceUriFromStdOut = true;
 	protected requiresProgram = true;
-	protected pollforMemoryMs?: number; // If set, will poll for memory usage and send events back.
 	protected processExit: Promise<{ code: number | null, signal: string | null }> = Promise.resolve({ code: 0, signal: null });
 	protected maxLogLineLength = 1000; // This should always be overriden in launch/attach requests but we have it here for narrower types.
 	protected shouldKillProcessOnTerminate = true;
@@ -188,80 +180,51 @@ export class DartDebugSession extends DebugSession {
 		await this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.program || args.cwd));
 		this.dartCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.dartSdkPath }) ?? this.dartCapabilities.version;
-		this.useWriteServiceInfo = this.allowWriteServiceInfo;
 		this.deleteServiceFileAfterRead = !!args.deleteServiceInfoFile;
 		this.readSharedArgs(args);
 
 		this.logDapResponse(response);
 		this.sendResponse(response);
 
-		if (this.useWriteServiceInfo) {
-			this.parseVmServiceUriFromStdOut = false;
-			this.vmServiceInfoFile = path.join(os.tmpdir(), `dart-vm-service-${getRandomInt(0x1000, 0x10000).toString(16)}.json`);
-		}
-
-		const terminalType = args.console === "terminal"
-			? "integrated"
-			: args.console === "externalTerminal"
-				? "external"
-				: undefined;
-
 		try {
-			// Terminal mode is only supported if we can use writeServiceInfo.
-			// TODO: Move useWriteServiceInfo check to the client, so other clients do not need to provide this.
-			if (terminalType && !this.supportsRunInTerminalRequest) {
-				this.log("Ignoring request to run in terminal because client does not support runInTerminalRequest", LogSeverity.Warn);
-			}
-			if (terminalType && this.useWriteServiceInfo && this.supportsRunInTerminalRequest) {
-				this.deleteServiceFileAfterRead = true;
-				this.childProcess = await this.spawnRemoteEditorProcess(args, terminalType);
-			} else {
-				const process = await this.spawnProcess(args);
+			const process = await this.spawnProcess(args);
 
-				this.childProcess = process;
-				this.processExited = false;
-				this.processExit = new Promise((resolve) => process.on("exit", (code, signal) => resolve({ code, signal })));
-				process.stdout.setEncoding("utf8");
-				process.stdout.on("data", async (data: Buffer | string) => {
-					let match: RegExpExecArray | null = null;
-					if (this.shouldConnectDebugger && this.parseVmServiceUriFromStdOut && !this.vmService) {
-						match = vmServiceListeningBannerPattern.exec(data.toString());
-					}
-					if (match)
-						await this.initDebugger(this.convertObservatoryUriToVmServiceUri(match[1]));
-					else if (this.sendStdOutToConsole)
-						this.logStdout(data.toString());
+			this.childProcess = process;
+			this.processExited = false;
+			this.processExit = new Promise((resolve) => process.on("exit", (code, signal) => resolve({ code, signal })));
+			process.stdout.setEncoding("utf8");
+			process.stdout.on("data", async (data: Buffer | string) => {
+				let match: RegExpExecArray | null = null;
+				if (this.shouldConnectDebugger && this.parseVmServiceUriFromStdOut && !this.vmService) {
+					match = vmServiceListeningBannerPattern.exec(data.toString());
+				}
+				if (match)
+					await this.initDebugger(this.convertObservatoryUriToVmServiceUri(match[1]));
+				else if (this.sendStdOutToConsole)
+					this.logStdout(data.toString());
+			});
+			process.stderr.setEncoding("utf8");
+			process.stderr.on("data", (data: Buffer | string) => {
+				this.logToUserBuffered(data.toString(), "stderr");
+			});
+			process.on("error", (error) => {
+				this.logToUser(`${error}\n`, "stderr");
+			});
+			void this.processExit.then(async ({ code, signal }) => {
+				this.processExited = true;
+				this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
+				if (!code && !signal)
+					this.logToUser("Exited\n");
+				else
+					this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
+				// To reduce the chances of losing async logs, wait a short period
+				// before terminating.
+				await this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
+				setImmediate(() => {
+					this.logDapEvent(new TerminatedEvent());
+					this.sendEvent(new TerminatedEvent());
 				});
-				process.stderr.setEncoding("utf8");
-				process.stderr.on("data", (data: Buffer | string) => {
-					this.logToUserBuffered(data.toString(), "stderr");
-				});
-				process.on("error", (error) => {
-					this.logToUser(`${error}\n`, "stderr");
-				});
-				void this.processExit.then(async ({ code, signal }) => {
-					this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
-					this.processExited = true;
-					this.log(`Process exited (${signal ? `${signal}`.toLowerCase() : code})`);
-					if (!code && !signal)
-						this.logToUser("Exited\n");
-					else
-						this.logToUser(`Exited (${signal ? `${signal}`.toLowerCase() : code})\n`);
-					// To reduce the chances of losing async logs, wait a short period
-					// before terminating.
-					await this.raceIgnoringErrors(() => this.lastLoggingEvent, 500);
-					setImmediate(() => {
-						this.logDapEvent(new TerminatedEvent());
-						this.sendEvent(new TerminatedEvent());
-					});
-				});
-			}
-
-			if (this.useWriteServiceInfo && this.shouldConnectDebugger) {
-
-				const url = await this.startServiceFilePolling();
-				await this.initDebugger(url.toString());
-			}
+			});
 		} catch (e) {
 			this.logToUser(`Unable to start debugging: ${e}`);
 			this.sendEvent(new TerminatedEvent());
@@ -294,80 +257,13 @@ export class DartDebugSession extends DebugSession {
 		this.useInspectorNotificationsForWidgetErrors = !!args.useInspectorNotificationsForWidgetErrors;
 	}
 
-	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartLaunchArgs & DebugProtocol.AttachRequestArguments): Promise<void> {
-		this.logDapRequest("attachRequest", args);
-		const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
-		if (!args || (!vmServiceUri && !args.vmServiceInfoFile)) {
-			return this.errorResponse(response, "Unable to attach; no VM service address or service info file provided.");
-		}
-
-		this.startProgress(debugLaunchProgressId, "Waiting for application");
-
-		this.shouldKillProcessOnTerminate = false;
-		this.cwd = args.cwd;
-		this.readSharedArgs(args);
-
-		this.log(`Attaching to process via ${vmServiceUri || args.vmServiceInfoFile}`);
-
-		// If we were given an explicity packages path, use it (otherwise we'll try
-		// to extract from the VM)
-		if (args.packages) {
-			// Support relative paths
-			if (args.packages && !path.isAbsolute(args.packages))
-				args.packages = args.cwd ? path.join(args.cwd, args.packages) : args.packages;
-
-			try {
-				this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.packages));
-			} catch (e) {
-				this.errorResponse(response, `Unable to load packages file: ${e}`);
-			}
-		}
-
-		this.logDapResponse(response);
-		this.sendResponse(response);
-
-		let url: string | undefined;
-		try {
-			if (vmServiceUri) {
-				// TODO: Should we do this here? DDS won't have a /ws on the end so
-				// this may end up being incorrect.
-				url = this.convertObservatoryUriToVmServiceUri(vmServiceUri);
-			} else {
-				this.vmServiceInfoFile = args.vmServiceInfoFile;
-				this.updateProgress(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}`);
-				url = await this.startServiceFilePolling();
-				this.endProgress(debugLaunchProgressId);
-			}
-			this.subscribeToStdout = true;
-			await this.initDebugger(url);
-		} catch (e) {
-			const messageSuffix = args.vmServiceInfoFile ? `\n    VM info was read from ${args.vmServiceInfoFile}` : "";
-			this.logToUser(`Unable to connect to VM service at ${url || "??"}${messageSuffix}\n    ${e}`);
-			this.sendEvent(new TerminatedEvent());
-			return;
-		}
-	}
+	protected abstract attachRequest(response: DebugProtocol.AttachResponse, args: DartLaunchArgs & DebugProtocol.AttachRequestArguments): Promise<void>;
 
 	protected sourceFileForArgs(args: DartLaunchArgs): string {
 		return args.cwd ? path.relative(args.cwd, args.program!) : args.program!;
 	}
 
-	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
-		let dartPath = path.join(args.dartSdkPath, dartVMPath);
-		const execution = this.buildExecutionInfo(dartPath, args);
-		dartPath = execution.executable;
-		const appArgs = execution.args;
-
-		this.log(`Spawning ${dartPath} with args ${JSON.stringify(appArgs)}`);
-		if (args.cwd)
-			this.log(`..  in ${args.cwd}`);
-		const env = Object.assign({}, args.toolEnv, args.env);
-		const process = safeSpawn(args.cwd, dartPath, appArgs, env);
-
-		this.log(`    PID: ${process.pid}`);
-
-		return process;
-	}
+	protected abstract spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess>;
 
 	protected async spawnRemoteEditorProcess(args: DartLaunchArgs, terminalType: "integrated" | "external"): Promise<RemoteEditorTerminalProcess> {
 		const dartPath = path.join(args.dartSdkPath, dartVMPath);
@@ -419,11 +315,6 @@ export class DartDebugSession extends DebugSession {
 			allArgs.push("--no-serve-devtools");
 			allArgs.push(`--enable-vm-service=${args.vmServicePort}`);
 			allArgs.push("--pause_isolates_on_start=true");
-		}
-		if (this.useWriteServiceInfo && this.vmServiceInfoFile) {
-			allArgs.push(`--write-service-info=${formatPathForVm(this.vmServiceInfoFile)}`);
-			allArgs.push("-DSILENT_OBSERVATORY=true");
-			allArgs.push("-DSILENT_VM_SERVICE=true");
 		}
 
 		// Replace in any custom tool.
@@ -478,68 +369,6 @@ export class DartDebugSession extends DebugSession {
 
 		if (this.sendLogsToClient)
 			this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.VmService } as LogMessage));
-	}
-
-	protected startServiceFilePolling(): Promise<string> {
-		this.logger.info(`Starting to poll for file ${this.vmServiceInfoFile}`);
-		// Ensure we stop if we were already running, to avoid leaving timers running
-		// if this is somehow called twice.
-		this.stopServiceFilePolling(false);
-		if (this.vmServiceInfoFileCompleter)
-			this.vmServiceInfoFileCompleter.reject("Cancelled");
-		this.vmServiceInfoFileCompleter = new PromiseCompleter<string>();
-		this.serviceInfoPollTimer = setInterval(() => this.tryReadServiceFile(), 50);
-		return this.vmServiceInfoFileCompleter.promise;
-	}
-
-	private stopServiceFilePolling(allowDelete: boolean) {
-		if (this.serviceInfoPollTimer) {
-			this.logger.info(`Stopping polling for file ${this.vmServiceInfoFile}`);
-			clearInterval(this.serviceInfoPollTimer);
-			this.serviceInfoPollTimer = undefined;
-		}
-		if (allowDelete
-			&& this.vmServiceInfoFile
-			&& fs.existsSync(this.vmServiceInfoFile)) {
-			try {
-				fs.unlinkSync(this.vmServiceInfoFile);
-				this.vmServiceInfoFile = undefined;
-			} catch (e) {
-				// Don't complain if we failed - the file may have been cleaned up
-				// in the meantime.
-			}
-		}
-	}
-
-	private async tryReadServiceFile(): Promise<void> {
-		if (!this.vmServiceInfoFile || !fs.existsSync(this.vmServiceInfoFile))
-			return;
-
-		try {
-			const serviceInfoJson = fs.readFileSync(this.vmServiceInfoFile, "utf8");
-
-			// It's possible we read the file before the VM had started writing it, so
-			// do some crude checks and bail to reduce the chances of logging half-written
-			// files as errors.
-			if (serviceInfoJson.length < 2 || !serviceInfoJson.trimRight().endsWith("}"))
-				return;
-
-			const serviceInfo: { uri: string } = JSON.parse(serviceInfoJson);
-
-			this.logger.info(`Successfully read JSON from ${this.vmServiceInfoFile} which indicates URI ${serviceInfo.uri}`);
-
-			this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
-			// Ensure we don't try to start anything before we've finished
-			// setting up the process when running remotely.
-			if (this.remoteEditorTerminalLaunched) {
-				await this.remoteEditorTerminalLaunched;
-				await new Promise((resolve) => setTimeout(resolve, 5));
-			}
-			this.vmServiceInfoFileCompleter?.resolve(serviceInfo.uri);
-		} catch (e) {
-			this.logger.error(e);
-			this.vmServiceInfoFileCompleter?.reject(e);
-		}
 	}
 
 	protected async initDebugger(uri: string): Promise<void> {
@@ -604,7 +433,7 @@ export class DartDebugSession extends DebugSession {
 						// we should keep a ref to this process to terminate when we quit. This avoids issues where our process is a shell
 						// (we use shell execute to fix issues on Windows) and the kill signal isn't passed on correctly.
 						// See: https://github.com/Dart-Code/Dart-Code/issues/907
-						if (this.allowTerminatingVmServicePid && this.childProcess) {
+						if (this.childProcess) {
 							this.recordAdditionalPid(vm.pid);
 						}
 
@@ -643,10 +472,6 @@ export class DartDebugSession extends DebugSession {
 								await this.handlePauseEvent(isolate.pauseEvent);
 							}
 						}));
-
-						// Set a timer for memory updates.
-						if (this.pollforMemoryMs)
-							setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs);
 
 						this.endProgress(debugLaunchProgressId);
 						this.logDapEvent(new InitializedEvent());
@@ -742,7 +567,6 @@ export class DartDebugSession extends DebugSession {
 		const signal = force ? "SIGKILL" : "SIGINT";
 		const request = force ? "DISC" : "TERM";
 		this.log(`${request}: Requested to terminate with ${signal}...`);
-		this.stopServiceFilePolling(this.deleteServiceFileAfterRead);
 		if (this.shouldKillProcessOnTerminate && this.childProcess && !this.processExited) {
 			this.log(`${request}: Terminating processes...`);
 			for (const pid of this.additionalPidsToTerminate) {
@@ -2216,36 +2040,6 @@ export class DartDebugSession extends DebugSession {
 		}
 
 		return undefined;
-	}
-
-	private async pollForMemoryUsage(): Promise<void> {
-		if (!this.childProcess || this.childProcess.killed || !this.vmService)
-			return;
-
-		const result = await this.vmService.getVM();
-		const vm = result.result as VM;
-
-		const isolatePromises = vm.isolates.map((isolateRef) => this.vmService!.getIsolate(isolateRef.id));
-		const isolatesResponses = await Promise.all(isolatePromises);
-		const isolates = isolatesResponses.map((response) => response.result as VMIsolate);
-
-		let current = 0;
-		let total = 0;
-
-		for (const isolate of isolates) {
-			if (!isolate._heaps)
-				continue;
-			for (const heap of [isolate._heaps.old, isolate._heaps.new]) {
-				current += heap.used + heap.external;
-				total += heap.capacity + heap.external;
-			}
-		}
-
-		this.logDapEvent(new Event("dart.debugMetrics", { memory: { current, total } }));
-		this.sendEvent(new Event("dart.debugMetrics", { memory: { current, total } }));
-
-		if (this.pollforMemoryMs)
-			setTimeout(() => this.pollForMemoryUsage(), this.pollforMemoryMs).unref();
 	}
 
 	private async reloadSources(): Promise<void> {

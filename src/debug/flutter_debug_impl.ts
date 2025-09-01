@@ -1,31 +1,28 @@
 import { ContinuedEvent, Event, OutputEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
-import * as path from "path";
 import { FlutterCapabilities } from "../shared/capabilities/flutter";
-import { debugLaunchProgressId, flutterPath, restartReasonManual } from "../shared/constants";
+import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
 import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
-import { errorString, isWebDevice, usingCustomScript } from "../shared/utils";
+import { errorString } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
-import { FlutterRun } from "./flutter_run";
 import { DebugAdapterLogger } from "./logging";
-import { RunDaemonBase, RunMode } from "./run_daemon_base";
+import { RunDaemonBase } from "./run_daemon_base";
 
 const objectGroupName = "my-group";
 const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";
 const flutterExceptionEndBannerPrefix = "══════════════════════════════════════════";
 
-export class FlutterDebugSession extends DartDebugSession {
+export abstract class FlutterDebugSession extends DartDebugSession {
 	private runDaemon?: RunDaemonBase;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
 	private appHasBeenToldToStopOrDetach = false;
 	private vmServiceUri?: string;
-	private isReloadInProgress = false;
 	protected readonly flutterCapabilities = FlutterCapabilities.empty;
 
 	// Allow flipping into stderr mode for red exceptions when we see the start/end of a Flutter exception dump.
@@ -35,7 +32,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		super();
 
 		this.sendStdOutToConsole = false;
-		this.allowWriteServiceInfo = false;
 		// We get the VM service URI from the `flutter run` process. If we parse
 		// it out of verbose logging and connect to it, it'll be before Flutter is
 		// finished setting up and bad things can happen (like us sending events
@@ -43,10 +39,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		this.parseVmServiceUriFromStdOut = false;
 		this.requiresProgram = false;
 		this.logCategory = LogCategory.FlutterRun;
-
-		// Enable connecting the VM even for noDebug mode so that service
-		// extensions can be used.
-		this.connectVmEvenForNoDebug = true;
 	}
 
 	protected initializeRequest(
@@ -58,40 +50,10 @@ export class FlutterDebugSession extends DartDebugSession {
 		super.initializeRequest(response, args);
 	}
 
-	protected async attachRequest(response: DebugProtocol.AttachResponse, args: DartLaunchArgs): Promise<void> {
-		// For flutter attach, we actually do the same thing as launch - we run a flutter process
-		// (flutter attach instead of flutter run).
-		this.subscribeToStdout = true;
-		return this.launchRequest(response, args);
-	}
-
 	protected async spawnProcess(args: DartLaunchArgs): Promise<SpawnedProcess> {
-		const isAttach = args.request === "attach";
-		const deviceIdFlag = args.toolArgs?.indexOf("-d");
-		const deviceId = deviceIdFlag && deviceIdFlag !== -1 && args.toolArgs && args.toolArgs.length > deviceIdFlag ? args.toolArgs[deviceIdFlag + 1] : undefined;
-
-		if (args.showMemoryUsage) {
-			this.pollforMemoryMs = 1000;
-		}
-
-		// If we have a service info file, read the URI from it and then use that
-		// as if it was supplied.
-		if (isAttach && (!args.vmServiceUri && args.vmServiceInfoFile)) {
-			this.vmServiceInfoFile = args.vmServiceInfoFile;
-			this.updateProgress(debugLaunchProgressId, `Waiting for ${this.vmServiceInfoFile}`);
-			args.vmServiceUri = await this.startServiceFilePolling();
-		}
-
-		// Normally for `flutter run` we don't allow terminating the pid we get from the VM service,
-		// because it's on a remote device, however in the case of the flutter-tester, it is local
-		// and otherwise might be left hanging around.
-		// Unless, of course, we attached in which case we expect to detach by default.
-		this.allowTerminatingVmServicePid = deviceId === "flutter-tester" && !isAttach;
-
 		const logger = new DebugAdapterLogger(this, this.logCategory);
 		this.expectAdditionalPidToTerminate = true;
-		const mode = isAttach ? RunMode.Attach : RunMode.Run;
-		this.runDaemon = this.spawnRunDaemon(mode, deviceId, args, logger);
+		this.runDaemon = this.spawnRunDaemon(args, logger);
 		this.runDaemon.registerForUnhandledMessages((msg) => this.handleLogOutput(msg));
 
 		// Set up subscriptions.
@@ -184,85 +146,7 @@ export class FlutterDebugSession extends DartDebugSession {
 		}
 	}
 
-	protected spawnRunDaemon(mode: RunMode, deviceId: string | undefined, args: DartLaunchArgs, logger: Logger): RunDaemonBase {
-		let allArgs = [];
-
-		if (mode === RunMode.Attach)
-			allArgs.push("attach");
-		else
-			allArgs.push("run");
-		allArgs.push("--machine");
-
-		const isProfileMode = args.toolArgs?.includes("--profile");
-		const isReleaseMode = args.toolArgs?.includes("--release");
-		const isWeb = isWebDevice(deviceId);
-
-		if (mode === RunMode.Attach) {
-			const vmServiceUri = (args.vmServiceUri || args.observatoryUri);
-
-			if (vmServiceUri) {
-				allArgs.push("--debug-uri");
-				allArgs.push(vmServiceUri);
-			}
-		}
-
-		if (mode === RunMode.Run) {
-			// For release/profile, always be noDebug. If we don't do this, we
-			// will use start-paused which can affect timing unexpectedly.
-			// https://github.com/Dart-Code/Dart-Code/issues/3838
-			if (isReleaseMode || isProfileMode) {
-				this.noDebug = true;
-			}
-
-			// Additionally, for release mode
-			// (or profile on web for now - see https://github.com/Dart-Code/Dart-Code/issues/3338)
-			// disable connecting the debugger.
-			if (isReleaseMode || (isProfileMode && isWeb)) {
-				this.connectVmEvenForNoDebug = false;
-			}
-
-			// When running in Profile mode, we don't want isolates to start
-			// paused because it could affect timings negatively and give a false
-			// impression of performance.
-			if (this.shouldConnectDebugger && !isProfileMode)
-				allArgs.push("--start-paused");
-		}
-
-		// Replace in any custom tool.
-		const customTool = {
-			replacesArgs: args.customToolReplacesArgs,
-			script: args.customTool,
-		};
-		let execution = usingCustomScript(
-			path.join(args.flutterSdkPath!, flutterPath),
-			allArgs,
-			customTool,
-		);
-		allArgs = execution.args;
-
-		if (args.toolArgs)
-			allArgs = allArgs.concat(args.toolArgs);
-
-		if (mode === RunMode.Run || args.program) {
-			if (!args.omitTargetFlag)
-				allArgs.push("--target");
-			if (args.program!.startsWith("//")) {
-				allArgs.push(args.program!);
-			} else {
-				allArgs.push(this.sourceFileForArgs(args));
-			}
-		}
-
-		if (args.args)
-			allArgs = allArgs.concat(args.args);
-
-		execution = {
-			args: allArgs,
-			executable: execution.executable,
-		};
-
-		return new FlutterRun(mode, this.dartCapabilities, execution, args.cwd, { envOverrides: args.env, toolEnv: this.toolEnv }, args.flutterRunLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
-	}
+	protected abstract spawnRunDaemon(args: DartLaunchArgs, logger: Logger): RunDaemonBase;
 
 	private async connectToVmServiceIfReady() {
 		if (this.vmServiceUri && this.appHasStarted && !this.vmService)
@@ -276,10 +160,7 @@ export class FlutterDebugSession extends DartDebugSession {
 				if (this.currentRunningAppId && this.appHasStarted && !this.processExited && this.runDaemon) {
 					// Request to quit/detach, but don't await it since we sometimes
 					// don't get responses before the process quits.
-					if (this.runDaemon.mode === RunMode.Run)
-						void this.runDaemon.stop(this.currentRunningAppId);
-					else
-						void this.runDaemon.detach(this.currentRunningAppId);
+					void this.runDaemon.stop(this.currentRunningAppId);
 
 					// Now wait for the process to terminate up to 3s.
 					await Promise.race([
@@ -315,7 +196,6 @@ export class FlutterDebugSession extends DartDebugSession {
 		if (!this.appHasStarted || !this.currentRunningAppId || !this.runDaemon)
 			return;
 
-		this.isReloadInProgress = true;
 		const restartType = hotRestart ? "hot-restart" : "hot-reload";
 
 		// To avoid issues with hot restart pausing on exceptions during the restart, we remove
@@ -328,8 +208,6 @@ export class FlutterDebugSession extends DartDebugSession {
 			await this.runDaemon.restart(this.currentRunningAppId, !this.noDebug, hotRestart, args);
 		} catch (e) {
 			this.sendEvent(new OutputEvent(`Error running ${restartType}: ${e}\n`, "stderr"));
-		} finally {
-			this.isReloadInProgress = false;
 		}
 	}
 

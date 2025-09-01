@@ -652,10 +652,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			}
 			debugConfig.flutterRunLogFile = insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
 			debugConfig.flutterTestLogFile = insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
-			debugConfig.showMemoryUsage =
-				debugConfig.showMemoryUsage || debugConfig.showMemoryUsage === false
-					? debugConfig.showMemoryUsage
-					: debugConfig.flutterMode === "profile";
 		}
 	}
 
