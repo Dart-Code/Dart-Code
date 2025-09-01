@@ -3,8 +3,6 @@ import { workspace } from "vscode";
 import { hasPackageMapFile, hasPubspec } from "../shared/utils/fs";
 import { isWithinWorkspace } from "./utils";
 
-export const UPGRADE_TO_WORKSPACE_FOLDERS = "Mark Projects as Workspace Folders";
-
 export function locateBestProjectRoot(folder: string, allowOutsideWorkspace = false): string | undefined {
 	// TODO(dantup): Review places where allowOutsideWorkspace is effectively false, because opening sub-folders
 	//  of Pub Workspaces is probably not uncommon.

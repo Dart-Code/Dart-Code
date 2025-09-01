@@ -14,7 +14,7 @@ import { config } from "./config";
 import { ringLog } from "./extension";
 import { locateBestProjectRoot } from "./project";
 
-export function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
+function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
 }
 
@@ -210,22 +210,6 @@ export function getLatestSdkVersion(): Promise<string> {
 		});
 		req.end();
 	});
-}
-
-// Escapes a set of command line arguments so that the escaped string is suitable for passing as an argument
-// to another shell command.
-// Implementation is taken from https://github.com/xxorax/node-shell-escape
-export function escapeShell(args: string[]) {
-	const ret: string[] = [];
-	args.forEach((arg) => {
-		if (/[^A-Za-z0-9_/:=-]/.test(arg)) {
-			arg = "'" + arg.replace(/'/g, "'\\''") + "'";
-			arg = arg.replace(/^(?:'')+/g, "") // unduplicate single-quote at the beginning
-				.replace(/\\'''/g, "\\'"); // remove non-escaped single-quote if there are enclosed between 2 escaped
-		}
-		ret.push(arg);
-	});
-	return ret.join(" ");
 }
 
 export async function promptToReloadExtension(logger: Logger, prompt?: string, buttonText?: string, offerLog?: boolean, specificLog?: string, useError?: boolean): Promise<void> {

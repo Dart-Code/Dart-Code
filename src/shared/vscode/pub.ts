@@ -7,7 +7,7 @@ import { Logger, Sdks } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { fsPath, getPubGeneratorVersion, isWithinPath } from "../../shared/utils/fs";
 
-export interface PubPackageStatus { folderUri: Uri, pubRequired: false | "GET" | "UPGRADE", reason?: string, workspace: "NONE" | "ROOT" | "PROJECT" }
+interface PubPackageStatus { folderUri: Uri, pubRequired: false | "GET" | "UPGRADE", reason?: string, workspace: "NONE" | "ROOT" | "PROJECT" }
 
 const pubspecHasDependenciesRegex = new RegExp("^(dev_)?dependencies\\s*:", "im");
 const pubspecIsWorkspaceProjectRegex = new RegExp("^resolution\\s*:\\s*workspace", "im");
@@ -220,6 +220,6 @@ export async function promptToRunPubUpgrade(folders: Uri[]) {
 		await runPubUpgrade(folders);
 }
 
-export function runPubUpgrade(folders: Uri[]) {
+function runPubUpgrade(folders: Uri[]) {
 	return commands.executeCommand("dart.upgradePackages", folders);
 }

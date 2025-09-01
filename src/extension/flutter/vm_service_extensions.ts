@@ -10,7 +10,7 @@ import { getDartWorkspaceFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { DebugCommands, debugSessions } from "../commands/debug";
 
-export const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
+const IS_INSPECTING_WIDGET_CONTEXT = "dart-code:flutter.isInspectingWidget";
 
 const keyTimeDilation = "timeDilation";
 const keyEnabled = "enabled";
@@ -37,7 +37,6 @@ const toggleExtensionStateKeys: Record<string, string> = {
 export const timeDilationNormal = 1.0;
 export const timeDilationSlow = 5.0;
 
-export interface ServiceExtensionArgs { type: VmServiceExtension; params: unknown; }
 
 /// Manages state for (mostly Flutter) VM service extensions.
 export class VmServiceExtensions {

@@ -16,12 +16,6 @@ export function flatMap<T1, T2>(input: readonly T1[], f: (input: T1) => readonly
 	return input.reduce((acc, x) => acc.concat(f(x)), [] as T2[]);
 }
 
-export async function flatMapAsync<T1, T2>(input: T1[], f: (input: T1) => Promise<readonly T2[]>): Promise<T2[]> {
-	let res: T2[] = [];
-	for (const x of input)
-		res = res.concat(await f(x));
-	return res;
-}
 
 export function filenameSafe(input: string) {
 	return input.replace(/[^a-z0-9]+/gi, "_").replace(/_{2,}/g, "_").replace(/_$/g, "").toLowerCase();
@@ -200,29 +194,12 @@ export function notUndefined<T>(x: T | undefined): x is T {
 	return x !== undefined;
 }
 
-export function notNull<T>(x: T | null): x is T {
+function notNull<T>(x: T | null): x is T {
 	return x !== null;
 }
 
 export function notNullOrUndefined<T>(x: T | null | undefined): x is T {
 	return notUndefined(x) && notNull(x);
-}
-
-export function asHexColor({ r, g, b, a }: { r: number, g: number, b: number, a: number }): string {
-	r = clamp(r, 0, 255);
-	g = clamp(g, 0, 255);
-	b = clamp(b, 0, 255);
-	a = clamp(a, 0, 255);
-
-	return `${asHex(a)}${asHex(r)}${asHex(g)}${asHex(b)}`.toLowerCase();
-}
-
-export function asHex(v: number) {
-	return Math.round(v).toString(16).padStart(2, "0");
-}
-
-export function clamp(v: number, min: number, max: number) {
-	return Math.min(Math.max(min, v), max);
 }
 
 export function generateTestNameFromFileName(input: string) {

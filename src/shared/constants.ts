@@ -39,7 +39,7 @@ export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
 export const platformDisplayName = isWin ? "win" : isMac ? "mac" : isChromeOS ? "chromeos" : "linux";
 export const platformEol = isWin ? "\r\n" : "\n";
 
-export const androidStudioExecutableNames = isWin ? ["studio64.exe"] : ["studio", "studio.sh"];
+const androidStudioExecutableNames = isWin ? ["studio64.exe"] : ["studio", "studio.sh"];
 export const executableNames = {
 	dart: isWin ? "dart.exe" : "dart",
 	dartdoc: isWin ? "dartdoc.bat" : "dartdoc",
@@ -53,8 +53,6 @@ export const getExecutableName = (cmd: string) => (executableNames as Record<str
 export const dartVMPath = "bin/" + executableNames.dart;
 export const devToolsToolPath = "tool/bin/" + executableNames.devToolsToolBinary;
 export const devToolsToolLegacyPath = "tool/bin/" + executableNames.devToolsToolLegacyBinary;
-export const dartDocPath = "bin/" + executableNames.dartdoc;
-export const pubPath = "bin/" + executableNames.pub;
 
 export let flutterPath = "bin/" + executableNames.flutter;
 export function setFlutterDev(useFlutterDev: boolean) {
@@ -66,7 +64,6 @@ export const androidStudioPaths = androidStudioExecutableNames.map((s) => "bin/"
 export const DART_DOWNLOAD_URL = "https://dart.dev/get-dart";
 export const FLUTTER_DOWNLOAD_URL = "https://flutter.dev/setup/";
 
-export const stopLoggingAction = "Stop Logging";
 export const showLogAction = "Show Log";
 export const captureLogsMaxLineLength = 999999999;
 
@@ -112,8 +109,6 @@ export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/
 export const initializingFlutterMessage = "Initializing the Flutter SDK. This may take a few minutes.";
 export const cloningFlutterMessage = "Downloading the Flutter SDK. This may take a few minutes.";
 
-export const cancelAction = "Cancel";
-export const closeAction = "Close";
 
 // Seconds.
 export const fiveSecondsInMs = 1000 * 5;
@@ -123,12 +118,11 @@ export const thirtySecondsInMs = 1000 * 30;
 
 export const fiveMinutesInMs = 1000 * 60 * 5;
 export const tenMinutesInMs = 1000 * 60 * 10;
-export const twentyMinutesInMs = 1000 * 60 * 20;
 
 // Hours.
 export const twoHoursInMs = 1000 * 60 * 60 * 2;
-export const twentyHoursInMs = 1000 * 60 * 60 * 20;
-export const fortyHoursInMs = 1000 * 60 * 60 * 40;
+const twentyHoursInMs = 1000 * 60 * 60 * 20;
+const fortyHoursInMs = 1000 * 60 * 60 * 40;
 
 // Duration for not showing a prompt that has been shown before.
 export const noRepeatPromptThreshold = twentyHoursInMs;
@@ -141,17 +135,11 @@ export const projectSearchProgressText = "Searching for projects...";
 export const projectSearchProgressNotificationDelayInMs = 2000;
 export const projectSearchCacheTimeInMs = fiveMinutesInMs;
 
-// Chrome OS exposed ports: 8000, 8008, 8080, 8085, 8888, 9005, 3000, 4200, 5000
-export const CHROME_OS_DEVTOOLS_PORT = 8080;
-export const CHROME_OS_VM_SERVICE_PORT = 8085;
-
 export const DART_CREATE_PROJECT_TRIGGER_FILE = "dart.create";
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
 export const flutterCreateAvailablePlatforms = ["android", "ios", "linux", "macos", "windows", "web"];
 export const flutterCreateTemplatesSupportingPlatforms = ["app", "plugin", "plugin_ffi", "skeleton"];
 
-export const REFACTOR_FAILED_DOC_MODIFIED = "This refactor cannot be applied because the document has changed.";
-export const REFACTOR_ANYWAY = "Refactor Anyway";
 
 export const showErrorsAction = "Show Errors";
 export const runAnywayAction = "Run Anyway";
@@ -169,7 +157,6 @@ export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-set
 export const openSettingsAction = "Open Settings File";
 export const tryAgainAction = "Try Again";
 export const vmServiceListeningBannerPattern = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
-export const vmServiceHttpLinkPattern = new RegExp("(http://[\\d\\.:]+/)");
 
 export const sdkDeprecationInformationUrl = "https://dartcode.org/sdk-version-compatibility/";
 

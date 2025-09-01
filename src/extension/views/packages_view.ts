@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DART_DEP_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCIES_NODE_CONTEXT, DART_DEP_DEV_DEPENDENCY_PACKAGE_NODE_CONTEXT, DART_DEP_FILE_NODE_CONTEXT, DART_DEP_FOLDER_NODE_CONTEXT, DART_DEP_PACKAGE_NODE_CONTEXT, DART_DEP_PROJECT_NODE_CONTEXT, DART_DEP_PUB_HOSTED_PACKAGE_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCIES_NODE_CONTEXT, DART_DEP_TRANSITIVE_DEPENDENCY_PACKAGE_NODE_CONTEXT } from "../../shared/constants.contexts";
 import { DartWorkspaceContext, IAmDisposable, Logger } from "../../shared/interfaces";
 import { PubDeps, PubDepsTreePackageDependency, PubDepsTreePackageTransitiveDependency } from "../../shared/pub/deps";
@@ -21,7 +20,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 
 	private processPackageMapChangeEvents = true;
 
-	constructor(private readonly logger: Logger, public readonly projectFinder: ProjectFinder, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) {
+	constructor(private readonly logger: Logger, public readonly projectFinder: ProjectFinder, context: DartWorkspaceContext) {
 		this.disposables.push(vs.commands.registerCommand("_dart.removeDependencyFromTreeNode", this.removeDependency, this));
 		this.disposables.push(vs.commands.registerCommand("_dart.openDependencyPageFromTreeNode", this.openDependencyPage, this));
 		context.events.onPackageMapChange.listen(() => {
@@ -37,7 +36,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 			setTimeout(() => this.processPackageMapChangeEvents = true, 5000);
 			this.onDidChangeTreeDataEmitter.fire(undefined);
 		});
-		this.deps = new PubDeps(logger, context, dartCapabilities);
+		this.deps = new PubDeps(logger, context);
 		this.packageMapLoader = new PackageMapLoader(logger);
 	}
 
@@ -162,7 +161,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 }
 
 /// A tree node in the packages tree.
-export abstract class PackageDep extends vs.TreeItem {
+class PackageDep extends vs.TreeItem {
 	constructor(
 		label: string | undefined,
 		resourceUri: vs.Uri | undefined,
@@ -180,7 +179,7 @@ export abstract class PackageDep extends vs.TreeItem {
 }
 
 /// A file  within a dependency.
-export class PackageDepFile extends PackageDep {
+class PackageDepFile extends PackageDep {
 	constructor(
 		resourceUri: vs.Uri,
 	) {
@@ -195,7 +194,7 @@ export class PackageDepFile extends PackageDep {
 }
 
 /// A folder within a dependency.
-export class PackageDepFolder extends PackageDep {
+class PackageDepFolder extends PackageDep {
 	constructor(
 		resourceUri: vs.Uri,
 	) {
@@ -205,7 +204,7 @@ export class PackageDepFolder extends PackageDep {
 }
 
 /// A tree node representing a project in the workspace.
-export class PackageDepProject extends PackageDep {
+class PackageDepProject extends PackageDep {
 	public readonly rootPackageFolder: string;
 	constructor(
 		rootPackageUri: vs.Uri,
@@ -229,7 +228,7 @@ export class PackageDepProject extends PackageDep {
 }
 
 /// A tree node representing a group (dependencies, dev dependencies, transitive dependencies).
-export class PackageDepProjectPackageGroup extends PackageDep {
+class PackageDepProjectPackageGroup extends PackageDep {
 	constructor(
 		label: string,
 		context: string,
@@ -241,7 +240,7 @@ export class PackageDepProjectPackageGroup extends PackageDep {
 }
 
 /// A tree node represending a dependency (of any kind).
-export class PackageDepPackage extends PackageDep {
+class PackageDepPackage extends PackageDep {
 	constructor(
 		public readonly packageName: string,
 		resourceUri: vs.Uri,

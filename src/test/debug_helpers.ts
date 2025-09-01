@@ -140,7 +140,7 @@ export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], ind
 	ensureVariable(variables, evaluateName, name, value);
 }
 
-export interface MapEntry {
+interface MapEntry {
 	key: {
 		evaluateName: string | undefined;
 		name: string;
@@ -244,7 +244,7 @@ export async function spawnFlutterProcess(script: string | Uri): Promise<DartPro
 	return flutterProcess;
 }
 
-export class DartProcess {
+class DartProcess {
 	public readonly vmServiceUri: Promise<string>;
 	public readonly exitCode: Promise<number | null>;
 	public get hasExited() { return this.exited; }

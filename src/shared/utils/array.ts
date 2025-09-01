@@ -8,15 +8,12 @@ export function sortBy<T>(items: T[], f: (item: T) => any): T[] {
 	});
 }
 
-export function not(f: (x: any) => boolean): (x: any) => boolean {
-	return (x) => !f(x);
-}
 
 export function unique<T>(items: T[]): T[] {
 	return Array.from(new Set(items));
 }
 
-export function arraysEqual<T>(items1: T[], items2: T[]) {
+function arraysEqual<T>(items1: T[], items2: T[]) {
 	return items1.length === items2.length && items1.every((val, i) => val === items2[i]);
 }
 

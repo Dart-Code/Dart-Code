@@ -50,7 +50,7 @@ export class LspAnalyzer extends Analyzer {
 		this.setupStatusItem();
 
 		// First set up the features that buildMiddleware() requires.
-		this.disposables.push(this.refactors = new InteractiveRefactors(logger, dartCapabilities));
+		this.disposables.push(this.refactors = new InteractiveRefactors(logger));
 		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities));
 
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
@@ -668,7 +668,7 @@ class LoggingTransform extends stream.Transform {
 	}
 }
 
-export function getAnalyzerArgs(logger: Logger) {
+function getAnalyzerArgs(logger: Logger) {
 	const analyzerPath = config.analyzerPath || "language-server";
 
 	// If the ssh host is set, then we are running the analyzer on a remote machine, that same analyzer

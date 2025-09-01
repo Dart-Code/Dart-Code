@@ -57,7 +57,7 @@ export function parseStackFrame(message: string): MessageWithUriData | undefined
 	return undefined;
 }
 
-export interface MessageWithUriData {
+interface MessageWithUriData {
 	col: number | undefined;
 	isStackFrame: boolean;
 	line: number | undefined;

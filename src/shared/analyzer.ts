@@ -45,7 +45,7 @@ export abstract class Analyzer implements IAmDisposable {
 	}
 }
 
-export interface AnalyzingEvent {
+interface AnalyzingEvent {
 	isAnalyzing: boolean;
 	suppressProgress?: boolean;
 }

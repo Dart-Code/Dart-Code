@@ -5,7 +5,7 @@ export interface Request<T> {
 	params: T;
 }
 
-export interface Response<T> {
+interface Response<T> {
 	id: string;
 	error: any;
 	result: T;
@@ -13,7 +13,7 @@ export interface Response<T> {
 
 export type UnknownResponse = Response<any>;
 
-export interface Notification<T> {
+interface Notification<T> {
 	event: string;
 	params: T;
 }

@@ -6,7 +6,6 @@ import * as dartdoc from "../utils/dartdocs";
 
 export const extensionPath = extensions.getExtension(dartCodeExtensionIdentifier)!.extensionPath;
 export const extensionVersion = getExtensionVersion();
-export const vsCodeVersionConstraint = getVsCodeVersionConstraint();
 export const isPreReleaseExtension = checkIsPreReleaseExtension();
 export const isDevExtension = checkIsDevExtension();
 export const hasFlutterExtension = checkHasFlutterExtension();
@@ -21,10 +20,6 @@ function getExtensionVersion(): string {
 	return packageJson.version as string;
 }
 
-function getVsCodeVersionConstraint(): string {
-	const packageJson = readJson(path.join(extensionPath, "package.json"));
-	return packageJson.engines.vscode as string;
-}
 
 function checkIsDevExtension() {
 	return extensionVersion.endsWith("-dev");

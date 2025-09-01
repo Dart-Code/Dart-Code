@@ -231,7 +231,7 @@ async function getFixes(editor: vs.TextEditor, outline: CommonOutline): Promise<
 	return fixes || [];
 }
 
-export type CommonOutline = {
+type CommonOutline = {
 	attributes?: Array<{ name: string, label: string }>;
 	variableName?: string;
 	className?: string;

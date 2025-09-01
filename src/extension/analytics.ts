@@ -427,7 +427,7 @@ interface AnalyticsData {
 	commandSource?: string,
 }
 
-export class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {
+class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {
 	public lastTracker: DebugAdapterExceptionSettingTracker | undefined;
 	createDebugAdapterTracker(): DebugAdapterTracker {
 		this.lastTracker = new DebugAdapterExceptionSettingTracker();

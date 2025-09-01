@@ -15,7 +15,7 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 	public readonly onDidChangeCodeLenses: Event<void> = this.onDidChangeCodeLensesEmitter.event;
 	private readonly flutterPackagesFolder: string;
 
-	constructor(private readonly logger: Logger, private readonly analyzer: LspAnalyzer, private readonly sdks: FlutterSdks) {
+	constructor(private readonly logger: Logger, private readonly analyzer: LspAnalyzer, sdks: FlutterSdks) {
 		this.disposables.push(this.analyzer.fileTracker.onOutline(() => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
@@ -77,7 +77,7 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 	}
 }
 
-export interface DartPadSampleInfo {
+interface DartPadSampleInfo {
 	libraryName: string;
 	className: string;
 	elementKind: string;

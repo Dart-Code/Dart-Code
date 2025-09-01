@@ -112,7 +112,7 @@ export function getTestSelectionForNodes(nodes: TreeNode[]): TestSelection[] | u
 	return (nodes as Array<GroupNode | TestNode>).map((node) => getTestSelectionForNode(node));
 }
 
-export function getTestSelectionForNode(treeNode: GroupNode | TestNode): TestSelection {
+function getTestSelectionForNode(treeNode: GroupNode | TestNode): TestSelection {
 	return { name: treeNode.name!, isGroup: treeNode instanceof GroupNode, position: treeNode.range?.start };
 }
 
@@ -126,7 +126,7 @@ export const defaultTestFileContents = (isFlutterProject: boolean, dartEscapedTe
 
 const defaultTestFileSelectionPlaceholder = "// TODO: Implement test";
 
-export function defaultFlutterTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
+function defaultFlutterTestFileContents(dartEscapedTestName: string): OpenedFileInformation {
 	const contents = `
 import 'package:flutter_test/flutter_test.dart';
 

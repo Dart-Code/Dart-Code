@@ -1,10 +1,10 @@
 export interface DtdResult { type: string }
-export interface DtdError {
+interface DtdError {
 	code: number,
 	message: string,
 	data: any,
 }
-export type DtdSuccess = DtdResult & { type: "Success" };
+type DtdSuccess = DtdResult & { type: "Success" };
 export interface DtdMessage { jsonrpc: "2.0", id?: string, method?: string, result?: DtdResult, error?: DtdError, params?: unknown }
 export type DtdResponse = DtdMessage & ({ result: DtdResult } | { error: DtdError });
 
@@ -204,17 +204,17 @@ export interface ActiveLocationChangedEvent extends Event {
 	selections: EditorSelection[];
 }
 
-export interface VersionedTextDocumentIdentifier {
+interface VersionedTextDocumentIdentifier {
 	uri: string;
 	version: number;
 }
 
-export interface EditorSelection {
+interface EditorSelection {
 	anchor: EditorPosition;
 	active: EditorPosition;
 }
 
-export interface EditorPosition {
+interface EditorPosition {
 	/// The zero-based line number of this position.
 	line: number;
 

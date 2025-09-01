@@ -86,7 +86,6 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 
 	constructor(
 		private readonly previewUrl: string,
-		private readonly pageTitle: string,
 	) {
 		super();
 
@@ -106,7 +105,7 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 	}
 }
 
-export class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
+class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 	protected readonly disposables: vs.Disposable[] = [];
 	public webviewView: vs.WebviewView | undefined;
 

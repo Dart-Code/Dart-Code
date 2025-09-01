@@ -8,7 +8,7 @@ import * as lsp from "vscode-languageclient";
 import * as YAML from "yaml";
 import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchProgressNotificationDelayInMs, projectSearchProgressText } from "../constants";
 import { EventEmitter } from "../events";
-import { Location, Logger } from "../interfaces";
+import { Logger } from "../interfaces";
 import { nullLogger } from "../logging";
 import { PromiseCompleter, flatMap, notUndefined } from "../utils";
 import { SimpleTimeBasedCache } from "../utils/cache";
@@ -20,7 +20,7 @@ export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sor
 const dartExtension = extensions.getExtension(dartCodeExtensionIdentifier);
 export const hostKind = getHostKind();
 
-export interface ProjectFolderSearchResults { projectFolders: string[], excludedFolders: Set<string> };
+interface ProjectFolderSearchResults { projectFolders: string[], excludedFolders: Set<string> };
 
 const projectFolderCache = new SimpleTimeBasedCache<ProjectFolderSearchResults>();
 let inProgressProjectFolderSearch: Promise<void> | undefined;
@@ -221,9 +221,6 @@ export function lspToRange(range: lsp.Range): Range {
 	return new Range(lspToPosition(range.start), lspToPosition(range.end));
 }
 
-export function toPosition(location: Location): Position {
-	return new Position(location.startLine - 1, location.startColumn - 1);
-}
 
 export function lspToPosition(position: lsp.Position): Position {
 	return new Position(position.line, position.character);
@@ -232,10 +229,6 @@ export function lspToPosition(position: lsp.Position): Position {
 // Translates an offset/length to a Range.
 // NOTE: Does not wrap lines because it does not have access to a TextDocument to know
 // where the line ends.
-export function toRangeOnLine(location: Location): Range {
-	const startPos = toPosition(location);
-	return new Range(startPos, startPos.translate(0, location.length));
-}
 
 export function showCode(editor: TextEditor, displayRange: Range, highlightRange: Range, selectionRange?: Range): void {
 	if (selectionRange)
@@ -248,7 +241,7 @@ export function showCode(editor: TextEditor, displayRange: Range, highlightRange
 	// See https://github.com/Microsoft/vscode/issues/45059
 }
 
-export function trimTrailingSlashes(s: string) {
+function trimTrailingSlashes(s: string) {
 	return s.replace(/[/\\]+$/, "");
 }
 

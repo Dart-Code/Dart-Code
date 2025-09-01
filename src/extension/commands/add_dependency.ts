@@ -385,8 +385,8 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 }
 
-export type PickablePackage = vs.QuickPickItem & (PubPackage | LocalPubPackageMarker | GitPubPackageMarker);
-export type PackageInfo = PubPackage | PathPubPackage | GitPubPackage;
+type PickablePackage = vs.QuickPickItem & (PubPackage | LocalPubPackageMarker | GitPubPackageMarker);
+type PackageInfo = PubPackage | PathPubPackage | GitPubPackage;
 
 
 export interface PubPackage {

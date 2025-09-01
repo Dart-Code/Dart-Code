@@ -12,7 +12,7 @@ export function isFirebaseStudio() {
 	return !!process.env[firebaseStudioEnvironmentVariableName];
 }
 
-export function isProjectIdx(appName: string | undefined) {
+function isProjectIdx(appName: string | undefined) {
 	return appName?.includes("IDX");
 }
 
