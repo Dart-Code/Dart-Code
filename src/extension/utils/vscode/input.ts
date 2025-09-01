@@ -83,7 +83,7 @@ export async function showSimpleSettingsEditor(title: string, placeholder: strin
 	}
 }
 
-export async function editSetting(setting: PickableSetting) {
+async function editSetting(setting: PickableSetting) {
 	const title = setting.label;
 	let placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;

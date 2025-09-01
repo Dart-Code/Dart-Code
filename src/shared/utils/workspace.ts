@@ -22,7 +22,7 @@ export function processBazelWorkspace(logger: Logger, config: WritableWorkspaceC
 	tryProcessBazelFlutterConfig(logger, config, bazelWorkspaceRoot);
 }
 
-export function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
+function tryProcessBazelFlutterConfig(logger: Logger, config: WritableWorkspaceConfig, bazelWorkspaceRoot: string) {
 	// flutter.json does not support windows.
 	if (isWin)
 		return;

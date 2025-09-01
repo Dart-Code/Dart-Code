@@ -45,7 +45,6 @@ let pendingCustomEvents: vs.DebugSessionCustomEvent[] = [];
 
 let hasPromptedAboutDebugSettings = false;
 
-export let isInDartDebugSession = false;
 export let isInFlutterDebugModeDebugSession = false;
 export let isInFlutterProfileModeDebugSession = false;
 
@@ -605,7 +604,6 @@ export class DebugCommands implements IAmDisposable {
 				void vs.commands.executeCommand("setContext", isInFlutterDebugModeDebugSessionContext, true);
 			}
 		} else if (s.configuration.debuggerType === DebuggerType.Dart) {
-			isInDartDebugSession = true;
 			void vs.commands.executeCommand("setContext", isInDartDebugSessionContext, true);
 		}
 

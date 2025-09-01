@@ -202,11 +202,6 @@ export interface CustomEmulatorDefinition {
 	args?: string[];
 }
 
-export interface Location {
-	startLine: number;
-	startColumn: number;
-	length: number;
-}
 
 export interface FlutterRawSurveyData {
 	uniqueId: string;

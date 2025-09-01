@@ -224,7 +224,7 @@ export class ClassOutlineVisitor extends OutlineVisitor {
 	}
 }
 
-export interface ClassInfo {
+interface ClassInfo {
 	className: string;
 	elementKind: string;
 	range: Range;

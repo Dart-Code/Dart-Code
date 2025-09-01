@@ -194,7 +194,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 }
 
 
-export class WidgetGuide {
+class WidgetGuide {
 	constructor(public readonly start: vs.Position, public readonly end: vs.Position) { }
 }
 

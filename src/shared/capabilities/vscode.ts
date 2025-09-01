@@ -2,7 +2,7 @@
 import { version as codeVersion, env } from "vscode";
 import { isCloudShell, isTheia } from "../vscode/utils_cloud";
 
-export class CodeCapabilities {
+class CodeCapabilities {
 	public version: string;
 
 	constructor(version: string) {

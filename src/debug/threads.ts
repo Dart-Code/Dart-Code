@@ -375,6 +375,6 @@ export class ThreadInfo {
 	}
 }
 
-export interface StorableData {
+interface StorableData {
 	type: string;
 }

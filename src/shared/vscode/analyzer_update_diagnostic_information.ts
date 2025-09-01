@@ -121,6 +121,6 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 	}
 }
 
-export class UpdateDiagnosticInformationRequest {
+class UpdateDiagnosticInformationRequest {
 	public static type = new RequestType<object, void, void>("dart/updateDiagnosticInformation");
 }

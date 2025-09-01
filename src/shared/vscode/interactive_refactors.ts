@@ -1,6 +1,5 @@
 import { CodeAction, CodeActionKind, Command, commands, Uri, window } from "vscode";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
-import { DartCapabilities } from "../capabilities/dart";
 import { isWin } from "../constants";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
@@ -12,7 +11,7 @@ export class InteractiveRefactors implements IAmDisposable {
 
 	private disposables: IAmDisposable[] = [];
 
-	constructor(private readonly logger: Logger, private readonly dartCapabilities: DartCapabilities) {
+	constructor(private readonly logger: Logger) {
 		this.disposables.push(commands.registerCommand(InteractiveRefactors.commandName, this.handleRefactor, this));
 	}
 
@@ -161,7 +160,7 @@ interface SaveUriParameter extends Parameter {
 	filters?: Record<string, string[]>;
 }
 
-export function isSaveUriParameter(parameter: Parameter): parameter is SaveUriParameter {
+function isSaveUriParameter(parameter: Parameter): parameter is SaveUriParameter {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 	return parameter.kind === SupportedParameterKind.saveUri;
 }

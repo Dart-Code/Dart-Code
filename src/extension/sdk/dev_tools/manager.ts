@@ -24,7 +24,6 @@ import { Context } from "../../../shared/vscode/workspace";
 import { Analytics } from "../../analytics";
 import { DebugCommands, debugSessions, isInFlutterDebugModeDebugSession, isInFlutterProfileModeDebugSession } from "../../commands/debug";
 import { config } from "../../config";
-import { PubGlobal } from "../../pub/global";
 import { ExtensionRecommentations } from "../../recommendations/recommendations";
 import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
@@ -59,7 +58,6 @@ export class DevToolsManager implements vs.Disposable {
 		private readonly logger: Logger,
 		private readonly context: Context,
 		private readonly analytics: Analytics,
-		private readonly pubGlobal: PubGlobal,
 		private readonly toolingDaemon: DartToolingDaemon | undefined,
 		private readonly dartCapabilities: DartCapabilities,
 		private readonly flutterCapabilities: FlutterCapabilities,
@@ -757,7 +755,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 	}
 }
 
-export interface ServerStartedNotification {
+interface ServerStartedNotification {
 	host: string;
 	port: number;
 	pid: number;

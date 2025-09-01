@@ -1,15 +1,14 @@
 import * as path from "path";
-import { DartCapabilities } from "../capabilities/dart";
 import { dartVMPath, flutterPath } from "../constants";
 import { DartWorkspaceContext, Logger } from "../interfaces";
 import { runProcess, safeSpawn } from "../processes";
 import { isFlutterProjectFolder, tryGetPackageName } from "../utils/fs";
 
-export type DependencyType = "root" | "direct" | "dev" | "transitive";
+type DependencyType = "root" | "direct" | "dev" | "transitive";
 
 /// Interacts with "pub deps --json" to look up types of dependencies.
 export class PubDeps {
-	constructor(private readonly logger: Logger, private readonly context: DartWorkspaceContext, private readonly dartCapabilities: DartCapabilities) { }
+	constructor(private readonly logger: Logger, private readonly context: DartWorkspaceContext) { }
 
 	public buildTree(json: PubDepsJson, packageName: string): PubDepsTree {
 		const packages: PubDepsJsonPackageLookup = {};
@@ -172,7 +171,7 @@ export interface PubDepsJson {
 /// These types cover both the pre-workspaces and post-workspaces
 /// versions, for example including `directDependencies`/`devDependencies` on packages
 /// even though they were not included in `dependencies` pre-workspaces.
-export interface PubDepsJsonPackage {
+interface PubDepsJsonPackage {
 	name: string;
 	version: string;
 	kind: DependencyType;
@@ -182,7 +181,7 @@ export interface PubDepsJsonPackage {
 }
 
 /// A lookup of package name -> [PubDepsJsonPackage].
-export type PubDepsJsonPackageLookup = Record<string, PubDepsJsonPackage>;
+type PubDepsJsonPackageLookup = Record<string, PubDepsJsonPackage>;
 
 /// The results of parsing a [PubDepsJson] to compute a set of trees
 /// for dependencies, devDependencies, and transitiveDependencies with
@@ -193,7 +192,7 @@ export interface PubDepsTree {
 
 /// A root package in a [PubDepsTree] along with dependencies,
 /// devDependencies, and transitiveDependencies with shortest paths.
-export interface PubDepsTreeRootPackage {
+interface PubDepsTreeRootPackage {
 	name: string;
 	version: string;
 	dependencies?: PubDepsTreePackageDependency[];

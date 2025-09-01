@@ -427,7 +427,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	void dartToolingDaemon?.dtdUri.then((uri) => extensionApiModel.setDtdUri(uri));
 	void analyzer.connectToDtd(dartToolingDaemon);
 
-	const devTools = new DevToolsManager(logger, extContext, analytics, pubGlobal, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
+	const devTools = new DevToolsManager(logger, extContext, analytics, dartToolingDaemon, dartCapabilities, flutterCapabilities, extensionRecommendations);
 	context.subscriptions.push(devTools);
 
 	// Initialize Widget Preview if enabled+supported.
@@ -539,7 +539,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	context.subscriptions.push(new OpenInOtherEditorCommands(logger, sdks));
 	context.subscriptions.push(new SettingsCommands(logger, workspaceContext));
-	context.subscriptions.push(new TestCommands(logger, testModel, workspaceContext, vsCodeTestController, dartCapabilities, flutterCapabilities));
+	context.subscriptions.push(new TestCommands(logger, workspaceContext, vsCodeTestController, dartCapabilities, flutterCapabilities));
 	context.subscriptions.push(new LspGoToLocationCommand(analyzer));
 	context.subscriptions.push(new LspGoToSuperCommand(analyzer));
 	context.subscriptions.push(new LspGoToAugmentedCommand(analyzer));
@@ -562,7 +562,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	// Register our view providers.
-	const dartPackagesProvider = new DartPackagesProvider(logger, projectFinder, workspaceContext, dartCapabilities);
+	const dartPackagesProvider = new DartPackagesProvider(logger, projectFinder, workspaceContext);
 	context.subscriptions.push(dartPackagesProvider);
 	const packagesTreeView = vs.window.createTreeView("dartDependencyTree", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(packagesTreeView);

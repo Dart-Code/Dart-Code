@@ -127,7 +127,7 @@ export async function getChildFolders(logger: Logger, parent: string, options?: 
 		.map((item) => path.join(parent, item.name));
 }
 
-export function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
+function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
 	return new Promise<fs.Dirent[]>((resolve) => fs.readdir(folder,
 		{ withFileTypes: true },
 		(err, files) => {
@@ -152,15 +152,15 @@ export function hasPubspec(folder: string): boolean {
 	return fs.existsSync(path.join(folder, "pubspec.yaml"));
 }
 
-export async function hasPubspecAsync(folder: string): Promise<boolean> {
+async function hasPubspecAsync(folder: string): Promise<boolean> {
 	return await fileExists(path.join(folder, "pubspec.yaml"));
 }
 
-export async function hasCreateTriggerFileAsync(folder: string): Promise<boolean> {
+async function hasCreateTriggerFileAsync(folder: string): Promise<boolean> {
 	return await fileExists(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
 }
 
-export async function isFlutterRepoAsync(folder: string): Promise<boolean> {
+async function isFlutterRepoAsync(folder: string): Promise<boolean> {
 	return await fileExists(path.join(folder, "bin/flutter")) && await fileExists(path.join(folder, "bin/cache/dart-sdk"));
 }
 

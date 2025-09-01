@@ -79,7 +79,7 @@ function codeLensIsValidForFile(codeLens: TemplatedLaunchConfig["codeLens"], wor
 	return workspacePath ? isWithinPathOrEqual(filePath, path.join(workspacePath, codeLens?.path)) : false;
 }
 
-export function isTemplateOfType(config: TemplatedLaunchConfig, templateType: string): boolean {
+function isTemplateOfType(config: TemplatedLaunchConfig, templateType: string): boolean {
 	const template = config.codeLens?.for;
 	return !!template && (
 		(typeof template === "string" && template === templateType)
@@ -87,7 +87,7 @@ export function isTemplateOfType(config: TemplatedLaunchConfig, templateType: st
 	);
 }
 
-export interface TemplatedLaunchConfig {
+interface TemplatedLaunchConfig {
 	name: string;
 	type?: string;
 	noDebug?: boolean;

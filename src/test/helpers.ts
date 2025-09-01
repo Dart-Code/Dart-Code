@@ -76,7 +76,6 @@ export const helloWorldExampleSubFolderPubspecFile = vs.Uri.file(path.join(fsPat
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
 export const missingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/missing.dart"));
 export const emptyFileInExcludedBySettingFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_by_setting/empty.dart"));
-export const emptyExcludedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_empty.dart"));
 export const helloWorldCompletionFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/completion.dart"));
 export const helloWorldDeferredScriptFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/deferred_script.dart"));
 export const helloWorldPartWrapperFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/part_wrapper.dart"));
@@ -100,8 +99,6 @@ export const helloWorldTestDiscoveryLargeFile = vs.Uri.file(path.join(fsPath(hel
 export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dupe_name_test.dart"));
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));
 export const helloWorldTestDynamicFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dynamic_test.dart"));
-export const helloWorldTestSkipFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "skip_test.dart"));
-export const helloWorldTestNestedFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "folder", "folder_test.dart"));
 export const helloWorldProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "project_test.dart"));
 export const helloWorldExampleSubFolderProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "test", "project_test.dart"));
 // Go To Tests
@@ -135,7 +132,7 @@ export const flutterHelloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fs
 export const flutterHelloWorldStack60File = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/stack60.dart"));
 export const flutterHelloWorldPrinterFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/printer.dart"));
 // Flutter example
-export const flutterHelloWorldExampleFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
+const flutterHelloWorldExampleFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
 export const flutterHelloWorldExamplePrinterFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleFolder), "lib/printer.dart"));
 export const flutterHelloWorldExampleTestFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleFolder), "test/printer_test.dart"));
 // Flutter Bazel
@@ -160,13 +157,9 @@ export const webHelloWorldMainFile = vs.Uri.file(path.join(fsPath(webHelloWorldF
 export const webHelloWorldIndexFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "web/index.html"));
 export const webHelloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "example"));
 export const webHelloWorldExampleSubFolderIndexFile = vs.Uri.file(path.join(fsPath(webHelloWorldExampleSubFolder), "web/index.html"));
-export const webBrokenFolder = vs.Uri.file(path.join(fsPath(webProjectContainerFolder), "broken"));
+const webBrokenFolder = vs.Uri.file(path.join(fsPath(webProjectContainerFolder), "broken"));
 export const webBrokenIndexFile = vs.Uri.file(path.join(fsPath(webBrokenFolder), "web/index.html"));
 export const webBrokenMainFile = vs.Uri.file(path.join(fsPath(webBrokenFolder), "web/main.dart"));
-// Web tests
-export const webTestMainFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/basic_test.dart"));
-export const webTestBrokenFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/broken_test.dart"));
-export const webTestOtherFile = vs.Uri.file(path.join(fsPath(webHelloWorldFolder), "test/other_test.dart"));
 
 export const flutterTestSurveyID = "flutterVsCodeTestSurvey";
 
@@ -651,19 +644,6 @@ export function rangeOf(searchText: string, inside?: vs.Range, allowMissing = fa
 	);
 }
 
-export function rangesOf(searchText: string): vs.Range[] {
-	const doc = currentDoc();
-	const results = [];
-	let searchRange: vs.Range | undefined;
-	let range: vs.Range | undefined;
-	// eslint-disable-next-line no-cond-assign
-	while (range = rangeOf(searchText, searchRange, true)) {
-		results.push(range);
-		// Next time, search starting from after this range.
-		searchRange = new vs.Range(range.end, doc.positionAt(doc.getText().length));
-	}
-	return results;
-}
 
 export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { parent: vs.DocumentSymbol | undefined }> | undefined> {
 	const documentSymbolResult = await vs.commands.executeCommand<vs.DocumentSymbol[]>("vscode.executeDocumentSymbolProvider", currentDoc().uri);
@@ -678,7 +658,7 @@ export async function getDocumentSymbols(): Promise<Array<vs.DocumentSymbol & { 
 	));
 }
 
-export async function getDefinitions(position: vs.Position): Promise<Array<vs.Location | vs.DefinitionLink>> {
+async function getDefinitions(position: vs.Position): Promise<Array<vs.Location | vs.DefinitionLink>> {
 	const definitionResult = await vs.commands.executeCommand<Array<vs.Location | vs.DefinitionLink>>("vscode.executeDefinitionProvider", currentDoc().uri, position);
 	return definitionResult || [];
 }
@@ -813,7 +793,7 @@ export function ensureDocumentSymbol(symbols: Array<vs.DocumentSymbol & { parent
 	assert.ok(range.end.line);
 }
 
-export function rangeString(range: vs.Range) {
+function rangeString(range: vs.Range) {
 	return `${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}`;
 }
 
@@ -934,7 +914,7 @@ export function completionLabel(completion: vs.CompletionItem): string {
 		: label.label;
 }
 
-export function completionLabelWithDetails(completion: vs.CompletionItem): string {
+function completionLabelWithDetails(completion: vs.CompletionItem): string {
 	const label = completion.label;
 	return typeof label === "string"
 		? label
@@ -983,16 +963,11 @@ export async function ensureFileContent(uri: vs.Uri, expected: string, allowNewM
 	assert.equal(normalise(doc.getText()), normalise(expected));
 }
 
-export function ensureTestSelection(expected: vs.Range): void {
+function ensureTestSelection(expected: vs.Range): void {
 	const editor = currentEditor();
 	assert.equal(editor.selection.isEqual(expected), true, `actual: ${rangeString(editor.selection)} (${editor.document.getText(editor.selection)}) vs expected: ${rangeString(expected)} (${editor.document.getText(expected)})`);
 }
 
-export async function ensureTestContentWithCursorPos(expected: string): Promise<void> {
-	await ensureTestContent(expected.replace(/\^/g, ""));
-	const pos = positionOf(expected);
-	ensureTestSelection(new vs.Range(pos, pos));
-}
 
 export async function ensureTestContentWithSelection(expected: string): Promise<void> {
 	await ensureTestContent(expected.replace(/\|/g, ""));
@@ -1030,21 +1005,6 @@ export async function waitForResult(action: () => boolean | Promise<boolean>, me
 		throw new Error(`Action didn't return true within ${milliseconds}ms (${message})`);
 }
 
-export async function tryFor(action: () => Promise<void> | void, milliseconds = 3000): Promise<void> {
-	let timeRemaining = milliseconds;
-	while (timeRemaining > 0) {
-		try {
-			await action();
-			return; // We succeeded, so return successfully.
-		} catch {
-			// Swallow the error so we can try again.
-		}
-		await new Promise((resolve) => setTimeout(resolve, 20));
-		timeRemaining -= 20;
-	}
-	// Run normally, so we get a good error message.
-	await action();
-}
 
 export async function waitForEditorChange(action: () => Thenable<void>): Promise<void> {
 	const doc = currentDoc();
