@@ -710,7 +710,7 @@ export class DebugCommands implements IAmDisposable {
 			const kind = body.kind;
 			const data = body.data;
 			switch (kind) {
-				case "navigate":
+				case "navigate": {
 					const uri: string | undefined = data.resolvedFileUri ?? data.resolvedUri ?? data.fileUri ?? data.uri ?? data.file;
 					const line: string | undefined = data.line;
 					const col: string | undefined = data.column;
@@ -726,6 +726,7 @@ export class DebugCommands implements IAmDisposable {
 						}
 					}
 					break;
+				}
 				default:
 					return false;
 			}
@@ -777,7 +778,7 @@ export class DebugCommands implements IAmDisposable {
 			const event = body.event;
 			const params = body.params;
 			switch (event) {
-				case "app.webLaunchUrl":
+				case "app.webLaunchUrl": {
 					const url = params.url as string;
 					const launched = !!params.launched;
 					if (!launched && !session.session.configuration.suppressWebServerDeviceBrowserLaunch) {
@@ -787,6 +788,8 @@ export class DebugCommands implements IAmDisposable {
 							this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${url}`);
 						}
 					}
+					break;
+				}
 			}
 		} else if (event === "flutter.forwardedRequest") {
 			const id = body.id;
@@ -796,7 +799,7 @@ export class DebugCommands implements IAmDisposable {
 			let error;
 			try {
 				switch (method) {
-					case "app.exposeUrl":
+					case "app.exposeUrl": {
 						const originalUrl = params.url as string;
 						let url;
 						try {
@@ -807,6 +810,7 @@ export class DebugCommands implements IAmDisposable {
 						}
 						result = { url };
 						break;
+					}
 				}
 			} catch (e) {
 				error = `${e}`;

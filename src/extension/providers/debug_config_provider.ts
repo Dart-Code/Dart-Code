@@ -743,12 +743,14 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					this.addArgsIfNotExist(args, `--${debugConfig.flutterMode}`);
 					break;
 
-				default: // Debug mode.
+				default: { // Debug mode.
 					const futterVmServicePortOption = "host-vmservice-port";
 					if (debugConfig.vmServicePort && isDebug)
 						this.addArgsIfNotExist(args, `--${futterVmServicePortOption}`, debugConfig.vmServicePort.toString());
 					if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
 						this.addArgsIfNotExist(args, "--no-track-widget-creation");
+					break;
+				}
 			}
 
 			if (debugConfig.flutterPlatform && debugConfig.flutterPlatform !== "default")

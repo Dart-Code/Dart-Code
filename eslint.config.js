@@ -63,7 +63,6 @@ export default defineConfig([
 			"@typescript-eslint/require-await": "off",
 			"@typescript-eslint/restrict-template-expressions": "off",
 			"no-async-promise-executor": "off",
-			"no-case-declarations": "off",
 			"no-empty": "off",
 			// End temporary exclusions
 			"arrow-body-style": "error",

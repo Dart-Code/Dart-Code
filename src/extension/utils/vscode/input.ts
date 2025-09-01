@@ -90,11 +90,12 @@ async function editSetting(setting: PickableSetting) {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const value = setting.currentValue;
 	switch (setting.settingKind) {
-		case "STRING":
+		case "STRING": {
 			const stringResult = await vs.window.showInputBox({ prompt, title, value: value as string | undefined });
 			if (stringResult !== undefined)
 				await setting.setValue(stringResult);
 			break;
+		}
 		case "ENUM": {
 			const quickPick = vs.window.createQuickPick();
 			quickPick.placeholder = placeholder;
@@ -141,7 +142,7 @@ async function editSetting(setting: PickableSetting) {
 				await setting.setValue(quickPick.selectedItems.map((item) => item.label));
 			break;
 		}
-		case "BOOL":
+		case "BOOL": {
 			const boolResult = await vs.window.showQuickPick(
 				[
 					{ label: "enable" } as vs.QuickPickItem,
@@ -152,6 +153,7 @@ async function editSetting(setting: PickableSetting) {
 			if (boolResult !== undefined)
 				await setting.setValue(boolResult.label === "enable");
 			break;
+		}
 	}
 }
 

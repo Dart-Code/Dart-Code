@@ -246,7 +246,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				await this.createEmulator();
 				void this.updateStatusBar();
 				break;
-			case "emulator":
+			case "emulator": {
 				// Clear the current device so we can wait for the new one
 				// to connect.
 				this.setCurrentDevice(undefined);
@@ -256,6 +256,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				await this.launchEmulator(selection.device, coldBoot);
 				void this.updateStatusBar();
 				break;
+			}
 			case "custom-emulator":
 				// Clear the current device so we can wait for the new one
 				// to connect.
@@ -265,7 +266,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				await this.launchCustomEmulator(selection.device);
 				void this.updateStatusBar();
 				break;
-			case "platform-enabler":
+			case "platform-enabler": {
 				const platformType = selection.device.platformType;
 				const projectRoot = selection.device.projectRoot;
 				if (!await this.enablePlatformType(platformType, projectRoot))
@@ -273,6 +274,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				// Attempt to select a device of this type that might now be valid.
 				await this.selectDeviceByPlatformType(platformType);
 				break;
+			}
 			case "device":
 				this.rememberDevice(selection.device);
 				this.setCurrentDevice(selection.device);

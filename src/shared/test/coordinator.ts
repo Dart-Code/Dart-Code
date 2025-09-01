@@ -81,7 +81,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 			// case "allSuites":
 			// 	this.handleAllSuitesNotification(evt as AllSuitesNotification);
 			// 	break;
-			case "suite":
+			case "suite": {
 				const event = evt as SuiteNotification;
 				// HACK: Handle paths with wrong slashes.
 				// https://github.com/Dart-Code/Dart-Code/issues/4441
@@ -98,6 +98,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 				this.owningDebugSessions[event.suite.path] = debugSessionID;
 				this.handleSuiteNotification(dartCodeDebugSessionID, event);
 				break;
+			}
 			case "testStart":
 				this.handleTestStartNotification(dartCodeDebugSessionID, evt as TestStartNotification);
 				break;

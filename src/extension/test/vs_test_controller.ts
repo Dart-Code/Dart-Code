@@ -448,7 +448,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				case "success":
 					run.passed(item, node.duration);
 					break;
-				default:
+				default: {
 					const outputEvents = node.outputEvents;
 					const output = outputEvents.map((output) => this.formatNotification(output)).join("\n");
 					const outputMessage = formatForTerminal(output);
@@ -468,6 +468,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 					else
 						run.errored(item, testMessage, node.duration);
 					break;
+				}
 			}
 		}
 	}
