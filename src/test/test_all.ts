@@ -128,33 +128,20 @@ async function runAllTests(): Promise<void> {
 			await runTests("flutter_snap", "empty");
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_debug") {
-			await runTests("dart_debug", "hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "false" });
-		}
-		if (!process.env.BOT || process.env.BOT === "dart_debug_sdk_dap") {
-			await runTests("dart_debug", "hello_world", "sdk_dap", { DART_CODE_FORCE_SDK_DAP: "true" });
+			await runTests("dart_debug", "hello_world", undefined);
 		}
 		if (!process.env.BOT || process.env.BOT === "dart_web_debug") {
 			await runTests("web_debug", "web");
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_debug") {
-			await runTests("flutter_debug", "flutter_hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "false" });
-			await runTests("flutter_bazel", "bazel.code-workspace", undefined, { DART_CODE_FORCE_SDK_DAP: "false" });
+			await runTests("flutter_debug", "flutter_hello_world", undefined);
+			await runTests("flutter_bazel", "bazel.code-workspace", undefined);
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_debug_chrome") {
-			await runTests("flutter_debug", "flutter_hello_world", "chrome", { FLUTTER_TEST_DEVICE_ID: "chrome", DART_CODE_FORCE_SDK_DAP: "false" });
-		}
-		if (!process.env.BOT || process.env.BOT === "flutter_debug_sdk_dap") {
-			await runTests("flutter_debug", "flutter_hello_world", "sdk_dap", { DART_CODE_FORCE_SDK_DAP: "true" });
-			await runTests("flutter_bazel", "bazel.code-workspace", "sdk_dap", { DART_CODE_FORCE_SDK_DAP: "true" });
-		}
-		if (!process.env.BOT || process.env.BOT === "flutter_debug_chrome_sdk_dap") {
-			await runTests("flutter_debug", "flutter_hello_world", "chrome_sdk_dap", { FLUTTER_TEST_DEVICE_ID: "chrome", DART_CODE_FORCE_SDK_DAP: "true" });
+			await runTests("flutter_debug", "flutter_hello_world", "chrome", { FLUTTER_TEST_DEVICE_ID: "chrome" });
 		}
 		if (!process.env.BOT || process.env.BOT === "flutter_test_debug") {
-			await runTests("flutter_test_debug", "flutter_hello_world", undefined, { DART_CODE_FORCE_SDK_DAP: "false" });
-		}
-		if (!process.env.BOT || process.env.BOT === "flutter_test_debug_sdk_dap") {
-			await runTests("flutter_test_debug", "flutter_hello_world", "sdk_dap", { DART_CODE_FORCE_SDK_DAP: "true" });
+			await runTests("flutter_test_debug", "flutter_hello_world", undefined);
 		}
 		if (!process.env.BOT || process.env.BOT === "misc") {
 			await runTests("dart_create_tests", "dart_create_tests.code-workspace");

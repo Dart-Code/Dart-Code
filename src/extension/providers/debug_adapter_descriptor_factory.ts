@@ -44,30 +44,20 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 				: this.experiments.flutterSdkDaps.applies;
 		}
 
-		const forceSdkDap = process.env.DART_CODE_FORCE_SDK_DAP === "true"
-			? true
-			: process.env.DART_CODE_FORCE_SDK_DAP === "false"
-				? false
-				: undefined;
 		let useSdkDap: boolean;
 		let sdkDapReason: string;
-		if (forceSdkDap !== undefined) {
-			useSdkDap = forceSdkDap;
-			sdkDapReason = "DART_CODE_FORCE_SDK_DAP env variable";
+		if (this.workspaceContext.config.forceFlutterWorkspace) {
+			useSdkDap = true;
+			sdkDapReason = "workspaceContext.config.forceFlutterWorkspace";
+		} else if (config.useLegacyDebugAdapters !== undefined) {
+			useSdkDap = !config.useLegacyDebugAdapters;
+			sdkDapReason = "config.useLegacyDebugAdapters";
+		} else if (isPreReleaseSdk) {
+			useSdkDap = true;
+			sdkDapReason = "canDefaultToSdkDap and using pre-release SDK";
 		} else {
-			if (this.workspaceContext.config.forceFlutterWorkspace) {
-				useSdkDap = true;
-				sdkDapReason = "workspaceContext.config.forceFlutterWorkspace";
-			} else if (config.useLegacyDebugAdapters !== undefined) {
-				useSdkDap = !config.useLegacyDebugAdapters;
-				sdkDapReason = "config.useLegacyDebugAdapters";
-			} else if (isPreReleaseSdk) {
-				useSdkDap = true;
-				sdkDapReason = "canDefaultToSdkDap and using pre-release SDK";
-			} else {
-				useSdkDap = isInSdkDapExperiment;
-				sdkDapReason = "sdkDaps experiment";
-			}
+			useSdkDap = isInSdkDapExperiment;
+			sdkDapReason = "sdkDaps experiment";
 		}
 		this.logger.info(`SDK DAP setting is ${useSdkDap}, set by ${sdkDapReason}`);
 
