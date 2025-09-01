@@ -67,52 +67,6 @@
 			]
 		},
 		{
-			"name": "Dart Debug Server",
-			"type": "node",
-			"cwd": "${workspaceFolder}",
-			"program": "${workspaceFolder}/out/dist/debug.js",
-			"args": [
-				"dart",
-				"--server=4715"
-			],
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Dart Test Debug Server",
-			"type": "node",
-			"cwd": "${workspaceFolder}",
-			"program": "${workspaceFolder}/out/dist/debug.js",
-			"args": [
-				"dart_test",
-				"--server=4716"
-			],
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
 			"name": "Web Debug Server",
 			"type": "node",
 			"cwd": "${workspaceFolder}",
@@ -143,52 +97,6 @@
 			"args": [
 				"web_test",
 				"--server=4714"
-			],
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Flutter Debug Server",
-			"type": "node",
-			"cwd": "${workspaceFolder}",
-			"program": "${workspaceFolder}/out/dist/debug.js",
-			"args": [
-				"flutter",
-				"--server=4711"
-			],
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Flutter Test Debug Server",
-			"type": "node",
-			"cwd": "${workspaceFolder}",
-			"program": "${workspaceFolder}/out/dist/debug.js",
-			"args": [
-				"flutter_test",
-				"--server=4712"
 			],
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -244,37 +152,7 @@
 			],
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "false"
-			},
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Dart Debug SDK DAP Tests",
-			"type": "extensionHost",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test/test_projects/hello_world",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/src/test/dart_debug",
-				"--profile-temp"
-			],
-			"env": {
-				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -442,8 +320,7 @@
 			],
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "false"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -472,66 +349,6 @@
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
 				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "false",
-				"FLUTTER_TEST_DEVICE_ID": "chrome"
-			},
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Flutter Debug SDK DAP Tests",
-			"type": "extensionHost",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test/test_projects/flutter_hello_world",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/src/test/flutter_debug",
-				"--profile-temp"
-			],
-			"env": {
-				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "true"
-			},
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Flutter Debug Chrome SDK DAP Tests",
-			"type": "extensionHost",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test/test_projects/flutter_hello_world",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/src/test/flutter_debug",
-				"--profile-temp"
-			],
-			"env": {
-				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "true",
 				"FLUTTER_TEST_DEVICE_ID": "chrome"
 			},
 			"preLaunchTask": "npm: watch",
@@ -560,37 +377,7 @@
 			],
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "false"
-			},
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Flutter Test Debug SDK DAP Tests",
-			"type": "extensionHost",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test/test_projects/flutter_hello_world",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/src/test/flutter_test_debug",
-				"--profile-temp"
-			],
-			"env": {
-				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -786,37 +573,7 @@
 			],
 			"env": {
 				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "false"
-			},
-			"preLaunchTask": "npm: watch",
-			"presentation": {
-				"hidden": true
-			},
-			"request": "launch",
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"smartStep": true,
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			]
-		},
-		{
-			"name": "Flutter Bazel SDK DAP Tests",
-			"type": "extensionHost",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test/test_projects/bazel.code-workspace",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/src/test/flutter_bazel",
-				"--profile-temp"
-			],
-			"env": {
-				"DART_CODE_USE_DEBUG_SERVERS": "true",
-				"DART_CODE_IS_TEST_RUN": "true",
-				"DART_CODE_FORCE_SDK_DAP": "true"
+				"DART_CODE_IS_TEST_RUN": "true"
 			},
 			"preLaunchTask": "npm: watch",
 			"presentation": {
@@ -894,12 +651,8 @@
 			"name": "Extension (Debuggable) + DAs",
 			"configurations": [
 				"Extension (Debuggable)",
-				"Dart Debug Server",
-				"Dart Test Debug Server",
 				"Web Debug Server",
-				"Web Test Debug Server",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server"
+				"Web Test Debug Server"
 			],
 			"presentation": {
 				"order": 0
@@ -919,19 +672,7 @@
 		{
 			"name": "Dart Debug Tests + DAs",
 			"configurations": [
-				"Dart Debug Tests",
-				"Dart Debug Server",
-				"Dart Test Debug Server"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Dart Debug SDK DAP Tests + DAs",
-			"configurations": [
-				"Dart Debug SDK DAP Tests"
+				"Dart Debug Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -993,8 +734,7 @@
 		{
 			"name": "Flutter Debug Tests + DAs",
 			"configurations": [
-				"Flutter Debug Tests",
-				"Flutter Debug Server"
+				"Flutter Debug Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -1004,28 +744,7 @@
 		{
 			"name": "Flutter Debug Chrome Tests + DAs",
 			"configurations": [
-				"Flutter Debug Chrome Tests",
-				"Flutter Debug Server"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter Debug SDK DAP Tests + DAs",
-			"configurations": [
-				"Flutter Debug SDK DAP Tests"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter Debug Chrome SDK DAP Tests + DAs",
-			"configurations": [
-				"Flutter Debug Chrome SDK DAP Tests"
+				"Flutter Debug Chrome Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -1035,19 +754,7 @@
 		{
 			"name": "Flutter Test Debug Tests + DAs",
 			"configurations": [
-				"Flutter Test Debug Tests",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter Test Debug SDK DAP Tests + DAs",
-			"configurations": [
-				"Flutter Test Debug SDK DAP Tests"
+				"Flutter Test Debug Tests"
 			],
 			"presentation": {
 				"order": 3
@@ -1117,19 +824,7 @@
 		{
 			"name": "Flutter Bazel Tests + DAs",
 			"configurations": [
-				"Flutter Bazel Tests",
-				"Flutter Debug Server",
-				"Flutter Test Debug Server"
-			],
-			"presentation": {
-				"order": 3
-			},
-			"stopAll": true
-		},
-		{
-			"name": "Flutter Bazel SDK DAP Tests + DAs",
-			"configurations": [
-				"Flutter Bazel SDK DAP Tests"
+				"Flutter Bazel Tests"
 			],
 			"presentation": {
 				"order": 3

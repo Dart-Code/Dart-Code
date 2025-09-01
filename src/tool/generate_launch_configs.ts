@@ -10,27 +10,22 @@ const testProjectsFolder = "src/test/test_projects";
 
 const testConfigs: TestConfig[] = [
 	{ testFolder: "dart", project: "hello_world" },
-	{ testFolder: "dart_debug", project: "hello_world", debugAdapters: ["dart", "dart_test"], sdkDaps: false },
-	{ testFolder: "dart_debug", project: "hello_world", sdkDaps: true },
+	{ testFolder: "dart_debug", project: "hello_world" },
 	{ testFolder: "web_debug", project: "web", debugAdapters: ["web", "web_test"] },
 	{ testFolder: "dart_nested", project: "dart_nested" },
 	{ testFolder: "dart_nested_flutter", project: "dart_nested_flutter" },
 	{ testFolder: "dart_nested_flutter2", project: "dart_nested_flutter2" },
 	{ testFolder: "flutter", project: "flutter_hello_world" },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: false },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world", debugAdapters: ["flutter"], sdkDaps: false, chrome: true },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world", sdkDaps: true },
-	{ testFolder: "flutter_debug", project: "flutter_hello_world", sdkDaps: true, chrome: true },
-	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", debugAdapters: ["flutter", "flutter_test"], sdkDaps: false },
-	{ testFolder: "flutter_test_debug", project: "flutter_hello_world", sdkDaps: true },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", },
+	{ testFolder: "flutter_debug", project: "flutter_hello_world", chrome: true },
+	{ testFolder: "flutter_test_debug", project: "flutter_hello_world" },
 	{ testFolder: "multi_root", project: "projects.code-workspace" },
 	{ testFolder: "multi_project_folder", project: "" },
 	{ testFolder: "dart_create_tests", project: "dart_create_tests.code-workspace" },
 	{ testFolder: "not_activated/dart_create", project: "empty" },
 	{ testFolder: "flutter_create_tests", project: "flutter_create_tests.code-workspace" },
 	{ testFolder: "not_activated/flutter_create", project: "empty" },
-	{ testFolder: "flutter_bazel", project: "bazel.code-workspace", debugAdapters: ["flutter", "flutter_test"], sdkDaps: false },
-	{ testFolder: "flutter_bazel", project: "bazel.code-workspace", sdkDaps: true },
+	{ testFolder: "flutter_bazel", project: "bazel.code-workspace" },
 	{ testFolder: "flutter_snap", project: "empty" },
 	{ testFolder: "flutter_repository", project: "${env:FLUTTER_ROOT}" },
 ];
@@ -106,8 +101,6 @@ function getTestConfigName(test: TestConfig) {
 	let name = getConfigName(test.testFolder);
 	if (test.chrome)
 		name = `${name} Chrome`;
-	if (test.sdkDaps)
-		name = `${name} SDK DAP`;
 	return `${name} Tests`;
 }
 
@@ -194,7 +187,6 @@ function getTestsConfig(test: TestConfig) {
 		env: {
 			DART_CODE_USE_DEBUG_SERVERS: "true",
 			DART_CODE_IS_TEST_RUN: "true",
-			DART_CODE_FORCE_SDK_DAP: test.sdkDaps === undefined ? undefined : `${test.sdkDaps}`,
 			FLUTTER_TEST_DEVICE_ID: test.chrome ? "chrome" : undefined,
 		},
 		preLaunchTask: "npm: watch",
@@ -208,7 +200,6 @@ interface TestConfig {
 	testFolder: string;
 	project: string;
 	debugAdapters?: string[];
-	sdkDaps?: boolean;
 	chrome?: boolean;
 }
 
