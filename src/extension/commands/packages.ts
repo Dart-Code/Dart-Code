@@ -50,28 +50,38 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private async getPackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
-		if (!config.enablePub)
+		if (!config.enablePub) {
+			this.logger.warn(`Pub is disabled by config, skipping!`);
 			return;
+		}
 
 		if (Array.isArray(uri)) {
+			this.logger.info(`Fetching packages for array...`);
 			for (const item of uri) {
 				await this.getPackages(item);
 			}
 			return;
 		}
 
+		this.logger.info(`Fetching packages for ${uri}!`);
+
 		if (!uri || !(uri instanceof vs.Uri)) {
+			this.logger.info(`No folder, so asking...`);
 			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to get packages for");
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
-			if (!uri)
+			if (!uri) {
+				this.logger.warn(`Got no folder, skipping!`);
 				return;
+			}
 		}
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
 		// Exclude folders we should never run pub get for.
-		if (!isValidPubGetTarget(uri).valid)
+		if (!isValidPubGetTarget(uri).valid) {
+			this.logger.warn(`Folder is not a valid pub get target, so skipping!`);
 			return;
+		}
 
 		const additionalArgs = [];
 		if (config.offline)
@@ -80,8 +90,10 @@ export class PackageCommands extends BaseSdkCommands {
 			additionalArgs.push("--no-example");
 
 		if (util.isInsideFlutterProject(uri)) {
+			this.logger.info(`Inside a Flutter project, running 'flutter pub get'`);
 			return this.runFlutter(["pub", "get", ...additionalArgs], uri);
 		} else {
+			this.logger.info(`Inside a Dart project, running 'dart pub get'`);
 			return this.runPub(["get", ...additionalArgs], uri);
 		}
 	}

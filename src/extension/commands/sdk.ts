@@ -44,8 +44,10 @@ export class BaseSdkCommands implements IAmDisposable {
 		alwaysShowOutput = false,
 	): Promise<RunProcessResult | undefined> {
 		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, selection);
-		if (!folderToRunCommandIn)
+		if (!folderToRunCommandIn) {
+			this.logger.error(`No folderToRunCommandIn, skipping!`);
 			return;
+		}
 
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
 		const containingWorkspacePath = containingWorkspace ? fsPath(containingWorkspace.uri) : undefined;
@@ -64,8 +66,10 @@ export class BaseSdkCommands implements IAmDisposable {
 	}
 
 	protected runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, customScript?: CustomScript): Promise<RunProcessResult | undefined> {
-		if (!this.sdks.flutter)
+		if (!this.sdks.flutter) {
+			this.logger.error(`No flutter SDK!`);
 			throw new Error("Flutter SDK not available");
+		}
 
 		const execution = usingCustomScript(
 			path.join(this.sdks.flutter, flutterPath),
@@ -96,6 +100,7 @@ export class BaseSdkCommands implements IAmDisposable {
 	}
 
 	protected async runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Promise<RunProcessResult | undefined> {
+		this.logger.info(`runCommandInFolder: ${folder}, ${binPath}, ${args}`);
 		shortPath = shortPath || path.basename(folder);
 		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
@@ -110,6 +115,7 @@ export class BaseSdkCommands implements IAmDisposable {
 		if (existingProcess && !existingProcess.hasStarted) {
 			// We already have a queued version of this command so there's no value in queueing another
 			// just bail.
+			this.logger.warn(`There is already a queued version of this command that has not started (${commandId}), skipping!`);
 			return Promise.resolve(undefined);
 		}
 
@@ -119,13 +125,16 @@ export class BaseSdkCommands implements IAmDisposable {
 			title: `${commandName} ${args.join(" ")}`,
 		}, (progress, token) => {
 			if (existingProcess) {
+				this.logger.info(`Terminating existing command...`);
 				progress.report({ message: "terminating previous command..." });
 				existingProcess.cancel();
 			} else {
+				this.logger.info(`No existing process, will run immediately`);
 				channel.clear();
 			}
 
 			const process = new ChainedProcess(() => {
+				this.logger.info(`Starting chained process!`);
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
 				progress.report({ message: "running..." });
 				const proc = safeToolSpawn(folder, binPath, args);
