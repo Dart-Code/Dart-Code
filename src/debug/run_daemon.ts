@@ -5,16 +5,20 @@ import { ExecutionInfo } from "../shared/processes";
 import { UnknownNotification, UnknownResponse } from "../shared/services/interfaces";
 import { StdIOService } from "../shared/services/stdio_service";
 
-export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
+export class WebRun extends StdIOService<UnknownNotification> {
 	constructor(
-		public readonly dartCapabilities: DartCapabilities,
+		private readonly dartCapabilties: DartCapabilities,
+		execution: ExecutionInfo,
+		projectFolder: string | undefined,
+		env: { envOverrides?: { [key: string]: string | undefined }, toolEnv: any },
 		logFile: string | undefined,
 		logger: Logger,
 		private readonly urlExposer: (url: string) => Promise<{ url: string }>,
 		maxLogLineLength: number,
-		messagesWrappedInBrackets = false,
-		treatHandlingErrorsAsUnhandledMessages = false) {
-		super(logger, maxLogLineLength, messagesWrappedInBrackets, treatHandlingErrorsAsUnhandledMessages, true, logFile);
+	) {
+		super(logger, maxLogLineLength, true, true, true, logFile);
+
+		this.createProcess(projectFolder, execution.executable, execution.args, env);
 	}
 
 	protected shouldHandleMessage(message: string): boolean {
@@ -156,10 +160,3 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	}
 }
 
-export class WebRun extends RunDaemonBase {
-	constructor(dartCapabilties: DartCapabilities, execution: ExecutionInfo, projectFolder: string | undefined, env: { envOverrides?: { [key: string]: string | undefined }, toolEnv: any }, logFile: string | undefined, logger: Logger, urlExposer: (url: string) => Promise<{ url: string }>, maxLogLineLength: number) {
-		super(dartCapabilties, logFile, logger, urlExposer, maxLogLineLength, true, true);
-
-		this.createProcess(projectFolder, execution.executable, execution.args, env);
-	}
-}

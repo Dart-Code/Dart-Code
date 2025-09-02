@@ -11,14 +11,14 @@ import { errorString, usingCustomScript } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
-import { RunDaemonBase, WebRun } from "./run_daemon_base";
+import { WebRun } from "./run_daemon";
 
 const objectGroupName = "my-group";
 const flutterExceptionStartBannerPrefix = "══╡ EXCEPTION CAUGHT BY";
 const flutterExceptionEndBannerPrefix = "══════════════════════════════════════════";
 
-export abstract class FlutterDebugSession extends DartDebugSession {
-	private runDaemon?: RunDaemonBase;
+export class WebDebugSession extends DartDebugSession {
+	private runDaemon?: WebRun;
 	private currentRunningAppId?: string;
 	private appHasStarted = false;
 	private appHasBeenToldToStopOrDetach = false;
@@ -38,7 +38,7 @@ export abstract class FlutterDebugSession extends DartDebugSession {
 		// way too early).
 		this.parseVmServiceUriFromStdOut = false;
 		this.requiresProgram = false;
-		this.logCategory = LogCategory.FlutterRun;
+		this.logCategory = LogCategory.WebDaemon;
 	}
 
 	protected initializeRequest(
@@ -145,8 +145,6 @@ export abstract class FlutterDebugSession extends DartDebugSession {
 			}
 		}
 	}
-
-	protected abstract spawnRunDaemon(args: DartLaunchArgs, logger: Logger): RunDaemonBase;
 
 	private async connectToVmServiceIfReady() {
 		if (this.vmServiceUri && this.appHasStarted && !this.vmService)
@@ -270,21 +268,13 @@ export abstract class FlutterDebugSession extends DartDebugSession {
 			);
 		}
 	}
-}
-
-export class WebDebugSession extends FlutterDebugSession {
-	constructor() {
-		super();
-
-		this.logCategory = LogCategory.WebDaemon;
-	}
 
 	protected async attachRequest(_response: DebugProtocol.AttachResponse, args: DartLaunchArgs): Promise<void> {
 		this.logToUser("Attach is not supported for Dart web projects\n");
 		this.sendEvent(new TerminatedEvent());
 	}
 
-	protected spawnRunDaemon(args: DartLaunchArgs, logger: Logger): RunDaemonBase {
+	protected spawnRunDaemon(args: DartLaunchArgs, logger: Logger): WebRun {
 		let allArgs: string[] = ["global", "run", "webdev", "daemon"];
 
 		// 	if (this.shouldConnectDebugger) {
