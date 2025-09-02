@@ -91,9 +91,22 @@ export class SuiteNode extends TreeNode {
 	}
 }
 
-export class GroupNode extends TreeNode {
-	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string, public range: Range | undefined) {
+abstract class RangeBasedTreeNode extends TreeNode {
+	private _range: Range | undefined;
+	public get range(): Range | undefined { return this._range; };
+	public set range(value: Range | undefined) {
+		this._range = value;
+		console.warn(`Updating range of ${this.label}!`);
+		this.rangeIsDirty = true;
+	};
+
+	public rangeIsDirty = true;
+}
+
+export class GroupNode extends RangeBasedTreeNode {
+	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string, range: Range | undefined) {
 		super(suiteData);
+		this.range = range;
 	}
 
 	get isSkipped(): boolean {
@@ -106,15 +119,16 @@ export class GroupNode extends TreeNode {
 	}
 }
 
-export class TestNode extends TreeNode {
+export class TestNode extends RangeBasedTreeNode {
 	private _status = TestStatus.Unknown;
 
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, public range: Range | undefined) {
+	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, range: Range | undefined) {
 		super(suiteData);
+		this.range = range;
 	}
 
 	get status(): TestStatus {

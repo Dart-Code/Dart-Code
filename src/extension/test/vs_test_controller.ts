@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { CoverageParser } from "../../shared/test/coverage";
-import { GroupNode, NodeDidChangeEvent, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, NodeDidChangeEvent, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TreeNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -353,14 +353,16 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		item.tags = tags;
 		item.description = node.description;
 		if ((node instanceof GroupNode || node instanceof TestNode) && node.range) {
-			// Only update locations of tests that already have locations if they are from the Outline, because
-			// if they were from results then re-applying the original location might now be inaccurate due to
-			// changes to the file.
-			if (!item.range || node.testSource === TestSource.Outline) {
+			// Only update locations of tests that don't already have locations, or where
+			// the location is dirty. We cannot just blindly update them because our locations
+			// may be stale if VS Code is tracking modified files.
+			if (!item.range || node.rangeIsDirty) {
+				console.warn(`Updating item range of ${item.label}/${node.label} ${!!item.range} / ${node.rangeIsDirty}!`);
 				item.range = new vs.Range(
 					new vs.Position(node.range.start.line, node.range.start.character),
 					new vs.Position(node.range.end.line, node.range.end.character),
 				);
+				node.rangeIsDirty = false;
 			}
 		}
 	}
