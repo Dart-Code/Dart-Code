@@ -2252,6 +2252,114 @@
 						"description": "Whether to include Dart and Flutter snippets in code completion.",
 						"scope": "window"
 					},
+					"dart.inlayHints": {
+						"type": [
+							"boolean",
+							"object"
+						],
+						"default": true,
+						"markdownDescription": "Whether to show Inlay Hints. When set to `true`, enables all inlay hints with default settings. When set to `false`, disables all inlay hints. Can also be an object to configure individual hint types. Requires Dart 3.10.",
+						"scope": "window",
+						"properties": {
+							"parameterNames": {
+								"type": [
+									"boolean",
+									"object"
+								],
+								"default": {
+									"enabled": true
+								},
+								"properties": {
+									"enabled": {
+										"type": [
+											"boolean",
+											"string"
+										],
+										"enum": [
+											true,
+											false,
+											"all",
+											"literal",
+											"none"
+										],
+										"enumDescriptions": [
+											"Show hints for all parameters.",
+											"Show no parameter name hints.",
+											"Show hints for all parameters.",
+											"Show hints only for arguments with literal values.",
+											"Show no parameter name hints."
+										],
+										"default": true,
+										"description": "Controls parameter name hints."
+									}
+								}
+							},
+							"parameterTypes": {
+								"type": [
+									"boolean",
+									"object"
+								],
+								"default": {
+									"enabled": true
+								},
+								"properties": {
+									"enabled": {
+										"type": "boolean",
+										"default": true,
+										"description": "Whether to show Inlay Hints for inferred parameter types."
+									}
+								}
+							},
+							"returnTypes": {
+								"type": [
+									"boolean",
+									"object"
+								],
+								"default": {
+									"enabled": true
+								},
+								"properties": {
+									"enabled": {
+										"type": "boolean",
+										"default": true,
+										"description": "Whether to show Inlay Hints for inferred return types."
+									}
+								}
+							},
+							"typeArguments": {
+								"type": [
+									"boolean",
+									"object"
+								],
+								"default": {
+									"enabled": true
+								},
+								"properties": {
+									"enabled": {
+										"type": "boolean",
+										"default": true,
+										"description": "Whether to show Inlay Hints for inferred type arguments."
+									}
+								}
+							},
+							"variableTypes": {
+								"type": [
+									"boolean",
+									"object"
+								],
+								"default": {
+									"enabled": true
+								},
+								"properties": {
+									"enabled": {
+										"type": "boolean",
+										"default": true,
+										"description": "Whether to show Inlay Hints for inferred variable declarations."
+									}
+								}
+							}
+						}
+					},
 					"dart.insertArgumentPlaceholders": {
 						"type": "boolean",
 						"default": true,
@@ -3064,8 +3172,7 @@
 						"default": true,
 						"description": "Whether to register the Dart SDK's MCP server with VS Code. This only applies to Dart SDKs >= v3.9.0 which added the server.",
 						"scope": "window"
-					}
-					,
+					},
 					"dart.mcpServerTools": {
 						"type": "object",
 						"default": {
@@ -3688,16 +3795,13 @@
 		"watch": "webpack --mode development --watch",
 		"build-tests": "tsc -p ./tsconfig.build.json",
 		"watch-non-ext": "tsc -p ./tsconfig.build.json --watch --extendedDiagnostics",
-
 		"lint": "eslint",
 		"lint:fix": "eslint --fix",
-
 		"pretest": "npm run build && npm run build-tests && npm run instrument-dist && npm run instrument",
 		"test": "xvfb-maybe node ./out/src/test/test_all.js",
 		"posttest": "npm run report_lcov && npm run report_screen",
 		"test-grammar": "vscode-tmgrammar-snap --expandDiff src/test/test_projects/grammar_testing/**/*.dart",
 		"test-all": "npm run test && npm run test-grammar",
-
 		"instrument-dist": "cd out/dist && nyc instrument --compact false --in-place . . && cd ../..",
 		"instrument": "cd out/src && nyc instrument --compact false --in-place . . && cd ../..",
 		"report_lcov": "nyc report -r lcovonly --report-dir coverage/$BOT",
