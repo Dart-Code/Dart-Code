@@ -1,7 +1,10 @@
 import * as vs from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { disposeAll } from "../../../shared/utils";
+import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
 import { envUtils } from "../../../shared/vscode/utils";
+import { isFirebaseStudio } from "../../../shared/vscode/utils_cloud";
+import { debugSessions } from "../../commands/debug";
 import { perSessionWebviewStateKey } from "../../extension";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
 
@@ -16,6 +19,25 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 
 	abstract get pageName(): string;
 	abstract get pageUrl(): Promise<string | null | undefined>; // undefined = no DevTools, null = just no page to display yet (still set up iframe).
+
+	// Given a string of wss://38617-firebase-test-connect-1756308783727.cluster-ursqb3v6abdzkxpsiqxh2nb3q4.cloudworkstations.dev/iN6zXu7VpYc=/ws
+	// return https://38617-firebase-test-connect-1756308783727.cluster-ursqb3v6abdzkxpsiqxh2nb3q4.cloudworkstations.dev
+	protected async computeHttpsUriFromWebSocketUri(url: string) {
+		url = await envUtils.exposeUrl(url);
+		let index = url.indexOf("//");
+		const urlAfterdoubleSlash = url.substring(index + 2);
+		index = urlAfterdoubleSlash.indexOf("/");
+		url = urlAfterdoubleSlash.substring(0, index);
+		url = `https://${url}`;
+		return url;
+
+	}
+
+	protected get currentSession(): DartDebugSessionInformation | undefined {
+		// Get the first debug session if present. Should we get the current session instead? 
+		// Just using the first one works with opening devTools, even when debugging a subsequent session.
+		return debugSessions && debugSessions.length ? debugSessions[0] : undefined;
+	}
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
 		if (this.webviewView !== webviewView) {
@@ -47,17 +69,47 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 			localResourceRoots: [],
 		};
 
+		let iframes = `<iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></iframe>`;
+		if (isFirebaseStudio()) {
+			iframes = `
+			<iframe id="vmServiceFrame" src="about:blank" frameborder="0" width="0" height="0" allow="cross-origin-isolated"></iframe>
+			<iframe id="dtdFrame" src="about:blank" frameborder="0" width="0" height="0" allow="cross-origin-isolated"></iframe>
+			${iframes}
+			`;
+		}
+
 		webviewView.webview.html = `
 			<html>
 			<head>
 			<meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
 			<script>${pageScript}</script>
 			</head>
-			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></iframe></body>
+			<body>
+			${iframes}
+			</body>
 			</html>
 			`;
 
 		await this.setUrl(pageUrl);
+		await this.setDtdUrl();
+		await this.setVmServiceUrl();
+	}
+
+	public async setVmServiceUrl() {
+		let url = this.currentSession?.vmServiceUri;
+		if (!url)
+			return;
+		url = await this.computeHttpsUriFromWebSocketUri(url);
+
+		void this.webviewView?.webview.postMessage({ command: "_dart-code.setVmServiceUrl", url });
+	}
+
+	public async setDtdUrl() {
+		let url = await this.devTools.dtdUri;
+		if (!url)
+			return;
+		url = await this.computeHttpsUriFromWebSocketUri(url);
+		void this.webviewView?.webview.postMessage({ command: "_dart-code.setDtdUrl", url });
 	}
 
 	public async setUrl(url: string | null) {
@@ -156,6 +208,14 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 				devToolsFrame.srcdoc = htmlContent;
 				vscode.setState({ ${perSessionWebviewStateKey}: { frameUrl: undefined } });
 				return;
+			case "_dart-code.setVmServiceUrl":
+				const vmServiceFrame = document.getElementById('vmServiceFrame');
+				vmServiceFrame.src = message.url;
+				return;
+			case "_dart-code.setDtdUrl":
+				const dtdFrame = document.getElementById('dtdFrame');
+				dtdFrame.src = message.url;
+				return;
 		}
 
 		try {
@@ -214,3 +274,5 @@ export abstract class MySimpleBaseWebViewProvider extends MyBaseWebViewProvider 
 		return this.devTools.urlFor(this.pageRoute);
 	}
 }
+
+

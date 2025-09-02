@@ -107,6 +107,10 @@ export class DevToolsManager implements vs.Disposable {
 		}
 	}
 
+	public get dtdUri(): Promise<string | undefined> | undefined {
+		return this.toolingDaemon?.dtdUri;
+	}
+
 	private setNotStartedStatusBar() {
 		this.statusBarItem.command = {
 			arguments: [{ commandSource: CommandSource.languageStatus }],
