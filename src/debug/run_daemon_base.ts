@@ -1,6 +1,7 @@
 import { DartCapabilities } from "../shared/capabilities/dart";
 import * as f from "../shared/flutter/daemon_interfaces";
 import { IAmDisposable, Logger } from "../shared/interfaces";
+import { ExecutionInfo } from "../shared/processes";
 import { UnknownNotification, UnknownResponse } from "../shared/services/interfaces";
 import { StdIOService } from "../shared/services/stdio_service";
 
@@ -155,3 +156,10 @@ export abstract class RunDaemonBase extends StdIOService<UnknownNotification> {
 	}
 }
 
+export class WebRun extends RunDaemonBase {
+	constructor(dartCapabilties: DartCapabilities, execution: ExecutionInfo, projectFolder: string | undefined, env: { envOverrides?: { [key: string]: string | undefined }, toolEnv: any }, logFile: string | undefined, logger: Logger, urlExposer: (url: string) => Promise<{ url: string }>, maxLogLineLength: number) {
+		super(dartCapabilties, logFile, logger, urlExposer, maxLogLineLength, true, true);
+
+		this.createProcess(projectFolder, execution.executable, execution.args, env);
+	}
+}
