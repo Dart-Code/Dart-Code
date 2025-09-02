@@ -5,8 +5,7 @@ import { debugLaunchProgressId, restartReasonManual } from "../shared/constants"
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
 import { AppProgress } from "../shared/flutter/daemon_interfaces";
-import { DiagnosticsNode, DiagnosticsNodeLevel, DiagnosticsNodeStyle, DiagnosticsNodeType, FlutterErrorData } from "../shared/flutter/structured_errors";
-import { Logger, SpawnedProcess, WidgetErrorInspectData } from "../shared/interfaces";
+import { Logger, SpawnedProcess } from "../shared/interfaces";
 import { errorString } from "../shared/utils";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
@@ -263,145 +262,11 @@ export abstract class FlutterDebugSession extends DartDebugSession {
 				await super.handleInspectEvent(event);
 			}
 		} finally {
-			// console.log(JSON.stringify(selectedWidget));
 			await this.runDaemon.callServiceExtension(
 				this.currentRunningAppId,
 				"ext.flutter.inspector.disposeGroup",
 				{ objectGroup: objectGroupName },
 			);
-			// TODO: How can we translate this back to source?
-			// const evt = event as any;
-			// const thread: VMIsolateRef = evt.isolate;
-			// const inspectee = (event as any).inspectee;
-		}
-	}
-
-	private handleFlutterErrorEvent(event: VMEvent) {
-		const error = event.extensionData as FlutterErrorData;
-		this.logFlutterErrorToUser(error);
-
-		if (this.useInspectorNotificationsForWidgetErrors)
-			this.tryParseDevToolsInspectLink(error);
-	}
-
-	private logFlutterErrorToUser(error: FlutterErrorData) {
-		const assumedTerminalSize = 80;
-		const barChar = "═";
-		const headerPrefix = barChar.repeat(8);
-		const headerSuffix = barChar.repeat(Math.max((assumedTerminalSize - error.description.length - 2 - headerPrefix.length), 0));
-		const header = `${headerPrefix} ${error.description} ${headerSuffix}`;
-		this.logToUser(`\n`, "stderr");
-		this.logToUser(`${header}\n`, "stderr");
-		if (error.errorsSinceReload)
-			this.logFlutterErrorSummary(error);
-		else
-			this.logDiagnosticNodeDescendents(error);
-		this.logToUser(`${barChar.repeat(header.length)}\n`, "stderr");
-	}
-
-	private logDiagnosticNodeToUser(node: DiagnosticsNode, { parent, level = 0, blankLineAfterSummary = true }: { parent: DiagnosticsNode; level?: number; blankLineAfterSummary?: boolean }) {
-		if (node.description && node.description.startsWith("◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤"))
-			return;
-
-		if (node.type === DiagnosticsNodeType.ErrorSpacer)
-			return;
-
-		let line = " ".repeat(level * 4);
-		if (node.name && node.showName !== false) {
-			line += node.name;
-			if (node.showSeparator !== false && node.description)
-				line += ": ";
-		}
-		if (node.description) {
-			if (this.useInspectorNotificationsForWidgetErrors && node.type === DiagnosticsNodeType.DevToolsDeepLinkProperty)
-				line += "You can inspect this widget using the 'Inspect Widget' button in the VS Code notification.";
-			else
-				line += node.description;
-		}
-		line = line.trimRight();
-
-		// For text that is not part of a stack trace and is not an Error or Summary we
-		// want to override the default red text for the stderr category to grey.
-		const isErrorMessage = node.level === DiagnosticsNodeLevel.Error
-			|| node.level === DiagnosticsNodeLevel.Summary
-			// TODO: Remove this when Flutter is marking user-thrown exceptions with
-			// ErrorSummary.
-			|| node.description && node.description.startsWith("Exception: ");
-
-		if (isErrorMessage) {
-			this.logToUser(`${line}\n`, "stderr");
-		} else {
-			this.logToUser(`${line}\n`, "stdout");
-		}
-		if (blankLineAfterSummary && node.level === DiagnosticsNodeLevel.Summary)
-			this.logToUser("\n", "stdout");
-
-		const childLevel = node.style === DiagnosticsNodeStyle.Flat
-			? level
-			: level + 1;
-
-		this.logDiagnosticNodeDescendents(node, childLevel);
-	}
-
-	private logFlutterErrorSummary(error: FlutterErrorData) {
-		for (const p of error.properties) {
-			const allChildrenAreLeaf = p.children && p.children.length && !p.children.find((c) => c.children && c.children.length);
-			if (p.level === DiagnosticsNodeLevel.Summary || allChildrenAreLeaf)
-				this.logDiagnosticNodeToUser(p, { parent: error, blankLineAfterSummary: false });
-		}
-	}
-
-	private logDiagnosticNodeDescendents(node: DiagnosticsNode, level = 0) {
-		if (node.style === DiagnosticsNodeStyle.Shallow)
-			return;
-
-		if (node.properties) {
-			let lastLevel: DiagnosticsNodeLevel | undefined;
-			for (const child of node.properties) {
-				if (lastLevel !== child.level && (lastLevel === DiagnosticsNodeLevel.Hint || child.level === DiagnosticsNodeLevel.Hint))
-					this.logToUser("\n", "stdout");
-				this.logDiagnosticNodeToUser(child, { parent: node, level });
-				lastLevel = child.level;
-			}
-		}
-		if (node.children)
-			node.children.forEach((child) => this.logDiagnosticNodeToUser(child, { parent: node, level }));
-	}
-
-	static flutterErrorDevToolsUrlPattern = new RegExp("(https?://[^/]+/)[^ ]+&inspectorRef=([^ &\\n]+)");
-	private tryParseDevToolsInspectLink(error: FlutterErrorData) {
-		try {
-			const errorSummaryNode = error.properties?.find((p) => p.type === DiagnosticsNodeType.ErrorSummary);
-			const devToolsLinkNode = error.properties?.find((p) => p.type === DiagnosticsNodeType.DevToolsDeepLinkProperty);
-
-			// "A RenderFlex overflowed by 5551 pixels on the right."
-			const errorDescription = errorSummaryNode?.description;
-
-			// "http://127.0.0.1:9100/#/inspector?uri=http%3A%2F%2F127.0.0.1%3A49905%2FC-UKCEA9hEQ%3D%2F&inspectorRef=inspector-0"
-			const devToolsInspectWidgetUrl = devToolsLinkNode?.value;
-			const devToolsInspectWidgetUrlMatch = devToolsInspectWidgetUrl ? FlutterDebugSession.flutterErrorDevToolsUrlPattern.exec(devToolsInspectWidgetUrl) : undefined;
-			const devToolsUrl = devToolsInspectWidgetUrlMatch?.length ? devToolsInspectWidgetUrlMatch[1] : undefined;
-			const inspectorReference = devToolsInspectWidgetUrlMatch?.length ? devToolsInspectWidgetUrlMatch[2] : undefined;
-
-			if (errorDescription && devToolsUrl && inspectorReference) {
-				this.sendEvent(new Event("dart.flutter.widgetErrorInspectData", { errorDescription, devToolsUrl, inspectorReference } as WidgetErrorInspectData));
-			}
-		} catch (e) {
-			this.logger.error(`Error trying to parse widget inspect data from structured error`);
-		}
-	}
-
-	// Extension
-	public async handleExtensionEvent(event: VMEvent) {
-		// Don't process any events while the debugger is still running init code.
-		await this.debuggerInit;
-
-		if (event.kind === "Extension" && event.extensionKind === "Flutter.Error") {
-			this.handleFlutterErrorEvent(event);
-		} else if (event.kind === "Extension" && event.extensionKind === "Flutter.ServiceExtensionStateChanged") {
-			this.sendEvent(new Event("flutter.serviceExtensionStateChanged", event.extensionData));
-		} else {
-			super.handleExtensionEvent(event);
 		}
 	}
 }

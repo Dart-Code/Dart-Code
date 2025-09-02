@@ -13,9 +13,6 @@ export class WebDebugSession extends FlutterDebugSession {
 	constructor() {
 		super();
 
-		// There is no observatory web app, so we shouldn't send an ObservatoryURI
-		// back to the editor, since that enables "Dart: Open Observatory" and friends.
-		this.supportsObservatoryWebApp = false;
 		this.logCategory = LogCategory.WebDaemon;
 	}
 
