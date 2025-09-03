@@ -19,8 +19,14 @@ export async function getPackageTestCapabilities(logger: Logger, workspaceContex
 		const proc = await runProcess(logger, binPath, ["run", "test:test", "--version"], folder, {}, safeSpawn);
 		const capabilities = DartTestCapabilities.empty;
 		if (proc.exitCode === 0) {
-			if (semver.valid(proc.stdout.trim()))
-				capabilities.version = proc.stdout.trim();
+			const output = proc.stdout.trim();
+			if (semver.valid(output))
+				capabilities.version = output;
+			else
+				console.warn(`Failed to parse pkg:test version number: ${output}`);
+		} else {
+			const output = (proc.stdout.trim() + "\n" + proc.stderr.trim()).trim();
+			console.warn(`Failed to get pkg:test version number: ${output}`);
 		}
 
 		cachedTestCapabilities[folder] = capabilities;

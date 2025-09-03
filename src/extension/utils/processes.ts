@@ -13,7 +13,8 @@ export function getToolEnv() {
 }
 
 export function getGlobalFlutterArgs() {
-	return globalFlutterArgs;
+	// Return a copy so we never have to worry about a caller mutating this.
+	return globalFlutterArgs.slice();
 }
 
 export function setFlutterRoot(root: string) {
