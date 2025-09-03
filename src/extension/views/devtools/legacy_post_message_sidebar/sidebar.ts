@@ -7,6 +7,7 @@ import { disposeAll } from "../../../../shared/utils";
 import { FlutterDeviceManager } from "../../../../shared/vscode/device_manager";
 import { envUtils } from "../../../../shared/vscode/utils";
 import { DevToolsManager } from "../../../sdk/dev_tools/manager";
+import { handleUrlAuthFunction } from "../../shared";
 import { DartApi } from "./dart_tooling_api";
 
 export class FlutterPostMessageSidebar implements IAmDisposable {
@@ -62,6 +63,9 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		const sidebarUri = URI.parse(sidebarUrl);
 		const frameOrigin = `${sidebarUri.scheme}://${sidebarUri.authority}`;
 		const embedFlags = this.dartCapabilities.requiresDevToolsEmbedFlag ? "embed=true&embedMode=one" : "embedMode=one";
+
+		// TODO(dantup): Consolidate this script with the two others into a local
+		//  .js file that can be referenced, so we don't have to embed inside a string.
 		const pageScript = `
 		let currentBackgroundColor;
 		let currentBaseUrl;
@@ -79,15 +83,18 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 				devToolsFrame.src = url;
 		}
 
+		${handleUrlAuthFunction}
+
 		const vscode = acquireVsCodeApi();
-		window.addEventListener('message', (event) => {
+		window.addEventListener('message', async (event) => {
 			const devToolsFrame = document.getElementById('devToolsFrame');
 			const message = event.data;
 
 			// Handle any special commands first.
 			switch (message.command) {
-				case "_dart-code.setUrl":
-					currentBaseUrl = message.url;
+				case "_dart-code.setUrls":
+					currentBaseUrl = message.urls.viewUrl;
+					await handleUrlAuth(message.urls.authUrls);
 					setIframeSrc();
 					return;
 			}
@@ -139,7 +146,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			this.deviceManager,
 		);
 
-		void webviewView.webview.postMessage({ command: "_dart-code.setUrl", url: sidebarUrl });
+		void webviewView.webview.postMessage({ command: "_dart-code.setUrls", url: sidebarUrl });
 	}
 
 }

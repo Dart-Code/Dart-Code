@@ -6,6 +6,7 @@ import { DevToolsPage } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { DevToolsEmbeddedViewOrSidebarView } from "../../sdk/dev_tools/embedded_view";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
+import { WebViewUrls } from "../shared";
 import { MyBaseWebViewProvider } from "./base_view_provider";
 
 export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
@@ -21,7 +22,7 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 	/// TODO(dantup): Consider if we need to ever support unloading static tools.
 	private isLoaded = false;
 
-	private targetUrl: string | undefined;
+	private targetUrls: WebViewUrls | undefined;
 
 	private readonly notConnectedHtml = `
 	<h1>Not Connected</h1>
@@ -43,7 +44,7 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 	}
 
 	/// Fired when the view is shown. If we had delayed setting the URL into the frame,
-	/// we must do it now. This allows us to call setUrl() for something like inspector when
+	/// we must do it now. This allows us to call setUrls() for something like inspector when
 	/// a debug session starts, without it loading DevTools if the view is not visible.
 	public async onShown(): Promise<void> {
 		if (this.isLoaded)
@@ -55,8 +56,8 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 			void this.devTools.spawn(undefined, { pageId: this.page.id, location: "sidebar", commandSource: CommandSource.onSidebarShown }, false);
 		} else {
 			// For non-static tools, we'll either show a message, or the URL we have.
-			if (this.targetUrl)
-				await this.setUrl(this.targetUrl, false);
+			if (this.targetUrls)
+				await this.setUrls(this.targetUrls, false);
 			else
 				this.unload(); // Show unloaded message.
 		}
@@ -70,14 +71,14 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 		void this.webViewProvider.setHtml(this.notConnectedHtml);
 	}
 
-	public async setUrl(url: string, forceShow: boolean): Promise<void> {
-		this.targetUrl = url;
+	public async setUrls(urls: WebViewUrls, forceShow: boolean): Promise<void> {
+		this.targetUrls = urls;
 
 		// If we're not loaded and not force-showing, we only store the URL for later.
 		if (!this.isLoaded && !forceShow)
 			return;
 
-		await this.webViewProvider.setUrl(url);
+		await this.webViewProvider.setUrls(urls);
 		if (forceShow) {
 			await vs.commands.executeCommand(`sidebarDevTools${this.page.commandSuffix}.focus`);
 			this.webViewProvider.webviewView?.show(true);
@@ -112,8 +113,8 @@ class MyWebViewProvider extends MyBaseWebViewProvider {
 		return this.name;
 	}
 
-	get pageUrl(): Promise<string | null | undefined> {
-		// We don't have this to start with, setUrl must be called.
+	get pageUrls(): Promise<WebViewUrls | null | undefined> {
+		// We don't have this to start with, setUrls must be called.
 		return Promise.resolve(null);
 	}
 }

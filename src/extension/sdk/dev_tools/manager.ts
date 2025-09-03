@@ -13,7 +13,7 @@ import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
 import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
-import { disposeAll, usingCustomScript, versionIsAtLeast } from "../../../shared/utils";
+import { disposeAll, notUndefined, usingCustomScript, versionIsAtLeast } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
@@ -28,6 +28,7 @@ import { ExtensionRecommentations } from "../../recommendations/recommendations"
 import { getExcludedFolders } from "../../utils";
 import { getToolEnv } from "../../utils/processes";
 import { SidebarDevTools } from "../../views/devtools/sidebar_devtools";
+import { exposeWebViewUrls, WebViewUrls } from "../../views/shared";
 import { DevToolsEmbeddedView, DevToolsEmbeddedViewOrSidebarView } from "./embedded_view";
 
 const devtoolsPackageName = "Dart DevTools";
@@ -375,14 +376,15 @@ export class DevToolsManager implements vs.Disposable {
 			if (this.dartCapabilities.requiresDevToolsEmbedFlag)
 				queryParams.embed = "true";
 			queryParams.embedMode = "one";
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
-			const exposedUrl = await envUtils.exposeUrl(fullUrl);
+			const fullUrls = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
+			const exposedUrls = await exposeWebViewUrls(fullUrls);
 
 			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
-			this.launchInEmbeddedWebView(exposedUrl, session, pageInfo, options.location, options.triggeredAutomatically, forceShow);
+			this.launchInEmbeddedWebView(exposedUrls, session, pageInfo, options.location, options.triggeredAutomatically, forceShow);
 		} else {
-			const fullUrl = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
-			await envUtils.openInBrowser(fullUrl, this.logger);
+			const fullUrls = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
+			// For the browser, we don't care about auth URLs.
+			await envUtils.openInBrowser(fullUrls.viewUrl, this.logger);
 		}
 	}
 
@@ -411,7 +413,7 @@ export class DevToolsManager implements vs.Disposable {
 			.join("&");
 	}
 
-	private async buildDevToolsUrl(baseUrl: string, queryParams: Record<string, string | undefined>, vmServiceUri?: string, clientVmServiceUri?: string) {
+	private async buildDevToolsUrl(baseUrl: string, queryParams: Record<string, string | undefined>, vmServiceUri?: string, clientVmServiceUri?: string): Promise<WebViewUrls> {
 		queryParams = {
 			...this.getDefaultQueryParams(),
 			...queryParams,
@@ -444,10 +446,20 @@ export class DevToolsManager implements vs.Disposable {
 
 		const paramsString = this.buildQueryString(queryParams);
 		const urlPathSeperator = baseUrl.endsWith("/") ? "" : "/";
-		return `${baseUrl}${urlPathSeperator}${path}?${paramsString}`;
+
+		// Compute any URLs that we may need to ensure are authed correctly.
+		const authUrls = [
+			await this.dtdUri,
+			queryParams.uri,
+		].filter(notUndefined);
+
+		return {
+			viewUrl: `${baseUrl}${urlPathSeperator}${path}?${paramsString}`,
+			authUrls: authUrls?.length ? authUrls : undefined,
+		};
 	}
 
-	private launchInEmbeddedWebView(uri: string, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | "sidebar" | undefined, triggeredAutomatically: boolean | undefined, forceShow: boolean) {
+	private launchInEmbeddedWebView(urls: WebViewUrls, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | "sidebar" | undefined, triggeredAutomatically: boolean | undefined, forceShow: boolean) {
 		const pageId = page.id;
 		const pageTitle = page.title;
 
@@ -467,7 +479,7 @@ export class DevToolsManager implements vs.Disposable {
 		if (!frame) {
 			if (location === "sidebar")
 				location = "beside"; // Unsupported sidebar config or view was somehow not pre-populated in frames.
-			frame = new DevToolsEmbeddedView(session, uri, pageTitle, location);
+			frame = new DevToolsEmbeddedView(session, urls.viewUrl, pageTitle, location);
 			frame.onDispose(() => {
 				if (!frame) return;
 				const index = views.indexOf(frame);
@@ -477,7 +489,7 @@ export class DevToolsManager implements vs.Disposable {
 			devToolsEmbeddedViews[pageId]?.push(frame);
 		}
 		frame.openedAutomatically = !!triggeredAutomatically;
-		frame.load(session, uri, forceShow);
+		frame.load(session, urls, forceShow);
 	}
 
 	private async launchThroughService(
