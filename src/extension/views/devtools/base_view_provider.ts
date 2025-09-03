@@ -225,9 +225,10 @@ export abstract class MySimpleBaseWebViewProvider extends MyBaseWebViewProvider 
 		if (!url)
 			return undefined;
 
+		const dtdUri = await this.devTools.dtdUri;
 		return {
 			viewUrl: url,
-			authUrls: undefined,
+			authUrls: dtdUri ? [dtdUri] : undefined,
 		};
 	}
 }
