@@ -5,7 +5,6 @@ import { CustomScript, Logger, WritableWorkspaceConfig } from "../interfaces";
 
 export function processDartSdkRepository(logger: Logger, config: WritableWorkspaceConfig, _dartSdkRoot: string) {
 	config.disableAutomaticPub = true;
-	config.supportsDartRunTest = false;
 }
 
 export function processFuchsiaWorkspace(logger: Logger, config: WritableWorkspaceConfig, _fuchsiaRoot: string) {
