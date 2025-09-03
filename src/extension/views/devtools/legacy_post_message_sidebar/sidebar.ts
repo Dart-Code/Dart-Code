@@ -7,7 +7,6 @@ import { disposeAll } from "../../../../shared/utils";
 import { FlutterDeviceManager } from "../../../../shared/vscode/device_manager";
 import { envUtils } from "../../../../shared/vscode/utils";
 import { DevToolsManager } from "../../../sdk/dev_tools/manager";
-import { handleUrlAuthFunction } from "../../shared";
 import { DartApi } from "./dart_tooling_api";
 
 export class FlutterPostMessageSidebar implements IAmDisposable {
@@ -83,8 +82,6 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 				devToolsFrame.src = url;
 		}
 
-		${handleUrlAuthFunction}
-
 		const vscode = acquireVsCodeApi();
 		window.addEventListener('message', async (event) => {
 			const devToolsFrame = document.getElementById('devToolsFrame');
@@ -92,9 +89,8 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 
 			// Handle any special commands first.
 			switch (message.command) {
-				case "_dart-code.setUrls":
-					currentBaseUrl = message.urls.viewUrl;
-					await handleUrlAuth(message.urls.authUrls);
+				case "_dart-code.setUrl":
+					currentBaseUrl = message.url;
 					setIframeSrc();
 					return;
 			}
@@ -146,7 +142,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			this.deviceManager,
 		);
 
-		void webviewView.webview.postMessage({ command: "_dart-code.setUrls", url: sidebarUrl });
+		void webviewView.webview.postMessage({ command: "_dart-code.setUrl", url: sidebarUrl });
 	}
 
 }

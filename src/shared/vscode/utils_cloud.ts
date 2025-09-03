@@ -22,6 +22,6 @@ export function isKnownCloudIde(appName: string | undefined) {
 
 export function requiresAuthIframes() {
 	// For now we only do this for Firebase Studio, but we can add other
-	// cloude IDEs if we find they have the same issue (and the same solution works).
+	// cloud IDEs if we find they have the same issue (and the same solution works).
 	return isFirebaseStudio();
 }

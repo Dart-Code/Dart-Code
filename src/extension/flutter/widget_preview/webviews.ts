@@ -32,7 +32,7 @@ function getPageHtmlSource(widgetPreviewUri: string): string {
 	return `
 		<html>
 		<head>
-		<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${vs.Uri.parse(widgetPreviewUri).authority}; frame-src  *;">
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${vs.Uri.parse(widgetPreviewUri).authority}; frame-src *;">
 		<script nonce="${scriptNonce}">${pageScript}</script>
 		<style nonce="${cssNonce}">#widgetPreviewFrame { ${frameCss} }</style>
 		</head>

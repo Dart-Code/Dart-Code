@@ -217,12 +217,17 @@ export abstract class MySimpleBaseWebViewProvider extends MyBaseWebViewProvider 
 	abstract get pageRoute(): string;
 
 	get pageUrls(): Promise<WebViewUrls | undefined> {
-		return this.devTools.urlFor(this.pageRoute).then((url) =>
-			url
-				? {
-					viewUrl: url,
-					authUrls: undefined,
-				}
-				: undefined);
+		return this.getPageUrls();
+	}
+
+	private async getPageUrls(): Promise<WebViewUrls | undefined> {
+		const url = await this.devTools.urlFor(this.pageRoute);
+		if (!url)
+			return undefined;
+
+		return {
+			viewUrl: url,
+			authUrls: undefined,
+		};
 	}
 }
