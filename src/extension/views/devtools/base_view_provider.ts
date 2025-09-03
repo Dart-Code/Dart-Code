@@ -2,7 +2,6 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { disposeAll } from "../../../shared/utils";
 import { envUtils } from "../../../shared/vscode/utils";
-import { isFirebaseStudio } from "../../../shared/vscode/utils_cloud";
 import { perSessionWebviewStateKey } from "../../extension";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
 import { exposeWebViewUrls, handleUrlAuthFunction, WebViewUrls } from "../shared";
@@ -49,24 +48,13 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 			localResourceRoots: [],
 		};
 
-		let iframes = `<iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></iframe>`;
-		if (isFirebaseStudio()) {
-			iframes = `
-			<iframe id="vmServiceFrame" src="about:blank" frameborder="0" width="0" height="0" allow="cross-origin-isolated"></iframe>
-			<iframe id="dtdFrame" src="about:blank" frameborder="0" width="0" height="0" allow="cross-origin-isolated"></iframe>
-			${iframes}
-			`;
-		}
-
 		webviewView.webview.html = `
 			<html>
 			<head>
 			<meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
 			<script>${pageScript}</script>
 			</head>
-			<body>
-			${iframes}
-			</body>
+			<body><iframe id="devToolsFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></iframe></body>
 			</html>
 			`;
 
