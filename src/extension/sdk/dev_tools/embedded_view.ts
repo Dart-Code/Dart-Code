@@ -4,7 +4,7 @@ import { IAmDisposable } from "../../../shared/interfaces";
 import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
 import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
-import { handleUrlAuthFunction, WebViewUrls } from "../../views/shared";
+import { exposeWebViewUrls, handleUrlAuthFunction, WebViewUrls } from "../../views/shared";
 
 // TODO(dantup): Consolidate this script with the two others into a local
 //  .js file that can be referenced, so we don't have to embed inside a string.
@@ -124,12 +124,12 @@ export abstract class DevToolsEmbeddedViewOrSidebarView implements IAmDisposable
 
 	constructor(public session: DartDebugSessionInformation | undefined) { }
 
-	abstract setUrls(urls: WebViewUrls, forceShow: boolean): void;
+	abstract setUrls(urls: WebViewUrls, forceShow: boolean): Promise<void>;
 	abstract reload(): void;
 
-	public load(session: DartDebugSessionInformation | undefined, urls: WebViewUrls, forceShow: boolean): void {
+	public async load(session: DartDebugSessionInformation | undefined, urls: WebViewUrls, forceShow: boolean): Promise<void> {
 		this.session = session;
-		this.setUrls(urls, forceShow);
+		await this.setUrls(urls, forceShow);
 	}
 
 	public dispose(): void {
@@ -175,7 +175,8 @@ export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
 		);
 	}
 
-	public setUrls(urls: WebViewUrls): void {
+	public async setUrls(urls: WebViewUrls): Promise<void> {
+		urls = await exposeWebViewUrls(urls);
 		void this.panel.webview.postMessage({ command: "setUrls", urls });
 		this.panel.reveal();
 	}

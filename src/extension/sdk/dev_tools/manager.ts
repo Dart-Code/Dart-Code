@@ -380,7 +380,7 @@ export class DevToolsManager implements vs.Disposable {
 			const exposedUrls = await exposeWebViewUrls(fullUrls);
 
 			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
-			this.launchInEmbeddedWebView(exposedUrls, session, pageInfo, options.location, options.triggeredAutomatically, forceShow);
+			await this.launchInEmbeddedWebView(exposedUrls, session, pageInfo, options.location, options.triggeredAutomatically, forceShow);
 		} else {
 			const fullUrls = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
 			// For the browser, we don't care about auth URLs.
@@ -459,7 +459,7 @@ export class DevToolsManager implements vs.Disposable {
 		};
 	}
 
-	private launchInEmbeddedWebView(urls: WebViewUrls, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | "sidebar" | undefined, triggeredAutomatically: boolean | undefined, forceShow: boolean) {
+	private async launchInEmbeddedWebView(urls: WebViewUrls, session: DartDebugSessionInformation | undefined, page: { id: string, title: string }, location: "beside" | "active" | "sidebar" | undefined, triggeredAutomatically: boolean | undefined, forceShow: boolean): Promise<void> {
 		const pageId = page.id;
 		const pageTitle = page.title;
 
@@ -489,7 +489,7 @@ export class DevToolsManager implements vs.Disposable {
 			devToolsEmbeddedViews[pageId]?.push(frame);
 		}
 		frame.openedAutomatically = !!triggeredAutomatically;
-		frame.load(session, urls, forceShow);
+		await frame.load(session, urls, forceShow);
 	}
 
 	private async launchThroughService(
