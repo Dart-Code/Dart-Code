@@ -62,6 +62,9 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		const sidebarUri = URI.parse(sidebarUrl);
 		const frameOrigin = `${sidebarUri.scheme}://${sidebarUri.authority}`;
 		const embedFlags = this.dartCapabilities.requiresDevToolsEmbedFlag ? "embed=true&embedMode=one" : "embedMode=one";
+
+		// TODO(dantup): Consolidate this script with the two others into a local
+		//  .js file that can be referenced, so we don't have to embed inside a string.
 		const pageScript = `
 		let currentBackgroundColor;
 		let currentBaseUrl;
@@ -80,7 +83,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		}
 
 		const vscode = acquireVsCodeApi();
-		window.addEventListener('message', (event) => {
+		window.addEventListener('message', async (event) => {
 			const devToolsFrame = document.getElementById('devToolsFrame');
 			const message = event.data;
 

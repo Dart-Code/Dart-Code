@@ -4,6 +4,7 @@ import { disposeAll } from "../../../shared/utils";
 import { envUtils } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
+import { exposeWebViewUrls, handleUrlAuthFunction, WebViewUrls } from "../shared";
 
 export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 	protected readonly disposables: vs.Disposable[] = [];
@@ -15,7 +16,7 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 	) { }
 
 	abstract get pageName(): string;
-	abstract get pageUrl(): Promise<string | null | undefined>; // undefined = no DevTools, null = just no page to display yet (still set up iframe).
+	abstract get pageUrls(): Promise<WebViewUrls | null | undefined>; // undefined = no DevTools, null = just no page to display yet (still set up iframe).
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
 		if (this.webviewView !== webviewView) {
@@ -30,8 +31,8 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		}
 
 		await this.devTools.start();
-		const pageUrl = await this.pageUrl;
-		if (pageUrl === undefined) { // undefined = no Devtools, null = just no page to display yet (still set up iframe).
+		const pageUrls = await this.pageUrls;
+		if (pageUrls === undefined) { // undefined = no Devtools, null = just no page to display yet (still set up iframe).
 			webviewView.webview.html = `
 			<html>
 			<body><h1>${this.pageName} Unavailable</h1><p>The ${this.pageName} requires DevTools but DevTools failed to start.</p></body>
@@ -57,15 +58,15 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 			</html>
 			`;
 
-		await this.setUrl(pageUrl);
+		await this.setUrls(pageUrls);
 	}
 
-	public async setUrl(url: string | null) {
-		if (!url)
+	public async setUrls(urls: WebViewUrls | null) {
+		if (!urls)
 			return;
 
-		url = await envUtils.exposeUrl(url);
-		void this.webviewView?.webview.postMessage({ command: "_dart-code.setUrl", url });
+		urls = await exposeWebViewUrls(urls);
+		void this.webviewView?.webview.postMessage({ command: "_dart-code.setUrls", urls });
 	}
 
 	public async setHtml(content: string | null) {
@@ -79,6 +80,8 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 	protected getScript() {
 		const embedFlags = this.dartCapabilities.requiresDevToolsEmbedFlag ? "embed=true&embedMode=one" : "embedMode=one";
 
+		// TODO(dantup): Consolidate this script with the two others into a local
+		//  .js file that can be referenced, so we don't have to embed inside a string.
 		return `
 	const vscode = acquireVsCodeApi();
 	const originalState = vscode.getState()?.${perSessionWebviewStateKey};
@@ -108,7 +111,9 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		};
 	}
 
-	window.addEventListener('message', (event) => {
+	${handleUrlAuthFunction}
+
+	window.addEventListener('message', async (event) => {
 		const devToolsFrame = document.getElementById('devToolsFrame');
 		const message = event.data;
 
@@ -120,12 +125,13 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 
 		// Handle any special commands first.
 		switch (message.command) {
-			case "_dart-code.setUrl":
-				const qsSep = message.url.includes("?") ? "&" : "?";
+			case "_dart-code.setUrls":
+				const qsSep = message.urls.viewUrl.includes("?") ? "&" : "?";
 				// Don't include # in colors
 				// https://github.com/flutter/flutter/issues/155992
-				let url = \`\${message.url}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(foreground?.replace('#', ''))}\`;
+				let url = \`\${message.urls.viewUrl}\${qsSep}${embedFlags}&theme=\${theme}&backgroundColor=\${encodeURIComponent(background?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(foreground?.replace('#', ''))}\`;
 				if (devToolsFrame.src !== url || devToolsFrame.srcdoc) {
+					await handleUrlAuth(message.urls.authUrls);
 					devToolsFrame.src = url;
 					devToolsFrame.removeAttribute('srcdoc');
 					vscode.setState({ ${perSessionWebviewStateKey}: { frameUrl: url } });
@@ -210,7 +216,19 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 export abstract class MySimpleBaseWebViewProvider extends MyBaseWebViewProvider {
 	abstract get pageRoute(): string;
 
-	get pageUrl(): Promise<string | undefined> {
-		return this.devTools.urlFor(this.pageRoute);
+	get pageUrls(): Promise<WebViewUrls | undefined> {
+		return this.getPageUrls();
+	}
+
+	private async getPageUrls(): Promise<WebViewUrls | undefined> {
+		const url = await this.devTools.urlFor(this.pageRoute);
+		if (!url)
+			return undefined;
+
+		const dtdUri = await this.devTools.dtdUri;
+		return {
+			viewUrl: url,
+			authUrls: dtdUri ? [dtdUri] : undefined,
+		};
 	}
 }

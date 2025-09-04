@@ -4,7 +4,10 @@ import { IAmDisposable } from "../../../shared/interfaces";
 import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
 import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
+import { exposeWebViewUrls, handleUrlAuthFunction, WebViewUrls } from "../../views/shared";
 
+// TODO(dantup): Consolidate this script with the two others into a local
+//  .js file that can be referenced, so we don't have to embed inside a string.
 const pageScript = `
 const vscode = acquireVsCodeApi();
 const originalState = vscode.getState()?.${perSessionWebviewStateKey};
@@ -25,6 +28,8 @@ function getTheme() {
 	};
 }
 
+${handleUrlAuthFunction}
+
 window.addEventListener('load', (event) => {
 	// Restore previous frame if we had one.
 	const devToolsFrame = document.getElementById('devToolsFrame');
@@ -33,17 +38,18 @@ window.addEventListener('load', (event) => {
 		devToolsFrame.src = originalFrameUrl;
 	}
 });
-window.addEventListener('message', (event) => {
+window.addEventListener('message', async (event) => {
 	const message = event.data;
 	const devToolsFrame = document.getElementById('devToolsFrame');
 	switch (message.command) {
-		case "setUrl":
+		case "setUrls":
 			const theme = getTheme();
 			const themeKind = theme.isDarkMode ? 'dark' : 'light';
 			// Don't include # in colors
 			// https://github.com/flutter/flutter/issues/155992
-			let url = \`\${message.url}&theme=\${themeKind}&backgroundColor=\${encodeURIComponent(theme.backgroundColor?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(theme.foregroundColor?.replace('#', ''))}\`;
+			let url = \`\${message.urls.viewUrl}&theme=\${themeKind}&backgroundColor=\${encodeURIComponent(theme.backgroundColor?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(theme.foregroundColor?.replace('#', ''))}\`;
 			if (devToolsFrame.src !== url) {
+				await handleUrlAuth(message.urls.authUrls);
 				devToolsFrame.src = url;
 				vscode.setState({ ${perSessionWebviewStateKey}: { frameUrl: url } });
 			}
@@ -118,12 +124,12 @@ export abstract class DevToolsEmbeddedViewOrSidebarView implements IAmDisposable
 
 	constructor(public session: DartDebugSessionInformation | undefined) { }
 
-	abstract setUrl(url: string, forceShow: boolean): void;
+	abstract setUrls(urls: WebViewUrls, forceShow: boolean): Promise<void>;
 	abstract reload(): void;
 
-	public load(session: DartDebugSessionInformation | undefined, url: string, forceShow: boolean): void {
+	public async load(session: DartDebugSessionInformation | undefined, urls: WebViewUrls, forceShow: boolean): Promise<void> {
 		this.session = session;
-		this.setUrl(url, forceShow);
+		await this.setUrls(urls, forceShow);
 	}
 
 	public dispose(): void {
@@ -152,7 +158,7 @@ export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
 		this.panel.webview.html = `
 			<html>
 			<head>
-			<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${vs.Uri.parse(devToolsUri).authority};">
+			<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${vs.Uri.parse(devToolsUri).authority}; frame-src *;">
 			<script nonce="${scriptNonce}">${pageScript}</script>
 			<style nonce="${cssNonce}">#devToolsFrame { ${frameCss} }</style>
 			</head>
@@ -169,8 +175,9 @@ export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
 		);
 	}
 
-	public setUrl(url: string): void {
-		void this.panel.webview.postMessage({ command: "setUrl", url });
+	public async setUrls(urls: WebViewUrls): Promise<void> {
+		urls = await exposeWebViewUrls(urls);
+		void this.panel.webview.postMessage({ command: "setUrls", urls });
 		this.panel.reveal();
 	}
 
