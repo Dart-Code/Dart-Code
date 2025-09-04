@@ -30,10 +30,19 @@ export class PromiseCompleter<T> {
 	public resolve!: (value: T | PromiseLike<T>) => void;
 	public reject!: (error?: any, stackTrace?: string) => void;
 
+	private _isComplete = false;
+	public get isComplete() { return this._isComplete; }
+
 	constructor() {
 		this.promise = new Promise((res, rej) => {
-			this.resolve = res;
-			this.reject = rej;
+			this.resolve = (x) => {
+				this._isComplete = true;
+				res(x);
+			};
+			this.reject = (x) => {
+				this._isComplete = true;
+				rej(x);
+			};
 		});
 	}
 }

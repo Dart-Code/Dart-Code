@@ -11,6 +11,9 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 	private readonly completer = new PromiseCompleter<void>();
 
 	private startProgress() {
+		if (this.completer.isComplete)
+			return;
+
 		void window.withProgress(
 			{
 				cancellable: false,
@@ -26,7 +29,10 @@ class DartDebugAdapterLaunchStatus implements DebugAdapterTracker {
 	}
 
 	public onWillStartSession(): void {
-		this.startProgress();
+		// Delay showing for 1s so we don't show for short launches because the notification
+		// appearing and disappearing can be quite noisy.
+		// https://github.com/Dart-Code/Dart-Code/issues/5682
+		setTimeout(() => this.startProgress(), 1000);
 	}
 
 	public onDidSendMessage(_message: any): void {
