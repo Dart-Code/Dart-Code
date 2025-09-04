@@ -3,7 +3,7 @@ import * as process from "process";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { dartCodeConfigurationPathEnvironmentVariableName, dartCodeServiceActivationDelayEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev } from "../shared/constants";
+import { dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
@@ -22,7 +22,6 @@ import { extensionVersion, isDevExtension } from "../shared/vscode/extension_uti
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { ProjectFinder, clearCaches, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
-import { isFirebaseStudio } from "../shared/vscode/utils_cloud";
 import { Context } from "../shared/vscode/workspace";
 import { WorkspaceContext } from "../shared/workspace";
 import { LspAnalyzer } from "./analysis/analyzer";
@@ -405,20 +404,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
 	const extensionRecommendations = new ExtensionRecommentations(logger, analytics, extContext);
-
-	// If configured, wait for some period before spawning any external services.
-	// Config overrides the env var to allow for testing different values.
-	// See https://github.com/Dart-Code/Dart-Code/issues/5613.
-	const serviceActivationDelayMsRaw = config.serviceActivationDelayMs ?? process.env[dartCodeServiceActivationDelayEnvironmentVariableName];
-	let serviceActivationDelayMs = Number(serviceActivationDelayMsRaw);
-	// Default to a 5s delay on Firebase Studio if no other config is set.
-	if (!serviceActivationDelayMs && isFirebaseStudio()) {
-		serviceActivationDelayMs = 5000;
-	}
-	if (!isNaN(serviceActivationDelayMs)) {
-		logger.info(`Service activation delay is configured, waiting ${serviceActivationDelayMs}ms`);
-		await new Promise((resolve) => setTimeout(resolve, serviceActivationDelayMs));
-	}
 
 	// Dart Tooling Daemon.
 	const dartToolingDaemon = dartCapabilities.supportsToolingDaemon && !workspaceContext.config.disableDartToolingDaemon
