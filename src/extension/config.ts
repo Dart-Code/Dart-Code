@@ -193,7 +193,6 @@ class Config {
 	get runPubGetOnNestedProjects(): "none" | "both" | "above" | "below" { return this.getConfig<"none" | "both" | "above" | "below">("runPubGetOnNestedProjects", "none"); }
 	get sdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("sdkPath", null)); }
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
-	get serviceActivationDelayMs(): undefined | number { return this.getConfig<null | number>("serviceActivationDelayMs", null); }
 	get sdkSwitchingTarget(): "workspace" | "global" { return this.getConfig<"workspace" | "global">("sdkSwitchingTarget", "workspace"); }
 	get shareDevToolsWithFlutter(): boolean { return this.getConfig<boolean>("shareDevToolsWithFlutter", true); }
 	get showDartPadSampleCodeLens(): boolean { return this.getConfig<boolean>("showDartPadSampleCodeLens", true); }
