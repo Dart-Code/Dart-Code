@@ -16,7 +16,7 @@ import { isWebDevice, notNullOrUndefined } from "../../shared/utils";
 import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
-import { getAllProjectFolders, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
+import { getAllProjectFolders, isDartWorkspaceFolder, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config, ResourceConfig } from "../config";
@@ -63,9 +63,15 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const isAttachRequest = debugConfig.request === "attach";
 		const logger = this.logger;
 		const editor = getActiveRealFileEditor();
-		const openFile = editor
+		let openFile = editor
 			? fsPath(editor.document.uri)
 			: undefined;
+		// If we're launching for a given workspace folder and the open file is inside it, then disregard the
+		// open file. Otherwise, we might try to launch something from then open file's project when the user
+		// expected the selected one.
+		// https://github.com/Dart-Code/Dart-Code/issues/5670
+		if (openFile && folder && isDartWorkspaceFolder(folder) && !isWithinPath(openFile, fsPath(folder.uri)))
+			openFile = undefined;
 
 		logger.info(`Starting debug session...`);
 		if (folder)
