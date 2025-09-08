@@ -477,6 +477,11 @@
 				"category": "Flutter"
 			},
 			{
+				"command": "flutter.clean.all",
+				"title": "Clean All Projects",
+				"category": "Flutter"
+			},
+			{
 				"command": "flutter.doctor",
 				"title": "Run Flutter Doctor",
 				"category": "Flutter"
@@ -1041,6 +1046,10 @@
 				},
 				{
 					"command": "flutter.clean",
+					"when": "dart-code:anyFlutterProjectLoaded"
+				},
+				{
+					"command": "flutter.clean.all",
 					"when": "dart-code:anyFlutterProjectLoaded"
 				},
 				{

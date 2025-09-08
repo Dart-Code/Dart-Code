@@ -10,11 +10,12 @@ import { DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerDat
 import { RunProcessResult } from "../../shared/processes";
 import { sortBy } from "../../shared/utils/array";
 import { stripMarkdown } from "../../shared/utils/dartdocs";
-import { fsPath, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
+import { fsPath, isFlutterProjectFolder, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
 import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../../shared/utils/projects";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
+import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -32,6 +33,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		super(logger, context, workspace, dartCapabilities);
 
 		this.disposables.push(vs.commands.registerCommand("flutter.clean", this.flutterClean.bind(this)));
+		this.disposables.push(vs.commands.registerCommand("flutter.clean.all", this.flutterCleanAllProjects.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("_flutter.screenshot.touchBar", (args: any) => vs.commands.executeCommand("flutter.screenshot", args)));
 		this.disposables.push(vs.commands.registerCommand("flutter.screenshot", this.flutterScreenshot.bind(this)));
 		this.disposables.push(vs.commands.registerCommand("flutter.doctor", this.flutterDoctor.bind(this)));
@@ -44,15 +46,28 @@ export class FlutterCommands extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean.bind(this)));
 	}
 
-	private async flutterClean(selection: vs.Uri | undefined): Promise<RunProcessResult | undefined> {
-		if (!selection) {
-			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, selection, true);
-			if (!path)
-				return;
-			selection = vs.Uri.file(path);
+	private async flutterClean(uri: vs.Uri | vs.Uri[] | undefined): Promise<RunProcessResult | undefined> {
+		if (Array.isArray(uri)) {
+			for (const item of uri)
+				await this.flutterClean(item);
+			return;
 		}
 
-		return this.runFlutter(["clean"], selection);
+		if (!uri) {
+			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, uri, true);
+			if (!path)
+				return;
+			uri = vs.Uri.file(path);
+		}
+
+		return this.runFlutter(["clean"], uri);
+	}
+
+	private async flutterCleanAllProjects(): Promise<void> {
+		const allFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
+		const flutterFolders = allFolders.filter(isFlutterProjectFolder);
+		const folderUris = flutterFolders.map((f) => vs.Uri.file(f));
+		await vs.commands.executeCommand("flutter.clean", folderUris);
 	}
 
 	private async flutterScreenshot() {
