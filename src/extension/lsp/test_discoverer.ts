@@ -70,8 +70,9 @@ export class TestDiscoverer implements IAmDisposable {
 				}),
 				watcher.onDidDelete((uri) => {
 					const filePath = fsPath(uri);
-					if (isTestFile(filePath) && !this.isExcludedPath(filePath))
-						this.model.clearSuiteOrDirectory(filePath);
+					// Don't use isTestFile() here because it calls isDartDocument() which checks
+					// for existence, but we've just been deleted.
+					this.model.clearSuiteOrDirectory(filePath);
 				}),
 			);
 		}
