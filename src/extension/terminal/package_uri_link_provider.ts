@@ -60,9 +60,7 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 	}
 
 	public async provideTerminalLinks(context: vs.TerminalLinkContext, _token: vs.CancellationToken): Promise<DartPackageUriLink[]> {
-		const res = await this.getLinks(context.line);
-		console.log(res);
-		return res;
+		return this.getLinks(context.line);
 	}
 
 	private async getLinks(content: string) {
