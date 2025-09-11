@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
-import { getActiveRealFileEditor, isDartDocument } from "../editors";
+import { getActiveRealFileEditor, isDartDocument } from "../../shared/vscode/editors";
 
 export class DartDebugAdapterGlobalEvaluationContextFactory implements vs.DebugAdapterTrackerFactory {
 	createDebugAdapterTracker(): vs.DebugAdapterTracker {

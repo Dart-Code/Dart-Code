@@ -1,22 +1,25 @@
 import * as vs from "vscode";
-import { Logger } from "../../shared/interfaces";
-import { PackageMap } from "../../shared/pub/package_map";
-import { notUndefined } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
-import { DartPackageUriLink, findPackageUriLinks, formatLineColFragment } from "../../shared/vscode/terminal_link_provider_utils";
-import { getAllProjectFolders } from "../../shared/vscode/utils";
-import { WorkspaceContext } from "../../shared/workspace";
-import { config } from "../config";
+import { Logger } from "../../interfaces";
+import { PackageMap } from "../../pub/package_map";
+import { notUndefined } from "../../utils";
+import { fsPath } from "../../utils/fs";
+import { WorkspaceContext } from "../../workspace";
 import { isDartDocument } from "../editors";
-import { locateBestProjectRoot } from "../project";
-import { getExcludedFolders } from "../utils";
+import { DartPackageUriLink, findPackageUriLinks, formatLineColFragment } from "../terminal_link_provider_utils";
+import { getAllProjectFolders } from "../utils";
 
 
 export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartPackageUriLink>, vs.DocumentLinkProvider<vs.DocumentLink> {
 	packageMaps: Record<string, PackageMap> | undefined;
 	packageMapDiscovery: Promise<void> | undefined;
 
-	constructor(private readonly logger: Logger, private readonly context: WorkspaceContext) {
+	constructor(
+private readonly logger: Logger,
+private readonly context: WorkspaceContext,
+private readonly locateBestProjectRoot: (folder: string) => string | undefined,
+private readonly getExcludedFolders: (f: vs.WorkspaceFolder | undefined) => string[],
+private readonly projectSearchDepth: number,
+	) {
 		context.events.onPackageMapChange.listen(() => {
 			this.packageMaps = undefined;
 			this.packageMapDiscovery = undefined;
@@ -24,15 +27,13 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 	}
 
 	private async discoverPackageMaps(): Promise<void> {
-		if (this.packageMapDiscovery) {
+		if (this.packageMapDiscovery)
 			return this.packageMapDiscovery;
-		}
 		this.packageMapDiscovery = new Promise(async (resolve) => {
-			const projectFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+			const projectFolders = await getAllProjectFolders(this.logger, this.getExcludedFolders, { requirePubspec: true, searchDepth: this.projectSearchDepth });
 			this.packageMaps = {};
-			for (const projectFolder of projectFolders) {
+			for (const projectFolder of projectFolders)
 				this.packageMaps[projectFolder] = PackageMap.loadForProject(this.logger, projectFolder);
-			}
 			resolve();
 		});
 		return this.packageMapDiscovery;
@@ -92,7 +93,7 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 		if (!isDartDocument(document))
 			return [];
 
-		const projectFolder = locateBestProjectRoot(fsPath(document.uri));
+		const projectFolder = this.locateBestProjectRoot(fsPath(document.uri));
 		if (!projectFolder)
 			return [];
 

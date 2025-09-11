@@ -87,8 +87,8 @@ import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
-import { DartFileUriLinkProvider } from "./terminal/file_uri_link_provider";
-import { DartPackageUriLinkProvider } from "./terminal/package_uri_link_provider";
+import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
+import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { VsCodeTestController } from "./test/vs_test_controller";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
@@ -98,6 +98,7 @@ import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils
 import { FlutterPostMessageSidebar } from "./views/devtools/legacy_post_message_sidebar/sidebar";
 import { PropertyEditor } from "./views/devtools/property_editor";
 import { FlutterDtdSidebar } from "./views/devtools/sidebar";
+import { locateBestProjectRoot } from "./project";
 import { DartPackagesProvider } from "./views/packages_view";
 
 let maybeAnalyzer: LspAnalyzer | undefined;
@@ -534,7 +535,13 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Set up commands for Dart editors.
 	context.subscriptions.push(new EditCommands());
 
-	const packageLinkProvider = new DartPackageUriLinkProvider(logger, workspaceContext);
+	const packageLinkProvider = new DartPackageUriLinkProvider(
+		logger,
+		workspaceContext,
+		locateBestProjectRoot,
+		util.getExcludedFolders,
+		config.projectSearchDepth,
+	);
 	const fileLinkProvider = new DartFileUriLinkProvider();
 	if (vs.window.registerTerminalLinkProvider) { // Workaround for GitPod/Theia not having this.
 		context.subscriptions.push(vs.window.registerTerminalLinkProvider(packageLinkProvider));

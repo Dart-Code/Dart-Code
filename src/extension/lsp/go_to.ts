@@ -2,9 +2,9 @@ import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { disposeAll } from "../../shared/utils";
 import { uriComparisonString } from "../../shared/utils/fs";
+import * as editors from "../../shared/vscode/editors";
 import { showCode } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
-import * as editors from "../editors";
 
 abstract class LspGoToCommand implements vs.Disposable {
 	protected disposables: vs.Disposable[] = [];

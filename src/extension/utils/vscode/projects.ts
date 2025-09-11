@@ -4,9 +4,9 @@ import { Uri } from "vscode";
 import { Logger } from "../../../shared/interfaces";
 import { notUndefined } from "../../../shared/utils";
 import { fsPath, homeRelativePath, isFlutterProjectFolder } from "../../../shared/utils/fs";
+import { getActiveRealFileEditor } from "../../../shared/vscode/editors";
 import { getAllProjectFolders } from "../../../shared/vscode/utils";
 import { config } from "../../config";
-import { getActiveRealFileEditor } from "../../editors";
 import { locateBestProjectRoot } from "../../project";
 import { getExcludedFolders } from "../../utils";
 
