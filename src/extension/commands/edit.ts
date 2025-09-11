@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
+import { getActiveRealFileEditor } from "../../shared/vscode/editors";
 import { firstEditorColumn, showCode } from "../../shared/vscode/utils";
-import { getActiveRealFileEditor } from "../editors";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
 export class EditCommands implements vs.Disposable {

@@ -1,6 +1,6 @@
 import * as vs from "vscode";
-import { fsPath } from "../../shared/utils/fs";
-import { DartFileUriLink, findFileUriLinks, formatLineColFragment } from "../../shared/vscode/terminal_link_provider_utils";
+import { fsPath } from "../../utils/fs";
+import { DartFileUriLink, findFileUriLinks, formatLineColFragment } from "../terminal_link_provider_utils";
 
 
 export class DartFileUriLinkProvider implements vs.TerminalLinkProvider<DartFileUriLink>, vs.DocumentLinkProvider<vs.DocumentLink> {
