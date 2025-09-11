@@ -1,5 +1,9 @@
 import { strict as assert } from "assert";
-import { activate, checkTreeNodeResults, delay, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
+import * as fs from "fs";
+import * as path from "path";
+import * as vs from "vscode";
+import { fsPath, tryDeleteFile } from "../../../shared/utils/fs";
+import { activate, checkTreeNodeResults, defer, delay, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -92,5 +96,51 @@ test/rename_test.dart [0/1 passed] Unknown
 		assert.equal(!!results.find((suite) => suite.includes("basic_test")), true);
 		// Ensure exclusion.
 		assert.equal(!!results.find((suite) => suite.includes("excluded_by_analysis_options")), false, "excluded_by_analysis_options was in the test list");
+	});
+
+	it("handles create/delete of test files on disk", async () => {
+		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
+
+		const newFilename = "disk_create_test.dart";
+		const newFilePath = path.join(fsPath(helloWorldTestFolder), newFilename);
+		defer("Cleanup new", () => tryDeleteFile(newFilePath));
+
+		fs.writeFileSync(newFilePath, `
+import "package:test/test.dart";
+
+void main() => test("test inside ${newFilename}", () {});
+			`);
+
+		// Ensure the file shows up after it was created.
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(newFilename)));
+
+		// Ensure the test inside it shows up if the file is opened.
+		await openFile(vs.Uri.file(newFilePath));
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(`test inside ${newFilename}`)));
+
+		// Ensure both disappear if the file is deleted.
+		fs.unlinkSync(newFilePath);
+		await waitForResult(() => !makeTestTextTree().some((s) => s.includes(newFilename)));
+	});
+
+	it("handles renaming of test files on disk", async () => {
+		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
+
+		const originalFilename = "disk_rename_original_test.dart";
+		const originalFilePath = path.join(fsPath(helloWorldTestFolder), originalFilename);
+		defer("Cleanup original", () => tryDeleteFile(originalFilePath));
+
+		const newFilename = "disk_rename_new_test.dart";
+		const newFilePath = path.join(fsPath(helloWorldTestFolder), newFilename);
+		defer("Cleanup new", () => tryDeleteFile(newFilePath));
+
+		fs.writeFileSync(originalFilePath, "");
+
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(originalFilename)));
+
+		fs.renameSync(originalFilePath, newFilePath);
+
+		await waitForResult(() => !makeTestTextTree().some((s) => s.includes(originalFilename)));
+		await waitForResult(() => makeTestTextTree().some((s) => s.includes(newFilename)));
 	});
 });

@@ -48,24 +48,16 @@ export class TestDiscoverer implements IAmDisposable {
 		// once we have discovered them.
 		if (!this.hasSetupFileHandlers) {
 			this.hasSetupFileHandlers = true;
+			const watcher = vs.workspace.createFileSystemWatcher("**/*_test.dart", false, true, false);
 			this.disposables.push(
-				vs.workspace.onDidCreateFiles((e) => {
-					e.files.forEach((file) => {
-						const filePath = fsPath(file);
-						if (isTestFile(filePath))
-							this.model.suiteDiscovered(undefined, filePath);
-					});
+				watcher,
+				watcher.onDidCreate(async (uri) => {
+					const filePath = fsPath(uri);
+					if (isTestFile(filePath))
+						this.model.suiteDiscovered(undefined, filePath);
 				}),
-				vs.workspace.onDidRenameFiles(async (e) => {
-					e.files.forEach(async (file) => {
-						this.model.clearSuiteOrDirectory(fsPath(file.oldUri));
-						void this.discoverTestSuites(fsPath(file.newUri), undefined);
-					});
-				}),
-				vs.workspace.onDidDeleteFiles(async (e) => {
-					e.files.forEach(async (file) => {
-						this.model.clearSuiteOrDirectory(fsPath(file));
-					});
+				watcher.onDidDelete((uri) => {
+					this.model.clearSuiteOrDirectory(fsPath(uri));
 				}),
 			);
 		}
