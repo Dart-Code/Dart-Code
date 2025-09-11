@@ -47,4 +47,10 @@ describe("DartFileUriTerminalLinkProvider", () => {
 		assert.equal(result.line, line);
 		assert.equal(result.col, col);
 	}
+
+	// TODO(dantup): Add tests that go verify DartPackageUriLinkProvider directly, including:
+	//  - navigating directly for a single terminal result
+	//  - calling goToLocations for multiple results
+	//
+	// This requires refactoring DartPackageUriLinkProvider and moving to shared (which requires an interface for finding projects/config).
 });
