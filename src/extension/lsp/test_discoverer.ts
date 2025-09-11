@@ -6,7 +6,7 @@ import { Outline, OutlineParams } from "../../shared/analysis/lsp/custom_protoco
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { SuiteNode, TestModel, TestSource } from "../../shared/test/test_model";
 import { disposeAll, uriToFilePath } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt } from "../../shared/utils/fs";
+import { forceWindowsDriveLetterToUppercase, fsPath, getRandomInt, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { OutlineVisitor } from "../../shared/utils/outline";
 import { extractTestNameFromOutline } from "../../shared/utils/test";
 import { getAllProjectFoldersAndExclusions } from "../../shared/vscode/utils";
@@ -23,6 +23,7 @@ export class TestDiscoverer implements IAmDisposable {
 	private hasSetupFileHandlers = false;
 
 	public testDiscoveryPerformed: Promise<void> | undefined;
+	public excludedFolders: Set<string> | undefined;
 
 	constructor(private readonly logger: Logger, public readonly fileTracker: FileTracker, private readonly model: TestModel) {
 		this.disposables.push(fileTracker.onOutline((o) => this.handleOutline(o)));
@@ -38,6 +39,12 @@ export class TestDiscoverer implements IAmDisposable {
 		await this.testDiscoveryPerformed;
 	}
 
+	private isExcludedPath(fileOrFolderPath: string) {
+		return this.excludedFolders
+			? [...this.excludedFolders].some((f) => isWithinPathOrEqual(fileOrFolderPath, f))
+			: false;
+	}
+
 	/// Immediately performs suite discovery. Use [ensureSuitesDiscovered] if you want
 	/// to just ensure discovery has run at least once.
 	///
@@ -48,16 +55,23 @@ export class TestDiscoverer implements IAmDisposable {
 		// once we have discovered them.
 		if (!this.hasSetupFileHandlers) {
 			this.hasSetupFileHandlers = true;
-			const watcher = vs.workspace.createFileSystemWatcher("**/*_test.dart", false, true, false);
+			const watcher = vs.workspace.createFileSystemWatcher(
+				"**/*_test.dart",
+				false, // ignoreCreateEvents
+				true, // ignoreChangeEvents
+				false, // ignoreDeleteEvents
+			);
 			this.disposables.push(
 				watcher,
 				watcher.onDidCreate(async (uri) => {
 					const filePath = fsPath(uri);
-					if (isTestFile(filePath))
+					if (isTestFile(filePath) && !this.isExcludedPath(filePath))
 						this.model.suiteDiscovered(undefined, filePath);
 				}),
 				watcher.onDidDelete((uri) => {
-					this.model.clearSuiteOrDirectory(fsPath(uri));
+					const filePath = fsPath(uri);
+					if (isTestFile(filePath) && !this.isExcludedPath(filePath))
+						this.model.clearSuiteOrDirectory(filePath);
 				}),
 			);
 		}
@@ -71,8 +85,8 @@ export class TestDiscoverer implements IAmDisposable {
 				try {
 					const projectFoldersAndExclusions = await getAllProjectFoldersAndExclusions(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 					const projectFolders = projectFoldersAndExclusions.projectFolders;
-					const excludedFolders = projectFoldersAndExclusions.excludedFolders;
-					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder, excludedFolders)));
+					this.excludedFolders = projectFoldersAndExclusions.excludedFolders;
+					await Promise.all(projectFolders.map((folder) => this.discoverTestSuites(folder)));
 				} catch (e) {
 					this.logger.error(`Failed to discover tests: ${e}`);
 				}
@@ -80,7 +94,7 @@ export class TestDiscoverer implements IAmDisposable {
 		);
 	}
 
-	private async discoverTestSuites(fileOrDirectory: string, excludedFolders: Set<string> | undefined, isDirectory?: boolean, level = 0) {
+	private async discoverTestSuites(fileOrDirectory: string, isDirectory?: boolean, level = 0) {
 		if (level > 100) return; // Ensure we don't traverse too far or follow any cycles.
 
 		if (isTestFile(fileOrDirectory)) {
@@ -93,8 +107,8 @@ export class TestDiscoverer implements IAmDisposable {
 					.map((item) => ({ name: item[0], type: item[1] }))
 					.filter((item) => !item.name.startsWith("."))
 					.map((item) => ({ name: item.name, type: item.type, path: path.join(fileOrDirectory, item.name) }))
-					.filter((item) => !(excludedFolders?.has(item.path) ?? false))
-					.map((item) => this.discoverTestSuites(item.path, excludedFolders, item.type === vs.FileType.Directory, level + 1));
+					.filter((item) => !(this.excludedFolders?.has(item.path) ?? false))
+					.map((item) => this.discoverTestSuites(item.path, item.type === vs.FileType.Directory, level + 1));
 
 				await Promise.all(childPromises);
 			} catch (e: any) {
