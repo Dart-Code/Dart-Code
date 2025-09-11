@@ -14,11 +14,11 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 	packageMapDiscovery: Promise<void> | undefined;
 
 	constructor(
-private readonly logger: Logger,
-private readonly context: WorkspaceContext,
-private readonly locateBestProjectRoot: (folder: string) => string | undefined,
-private readonly getExcludedFolders: (f: vs.WorkspaceFolder | undefined) => string[],
-private readonly projectSearchDepth: number,
+		private readonly logger: Logger,
+		readonly context: WorkspaceContext,
+		private readonly locateBestProjectRoot: (folder: string) => string | undefined,
+		private readonly getExcludedFolders: (f: vs.WorkspaceFolder | undefined) => string[],
+		private readonly projectSearchDepth: number,
 	) {
 		context.events.onPackageMapChange.listen(() => {
 			this.packageMaps = undefined;

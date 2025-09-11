@@ -3252,7 +3252,7 @@
 					"dart.projectSearchDepth": {
 						"type": "number",
 						"default": 5,
-						"description": "How many levels (including the workspace roots) down the workspace to search for Dart/Flutter projects. Increasing this number may help detect Flutter projects that are deeply nested in your workspace but slow down all operations that search for projects, including extension activation.",
+						"description": "How many levels (including the workspace roots) down the workspace to search for Dart/Flutter projects. Increasing this number may help detect Flutter projects that are deeply nested in your workspace but slow down all operations that search for projects, including extension activation (requires restart).",
 						"scope": "window"
 					},
 					"dart.env": {
