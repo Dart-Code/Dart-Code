@@ -96,6 +96,9 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 		if (!projectFolder)
 			return [];
 
+		if (!this.packageMaps)
+			await this.discoverPackageMaps();
+
 		// Prefer using the package map for the current project to look this up, since the workspace might have multiple.
 		const packageMap = this.packageMaps ? this.packageMaps[projectFolder] : undefined;
 		if (!packageMap)
