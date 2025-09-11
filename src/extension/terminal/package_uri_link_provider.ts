@@ -72,19 +72,19 @@ export class DartPackageUriLinkProvider implements vs.TerminalLinkProvider<DartP
 
 	public handleTerminalLink(link: DartPackageUriLink): vs.ProviderResult<void> {
 		const filePaths = this.resolvePackageUris(link.uri);
-		const locations: vs.Location[] = filePaths.map((filePath) => new vs.Location(vs.Uri.file(filePath), new vs.Position(link.line ?? 0, link.col ?? 0)));
 
-		if (!locations.length) {
+		if (!filePaths.length) {
 			// No locations.
 			void vs.window.showErrorMessage(`Unable to find root for package ${link.packageName}`);
 			return;
-		} else if (locations.length === 1) {
+		} else if (filePaths.length === 1) {
 			// Single location, go straight there.
-			const link = locations[0];
-			void vs.commands.executeCommand("_dart.jumpToLineColInUri", link.uri, link.range.start.line, link.range.start.character);
+			void vs.commands.executeCommand("_dart.jumpToLineColInUri", vs.Uri.file(filePaths[0]), link.line, link.col);
 		} else {
 			// Multiple locations - go to the first one but show a Peek window.
-			void vs.commands.executeCommand("editor.action.goToLocations", locations[0].uri, new vs.Position(0, 0), locations, "gotoAndPeek", "No locations found");
+			const locations: vs.Location[] = filePaths.map((filePath) => new vs.Location(vs.Uri.file(filePath), new vs.Position(link.line ?? 0, link.col ?? 0)));
+			const first = locations[0];
+			void vs.commands.executeCommand("editor.action.goToLocations", first.uri, first.range.start, locations, "gotoAndPeek", "No locations found");
 		}
 	}
 
