@@ -20,20 +20,35 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 	}
 	if (runSkippedTests)
 		toolArgs.push("--run-skipped");
-	if (includeCoverage && isFlutter) {
+	if (includeCoverage) {
 		const coverageFilePath = path.join(os.tmpdir(), `flutter-coverage-${getRandomInt(0x1000, 0x10000).toString(16)}.lcov`);
-		toolArgs.push("--coverage");
-		toolArgs.push("--branch-coverage");
-		toolArgs.push("--coverage-path");
-		toolArgs.push(coverageFilePath);
-		if (workspacePackageNames) {
-			for (const packageName of workspacePackageNames) {
-				toolArgs.push("--coverage-package", packageName);
+		if (isFlutter) {
+			toolArgs.push("--coverage");
+			toolArgs.push("--branch-coverage");
+			toolArgs.push("--coverage-path");
+			toolArgs.push(coverageFilePath);
+			if (workspacePackageNames) {
+				for (const packageName of workspacePackageNames) {
+					toolArgs.push("--coverage-package", packageName);
+				}
 			}
-		}
 
-		template ??= {};
-		template.coverageFilePath = coverageFilePath;
+			template ??= {};
+			template.coverageFilePath = coverageFilePath;
+		} else if (???) {
+			toolArgs.push("--branch-coverage");
+			toolArgs.push("--coverage-path");
+			toolArgs.push(coverageFilePath);
+			// TODO(dantup): Add behind a capability once Dart supports this.
+			// if (workspacePackageNames) {
+			// 	for (const packageName of workspacePackageNames) {
+			// 		toolArgs.push("--coverage-package", packageName);
+			// 	}
+			// }
+
+			template ??= {};
+			template.coverageFilePath = coverageFilePath;
+		}
 	}
 
 	return Object.assign(
