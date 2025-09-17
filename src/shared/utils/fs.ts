@@ -200,13 +200,17 @@ export function pubspecContentReferencesFlutter(content: string) {
 	}
 }
 
-export function tryGetPackageName(packageDirectory: string): string | undefined {
+function tryGetPackageName(packageDirectory: string): string | undefined {
 	try {
 		const yaml = YAML.parse(fs.readFileSync(path.join(packageDirectory, "pubspec.yaml")).toString());
 		return (yaml?.name ?? undefined) as string | undefined;
 	} catch {
 		return undefined;
 	}
+}
+
+export function getPackageName(packageDirectory: string): string {
+	return tryGetPackageName(packageDirectory) ?? path.basename(packageDirectory);
 }
 
 export function referencesBuildRunner(folder?: string): boolean {

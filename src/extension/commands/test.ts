@@ -10,7 +10,7 @@ import { GroupNode, SuiteData, SuiteNode, TestNode, TreeNode } from "../../share
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
-import { fsPath, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
+import { fsPath, getPackageName, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
 import { TestOutlineInfo } from "../../shared/utils/outline";
 import { TestSelection, createTestFileAction, defaultTestFileContents, getLaunchConfig, getTestSelectionForNodes, getTestSelectionForOutline } from "../../shared/utils/test";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
@@ -170,7 +170,7 @@ export class TestCommands implements vs.Disposable {
 		let workspacePackageNames: string[] | undefined;
 		if (includeCoverage && isFlutter) {
 			const workspacePackagePaths = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
-			workspacePackageNames = workspacePackagePaths.map((packagePath) => path.basename(packagePath));
+			workspacePackageNames = workspacePackagePaths.map((packagePath) => getPackageName(packagePath));
 		}
 
 		let shouldRunTestsByLine = false;

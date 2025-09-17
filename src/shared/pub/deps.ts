@@ -2,7 +2,7 @@ import * as path from "path";
 import { dartVMPath, flutterPath } from "../constants";
 import { DartWorkspaceContext, Logger } from "../interfaces";
 import { runProcess, safeSpawn } from "../processes";
-import { isFlutterProjectFolder, tryGetPackageName } from "../utils/fs";
+import { getPackageName, isFlutterProjectFolder } from "../utils/fs";
 
 type DependencyType = "root" | "direct" | "dev" | "transitive";
 
@@ -118,7 +118,7 @@ export class PubDeps {
 	}
 
 	public async getTree(projectDirectory: string): Promise<PubDepsTree | undefined> {
-		const packageName = tryGetPackageName(projectDirectory) ?? path.basename(projectDirectory);
+		const packageName = getPackageName(projectDirectory);
 		const json = await this.getJson(projectDirectory);
 		return json ? this.buildTree(json, packageName) : undefined;
 	}

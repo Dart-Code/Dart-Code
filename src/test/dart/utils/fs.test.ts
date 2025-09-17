@@ -1,8 +1,10 @@
 import { strict as assert } from "assert";
+import * as fs from "fs";
+import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
-import { findCommonAncestorFolder, fsPath, uriComparisonString } from "../../../shared/utils/fs";
-import { flutterHelloWorldFolder, helloWorldFolder, helloWorldTestFolder, testProjectsFolder } from "../../helpers";
+import { findCommonAncestorFolder, fsPath, getPackageName, uriComparisonString } from "../../../shared/utils/fs";
+import { defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldTestFolder, testProjectsFolder, tryDeleteDirectoryRecursive } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
 	it("handles empty array", () => {
@@ -83,5 +85,26 @@ describe("uriComparisonString", () => {
 			uriComparisonString(Uri.parse("http://foo/bar")),
 			"http://foo/bar",
 		);
+	});
+});
+
+describe("getPackageName", () => {
+	it("uses the package name from pubspec.yaml when available", () => {
+		const tempFolder = getRandomTempFolder();
+		const projectFolder = path.join(tempFolder, "workspace_project");
+		defer("delete temp folder", () => tryDeleteDirectoryRecursive(projectFolder));
+
+		fs.mkdirSync(projectFolder, { recursive: true });
+		fs.writeFileSync(path.join(projectFolder, "pubspec.yaml"), "name: my_custom_package\n");
+		assert.equal(getPackageName(projectFolder), "my_custom_package");
+	});
+
+	it("falls back to the folder name when pubspec.yaml is missing", () => {
+		const tempFolder = getRandomTempFolder();
+		const projectFolder = path.join(tempFolder, "workspace_project");
+		defer("delete temp folder", () => tryDeleteDirectoryRecursive(projectFolder));
+
+		fs.mkdirSync(projectFolder, { recursive: true });
+		assert.equal(getPackageName(projectFolder), "workspace_project");
 	});
 });
