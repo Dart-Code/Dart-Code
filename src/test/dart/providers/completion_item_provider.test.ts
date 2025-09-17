@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { acceptFirstSuggestion, activate, completionLabel, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
+import { acceptFirstSuggestion, activate, completionLabel, currentDoc, emptyFile, ensureCompletion, ensureNoCompletion, ensureInsertReplaceRanges as ensureRanges, ensureTestContent, ensureTestContentWithSelection, everythingFile, getCompletionsAt, helloWorldCompletionFile, helloWorldPartFile, helloWorldPartWrapperFile, openFile, privateApi, rangeOf, select, setTestContent, snippetValue } from "../../helpers";
 
 describe("completion_item_provider", () => {
 	beforeEach("activate helloWorldCompletionFile", () => activate(helloWorldCompletionFile));
@@ -118,9 +118,11 @@ main() {
 
 	it.skip("sorts completions by relevance");
 
-	// Skipped, needs investigating.
-	// https://github.com/Dart-Code/Dart-Code/issues/5652
-	it.skip("inserts full text for overrides", async () => {
+	it("inserts full text for overrides", async function () {
+		if (privateApi.dartCapabilities.hasOverrideCompletionIssue)
+			// https://github.com/Dart-Code/Dart-Code/issues/5652
+			this.skip();
+
 		await setTestContent(`
 abstract class Person {
   String get fullName;
