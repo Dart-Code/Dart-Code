@@ -1069,6 +1069,7 @@ export function deleteFileIfExists(filePath: string) {
 }
 
 export async function captureDebugSessionCustomEvents(startDebug: () => void, expectMultipleSessions = false): Promise<vs.DebugSessionCustomEvent[]> {
+	let totalSessionsStarted = 0;
 	const sessions = new Set<vs.DebugSession>();
 	let startSub: IAmDisposable | undefined;
 	let endSub: IAmDisposable | undefined;
@@ -1077,6 +1078,7 @@ export async function captureDebugSessionCustomEvents(startDebug: () => void, ex
 	const startPromise = new Promise<void>((resolve) => {
 		startSub = vs.debug.onDidStartDebugSession((s) => {
 			sessions.add(s);
+			totalSessionsStarted++;
 			resolve();
 		});
 	});
@@ -1087,8 +1089,9 @@ export async function captureDebugSessionCustomEvents(startDebug: () => void, ex
 	const endPromise = new Promise<void>((resolve) => {
 		endSub = vs.debug.onDidTerminateDebugSession(async (s) => {
 			sessions.delete(s);
+			// Allow some time for another session to start in case of multi-session test runs.
 			if (expectMultipleSessions)
-				await delay(100); // Allow some time for another session to start in case of multi-session test runs.
+				await waitFor(() => totalSessionsStarted > 1);
 			if (sessions.size === 0)
 				resolve();
 		});
