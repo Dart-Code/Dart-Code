@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { iUnderstandAction, tenSecondsInMs } from "../../shared/constants";
+import { isDartCodeTestRun, iUnderstandAction, tenSecondsInMs } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -229,7 +229,7 @@ export class PackageCommands extends BaseSdkCommands {
 		// If the save was triggered by one of the auto-save options, then debounce longer.
 		const debounceDuration = lastPubspecSaveReason === vs.TextDocumentSaveReason.FocusOut
 			|| lastPubspecSaveReason === vs.TextDocumentSaveReason.AfterDelay
-			? 10000
+			? (isDartCodeTestRun ? 3000 : 10000)
 			: 1000;
 
 		const projectUri = vs.Uri.file(path.dirname(filePath));

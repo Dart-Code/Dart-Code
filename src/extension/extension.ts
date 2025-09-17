@@ -20,6 +20,8 @@ import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants"
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
+import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
+import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
 import { ProjectFinder, clearCaches, createWatcher, envUtils, hostKind, isRunningLocally, warnIfPathCaseMismatch } from "../shared/vscode/utils";
 import { Context } from "../shared/vscode/workspace";
@@ -65,6 +67,7 @@ import { FlutterWidgetPreviewManager } from "./flutter/widget_preview/widget_pre
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToImportsCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
+import { locateBestProjectRoot } from "./project";
 import { AddDependencyCodeActionProvider } from "./providers/add_dependency_code_action_provider";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
@@ -87,8 +90,6 @@ import { DevToolsManager } from "./sdk/dev_tools/manager";
 import { StatusBarVersionTracker } from "./sdk/status_bar_version_tracker";
 import { checkForStandardDartSdkUpdates } from "./sdk/update_check";
 import { SdkUtils } from "./sdk/utils";
-import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
-import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { VsCodeTestController } from "./test/vs_test_controller";
 import { handleNewProjects, showUserPrompts } from "./user_prompts";
 import * as util from "./utils";
@@ -98,7 +99,6 @@ import { getToolEnv, safeToolSpawn, setFlutterRoot, setupToolEnv } from "./utils
 import { FlutterPostMessageSidebar } from "./views/devtools/legacy_post_message_sidebar/sidebar";
 import { PropertyEditor } from "./views/devtools/property_editor";
 import { FlutterDtdSidebar } from "./views/devtools/sidebar";
-import { locateBestProjectRoot } from "./project";
 import { DartPackagesProvider } from "./views/packages_view";
 
 let maybeAnalyzer: LspAnalyzer | undefined;
@@ -750,6 +750,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		logger,
 		mcpServerProvider: isDartCodeTestRun ? mcpServerProvider : undefined,
 		nextAnalysis: () => analyzer?.onNextAnalysisComplete,
+		packageCommands,
 		packagesTreeProvider: dartPackagesProvider,
 		pubGlobal,
 		safeToolSpawn,

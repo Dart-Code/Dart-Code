@@ -1,6 +1,5 @@
 import { strict as assert } from "assert";
 import * as sinon from "sinon";
-import * as vs from "vscode";
 import { activate, delay, helloWorldPubspec, openFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../../helpers";
 
 describe("pub get", () => {
@@ -11,8 +10,7 @@ describe("pub get", () => {
 	});
 
 	it("runs automatically when pubspec is saved", async () => {
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
+		const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").withArgs(sinon.match.any, sinon.match.any).resolves();
 
 		const editor = await openFile(helloWorldPubspec);
 		const doc = editor.document;
@@ -21,14 +19,13 @@ describe("pub get", () => {
 
 		// Allow a short time for the command to be called because this is now a
 		// file system watcher.
-		await waitForResult(() => getPackagesCommand.calledOnce);
+		await waitForResult(() => fetchPackagesOrPrompt.calledOnce);
 	});
 
 	it("does not run automatically if disabled", async () => {
 		await setConfigForTest("dart", "runPubGetOnPubspecChanges", false);
 
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
+		const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").withArgs(sinon.match.any, sinon.match.any).resolves();
 
 		const editor = await openFile(helloWorldPubspec);
 		const doc = editor.document;
@@ -37,14 +34,13 @@ describe("pub get", () => {
 
 		// Wait for 1s then ensure it still hadn't run.
 		await delay(1000);
-		assert.ok(!getPackagesCommand.calledOnce);
+		assert.ok(!fetchPackagesOrPrompt.called);
 	});
 
 	it("runs delayed when pubspec is auto-saved", async () => {
 		await setConfigForTest("files", "autoSave", "afterDelay");
 
-		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
-		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
+		const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").withArgs(sinon.match.any, sinon.match.any).resolves();
 
 		const editor = await openFile(helloWorldPubspec);
 		const doc = editor.document;
@@ -52,18 +48,17 @@ describe("pub get", () => {
 
 		// Wait for 1sec and ensure it wasn't called.
 		await delay(1000);
-		assert.ok(!getPackagesCommand.called);
+		assert.ok(!fetchPackagesOrPrompt.called);
 
-		// Wait for 2sec and make another change to test debouncing.
-		await delay(2000);
+		// Wait another 1s and make another change to test debouncing.
+		await delay(1000);
 		await setTestContent(doc.getText() + " # test");
 
-		// Wait for 2sec and ensure it still wasn't called (because it was pushed back to 10sec again).
+		// Wait for 2sec and ensure it still wasn't called (because it was pushed back to 3sec again).
 		await delay(2000);
-		assert.ok(!getPackagesCommand.called);
+		assert.ok(!fetchPackagesOrPrompt.called);
 
-		// Wait enough time that it definitely should've been called.
-		await delay(9000);
-		assert.ok(getPackagesCommand.called);
+		// Wait for it to be called.
+		await waitForResult(() => fetchPackagesOrPrompt.calledOnce);
 	});
 });

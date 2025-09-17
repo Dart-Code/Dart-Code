@@ -123,6 +123,9 @@ export interface InternalExtensionApi {
 	logger: EmittingLogger;
 	analyzer: Analyzer;
 	nextAnalysis: () => Promise<void>;
+	packageCommands: {
+		fetchPackagesOrPrompt(uri: Uri | undefined, options?: { alwaysPrompt?: boolean, upgradeOnSdkChange?: boolean }): Promise<void>;
+	},
 	packagesTreeProvider: TreeDataProvider<TreeItem> & { deps?: PubDeps, packageMapLoader?: PackageMapLoader, projectFinder?: ProjectFinder };
 	pubGlobal: {
 		installIfRequired(options: { packageName?: string; packageID: string; moreInfoLink?: string; requiredVersion?: string; customActivateScript?: CustomScript; updateSilently?: boolean; silent?: boolean; }): Promise<string | undefined>;
