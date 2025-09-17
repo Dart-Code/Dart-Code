@@ -742,7 +742,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				// TODO: This should be false in noDebug mode in SDK DAPs too.
 				// verified: false,
 			})
-				.then(() => delay(10000))
+				.then(() => delay(5000))
 				.then(() => dc.terminateRequest()),
 		);
 
@@ -1620,7 +1620,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await waitAllThrowIfTerminates(dc,
 			dc.debuggerReady()
-				.then(() => delay(10000))
+				.then(() => delay(5000))
 				.then(() => dc.terminateRequest()),
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),

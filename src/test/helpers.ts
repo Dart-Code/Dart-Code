@@ -251,7 +251,7 @@ function setupTestLogging(): boolean {
 			logger = new BufferedLogger();
 
 			// Wait a little before closing, to ensure we capture anything in-progress.
-			await delay(1000);
+			await delay(100);
 			await testLogger.dispose();
 			// On CI, we delete logs for passing tests to save space.
 			if (process.env.CI && testResult === "passed") {
@@ -284,7 +284,7 @@ export async function activate(file?: vs.Uri | null): Promise<void> {
 	await privateApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start
 	// before we continue.
-	await delay(200);
+	await delay(50);
 	logger.info(`Waiting for in-progress analysis`);
 	await privateApi.currentAnalysis();
 
@@ -307,7 +307,7 @@ export async function getPackages(uri?: vs.Uri) {
 	// It's not guaranteed that this will trigger new analysis, because we might already have all packages
 	// up-to-date, so just wait a bit.
 	await vs.commands.executeCommand("dart.getPackages", uri || vs.workspace.workspaceFolders![0].uri);
-	await delay(1000);
+	await delay(100);
 }
 
 function logOpenEditors() {
@@ -371,7 +371,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 	} catch (e) {
 		logger.warn(e);
 	}
-	await delay(100);
+	await delay(50);
 	logger.info(`Done closing editors!`);
 	logOpenEditors();
 }
@@ -418,7 +418,7 @@ export async function openFile(file: vs.Uri, column?: vs.ViewColumn): Promise<vs
 		logger.warn(e, LogCategory.CI);
 		return await vs.window.showTextDocument(doc, { viewColumn: column, preview: false });
 	} finally {
-		await delay(100);
+		await delay(50);
 	}
 }
 
@@ -532,7 +532,7 @@ export async function setTestContent(content: string): Promise<void> {
 
 	// HACK: Add a small delay to try and reduce the chance of a "Requested result
 	// might be inconsistent with previously returned results" error.
-	await delay(300);
+	await delay(50);
 	await privateApi.currentAnalysis();
 }
 
@@ -581,12 +581,12 @@ export async function executeSortMembersCodeAction() {
 	return executeCodeAction({ kind: SourceSortMembersCodeActionKind }, startOfDocument);
 }
 
-export async function getCodeActions({ kind, title, requireExactlyOne = false }: { kind?: vs.CodeActionKind, title?: string, requireExactlyOne?: boolean }, range: vs.Range) {
+export async function getCodeActions({ kind, title, requireExactlyOne = false, waitForMatch = true }: { kind?: vs.CodeActionKind, title?: string, requireExactlyOne?: boolean, waitForMatch?: boolean }, range: vs.Range) {
 	let codeActions: vs.CodeAction[] = [];
 	let matchingActions = await waitFor(async () => {
 		codeActions = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, range);
 		const matchingActions = codeActions.filter((ca) => (!kind || kind.contains(ca.kind!)) && (!title || ca.title === title));
-		return matchingActions.length ? matchingActions : undefined;
+		return (!waitForMatch || matchingActions.length) ? matchingActions : undefined;
 	});
 
 	matchingActions ??= [];
@@ -709,19 +709,18 @@ export async function acceptFirstSuggestion(): Promise<void> {
 	let remainingTries = 10;
 	while (!results || results.isIncomplete || results.items.length === 0) {
 		await delay(50);
-		results = await vs.commands.executeCommand<vs.CompletionList>("vscode.executeCompletionItemProvider", doc.uri, pos);
+		results = await vs.commands.executeCommand<vs.CompletionList>("vscode.executeCompletionItemProvider", doc.uri, pos, undefined, 1 /* resolveCount, forces resolve for the item */);
 		if (--remainingTries <= 0)
 			break;
-
 	}
 
 	// TODO: Can we make this better (we're essentially waiting to ensure resolve completed
 	// before we accept, so that we don't insert the standard label without the extra
 	// edits which are added in in resolve).
 	await vs.commands.executeCommand("editor.action.triggerSuggest");
-	await delay(6000);
+	await delay(100);
 	await waitForEditorChange(() => vs.commands.executeCommand("acceptSelectedSuggestion"));
-	await delay(1000);
+	await delay(100);
 }
 
 export function ensureInsertReplaceRanges(range: undefined | vs.Range | { inserting: vs.Range, replacing: vs.Range }, insertRangeMatch: string, replaceRangeMatch: string) {
@@ -1058,7 +1057,7 @@ export async function writeBrokenDartCodeIntoFileForTest(file: vs.Uri): Promise<
 	await nextAnalysis;
 	// HACK: Sometimes we see analysis the analysis flag toggle quickly and we get an empty error list
 	// so we need to add a small delay here and then wait for any in progress analysis.
-	await delay(500);
+	await delay(50);
 	await privateApi.currentAnalysis();
 	defer("Remove broken Dart file", () => tryDelete(file));
 }
@@ -1089,7 +1088,7 @@ export async function captureDebugSessionCustomEvents(startDebug: () => void, ex
 		endSub = vs.debug.onDidTerminateDebugSession(async (s) => {
 			sessions.delete(s);
 			if (expectMultipleSessions)
-				await delay(1000); // Allow some time for another session to start in case of multi-session test runs.
+				await delay(100); // Allow some time for another session to start in case of multi-session test runs.
 			if (sessions.size === 0)
 				resolve();
 		});

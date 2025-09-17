@@ -306,7 +306,7 @@ describe("flutter test debugger", () => {
 					await delay(1000);
 					await waitFor(
 						() => startedSessions >= 0 && runningSessions === 0,
-						300, // check every 300ms
+						50, // check every 50ms
 						60000, // wait up to 60 seconds
 					);
 				} finally {

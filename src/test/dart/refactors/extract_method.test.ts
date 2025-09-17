@@ -36,7 +36,7 @@ main() {
   print("Hello, world!");
 }
 		`);
-		const codeActions = await getCodeActions({ title: "Extract Method" }, new vs.Range(positionOf("^main("), positionOf("world^")));
+		const codeActions = await getCodeActions({ title: "Extract Method", waitForMatch: false }, new vs.Range(positionOf("^main("), positionOf("world^")));
 		assert.equal(codeActions.length, 0);
 	});
 

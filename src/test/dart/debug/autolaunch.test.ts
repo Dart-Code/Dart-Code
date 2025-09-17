@@ -138,7 +138,7 @@ describe("debug autolaunch", () => {
 			const launchConfig = createLaunchConfig("VM Service Delayed Test", vmServiceUri, 5000);
 
 			await triggerAutoLaunch(filePath, launchConfig);
-			void delay(2000).then(startMockServer);
+			void delay(1000).then(startMockServer);
 
 			await waitFor(() => startDebugSession.called, 5000);
 			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig));
@@ -147,12 +147,12 @@ describe("debug autolaunch", () => {
 		it("should fail to start debugging if VM Service never becomes available", async () => {
 			const { filePath, startDebugSession } = createTestEnvironment();
 			const vmServiceUri = `ws://localhost:${serverPort}`;
-			const launchConfig = createLaunchConfig("VM Service Timeout Test", vmServiceUri, 2000);
+			const launchConfig = createLaunchConfig("VM Service Timeout Test", vmServiceUri, 1000);
 
 			await triggerAutoLaunch(filePath, launchConfig);
 			// Don't start the mock server - VM Service should timeout
 
-			await delay(4000); // Wait long enough for the timeout.
+			await delay(2000); // Wait long enough for the timeout.
 			assert.ok(!startDebugSession.called);
 		});
 

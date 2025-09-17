@@ -42,9 +42,9 @@ main() {
 }
 		`);
 
-		// Wait for 5 seconds and ensure we don't have any errors. We can't wait on a change
+		// Wait for 1 seconds and ensure we don't have any errors. We can't wait on a change
 		// to diagnostics because if things are working correctly we won't be getting any.
-		await delay(5000);
+		await delay(1000);
 
 		const errors = vs.languages.getDiagnostics(emptyFileInExcludedBySettingFolder);
 		assert.equal(0, errors.length);

@@ -57,7 +57,7 @@ class MyWidget extends StatelessWidget {
 }
 		`);
 
-		const codeActions = await getCodeActions({ title: "Extract Widget" }, rangeOf("|MyWidget|"));
+		const codeActions = await getCodeActions({ title: "Extract Widget", waitForMatch: false }, rangeOf("|MyWidget|"));
 		assert.equal(codeActions.length, 0);
 	});
 

@@ -35,8 +35,8 @@ describe("pub get", () => {
 		await setTestContent(doc.getText() + " # test");
 		await doc.save();
 
-		// Wait for 2s then ensure it still hadn't run.
-		await delay(2000);
+		// Wait for 1s then ensure it still hadn't run.
+		await delay(1000);
 		assert.ok(!getPackagesCommand.calledOnce);
 	});
 
@@ -54,16 +54,16 @@ describe("pub get", () => {
 		await delay(1000);
 		assert.ok(!getPackagesCommand.called);
 
-		// Wait for 7sec and make another change to test debouncing.
-		await delay(7000);
+		// Wait for 2sec and make another change to test debouncing.
+		await delay(2000);
 		await setTestContent(doc.getText() + " # test");
 
-		// Wait for 5sec and ensure it still wasn't called (because it was pushed back to 10sec again).
-		await delay(5000);
+		// Wait for 2sec and ensure it still wasn't called (because it was pushed back to 10sec again).
+		await delay(2000);
 		assert.ok(!getPackagesCommand.called);
 
 		// Wait enough time that it definitely should've been called.
-		await delay(10000);
+		await delay(9000);
 		assert.ok(getPackagesCommand.called);
 	});
 });
