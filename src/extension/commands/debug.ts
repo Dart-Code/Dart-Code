@@ -405,10 +405,10 @@ export class DebugCommands implements IAmDisposable {
 		}));
 		this.disposables.push(vs.commands.registerCommand("dart.promptForVmService", async (defaultValueOrConfig: string | vs.DebugConfiguration | undefined): Promise<string | undefined> => {
 			const defaultValue = typeof defaultValueOrConfig === "string" ? defaultValueOrConfig : undefined;
-			return vs.window.showInputBox({
+			let vmServiceUriOrPort = await vs.window.showInputBox({
 				ignoreFocusOut: true, // Don't close the window if the user tabs away to get the uri
-				placeHolder: "Paste an VM Service URI",
-				prompt: "Enter VM Service URI",
+				placeHolder: "Paste a VM Service URI or a port number",
+				prompt: "VM Service URI or port number",
 				validateInput: (input) => {
 					if (!input)
 						return;
@@ -423,10 +423,16 @@ export class DebugCommands implements IAmDisposable {
 
 					if (!input.startsWith("http://") && !input.startsWith("https://")
 						&& !input.startsWith("ws://") && !input.startsWith("wss://"))
-						return "Please enter a valid VM Service URI";
+						return "Please enter a valid VM Service or a port number";
 				},
 				value: defaultValue,
 			});
+
+			// If the input is just a number, treat is as a localhost port.
+			if (vmServiceUriOrPort && /^[0-9]+$/.exec(vmServiceUriOrPort))
+				vmServiceUriOrPort = `http://127.0.0.1:${vmServiceUriOrPort}`;
+
+			return vmServiceUriOrPort;
 		}));
 
 		// Debug options.

@@ -581,9 +581,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		vmServiceUriOrPort = vmServiceUriOrPort?.trim();
 
 		// If the input is just a number, treat is as a localhost port.
-		if (vmServiceUriOrPort && /^[0-9]+$/.exec(vmServiceUriOrPort)) {
+		if (vmServiceUriOrPort && /^[0-9]+$/.exec(vmServiceUriOrPort))
 			vmServiceUriOrPort = `http://127.0.0.1:${vmServiceUriOrPort}`;
-		}
 
 		return vmServiceUriOrPort;
 	}
