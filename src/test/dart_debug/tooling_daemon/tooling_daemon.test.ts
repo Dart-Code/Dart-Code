@@ -3,11 +3,11 @@ import { DebuggerType } from "../../../shared/enums";
 import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
 import { fsPath } from "../../../shared/utils/fs";
 import { createDebugClient, startDebugger } from "../../debug_helpers";
-import { activate, delay, helloWorldMainFile, positionOf, privateApi } from "../../helpers";
+import { activateWithoutAnalysis, delay, helloWorldMainFile, positionOf, privateApi } from "../../helpers";
 
 // These are debug-related tests for DTD. There are also some tests in `../dart`.
 describe("dart tooling daemon", () => {
-	beforeEach("activate helloWorldMainFile", () => activate(helloWorldMainFile));
+	beforeEach("activate helloWorldMainFile", () => activateWithoutAnalysis(helloWorldMainFile));
 
 	beforeEach("skip if not supported", async function () {
 		if (!privateApi.dartCapabilities.supportsToolingDaemon)

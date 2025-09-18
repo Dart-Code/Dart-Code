@@ -11,12 +11,12 @@ import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
-	beforeEach("activate", () => activate(null));
+	beforeEach("activate", () => activateWithoutAnalysis(null));
 
 	let dc: DartDebugClient;
 	let consoleOutputCategory: string;

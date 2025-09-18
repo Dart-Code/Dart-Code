@@ -1,9 +1,9 @@
 import { DebuggerType } from "../../shared/enums";
-import { activate, helloWorldFolder } from "../helpers";
+import { activateWithoutAnalysis, helloWorldFolder } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
 describe("dart debugger type", async () => {
-	beforeEach("activate", () => activate(null));
+	beforeEach("activate", () => activateWithoutAnalysis(null));
 
 	const tests: Array<{ program: string, cwd?: string, debuggerType?: DebuggerType, expectedDebuggerType: DebuggerType }> = [
 		// All POSIX paths, Windows handled below.

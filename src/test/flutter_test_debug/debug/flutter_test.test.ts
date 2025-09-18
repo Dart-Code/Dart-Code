@@ -10,10 +10,10 @@ import { waitFor } from "../../../shared/utils/promises";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
-	beforeEach("activate flutterTestMainFile", () => activate(flutterTestMainFile));
+	beforeEach("activate flutterTestMainFile", () => activateWithoutAnalysis(flutterTestMainFile));
 
 	beforeEach(() => {
 		deferUntilLast("Kill flutter_tester", () => watchPromise("Killing flutter_tester processes", killFlutterTester()));

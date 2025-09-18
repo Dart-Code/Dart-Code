@@ -193,7 +193,7 @@ function getDefaultFile(): vs.Uri {
 		return emptyFile;
 }
 
-export async function activateWithoutAnalysis(): Promise<void> {
+export async function activateWithoutAnalysis(file?: vs.Uri | null): Promise<void> {
 	if (!ext.isActive)
 		await ext.activate();
 	if (ext.exports) {
@@ -202,6 +202,16 @@ export async function activateWithoutAnalysis(): Promise<void> {
 		setupTestLogging();
 	} else {
 		console.warn("Extension has no exports, it probably has not activated correctly! Check the extension startup logs.");
+	}
+
+	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
+		file = getDefaultFile();
+
+	await closeAllOpenFiles();
+	if (file) {
+		await openFile(file);
+	} else {
+		logger.info(`Not opening any file`);
 	}
 }
 
@@ -270,16 +280,8 @@ function setupTestLogging(): boolean {
 }
 
 export async function activate(file?: vs.Uri | null): Promise<void> {
-	await activateWithoutAnalysis();
-	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
-		file = getDefaultFile();
+	await activateWithoutAnalysis(file);
 
-	await closeAllOpenFiles();
-	if (file) {
-		await openFile(file);
-	} else {
-		logger.info(`Not opening any file`);
-	}
 	logger.info(`Waiting for initial analysis`);
 	await privateApi.initialAnalysis;
 	// Opening a file above may start analysis after a short period so give it time to start

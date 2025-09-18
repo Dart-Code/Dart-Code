@@ -1,11 +1,11 @@
 import { DebuggerType } from "../../shared/enums";
 import { waitFor } from "../../shared/utils/promises";
 import { flutterTestDeviceId, flutterTestDeviceIsWeb } from "../debug_helpers";
-import { activate, flutterHelloWorldFolder, privateApi } from "../helpers";
+import { activateWithoutAnalysis, flutterHelloWorldFolder, privateApi } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
 describe(`flutter debugger type`, async () => {
-	beforeEach("activate", () => activate(null));
+	beforeEach("activate", () => activateWithoutAnalysis(null));
 
 	beforeEach("Wait for device to be available", async () => {
 		// For web, the device doesn't show up immediately so we need to wait

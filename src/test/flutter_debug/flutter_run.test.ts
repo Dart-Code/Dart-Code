@@ -10,12 +10,12 @@ import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureServiceExtensionValue, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activate, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
+import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, flutterHelloWorldBrokenFile, flutterHelloWorldFolder, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
 describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
-	beforeEach("activate flutterHelloWorldMainFile", () => activate(flutterHelloWorldMainFile));
+	beforeEach("activate flutterHelloWorldMainFile", () => activateWithoutAnalysis(flutterHelloWorldMainFile));
 
 	beforeEach("Wait for device to be available", async () => {
 		// For web, the device doesn't show up immediately so we need to wait

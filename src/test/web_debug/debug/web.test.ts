@@ -5,13 +5,13 @@ import { DebuggerType, VmService } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, ensureVariable, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activate, closeAllOpenFiles, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, getLaunchConfiguration, getPackages, logger, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
+import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, delay, ensureHasRunWithArgsStarting, getLaunchConfiguration, getPackages, logger, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise, webBrokenIndexFile, webBrokenMainFile, webHelloWorldExampleSubFolder, webHelloWorldExampleSubFolderIndexFile, webHelloWorldFolder, webHelloWorldIndexFile, webHelloWorldMainFile, webProjectContainerFolder } from "../../helpers";
 
 describe("web debugger", () => {
 	before("get packages (0)", () => getPackages(webHelloWorldIndexFile));
 	before("get packages (1)", () => getPackages(webBrokenIndexFile));
 
-	beforeEach("activate webHelloWorldIndexFile", () => activate(webHelloWorldIndexFile));
+	beforeEach("activate webHelloWorldIndexFile", () => activateWithoutAnalysis(webHelloWorldIndexFile));
 
 	let dc: DartDebugClient;
 	beforeEach("create debug client", () => {
