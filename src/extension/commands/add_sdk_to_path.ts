@@ -145,7 +145,7 @@ export class AddSdkToPath {
 		}
 	}
 
-	/// Gets the name of the profile file that we can add `export PATH=` too on macOS.
+	/// Gets the name of the profile file that we can add `export PATH=` to on macOS.
 	private getMacShellProfileFilename(): string | undefined {
 		if (!isMac)
 			return undefined;
