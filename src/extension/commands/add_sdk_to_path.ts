@@ -1,6 +1,8 @@
+import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkPathToClipboardAction, isChromeOS, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
+import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkPathToClipboardAction, isChromeOS, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -24,9 +26,9 @@ export class AddSdkToPath {
 			result = this.canAddPathAutomatically()
 				? isWin
 					? await this.addToPathWindows(sdkPath)
-					// If we add more platforms here, we must also remove the isWin check in
-					// tryFlutterCloneIfGitAvailable() so the prompt to add to PATH shows.
-					: AddSdkToPathResult.unavailableOnPlatform
+					: isMac
+						? await this.addToPathMac(sdkPath)
+						: AddSdkToPathResult.unavailableOnPlatform
 				: AddSdkToPathResult.unavailableOnPlatform;
 			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(sdkPath))) {
 				void vs.window.showInformationMessage(sdkAlreadyOnPathPrompt(sdkType));
@@ -44,7 +46,7 @@ export class AddSdkToPath {
 		if (!this.canAddPathAutomatically() && !this.canShowInstructions())
 			return;
 
-		// Change isWin here if we support this on other platforms in AddSdkToPath.addToPath.
+		// Update this check if we support this on other platforms in AddSdkToPath.addToPath.
 		if (this.canAddPathAutomatically()) {
 			const action = await vs.window.showInformationMessage(addSdkToPathPrompt(sdkType), addSdkToPathAction, noThanksAction);
 			if (action === addSdkToPathAction)
@@ -55,7 +57,13 @@ export class AddSdkToPath {
 	}
 
 	private canAddPathAutomatically(): boolean {
-		return isWin;
+		if (isWin)
+			return true;
+
+		if (isMac)
+			return !!this.getMacShellProfileFilename();
+
+		return false;
 	}
 
 	private canShowInstructions(): boolean {
@@ -105,6 +113,51 @@ export class AddSdkToPath {
 		} catch (e) {
 			this.logger.error(e);
 			return AddSdkToPathResult.failed;
+		}
+	}
+
+	private async addToPathMac(sdkPath: string): Promise<AddSdkToPathResult> {
+		const exportLine = `export PATH="${sdkPath}:$PATH"`;
+		try {
+			const profileFilename = this.getMacShellProfileFilename();
+			if (!profileFilename)
+				return AddSdkToPathResult.unavailableOnPlatform;
+
+			const profilePath = path.join(os.homedir(), profileFilename);
+			let existingContents = "";
+			try {
+				existingContents = await fs.promises.readFile(profilePath, "utf8");
+			} catch (e) {
+				if ((e as NodeJS.ErrnoException).code !== "ENOENT")
+					throw e;
+			}
+
+			if (existingContents.includes(exportLine))
+				return AddSdkToPathResult.alreadyExisted;
+
+			const needsLeadingNewline = existingContents.length > 0 && !existingContents.endsWith("\n");
+			const prefix = needsLeadingNewline ? "\n" : "";
+			await fs.promises.appendFile(profilePath, `${prefix}${exportLine}\n`);
+			return AddSdkToPathResult.succeeded;
+		} catch (e) {
+			this.logger.error(e);
+			return AddSdkToPathResult.failed;
+		}
+	}
+
+	/// Gets the name of the profile file that we can add `export PATH=` too on macOS.
+	private getMacShellProfileFilename(): string | undefined {
+		if (!isMac)
+			return undefined;
+
+		const shell = process.env.SHELL ? path.basename(process.env.SHELL) : undefined;
+		switch (shell) {
+			case "bash":
+				return ".bash_profile";
+			case "zsh":
+				return ".zshenv";
+			default:
+				return undefined;
 		}
 	}
 }
