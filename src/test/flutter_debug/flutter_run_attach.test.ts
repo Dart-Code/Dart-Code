@@ -76,8 +76,8 @@ describe("flutter run debugger (attach)", () => {
 			watchPromise("attaches_and_waits->launch", dc.launch(config)),
 		);
 
-		// Ensure we're still responsive after 3 seconds.
-		await delay(3000);
+		// Ensure we're responsive after 1 second.
+		await delay(1000);
 		await watchPromise("attaches_and_waits->threadsRequest", dc.threadsRequest());
 
 		await waitAllThrowIfTerminates(dc,
@@ -103,7 +103,7 @@ describe("flutter run debugger (attach)", () => {
 		);
 
 		// Ensure the main process is still alive.
-		await delay(4000);
+		await delay(1000);
 		assert.equal(process.hasExited, false);
 	});
 });

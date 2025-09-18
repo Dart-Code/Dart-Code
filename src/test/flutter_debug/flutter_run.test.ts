@@ -137,8 +137,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.launch(config),
 		);
 
-		// Ensure we're still responsive after 3 seconds.
-		await delay(3000);
+		// Ensure we're still responsive after 1 second.
+		await delay(1000);
 		await dc.threadsRequest();
 
 		await waitAllThrowIfTerminates(dc,
@@ -397,9 +397,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Kick off a build, but do not await it...
 		void dc.launch(config);
 
-		// Wait 5 seconds after configuration sequence completes to ensure the build is in progress...
+		// Wait 2 seconds after configuration sequence completes to ensure the build is in progress...
 		await configSequence;
-		await delay(5000);
+		await delay(2000);
 
 		// Send a disconnect request and ensure it happens within 5 seconds.
 		await Promise.race([
@@ -742,7 +742,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				// TODO: This should be false in noDebug mode in SDK DAPs too.
 				// verified: false,
 			})
-				.then(() => delay(5000))
+				.then(() => delay(1000))
 				.then(() => dc.terminateRequest()),
 		);
 
@@ -1620,7 +1620,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 		await waitAllThrowIfTerminates(dc,
 			dc.debuggerReady()
-				.then(() => delay(5000))
+				.then(() => delay(2000))
 				.then(() => dc.terminateRequest()),
 			dc.configurationSequence(),
 			dc.waitForEvent("terminated"),

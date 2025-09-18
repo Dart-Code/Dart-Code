@@ -26,8 +26,8 @@ describe("web debugger", () => {
 			watchPromise("launch", dc.launch(config)),
 		);
 
-		// Ensure we're still responsive after 3 seconds.
-		await delay(3000);
+		// Ensure we're still responsive after 1 second.
+		await delay(1000);
 		await watchPromise("threadsRequest", dc.threadsRequest());
 
 		await waitAllThrowIfTerminates(dc,
@@ -105,8 +105,8 @@ describe("web debugger", () => {
 			dc.launch(config),
 		]);
 
-		// Wait 5 seconds to ensure the build is in progress...
-		await delay(5000);
+		// Wait 2 seconds to ensure the build is in progress...
+		await delay(2000);
 
 		// Send a disconnect request and ensure it happens within 5 seconds.
 		await Promise.race([
