@@ -423,7 +423,7 @@ export class DebugCommands implements IAmDisposable {
 
 					if (!input.startsWith("http://") && !input.startsWith("https://")
 						&& !input.startsWith("ws://") && !input.startsWith("wss://"))
-						return "Please enter a valid VM Service or a port number";
+						return "Please enter a valid VM Service URI or a port number";
 				},
 				value: defaultValue,
 			});
