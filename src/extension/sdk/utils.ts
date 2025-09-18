@@ -113,6 +113,7 @@ export class SdkUtils {
 		const downloadAction = "Download SDK";
 		const locateAction = "Locate SDK";
 		let displayMessage = `Could not find a ${sdkType} SDK. Please download, or, if already downloaded, click '${locateAction}'.`;
+		outer:
 		while (true) {
 			const ringLogContents = ringLog.toString();
 			const selectedItem = await window.showErrorMessage(displayMessage,
@@ -142,6 +143,7 @@ export class SdkUtils {
 					const cloneResult = await this.tryFlutterCloneIfGitAvailable(commandToReRun);
 					switch (cloneResult) {
 						case CloneSdkResult.succeeded:
+							break outer;
 						case CloneSdkResult.cancelled:
 							break;
 						case CloneSdkResult.noGit:
