@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkPathToClipboardAction, isChromeOS, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
+import { SdkTypeString, addSdkToPathAction, addSdkToPathPrompt, addToPathInstructionsUrl, addedToPathPrompt, copySdkPathToClipboardAction, isChromeOS, isLinux, isMac, isWin, noSdkAvailablePrompt, noThanksAction, openInstructionsAction, sdkAlreadyOnPathPrompt, unableToAddToPathPrompt } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { envUtils } from "../../shared/vscode/utils";
@@ -26,9 +26,7 @@ export class AddSdkToPath {
 			result = this.canAddPathAutomatically()
 				? isWin
 					? await this.addToPathWindows(sdkPath)
-					: isMac
-						? await this.addToPathMac(sdkPath)
-						: AddSdkToPathResult.unavailableOnPlatform
+					: await this.addToPathUnix(sdkPath)
 				: AddSdkToPathResult.unavailableOnPlatform;
 			if (result === AddSdkToPathResult.alreadyExisted || (result === AddSdkToPathResult.failed && process.env.PATH?.includes(sdkPath))) {
 				void vs.window.showInformationMessage(sdkAlreadyOnPathPrompt(sdkType));
@@ -57,13 +55,7 @@ export class AddSdkToPath {
 	}
 
 	private canAddPathAutomatically(): boolean {
-		if (isWin)
-			return true;
-
-		if (isMac)
-			return !!this.getMacShellProfileFilename();
-
-		return false;
+		return isWin || !!this.getUnixShellProfileFilename();
 	}
 
 	private canShowInstructions(): boolean {
@@ -116,10 +108,10 @@ export class AddSdkToPath {
 		}
 	}
 
-	private async addToPathMac(sdkPath: string): Promise<AddSdkToPathResult> {
+	private async addToPathUnix(sdkPath: string): Promise<AddSdkToPathResult> {
 		const exportLine = `export PATH="${sdkPath}:$PATH"`;
 		try {
-			const profileFilename = this.getMacShellProfileFilename();
+			const profileFilename = this.getUnixShellProfileFilename();
 			if (!profileFilename)
 				return AddSdkToPathResult.unavailableOnPlatform;
 
@@ -145,9 +137,9 @@ export class AddSdkToPath {
 		}
 	}
 
-	/// Gets the name of the profile file that we can add `export PATH=` to on macOS.
-	private getMacShellProfileFilename(): string | undefined {
-		if (!isMac)
+	/// Gets the name of the profile file that we can add `export PATH=` to on macOS/Linux.
+	private getUnixShellProfileFilename(): string | undefined {
+		if (!isMac && !isLinux)
 			return undefined;
 
 		const shell = process.env.SHELL ? path.basename(process.env.SHELL) : undefined;
