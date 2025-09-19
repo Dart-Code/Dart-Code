@@ -1,6 +1,7 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
-import { commands, ExtensionContext, extensions, ProgressLocation, window, workspace } from "vscode";
+import { commands, ExtensionContext, extensions, ProgressLocation, Uri, window, workspace } from "vscode";
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
@@ -241,6 +242,7 @@ export class SdkUtils {
 	private async promptForFlutterClone(gitExecutable: string): Promise<{ folder?: string, result: CloneSdkResult }> {
 		const selectedFolders =
 			await window.showOpenDialog({
+				defaultUri: Uri.file(os.homedir()),
 				canSelectFiles: false,
 				canSelectFolders: true,
 				canSelectMany: false,
