@@ -68,7 +68,6 @@ async function setUrls(urls) {
 function sendTheme() {
 	const widgetPreviewFrame = document.getElementById('widgetPreviewFrame');
 	const theme = getTheme();
-	console.log(\`posting theme change: \${theme}\`);
 	widgetPreviewFrame.contentWindow.postMessage({
 		method: 'editor.themeChanged',
 		params: {
@@ -81,7 +80,7 @@ function sendTheme() {
 document.addEventListener('DOMContentLoaded', function () {
 	new MutationObserver((mutationList) => {
 		for (const mutation of mutationList) {
-			if (mutation.type === "attributes" && mutation.attributeName == "class") {
+			if (mutation.type === "attributes" && mutation.attributeName === "class") {
 				let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
 				if (newBackgroundColor !== currentBackgroundColor) {
 					sendTheme();

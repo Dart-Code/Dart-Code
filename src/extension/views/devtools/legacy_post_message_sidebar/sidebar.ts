@@ -109,7 +109,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		document.addEventListener('DOMContentLoaded', function () {
 			new MutationObserver((mutationList) => {
 				for (const mutation of mutationList) {
-					if (mutation.type === "attributes" && mutation.attributeName == "class") {
+					if (mutation.type === "attributes" && mutation.attributeName === "class") {
 						let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-sideBar-background');
 						if (newBackgroundColor !== currentBackgroundColor) {
 							setIframeSrc();
