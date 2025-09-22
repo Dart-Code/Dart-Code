@@ -2,8 +2,8 @@ import * as vs from "vscode";
 import { FLUTTER_WIDGET_PREVIEW_SUPPORTED_CONTEXT } from "../../../shared/constants.contexts";
 import { IAmDisposable, Logger } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
-import { envUtils } from "../../../shared/vscode/utils";
 import { FlutterWidgetPreviewServer } from "../../flutter/widget_preview_server";
+import { exposeWebViewUrls, WebViewUrls } from "../../views/shared";
 import { WidgetPreviewEmbeddedView, WidgetPreviewSidebarView, WidgetPreviewView } from "./webviews";
 
 /**
@@ -19,7 +19,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	constructor(
 		private readonly logger: Logger,
 		readonly flutterSdkPath: string,
-		dtdUri: Promise<string | undefined> | undefined,
+		private readonly dtdUri: Promise<string | undefined> | undefined,
 		devtoolsServerUri: Promise<string | undefined> | undefined,
 		readonly tempWorkingDirectory: string,
 		private readonly location: "sidebar" | "beside",
@@ -53,13 +53,17 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 		this.isSetUp = true;
 
 		try {
-			let previewUrl = await this.server.previewUrl;
-			previewUrl = await envUtils.exposeUrl(previewUrl);
+			const dtdUri = await this.dtdUri;
+			let previewUrls: WebViewUrls = {
+				viewUrl: await this.server.previewUrl,
+				authUrls: dtdUri ? [dtdUri] : undefined,
+			};
+			previewUrls = await exposeWebViewUrls(previewUrls);
 			const pageTitle = "Flutter Widget Preview";
 
 			const view = this.view = this.location === "sidebar"
-				? new WidgetPreviewSidebarView(previewUrl)
-				: new WidgetPreviewEmbeddedView(previewUrl, pageTitle);
+				? new WidgetPreviewSidebarView(previewUrls)
+				: new WidgetPreviewEmbeddedView(previewUrls, pageTitle);
 
 			view.onDispose(() => this.view = undefined);
 		} catch (e) {

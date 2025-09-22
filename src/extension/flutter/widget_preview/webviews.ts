@@ -5,6 +5,7 @@ import { IAmDisposable } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
+import { handleUrlAuthFunction, WebViewUrls } from "../../views/shared";
 
 // TODO(dantup): Consider if we need to handle keydown/launchUrl/clipboard-write as in DevTools?
 //  They would first need implementing in the widget preview to pass up via postMessage.
@@ -14,6 +15,23 @@ const vscode = acquireVsCodeApi();
 const originalState = vscode.getState()?.${perSessionWebviewStateKey};
 const originalFrameUrl = originalState?.frameUrl;
 
+// Track the background color as an indicator of whether the theme changed.
+let currentBackgroundColor;
+
+function getTheme() {
+	const isDarkMode = !document.body.classList.contains('vscode-light');
+	const backgroundColor = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
+	const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
+
+	return {
+		isDarkMode: isDarkMode,
+		backgroundColor: backgroundColor,
+		foregroundColor: foregroundColor,
+	};
+}
+
+${handleUrlAuthFunction}
+
 window.addEventListener('load', (event) => {
 	// Restore previous frame if we had one.
 	const widgetPreviewFrame = document.getElementById('widgetPreviewFrame');
@@ -22,21 +40,76 @@ window.addEventListener('load', (event) => {
 		widgetPreviewFrame.src = originalFrameUrl;
 	}
 });
+
+window.addEventListener('message', async (event) => {
+	const message = event.data;
+	const widgetPreviewFrame = document.getElementById('widgetPreviewFrame');
+	switch (message.command) {
+		case "setUrls":
+			await setUrls(message.urls);
+			break;
+	}
+});
+
+async function setUrls(urls) {
+	const theme = getTheme();
+	const themeKind = theme.isDarkMode ? 'dark' : 'light';
+	// Don't include # in colors
+	// https://github.com/flutter/flutter/issues/155992
+	const separator = urls.viewUrl.includes('?') ? '&' : '?';
+	let url = \`\${urls.viewUrl}\${separator}theme=\${themeKind}&backgroundColor=\${encodeURIComponent(theme.backgroundColor?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(theme.foregroundColor?.replace('#', ''))}\`;
+	if (widgetPreviewFrame.src !== url) {
+		await handleUrlAuth(urls.authUrls);
+		widgetPreviewFrame.src = url;
+		vscode.setState({ ${perSessionWebviewStateKey}: { frameUrl: url } });
+	}
+}
+
+function sendTheme() {
+	const widgetPreviewFrame = document.getElementById('widgetPreviewFrame');
+	const theme = getTheme();
+	console.log(\`posting theme change: \${theme}\`);
+	widgetPreviewFrame.contentWindow.postMessage({
+		method: 'editor.themeChanged',
+		params: {
+			kind: 'themeChanged',
+			theme: theme,
+		}
+	}, "*");
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+	new MutationObserver((mutationList) => {
+		for (const mutation of mutationList) {
+			if (mutation.type === "attributes" && mutation.attributeName == "class") {
+				let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
+				if (newBackgroundColor !== currentBackgroundColor) {
+					sendTheme();
+					break;
+				}
+			}
+		}
+	}).observe(document.body, { attributeFilter : ['class'], attributeOldValue: true });
+});
 `;
 
-const scriptNonce = Buffer.from(pageScript).toString("base64");
 const frameCss = "position: absolute; top: 0; left: 0; width: 100%; height: 100%";
 const cssNonce = Buffer.from(frameCss).toString("base64");
 
-function getPageHtmlSource(widgetPreviewUri: string): string {
+function getPageHtmlSource(widgetPreviewUris: WebViewUrls): string {
+	const fullPageScript = `
+	${pageScript}
+	window.addEventListener('load', (event) => setUrls(${JSON.stringify(widgetPreviewUris)}));
+	`;
+	const scriptNonce = Buffer.from(fullPageScript).toString("base64");
 	return `
 		<html>
 		<head>
-		<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${vs.Uri.parse(widgetPreviewUri).authority}; frame-src *;">
-		<script nonce="${scriptNonce}">${pageScript}</script>
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-${scriptNonce}' 'nonce-${cssNonce}' http://${vs.Uri.parse(widgetPreviewUris.viewUrl).authority}; frame-src *;">
+		<script nonce="${scriptNonce}">${fullPageScript}</script>
 		<style nonce="${cssNonce}">#widgetPreviewFrame { ${frameCss} }</style>
 		</head>
-		<body><iframe id="widgetPreviewFrame" src="${widgetPreviewUri}" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated"></iframe></body>
+		<body><iframe id="widgetPreviewFrame" src="about:blank" frameborder="0" allow="clipboard-read; clipboard-write; cross-origin-isolated"></iframe></body>
 		</html>
 	`;
 }
@@ -55,7 +128,7 @@ export abstract class WidgetPreviewView implements IAmDisposable {
 export class WidgetPreviewEmbeddedView extends WidgetPreviewView {
 	private readonly panel: vs.WebviewPanel;
 
-	constructor(readonly widgetPreviewUri: string, readonly pageTitle: string) {
+	constructor(readonly widgetPreviewUri: WebViewUrls, readonly pageTitle: string) {
 		super();
 
 		const column = firstNonEditorColumn() ?? vs.ViewColumn.Beside;
@@ -85,12 +158,12 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 	protected readonly webViewProvider: WidgetPreviewSidebarViewProvider;
 
 	constructor(
-		private readonly previewUrl: string,
+		private readonly previewUrls: WebViewUrls,
 	) {
 		super();
 
 		void vs.commands.executeCommand("setContext", `${SIDEBAR_AVAILABLE_PREFIX}widgetPreview`, true);
-		this.webViewProvider = new WidgetPreviewSidebarViewProvider(this.previewUrl);
+		this.webViewProvider = new WidgetPreviewSidebarViewProvider(this.previewUrls);
 		this.disposables.push(this.webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider(`sidebarWidgetPreview`, this.webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
@@ -110,7 +183,7 @@ class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 	public webviewView: vs.WebviewView | undefined;
 
 	constructor(
-		private readonly previewUrl: string
+		private readonly previewUrls: WebViewUrls
 	) { }
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
@@ -123,7 +196,7 @@ class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 			localResourceRoots: [],
 		};
 
-		webviewView.webview.html = getPageHtmlSource(this.previewUrl);
+		webviewView.webview.html = getPageHtmlSource(this.previewUrls);
 	}
 
 	public dispose(): void {
