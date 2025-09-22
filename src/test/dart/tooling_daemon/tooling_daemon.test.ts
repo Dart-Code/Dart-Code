@@ -1,8 +1,9 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { ServiceMethod } from "../../../shared/services/tooling_daemon_services";
-import { activate, delay, flutterHelloWorldMainFile, helloWorldMainFile, privateApi } from "../../helpers";
+import { ActiveLocationChangedEvent, EventKind, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
+import { fsPath } from "../../../shared/utils/fs";
+import { activate, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, waitForResult } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
 describe("dart tooling daemon", () => {
@@ -95,5 +96,62 @@ describe("dart tooling daemon", () => {
 		// Ensure expected LSP services are registered.
 		const knownServices = daemon.registeredServiceMethods;
 		assert.ok(knownServices.has("Lsp.experimental/echo"), `Did not find "Lsp.experimental/echo" in ${[...knownServices].join(", ")}`);
+	});
+
+	it("should send ActiveLocationChanged events when the selection changes", async () => {
+		const editor = await openFile(helloWorldMainFile);
+		await delay(1000); // We don't want the event from the above so wait before subscribing.
+
+		const daemon = privateApi.toolingDaemon;
+		assert.ok(daemon);
+
+		await daemon.connected;
+		await daemon.streamListen(Stream.Editor);
+
+		const events: ActiveLocationChangedEvent[] = [];
+		const listener = daemon.onNotification(Stream.Editor, EventKind[EventKind.activeLocationChanged], (event: ActiveLocationChangedEvent) => events.push(event));
+		try {
+			editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
+			await delay(1000);
+			editor.selections = [
+				new vs.Selection(new vs.Position(3, 0), new vs.Position(4, 0)),
+				new vs.Selection(new vs.Position(5, 0), new vs.Position(6, 0)),
+			];
+			await delay(1000);
+			editor.selection = new vs.Selection(new vs.Position(0, 0), new vs.Position(0, 0));
+			await waitForResult(() => events.length >= 2);
+
+			assert.deepStrictEqual(
+				events.map((e) => ({ filePath: fsPath(vs.Uri.parse(e.textDocument!.uri)), selections: e.selections })),
+				[
+					{
+						filePath: fsPath(helloWorldMainFile),
+						selections: [
+							{
+								active: { line: 2, character: 0 },
+								anchor: { line: 1, character: 0 }
+							}
+						]
+					},
+					{
+						filePath: fsPath(helloWorldMainFile),
+						selections: [
+							{
+								active: { line: 4, character: 0 },
+								anchor: { line: 3, character: 0 }
+							},
+							{
+								active: { line: 6, character: 0 },
+								anchor: { line: 5, character: 0 }
+							}
+						]
+					},
+				],
+			);
+
+		} finally {
+			await listener.dispose();
+			await daemon.streamCancel(Stream.Editor);
+		}
 	});
 });
