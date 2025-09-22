@@ -58,6 +58,7 @@ async function setUrls(urls) {
 	// https://github.com/flutter/flutter/issues/155992
 	const separator = urls.viewUrl.includes('?') ? '&' : '?';
 	let url = \`\${urls.viewUrl}\${separator}theme=\${themeKind}&backgroundColor=\${encodeURIComponent(theme.backgroundColor?.replace('#', ''))}&foregroundColor=\${encodeURIComponent(theme.foregroundColor?.replace('#', ''))}\`;
+	const widgetPreviewFrame = document.getElementById('widgetPreviewFrame');
 	if (widgetPreviewFrame.src !== url) {
 		await handleUrlAuth(urls.authUrls);
 		widgetPreviewFrame.src = url;
