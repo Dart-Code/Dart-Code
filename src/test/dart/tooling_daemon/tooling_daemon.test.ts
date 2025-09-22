@@ -99,9 +99,6 @@ describe("dart tooling daemon", () => {
 	});
 
 	it("should send ActiveLocationChanged events when the selection changes", async () => {
-		const editor = await openFile(helloWorldMainFile);
-		await delay(1000); // We don't want the event from the above so wait before subscribing.
-
 		const daemon = privateApi.toolingDaemon;
 		assert.ok(daemon);
 
@@ -111,15 +108,19 @@ describe("dart tooling daemon", () => {
 		const events: ActiveLocationChangedEvent[] = [];
 		const listener = daemon.onNotification(Stream.Editor, EventKind[EventKind.activeLocationChanged], (event: ActiveLocationChangedEvent) => events.push(event));
 		try {
+			const editor = await openFile(helloWorldMainFile);
+			editor.selection = new vs.Selection(new vs.Position(0, 0), new vs.Position(0, 0));
+			// Discard any first events for the above.
+			await waitForResult(() => events.length >= 1);
+			events.length = 0;
+
 			editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
-			await delay(1000);
+			await delay(200 + 10); // debounce = 200ms
 			editor.selections = [
 				new vs.Selection(new vs.Position(3, 0), new vs.Position(4, 0)),
 				new vs.Selection(new vs.Position(5, 0), new vs.Position(6, 0)),
 			];
-			await delay(1000);
-			editor.selection = new vs.Selection(new vs.Position(0, 0), new vs.Position(0, 0));
-			await waitForResult(() => events.length >= 2);
+			await waitForResult(() => events.length >= 2); // Wait for both expected events.
 
 			assert.deepStrictEqual(
 				events.map((e) => ({ filePath: fsPath(vs.Uri.parse(e.textDocument!.uri)), selections: e.selections })),
