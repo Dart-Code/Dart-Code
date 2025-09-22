@@ -84,7 +84,6 @@ window.addEventListener('keydown', (event) => {
 		devToolsFrame?.contentWindow.focus();
 });
 
-
 function sendTheme() {
 	const devToolsFrame = document.getElementById('devToolsFrame');
 	const theme = getTheme();
