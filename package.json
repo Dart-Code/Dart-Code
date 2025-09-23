@@ -357,6 +357,11 @@
 				"category": "Dart"
 			},
 			{
+				"command": "dart.addCommentsToCode",
+				"title": "Add Comments to Code (test LLM APIs)",
+				"category": "Dart"
+			},
+			{
 				"command": "dart.edit.fixAllInWorkspace",
 				"title": "Apply Fix All in Workspace",
 				"category": "Dart"
@@ -1006,6 +1011,10 @@
 				},
 				{
 					"command": "dart.sortMembers",
+					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
+				},
+				{
+					"command": "dart.addCommentsToCode",
 					"when": "dart-code:anyProjectLoaded && editorLangId == dart"
 				},
 				{

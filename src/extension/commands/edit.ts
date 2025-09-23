@@ -16,6 +16,7 @@ export class EditCommands implements vs.Disposable {
 			vs.commands.registerCommand("dart.toggleLineComment", this.toggleLineComment.bind(this)),
 			vs.commands.registerCommand("dart.toggleDartdocComment", this.toggleDartdocComment.bind(this)),
 			vs.commands.registerCommand("dart.sortMembers", () => this.runCodeAction("source.sortMembers")),
+			vs.commands.registerCommand("dart.addCommentsToCode", this.addCommentsToCode.bind(this)),
 		);
 	}
 
@@ -212,6 +213,65 @@ export class EditCommands implements vs.Disposable {
 				}
 			}
 		});
+	}
+
+	private async addCommentsToCode() {
+		const editor = getActiveRealFileEditor();
+		if (!editor) {
+			return;
+		}
+
+		const selection = editor.selection;
+		const selectedText = editor.document.getText(selection);
+
+		if (!selectedText.trim()) {
+			void vs.window.showInformationMessage("Please select some code to add comments to.");
+			return;
+		}
+
+		try {
+			await vs.window.withProgress({
+				location: vs.ProgressLocation.Notification,
+				title: "Adding comments to code...",
+				cancellable: false
+			}, async () => {
+				// We could provide a filter here, but for this test just get them all.
+				const models = await vs.lm.selectChatModels();
+				if (!models || models.length === 0) {
+					void vs.window.showErrorMessage("No language models available.");
+					return;
+				}
+
+				// And just use the first one.
+				// We could use extesionContext.languageModelAccessInformation.canSendRequest() to tell if we already have permission before trying to use a model.
+				const model = models[0];
+				const messages = [
+					vs.LanguageModelChatMessage.User(`
+						Please add helpful comments to explain the following code.
+						Keep the code structure intact, just add comments.
+						Do not wrap the code in any markers, only return the raw code.
+						Here's the code:
+
+						${selectedText}
+					`)
+				];
+
+				const response = await model.sendRequest(messages, {}, new vs.CancellationTokenSource().token);
+				let commentedCode = "";
+				for await (const fragment of response.stream) {
+					if (fragment instanceof vs.LanguageModelTextPart) {
+						commentedCode += fragment.value;
+					}
+				}
+
+				// Replace the selection with the commented code
+				await editor.edit((editBuilder) => {
+					editBuilder.replace(selection, commentedCode);
+				});
+			});
+		} catch (error) {
+			void vs.window.showErrorMessage(`Failed to add comments: ${error}`);
+		}
 	}
 
 	public dispose(): any {
