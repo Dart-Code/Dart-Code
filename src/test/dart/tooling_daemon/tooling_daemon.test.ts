@@ -1,9 +1,9 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
-import { ActiveLocationChangedEvent, EventKind, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
+import { ActiveLocation, ActiveLocationChangedEvent, EventKind, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, waitForResult } from "../../helpers";
+import { activate, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, setConfigForTest, waitForResult } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
 describe("dart tooling daemon", () => {
@@ -58,7 +58,6 @@ describe("dart tooling daemon", () => {
 				(_fullMatch, prefix, driveLetter) => `${prefix}${driveLetter}:`,
 			] as Array<(_fullMatch: string, prefix: string, driveLetter: string, colon: string) => string>) {
 				const uri = helloWorldMainFile.toString().replace(/(file:\/\/\/)(\w)(:|%3a|%3A)/, replacer);
-				console.log(uri);
 				const result = await daemon.callMethod(ServiceMethod.readFileAsString, { uri });
 				assert.ok(result.content);
 			}
@@ -99,9 +98,11 @@ describe("dart tooling daemon", () => {
 	});
 
 	it("should send ActiveLocationChanged events when the selection changes", async () => {
+		const dtdDebounceMs = 1;
+		await setConfigForTest("dart", "dtdEditorActiveLocationDelay", dtdDebounceMs); // Reduce debounce time for test.
+
 		const daemon = privateApi.toolingDaemon;
 		assert.ok(daemon);
-
 		await daemon.connected;
 		await daemon.streamListen(Stream.Editor);
 
@@ -115,7 +116,7 @@ describe("dart tooling daemon", () => {
 			events.length = 0;
 
 			editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
-			await delay(200 + 10); // debounce = 200ms
+			await delay(dtdDebounceMs + 10);
 			editor.selections = [
 				new vs.Selection(new vs.Position(3, 0), new vs.Position(4, 0)),
 				new vs.Selection(new vs.Position(5, 0), new vs.Position(6, 0)),
@@ -123,7 +124,7 @@ describe("dart tooling daemon", () => {
 			await waitForResult(() => events.length >= 2); // Wait for both expected events.
 
 			assert.deepStrictEqual(
-				events.map((e) => ({ filePath: fsPath(vs.Uri.parse(e.textDocument!.uri)), selections: e.selections })),
+				events.map(simplify),
 				[
 					{
 						filePath: fsPath(helloWorldMainFile),
@@ -155,4 +156,73 @@ describe("dart tooling daemon", () => {
 			await daemon.streamCancel(Stream.Editor);
 		}
 	});
+
+	it("should return the current active location", async () => {
+		const dtdDebounceMs = 1;
+		await setConfigForTest("dart", "dtdEditorActiveLocationDelay", dtdDebounceMs); // Reduce debounce time for test.
+
+		const daemon = privateApi.toolingDaemon;
+		assert.ok(daemon);
+		await daemon.connected;
+
+		const editor = await openFile(helloWorldMainFile);
+		await delay(dtdDebounceMs + 50);
+
+		// Ensure there's an initial location for this file after opening.
+		let location = await daemon.callMethod(ServiceMethod.editorGetActiveLocation);
+		assert.equal(fsPath(vs.Uri.parse(location.textDocument!.uri)), fsPath(helloWorldMainFile));
+
+
+		// Test a single-position update. Set twice to ensure there's always a change regardless of the
+		// original position restored when the file was opened.
+		editor.selection = new vs.Selection(new vs.Position(0, 0), new vs.Position(0, 0));
+		editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));
+		await delay(dtdDebounceMs + 50);
+
+		location = await daemon.callMethod(ServiceMethod.editorGetActiveLocation);
+		assert.deepStrictEqual(
+			simplify(location),
+			{
+				filePath: fsPath(helloWorldMainFile),
+				selections: [
+					{
+						active: { line: 2, character: 0 },
+						anchor: { line: 1, character: 0 }
+					}
+				]
+			},
+		);
+
+
+		// Test a multi-selection.
+		editor.selections = [
+			new vs.Selection(new vs.Position(3, 0), new vs.Position(4, 0)),
+			new vs.Selection(new vs.Position(5, 0), new vs.Position(6, 0)),
+		];
+		await delay(dtdDebounceMs + 50);
+		location = await daemon.callMethod(ServiceMethod.editorGetActiveLocation);
+		assert.deepStrictEqual(
+			simplify(location),
+			{
+				filePath: fsPath(helloWorldMainFile),
+				selections: [
+					{
+						active: { line: 4, character: 0 },
+						anchor: { line: 3, character: 0 }
+					},
+					{
+						active: { line: 6, character: 0 },
+						anchor: { line: 5, character: 0 }
+					}
+				]
+			},
+		);
+	});
 });
+
+function simplify(e: ActiveLocation) {
+	return {
+		filePath: fsPath(vs.Uri.parse(e.textDocument!.uri)),
+		selections: e.selections
+	};
+}

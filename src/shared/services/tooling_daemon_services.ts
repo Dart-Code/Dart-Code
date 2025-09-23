@@ -55,6 +55,7 @@ export enum ServiceMethod {
 	readFileAsString = "FileSystem.readFileAsString",
 	streamListen = "streamListen",
 	streamCancel = "streamCancel",
+	editorGetActiveLocation = `${Service.Editor}.getActiveLocation`
 }
 
 export interface RegisterServiceParams {
@@ -198,10 +199,13 @@ export interface DebugSessionStoppedEvent extends Event {
 	debugSessionId: string;
 }
 
-export interface ActiveLocationChangedEvent extends Event {
-	kind: EventKind.activeLocationChanged;
+export interface ActiveLocation {
 	textDocument: VersionedTextDocumentIdentifier | undefined;
 	selections: EditorSelection[];
+}
+
+export interface ActiveLocationChangedEvent extends Event, ActiveLocation {
+	kind: EventKind.activeLocationChanged;
 }
 
 interface VersionedTextDocumentIdentifier {
