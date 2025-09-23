@@ -10,7 +10,7 @@ import { CategoryLogger } from "../logging";
 import { PromiseCompleter, PromiseOr, disposeAll } from "../utils";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
-import { ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
+import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
@@ -94,10 +94,10 @@ export class DartToolingDaemon implements IAmDisposable {
 		}
 	}
 
-	protected async sendActiveLocation(activeLocation: ActiveLocationChangedEvent): Promise<void> {
+	protected async sendActiveLocation(activeLocation: ActiveLocation): Promise<void> {
 		const connection = await this.connected;
 		if (connection)
-			this.sendEvent(Stream.Editor, activeLocation);
+			this.sendEvent(Stream.Editor, { kind: EventKind.activeLocationChanged, ...activeLocation });
 	}
 
 	private async handleData(data: string) {
@@ -154,6 +154,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		return this.onNotification("Service", "ServiceUnregistered", (e) => void listener(e as ServiceUnregisteredEventData), thisArgs);
 	}
 
+	public async registerService(service: Service.Editor, method: "getActiveLocation", capabilities: object | undefined, f: () => PromiseOr<DtdResult & ActiveLocation>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "getDevices", capabilities: object | undefined, f: () => PromiseOr<DtdResult & GetDevicesResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "selectDevice", capabilities: object | undefined, f: (params: SelectDeviceParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "enablePlatformType", capabilities: object | undefined, f: (params: EnablePlatformTypeParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
@@ -180,6 +181,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.getVmServices): Promise<GetVmServicesResult>;
 	public callMethod(service: ServiceMethod.streamListen, params: { streamId: string }): Promise<DtdResult>;
 	public callMethod(service: ServiceMethod.streamCancel, params: { streamId: string }): Promise<DtdResult>;
+	public callMethod(service: ServiceMethod.editorGetActiveLocation): Promise<DtdResult & ActiveLocation>;
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
 		if (!this.connection)
 			return Promise.reject(`Unable to call ${method}, DTD connection is unavailable`);

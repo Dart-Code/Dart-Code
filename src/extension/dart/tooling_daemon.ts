@@ -6,7 +6,7 @@ import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { DartSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
-import { ActiveLocationChangedEvent, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream } from "../../shared/services/tooling_daemon_services";
+import { ActiveLocation, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream } from "../../shared/services/tooling_daemon_services";
 import { disposeAll, nullToUndefined, PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
@@ -24,7 +24,6 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	private readonly statusBarItem = getLanguageStatusItem("dart.toolingDaemon", ANALYSIS_FILTERS);
 	private readonly editorServices: EditorServices;
 	private sendActiveLocationDebounceTimer: NodeJS.Timeout | undefined;
-	private readonly activeLocationDebounceTimeMs = config.dtdEditorActiveLocationDelay;
 	public debugCommandsCompleter = new PromiseCompleter<DebugCommands>();
 
 	constructor(
@@ -211,10 +210,10 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 
 		if (this.sendActiveLocationDebounceTimer)
 			clearTimeout(this.sendActiveLocationDebounceTimer);
-		this.sendActiveLocationDebounceTimer = setTimeout(() => this.sendActiveLocationChange(editor), this.activeLocationDebounceTimeMs);
+		this.sendActiveLocationDebounceTimer = setTimeout(() => this.updateActiveLocation(editor), config.dtdEditorActiveLocationDelay);
 	}
 
-	private sendActiveLocationChange(editor: TextEditor | undefined) {
+	private updateActiveLocation(editor: TextEditor | undefined) {
 		// Usually we only send the change if the editor whose selection changed is still
 		// the active editor. However, if the active editor is a "non-editor" (for example an Output pane
 		// or embedded Widget Inspector), we will still allow this, to support selection changes triggered
@@ -223,10 +222,13 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			return;
 		}
 
-		const document = editor?.document;
+		const activeLocation = this.editorServices.activeLocation = this.getActiveLocation(editor);
+		void this.sendActiveLocation(activeLocation);
+	}
 
-		const location: ActiveLocationChangedEvent = {
-			kind: EventKind.activeLocationChanged,
+	private getActiveLocation(editor: TextEditor | undefined): ActiveLocation {
+		const document = editor?.document;
+		return {
 			selections: editor?.selections.map((s) => ({
 				active: {
 					character: s.active.character,
@@ -237,12 +239,13 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 					line: s.anchor.line,
 				},
 			})) ?? [],
-			textDocument: document ? {
-				uri: forceWindowsDriveLetterToUppercaseInUriString(document.uri.toString()),
-				version: document.version,
-			} : undefined,
+			textDocument: document
+				? {
+					uri: forceWindowsDriveLetterToUppercaseInUriString(document.uri.toString()),
+					version: document.version,
+				}
+				: undefined,
 		};
-		void this.sendActiveLocation(location);
 	}
 
 	public dispose() {
@@ -253,6 +256,11 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 
 class EditorServices implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
+
+	public activeLocation: ActiveLocation = {
+		textDocument: undefined,
+		selections: [],
+	};
 
 	constructor(
 		private readonly daemon: DartToolingDaemon,
@@ -301,6 +309,10 @@ class EditorServices implements IAmDisposable {
 					};
 				})
 				: undefined,
+			this.daemon.registerService(Service.Editor, "getActiveLocation", undefined, async () => ({
+				...this.activeLocation,
+				type: "ActiveLocation",
+			})),
 			this.daemon.registerService(Service.Editor, "getDebugSessions", undefined, () => ({
 				debugSessions: debugSessions.map((d) => this.asDtdEditorDebugSession(d)),
 				type: "GetDebugSessionsResult",
