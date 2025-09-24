@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import * as lsp from "../../shared/analysis/lsp/custom_protocol";
 import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
-import { DocumentPositionTracker } from "../../shared/vscode/trackers";
+import { SingleDocumentPositionTracker } from "../../shared/vscode/trackers";
 import { lspToPosition } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { config } from "../config";
@@ -200,7 +200,7 @@ class WidgetGuide {
 
 class WidgetGuideTracker implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
-	private readonly tracker: DocumentPositionTracker = new DocumentPositionTracker();
+	private readonly tracker: SingleDocumentPositionTracker = new SingleDocumentPositionTracker();
 	private readonly guideMap: Map<WidgetGuide, [vs.Position, vs.Position]> = new Map<WidgetGuide, [vs.Position, vs.Position]>();
 
 	private onGuidesChangedEmitter = new vs.EventEmitter<[vs.TextDocument, WidgetGuide[]]>();

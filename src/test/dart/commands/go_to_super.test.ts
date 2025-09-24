@@ -21,7 +21,7 @@ describe("go_to_super", () => {
 		assert.equal(fsPath(editor.document.uri), fsPath(derivedFile));
 		ensureIsRange(
 			editor.selection,
-			rangeOf("void |blah|()", new vs.Range(positionOf("^class D"), positionOf("^// blahD"))),
+			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class D"), positionOf("^// blahD"))),
 		);
 	});
 
@@ -34,7 +34,7 @@ describe("go_to_super", () => {
 		// Check we went to B and not C (because B doesn't have an implementation).
 		ensureIsRange(
 			editor.selection,
-			rangeOf("void |blah|()", new vs.Range(positionOf("^class B"), positionOf("^// blahB"))),
+			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class B"), positionOf("^// blahB"))),
 		);
 	});
 
@@ -46,7 +46,7 @@ describe("go_to_super", () => {
 		assert.equal(fsPath(currentDoc().uri), fsPath(superFile));
 		ensureIsRange(
 			currentEditor().selection,
-			rangeOf("void |blah|()", new vs.Range(positionOf("^class A"), positionOf("^// blahA"))),
+			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class A"), positionOf("^// blahA"))),
 		);
 	});
 });

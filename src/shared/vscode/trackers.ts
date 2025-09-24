@@ -1,9 +1,10 @@
 import * as vs from "vscode";
 import { disposeAll } from "../utils";
 
-export class DocumentPositionTracker implements vs.Disposable {
+export class SingleDocumentPositionTracker implements vs.Disposable {
+	// TODO(dantup): Deprecate and remove this in favour of DocumentPositionTracker
 	private readonly disposables: vs.Disposable[] = [];
-	private readonly tracker: DocumentOffsetTracker = new DocumentOffsetTracker();
+	private readonly tracker: SingleDocumentOffsetTracker = new SingleDocumentOffsetTracker();
 	private readonly positionMap: Map<vs.Position, number> = new Map<vs.Position, number>();
 
 	private onPositionsChangedEmitter = new vs.EventEmitter<[vs.TextDocument, Map<vs.Position, vs.Position>]>();
@@ -49,7 +50,8 @@ export class DocumentPositionTracker implements vs.Disposable {
 	}
 }
 
-export class DocumentOffsetTracker implements vs.Disposable {
+export class SingleDocumentOffsetTracker implements vs.Disposable {
+	// TODO(dantup): Deprecate and remove this in favour of DocumentPositionTracker
 	private readonly disposables: vs.Disposable[] = [];
 	private document: vs.TextDocument | undefined;
 	private readonly offsetMap: Map<number, number> = new Map<number, number>();
@@ -113,5 +115,158 @@ export class DocumentOffsetTracker implements vs.Disposable {
 
 	public dispose() {
 		disposeAll(this.disposables);
+	}
+}
+
+interface PositionTrackerEntry {
+	position: vs.Position;
+	callback: (newPosition: vs.Position | undefined) => void;
+	dispose(): void;
+}
+
+export class DocumentPositionTracker implements vs.Disposable {
+	private readonly disposables: vs.Disposable[] = [];
+	private readonly trackers: Map<vs.TextDocument, PositionTrackerEntry[]> = new Map<vs.TextDocument, PositionTrackerEntry[]>();
+
+	constructor() {
+		this.disposables.push(vs.workspace.onDidChangeTextDocument((e) => this.handleDocumentChange(e)));
+		this.disposables.push(vs.workspace.onDidCloseTextDocument((doc) => this.handleDocumentClose(doc)));
+	}
+
+	public trackPosition(document: vs.TextDocument, position: vs.Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
+		const entry: PositionTrackerEntry = {
+			position,
+			callback,
+			dispose: () => {
+				const trackers = this.trackers.get(document);
+				if (!trackers)
+					return;
+
+				const index = trackers.indexOf(entry);
+				if (index !== -1) {
+					trackers.splice(index, 1);
+				}
+				if (trackers.length === 0) {
+					this.trackers.delete(document);
+				}
+			}
+		};
+
+		if (!this.trackers.has(document)) {
+			this.trackers.set(document, []);
+		}
+		this.trackers.get(document)!.push(entry);
+
+		return entry;
+	}
+
+	private handleDocumentChange(e: vs.TextDocumentChangeEvent) {
+		const trackers = this.trackers.get(e.document);
+		if (!trackers) return;
+
+		const trackersToDispose: PositionTrackerEntry[] = [];
+		for (const entry of trackers) {
+			const currentOffset = e.document.offsetAt(entry.position);
+			const newOffset = this.updateOffset(currentOffset, e);
+
+			if (newOffset === undefined) {
+				// Position is removed, so will update to undefined and dispose the tracker.
+				entry.callback(undefined);
+				trackersToDispose.push(entry);
+			} else {
+				const newPosition = e.document.positionAt(newOffset);
+				entry.position = newPosition;
+				entry.callback(newPosition);
+			}
+		}
+
+		for (const tracker of trackersToDispose) {
+			tracker.dispose();
+		}
+	}
+
+	private handleDocumentClose(doc: vs.TextDocument) {
+		const trackers = this.trackers.get(doc);
+		if (!trackers)
+			return;
+
+		for (const entry of trackers)
+			entry.callback(undefined);
+
+		this.trackers.delete(doc);
+	}
+
+	private updateOffset(offset: number, change: vs.TextDocumentChangeEvent): number | undefined {
+		// If any edit spans us, consider us deleted.
+		if (change.contentChanges.find((edit) => edit.rangeOffset < offset && edit.rangeOffset + edit.rangeLength > offset)) {
+			return undefined;
+		}
+
+		// Otherwise, shift us along to account for any edits before us.
+		const totalDiff = change.contentChanges
+			// Edits that end before us.
+			.filter((edit) => edit.rangeOffset + edit.rangeLength <= offset)
+			// Get the difference in lengths to know if we inserted or removed.
+			.map((edit) => edit.text.length - edit.rangeLength)
+			.reduce((total, n) => total + n, 0);
+
+		return offset + totalDiff;
+	}
+
+	public dispose() {
+		this.trackers.clear();
+		disposeAll(this.disposables);
+	}
+}
+
+interface RangeTrackerEntry {
+	dispose: () => void;
+}
+
+export class DocumentRangeTracker implements vs.Disposable {
+	private readonly positionTracker = new DocumentPositionTracker();
+	private readonly rangeTrackers: RangeTrackerEntry[] = [];
+
+	public trackRange(document: vs.TextDocument, range: vs.Range, callback: (newRange: vs.Range | undefined) => void): vs.Disposable {
+		let start: vs.Position | undefined = range.start;
+		let end: vs.Position | undefined = range.end;
+
+		const startDisposable = this.positionTracker.trackPosition(document, range.start, (newPos) => {
+			start = newPos;
+			updateRange();
+		});
+
+		const endDisposable = this.positionTracker.trackPosition(document, range.end, (newPos) => {
+			end = newPos;
+			updateRange();
+		});
+
+		const updateRange = () => {
+			const newRange = (start && end) ? new vs.Range(start, end) : undefined;
+			callback(newRange);
+		};
+
+		const entry: RangeTrackerEntry = {
+			dispose: () => {
+				startDisposable.dispose();
+				endDisposable.dispose();
+				const index = this.rangeTrackers.indexOf(entry);
+				if (index !== -1) {
+					this.rangeTrackers.splice(index, 1);
+				}
+			}
+		};
+
+		this.rangeTrackers.push(entry);
+
+		return entry;
+	}
+
+	public dispose() {
+		this.positionTracker.dispose();
+		for (const entry of this.rangeTrackers) {
+			entry.dispose();
+		}
+		this.rangeTrackers.length = 0;
 	}
 }

@@ -1,11 +1,12 @@
 import { strict as assert } from "assert";
+import * as vs from "vscode";
 import { Position, Range } from "vscode";
-import { DocumentOffsetTracker, DocumentPositionTracker } from "../../../shared/vscode/trackers";
-import { activate, currentDoc, currentEditor, positionOf, setTestContent } from "../../helpers";
+import { DocumentPositionTracker, DocumentRangeTracker, SingleDocumentOffsetTracker, SingleDocumentPositionTracker } from "../../../shared/vscode/trackers";
+import { activate, closeFile, currentDoc, currentEditor, defer, positionOf, rangeOf, setTestContent } from "../../helpers";
 
 describe("offset tracker", () => {
 	beforeEach("activate emptyFile", () => activate());
-	const tracker = new DocumentOffsetTracker();
+	const tracker = new SingleDocumentOffsetTracker();
 
 	it("handles insertions before tracked position", async () => {
 		const editor = currentEditor();
@@ -124,7 +125,7 @@ describe("offset tracker", () => {
 describe("position tracker", () => {
 	beforeEach("activate emptyFile", () => activate());
 
-	const tracker = new DocumentPositionTracker();
+	const tracker = new SingleDocumentPositionTracker();
 
 	it("handles insertions before tracked position", async () => {
 		const editor = currentEditor();
@@ -237,5 +238,259 @@ describe("position tracker", () => {
 
 		assert.ok(updatedValues);
 		assert.ok(updatedValues.get(originalPosition)!.isEqual(positionOf("4^5")));
+	});
+});
+
+describe("multi-document position tracker", () => {
+	beforeEach("activate", () => activate(null));
+
+	it("tracks changes in multiple documents", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc1 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor1 = await vs.window.showTextDocument(doc1);
+		let position1: vs.Position | undefined = positionOf("^333", doc1);
+
+		const doc2 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		let position2: vs.Position | undefined = positionOf("^4444", doc2);
+
+		// Set up trackers for both documents.
+		tracker.trackPosition(doc1, position1, (newPosition) => position1 = newPosition);
+		tracker.trackPosition(doc2, position2, (newPosition) => position2 = newPosition);
+
+		// Apply insert, replace, delete before and after in the first doc.
+		await editor1.edit((eb) => {
+			eb.insert(positionOf("^1", doc1), "inserted at start");
+			eb.insert(positionOf("55555^", doc1), "inserted at end");
+		});
+		await editor1.edit((eb) => {
+			eb.replace(rangeOf("|22|", doc1), "-2-2");
+			eb.replace(rangeOf("|4444|", doc1), "-4-4-4-4");
+		});
+		await editor1.edit((eb) => {
+			eb.delete(rangeOf("| at start|", doc1));
+			eb.delete(rangeOf("| at end|", doc1));
+		});
+
+		// Tracked positions should still match locations where the original text was.
+		assert.ok(position1.isEqual(positionOf("^333", doc1)));
+		assert.ok(position2.isEqual(positionOf("^4444", doc2)));
+	});
+
+	it("stops tracking when individual track is disposed", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let position: vs.Position | undefined = positionOf("^333", doc);
+
+		// Set up multiple trackers for the same position.
+		const posTrack = tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
+
+		// Did update
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
+		assert.ok(position.isEqual(positionOf("^333", doc)));
+
+		await posTrack.dispose();
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
+		assert.ok(position.isEqual(positionOf("^22 3", doc))); // Was not tracked, so is out of sync.
+	});
+
+	it("stops tracking when whole tracker is disposed", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let position: vs.Position | undefined = positionOf("^333", doc);
+
+		// Set up multiple trackers for the same position.
+		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
+
+		// Did update
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
+		assert.ok(position.isEqual(positionOf("^333", doc)));
+
+		tracker.dispose();
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
+		assert.ok(position.isEqual(positionOf("^22 3", doc))); // Was not tracked, so is out of sync.
+	});
+
+	it("can track the same position multiple times", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let position1: vs.Position | undefined = positionOf("^333", doc);
+		let position2: vs.Position | undefined = position1;
+
+		// Set up multiple trackers for the same position.
+		tracker.trackPosition(doc, position1, (newPosition) => position1 = newPosition);
+		tracker.trackPosition(doc, position2, (newPosition) => position2 = newPosition);
+
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
+
+		// Both tracked positions should've been updated.
+		assert.ok(position1.isEqual(positionOf("^333", doc)));
+		assert.ok(position2.isEqual(position1));
+	});
+
+	it("updates to undefined when document is closed", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		await vs.window.showTextDocument(doc);
+		let position: vs.Position | undefined = positionOf("^333", doc);
+
+		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
+		await closeFile(doc.uri);
+
+		assert.equal(position, undefined);
+	});
+
+	it("updates to undefined if text is deleted", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let position: vs.Position | undefined = positionOf("^333", doc);
+
+		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
+
+		await editor.edit((eb) => eb.delete(rangeOf("| 333 |", doc)));
+
+		assert.equal(position, undefined);
+	});
+});
+
+describe("multi-document range tracker", () => {
+	beforeEach("activate", () => activate(null));
+
+	it("tracks changes in multiple documents", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc1 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor1 = await vs.window.showTextDocument(doc1);
+		let range1: vs.Range | undefined = rangeOf("|333|", doc1);
+
+		const doc2 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		let range2: vs.Range | undefined = rangeOf("|4444|", doc2);
+
+		// Set up trackers for both documents.
+		tracker.trackRange(doc1, range1, (newRange) => range1 = newRange);
+		tracker.trackRange(doc2, range2, (newRange) => range2 = newRange);
+
+		// Apply insert, replace, delete before and after in the first doc.
+		await editor1.edit((eb) => {
+			eb.insert(positionOf("^1", doc1), "inserted at start");
+			eb.insert(positionOf("55555^", doc1), "inserted at end");
+		});
+		await editor1.edit((eb) => {
+			eb.replace(rangeOf("|22|", doc1), "-2-2");
+			eb.replace(rangeOf("|4444|", doc1), "-4-4-4-4");
+		});
+		await editor1.edit((eb) => {
+			eb.delete(rangeOf("| at start|", doc1));
+			eb.delete(rangeOf("| at end|", doc1));
+		});
+
+		// Tracked ranges should still match locations where the original text was.
+		assert.ok(range1.isEqual(rangeOf("|333|", doc1)));
+		assert.ok(range2.isEqual(rangeOf("|4444|", doc2)));
+	});
+
+	it("stops tracking when individual track is disposed", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let range: vs.Range | undefined = rangeOf("|333|", doc);
+
+		// Set up tracker for the range.
+		const rangeTrack = tracker.trackRange(doc, range, (newRange) => range = newRange);
+
+		// Did update
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
+		assert.ok(range.isEqual(rangeOf("|333|", doc)));
+
+		await rangeTrack.dispose();
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
+		assert.ok(range.isEqual(rangeOf("|22 |", doc))); // Was not tracked, so is out of sync.
+	});
+
+	it("stops tracking when whole tracker is disposed", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let range: vs.Range | undefined = rangeOf("|333|", doc);
+
+		// Set up tracker for the range.
+		tracker.trackRange(doc, range, (newRange) => range = newRange);
+
+		// Did update
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
+		assert.ok(range.isEqual(rangeOf("|333|", doc)));
+
+		tracker.dispose();
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
+		assert.ok(range.isEqual(rangeOf("|22 |", doc))); // Was not tracked, so is out of sync.
+	});
+
+	it("can track the same range multiple times", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let range1: vs.Range | undefined = rangeOf("|333|", doc);
+		let range2: vs.Range | undefined = range1;
+
+		// Set up multiple trackers for the same range.
+		tracker.trackRange(doc, range1, (newRange) => range1 = newRange);
+		tracker.trackRange(doc, range2, (newRange) => range2 = newRange);
+
+		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
+
+		// Both tracked ranges should've been updated.
+		assert.ok(range1.isEqual(rangeOf("|333|", doc)));
+		assert.ok(range2.isEqual(range1));
+	});
+
+	it("updates to undefined when document is closed", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		await vs.window.showTextDocument(doc);
+		let range: vs.Range | undefined = rangeOf("|333|", doc);
+
+		tracker.trackRange(doc, range, (newRange) => range = newRange);
+		await closeFile(doc.uri);
+
+		assert.equal(range, undefined);
+	});
+
+	it("updates to undefined if text is deleted", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let range: vs.Range | undefined = rangeOf("|333|", doc);
+
+		tracker.trackRange(doc, range, (newRange) => range = newRange);
+
+		await editor.edit((eb) => eb.delete(rangeOf("| 333 |", doc)));
+
+		assert.equal(range, undefined);
 	});
 });
