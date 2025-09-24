@@ -7,6 +7,7 @@ import { DebuggerType, VmServiceExtension } from "../../../shared/enums";
 import { TestDoneNotification, TestStartNotification } from "../../../shared/test_protocol";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
+import { getLaunchConfig } from "../../../shared/utils/test";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
@@ -561,6 +562,32 @@ describe("flutter test debugger", () => {
 			assert(addCoverageStub?.called);
 			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
 			assert.deepStrictEqual(coverageFiles, [fsPath(flutterHelloWorldPrinterFile)]);
+		});
+
+		it("uses correct regex for --coverage-package", () => {
+			const config = getLaunchConfig(
+				false, // noDebug
+				true, // includeCoverage
+				true, // isFlutter
+				fsPath(flutterHelloWorldExampleTestFile),
+				undefined, // testSelection
+				false, // shouldRunTestByLine
+				undefined, // runSkipped
+				undefined, // template
+				["flutter_hello_world", "flutter_hello_world_example"], // workspacePackageNames
+			);
+
+			const toolArgs = (config as { toolArgs?: string[] }).toolArgs ?? [];
+			const coveragePackages: string[] = [];
+			for (let i = 0; i < toolArgs.length - 1; i++) {
+				if (toolArgs[i] === "--coverage-package")
+					coveragePackages.push(toolArgs[i + 1]);
+			}
+
+			assert.deepStrictEqual(
+				coveragePackages,
+				[`^flutter_hello_world$`, `^flutter_hello_world_example$`],
+			);
 		});
 	});
 });
