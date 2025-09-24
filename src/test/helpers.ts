@@ -621,11 +621,9 @@ export function positionOf(searchText: string, doc?: vs.TextDocument): vs.Positi
 	return doc.positionAt(matchedTextIndex + caretOffset);
 }
 
-export function rangeOf(searchText: string, inside: vs.Range | undefined, allowMissing: true): vs.Range | undefined;
-export function rangeOf(searchText: string, inside?: vs.Range): vs.Range;
-export function rangeOf(searchText: string, inside?: vs.Range, allowMissing = false): vs.Range | undefined {
+export function rangeOf(searchText: string, doc?: vs.TextDocument, inside?: vs.Range): vs.Range {
 	searchText = searchText.replace(/\r/g, "").replace(/\n/g, documentEol);
-	const doc = currentDoc();
+	doc ??= currentDoc();
 	const startOffset = searchText.indexOf("|");
 	assert.notEqual(startOffset, -1, `Couldn't find a | in search text (${searchText})`);
 	const endOffset = searchText.lastIndexOf("|");
@@ -637,8 +635,6 @@ export function rangeOf(searchText: string, inside?: vs.Range, allowMissing = fa
 	let matchedTextIndex = docText.indexOf(searchText.replace(/\|/g, ""), startSearchAt);
 	if (endSearchAt > -1 && matchedTextIndex > endSearchAt)
 		matchedTextIndex = -1;
-	if (matchedTextIndex === -1 && allowMissing)
-		return undefined;
 	assert.notEqual(matchedTextIndex, -1, `Couldn't find string ${searchText.replace(/\|/g, "")} in the document to get range of. Document contained:\n${docText}`);
 
 	return new vs.Range(
