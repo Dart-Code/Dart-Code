@@ -119,7 +119,7 @@ export class SingleDocumentOffsetTracker implements vs.Disposable {
 }
 
 interface PositionTrackerEntry {
-	position: vs.Position;
+	offset: number;
 	callback: (newPosition: vs.Position | undefined) => void;
 	dispose(): void;
 }
@@ -134,8 +134,9 @@ export class DocumentPositionTracker implements vs.Disposable {
 	}
 
 	public trackPosition(document: vs.TextDocument, position: vs.Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
+		const offset = document.offsetAt(position);
 		const entry: PositionTrackerEntry = {
-			position,
+			offset,
 			callback,
 			dispose: () => {
 				const trackers = this.trackers.get(document);
@@ -166,8 +167,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 
 		const trackersToDispose: PositionTrackerEntry[] = [];
 		for (const entry of trackers) {
-			const currentOffset = e.document.offsetAt(entry.position);
-			const newOffset = this.updateOffset(currentOffset, e);
+			const newOffset = this.updateOffset(entry.offset, e);
 
 			if (newOffset === undefined) {
 				// Position is removed, so will update to undefined and dispose the tracker.
@@ -175,7 +175,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 				trackersToDispose.push(entry);
 			} else {
 				const newPosition = e.document.positionAt(newOffset);
-				entry.position = newPosition;
+				entry.offset = newOffset;
 				entry.callback(newPosition);
 			}
 		}

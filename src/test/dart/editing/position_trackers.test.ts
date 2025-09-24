@@ -278,6 +278,23 @@ describe("multi-document position tracker", () => {
 		assert.ok(position2.isEqual(positionOf("^4444", doc2)));
 	});
 
+	it("handles multi-line insertions before tracked position", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "line1\nline2\nline3", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let position: vs.Position | undefined = positionOf("^line3", doc);
+
+		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
+
+		// Insert a newline at the start of the doc.
+		await editor.edit((eb) => eb.insert(new Position(0, 0), "\n"));
+
+		// The tracked position should still be at the start of line 3.
+		assert.ok(position.isEqual(positionOf("^line3", doc)));
+	});
+
 	it("stops tracking when individual track is disposed", async () => {
 		const tracker = new DocumentPositionTracker();
 		defer("Dispose tracker", () => tracker.dispose());
@@ -403,6 +420,23 @@ describe("multi-document range tracker", () => {
 		// Tracked ranges should still match locations where the original text was.
 		assert.ok(range1.isEqual(rangeOf("|333|", doc1)));
 		assert.ok(range2.isEqual(rangeOf("|4444|", doc2)));
+	});
+
+	it("handles multi-line insertions before tracked range", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "line1\nline2\nline3", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let range: vs.Range | undefined = rangeOf("|line3|", doc);
+
+		tracker.trackRange(doc, range, (newRange) => range = newRange);
+
+		// Insert a newline at the start of the doc.
+		await editor.edit((eb) => eb.insert(new Position(0, 0), "\n"));
+
+		// The tracked range should still be around "line3".
+		assert.ok(range.isEqual(rangeOf("|line3|", doc)));
 	});
 
 	it("stops tracking when individual track is disposed", async () => {
