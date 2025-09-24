@@ -264,9 +264,8 @@ export class DocumentRangeTracker implements vs.Disposable {
 
 	public dispose() {
 		this.positionTracker.dispose();
-		for (const entry of this.rangeTrackers) {
-			entry.dispose();
-		}
+		// We don't need to dispose these manually, because disposing the position tracker
+		// already disposes all tracked positions.
 		this.rangeTrackers.length = 0;
 	}
 }
