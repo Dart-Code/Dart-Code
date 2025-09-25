@@ -1,4 +1,4 @@
-import { commands, env, ExtensionContext, TextEditor, window, workspace } from "vscode";
+import { commands, env, ExtensionContext, TextEditor, Uri, window, workspace } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { CommandSource, restartReasonManual } from "../../shared/constants";
 import { DTD_AVAILABLE } from "../../shared/constants.contexts";
@@ -6,7 +6,7 @@ import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { DartSdks, IAmDisposable, Logger } from "../../shared/interfaces";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
-import { ActiveLocation, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream } from "../../shared/services/tooling_daemon_services";
+import { ActiveLocation, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream, SuccessResult } from "../../shared/services/tooling_daemon_services";
 import { disposeAll, nullToUndefined, PromiseCompleter } from "../../shared/utils";
 import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
@@ -313,6 +313,7 @@ class EditorServices implements IAmDisposable {
 				...this.activeLocation,
 				type: "ActiveLocation",
 			})),
+			this.daemon.registerService(Service.Editor, "navigateToCode", undefined, async (params: NavigateToCodeParams) => this.navigateToCode(params)),
 			this.daemon.registerService(Service.Editor, "getDebugSessions", undefined, () => ({
 				debugSessions: debugSessions.map((d) => this.asDtdEditorDebugSession(d)),
 				type: "GetDebugSessionsResult",
@@ -366,6 +367,19 @@ class EditorServices implements IAmDisposable {
 
 	public dispose(): any {
 		disposeAll(this.disposables);
+	}
+
+	private async navigateToCode(params: NavigateToCodeParams): Promise<SuccessResult> {
+		const uri = Uri.parse(params.uri);
+		if (uri.scheme !== "file") {
+			const error = new Error(`Unsupported URI scheme: ${uri.scheme}`) as Error & { code?: number; };
+			error.code = 144;
+			throw error;
+		}
+
+		await commands.executeCommand("_dart.jumpToLineColInUri", uri, params.line, params.column);
+
+		return { type: "Success" };
 	}
 
 	private asDtdEditorDevice(device: Device, supported: boolean): EditorDevice {
