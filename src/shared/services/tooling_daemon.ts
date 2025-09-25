@@ -124,8 +124,7 @@ export class DartToolingDaemon implements IAmDisposable {
 					});
 				} catch (e: unknown) {
 					const error = this.asDtdError(e);
-					const message = error.message ?? `${e}`;
-					this.logger.error(`Failed handling service request ${method}: ${message}`);
+					this.logger.error(`Failed handling service request ${method}: ${error.message}`);
 					this.send({
 						id,
 						jsonrpc: "2.0",
