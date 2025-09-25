@@ -341,6 +341,7 @@ describe.only("dart test debugger", () => {
 						"discovery_test.dart",
 						"dupe_name_test.dart",
 						"dynamic_test.dart",
+						"empty_test.dart",
 						"environment_test.dart",
 						// These excluded tests show up because we for testing they're
 						// directly inside the run folder. For the cases we care about (excluding
@@ -650,20 +651,23 @@ class MyTest {
 test\\empty_test.dart
 	group1: 8:2-12:4
 		test1: 9:4-11:6
-	MyTest | test_reflected: 16:2-17:2
+	MyTest | test_reflected: 17:2-18:2
 			`.trim(),
 			"",
 		);
 
+
 		// Insert a line at the start of the doc and ensure everything updates.
 		await currentEditor().edit((eb) => eb.insert(new vs.Position(0, 0), "// new first line\n"));
 		await delay(50);
-		await waitForResult(() => getTestRanges(helloWorldTestEmptyFile) ===
+		privateApi.testDiscoverer?.forceUpdate(helloWorldTestEmptyFile);
+		assert.equal(
+			getTestRanges(helloWorldTestEmptyFile),
 			`
 test\\empty_test.dart
 	group1: 9:2-13:4
 		test1: 10:4-12:6
-	MyTest | test_reflected: 17:2-18:2
+	MyTest | test_reflected: 18:2-19:2
 			`.trim(),
 		);
 	});

@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { Position, Range } from "../interfaces";
 import { disposeAll } from "../utils";
 
 export class SingleDocumentPositionTracker implements vs.Disposable {
@@ -133,8 +134,8 @@ export class DocumentPositionTracker implements vs.Disposable {
 		this.disposables.push(vs.workspace.onDidCloseTextDocument((doc) => this.handleDocumentClose(doc)));
 	}
 
-	public trackPosition(document: vs.TextDocument, position: vs.Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
-		const offset = document.offsetAt(position);
+	public trackPosition(document: vs.TextDocument, position: Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
+		const offset = document.offsetAt(new vs.Position(position.line, position.character));
 		const entry: PositionTrackerEntry = {
 			offset,
 			callback,
@@ -163,7 +164,8 @@ export class DocumentPositionTracker implements vs.Disposable {
 
 	private handleDocumentChange(e: vs.TextDocumentChangeEvent) {
 		const trackers = this.trackers.get(e.document);
-		if (!trackers) return;
+		if (!trackers)
+			return;
 
 		const trackersToDispose: PositionTrackerEntry[] = [];
 		for (const entry of trackers) {
@@ -227,9 +229,9 @@ export class DocumentRangeTracker implements vs.Disposable {
 	private readonly positionTracker = new DocumentPositionTracker();
 	private readonly rangeTrackers: RangeTrackerEntry[] = [];
 
-	public trackRange(document: vs.TextDocument, range: vs.Range, callback: (newRange: vs.Range | undefined) => void): vs.Disposable {
-		let start: vs.Position | undefined = range.start;
-		let end: vs.Position | undefined = range.end;
+	public trackRange(document: vs.TextDocument, range: Range, callback: (newRange: Range | undefined) => void): vs.Disposable {
+		let start: Position | undefined = range.start;
+		let end: Position | undefined = range.end;
 
 		const startDisposable = this.positionTracker.trackPosition(document, range.start, (newPos) => {
 			start = newPos;
@@ -242,8 +244,14 @@ export class DocumentRangeTracker implements vs.Disposable {
 		});
 
 		const updateRange = () => {
-			const newRange = (start && end) ? new vs.Range(start, end) : undefined;
+			const newRange = (start && end) ? { start, end } : undefined;
 			callback(newRange);
+
+			// If we don't have a range because one position went away, be sure to dispose the other tracker.
+			if (!newRange) {
+				startDisposable.dispose();
+				endDisposable.dispose();
+			}
 		};
 
 		const entry: RangeTrackerEntry = {

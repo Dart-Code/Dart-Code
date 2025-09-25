@@ -1,10 +1,11 @@
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
-import { Position, Range } from "../interfaces";
+import { Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isWithinPath } from "../utils/fs";
+import { rangesEqual } from "../utils/positions";
 import { makeRegexForTests } from "../utils/test";
 
 export abstract class TreeNode {
@@ -386,7 +387,7 @@ export class TestModel {
 			if (testNode.testSource === TestSource.Outline) {
 				const children = testNode.children
 					.filter((c) => c.testSource === TestSource.Result)
-					.filter((c) => !c.range || (originalRange && this.rangeEquals(c.range, originalRange)));
+					.filter((c) => !c.range || (originalRange && rangesEqual(c.range, originalRange)));
 				for (const child of children)
 					child.range = range;
 			}
@@ -511,14 +512,6 @@ export class TestModel {
 		if (index > -1)
 			parent.children.splice(index, 1);
 		this.updateNode({ node, nodeWasRemoved: true });
-	}
-
-	private rangeEquals(r1: Range, r2: Range): boolean {
-		return this.positionEquals(r1.start, r2.start) && this.positionEquals(r1.end, r2.end);
-	}
-
-	private positionEquals(p1: Position, p2: Position): boolean {
-		return p1.line === p2.line && p1.character === p2.character;
 	}
 }
 

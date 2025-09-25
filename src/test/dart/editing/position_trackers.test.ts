@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { Position, Range } from "vscode";
+import { Position, Range } from "../../../shared/interfaces";
+import { positionsEqual, rangesEqual } from "../../../shared/utils/positions";
 import { DocumentPositionTracker, DocumentRangeTracker, SingleDocumentOffsetTracker, SingleDocumentPositionTracker } from "../../../shared/vscode/trackers";
 import { activate, closeFile, currentDoc, currentEditor, defer, positionOf, rangeOf, setTestContent } from "../../helpers";
 
@@ -20,7 +21,7 @@ describe("offset tracker", () => {
 		tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
 
 		// Insert a character before our position.
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalOffset), 6);
@@ -38,7 +39,7 @@ describe("offset tracker", () => {
 		tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
 
 		// Delete a character before our position.
-		await editor.edit((eb) => eb.delete(new Range(new Position(0, 0), new Position(0, 1))));
+		await editor.edit((eb) => eb.delete(new vs.Range(new vs.Position(0, 0), new vs.Position(0, 1))));
 
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalOffset), 4);
@@ -56,7 +57,7 @@ describe("offset tracker", () => {
 		tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
 
 		// Replace a character before our position.
-		await editor.edit((eb) => eb.replace(new Range(new Position(0, 0), new Position(0, 1)), "_"));
+		await editor.edit((eb) => eb.replace(new vs.Range(new vs.Position(0, 0), new vs.Position(0, 1)), "_"));
 
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalOffset), originalOffset);
@@ -74,7 +75,7 @@ describe("offset tracker", () => {
 		tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
 
 		// Insert text after our position.
-		await editor.edit((eb) => eb.insert(new Position(0, 7), "NEW TEXT"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 7), "NEW TEXT"));
 
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalOffset), originalOffset);
@@ -92,7 +93,7 @@ describe("offset tracker", () => {
 		tracker.onOffsetsChanged(([_, offsetMap]) => updatedValues = offsetMap);
 
 		// Insert text after our position.
-		await editor.edit((eb) => eb.replace(new Range(new Position(0, 2), new Position(0, 8)), "THIS IS NEW TEXT"));
+		await editor.edit((eb) => eb.replace(new vs.Range(new vs.Position(0, 2), new vs.Position(0, 8)), "THIS IS NEW TEXT"));
 
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalOffset), undefined);
@@ -111,11 +112,11 @@ describe("offset tracker", () => {
 
 		// Make multiple edits so that we still expect to key using the original
 		// offset but the value is updated based on its current value each time.
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalOffset), 10);
@@ -139,10 +140,10 @@ describe("position tracker", () => {
 		tracker.onPositionsChanged(([_, positionMap]) => updatedValues = positionMap);
 
 		// Insert a character before our position.
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition)!.isEqual(positionOf("4^5")));
+		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, positionOf("4^5")));
 	});
 
 	it("handles deletes before tracked position", async () => {
@@ -157,10 +158,10 @@ describe("position tracker", () => {
 		tracker.onPositionsChanged(([_, positionMap]) => updatedValues = positionMap);
 
 		// Delete a character before our position.
-		await editor.edit((eb) => eb.delete(new Range(new Position(0, 0), new Position(0, 1))));
+		await editor.edit((eb) => eb.delete(new vs.Range(new vs.Position(0, 0), new vs.Position(0, 1))));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition)!.isEqual(positionOf("4^5")));
+		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, positionOf("4^5")));
 	});
 
 	it("handles same-length edits before tracked position", async () => {
@@ -175,10 +176,10 @@ describe("position tracker", () => {
 		tracker.onPositionsChanged(([_, positionMap]) => updatedValues = positionMap);
 
 		// Replace a character before our position.
-		await editor.edit((eb) => eb.replace(new Range(new Position(0, 0), new Position(0, 1)), "_"));
+		await editor.edit((eb) => eb.replace(new vs.Range(new vs.Position(0, 0), new vs.Position(0, 1)), "_"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition)!.isEqual(positionOf("4^5")));
+		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, positionOf("4^5")));
 	});
 
 	it("ignores edits after tracked position", async () => {
@@ -193,10 +194,10 @@ describe("position tracker", () => {
 		tracker.onPositionsChanged(([_, positionMap]) => updatedValues = positionMap);
 
 		// Insert text after our position.
-		await editor.edit((eb) => eb.insert(new Position(0, 7), "NEW TEXT"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 7), "NEW TEXT"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition)!.isEqual(positionOf("4^5")));
+		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, positionOf("4^5")));
 	});
 
 	it("returns undefined if position was swallowed by an edit", async () => {
@@ -211,7 +212,7 @@ describe("position tracker", () => {
 		tracker.onPositionsChanged(([_, positionMap]) => updatedValues = positionMap);
 
 		// Insert text after our position.
-		await editor.edit((eb) => eb.replace(new Range(new Position(0, 2), new Position(0, 8)), "THIS IS NEW TEXT"));
+		await editor.edit((eb) => eb.replace(new vs.Range(new vs.Position(0, 2), new vs.Position(0, 8)), "THIS IS NEW TEXT"));
 
 		assert.ok(updatedValues);
 		assert.equal(updatedValues.get(originalPosition), undefined);
@@ -230,14 +231,14 @@ describe("position tracker", () => {
 
 		// Make multiple edits so that we still expect to key using the original
 		// offset but the value is updated based on its current value each time.
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "_"));
 
 		assert.ok(updatedValues);
-		assert.ok(updatedValues.get(originalPosition)!.isEqual(positionOf("4^5")));
+		assert.ok(positionsEqual(updatedValues.get(originalPosition)!, positionOf("4^5")));
 	});
 });
 
@@ -250,10 +251,10 @@ describe("multi-document position tracker", () => {
 
 		const doc1 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor1 = await vs.window.showTextDocument(doc1);
-		let position1: vs.Position | undefined = positionOf("^333", doc1);
+		let position1: Position | undefined = positionOf("^333", doc1);
 
 		const doc2 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
-		let position2: vs.Position | undefined = positionOf("^4444", doc2);
+		let position2: Position | undefined = positionOf("^4444", doc2);
 
 		// Set up trackers for both documents.
 		tracker.trackPosition(doc1, position1, (newPosition) => position1 = newPosition);
@@ -274,8 +275,8 @@ describe("multi-document position tracker", () => {
 		});
 
 		// Tracked positions should still match locations where the original text was.
-		assert.ok(position1.isEqual(positionOf("^333", doc1)));
-		assert.ok(position2.isEqual(positionOf("^4444", doc2)));
+		assert.ok(positionsEqual(position1, positionOf("^333", doc1)));
+		assert.ok(positionsEqual(position2, positionOf("^4444", doc2)));
 	});
 
 	it("handles multi-line insertions before tracked position", async () => {
@@ -284,15 +285,15 @@ describe("multi-document position tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "line1\nline2\nline3", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let position: vs.Position | undefined = positionOf("^line3", doc);
+		let position: Position | undefined = positionOf("^line3", doc);
 
 		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
 
 		// Insert a newline at the start of the doc.
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "\n"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "\n"));
 
 		// The tracked position should still be at the start of line 3.
-		assert.ok(position.isEqual(positionOf("^line3", doc)));
+		assert.ok(positionsEqual(position, positionOf("^line3", doc)));
 	});
 
 	it("stops tracking when individual track is disposed", async () => {
@@ -301,18 +302,18 @@ describe("multi-document position tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let position: vs.Position | undefined = positionOf("^333", doc);
+		let position: Position | undefined = positionOf("^333", doc);
 
 		// Set up multiple trackers for the same position.
 		const posTrack = tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
 
 		// Did update
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
-		assert.ok(position.isEqual(positionOf("^333", doc)));
+		assert.ok(positionsEqual(position, positionOf("^333", doc)));
 
 		await posTrack.dispose();
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
-		assert.ok(position.isEqual(positionOf("^22 3", doc))); // Was not tracked, so is out of sync.
+		assert.ok(positionsEqual(position, positionOf("^22 3", doc))); // Was not tracked, so is out of sync.
 	});
 
 	it("stops tracking when whole tracker is disposed", async () => {
@@ -321,18 +322,18 @@ describe("multi-document position tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let position: vs.Position | undefined = positionOf("^333", doc);
+		let position: Position | undefined = positionOf("^333", doc);
 
 		// Set up multiple trackers for the same position.
 		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
 
 		// Did update
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
-		assert.ok(position.isEqual(positionOf("^333", doc)));
+		assert.ok(positionsEqual(position, positionOf("^333", doc)));
 
 		tracker.dispose();
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
-		assert.ok(position.isEqual(positionOf("^22 3", doc))); // Was not tracked, so is out of sync.
+		assert.ok(positionsEqual(position, positionOf("^22 3", doc))); // Was not tracked, so is out of sync.
 	});
 
 	it("can track the same position multiple times", async () => {
@@ -341,8 +342,8 @@ describe("multi-document position tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let position1: vs.Position | undefined = positionOf("^333", doc);
-		let position2: vs.Position | undefined = position1;
+		let position1: Position | undefined = positionOf("^333", doc);
+		let position2: Position | undefined = position1;
 
 		// Set up multiple trackers for the same position.
 		tracker.trackPosition(doc, position1, (newPosition) => position1 = newPosition);
@@ -351,8 +352,8 @@ describe("multi-document position tracker", () => {
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
 
 		// Both tracked positions should've been updated.
-		assert.ok(position1.isEqual(positionOf("^333", doc)));
-		assert.ok(position2.isEqual(position1));
+		assert.ok(positionsEqual(position1, positionOf("^333", doc)));
+		assert.ok(positionsEqual(position2, position1));
 	});
 
 	it("updates to undefined when document is closed", async () => {
@@ -361,7 +362,7 @@ describe("multi-document position tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		await vs.window.showTextDocument(doc);
-		let position: vs.Position | undefined = positionOf("^333", doc);
+		let position: Position | undefined = positionOf("^333", doc);
 
 		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
 		await closeFile(doc.uri);
@@ -375,7 +376,7 @@ describe("multi-document position tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let position: vs.Position | undefined = positionOf("^333", doc);
+		let position: Position | undefined = positionOf("^333", doc);
 
 		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
 
@@ -394,10 +395,10 @@ describe("multi-document range tracker", () => {
 
 		const doc1 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor1 = await vs.window.showTextDocument(doc1);
-		let range1: vs.Range | undefined = rangeOf("|333|", doc1);
+		let range1: Range | undefined = rangeOf("|333|", doc1);
 
 		const doc2 = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
-		let range2: vs.Range | undefined = rangeOf("|4444|", doc2);
+		let range2: Range | undefined = rangeOf("|4444|", doc2);
 
 		// Set up trackers for both documents.
 		tracker.trackRange(doc1, range1, (newRange) => range1 = newRange);
@@ -418,8 +419,8 @@ describe("multi-document range tracker", () => {
 		});
 
 		// Tracked ranges should still match locations where the original text was.
-		assert.ok(range1.isEqual(rangeOf("|333|", doc1)));
-		assert.ok(range2.isEqual(rangeOf("|4444|", doc2)));
+		assert.ok(rangesEqual(range1, rangeOf("|333|", doc1)));
+		assert.ok(rangesEqual(range2, rangeOf("|4444|", doc2)));
 	});
 
 	it("handles multi-line insertions before tracked range", async () => {
@@ -428,15 +429,15 @@ describe("multi-document range tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "line1\nline2\nline3", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let range: vs.Range | undefined = rangeOf("|line3|", doc);
+		let range: Range | undefined = rangeOf("|line3|", doc);
 
 		tracker.trackRange(doc, range, (newRange) => range = newRange);
 
 		// Insert a newline at the start of the doc.
-		await editor.edit((eb) => eb.insert(new Position(0, 0), "\n"));
+		await editor.edit((eb) => eb.insert(new vs.Position(0, 0), "\n"));
 
 		// The tracked range should still be around "line3".
-		assert.ok(range.isEqual(rangeOf("|line3|", doc)));
+		assert.ok(rangesEqual(range, rangeOf("|line3|", doc)));
 	});
 
 	it("stops tracking when individual track is disposed", async () => {
@@ -445,18 +446,18 @@ describe("multi-document range tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let range: vs.Range | undefined = rangeOf("|333|", doc);
+		let range: Range | undefined = rangeOf("|333|", doc);
 
 		// Set up tracker for the range.
 		const rangeTrack = tracker.trackRange(doc, range, (newRange) => range = newRange);
 
 		// Did update
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
-		assert.ok(range.isEqual(rangeOf("|333|", doc)));
+		assert.ok(rangesEqual(range, rangeOf("|333|", doc)));
 
 		await rangeTrack.dispose();
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
-		assert.ok(range.isEqual(rangeOf("|22 |", doc))); // Was not tracked, so is out of sync.
+		assert.ok(rangesEqual(range, rangeOf("|22 |", doc))); // Was not tracked, so is out of sync.
 	});
 
 	it("stops tracking when whole tracker is disposed", async () => {
@@ -465,18 +466,18 @@ describe("multi-document range tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let range: vs.Range | undefined = rangeOf("|333|", doc);
+		let range: Range | undefined = rangeOf("|333|", doc);
 
 		// Set up tracker for the range.
 		tracker.trackRange(doc, range, (newRange) => range = newRange);
 
 		// Did update
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
-		assert.ok(range.isEqual(rangeOf("|333|", doc)));
+		assert.ok(rangesEqual(range, rangeOf("|333|", doc)));
 
 		tracker.dispose();
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
-		assert.ok(range.isEqual(rangeOf("|22 |", doc))); // Was not tracked, so is out of sync.
+		assert.ok(rangesEqual(range, rangeOf("|22 |", doc))); // Was not tracked, so is out of sync.
 	});
 
 	it("can track the same range multiple times", async () => {
@@ -485,8 +486,8 @@ describe("multi-document range tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let range1: vs.Range | undefined = rangeOf("|333|", doc);
-		let range2: vs.Range | undefined = range1;
+		let range1: Range | undefined = rangeOf("|333|", doc);
+		let range2: Range | undefined = range1;
 
 		// Set up multiple trackers for the same range.
 		tracker.trackRange(doc, range1, (newRange) => range1 = newRange);
@@ -495,8 +496,8 @@ describe("multi-document range tracker", () => {
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
 
 		// Both tracked ranges should've been updated.
-		assert.ok(range1.isEqual(rangeOf("|333|", doc)));
-		assert.ok(range2.isEqual(range1));
+		assert.ok(rangesEqual(range1, rangeOf("|333|", doc)));
+		assert.ok(rangesEqual(range2, range1));
 	});
 
 	it("updates to undefined when document is closed", async () => {
@@ -505,7 +506,7 @@ describe("multi-document range tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		await vs.window.showTextDocument(doc);
-		let range: vs.Range | undefined = rangeOf("|333|", doc);
+		let range: Range | undefined = rangeOf("|333|", doc);
 
 		tracker.trackRange(doc, range, (newRange) => range = newRange);
 		await closeFile(doc.uri);
@@ -519,7 +520,7 @@ describe("multi-document range tracker", () => {
 
 		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
 		const editor = await vs.window.showTextDocument(doc);
-		let range: vs.Range | undefined = rangeOf("|333|", doc);
+		let range: Range | undefined = rangeOf("|333|", doc);
 
 		tracker.trackRange(doc, range, (newRange) => range = newRange);
 
