@@ -1,12 +1,14 @@
+import { URI } from "vscode-uri";
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
-import { Range } from "../interfaces";
+import { IAmDisposable, Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
 import { isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
 import { makeRegexForTests } from "../utils/test";
+import { DocumentRangeTracker } from "../vscode/trackers";
 
 export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
@@ -112,6 +114,7 @@ export class TestNode extends TreeNode {
 
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
+	public rangeTracker: IAmDisposable | undefined;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
 	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, public range: Range | undefined) {
@@ -163,11 +166,12 @@ export class TestModel {
 	public readonly onDidChangeTreeData: Event<NodeDidChangeEvent | undefined> = this.onDidChangeDataEmitter.event;
 
 	private readonly testEventListeners: TestEventListener[] = [];
+	private readonly rangeTracker = new DocumentRangeTracker();
 
 	// TODO: Make private?
 	public readonly suites = new DocumentCache<SuiteData>();
 
-	public constructor(private readonly config: { showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
+	public constructor(private readonly config: { experimentalTestTracking: boolean; showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
 
 	public addTestEventListener(listener: TestEventListener) {
 		this.testEventListeners.push(listener);
@@ -381,15 +385,17 @@ export class TestModel {
 			const originalRange = testNode.range;
 			testNode.range = range;
 
-			// If we're an Outline node being updated, and we have Results children that
-			// had the same range as us, they should be updated too, so Results nodes do not
-			// drift away from the location over time.
-			if (testNode.testSource === TestSource.Outline) {
-				const children = testNode.children
-					.filter((c) => c.testSource === TestSource.Result)
-					.filter((c) => !c.range || (originalRange && rangesEqual(c.range, originalRange)));
-				for (const child of children)
-					child.range = range;
+			if (!this.config.experimentalTestTracking) {
+				// If we're an Outline node being updated, and we have Results children that
+				// had the same range as us, they should be updated too, so Results nodes do not
+				// drift away from the location over time.
+				if (testNode.testSource === TestSource.Outline) {
+					const children = testNode.children
+						.filter((c) => c.testSource === TestSource.Result)
+						.filter((c) => !c.range || (originalRange && rangesEqual(c.range, originalRange)));
+					for (const child of children)
+						child.range = range;
+				}
 			}
 		} else {
 			testNode.testSource = source;
@@ -416,6 +422,26 @@ export class TestModel {
 		}
 
 		this.updateNode({ node: testNode });
+
+		// If this test is from a result, track its location so we can keep it
+		// up-to-date as the user edits the file.
+		if (this.config.experimentalTestTracking && source === TestSource.Result && testNode.testSource === TestSource.Result && range && testPath) {
+			void this.rangeTracker.trackRangeForUri(
+				URI.file(suitePath),
+				range,
+				(newRange) => {
+					if (newRange) {
+						testNode.range = newRange;
+						this.updateNode({ node: testNode });
+					} else {
+						this.removeNode(testNode);
+					}
+				},
+			).then(
+				(tracker) => testNode.rangeTracker = tracker,
+				(e) => console.error(e),
+			);
+		}
 
 		if (hasStarted && dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testStarted(dartCodeDebugSessionID, testNode));

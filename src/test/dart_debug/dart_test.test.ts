@@ -614,8 +614,8 @@ test/tree_test.dart [6/8 passed] Failed
 		});
 	}
 
-	// Failing test for https://github.com/Dart-Code/Dart-Code/issues/5668
-	it.skip("keeps test model updated as documents change", async () => {
+	it("keeps test model updated as documents change", async () => {
+		await setConfigForTest("dart", "experimentalTestTracking", true);
 		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
 		await openFile(helloWorldTestEmptyFile);
 		await setTestContent(`
