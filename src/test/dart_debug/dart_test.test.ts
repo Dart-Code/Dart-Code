@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import { writeFileSync } from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
@@ -615,6 +616,7 @@ test/tree_test.dart [6/8 passed] Failed
 
 	// Failing test for https://github.com/Dart-Code/Dart-Code/issues/5668
 	it.skip("keeps test model updated as documents change", async () => {
+		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
 		await openFile(helloWorldTestEmptyFile);
 		await setTestContent(`
 import 'package:test/test.dart';

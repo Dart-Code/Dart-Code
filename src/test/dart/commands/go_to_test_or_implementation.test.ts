@@ -5,7 +5,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { createFolderForFile, fsPath, tryDeleteFile } from "../../../shared/utils/fs";
 import { createTestFileAction, defaultDartTestFileContents } from "../../../shared/utils/test";
-import { activate, createTempTestFile, currentDoc, currentEditor, defer, emptyFile, helloWorldFolder, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestMainFile, helloWorldTestNotExistingEmptyFile, helloWorldTestTreeFile, openFile, privateApi, sb, tryDelete, waitForResult } from "../../helpers";
+import { activate, createTempTestFile, currentDoc, currentEditor, defer, emptyFile, helloWorldFolder, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, privateApi, sb, tryDelete, waitForResult } from "../../helpers";
 
 for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOrImplementationFile"] as const) {
 	describe(commandName, () => {
@@ -168,7 +168,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			});
 
 			it("can create a test file that doesn't already exist", async () => {
-				const testFilePath = fsPath(helloWorldTestNotExistingEmptyFile);
+				const testFilePath = fsPath(helloWorldTestEmptyFile);
 				const testFileRelativePath = "test/empty_test.dart";
 				tryDeleteFile(testFilePath);
 
@@ -200,7 +200,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 
 				// Check the file is open and has the correct selection.
 				const e = currentEditor();
-				assert.equal(e.document.uri.toString(), helloWorldTestNotExistingEmptyFile.toString());
+				assert.equal(e.document.uri.toString(), helloWorldTestEmptyFile.toString());
 				assert.equal(e.document.offsetAt(e.selection.start), expected.selectionOffset);
 				assert.equal(e.document.offsetAt(e.selection.end) - e.document.offsetAt(e.selection.start), expected.selectionLength);
 			});
