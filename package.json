@@ -3324,7 +3324,7 @@
 					"dart.experimentalTestTracking": {
 						"type": "boolean",
 						"default": false,
-						"markdownDescription": "Whether to enable experimental tracking of test locations. This may improve the experience when using packages like `pkg:test_reflective_loader` where tests are only discovered during test runs and not during coding (requires restart).",
+						"markdownDescription": "Whether to enable experimental tracking of test locations. This may improve the experience when using packages like `pkg:test_reflective_loader` where tests are only discovered during test runs and not during coding.",
 						"scope": "window"
 					},
 					"dart.experimentalDtdHandlers": {
