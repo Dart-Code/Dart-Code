@@ -423,6 +423,10 @@ export class TestModel {
 
 		this.updateNode({ node: testNode });
 
+		// Dispose any previous tracker, because we may create a new one below if this new
+		// location needs tracking.
+		void testNode.rangeTracker?.dispose();
+
 		// If this test is from a result, track its location so we can keep it
 		// up-to-date as the user edits the file.
 		if (this.config.experimentalTestTracking && source === TestSource.Result && testNode.testSource === TestSource.Result && range && testPath) {
