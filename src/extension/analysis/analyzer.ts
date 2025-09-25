@@ -85,7 +85,7 @@ export class LspAnalyzer extends Analyzer {
 						void envUtils.openInBrowser(uri.toString());
 						break;
 					default:
-						console.error(`Unable to open URI ${uri} as requested by LSP server. Unknown scheme.`);
+						this.logger.error(`Unable to open URI ${uri} as requested by LSP server. Unknown scheme.`);
 
 				}
 			});

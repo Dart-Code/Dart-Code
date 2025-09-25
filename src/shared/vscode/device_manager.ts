@@ -51,7 +51,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 		// Force a request for emulators to stash their names, so we can display
 		// the better name if the automatically-selected device happens to be an
 		// emulator.
-		this.getEmulators().then(() => this.updateStatusBar()).catch((e) => console.error(e));
+		this.getEmulators().then(() => this.updateStatusBar()).catch((e) => this.logger.error(e));
 
 		this.subscriptions.push(this.statusBarItem);
 
@@ -180,7 +180,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			.then((emulators) => emulatorDevices = emulators)
 			.finally(() => quickPick.busy = false)
 			.finally(() => updatePickableDeviceList())
-			.catch((e) => console.error(e));
+			.catch((e) => this.logger.error(e));
 
 		// If new devices are attached while the list is open, add them to the end.
 		const deviceAddedSubscription = this.daemon.registerForDeviceAdded(() => updatePickableDeviceList());

@@ -1,7 +1,7 @@
 import { URI } from "vscode-uri";
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
-import { IAmDisposable, Range } from "../interfaces";
+import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
@@ -171,7 +171,7 @@ export class TestModel {
 	// TODO: Make private?
 	public readonly suites = new DocumentCache<SuiteData>();
 
-	public constructor(private readonly config: { experimentalTestTracking: boolean; showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
+	public constructor(private readonly logger: Logger, private readonly config: { experimentalTestTracking: boolean; showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
 
 	public addTestEventListener(listener: TestEventListener) {
 		this.testEventListeners.push(listener);
@@ -439,7 +439,7 @@ export class TestModel {
 				},
 			).then(
 				(tracker) => testNode.rangeTracker = tracker,
-				(e) => console.error(e),
+				(e) => this.logger.error(e),
 			);
 		}
 
