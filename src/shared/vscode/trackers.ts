@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { URI } from "vscode-uri";
 import { Position, Range } from "../interfaces";
 import { disposeAll } from "../utils";
 
@@ -228,6 +229,14 @@ interface RangeTrackerEntry {
 export class DocumentRangeTracker implements vs.Disposable {
 	private readonly positionTracker = new DocumentPositionTracker();
 	private readonly rangeTrackers: RangeTrackerEntry[] = [];
+
+	public async trackRangeForUri(documentUri: URI, range: Range, callback: (newRange: Range | undefined) => void): Promise<vs.Disposable> {
+		// TODO(dantup): This being async doesn't feel good.
+		const document = vs.workspace.textDocuments.find((d) => d.uri.toString() === documentUri.toString())
+			?? await vs.workspace.openTextDocument(documentUri);
+
+		return this.trackRange(document, range, callback);
+	}
 
 	public trackRange(document: vs.TextDocument, range: Range, callback: (newRange: Range | undefined) => void): vs.Disposable {
 		let start: Position | undefined = range.start;
