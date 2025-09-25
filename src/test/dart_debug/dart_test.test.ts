@@ -11,9 +11,9 @@ import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
-describe("dart test debugger", () => {
+describe.only("dart test debugger", () => {
 	// We have tests that require external packages.
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activateWithoutAnalysis(null));
@@ -610,6 +610,78 @@ test/tree_test.dart [6/8 passed] Failed
 				});
 			}
 		});
+	}
+
+	// Failing test for https://github.com/Dart-Code/Dart-Code/issues/5668
+	it.skip("keeps test model updated as documents change", async () => {
+		await openFile(helloWorldTestEmptyFile);
+		await setTestContent(`
+import 'package:test/test.dart';
+import 'package:test_reflective_loader/test_reflective_loader.dart';
+
+void main() {
+  defineReflectiveSuite(() {
+    defineReflectiveTests(MyTest);
+  });
+
+  group('group1', () {
+    test('test1', () {
+      expect(1, 1);
+    });
+  });
+}
+
+@reflectiveTest
+class MyTest {
+  void test_reflected() {
+    expect(1, 1);
+  }
+}
+		`.trim());
+		await currentEditor().document.save();
+
+
+		// Initial locations.
+		await runWithoutDebugging(helloWorldTestEmptyFile);
+		await waitForResult(() => getTestRanges(helloWorldTestEmptyFile).includes("MyTest | test_reflected"));
+		assert.equal(
+			getTestRanges(helloWorldTestEmptyFile),
+			`
+test\\empty_test.dart
+	group1: 8:2-12:4
+		test1: 9:4-11:6
+	MyTest | test_reflected: 16:2-17:2
+			`.trim(),
+			"",
+		);
+
+		// Insert a line at the start of the doc and ensure everything updates.
+		await currentEditor().edit((eb) => eb.insert(new vs.Position(0, 0), "// new first line\n"));
+		await delay(50);
+		await waitForResult(() => getTestRanges(helloWorldTestEmptyFile) ===
+			`
+test\\empty_test.dart
+	group1: 9:2-13:4
+		test1: 10:4-12:6
+	MyTest | test_reflected: 17:2-18:2
+			`.trim(),
+		);
+	});
+
+	function getTestRanges(testSuiteUri: vs.Uri) {
+		const lines: string[] = [];
+		function appendNode(item: vs.TestItem, indent = 0) {
+			const rangeInfo = item.range ? `: ${item.range?.start.line}:${item.range?.start.character}-${item.range?.end.line}:${item.range?.end.character}` : "";
+			lines.push(`${"\t".repeat(indent)}${item.label}${rangeInfo}`);
+			item.children.forEach((child) => {
+				appendNode(child, indent + 1);
+			});
+		}
+		privateApi.testController.controller.items.forEach((item) => {
+			if (item.uri && fsPath(item.uri) === fsPath(testSuiteUri))
+				appendNode(item);
+		});
+		return lines.join("\n").trim();
 	}
 
 	async function checkRunSingleTestFromCodeLens(fileUri: vs.Uri, search: string, testName: string | undefined, lineDelta = 0) {
