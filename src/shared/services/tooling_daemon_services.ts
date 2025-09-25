@@ -2,7 +2,7 @@ export interface DtdResult { type: string }
 interface DtdError {
 	code: number,
 	message: string,
-	data: any,
+	data?: any,
 }
 type DtdSuccess = DtdResult & { type: "Success" };
 export interface DtdMessage { jsonrpc: "2.0", id?: string, method?: string, result?: DtdResult, error?: DtdError, params?: unknown }
@@ -55,7 +55,8 @@ export enum ServiceMethod {
 	readFileAsString = "FileSystem.readFileAsString",
 	streamListen = "streamListen",
 	streamCancel = "streamCancel",
-	editorGetActiveLocation = `${Service.Editor}.getActiveLocation`
+	editorGetActiveLocation = `${Service.Editor}.getActiveLocation`,
+	editorNavigateToCode = `${Service.Editor}.navigateToCode`,
 }
 
 export interface RegisterServiceParams {
@@ -111,6 +112,12 @@ export interface HotReloadParams {
 
 export interface HotRestartParams {
 	debugSessionId: string;
+}
+
+export interface NavigateToCodeParams {
+	uri: string;
+	line?: number; // 1-based.
+	column?: number; // 1-based.
 }
 
 export interface OpenDevToolsPageParams {

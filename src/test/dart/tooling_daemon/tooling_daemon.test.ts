@@ -81,6 +81,37 @@ describe("dart tooling daemon", () => {
 		}
 	});
 
+	it("should be able to navigate to code", async () => {
+		const daemon = privateApi.toolingDaemon;
+		assert.ok(daemon);
+		await daemon.connected;
+
+		const targetLine = 5;
+		const targetColumn = 1;
+		await daemon.callMethod(ServiceMethod.editorNavigateToCode, {
+			column: targetColumn,
+			line: targetLine,
+			uri: helloWorldMainFile.toString(),
+		});
+
+		const editor = vs.window.activeTextEditor;
+		assert.ok(editor);
+		assert.equal(fsPath(editor.document.uri), fsPath(helloWorldMainFile));
+		assert.equal(editor.selection.active.line, targetLine - 1);
+		assert.equal(editor.selection.active.character, targetColumn - 1);
+	});
+
+	it("should return an error for unsupported URI schemes", async () => {
+		const daemon = privateApi.toolingDaemon;
+		assert.ok(daemon);
+		await daemon.connected;
+
+		await assert.rejects(
+			daemon.callMethod(ServiceMethod.editorNavigateToCode, { uri: "https://dart.dev" }),
+			(error: any) => error?.code === 144,
+		);
+	});
+
 	it("should expose LSP methods via the analyzer", async function () {
 		if (!privateApi.dartCapabilities.supportsLspOverDtd)
 			this.skip();

@@ -10,7 +10,7 @@ import { CategoryLogger } from "../logging";
 import { PromiseCompleter, PromiseOr, disposeAll } from "../utils";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
-import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
+import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
 	protected readonly disposables: IAmDisposable[] = [];
@@ -115,12 +115,23 @@ export class DartToolingDaemon implements IAmDisposable {
 			// Handle service request.
 			const serviceHandler = this.serviceHandlers[method];
 			if (serviceHandler) {
-				const result = await serviceHandler(request.params);
-				this.send({
-					id,
-					jsonrpc: "2.0",
-					result,
-				});
+				try {
+					const result = await serviceHandler(request.params);
+					this.send({
+						id,
+						jsonrpc: "2.0",
+						result,
+					});
+				} catch (e: unknown) {
+					const error = this.asDtdError(e);
+					const message = error.message ?? `${e}`;
+					this.logger.error(`Failed handling service request ${method}: ${message}`);
+					this.send({
+						id,
+						jsonrpc: "2.0",
+						error,
+					});
+				}
 			}
 
 		} else if (id) {
@@ -162,6 +173,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public async registerService(service: Service.Editor, method: "hotReload", capabilities: object | undefined, f: (params: HotReloadParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "hotRestart", capabilities: object | undefined, f: (params: HotRestartParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service.Editor, method: "openDevToolsPage", capabilities: object | undefined, f: (params: OpenDevToolsPageParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
+	public async registerService(service: Service.Editor, method: "navigateToCode", capabilities: object | undefined, f: (params: NavigateToCodeParams) => PromiseOr<DtdResult & SuccessResult>): Promise<void>;
 	public async registerService(service: Service, method: string, capabilities: object | undefined, f: (params: any) => PromiseOr<DtdResult>): Promise<void> {
 		const serviceName = Service[service];
 		const resp = await this.callMethod(ServiceMethod.registerService, { service: serviceName, method, capabilities });
@@ -182,6 +194,7 @@ export class DartToolingDaemon implements IAmDisposable {
 	public callMethod(service: ServiceMethod.streamListen, params: { streamId: string }): Promise<DtdResult>;
 	public callMethod(service: ServiceMethod.streamCancel, params: { streamId: string }): Promise<DtdResult>;
 	public callMethod(service: ServiceMethod.editorGetActiveLocation): Promise<DtdResult & ActiveLocation>;
+	public callMethod(service: ServiceMethod.editorNavigateToCode, params: NavigateToCodeParams): Promise<DtdResult & SuccessResult>;
 	public async callMethod(method: ServiceMethod, params?: unknown): Promise<DtdResult> {
 		if (!this.connection)
 			return Promise.reject(`Unable to call ${method}, DTD connection is unavailable`);
@@ -224,6 +237,19 @@ export class DartToolingDaemon implements IAmDisposable {
 				streamId: Stream[stream],
 			},
 		});
+	}
+
+	private asDtdError(error: unknown): { code: number; message: string } {
+		let code = (error as any)?.code;
+		let message = (error as any)?.message;
+
+		if (typeof code !== "number")
+			code = -32000;
+
+		if (typeof message !== "string")
+			message = error?.toString() ?? "Unknown error";
+
+		return { code, message };
 	}
 
 	private send(json: DtdMessage): void {
