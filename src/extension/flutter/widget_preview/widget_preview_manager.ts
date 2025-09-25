@@ -13,7 +13,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	private readonly disposables: vs.Disposable[] = [];
 	private server: FlutterWidgetPreviewServer;
 	private view?: WidgetPreviewView;
-	private isSetUp = false;
+	private setUpPreviewPromise: Promise<void> | undefined;
 	private hasShownProgress = false;
 
 	constructor(
@@ -47,11 +47,14 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			void this.setUpPreview();
 	}
 
-	private async setUpPreview() {
-		if (this.isSetUp)
-			return;
-		this.isSetUp = true;
+	private async setUpPreview(): Promise<void> {
+		if (!this.setUpPreviewPromise)
+			this.setUpPreviewPromise = this.setUpPreviewImpl();
 
+		return this.setUpPreviewPromise;
+	}
+
+	private async setUpPreviewImpl(): Promise<void> {
 		try {
 			const dtdUri = await this.dtdUri;
 			let previewUrls: WebViewUrls = {
