@@ -248,7 +248,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): Promise<unknown> {
-		return Promise.all(subscriptions.slice().map((sub) => sub(notification))).catch((e) => console.error(e));
+		return Promise.all(subscriptions.slice().map((sub) => sub(notification))).catch((e) => this.logger.error(e));
 	}
 
 	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {
