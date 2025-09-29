@@ -1010,7 +1010,7 @@
 				},
 				{
 					"command": "dart.openObservatory",
-					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart"
+					"when": "dart-code:anyProjectLoaded && inDebugMode && debugType == dart && dart-code:observatorySupported"
 				},
 				{
 					"command": "dart.openAnalyzerDiagnostics",

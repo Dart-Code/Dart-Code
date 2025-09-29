@@ -30,7 +30,7 @@ export class DartCapabilities {
 	get supportsDevToolsPropertyEditor() { return versionIsAtLeast(this.version, "3.8.0-171.2"); }
 	get supportsLspOverDtd() { return versionIsAtLeast(this.version, "3.8.0-0"); }
 	get supportsDtdRegisterVmService() { return versionIsAtLeast(this.version, "3.9.0-0"); }
-
+	get supportsObservatory() { return !versionIsAtLeast(this.version, "3.9.0-0"); }
 	get supportsMcpServer() { return versionIsAtLeast(this.version, "3.9.0-163"); } // https://github.com/dart-lang/ai/pull/206#issuecomment-3020314522
 	get supportsMcpServerLogFile() { return versionIsAtLeast(this.version, "3.9.0-303"); }
 	get mcpServerRequiresExperimentalFlag() { return !versionIsAtLeast(this.version, "3.9.0-293"); }
