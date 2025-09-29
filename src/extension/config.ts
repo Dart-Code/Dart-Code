@@ -182,7 +182,7 @@ class Config {
 	get experimentalDtdHandlers(): boolean { return this.getConfig<boolean>("experimentalDtdHandlers", false); }
 	get experimentalPropertyEditor(): boolean { return this.getConfig<boolean>("experimentalPropertyEditor", false); }
 	get experimentalFlutterWidgetPreview(): boolean { return this.getConfig<boolean>("experimentalFlutterWidgetPreview", false); }
-	get experimentalFlutterWidgetPreviewLocation(): "beside" | "sidebar" { return this.getConfig<"beside" | "sidebar">("experimentalFlutterWidgetPreviewLocation", "sidebar"); }
+	get flutterWidgetPreviewLocation(): "beside" | "sidebar" { return this.getConfig<"beside" | "sidebar">("flutterWidgetPreviewLocation", "sidebar"); }
 	get experimentalTestTracking(): boolean { return this.getConfig<boolean>("experimentalTestTracking", false); }
 	get dtdEditorActiveLocationDelay(): number { return this.getConfig<number>("dtdEditorActiveLocationDelay", 200); }
 	get previewFlutterUiGuides(): boolean { return this.getConfig<boolean>("previewFlutterUiGuides", false); }

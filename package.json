@@ -2685,6 +2685,20 @@
 						"markdownDescription": "Sets the [Web renderer](https://flutter.dev/to/web-renderers) used for Flutter web apps.",
 						"scope": "window"
 					},
+					"dart.flutterWidgetPreviewLocation": {
+						"type": "string",
+						"enum": [
+							"beside",
+							"sidebar"
+						],
+						"enumDescriptions": [
+							"Open the Flutter Widget Preview beside the active editor",
+							"Open the Flutter Widget Preview in the sidebar"
+						],
+						"default": "sidebar",
+						"markdownDescription": "Where to display the Flutter Widget Preview.",
+						"scope": "window"
+					},
 					"dart.useFlutterDev": {
 						"default": false,
 						"type": "boolean",
@@ -3331,26 +3345,6 @@
 						"type": "boolean",
 						"default": false,
 						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) LSP handlers through DTD. This setting is passed to the analysis server in the connectToDtd request and therefore relies on DTD being supported and enabled for the analysis server (requires restart).",
-						"scope": "window"
-					},
-					"dart.experimentalFlutterWidgetPreview": {
-						"type": "boolean",
-						"default": false,
-						"markdownDescription": "EXPERIMENTAL: Whether to enable the Flutter Widget Preview experimental feature. This feature requires an unreleased version of Flutter from the `master` branch.",
-						"scope": "window"
-					},
-					"dart.experimentalFlutterWidgetPreviewLocation": {
-						"type": "string",
-						"enum": [
-							"beside",
-							"sidebar"
-						],
-						"enumDescriptions": [
-							"Open the Flutter Widget Preview beside the active editor",
-							"Open the Flutter Widget Preview in the sidebar"
-						],
-						"default": "sidebar",
-						"markdownDescription": "Where to display the Flutter Widget Preview.",
 						"scope": "window"
 					}
 				}

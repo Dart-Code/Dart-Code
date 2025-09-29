@@ -429,7 +429,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const projectFolders = await projectFinder.findAllProjectFolders({ requirePubspec: true, searchDepth: config.projectSearchDepth });
 		const firstFlutterProject = projectFolders.find(isFlutterProjectFolder);
 		if (firstFlutterProject)
-			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, firstFlutterProject, config.experimentalFlutterWidgetPreviewLocation));
+			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, firstFlutterProject, config.flutterWidgetPreviewLocation));
 	}
 
 	// Debug commands.
