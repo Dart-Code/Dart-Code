@@ -264,51 +264,56 @@ describe(`flutter run debugger (only test device)`, () => {
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
 
-	it("can hot reload with customRequest", async () => {
+	it("can hot reload with customRequest, using command, on-save, on-save with custom glob, external modification", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
 			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
 			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
 		);
-
-		await watchPromise("hot_reloads_successfully->hotReload", dc.hotReload());
-
-		await waitAllThrowIfTerminates(dc,
-			watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
-			watchPromise("hot_reloads_successfully->terminateRequest", dc.terminateRequest()),
-		);
-	});
-
-	it("can hot reload using command", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
-			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
-		);
-
-		await vs.commands.executeCommand("flutter.hotReload");
-
-		await waitAllThrowIfTerminates(dc,
-			watchPromise("hot_reloads_successfully->waitForEvent:terminated", dc.waitForEvent("terminated")),
-			watchPromise("hot_reloads_successfully->terminateRequest", dc.terminateRequest()),
-		);
-	});
-
-	it("hot reloads on save", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
 		await delayBeforeRestart();
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForHotReload(),
-			saveTrivialChangeToFile(flutterHelloWorldMainFile),
-		);
+
+		// can hot reload with customRequest
+		{
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForHotReload(),
+				dc.hotReload(),
+			);
+		}
+
+		// can hot reload using command
+		{
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForHotReload(),
+				Promise.resolve(vs.commands.executeCommand("flutter.hotReload")),
+			);
+		}
+
+		// hot reloads on save
+		{
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForHotReload(),
+				saveTrivialChangeToFile(flutterHelloWorldMainFile),
+			);
+		}
+
+		// hot reloads on save of custom glob
+		{
+			await setConfigForTest("dart", "hotReloadPatterns", ["**/*.md"]);
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForHotReload(),
+				saveTrivialChangeToFile(flutterHelloWorldReadmeFile),
+			);
+		}
+
+		// hot reloads on external modification of file
+		{
+			await setConfigForTest("dart", "previewHotReloadOnSaveWatcher", true);
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForHotReload(),
+				makeTrivialChangeToFileDirectly(flutterHelloWorldMainFile),
+			);
+		}
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
@@ -316,82 +321,30 @@ describe(`flutter run debugger (only test device)`, () => {
 		);
 	});
 
-	it("hot reloads on save of custom glob", async () => {
-		await setConfigForTest("dart", "hotReloadPatterns", ["**/*.md"]);
+	it("can hot restart using customRequest, command", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
 			dc.configurationSequence(),
 			dc.launch(config),
 		);
-
 		await delayBeforeRestart();
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForHotReload(),
-			saveTrivialChangeToFile(flutterHelloWorldReadmeFile),
-		);
 
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
+		// can hot restart using customRequest
+		{
+			await waitAllThrowIfTerminates(dc,
+				dc.assertOutputContains("stdout", "Restarted app"),
+				dc.customRequest("hotRestart"),
+			);
+		}
 
-	it("hot reloads on external modification of file", async () => {
-		await setConfigForTest("dart", "previewHotReloadOnSaveWatcher", true);
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
-		await delayBeforeRestart();
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForHotReload(),
-			makeTrivialChangeToFileDirectly(flutterHelloWorldMainFile),
-		);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("can hot restart using customRequest", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
-		await delayBeforeRestart();
-		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("stdout", "Restarted app"),
-			dc.customRequest("hotRestart"),
-		);
-
-		await delayBeforeRestart();
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("can hot restart using command", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
-		await delayBeforeRestart();
-		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("stdout", "Restarted app"),
-			vs.commands.executeCommand("flutter.hotRestart") as Promise<void>,
-		);
+		// can hot restart using command
+		{
+			await waitAllThrowIfTerminates(dc,
+				dc.assertOutputContains("stdout", "Restarted app"),
+				vs.commands.executeCommand("flutter.hotRestart") as Promise<void>,
+			);
+		}
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
