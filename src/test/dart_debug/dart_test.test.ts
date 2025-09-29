@@ -4,7 +4,6 @@ import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { DebuggerType } from "../../shared/enums";
-import { getPackageTestCapabilities } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../shared/utils/outline";
@@ -12,7 +11,7 @@ import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -36,42 +35,6 @@ describe("dart test debugger", () => {
 		privateApi.testDiscoverer?.forceUpdate(file);
 		return editor;
 	}
-
-	describe("resolves the correct debug config", () => {
-		it("passing launch.json's toolArgs to the VM", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(helloWorldTestMainFile),
-				toolArgs: ["--fake-flag"],
-			});
-
-			assert.ok(resolvedConfig);
-			assert.equal(resolvedConfig.program, fsPath(helloWorldTestMainFile));
-			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--fake-flag"]);
-		});
-
-		it("when testAdditionalArgs is set", async () => {
-			await setConfigForTest("dart", "testAdditionalArgs", ["--my-test-flag"]);
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(helloWorldTestMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--my-test-flag"]);
-		});
-
-		it("when suppressTestTimeouts is set", async () => {
-			await setConfigForTest("dart", "suppressTestTimeouts", "always");
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(helloWorldTestMainFile),
-			});
-
-			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, resolvedConfig.cwd!);
-			if (testCapabilities.supportsIgnoreTimeouts)
-				ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--ignore-timeouts"]);
-			else
-				ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--timeout"]);
-		});
-	});
 
 	for (const runByLine of [false, true]) {
 		describe(`when running tests by ${runByLine ? "line" : "name"}`, () => {

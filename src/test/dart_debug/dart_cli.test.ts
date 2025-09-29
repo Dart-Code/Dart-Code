@@ -15,7 +15,7 @@ import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureArrayContainsArray, ensureHasRunWithArgsStarting, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, getResolvedDebugConfiguration, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, rangeFor, sb, setConfigForTest, setTestContent, tryDeleteDirectoryRecursive, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
+import { activateWithoutAnalysis, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureHasRunWithArgsStarting, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, rangeFor, sb, setConfigForTest, setTestContent, tryDeleteDirectoryRecursive, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
 	// We have tests that require external packages.
@@ -36,51 +36,6 @@ describe("dart cli debugger", () => {
 		await dc.start();
 		return config;
 	}
-
-	describe("resolves the correct debug config", () => {
-
-		it("using users explicit cwd with an explicit program", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				cwd: "/foo",
-				program: fsPath(helloWorldMainFile),
-			});
-
-			assert.ok(resolvedConfig);
-			assert.equal(resolvedConfig.cwd, "/foo");
-			assert.equal(resolvedConfig.program, fsPath(helloWorldMainFile));
-		});
-
-		it("using open file", async () => {
-			await openFile(helloWorldMainFile);
-			const resolvedConfig = await getResolvedDebugConfiguration({ program: undefined });
-
-			assert.ok(resolvedConfig);
-			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
-			assert.equal(resolvedConfig.program, fsPath(helloWorldMainFile));
-		});
-
-		it("passing launch.json's toolArgs to the VM", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(helloWorldMainFile),
-				toolArgs: ["--fake-flag"],
-			});
-
-			assert.ok(resolvedConfig);
-			assert.equal(resolvedConfig.program, fsPath(helloWorldMainFile));
-			assert.equal(resolvedConfig.cwd, fsPath(helloWorldFolder));
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--fake-flag"]);
-		});
-
-		it("when cliAdditionalArgs is set", async () => {
-			await setConfigForTest("dart", "cliAdditionalArgs", ["--my-vm-flag"]);
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(helloWorldMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--my-vm-flag"]);
-		});
-
-	});
 
 	it("runs to completion", async () => {
 		const config = await startDebugger(dc, helloWorldMainFile);

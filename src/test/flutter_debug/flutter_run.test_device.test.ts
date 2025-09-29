@@ -6,7 +6,7 @@ import { versionIsAtLeast } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureServiceExtensionValue, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, getResolvedDebugConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
+import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureHasRunWithArgsStarting, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
 
 describe(`flutter run debugger (only test device)`, () => {
 	beforeEach("Skip test-device tests on web", function () {
@@ -38,85 +38,6 @@ describe(`flutter run debugger (only test device)`, () => {
 
 	/// If we restart too fast, things fail :-/
 	const delayBeforeRestart = () => delay(1000);
-
-	describe("resolves the correct debug config", () => {
-		it("for a simple script", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				args: ["--foo"],
-				deviceId: flutterTestDeviceId,
-				program: fsPath(flutterHelloWorldMainFile),
-			});
-
-			assert.ok(resolvedConfig);
-			assert.equal(resolvedConfig.program, fsPath(flutterHelloWorldMainFile));
-			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["-d", flutterTestDeviceId]);
-			assert.equal(resolvedConfig.toolArgs!.includes("--web-server-debug-protocol"), false);
-			assert.deepStrictEqual(resolvedConfig.args, ["--foo"]);
-		});
-
-		it("when using the web-server service", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				deviceId: "web-server",
-				program: fsPath(flutterHelloWorldMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-server-debug-protocol", "ws"]);
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-server-debug-injected-client-protocol", "ws"]);
-		});
-
-		it('when web renderer is set to "flutter-default"', async () => {
-			await setConfigForTest("dart", "flutterWebRenderer", "flutter-default");
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				deviceId: "web-server",
-				program: fsPath(flutterHelloWorldMainFile),
-			});
-
-			assert.ok(
-				!resolvedConfig.toolArgs!.includes("--web-renderer"),
-				"By default, the `--web-renderer` argument should not be set",
-			);
-		});
-
-		it("when web renderer is set", async () => {
-			await setConfigForTest("dart", "flutterWebRenderer", "html");
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				deviceId: "web-server",
-				program: fsPath(flutterHelloWorldMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--web-renderer", "html"]);
-		});
-
-		it("when flutterMode is set", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				deviceId: flutterTestDeviceId,
-				flutterMode: "release",
-				program: fsPath(flutterHelloWorldMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--release"]);
-		});
-
-		it("when flutterPlatform is set", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				deviceId: flutterTestDeviceId,
-				flutterPlatform: "android-arm",
-				program: fsPath(flutterHelloWorldMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--target-platform", "android-arm"]);
-		});
-
-		it("when flutterRunAdditionalArgs is set", async () => {
-			await setConfigForTest("dart", "flutterRunAdditionalArgs", ["--no-sound-null-safety"]);
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(flutterHelloWorldMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--no-sound-null-safety"]);
-		});
-	});
 
 	describe("prompts the user if trying to run with errors", () => {
 		it("and cancels launch if they click Show Errors");

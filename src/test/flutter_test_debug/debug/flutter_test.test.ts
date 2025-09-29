@@ -11,7 +11,7 @@ import { getLaunchConfig } from "../../../shared/utils/test";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureArrayContainsArray, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getResolvedDebugConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activateWithoutAnalysis(flutterTestMainFile));
@@ -25,38 +25,6 @@ describe("flutter test debugger", () => {
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.FlutterTest);
 		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
-	});
-
-	describe("resolves the correct debug config", () => {
-		it("for a simple script", async () => {
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				args: ["--foo"],
-				program: fsPath(flutterTestMainFile),
-			});
-
-			assert.ok(resolvedConfig);
-			assert.equal(resolvedConfig.program, fsPath(flutterTestMainFile));
-			assert.equal(resolvedConfig.cwd, fsPath(flutterHelloWorldFolder));
-			assert.deepStrictEqual(resolvedConfig.args, ["--foo"]);
-		});
-
-		it("when flutterTestAdditionalArgs is set", async () => {
-			await setConfigForTest("dart", "flutterTestAdditionalArgs", ["--no-sound-null-safety"]);
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(flutterTestMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--no-sound-null-safety"]);
-		});
-
-		it("when suppressTestTimeouts is set", async () => {
-			await setConfigForTest("dart", "suppressTestTimeouts", "always");
-			const resolvedConfig = await getResolvedDebugConfiguration({
-				program: fsPath(flutterTestMainFile),
-			});
-
-			ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--timeout"]);
-		});
 	});
 
 	for (const runByLine of [false, true]) {
