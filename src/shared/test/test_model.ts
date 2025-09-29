@@ -224,10 +224,10 @@ export class TestModel {
 		toDelete.forEach((node) => this.removeNode(node));
 	}
 
-	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
+	public getOrCreateSuite(suitePath: string, supportsCoverage: boolean): [SuiteData, boolean] {
 		let suite = this.suites.getForPath(suitePath);
 		if (!suite) {
-			suite = new SuiteData(suitePath, this.isPathInsideFlutterProject(suitePath));
+			suite = new SuiteData(suitePath, supportsCoverage);
 			this.suites.setForPath(suitePath, suite);
 			return [suite, true];
 		}
@@ -309,7 +309,8 @@ export class TestModel {
 	}
 
 	public suiteDiscovered(dartCodeDebugSessionID: string | undefined, suitePath: string): SuiteData {
-		const [suite] = this.getOrCreateSuite(suitePath);
+		const supportsCoverage = this.isPathInsideFlutterProject(suitePath) || ;
+		const [suite] = this.getOrCreateSuite(suitePath, supportsCoverage);
 		this.updateNode({ node: suite.node });
 
 		this.testEventListeners.forEach((l) => l.suiteDiscovered(dartCodeDebugSessionID, suite.node));
@@ -551,7 +552,7 @@ export class SuiteData {
 	private readonly groupsByName = new Map<string, GroupNode>();
 	private readonly testsById = new Map<string, TestNode>();
 	private readonly testsByName = new Map<string, TestNode>();
-	constructor(public readonly path: string, public readonly isFlutterSuite: boolean) {
+	constructor(public readonly path: string, public readonly supportsCoverage: boolean) {
 		this.node = new SuiteNode(this);
 	}
 	private static unnamedItemMarker = "<!!!###unnamed-test-item###!!!>";
