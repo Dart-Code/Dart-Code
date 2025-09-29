@@ -15,6 +15,8 @@ export class FlutterCapabilities {
 	get requiresForcedDebugModeForNoDebug() { return versionIsAtLeast(this.version, "3.13.0-0"); } // TODO(dantup): Add upper bound when we don't need this.
 	get supportsSkeleton() { return !versionIsAtLeast(this.version, "3.29.0"); }
 	get supportsWidgetPreview() { return versionIsAtLeast(this.version, "3.36.0-1"); }
+	TODO(dantup): Update this version when we know a version with the Windows fix.
+	get supportsWidgetPreviewByDefault() { return versionIsAtLeast(this.version, "3.37.0-0"); }
 	// TODO: Update these (along with Dart) when supported.
 	get webSupportsEvaluation() { return false; }
 	get webSupportsDebugging() { return true; }
