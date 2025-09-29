@@ -1676,7 +1676,7 @@
 				{
 					"id": "sidebarWidgetPreviewContainer",
 					"title": "Flutter: Widget Preview",
-					"icon": "media/icons/sidebar/flutter.svg"
+					"icon": "media/icons/sidebar/widget_preview.svg"
 				}
 			]
 		},
@@ -1784,7 +1784,7 @@
 					"type": "webview",
 					"name": "",
 					"when": "dart-code:anyFlutterProjectLoaded && dart-code:sidebar.widgetPreview",
-					"icon": "media/icons/sidebar/flutter.svg"
+					"icon": "media/icons/sidebar/widget_preview.svg"
 				}
 			]
 		},
