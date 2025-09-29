@@ -650,7 +650,7 @@ class MyTest {
 		assert.equal(
 			getTestRanges(helloWorldTestEmptyFile),
 			`
-test\\empty_test.dart
+test/empty_test.dart
 	group1: 8:2-12:4
 		test1: 9:4-11:6
 	MyTest | test_reflected: 17:2-18:2
@@ -666,7 +666,7 @@ test\\empty_test.dart
 		assert.equal(
 			getTestRanges(helloWorldTestEmptyFile),
 			`
-test\\empty_test.dart
+test/empty_test.dart
 	group1: 9:2-13:4
 		test1: 10:4-12:6
 	MyTest | test_reflected: 18:2-19:2
@@ -677,8 +677,10 @@ test\\empty_test.dart
 	function getTestRanges(testSuiteUri: vs.Uri) {
 		const lines: string[] = [];
 		function appendNode(item: vs.TestItem, indent = 0) {
+			// Always use forward slashes in the suite paths so the tests work on all platforms.
+			const label = item.uri ? item.label.replaceAll("\\", "/") : item.label;
 			const rangeInfo = item.range ? `: ${item.range?.start.line}:${item.range?.start.character}-${item.range?.end.line}:${item.range?.end.character}` : "";
-			lines.push(`${"\t".repeat(indent)}${item.label}${rangeInfo}`);
+			lines.push(`${"\t".repeat(indent)}${label}${rangeInfo}`);
 			item.children.forEach((child) => {
 				appendNode(child, indent + 1);
 			});
