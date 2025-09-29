@@ -53,56 +53,28 @@ describe("flutter run debugger (attach)", () => {
 		return config;
 	}
 
-	it("attaches to a Flutter application and collects stdout", async () => {
+	it("attaches to a Flutter application, collects stdout, remains active, detaches without stopping it", async () => {
 		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
 		const vmServiceUri = await process.vmServiceUri;
 		const config = await attachDebugger(vmServiceUri);
 
+		// Attaches and collects stdout.
 		await waitAllThrowIfTerminates(dc,
+			watchPromise("attaches_and_waits->debuggerReady", dc.debuggerReady()),
 			watchPromise("attaches_and_collects_stdout->configurationSequence", dc.configurationSequence()),
 			watchPromise("attaches_and_collects_stdout->output", dc.assertOutput("stdout", "Hello, world!")),
 			watchPromise("attaches_and_collects_stdout->launch", dc.launch(config)),
 		);
-	});
 
-	it("attaches to a Flutter application and remains active until told to detach", async () => {
-		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
-		const vmServiceUri = await process.vmServiceUri;
-		const config = await attachDebugger(vmServiceUri);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.debuggerReady(),
-			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
-			watchPromise("attaches_and_waits->launch", dc.launch(config)),
-		);
-
-		// Ensure we're responsive after 1 second.
+		// Remains active.
 		await delay(1000);
 		await watchPromise("attaches_and_waits->threadsRequest", dc.threadsRequest());
 
+		// Detaches without stopping the process.
 		await waitAllThrowIfTerminates(dc,
 			watchPromise("attaches_and_waits->waitForEvent:terminated", dc.waitForEvent("terminated")),
 			watchPromise("attaches_and_waits->terminateRequest", dc.terminateRequest()),
 		);
-	});
-
-	it("detaches without terminating the app", async () => {
-		const process = await spawnFlutterProcess(flutterHelloWorldMainFile);
-		const vmServiceUri = await process.vmServiceUri;
-		const config = await attachDebugger(vmServiceUri);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.debuggerReady(),
-			watchPromise("attaches_and_waits->configurationSequence", dc.configurationSequence()),
-			watchPromise("attaches_and_waits->launch", dc.launch(config)),
-		);
-
-		await waitAllThrowIfTerminates(dc,
-			watchPromise("attaches_and_waits->waitForEvent:terminated", dc.waitForEvent("terminated")),
-			watchPromise("attaches_and_waits->terminateRequest", dc.terminateRequest()),
-		);
-
-		// Ensure the main process is still alive.
 		await delay(1000);
 		assert.equal(process.hasExited, false);
 	});
