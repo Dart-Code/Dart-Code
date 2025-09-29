@@ -59,23 +59,29 @@ describe("flutter run debugger (attach)", () => {
 		const config = await attachDebugger(vmServiceUri);
 
 		// Attaches and collects stdout.
-		await waitAllThrowIfTerminates(dc,
-			watchPromise("attaches_and_waits->debuggerReady", dc.debuggerReady()),
-			watchPromise("attaches_and_collects_stdout->configurationSequence", dc.configurationSequence()),
-			watchPromise("attaches_and_collects_stdout->output", dc.assertOutput("stdout", "Hello, world!")),
-			watchPromise("attaches_and_collects_stdout->launch", dc.launch(config)),
-		);
+		{
+			await waitAllThrowIfTerminates(dc,
+				watchPromise("attaches_and_waits->debuggerReady", dc.debuggerReady()),
+				watchPromise("attaches_and_collects_stdout->configurationSequence", dc.configurationSequence()),
+				watchPromise("attaches_and_collects_stdout->output", dc.assertOutput("stdout", "Hello, world!")),
+				watchPromise("attaches_and_collects_stdout->launch", dc.launch(config)),
+			);
+		}
 
 		// Remains active.
-		await delay(1000);
-		await watchPromise("attaches_and_waits->threadsRequest", dc.threadsRequest());
+		{
+			await delay(1000);
+			await watchPromise("attaches_and_waits->threadsRequest", dc.threadsRequest());
+		}
 
 		// Detaches without stopping the process.
-		await waitAllThrowIfTerminates(dc,
-			watchPromise("attaches_and_waits->waitForEvent:terminated", dc.waitForEvent("terminated")),
-			watchPromise("attaches_and_waits->terminateRequest", dc.terminateRequest()),
-		);
-		await delay(1000);
-		assert.equal(process.hasExited, false);
+		{
+			await waitAllThrowIfTerminates(dc,
+				watchPromise("attaches_and_waits->waitForEvent:terminated", dc.waitForEvent("terminated")),
+				watchPromise("attaches_and_waits->terminateRequest", dc.terminateRequest()),
+			);
+			await delay(1000);
+			assert.equal(process.hasExited, false);
+		}
 	});
 });

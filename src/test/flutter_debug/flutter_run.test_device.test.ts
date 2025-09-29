@@ -168,7 +168,7 @@ describe(`flutter run debugger (only test device)`, () => {
 		});
 	});
 
-	it("can override platform", async () => {
+	it("can override platform, toggle brightness/theme", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
@@ -176,6 +176,7 @@ describe(`flutter run debugger (only test device)`, () => {
 			dc.launch(config),
 		);
 
+		// Can override platform
 		// Wait for Platform extension before trying to call it.
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.PlatformOverride), "Platform override loaded");
 
@@ -186,20 +187,7 @@ describe(`flutter run debugger (only test device)`, () => {
 			await ensureServiceExtensionValue(VmServiceExtension.PlatformOverride, platform, dc);
 		}
 
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("can toggle theme", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
+		// Can toggle brightness/theme
 		// Wait for Brightness extension before trying to call it.
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
 
@@ -215,7 +203,7 @@ describe(`flutter run debugger (only test device)`, () => {
 		);
 	});
 
-	it("re-sends theme on hot restart if set by us", async () => {
+	it("re-sends theme on hot restart only if set by us, not if set by someone else", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
@@ -225,55 +213,42 @@ describe(`flutter run debugger (only test device)`, () => {
 
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
 
-		// Set the brightness to Dark through our toggle. This leaves us in control so we should
-		// we-transmit it.
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
-		await vs.commands.executeCommand("flutter.toggleBrightness");
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+		// Re-sends theme on hot restart if set by us.
+		{
+			// Set the brightness to Dark through our toggle. This leaves us in control so we should
+			// we-transmit it.
+			await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+			await vs.commands.executeCommand("flutter.toggleBrightness");
+			await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
 
-		// Hot restart, and wait for the service extension to come back.
-		await vs.commands.executeCommand("flutter.hotRestart");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
-		await delay(100); // Allow time for the values to be re-sent.
+			// Hot restart, and wait for the service extension to come back.
+			await vs.commands.executeCommand("flutter.hotRestart");
+			await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
+			await delay(100); // Allow time for the values to be re-sent.
 
-		// Ensure the current value is still Dark (ie. we re-sent it).
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+			// Ensure the current value is still Dark (ie. we re-sent it).
+			await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
+		}
 
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
+		// Does not re-send theme on hot restart if set by someone else.
+		{
+			// Now check that it's not set if "someone else" updated it.
+			await vs.commands.executeCommand("flutter.toggleBrightness");
+			await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
 
-	it("does not re-send theme on hot restart if set by someone else", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
+			// Now set it directly (emulating another tool). This should drop our override so we would not re-send it.
+			await privateApi.debugCommands.vmServices.sendExtensionValue(dc.currentSession, VmServiceExtension.BrightnessOverride, "Brightness.dark");
+			await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
 
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
+			// Hot restart, and wait for the service extension to come back.
+			await vs.commands.executeCommand("flutter.hotRestart");
+			await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
+			await delay(100); // Allow time for the values to be re-sent.
 
-		// First toggle the brightness ourselves, so we have a local override value.
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
-		await vs.commands.executeCommand("flutter.toggleBrightness");
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
-		await vs.commands.executeCommand("flutter.toggleBrightness");
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
-
-		// Now set it directly (emulating another tool). This should drop our override so we would not re-send it.
-		await privateApi.debugCommands.vmServices.sendExtensionValue(dc.currentSession, VmServiceExtension.BrightnessOverride, "Brightness.dark");
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
-
-		// Hot restart, and wait for the service extension to come back.
-		await vs.commands.executeCommand("flutter.hotRestart");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
-		await delay(100); // Allow time for the values to be re-sent.
-
-		// Ensure the current value has reverted (since it was the other tools job to re-send it, but in
-		// this case that other tool is fake and did not).
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+			// Ensure the current value has reverted (since it was the other tools job to re-send it, but in
+			// this case that other tool is fake and did not).
+			await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
+		}
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
