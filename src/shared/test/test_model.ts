@@ -24,6 +24,7 @@ export abstract class TreeNode {
 	public testCountSkip = 0;
 
 	public description: string | undefined;
+	public rangeTracker: IAmDisposable | undefined;
 
 	constructor(public readonly suiteData: SuiteData) { }
 
@@ -80,6 +81,10 @@ export abstract class TreeNode {
 	set isStale(value: boolean) {
 		this._isStale = value;
 	}
+
+	public dispose(): void {
+		void this.rangeTracker?.dispose();
+	}
 }
 
 export class SuiteNode extends TreeNode {
@@ -114,7 +119,6 @@ export class TestNode extends TreeNode {
 
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
-	public rangeTracker: IAmDisposable | undefined;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
 	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, public range: Range | undefined) {
@@ -265,10 +269,8 @@ export class TestModel {
 	}
 
 	public updateNode(event?: NodeDidChangeEvent) {
-		if (event?.nodeWasRemoved
-			// TODO(dantup): Remove this and handle groups - see #5738
-			&& event.node instanceof TestNode)
-			void event.node.rangeTracker?.dispose();
+		if (event?.nodeWasRemoved)
+			event.node.dispose();
 
 		this.onDidChangeDataEmitter.fire(event);
 	}
@@ -361,6 +363,7 @@ export class TestModel {
 			groupNode.parent.children.push(groupNode);
 
 		this.updateNode({ node: groupNode });
+		this.setupRangeTracking(groupNode, source, suitePath, range, groupPath);
 
 		this.testEventListeners.forEach((l) => l.groupDiscovered(dartCodeDebugSessionID, groupNode));
 
@@ -427,30 +430,7 @@ export class TestModel {
 		}
 
 		this.updateNode({ node: testNode });
-
-		// Dispose any previous tracker, because we may create a new one below if this new
-		// location needs tracking.
-		void testNode.rangeTracker?.dispose();
-
-		// If this test is from a result, track its location so we can keep it
-		// up-to-date as the user edits the file.
-		if (this.config.experimentalTestTracking && source === TestSource.Result && testNode.testSource === TestSource.Result && range && testPath) {
-			void this.rangeTracker.trackRangeForUri(
-				URI.file(suitePath),
-				range,
-				(newRange) => {
-					if (newRange) {
-						testNode.range = newRange;
-						this.updateNode({ node: testNode });
-					} else {
-						this.removeNode(testNode);
-					}
-				},
-			).then(
-				(tracker) => testNode.rangeTracker = tracker,
-				(e) => this.logger.error(e),
-			);
-		}
+		this.setupRangeTracking(testNode, source, suitePath, range, testPath);
 
 		if (hasStarted && dartCodeDebugSessionID)
 			this.testEventListeners.forEach((l) => l.testStarted(dartCodeDebugSessionID, testNode));
@@ -471,6 +451,32 @@ export class TestModel {
 			const regex = new RegExp(makeRegexForTests([{ name: child.name, isGroup: child instanceof GroupNode, position: undefined }]));
 			if (regex.test(name))
 				return child as any as T;
+		}
+	}
+
+	private setupRangeTracking(node: GroupNode | TestNode, source: TestSource, suitePath: string, range: Range | undefined, nodePath: string | undefined): void {
+		// Dispose any previous tracker, because we may create a new one below if this new
+		// location needs tracking.
+		node.dispose();
+
+		// If this node is from a result, track its location so we can keep it
+		// up-to-date as the user edits the file.
+		if (this.config.experimentalTestTracking && source === TestSource.Result && node.testSource === TestSource.Result && range && nodePath) {
+			void this.rangeTracker.trackRangeForUri(
+				URI.file(suitePath),
+				range,
+				(newRange) => {
+					if (newRange) {
+						node.range = newRange;
+						this.updateNode({ node });
+					} else {
+						this.removeNode(node);
+					}
+				},
+			).then(
+				(tracker) => node.rangeTracker = tracker,
+				(e) => this.logger.error(e),
+			);
 		}
 	}
 
