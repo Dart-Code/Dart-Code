@@ -265,6 +265,11 @@ export class TestModel {
 	}
 
 	public updateNode(event?: NodeDidChangeEvent) {
+		if (event?.nodeWasRemoved
+			// TODO(dantup): Remove this and handle groups - see #5738
+			&& event.node instanceof TestNode)
+			void event.node.rangeTracker?.dispose();
+
 		this.onDidChangeDataEmitter.fire(event);
 	}
 
