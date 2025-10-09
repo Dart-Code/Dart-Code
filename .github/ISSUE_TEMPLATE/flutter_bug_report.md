@@ -1,8 +1,8 @@
 ---
-name: Dart extension bug report
-about: Report something not working as expected in the Dart extension
+name: Flutter extension bug report
+about: Report something not working as expected in the Flutter extension
 title: ''
-labels: is bug
+labels: is bug, is flutter
 assignees: ''
 
 ---
