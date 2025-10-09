@@ -1654,7 +1654,7 @@
 					"icon": "media/icons/sidebar/flutter.svg"
 				},
 				{
-					"id": "flutterPropertyEditor",
+					"id": "flutterPropertyEditorContainer",
 					"title": "Flutter Property Editor",
 					"icon": "media/icons/sidebar/property_editor.svg"
 				},
@@ -1675,7 +1675,7 @@
 				},
 				{
 					"id": "sidebarWidgetPreviewContainer",
-					"title": "Flutter: Widget Preview",
+					"title": "Flutter Widget Preview",
 					"icon": "media/icons/sidebar/widget_preview.svg"
 				}
 			]
@@ -1704,7 +1704,7 @@
 					"icon": "media/icons/sidebar/flutter.svg"
 				}
 			],
-			"flutterPropertyEditor": [
+			"flutterPropertyEditorContainer": [
 				{
 					"id": "flutterPropertyEditor",
 					"type": "webview",
@@ -1782,7 +1782,7 @@
 				{
 					"id": "sidebarWidgetPreview",
 					"type": "webview",
-					"name": "",
+					"name": "Flutter Widget Preview",
 					"when": "dart-code:anyFlutterProjectLoaded && dart-code:sidebar.widgetPreview",
 					"icon": "media/icons/sidebar/widget_preview.svg"
 				}
