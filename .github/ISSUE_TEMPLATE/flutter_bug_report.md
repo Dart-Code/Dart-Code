@@ -29,4 +29,4 @@ You can run the **Dart: Collect Diagnostic Information** command from the VS Cod
  - VS Code version:
  - Dart extension version:
  - Dart/Flutter SDK version:
- - Target device (if the issue relates to Flutter debugging):
+ - Target device:
