@@ -1,6 +1,6 @@
 ---
-name: Bug report
-about: Report something not working as expected
+name: Dart extension bug report
+about: Report something not working as expected in the Dart extension
 title: ''
 labels: is bug
 assignees: ''
