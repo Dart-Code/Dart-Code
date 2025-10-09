@@ -12,7 +12,7 @@ import { config } from "../config";
 import * as util from "../utils";
 import { getExcludedFolders } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
-import { BaseSdkCommands, commandState } from "./sdk";
+import { BaseSdkCommands, commandState, OperationProgress } from "./sdk";
 
 let isFetchingPackages = false;
 let runPubGetDelayTimer: NodeJS.Timeout | undefined;
@@ -49,13 +49,31 @@ export class PackageCommands extends BaseSdkCommands {
 		this.setupPubspecWatcher();
 	}
 
-	private async getPackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
+	private async getPackages(
+		uri: string | vs.Uri | vs.Uri[] | undefined,
+		operationProgress?: OperationProgress,
+	) {
 		if (!config.enablePub)
 			return;
 
+		// If we don't have a parent progress, add one.
+		if (!operationProgress) {
+			await vs.window.withProgress({
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: "pub get",
+			}, (progress, token) => this.getPackages(uri, { progressReporter: progress, cancellationToken: token }));
+			return;
+		}
+
+		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
-			for (const item of uri) {
-				await this.getPackages(item);
+			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
+			for (const item of uris) {
+				if (operationProgress.cancellationToken.isCancellationRequested)
+					break;
+
+				await this.getPackages(item, operationProgress);
 			}
 			return;
 		}
@@ -69,21 +87,24 @@ export class PackageCommands extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
+		return this.getPackagesForUri(uri, operationProgress);
+	}
+
+	private async getPackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress) {
 		// Exclude folders we should never run pub get for.
 		if (!isValidPubGetTarget(uri).valid)
 			return;
 
-		const additionalArgs = [];
+		const additionalArgs: string[] = [];
 		if (config.offline)
 			additionalArgs.push("--offline");
 		if (this.dartCapabilities.needsNoExampleForPubGet)
 			additionalArgs.push("--no-example");
 
-		if (util.isInsideFlutterProject(uri)) {
-			return this.runFlutter(["pub", "get", ...additionalArgs], uri);
-		} else {
-			return this.runPub(["get", ...additionalArgs], uri);
-		}
+		if (util.isInsideFlutterProject(uri))
+			return this.runFlutter(["pub", "get", ...additionalArgs], uri, false, operationProgress);
+		else
+			return this.runPub(["get", ...additionalArgs], uri, false, operationProgress);
 	}
 
 	private async getPackagesForAllProjects() {
@@ -114,13 +135,31 @@ export class PackageCommands extends BaseSdkCommands {
 			return this.runPub(["outdated"], uri, true);
 	}
 
-	private async upgradePackages(uri: string | vs.Uri | vs.Uri[] | undefined) {
+	private async upgradePackages(
+		uri: string | vs.Uri | vs.Uri[] | undefined,
+		operationProgress?: OperationProgress
+	) {
 		if (!config.enablePub)
 			return;
 
+		// If we don't have a parent progress, add one.
+		if (!operationProgress) {
+			await vs.window.withProgress({
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: "pub upgrade",
+			}, (progress, token) => this.upgradePackages(uri, { progressReporter: progress, cancellationToken: token }));
+			return;
+		}
+
+		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
-			for (const item of uri) {
-				await this.upgradePackages(item);
+			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
+			for (const item of uris) {
+				if (operationProgress.cancellationToken.isCancellationRequested)
+					break;
+
+				await this.upgradePackages(item, operationProgress);
 			}
 			return;
 		}
@@ -134,14 +173,18 @@ export class PackageCommands extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 
+		return this.upgradePackagesForUri(uri, operationProgress);
+	}
+
+	private async upgradePackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress) {
 		// Exclude folders we should never run pub get for.
 		if (!isValidPubGetTarget(uri).valid)
 			return;
 
 		if (util.isInsideFlutterProject(uri))
-			return this.runFlutter(["pub", "upgrade"], uri);
+			return this.runFlutter(["pub", "upgrade"], uri, false, operationProgress);
 		else
-			return this.runPub(["upgrade"], uri);
+			return this.runPub(["upgrade"], uri, false, operationProgress);
 	}
 
 	private async upgradePackagesMajorVersions(uri: string | vs.Uri | undefined) {

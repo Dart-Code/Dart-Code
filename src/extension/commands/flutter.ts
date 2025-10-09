@@ -24,7 +24,7 @@ import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
 import { PickableSetting, showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
-import { BaseSdkCommands, commandState, packageNameRegex } from "./sdk";
+import { BaseSdkCommands, commandState, OperationProgress, packageNameRegex } from "./sdk";
 
 export class FlutterCommands extends BaseSdkCommands {
 	private flutterScreenshotPath?: string;
@@ -46,10 +46,28 @@ export class FlutterCommands extends BaseSdkCommands {
 		this.disposables.push(vs.commands.registerCommand("_flutter.clean", this.flutterClean.bind(this)));
 	}
 
-	private async flutterClean(uri: vs.Uri | vs.Uri[] | undefined): Promise<RunProcessResult | undefined> {
+	private async flutterClean(
+		uri: vs.Uri | vs.Uri[] | undefined,
+		operationProgress?: OperationProgress,
+	): Promise<RunProcessResult | undefined> {
+		// If we don't have a parent progress, add one.
+		if (!operationProgress) {
+			await vs.window.withProgress({
+				cancellable: true,
+				location: vs.ProgressLocation.Notification,
+				title: "flutter clean",
+			}, (progress, token) => this.flutterClean(uri, { progressReporter: progress, cancellationToken: token }));
+			return;
+		}
+
+		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
-			for (const item of uri)
-				await this.flutterClean(item);
+			for (const item of uri) {
+				if (operationProgress.cancellationToken.isCancellationRequested)
+					break;
+
+				await this.flutterClean(item, operationProgress);
+			}
 			return;
 		}
 
@@ -60,7 +78,7 @@ export class FlutterCommands extends BaseSdkCommands {
 			uri = vs.Uri.file(path);
 		}
 
-		return this.runFlutter(["clean"], uri);
+		return this.runFlutter(["clean"], uri, false, operationProgress);
 	}
 
 	private async flutterCleanAllProjects(): Promise<void> {
@@ -137,7 +155,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		const tempDir = path.join(os.tmpdir(), "dart-code-cmd-run");
 		if (!fs.existsSync(tempDir))
 			fs.mkdirSync(tempDir);
-		return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, this.workspace.config?.flutterDoctorScript);
+		return this.runFlutterInFolder(tempDir, ["doctor", "-v"], "flutter", true, undefined, this.workspace.config?.flutterDoctorScript);
 	}
 
 	private async flutterUpgrade() {
