@@ -1,8 +1,8 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
+name: Flutter extension feature request
+about: Suggest an idea for the Flutter extension
 title: ''
-labels: is enhancement
+labels: is enhancement, is flutter
 assignees: ''
 
 ---
