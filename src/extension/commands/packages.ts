@@ -4,6 +4,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { isDartCodeTestRun, iUnderstandAction, tenSecondsInMs } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { uniq } from "../../shared/utils";
+import { RunProcessResult } from "../../shared/processes";
 import { fsPath } from "../../shared/utils/fs";
 import { getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
@@ -52,18 +53,17 @@ export class PackageCommands extends BaseSdkCommands {
 	private async getPackages(
 		uri: string | vs.Uri | vs.Uri[] | undefined,
 		operationProgress?: OperationProgress,
-	) {
+	): Promise<RunProcessResult | undefined> {
 		if (!config.enablePub)
 			return;
 
 		// If we don't have a parent progress, add one.
 		if (!operationProgress) {
-			await vs.window.withProgress({
+			return vs.window.withProgress({
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
 				title: "pub get",
 			}, (progress, token) => this.getPackages(uri, { progressReporter: progress, cancellationToken: token }));
-			return;
 		}
 
 		// If we are a batch, run for each item.
@@ -138,18 +138,17 @@ export class PackageCommands extends BaseSdkCommands {
 	private async upgradePackages(
 		uri: string | vs.Uri | vs.Uri[] | undefined,
 		operationProgress?: OperationProgress
-	) {
+	): Promise<RunProcessResult | undefined> {
 		if (!config.enablePub)
 			return;
 
 		// If we don't have a parent progress, add one.
 		if (!operationProgress) {
-			await vs.window.withProgress({
+			return vs.window.withProgress({
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
 				title: "pub upgrade",
 			}, (progress, token) => this.upgradePackages(uri, { progressReporter: progress, cancellationToken: token }));
-			return;
 		}
 
 		// If we are a batch, run for each item.

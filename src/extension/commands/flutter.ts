@@ -52,12 +52,11 @@ export class FlutterCommands extends BaseSdkCommands {
 	): Promise<RunProcessResult | undefined> {
 		// If we don't have a parent progress, add one.
 		if (!operationProgress) {
-			await vs.window.withProgress({
+			return vs.window.withProgress({
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
 				title: "flutter clean",
 			}, (progress, token) => this.flutterClean(uri, { progressReporter: progress, cancellationToken: token }));
-			return;
 		}
 
 		// If we are a batch, run for each item.
