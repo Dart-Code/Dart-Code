@@ -25,6 +25,11 @@ export const commandState = {
 	promptToReloadOnVersionChanges: true,
 };
 
+export interface OperationProgress {
+	progressReporter: vs.Progress<{ message?: string; increment?: number }>;
+	cancellationToken: vs.CancellationToken;
+}
+
 export class BaseSdkCommands implements IAmDisposable {
 	protected readonly sdks: DartSdks;
 	protected readonly disposables: vs.Disposable[] = [];
@@ -37,11 +42,12 @@ export class BaseSdkCommands implements IAmDisposable {
 	}
 
 	protected async runCommandForWorkspace(
-		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean) => Promise<RunProcessResult | undefined>,
+		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean, operationProgress?: OperationProgress) => Promise<RunProcessResult | undefined>,
 		placeHolder: string,
 		args: string[],
 		selection: vs.Uri | undefined,
 		alwaysShowOutput = false,
+		operationProgress?: OperationProgress,
 	): Promise<RunProcessResult | undefined> {
 		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, selection);
 		if (!folderToRunCommandIn)
@@ -50,20 +56,25 @@ export class BaseSdkCommands implements IAmDisposable {
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
 		const containingWorkspacePath = containingWorkspace ? fsPath(containingWorkspace.uri) : undefined;
 
-		// Display the relative path from the workspace root to the folder we're running, or if they're
-		// the same then the folder name we're running in.
-		const shortPath = containingWorkspacePath
-			? path.relative(containingWorkspacePath, folderToRunCommandIn) || path.basename(folderToRunCommandIn)
-			: path.basename(folderToRunCommandIn);
+		// Display the relative path from the workspace root to the folder we're running up to two segments.
+		let shortPath = path.basename(folderToRunCommandIn);
+		if (containingWorkspacePath) {
+			const relativePath = path.relative(containingWorkspacePath, folderToRunCommandIn);
+			if (relativePath) {
+				shortPath = relativePath.includes(path.sep)
+					? relativePath.split(path.sep).slice(-2).join(path.sep)
+					: relativePath;
+			}
+		}
 
-		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput);
+		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput, operationProgress);
 	}
 
-	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Promise<RunProcessResult | undefined> {
-		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
+	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
+		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress);
 	}
 
-	protected runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, customScript?: CustomScript): Promise<RunProcessResult | undefined> {
+	protected runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress, customScript?: CustomScript): Promise<RunProcessResult | undefined> {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 
@@ -77,14 +88,14 @@ export class BaseSdkCommands implements IAmDisposable {
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
 			.concat(execution.args);
 
-		return this.runCommandInFolder(shortPath, folder, execution.executable, allArgs, alwaysShowOutput);
+		return this.runCommandInFolder(shortPath, folder, execution.executable, allArgs, alwaysShowOutput, operationProgress);
 	}
 
-	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false): Promise<RunProcessResult | undefined> {
-		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput);
+	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
+		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress);
 	}
 
-	protected runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false): Promise<RunProcessResult | undefined> {
+	protected runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
 		if (!this.sdks.dart)
 			throw new Error("Dart SDK not available");
 
@@ -92,10 +103,10 @@ export class BaseSdkCommands implements IAmDisposable {
 
 		const pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
 
-		return this.runCommandInFolder(shortPath, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput);
+		return this.runCommandInFolder(shortPath, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput, operationProgress);
 	}
 
-	protected async runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean): Promise<RunProcessResult | undefined> {
+	protected async runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
 		shortPath = shortPath || path.basename(folder);
 		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
@@ -113,11 +124,7 @@ export class BaseSdkCommands implements IAmDisposable {
 			return Promise.resolve(undefined);
 		}
 
-		return await vs.window.withProgress({
-			cancellable: true,
-			location: vs.ProgressLocation.Notification,
-			title: `${commandName} ${args.join(" ")}`,
-		}, (progress, token) => {
+		const runWithProgress = async (progress: vs.Progress<{ message?: string; increment?: number }>, token: vs.CancellationToken) => {
 			if (existingProcess) {
 				progress.report({ message: "terminating previous command..." });
 				existingProcess.cancel();
@@ -127,7 +134,7 @@ export class BaseSdkCommands implements IAmDisposable {
 
 			const process = new ChainedProcess(() => {
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
-				progress.report({ message: "running..." });
+				progress.report({ message: `${shortPath}...` });
 				const proc = safeToolSpawn(folder, binPath, args);
 				channels.runProcessInOutputChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
@@ -148,7 +155,16 @@ export class BaseSdkCommands implements IAmDisposable {
 			token.onCancellationRequested(() => process.cancel());
 
 			return process.completed;
-		});
+		};
+
+		if (operationProgress)
+			return runWithProgress(operationProgress.progressReporter, operationProgress.cancellationToken);
+
+		return await vs.window.withProgress({
+			cancellable: true,
+			location: vs.ProgressLocation.Notification,
+			title: `${commandName} ${args.join(" ")}`,
+		}, (progress, token) => runWithProgress(progress, token));
 	}
 
 	public dispose(): any {
