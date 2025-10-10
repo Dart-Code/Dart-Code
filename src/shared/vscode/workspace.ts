@@ -33,6 +33,8 @@ export class Context {
 	public setFlutterSurveyNotificationDoNotShow(id: string, value: boolean | undefined) { void this.context.globalState.update(`flutterSurvey${id}NotificationDoNotShowAgain`, value); }
 	public getSdkDeprecationNoticeDoNotShow(dartSdkVersion: string): boolean | undefined { return !!this.context.globalState.get(`dartSdk${dartSdkVersion}DeprecationNotificationDoNotShowAgain`); }
 	public setSdkDeprecationNoticeDoNotShow(dartSdkVersion: string, value: boolean | undefined) { void this.context.globalState.update(`dartSdk${dartSdkVersion}DeprecationNotificationDoNotShowAgain`, value); }
+	public getAppWarningDoNotShow(warningId: string): boolean | undefined { return !!this.context.globalState.get(`appWarning${warningId}DoNotShowAgain`); }
+	public setAppWarningDoNotShow(warningId: string, value: boolean | undefined) { void this.context.globalState.update(`appWarning${warningId}DoNotShowAgain`, value); }
 	get hasWarnedAboutFormatterSyntaxLimitation(): boolean { return !!this.context.globalState.get("hasWarnedAboutFormatterSyntaxLimitation"); }
 	set hasWarnedAboutFormatterSyntaxLimitation(value: boolean) { void this.context.globalState.update("hasWarnedAboutFormatterSyntaxLimitation", value); }
 	get hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation(): boolean { return !!this.context.globalState.get("hasWarnedAboutPubUpgradeMajorVersionsPubpecMutation"); }
