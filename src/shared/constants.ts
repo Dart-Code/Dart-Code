@@ -83,6 +83,7 @@ export const openAction = "Open";
 export const alwaysOpenAction = "Always Open";
 export const notTodayAction = "Not Now";
 export const doNotAskAgainAction = "Never Ask";
+export const doNotShowAgainAction = "Don't Show Again";
 export const moreInfoAction = "More Info";
 
 export const flutterSurveyDataUrl = "https://docs.flutter.dev/f/flutter-survey-metadata.json";

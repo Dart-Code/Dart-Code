@@ -2,7 +2,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { CommandSource, debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, widgetInspectorPage } from "../../shared/constants";
+import { CommandSource, debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, doNotShowAgainAction, moreInfoAction, widgetInspectorPage } from "../../shared/constants";
 import { isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext } from "../../shared/constants.contexts";
 import { DebugOption, DebuggerType, LogCategory, LogSeverity, VmService, VmServiceExtension, debugOptionNames } from "../../shared/enums";
 import { DartWorkspaceContext, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
@@ -793,6 +793,29 @@ export class DebugCommands implements IAmDisposable {
 						} catch {
 							this.logger.error(`Failed to launch URL from Flutter app.webLaunchUrl event: ${url}`);
 						}
+					}
+					break;
+				}
+				case "app.warning": {
+					const warningId = params.warningId as string;
+					if (this.context.getAppWarningDoNotShow(warningId))
+						break;
+
+					const warningText = params.warning as string;
+					const url = params.url as string | undefined;
+
+					const buttons = url ? [moreInfoAction] : [];
+					buttons.push(doNotShowAgainAction);
+
+					const userAction = await vs.window.showWarningMessage(warningText, ...buttons);
+					if (url && userAction === moreInfoAction) {
+						try {
+							await envUtils.openInBrowser(url, this.logger);
+						} catch {
+							this.logger.error(`Failed to launch URL from Flutter app.warning event: ${url}`);
+						}
+					} else if (userAction === doNotShowAgainAction) {
+						this.context.setAppWarningDoNotShow(warningId, true);
 					}
 					break;
 				}
