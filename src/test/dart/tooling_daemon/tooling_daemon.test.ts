@@ -3,6 +3,7 @@ import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { ActiveLocation, ActiveLocationChangedEvent, EventKind, ServiceMethod, Stream } from "../../../shared/services/tooling_daemon_services";
 import { fsPath } from "../../../shared/utils/fs";
+import { waitFor } from "../../../shared/utils/promises";
 import { activate, delay, flutterHelloWorldMainFile, helloWorldMainFile, openFile, privateApi, setConfigForTest, waitForResult } from "../../helpers";
 
 // These are basic tests for DTD. There are also some tests in `../dart_debug`.
@@ -152,8 +153,11 @@ describe("dart tooling daemon", () => {
 				new vs.Selection(new vs.Position(3, 0), new vs.Position(4, 0)),
 				new vs.Selection(new vs.Position(5, 0), new vs.Position(6, 0)),
 			];
-			await waitForResult(() => events.length >= 2); // Wait for both expected events.
 
+			// Wait for both expected events. Use waitFor and don't throw on failure because the error message
+			// from the assert below will be better (we use `waitFor` just to force a delay, but continue when
+			// the condition is met).
+			await waitFor(() => events.length >= 2);
 			assert.deepStrictEqual(
 				events.map(simplify),
 				[
@@ -181,7 +185,6 @@ describe("dart tooling daemon", () => {
 					},
 				],
 			);
-
 		} finally {
 			await listener.dispose();
 			await daemon.streamCancel(Stream.Editor);
