@@ -798,10 +798,15 @@ export class DebugCommands implements IAmDisposable {
 				}
 				case "app.warning": {
 					const warningId = params.warningId as string;
+					const warningText = params.warning as string;
+					if (!warningId || !warningText) {
+						this.logger.warn(`Received app.warning event with missing 'warningId' or 'warning' fields: ${JSON.stringify(params)}`);
+						break;
+					}
+
 					if (this.context.getAppWarningDoNotShow(warningId))
 						break;
 
-					const warningText = params.warning as string;
 					const url = params.url as string | undefined;
 
 					const buttons = url ? [moreInfoAction] : [];
@@ -811,8 +816,8 @@ export class DebugCommands implements IAmDisposable {
 					if (url && userAction === moreInfoAction) {
 						try {
 							await envUtils.openInBrowser(url, this.logger);
-						} catch {
-							this.logger.error(`Failed to launch URL from Flutter app.warning event: ${url}`);
+						} catch (e) {
+							this.logger.error(`Failed to launch URL from Flutter app.warning event: ${url}: ${e}`);
 						}
 					} else if (userAction === doNotShowAgainAction) {
 						this.context.setAppWarningDoNotShow(warningId, true);
