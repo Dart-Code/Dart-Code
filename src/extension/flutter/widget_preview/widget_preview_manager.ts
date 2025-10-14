@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { FLUTTER_WIDGET_PREVIEW_SUPPORTED_CONTEXT } from "../../../shared/constants.contexts";
 import { IAmDisposable, Logger } from "../../../shared/interfaces";
-import { disposeAll } from "../../../shared/utils";
+import { disposeAll, PromiseCompleter } from "../../../shared/utils";
 import { FlutterWidgetPreviewServer } from "../../flutter/widget_preview_server";
 import { exposeWebViewUrls, WebViewUrls } from "../../views/shared";
 import { WidgetPreviewEmbeddedView, WidgetPreviewSidebarView, WidgetPreviewView } from "./webviews";
@@ -56,19 +56,20 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 
 	private async setUpPreviewImpl(): Promise<void> {
 		try {
-			const dtdUri = await this.dtdUri;
-			let previewUrls: WebViewUrls = {
-				viewUrl: await this.server.previewUrl,
-				authUrls: dtdUri ? [dtdUri] : undefined,
-			};
-			previewUrls = await exposeWebViewUrls(previewUrls);
+			const completer = new PromiseCompleter<WebViewUrls>();
 			const pageTitle = "Flutter Widget Preview";
 
 			const view = this.view = this.location === "sidebar"
-				? new WidgetPreviewSidebarView(previewUrls)
-				: new WidgetPreviewEmbeddedView(previewUrls, pageTitle);
-
+				? new WidgetPreviewSidebarView(() => this.showProgressIfRequired(), completer.promise)
+				: new WidgetPreviewEmbeddedView(this.logger, completer.promise, pageTitle);
 			view.onDispose(() => this.view = undefined);
+
+			const dtdUri = await this.dtdUri;
+			const previewUrls: WebViewUrls = {
+				viewUrl: await this.server.previewUrl,
+				authUrls: dtdUri ? [dtdUri] : undefined,
+			};
+			completer.resolve(await exposeWebViewUrls(previewUrls));
 		} catch (e) {
 			const message = `Failed to set up Widget Preview: ${e}`;
 			this.logger.error(message);
@@ -76,7 +77,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 		}
 	}
 
-	public async showPreview(): Promise<void> {
+	public showProgressIfRequired() {
 		// Ensure progress is shown if the server is not ready yet.
 		if (!this.hasShownProgress) {
 			this.hasShownProgress = true;
@@ -89,7 +90,10 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 				() => this.server.previewUrl,
 			);
 		}
+	}
 
+	public async showPreview(): Promise<void> {
+		this.showProgressIfRequired();
 		await this.setUpPreview();
 		this.view?.show();
 	}

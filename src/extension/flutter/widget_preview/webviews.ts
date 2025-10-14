@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { SIDEBAR_AVAILABLE_PREFIX } from "../../../shared/constants.contexts";
 import { Event, EventEmitter } from "../../../shared/events";
-import { IAmDisposable } from "../../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
@@ -128,7 +128,7 @@ export abstract class WidgetPreviewView implements IAmDisposable {
 export class WidgetPreviewEmbeddedView extends WidgetPreviewView {
 	private readonly panel: vs.WebviewPanel;
 
-	constructor(readonly widgetPreviewUri: WebViewUrls, readonly pageTitle: string) {
+	constructor(private readonly logger: Logger, readonly previewUrls: Promise<WebViewUrls>, readonly pageTitle: string) {
 		super();
 
 		const column = firstNonEditorColumn() ?? vs.ViewColumn.Beside;
@@ -139,7 +139,9 @@ export class WidgetPreviewEmbeddedView extends WidgetPreviewView {
 		});
 		this.panel.onDidDispose(() => this.dispose(true));
 
-		this.panel.webview.html = getPageHtmlSource(widgetPreviewUri);
+		this.previewUrls
+			.then((previewUrls) => this.panel.webview.html = getPageHtmlSource(previewUrls))
+			.catch((e) => this.logger.error(e));
 	}
 
 	public show(): void {
@@ -158,12 +160,13 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 	protected readonly webViewProvider: WidgetPreviewSidebarViewProvider;
 
 	constructor(
-		private readonly previewUrls: WebViewUrls,
+		private readonly showProgressIfRequired: () => void,
+		private readonly previewUrls: Promise<WebViewUrls>,
 	) {
 		super();
 
 		void vs.commands.executeCommand("setContext", `${SIDEBAR_AVAILABLE_PREFIX}widgetPreview`, true);
-		this.webViewProvider = new WidgetPreviewSidebarViewProvider(this.previewUrls);
+		this.webViewProvider = new WidgetPreviewSidebarViewProvider(this.showProgressIfRequired, this.previewUrls);
 		this.disposables.push(this.webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider(`sidebarWidgetPreview`, this.webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
@@ -183,7 +186,8 @@ class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 	public webviewView: vs.WebviewView | undefined;
 
 	constructor(
-		private readonly previewUrls: WebViewUrls
+		private readonly showProgressIfRequired: () => void,
+		private readonly previewUrls: Promise<WebViewUrls>
 	) { }
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
@@ -191,12 +195,15 @@ class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 			this.webviewView = webviewView;
 		}
 
+		this.showProgressIfRequired();
+
 		webviewView.webview.options = {
 			enableScripts: true,
 			localResourceRoots: [],
 		};
 
-		webviewView.webview.html = getPageHtmlSource(this.previewUrls);
+		const previewUrls = await this.previewUrls;
+		webviewView.webview.html = getPageHtmlSource(previewUrls);
 	}
 
 	public dispose(): void {
