@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
-import { DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, moreInfoAction, noAction, onlyAnalyzeProjectsWithOpenFilesDeprecationUrl, onlyAnalyzeProjectsWithOpenFilesPromptKey, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
@@ -85,6 +85,11 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
+	if (!shouldSuppress(onlyAnalyzeProjectsWithOpenFilesPromptKey) && config.onlyAnalyzeProjectsWithOpenFiles) {
+		showPrompt(onlyAnalyzeProjectsWithOpenFilesPromptKey, promptAboutOnlyAnalyzeProjectsWithOpenFilesDeprecation);
+		return;
+	}
+
 	if (!shouldSuppress(useRecommendedSettingsPromptKey) && !hasAnyExistingDartSettings()) {
 		showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
 		return;
@@ -114,6 +119,17 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 		await vs.commands.executeCommand("dart.writeRecommendedSettings");
 	} else if (action === showRecommendedSettingsAction) {
 		await envUtils.openInBrowser(recommendedSettingsUrl);
+	}
+	return true;
+}
+
+async function promptAboutOnlyAnalyzeProjectsWithOpenFilesDeprecation(): Promise<boolean> {
+	const action = await vs.window.showWarningMessage(
+		"The [dart.onlyAnalyzeProjectsWithOpenFiles](command:workbench.action.openSettings?%22@id:dart.onlyAnalyzeProjectsWithOpenFiles%22) setting is not recommended and will be removed in an upcoming Dart SDK.",
+		moreInfoAction,
+	);
+	if (action === moreInfoAction) {
+		await envUtils.openInBrowser(onlyAnalyzeProjectsWithOpenFilesDeprecationUrl);
 	}
 	return true;
 }
