@@ -170,6 +170,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("extensionKind", data.extensionKind);
 		add("platform", data.platform);
 		add("hostKind", data.hostKind ?? "desktop");
+		add("onlyAnalyzeProjectsWithOpenFiles", data.onlyAnalyzeProjectsWithOpenFiles);
 		add("showTodos", data.showTodos);
 		add("userLanguage", data.language);
 		add("workspaceType", data.workspaceType);
@@ -283,6 +284,7 @@ export class Analytics implements IAmDisposable {
 			hostKind,
 			language: env.language,
 			platform: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
+			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles ? "On" : "Off",
 			showTodos: config.showTodos ? "On" : "Off",
 			workspaceType: this.workspaceContext?.workspaceTypeDescription,
 			...customData,
@@ -401,6 +403,7 @@ interface AnalyticsData {
 
 	analyzerProtocol: string,
 	formatter: string,
+	onlyAnalyzeProjectsWithOpenFiles: string,
 	showTodos: string,
 	closingLabels: string,
 	flutterUiGuides: string | undefined,
