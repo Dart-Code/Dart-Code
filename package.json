@@ -1891,6 +1891,7 @@
 						"type": "boolean",
 						"default": false,
 						"markdownDescription": "**Deprecated**: Whether to ignore workspace folders and perform analysis based on the open files. This setting can make performance significantly worse when moving around a project and is not recommended.",
+						"deprecationMessage": "This setting is deprecated and will be removed in a future Dart SDK.",
 						"scope": "window"
 					},
 					"dart.showTodos": {

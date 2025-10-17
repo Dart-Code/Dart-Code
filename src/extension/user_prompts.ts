@@ -125,7 +125,7 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 
 async function promptAboutOnlyAnalyzeProjectsWithOpenFilesDeprecation(): Promise<boolean> {
 	const action = await vs.window.showWarningMessage(
-		"The [dart.onlyAnalyzeProjectsWithOpenFiles](command:workbench.action.openSettings?%22dart.onlyAnalyzeProjectsWithOpenFiles%22) setting is not recommended and will be removed in an upcoming Dart SDK.",
+		"The [dart.onlyAnalyzeProjectsWithOpenFiles](command:workbench.action.openSettings?%22@id:dart.onlyAnalyzeProjectsWithOpenFiles%22) setting is not recommended and will be removed in an upcoming Dart SDK.",
 		moreInfoAction,
 	);
 	if (action === moreInfoAction) {
