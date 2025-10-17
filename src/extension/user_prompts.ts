@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
-import { cursorInstallMcpServer, DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { cursorInstallMcpServer, DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, onlyAnalyzeProjectsWithOpenFilesDeprecationUrl, onlyAnalyzeProjectsWithOpenFilesPromptKey, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
@@ -85,6 +85,11 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 			return; // Bail if we showed it, so we won't show any other notifications.
 	}
 
+	if (!shouldSuppress(onlyAnalyzeProjectsWithOpenFilesPromptKey) && config.onlyAnalyzeProjectsWithOpenFiles) {
+		showPrompt(onlyAnalyzeProjectsWithOpenFilesPromptKey, promptAboutOnlyAnalyzeProjectsWithOpenFilesDeprecation);
+		return;
+	}
+
 	if (!shouldSuppress(useRecommendedSettingsPromptKey) && !hasAnyExistingDartSettings()) {
 		showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
 		return;
@@ -135,6 +140,18 @@ async function promptToInstallMcpServerForCursor(): Promise<boolean> {
 	if (action === yesAction) {
 		const mcpSetupUri = vs.Uri.parse("cursor://anysphere.cursor-deeplink/mcp/install?name=dart&config=eyJ0eXBlIjoic3RkaW8iLCJjb21tYW5kIjoiZGFydCBtY3Atc2VydmVyIC0tZXhwZXJpbWVudGFsLW1jcC1zZXJ2ZXIgLS1mb3JjZS1yb290cy1mYWxsYmFjayJ9");
 		await vs.commands.executeCommand("vscode.open", mcpSetupUri);
+	}
+	return true;
+}
+
+async function promptAboutOnlyAnalyzeProjectsWithOpenFilesDeprecation(): Promise<boolean> {
+	const actionText = "Go to GitHub Issue";
+	const action = await vs.window.showWarningMessage(
+		"The [dart.onlyAnalyzeProjectsWithOpenFiles](command:workbench.action.openSettings?%22@id:dart.onlyAnalyzeProjectsWithOpenFiles%22) setting is not recommended and may be removed. If you need this, please provide details on the GitHub issue.",
+		actionText,
+	);
+	if (action === actionText) {
+		await envUtils.openInBrowser(onlyAnalyzeProjectsWithOpenFilesDeprecationUrl);
 	}
 	return true;
 }

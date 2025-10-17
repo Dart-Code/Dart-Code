@@ -1886,12 +1886,6 @@
 						"description": "Whether to show a notification the first few times an Analysis Server exception occurs.",
 						"scope": "window"
 					},
-					"dart.onlyAnalyzeProjectsWithOpenFiles": {
-						"type": "boolean",
-						"default": false,
-						"description": "Whether to ignore workspace folders and perform analysis based on the open files, as if no workspace was open at all. This allows opening very large folders without causing them to be fully analyzed but will result a lot of re-analysis as files are opened/closed. This is **not** recommended for small or medium sized workspaces, only very large workspaces where you are working in only a small part.",
-						"scope": "window"
-					},
 					"dart.showTodos": {
 						"type": [
 							"boolean",
@@ -3457,6 +3451,12 @@
 						"default": null,
 						"markdownDescription": "**LEGACY SETTING: Only applies when using the legacy debug adapters.**\n\nThe path to a log file for communication between Dart Code and the webdev daemon. This is useful when trying to diagnose issues with launching web apps. Use `${name}` in the log file name to insert the Debug Session name to prevent concurrent debug sessions overwriting each others logs. Use `${workspaceName}` to insert the name of the current workspace in the file path. Use `~` to insert the user's home directory (the path should then use `/` separators even on Windows). Only the noted substitutions are supported, others will stay as-is.",
 						"scope": "machine-overridable"
+					},
+					"dart.onlyAnalyzeProjectsWithOpenFiles": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "**Deprecated**: Whether to ignore workspace folders and perform analysis based on the open files. This setting can make performance significantly worse when moving around a project and is not recommended.",
+						"scope": "window"
 					}
 				}
 			}
