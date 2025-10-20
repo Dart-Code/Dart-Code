@@ -3,9 +3,9 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { isDartCodeTestRun, iUnderstandAction, tenSecondsInMs } from "../../shared/constants";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
-import { uniq } from "../../shared/utils";
 import { RunProcessResult } from "../../shared/processes";
-import { fsPath } from "../../shared/utils/fs";
+import { uniq } from "../../shared/utils";
+import { fsPath, touchFile } from "../../shared/utils/fs";
 import { getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -48,6 +48,14 @@ export class PackageCommands extends BaseSdkCommands {
 
 		// Hook saving pubspec to run pub.get.
 		this.setupPubspecWatcher();
+	}
+
+	/// Touches pubspec.lock and .dart_tool/package_config.json to update their modification times.
+	/// This is a workaround for https://github.com/Dart-Code/Dart-Code/issues/5549.
+	private touchPubFiles(uri: vs.Uri): void {
+		const folder = fsPath(uri);
+		touchFile(path.join(folder, "pubspec.lock"));
+		touchFile(path.join(folder, ".dart_tool", "package_config.json"));
 	}
 
 	private async getPackages(
@@ -101,10 +109,18 @@ export class PackageCommands extends BaseSdkCommands {
 		if (this.dartCapabilities.needsNoExampleForPubGet)
 			additionalArgs.push("--no-example");
 
+		let result: RunProcessResult | undefined;
 		if (util.isInsideFlutterProject(uri))
-			return this.runFlutter(["pub", "get", ...additionalArgs], uri, false, operationProgress);
+			result = await this.runFlutter(["pub", "get", ...additionalArgs], uri, false, operationProgress);
 		else
-			return this.runPub(["get", ...additionalArgs], uri, false, operationProgress);
+			result = await this.runPub(["get", ...additionalArgs], uri, false, operationProgress);
+
+		// Touch the files to update their modification times.
+		// This is a workaround for https://github.com/Dart-Code/Dart-Code/issues/5549.
+		if (result && this.dartCapabilities.requiresTouchAfterPubGet)
+			this.touchPubFiles(uri);
+
+		return result;
 	}
 
 	private async getPackagesForAllProjects() {

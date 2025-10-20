@@ -493,3 +493,15 @@ export function nextAvailableFilename(folder: string, prefix: string, suffix = "
 	// handle the already-exists condition if user doesn't change it manually.
 	return `${prefix}1${suffix}`;
 }
+
+/// Updates the modification time of a file to the current time (if the file exists).
+export function touchFile(filePath: string): void {
+	try {
+		if (fs.existsSync(filePath)) {
+			const now = new Date();
+			fs.utimesSync(filePath, now, now);
+		}
+	} catch {
+		// Silently ignore errors (file doesn't exist, permission issues).
+	}
+}

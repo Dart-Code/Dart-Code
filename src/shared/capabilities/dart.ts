@@ -53,6 +53,10 @@ export class DartCapabilities {
 	// https://github.com/dart-lang/pub/issues/4588
 	get hasPackageConfigTimestampIssue() { return versionIsAtLeast(this.version, "3.7.0") && !versionIsAtLeast(this.version, "3.9.0"); }
 
+	// Workaround for https://github.com/Dart-Code/Dart-Code/issues/5549
+	// TODO(dantup): Set an upper bound on this once the Pub issue is fixed.
+	get requiresTouchAfterPubGet() { return versionIsAtLeast(this.version, "3.7.0") && !versionIsAtLeast(this.version, "9.9.9"); }
+
 	// https://github.com/Dart-Code/Dart-Code/issues/5652
 	get hasOverrideCompletionIssue() { return !versionIsAtLeast(this.version, "3.10.0-205"); }
 }
