@@ -117,7 +117,7 @@ export class PackageCommands extends BaseSdkCommands {
 
 		// Touch the files to update their modification times.
 		// This is a workaround for https://github.com/Dart-Code/Dart-Code/issues/5549.
-		if (result && this.dartCapabilities.requiresTouchAfterPubGet)
+		if (result && result.exitCode === 0 && this.dartCapabilities.requiresTouchAfterPubGet)
 			this.touchPubFiles(uri);
 
 		return result;
