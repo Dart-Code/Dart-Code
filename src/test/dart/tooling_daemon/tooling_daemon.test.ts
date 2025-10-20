@@ -145,6 +145,7 @@ describe("dart tooling daemon", () => {
 			editor.selection = new vs.Selection(new vs.Position(0, 0), new vs.Position(0, 0));
 			// Discard any first events for the above.
 			await waitForResult(() => events.length >= 1);
+			await delay(100); // Allow of unrelated events.
 			events.length = 0;
 
 			editor.selection = new vs.Selection(new vs.Position(1, 0), new vs.Position(2, 0));

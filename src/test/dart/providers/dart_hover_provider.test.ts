@@ -46,10 +46,13 @@ describe("dart_hover_provider", () => {
 		return hovers[0];
 	}
 
-	function getExpectedSignature(method: string, returnType: string): string {
-		return privateApi.dartCapabilities.omitsVoidForSetters && method.startsWith("set ") && returnType === "void"
-			? method
-			: `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`;
+	function getExpectedSignature(method: string, returnType: string | undefined): string {
+		if (privateApi.dartCapabilities.omitsVoidForSetters && method.startsWith("set ") && returnType === "void")
+			return method;
+		else if (!returnType)
+			return `${method.startsWith("(") ? `Function${method}` : method}`;
+		else
+			return `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`;
 	}
 
 	function getExpectedDoc(doc: string, packagePath: string, className?: string): string {
@@ -99,14 +102,17 @@ describe("dart_hover_provider", () => {
 
 	it("returns expected information for a constructor", async () => {
 		const hover = await getHoverAt("My^TestClass()");
-		assert.equal(hover.displayText, getExpectedSignature("MyTestClass()", "MyTestClass"));
+		const className = privateApi.dartCapabilities.omitsClassNameForConstructors ? undefined : "MyTestClass";
+		assert.equal(hover.displayText, getExpectedSignature("MyTestClass()", className));
 		assert.equal(hover.documentation, getExpectedDoc("This is my class constructor.", "package:hello_world/everything.dart", "MyTestClass"));
 		assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass|()"));
 	});
 
 	it("returns expected information for a named constructor", async () => {
+		const className = privateApi.dartCapabilities.omitsClassNameForConstructors ? undefined : "MyTestClass";
+
 		for (const hover of [await getHoverAt("My^TestClass.myTestNamed()"), await getHoverAt("MyTestClass.myTestN^amed()")]) {
-			assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", "MyTestClass"));
+			assert.equal(hover.displayText, getExpectedSignature("MyTestClass.myTestNamed()", className));
 			assert.equal(hover.documentation, getExpectedDoc("This is my class named constructor.", "package:hello_world/everything.dart", "MyTestClass"));
 			assert.deepStrictEqual(hover.range, rangeOf("|MyTestClass.myTestNamed|()"));
 		}
