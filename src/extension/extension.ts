@@ -424,8 +424,12 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Initialize Widget Preview if enabled+supported.
 	const flutterSdk = workspaceContext.sdks.flutter;
 	if (
-		config.experimentalFlutterWidgetPreview
-		&& flutterCapabilities.supportsWidgetPreview
+		(
+			// Preview enabled and supportsWidgetPreview (3.36)
+			(config.experimentalFlutterWidgetPreview && flutterCapabilities.supportsWidgetPreview) ||
+			// Or supportsWidgetPreviewByDefault (3.38 beta)
+			flutterCapabilities.supportsWidgetPreviewByDefault
+		)
 		&& flutterSdk
 		&& vs.workspace.workspaceFolders?.length) {
 		// TODO(dantup): Support multiple projects better.
