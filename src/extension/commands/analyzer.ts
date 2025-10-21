@@ -2,7 +2,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
 import { Analyzer } from "../../shared/analyzer";
-import { issueTrackerAction, issueTrackerUri, showLogAction } from "../../shared/constants";
+import { ExtensionRestartReason, issueTrackerAction, issueTrackerUri, showLogAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { envUtils } from "../../shared/vscode/utils";
@@ -34,7 +34,7 @@ export class AnalyzerCommands {
 			const completeLog = `${logPrefix}${logHeader}${ringLogContents}`;
 
 			// Restart.
-			void vs.commands.executeCommand("_dart.reloadExtension", "dart.restartAnalysisServer");
+			void vs.commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.AnalysisServerRestartCommand);
 
 			// Show a notification and offer the log file.
 			const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);

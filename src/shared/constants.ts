@@ -70,6 +70,17 @@ export const captureLogsMaxLineLength = 999999999;
 export const restartReasonManual = "manual";
 export const restartReasonSave = "save";
 
+export enum ExtensionRestartReason {
+	Unknown = "unknown",
+	UserPrompt = "userPrompt",
+	AfterFlutterClone = "afterFlutterClone",
+	AnalysisServerRestartCommand = "analysisServerRestartCommand",
+	NewPlatformEnabledPrompt = "newPlatformEnabledPrompt",
+	ToolingDaemonStatusBar = "toolingDaemonStatusBar",
+	// For test use only.
+	Test = "test",
+}
+
 export const debugLaunchProgressId = "launch";
 export const debugTerminatingProgressId = "terminate";
 

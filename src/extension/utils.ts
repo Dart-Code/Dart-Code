@@ -4,7 +4,7 @@ import { minimatch } from "minimatch";
 import * as os from "os";
 import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
-import { showLogAction } from "../shared/constants";
+import { ExtensionRestartReason, showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
@@ -232,7 +232,7 @@ export async function promptToReloadExtension(logger: Logger, prompt?: string, b
 			else
 				void openLogContents(undefined, ringLogContents, tempLogPath);
 		} else if (!prompt || chosenAction === restartAction) {
-			void commands.executeCommand("_dart.reloadExtension", prompt);
+			void commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.UserPrompt);
 		}
 	}
 }

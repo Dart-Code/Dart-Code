@@ -1,7 +1,13 @@
 {
 		"events": {
 			"Extension_Activated": { },
-			"Extension_Restart": { },
+			"Extension_Restart": {
+				"reason":                       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The reason the extension restarted." }
+			},
+			"Extension_Deactivate": {
+				"sessionDurationSeconds":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the extension session that just ended." },
+				"totalSessionDurationSeconds":  { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the overall session which may have included internal restarts." }
+			},
 			"SdkDetectionFailure": { },
 			"Debugger_Activated": {
 				"debuggerPreference":         { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether debugging is to to 'just my code', or includes external package and SDK sources" },

@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import { commands, workspace } from "vscode";
+import { ExtensionRestartReason } from "../../shared/constants";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, activateWithoutAnalysis, extApi, helloWorldExampleSubFolder, helloWorldFolder, helloWorldMainFile, waitForResult } from "../helpers";
 
@@ -10,7 +11,7 @@ describe("extension api", () => {
 
 		let didChange = false;
 		const sub = extApi.onDtdUriChanged(() => didChange = true);
-		await commands.executeCommand("_dart.reloadExtension", "testing");
+		await commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
 		await waitForResult(() => didChange);
 		sub.dispose();
 	});
@@ -21,7 +22,7 @@ describe("extension api", () => {
 
 		let didChange = false;
 		const sub = extApi.onSdksChanged(() => didChange = true);
-		await commands.executeCommand("_dart.reloadExtension", "testing");
+		await commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.Test);
 		await waitForResult(() => didChange);
 		sub.dispose();
 	});

@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, env, TelemetryLogger, TelemetrySender } from "vscode";
-import { dartCodeExtensionIdentifier, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
+import { dartCodeExtensionIdentifier, ExtensionRestartReason, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { disposeAll } from "../shared/utils";
 import { getRandomInt } from "../shared/utils/fs";
@@ -32,6 +32,7 @@ const sessionStartMs = new Date().getTime();
 export enum AnalyticsEvent {
 	Extension_Activated,
 	Extension_Restart,
+	Extension_Deactivate,
 	SdkDetectionFailure,
 	Debugger_Activated,
 	DevTools_Opened,
@@ -65,7 +66,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		// No errors are collected.
 	}
 
-	private async send(data: AnalyticsData & Record<string, any>): Promise<void> {
+	private async send(data: AnalyticsData): Promise<void> {
 		const analyticsData = {
 			// Everything listed here should be in the 'telemetry.json' file in the extension root.
 			client_id: machineId, // eslint-disable-line camelcase
@@ -81,6 +82,9 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 					debuggerPreference: data.debuggerPreference,
 					debuggerRunType: data.debuggerRunType,
 					debuggerType: data.debuggerType,
+					reason: data.reason,
+					sessionDurationSeconds: data.sessionDurationSeconds,
+					totalSessionDurationSeconds: data.totalSessionDurationSeconds,
 					// GA4 doesn't record any users unless there is non-zero engagement time.
 					// eslint-disable-next-line camelcase
 					engagement_time_msec: new Date().getTime() - sessionStartMs,
@@ -333,7 +337,20 @@ export class Analytics implements IAmDisposable {
 
 	// All events below should be included in telemetry.json.
 	public logExtensionActivated() { this.event(AnalyticsEvent.Extension_Activated); }
-	public logExtensionRestart() { this.event(AnalyticsEvent.Extension_Restart); }
+	public logExtensionRestart(reason: ExtensionRestartReason) {
+		const customData: Partial<AnalyticsData> = {
+			reason,
+		};
+		this.event(AnalyticsEvent.Extension_Restart, customData);
+	}
+	public logExtensionDeactivate({ sessionDurationMs, totalSessionDurationMs }: { sessionDurationMs: number | undefined; totalSessionDurationMs: number | undefined; }) {
+		const customData: Partial<AnalyticsData> = {
+			sessionDurationSeconds: sessionDurationMs ? sessionDurationMs / 1000 : undefined,
+			totalSessionDurationSeconds: totalSessionDurationMs ? totalSessionDurationMs / 1000 : undefined,
+		};
+		this.event(AnalyticsEvent.Extension_Deactivate, customData);
+	}
+
 	public logErrorFlutterDaemonTimeout() { this.event(AnalyticsEvent.Error_FlutterDaemonTimeout); }
 	public logSdkDetectionFailure() { this.event(AnalyticsEvent.SdkDetectionFailure); }
 	public logDebuggerStart(debuggerType: string, debuggerRunType: string, sdkDap: boolean) {
@@ -409,6 +426,9 @@ interface AnalyticsData {
 	flutterUiGuides: string | undefined,
 	flutterHotReloadOnSave: string | undefined,
 
+	// Generic reason (for things like extension restart).
+	reason?: string,
+
 	// For debugger start events.
 	// TODO(dantup): Should these be params on the event, rather than user properties?
 	debuggerType?: string,
@@ -428,6 +448,10 @@ interface AnalyticsData {
 
 	// Source of commands, such as launching from sidebar vs command palette.
 	commandSource?: string,
+
+	// Extension lifecycle timings.
+	sessionDurationSeconds?: number,
+	totalSessionDurationSeconds?: number,
 }
 
 class DebugAdapterExceptionSettingTrackerFactory implements DebugAdapterTrackerFactory {

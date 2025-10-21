@@ -3,7 +3,7 @@ import * as process from "process";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev } from "../shared/constants";
+import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, OBSERVATORY_SUPPORTED_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
@@ -106,11 +106,12 @@ let flutterDaemon: IFlutterDaemon | undefined;
 let deviceManager: FlutterDeviceManager | undefined;
 const dartCapabilities = DartCapabilities.empty;
 const flutterCapabilities = FlutterCapabilities.empty;
-let analytics: Analytics;
 
+let analytics: Analytics;
+const extensionTotalSessionStart = Date.now(); // Set for overall session.
+let extensionThisSessionStart = extensionTotalSessionStart; // Reset during every activation.
 
 let previousSettings: string;
-
 let experiments: KnownExperiments;
 
 const loggers: IAmDisposable[] = [];
@@ -130,6 +131,8 @@ export const ringLog: RingLog = new RingLog(500);
 export const perSessionWebviewStateKey = `webviewState_${(new Date()).getTime()}_${getRandomInt(1, 1000)}`;
 
 export async function activate(context: vs.ExtensionContext, isRestart = false) {
+	extensionThisSessionStart = Date.now();
+
 	// Ring logger is only set up once and presist over silent restarts.
 	if (!ringLogger)
 		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(800)));
@@ -151,13 +154,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	util.logTime("Code called activate");
 
 	// Wire up a reload command that will re-initialise everything.
-	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (reason?: string) => {
-		reason ??= "unknown reason";
-		logger.warn(`Performing silent extension reload (${reason})...`);
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (reason?: ExtensionRestartReason) => {
+		reason ??= ExtensionRestartReason.Unknown;
+		logger.warn(`Performing extension reload (${reason})...`);
+		analytics.logExtensionRestart(reason);
 		await deactivate(true);
 		disposeAll(context.subscriptions);
 		await activate(context, true);
-		logger.info("Done!");
+		logger.info("Done reloading extension!");
 	}));
 
 	// Configure if using flutter-dev.
@@ -687,11 +691,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		}
 	}
 
-	if (isRestart) {
-		analytics.logExtensionRestart();
-	} else {
+	if (!isRestart)
 		analytics.logExtensionActivated();
-	}
 
 	// Handle changes to the workspace.
 	// Set the roots, handling project changes that might affect SDKs.
@@ -866,6 +867,14 @@ function getSettingsThatRequireRestart() {
 
 export async function deactivate(isRestart = false): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
+
+	// Record session durations.
+	const sessionEndTimestamp = Date.now();
+	const sessionDurationMs = sessionEndTimestamp - extensionThisSessionStart; // Always record _this_ duration.
+	const totalSessionDurationMs = isRestart ? undefined : sessionEndTimestamp - extensionTotalSessionStart; // Only record totals for non-restarts.
+	if (analytics)
+		analytics.logExtensionDeactivate({ sessionDurationMs, totalSessionDurationMs });
+
 	extensionApiModel.clear();
 
 	const loggersToDispose = [...loggers];

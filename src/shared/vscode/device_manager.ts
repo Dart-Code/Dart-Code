@@ -1,7 +1,7 @@
 import * as vs from "vscode";
 import { disposeAll, flatMap, notNullOrUndefined, uniq, withTimeout } from "../../shared/utils";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
-import { skipAction } from "../constants";
+import { ExtensionRestartReason, skipAction } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
 import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, FlutterCreateCommandArgs, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
@@ -296,7 +296,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			const restartAction = "Reload";
 			const chosenAction = await vs.window.showInformationMessage("You must reload after enabling a new platform", restartAction, skipAction);
 			if (chosenAction === restartAction) {
-				void vs.commands.executeCommand("_dart.reloadExtension", "new platform enabled prompt");
+				void vs.commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.NewPlatformEnabledPrompt);
 				return true;
 			}
 		}

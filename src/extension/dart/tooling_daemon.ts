@@ -1,6 +1,6 @@
 import { commands, env, ExtensionContext, TextEditor, Uri, window, workspace } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { CommandSource, restartReasonManual } from "../../shared/constants";
+import { CommandSource, ExtensionRestartReason, restartReasonManual } from "../../shared/constants";
 import { DTD_AVAILABLE } from "../../shared/constants.contexts";
 import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
@@ -192,7 +192,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		const statusBarItem = this.statusBarItem;
 		statusBarItem.text = "Dart Tooling Daemon Terminated";
 		statusBarItem.command = {
-			arguments: ["DTD terminated status bar item"],
+			arguments: [ExtensionRestartReason.ToolingDaemonStatusBar],
 			command: "_dart.reloadExtension",
 			title: "restart",
 		};
