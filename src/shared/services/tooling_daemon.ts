@@ -2,12 +2,12 @@
 import * as path from "path";
 import * as ws from "ws";
 import { DartCapabilities } from "../capabilities/dart";
-import { dartVMPath, tenMinutesInMs } from "../constants";
+import { dartVMPath, ExtensionRestartReason, tenMinutesInMs } from "../constants";
 import { LogCategory } from "../enums";
 import { EventsEmitter } from "../events";
 import { DartSdks, IAmDisposable, Logger } from "../interfaces";
 import { CategoryLogger } from "../logging";
-import { PromiseCompleter, PromiseOr, disposeAll } from "../utils";
+import { disposeAll, PromiseCompleter, PromiseOr } from "../utils";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
 import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
@@ -41,7 +41,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		additionalArgs: string[],
 		maxLogLineLength: number | undefined,
 		getToolEnv: () => any,
-		private readonly promptToReloadExtension: (prompt?: string, buttonText?: string, offerLog?: boolean) => Promise<void>,
+		private readonly promptToReloadExtension: (logger: Logger, options: { prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; restartReason: ExtensionRestartReason }) => Promise<void>,
 	) {
 		this.logger = new CategoryLogger(logger, LogCategory.DartToolingDaemon);
 		this.dtdProcess = new DartToolingDaemonProcess(this.logger, sdks, additionalArgs, maxLogLineLength, getToolEnv);
@@ -291,7 +291,11 @@ export class DartToolingDaemon implements IAmDisposable {
 		// here can override hasShownTerminationError, for example to show the error when
 		// something tries to interact with the API (`notifyRequestAfterExit`).
 		this.hasShownTerminatedError = true;
-		void this.promptToReloadExtension(`The Dart Tooling Daemon ${which} ${message}.`, undefined, true);
+		void this.promptToReloadExtension(this.logger, {
+			prompt: `The Dart Tooling Daemon ${which} ${message}.`,
+			offerLog: true,
+			restartReason: ExtensionRestartReason.ToolingDaemonTerminated
+		});
 	}
 
 	public dispose(): any {

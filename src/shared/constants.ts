@@ -89,6 +89,7 @@ export enum ExtensionRestartReason {
 	NewPlatformEnabledPrompt = "newPlatformEnabledPrompt",
 	RestartMacDaemonMessage = "restartMacDaemonMessage",
 	ToolingDaemonStatusBar = "toolingDaemonStatusBar",
+	ToolingDaemonTerminated = "toolingDaemonTerminated",
 	// For test use only.
 	Test = "test",
 }
