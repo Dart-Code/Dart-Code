@@ -74,6 +74,8 @@ export enum ExtensionRestartReason {
 	Unknown = "unknown",
 	AfterFlutterClone = "afterFlutterClone",
 	AfterFlutterExtensionInstall = "afterFlutterExtensionInstall",
+	AfterFlutterUpgrade = "afterFlutterUpgrade",
+	AfterSdkVersionFileChange = "afterSdkVersionFileChange",
 	AnalysisServerCrashedManyTimes = "analysisServerCrashedManyTimes",
 	AnalysisServerFromSourceMismatch = "analysisServerFromSourceMismatch",
 	AnalysisServerRestartCommand = "analysisServerRestartCommand",

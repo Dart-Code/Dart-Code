@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, flutterPath } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason, flutterPath } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -236,6 +236,7 @@ export class SdkCommands extends BaseSdkCommands {
 			// Wait a short period before prompting.
 			setTimeout(() => util.promptToReloadExtension(this.logger, {
 				prompt: "Your Dart SDK has been updated. Reload using the new SDK?",
+				restartReason: ExtensionRestartReason.AfterSdkVersionFileChange,
 			}), 1000);
 		});
 

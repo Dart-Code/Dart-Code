@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { vsCodeVersion } from "../../shared/capabilities/vscode";
-import { CommandSource, defaultLaunchJson, flutterCreateAvailablePlatforms, flutterCreateTemplatesSupportingPlatforms } from "../../shared/constants";
+import { CommandSource, defaultLaunchJson, ExtensionRestartReason, flutterCreateAvailablePlatforms, flutterCreateTemplatesSupportingPlatforms } from "../../shared/constants";
 import { DartWorkspaceContext, FlutterCreateCommandArgs, FlutterCreateTriggerData, FlutterProjectTemplate, Logger } from "../../shared/interfaces";
 import { RunProcessResult } from "../../shared/processes";
 import { sortBy } from "../../shared/utils/array";
@@ -168,7 +168,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		// Don't prompt to reload when the version changes, as we automatically reload here.
 		commandState.promptToReloadOnVersionChanges = false;
 		await this.runFlutterInFolder(tempDir, ["upgrade"], "flutter", true);
-		await util.promptToReloadExtension(this.logger);
+		await util.promptToReloadExtension(this.logger, { restartReason: ExtensionRestartReason.AfterFlutterUpgrade });
 	}
 
 	private async flutterCreate({ projectName, projectPath, triggerData, platform }: FlutterCreateCommandArgs) {
