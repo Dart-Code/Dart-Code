@@ -234,7 +234,9 @@ export class SdkCommands extends BaseSdkCommands {
 			setTimeout(() => commandState.promptToReloadOnVersionChanges = true, 60000);
 
 			// Wait a short period before prompting.
-			setTimeout(() => util.promptToReloadExtension(this.logger, "Your Dart SDK has been updated. Reload using the new SDK?", undefined, false), 1000);
+			setTimeout(() => util.promptToReloadExtension(this.logger, {
+				prompt: "Your Dart SDK has been updated. Reload using the new SDK?",
+			}), 1000);
 		});
 
 		this.disposables.push({ dispose() { watcher.close(); } });

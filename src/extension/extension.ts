@@ -264,7 +264,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			runIfNoDevices = () => {
 				if (!hasRunNoDevicesMessage) {
 					const instruction = workspaceContext.config.restartMacDaemonMessage;
-					void promptToReloadExtension(logger, `${instruction} (Settings currently expect port: ${config.daemonPort}.)`, `Reopen this workspace`);
+					void promptToReloadExtension(logger, {
+						prompt: `${instruction} (Settings currently expect port: ${config.daemonPort}.)`,
+						buttonText: `Reopen this workspace`
+					});
 					hasRunNoDevicesMessage = true;
 				}
 			};

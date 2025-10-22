@@ -212,7 +212,7 @@ export function getLatestSdkVersion(): Promise<string> {
 	});
 }
 
-export async function promptToReloadExtension(logger: Logger, prompt?: string, buttonText?: string, offerLog?: boolean, specificLog?: string, useError?: boolean): Promise<void> {
+export async function promptToReloadExtension(logger: Logger, { prompt, buttonText, offerLog, specificLog, useError }: { prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; } = {}): Promise<void> {
 	const restartAction = buttonText || "Reload";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
 

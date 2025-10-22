@@ -11,10 +11,14 @@ export function reportAnalyzerTerminatedWithError(logger: Logger, duringStartup 
 	if (isShowingAnalyzerError)
 		return;
 	isShowingAnalyzerError = true;
-	const message = duringStartup
+	const prompt = duringStartup
 		? "The Dart Analyzer could not be started."
 		: "The Dart Analyzer has terminated.";
-	void promptToReloadExtension(logger, message, undefined, true, config.analyzerLogFile).then(() => isShowingAnalyzerError = false);
+	void promptToReloadExtension(logger, {
+		prompt,
+		offerLog: true,
+		specificLog: config.analyzerLogFile
+	}).then(() => isShowingAnalyzerError = false);
 }
 
 export async function getFlutterConfigValue<T>(logger: Logger, flutterSdkPath: string | undefined, folder: string, flutterConfigKey: string): Promise<T> {

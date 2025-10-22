@@ -642,7 +642,11 @@ export class LspAnalyzer extends Analyzer {
 			if (typeof errorOutput === "string") {
 				if (!hasShownAnalysisServerVersionMismatchError && config.analyzerPath && errorOutput.includes("analysis_server.dart") && errorOutput.includes("The specified language version is too high")) {
 					hasShownAnalysisServerVersionMismatchError = true;
-					void promptToReloadExtension(logger, "Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?", undefined, true, undefined, true);
+					void promptToReloadExtension(logger, {
+						prompt: "Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?",
+						offerLog: true,
+						useError: true,
+					});
 				}
 			}
 
@@ -754,8 +758,12 @@ class DartErrorHandler implements ls.ErrorHandler {
 		} else {
 			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
 			if (diff <= 3 * 60 * 1000) {
-				const message = `The Dart Analysis Server crashed ${this.maxRestartCount + 1} times in the last 3 minutes. See the log for more information.`;
-				void promptToReloadExtension(this.logger, message, undefined, true, undefined, true);
+				const prompt = `The Dart Analysis Server crashed ${this.maxRestartCount + 1} times in the last 3 minutes. See the log for more information.`;
+				void promptToReloadExtension(this.logger, {
+					prompt,
+					offerLog: true,
+					useError: true,
+				});
 				return {
 					action: ls.CloseAction.DoNotRestart,
 					handled: true,

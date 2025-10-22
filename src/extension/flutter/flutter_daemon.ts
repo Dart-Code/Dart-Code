@@ -78,7 +78,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	}
 
 	public startPing(customMessage?: string) {
-		const message = customMessage ?? "The daemon connection was lost. Reload the extension to restart the daemon.";
+		const prompt = customMessage ?? "The daemon connection was lost. Reload the extension to restart the daemon.";
 		this.pingIntervalId = setInterval(async () => {
 			try {
 				await withTimeout(this.daemonVersion(), "The daemon connection was lost", 10);
@@ -86,7 +86,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
 				this.hasShownTerminatedError = true;
-				void promptToReloadExtension(this.logger, message);
+				void promptToReloadExtension(this.logger, { prompt });
 			}
 		}, 60 * 1000);
 	}
@@ -138,7 +138,11 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		// here can override hasShownTerminationError, for example to show the error when
 		// something tries to interact with the API (`notifyRequestAfterExit`).
 		this.hasShownTerminatedError = true;
-		void promptToReloadExtension(this.logger, `The Flutter Daemon ${message}.`, undefined, true, config.flutterDaemonLogFile);
+		void promptToReloadExtension(this.logger, {
+			prompt: `The Flutter Daemon ${message}.`,
+			offerLog: true,
+			specificLog: config.flutterDaemonLogFile,
+		});
 	}
 
 	public dispose() {
@@ -157,7 +161,11 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		} catch (e) {
 			if (!this.hasShownTerminatedError && !this.isShuttingDown) {
 				this.hasShownTerminatedError = true;
-				void promptToReloadExtension(this.logger, "The Flutter Daemon has terminated.", undefined, true, config.flutterDaemonLogFile);
+				void promptToReloadExtension(this.logger, {
+					prompt: "The Flutter Daemon has terminated.",
+					offerLog: true,
+					specificLog: config.flutterDaemonLogFile,
+				});
 				throw e;
 			}
 		}

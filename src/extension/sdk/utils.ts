@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { commands, ExtensionContext, extensions, ProgressLocation, Uri, window, workspace } from "vscode";
-import { ExtensionRestartReason, analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
+import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
 import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter } from "../../shared/utils/fs";
@@ -77,12 +77,11 @@ export class SdkUtils {
 	}
 
 	public showFluttersDartSdkActivationFailure() {
-		void promptToReloadExtension(
-			this.logger,
-			"Could not find Dart in your Flutter SDK. " +
-			"Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
-			"Reload",
-			true,
+		void promptToReloadExtension(this.logger, {
+			prompt: "Could not find Dart in your Flutter SDK. Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
+			buttonText: "Reload",
+			offerLog: true,
+		},
 		);
 	}
 	public showFlutterActivationFailure(commandToReRun?: string) {

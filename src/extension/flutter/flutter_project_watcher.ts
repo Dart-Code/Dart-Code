@@ -51,11 +51,10 @@ export class FlutterProjectWatcher implements IAmDisposable {
 			// We only prompt once per session, so we can dispose our watcher.
 			this.dispose();
 
-			void promptToReloadExtension(
-				this.logger,
-				"A Flutter project was added to the workspace. Reload to switch to the Flutter SDK?",
-				"Reload",
-			);
+			void promptToReloadExtension(this.logger, {
+				prompt: "A Flutter project was added to the workspace. Reload to switch to the Flutter SDK?",
+				buttonText: "Reload"
+			});
 		}
 	}
 
