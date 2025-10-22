@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { flutterExtensionIdentifier, noThanksAction } from "../../shared/constants";
+import { ExtensionRestartReason, flutterExtensionIdentifier, noThanksAction } from "../../shared/constants";
 import { Context } from "../../shared/vscode/workspace";
 
 import { Logger } from "../../shared/interfaces";
@@ -22,7 +22,7 @@ export class ExtensionRecommentations {
 		);
 		if (res === installExtension) {
 			await this.installExtension(flutterExtensionIdentifier);
-			void promptToReloadExtension(this.logger);
+			void promptToReloadExtension(this.logger, { restartReason: ExtensionRestartReason.AfterFlutterExtensionInstall });
 		}
 
 		return false;

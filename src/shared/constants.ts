@@ -72,10 +72,22 @@ export const restartReasonSave = "save";
 
 export enum ExtensionRestartReason {
 	Unknown = "unknown",
-	UserPrompt = "userPrompt",
 	AfterFlutterClone = "afterFlutterClone",
+	AfterFlutterExtensionInstall = "afterFlutterExtensionInstall",
+	AnalysisServerCrashedManyTimes = "analysisServerCrashedManyTimes",
+	AnalysisServerFromSourceMismatch = "analysisServerFromSourceMismatch",
 	AnalysisServerRestartCommand = "analysisServerRestartCommand",
+	AnalyzerTerminated = "analyzerTerminated",
+	ChangeWorkspaceFolders = "changeWorkspaceFolders",
+	ConfigurationChange = "configurationChange",
+	FlutterDaemonTerminatedExit = "flutterDaemonTerminatedExit",
+	FlutterDaemonTerminatedPing = "flutterDaemonTerminatedPing",
+	FlutterDaemonTerminatedSend = "flutterDaemonTerminatedSend",
+	FlutterProjectAdded = "flutterProjectAdded",
+	FlutterSdkActivationFailure = "flutterSdkActivationFailure",
+	LocatedSdk = "locatedSdk",
 	NewPlatformEnabledPrompt = "newPlatformEnabledPrompt",
+	RestartMacDaemonMessage = "restartMacDaemonMessage",
 	ToolingDaemonStatusBar = "toolingDaemonStatusBar",
 	// For test use only.
 	Test = "test",

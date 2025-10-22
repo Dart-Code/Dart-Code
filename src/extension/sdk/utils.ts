@@ -81,6 +81,7 @@ export class SdkUtils {
 			prompt: "Could not find Dart in your Flutter SDK. Please run 'flutter doctor' in the terminal then reload the project once all issues are resolved.",
 			buttonText: "Reload",
 			offerLog: true,
+			restartReason: ExtensionRestartReason.FlutterSdkActivationFailure,
 		},
 		);
 	}
@@ -129,7 +130,7 @@ export class SdkUtils {
 					const matchingSdkFolder = search(selectedFolders.map((f) => fsPath(f)));
 					if (matchingSdkFolder.sdkPath) {
 						await saveSdkPath(matchingSdkFolder.sdkPath);
-						await promptToReloadExtension(this.logger);
+						await promptToReloadExtension(this.logger, { restartReason: ExtensionRestartReason.LocatedSdk });
 						if (commandToReRun) {
 							void commands.executeCommand(commandToReRun);
 						}

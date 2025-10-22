@@ -1,5 +1,5 @@
 import * as path from "path";
-import { flutterPath } from "../../shared/constants";
+import { ExtensionRestartReason, flutterPath } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { config } from "../config";
 import { promptToReloadExtension } from "../utils";
@@ -17,7 +17,8 @@ export function reportAnalyzerTerminatedWithError(logger: Logger, duringStartup 
 	void promptToReloadExtension(logger, {
 		prompt,
 		offerLog: true,
-		specificLog: config.analyzerLogFile
+		specificLog: config.analyzerLogFile,
+		restartReason: ExtensionRestartReason.AnalyzerTerminated,
 	}).then(() => isShowingAnalyzerError = false);
 }
 

@@ -266,7 +266,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 					const instruction = workspaceContext.config.restartMacDaemonMessage;
 					void promptToReloadExtension(logger, {
 						prompt: `${instruction} (Settings currently expect port: ${config.daemonPort}.)`,
-						buttonText: `Reopen this workspace`
+						buttonText: `Reopen this workspace`,
+						restartReason: ExtensionRestartReason.RestartMacDaemonMessage,
 					});
 					hasRunNoDevicesMessage = true;
 				}
@@ -711,7 +712,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			newWorkspaceContext.hasAnyFlutterProjects !== workspaceContext.hasAnyFlutterProjects
 			|| newWorkspaceContext.hasProjectsInFuchsiaTree !== workspaceContext.hasProjectsInFuchsiaTree
 		) {
-			void util.promptToReloadExtension(logger);
+			void util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ChangeWorkspaceFolders });
 			return;
 		}
 
@@ -840,7 +841,7 @@ function handleConfigurationChange() {
 		// and shutting the server down too quickly results in that trying to write to a closed
 		// stream.
 		logger.warn(`Configuration changed, reloading`);
-		setTimeout(() => util.promptToReloadExtension(logger), 50);
+		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange }), 50);
 	}
 }
 

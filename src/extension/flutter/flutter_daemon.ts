@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { flutterPath, isChromeOS, isDartCodeTestRun, tenMinutesInMs, twentySecondsInMs } from "../../shared/constants";
+import { ExtensionRestartReason, flutterPath, isChromeOS, isDartCodeTestRun, tenMinutesInMs, twentySecondsInMs } from "../../shared/constants";
 import { FLUTTER_SUPPORTS_ATTACH } from "../../shared/constants.contexts";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
@@ -86,7 +86,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				clearInterval(this.pingIntervalId);
 				this.logger.error(e);
 				this.hasShownTerminatedError = true;
-				void promptToReloadExtension(this.logger, { prompt });
+				void promptToReloadExtension(this.logger, { prompt, restartReason: ExtensionRestartReason.FlutterDaemonTerminatedPing });
 			}
 		}, 60 * 1000);
 	}
@@ -142,6 +142,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			prompt: `The Flutter Daemon ${message}.`,
 			offerLog: true,
 			specificLog: config.flutterDaemonLogFile,
+			restartReason: ExtensionRestartReason.FlutterDaemonTerminatedExit,
 		});
 	}
 
@@ -165,6 +166,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 					prompt: "The Flutter Daemon has terminated.",
 					offerLog: true,
 					specificLog: config.flutterDaemonLogFile,
+					restartReason: ExtensionRestartReason.FlutterDaemonTerminatedSend,
 				});
 				throw e;
 			}

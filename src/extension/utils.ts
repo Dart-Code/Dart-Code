@@ -212,7 +212,11 @@ export function getLatestSdkVersion(): Promise<string> {
 	});
 }
 
-export async function promptToReloadExtension(logger: Logger, { prompt, buttonText, offerLog, specificLog, useError }: { prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; } = {}): Promise<void> {
+export async function promptToReloadExtension(
+	logger: Logger,
+	{ prompt, buttonText, offerLog, specificLog, useError, restartReason }:
+		{ prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; restartReason: ExtensionRestartReason, },
+): Promise<void> {
 	const restartAction = buttonText || "Reload";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
 
@@ -232,7 +236,7 @@ export async function promptToReloadExtension(logger: Logger, { prompt, buttonTe
 			else
 				void openLogContents(undefined, ringLogContents, tempLogPath);
 		} else if (!prompt || chosenAction === restartAction) {
-			void commands.executeCommand("_dart.reloadExtension", ExtensionRestartReason.UserPrompt);
+			void commands.executeCommand("_dart.reloadExtension", restartReason);
 		}
 	}
 }

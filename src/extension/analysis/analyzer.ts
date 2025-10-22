@@ -7,7 +7,7 @@ import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } 
 import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -646,6 +646,7 @@ export class LspAnalyzer extends Analyzer {
 						prompt: "Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?",
 						offerLog: true,
 						useError: true,
+						restartReason: ExtensionRestartReason.AnalysisServerFromSourceMismatch
 					});
 				}
 			}
@@ -763,6 +764,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 					prompt,
 					offerLog: true,
 					useError: true,
+					restartReason: ExtensionRestartReason.AnalysisServerCrashedManyTimes
 				});
 				return {
 					action: ls.CloseAction.DoNotRestart,

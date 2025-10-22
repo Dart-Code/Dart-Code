@@ -1,5 +1,6 @@
 import * as path from "path";
 import { Uri, workspace } from "vscode";
+import { ExtensionRestartReason } from "../../shared/constants";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath, projectReferencesFlutter } from "../../shared/utils/fs";
@@ -53,7 +54,8 @@ export class FlutterProjectWatcher implements IAmDisposable {
 
 			void promptToReloadExtension(this.logger, {
 				prompt: "A Flutter project was added to the workspace. Reload to switch to the Flutter SDK?",
-				buttonText: "Reload"
+				buttonText: "Reload",
+				restartReason: ExtensionRestartReason.FlutterProjectAdded,
 			});
 		}
 	}
