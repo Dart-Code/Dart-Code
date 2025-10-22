@@ -158,7 +158,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		reason ??= ExtensionRestartReason.Unknown;
 		logger.warn(`Performing extension reload (${reason})...`);
 		analytics.logExtensionRestart(reason);
-		await deactivate(true);
+		await deactivate(true, reason);
 		disposeAll(context.subscriptions);
 		await activate(context, true);
 		logger.info("Done reloading extension!");
@@ -873,7 +873,7 @@ function getSettingsThatRequireRestart() {
 		+ config.flutterAdbConnectOnChromeOs;
 }
 
-export async function deactivate(isRestart = false): Promise<void> {
+export async function deactivate(isRestart = false, reason: ExtensionRestartReason | undefined): Promise<void> {
 	logger.info(`Extension deactivate was called (isRestart: ${isRestart})`);
 
 	// Record session durations.
@@ -881,7 +881,7 @@ export async function deactivate(isRestart = false): Promise<void> {
 	const sessionDurationMs = sessionEndTimestamp - extensionThisSessionStart; // Always record _this_ duration.
 	const totalSessionDurationMs = isRestart ? undefined : sessionEndTimestamp - extensionTotalSessionStart; // Only record totals for non-restarts.
 	if (analytics)
-		analytics.logExtensionDeactivate({ sessionDurationMs, totalSessionDurationMs });
+		analytics.logExtensionDeactivate({ sessionDurationMs, totalSessionDurationMs, reason });
 
 	extensionApiModel.clear();
 

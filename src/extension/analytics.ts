@@ -343,10 +343,11 @@ export class Analytics implements IAmDisposable {
 		};
 		this.event(AnalyticsEvent.Extension_Restart, customData);
 	}
-	public logExtensionDeactivate({ sessionDurationMs, totalSessionDurationMs }: { sessionDurationMs: number | undefined; totalSessionDurationMs: number | undefined; }) {
+	public logExtensionDeactivate({ sessionDurationMs, totalSessionDurationMs, reason }: { sessionDurationMs: number | undefined; totalSessionDurationMs: number | undefined; reason?: ExtensionRestartReason }) {
 		const customData: Partial<AnalyticsData> = {
 			sessionDurationSeconds: sessionDurationMs ? sessionDurationMs / 1000 : undefined,
 			totalSessionDurationSeconds: totalSessionDurationMs ? totalSessionDurationMs / 1000 : undefined,
+			reason,
 		};
 		this.event(AnalyticsEvent.Extension_Deactivate, customData);
 	}
