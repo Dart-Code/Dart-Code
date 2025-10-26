@@ -332,7 +332,7 @@ export class ResourceConfig {
 	get sdkPaths(): string[] { return this.getConfig<string[]>("sdkPaths", []).map(resolvePaths); }
 	get showDartDeveloperLogs(): boolean { return this.getConfig<boolean>("showDartDeveloperLogs", true); }
 	get showGettersInDebugViews(): boolean { return this.getConfig<boolean>("showGettersInDebugViews", true); }
-	get suppressTestTimeouts(): "never" | "debug" | "always" { return this.getConfig<"never" | "debug" | "always">("suppressTestTimeouts", "never"); }
+	get suppressTestTimeouts(): "never" | "debug" | "always" { return this.getConfig<"never" | "debug" | "always">("suppressTestTimeouts", "debug"); }
 	get testAdditionalArgs(): string[] { return this.getConfig<string[]>("testAdditionalArgs", []); }
 	get toolingDaemonLogFile(): undefined | string { return createFolderForFile(insertWorkspaceName(resolvePaths(this.getConfig<null | string>("toolingDaemonLogFile", null)))); }
 	get vmAdditionalArgs(): string[] { return this.getConfig<string[]>("vmAdditionalArgs", []); }
