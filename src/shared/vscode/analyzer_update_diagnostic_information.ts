@@ -30,7 +30,7 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const that = this;
 		return {
-			dispose() {
+			clear() {
 				disposeAll(disposables);
 			},
 			fillClientCapabilities(_capabilities: ClientCapabilities) { },

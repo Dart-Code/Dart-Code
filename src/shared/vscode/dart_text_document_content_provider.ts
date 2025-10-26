@@ -17,7 +17,7 @@ export class DartTextDocumentContentProviderFeature implements IAmDisposable {
 		const client = this.client;
 		const disposables = this.disposables;
 		return {
-			dispose() {
+			clear() {
 				disposeAll(disposables);
 			},
 			fillClientCapabilities(capabilities: ClientCapabilities) {
