@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
-import { DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
+import { cursorInstallMcpServer, DART_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, installFlutterExtensionPromptKey, isWin, noAction, recommendedSettingsUrl, showRecommendedSettingsAction, useRecommendedSettingsPromptKey, userPromptContextPrefix, yesAction } from "../shared/constants";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
 import { Analytics, DartProjectTemplate, FlutterCreateCommandArgs, FlutterCreateTriggerData, Logger } from "../shared/interfaces";
@@ -89,6 +89,14 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		showPrompt(useRecommendedSettingsPromptKey, promptToUseRecommendedSettings);
 		return;
 	}
+
+	// Show MCP install prompt for Cursor.
+	if (vs.env.appName === "Cursor" && workspaceContext.sdks.dart) {
+		if (!shouldSuppress(cursorInstallMcpServer)) {
+			showPrompt(cursorInstallMcpServer, promptToInstallMcpServerForCursor);
+			return;
+		}
+	}
 }
 
 function hasAnyExistingDartSettings(): boolean {
@@ -114,6 +122,19 @@ async function promptToUseRecommendedSettings(): Promise<boolean> {
 		await vs.commands.executeCommand("dart.writeRecommendedSettings");
 	} else if (action === showRecommendedSettingsAction) {
 		await envUtils.openInBrowser(recommendedSettingsUrl);
+	}
+	return true;
+}
+
+async function promptToInstallMcpServerForCursor(): Promise<boolean> {
+	const action = await vs.window.showInformationMessage(
+		"Would you like to install the Dart and Flutter MCP server?",
+		yesAction,
+		noAction,
+	);
+	if (action === yesAction) {
+		const mcpSetupUri = vs.Uri.parse("cursor://anysphere.cursor-deeplink/mcp/install?name=dart&config=eyJ0eXBlIjoic3RkaW8iLCJjb21tYW5kIjoiZGFydCBtY3Atc2VydmVyIC0tZXhwZXJpbWVudGFsLW1jcC1zZXJ2ZXIgLS1mb3JjZS1yb290cy1mYWxsYmFjayJ9");
+		await vs.commands.executeCommand("vscode.open", mcpSetupUri);
 	}
 	return true;
 }

@@ -174,6 +174,7 @@ export const runAnywayAction = "Run Anyway";
 export const userPromptContextPrefix = "hasPrompted.";
 export const installFlutterExtensionPromptKey = "install_flutter_extension_3";
 export const useRecommendedSettingsPromptKey = "use_recommended_settings";
+export const cursorInstallMcpServer = "cursor_install_mcp_server";
 export const yesAction = "Yes";
 export const noAction = "No";
 export const noThanksAction = "No Thanks";
