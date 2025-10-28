@@ -15,7 +15,7 @@ import { PublicCodeLens, PublicCodeLensSuppressOptions, PublicDartExtensionApi, 
 /// A single instance of this class is created (below) that is used internally to modify the data
 /// provided by the API.
 class DartExtensionApiModel {
-	public readonly version = 2;
+	public readonly version = 3;
 
 	public sdks: Sdks | undefined;
 	public dtdUri: string | undefined;
