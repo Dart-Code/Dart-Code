@@ -142,8 +142,8 @@ describe("test_code_lens", () => {
 
 		it("suppresses test code lenses but allows override for specific folders", async () => {
 			const disposables = [
-				extApi.features.codeLens.suppress([helloWorldFolder], { main: true }),
-				extApi.features.codeLens.suppress([helloWorldTestFolder], { main: false }),
+				extApi.features.codeLens.suppress([helloWorldFolder], { test: true }),
+				extApi.features.codeLens.suppress([helloWorldTestFolder], { test: false }),
 			];
 
 			try {
