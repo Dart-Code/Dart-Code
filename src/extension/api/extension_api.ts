@@ -9,7 +9,8 @@ import { LspAnalyzer } from "../analysis/analyzer";
 import { SdkCommands } from "../commands/sdk";
 import { config } from "../config";
 import { safeToolSpawn } from "../utils/processes";
-import { PublicDartExtensionApi, PublicElement, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "./interfaces";
+import { FeatureOverrideManager } from "./feature_overrides";
+import { PublicCodeLens, PublicCodeLensSuppressOptions, PublicDartExtensionApi, PublicElement, PublicFeatures, PublicOutline, PublicRunOptions, PublicRunResult, PublicSdk, PublicSdks, PublicStartResult, PublicWorkspace } from "./interfaces";
 
 /// A single instance of this class is created (below) that is used internally to modify the data
 /// provided by the API.
@@ -21,6 +22,8 @@ class DartExtensionApiModel {
 	public analyzer: LspAnalyzer | undefined;
 	public projectFinder: ProjectFinder | undefined;
 	public sdkCommands: SdkCommands | undefined;
+
+	public readonly codeLensSuppressions = new FeatureOverrideManager<PublicCodeLensSuppressOptions>();
 
 	private onSdksChangedEmitter = new vs.EventEmitter<Sdks | undefined>();
 	public readonly onSdksChanged = this.onSdksChangedEmitter.event;
@@ -56,6 +59,7 @@ class DartExtensionApiModel {
 		this.setAnalyzer(undefined);
 		this.setProjectFinder(undefined);
 		this.setSdkCommands(undefined);
+		this.codeLensSuppressions.clear();
 	}
 }
 
@@ -71,6 +75,7 @@ export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
 
 	private readonly workspaceImpl = new PublicWorkspaceImpl();
 	private readonly sdkImpl = new PublicSdkImpl();
+	private readonly featuresImpl = new PublicFeaturesImpl();
 
 	public get version() { return extensionApiModel.version; };
 
@@ -100,6 +105,10 @@ export class PublicDartExtensionApiImpl implements PublicDartExtensionApi {
 
 	public get sdk(): PublicSdk {
 		return this.sdkImpl;
+	}
+
+	public get features(): PublicFeatures {
+		return this.featuresImpl;
 	}
 }
 
@@ -184,5 +193,19 @@ class PublicSdkImpl implements PublicSdk {
 		const dartExecutable = path.join(data.sdks.dart, dartVMPath);
 
 		return safeToolSpawn(folder, dartExecutable, args);
+	}
+}
+
+class PublicFeaturesImpl implements PublicFeatures {
+	private readonly codeLensImpl = new PublicCodeLensImpl();
+
+	public get codeLens(): PublicCodeLens {
+		return this.codeLensImpl;
+	}
+}
+
+class PublicCodeLensImpl implements PublicCodeLens {
+	public suppress(projectFolders: vs.Uri[], options: PublicCodeLensSuppressOptions): vs.Disposable {
+		return data.codeLensSuppressions.addOverride(projectFolders, options);
 	}
 }

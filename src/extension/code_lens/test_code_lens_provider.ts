@@ -6,6 +6,7 @@ import { TestOutlineInfo, TestOutlineVisitor } from "../../shared/utils/outline"
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
+import { extensionApiModel } from "../api/extension_api";
 import { isTestFile } from "../utils";
 
 export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
@@ -17,9 +18,16 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		this.disposables.push(this.analyzer.fileTracker.onOutline(() => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
+		this.disposables.push(extensionApiModel.codeLensSuppressions.onDidChange(() => this.onDidChangeCodeLensesEmitter.fire()));
 	}
 
 	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[] | undefined> {
+		// Check if test code lenses are suppressed for this document
+		const suppressions = extensionApiModel.codeLensSuppressions.getOverrides(document.uri);
+		if (suppressions.test) {
+			return undefined;
+		}
+
 		// We should only show the CodeLens for projects we know can actually handle `pub run` (for ex. the
 		// SDK codebase cannot, and will therefore run all tests when you click them).
 		if (!this.analyzer.fileTracker.supportsPackageTest(document.uri))
