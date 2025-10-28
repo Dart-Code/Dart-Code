@@ -24,7 +24,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[] | undefined> {
 		// Check if main code lenses are suppressed for this document
 		const suppressions = extensionApiModel.codeLensSuppressions.getOverrides(document.uri);
-		if (suppressions.main === true) {
+		if (suppressions.main) {
 			return undefined;
 		}
 
