@@ -6,6 +6,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
 import { lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
+import { extensionApiModel } from "../api/extension_api";
 import { isInsideFlutterProject, isTestFile } from "../utils";
 
 export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
@@ -17,9 +18,16 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		this.disposables.push(this.analyzer.fileTracker.onOutline(() => {
 			this.onDidChangeCodeLensesEmitter.fire();
 		}));
+		this.disposables.push(extensionApiModel.codeLensSuppressions.onDidChange(() => this.onDidChangeCodeLensesEmitter.fire()));
 	}
 
 	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[] | undefined> {
+		// Check if main code lenses are suppressed for this document
+		const suppressions = extensionApiModel.codeLensSuppressions.getOverrides(document.uri);
+		if (suppressions.main === true) {
+			return undefined;
+		}
+
 		// Without version numbers, the best we have to tell if an outline is likely correct or stale is
 		// if its length matches the document exactly.
 		const expectedLength = document.getText().length;

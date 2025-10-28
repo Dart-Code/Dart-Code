@@ -1,7 +1,8 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { disposeAll } from "../../../shared/utils";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, addLaunchConfigsForTest, getCodeLens, getPackages, helloWorldMainFile, helloWorldTestMainFile, openFile, positionOf, privateApi, waitForResult } from "../../helpers";
+import { activate, addLaunchConfigsForTest, extApi, getCodeLens, getPackages, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, helloWorldTestMainFile, openFile, positionOf, privateApi, waitForResult } from "../../helpers";
 
 describe("main_code_lens", () => {
 	before("get packages", () => getPackages());
@@ -12,22 +13,22 @@ describe("main_code_lens", () => {
 		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		const mainFunctionPos = positionOf(`main^() async {`);
+		const targetPos = positionOf(`main^() async {`);
 
-		const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
-		assert.equal(codeLensForMainFunction.length, 2);
+		const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+		assert.equal(codeLensForTarget.length, 2);
 
 		// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 		// race condition. Rather than failing our test runs, skip.
 		// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-		if (!codeLensForMainFunction[0].command)
+		if (!codeLensForTarget[0].command)
 			this.skip();
 
-		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
+		const runAction = codeLensForTarget.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "dart.startWithoutDebugging");
 		assert.equal(fsPath(runAction.command!.arguments![0].resource as vs.Uri), fsPath(helloWorldMainFile));
 
-		const debugAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Debug");
+		const debugAction = codeLensForTarget.find((cl) => cl.command!.title === "Debug");
 		assert.equal(debugAction!.command!.command, "dart.startDebugging");
 		assert.equal(fsPath(debugAction!.command!.arguments![0].resource as vs.Uri), fsPath(helloWorldMainFile));
 	});
@@ -37,21 +38,21 @@ describe("main_code_lens", () => {
 		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
 
 		const fileCodeLens = await getCodeLens(editor.document);
-		const mainFunctionPos = positionOf(`main^() async {`);
+		const targetPos = positionOf(`main^() async {`);
 
-		const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
-		assert.equal(codeLensForMainFunction.length, 2);
+		const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+		assert.equal(codeLensForTarget.length, 2);
 
 		// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 		// race condition. Rather than failing our test runs, skip.
 		// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-		if (!codeLensForMainFunction[0].command)
+		if (!codeLensForTarget[0].command)
 			this.skip();
 
-		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
+		const runAction = codeLensForTarget.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.arguments![0].launchTemplate.env.LAUNCH_ENV_VAR, "default");
 
-		const debugAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Debug")!;
+		const debugAction = codeLensForTarget.find((cl) => cl.command!.title === "Debug")!;
 		assert.equal(debugAction.command!.arguments![0].launchTemplate.env.LAUNCH_ENV_VAR, "noDebugExplicitlyFalse");
 	});
 
@@ -84,18 +85,18 @@ describe("main_code_lens", () => {
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 				const fileCodeLens = await getCodeLens(editor.document);
-				const mainFunctionPos = positionOf(testConfig.lensLocation);
+				const targetPos = positionOf(testConfig.lensLocation);
 
-				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
-				assert.equal(codeLensForMainFunction.length, 3);
+				const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+				assert.equal(codeLensForTarget.length, 3);
 
 				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 				// race condition. Rather than failing our test runs, skip.
 				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-				if (!codeLensForMainFunction[0].command)
+				if (!codeLensForTarget[0].command)
 					this.skip();
 
-				const action = codeLensForMainFunction.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;
+				const action = codeLensForTarget.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;
 				assert.equal(action.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
 				assert.equal(fsPath(action.command!.arguments![0].resource as vs.Uri), fsPath(testConfig.fileUri));
 				assert.equal(action.command!.arguments![0].launchTemplate.console, "terminal");
@@ -122,18 +123,18 @@ describe("main_code_lens", () => {
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 				const fileCodeLens = await getCodeLens(editor.document);
-				const mainFunctionPos = positionOf(testConfig.lensLocation);
+				const targetPos = positionOf(testConfig.lensLocation);
 
-				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
-				assert.equal(codeLensForMainFunction.length, 2);
+				const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+				assert.equal(codeLensForTarget.length, 2);
 
 				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
 				// race condition. Rather than failing our test runs, skip.
 				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
-				if (!codeLensForMainFunction[0].command)
+				if (!codeLensForTarget[0].command)
 					this.skip();
 
-				const action = codeLensForMainFunction.find((cl) => cl.command!.title === `${debugType.name}`)!;
+				const action = codeLensForTarget.find((cl) => cl.command!.title === `${debugType.name}`)!;
 				assert.equal(action.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
 				assert.equal(fsPath(action.command!.arguments![0].resource as vs.Uri), fsPath(testConfig.fileUri));
 				assert.equal(action.command!.arguments![0].launchTemplate.console, "terminal");
@@ -176,10 +177,10 @@ describe("main_code_lens", () => {
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(testConfig.fileUri));
 
 				const fileCodeLens = await getCodeLens(editor.document);
-				const mainFunctionPos = positionOf(testConfig.lensLocation);
+				const targetPos = positionOf(testConfig.lensLocation);
 
-				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
-				const codeLensNames = codeLensForMainFunction.map((cl) => cl.command!.title);
+				const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+				const codeLensNames = codeLensForTarget.map((cl) => cl.command!.title);
 				const expected = testConfig.expectMatch
 					? ["Run", "Debug", "Run (terminal)"]
 					: ["Run", "Debug"];
@@ -187,4 +188,114 @@ describe("main_code_lens", () => {
 			});
 		}
 	}
+
+	describe("suppression via API", () => {
+		it("suppresses main code lenses for a project folder", async () => {
+			const disposable = extApi.features.codeLens.suppress([helloWorldFolder], { main: true });
+
+			try {
+				const editor = await openFile(helloWorldMainFile);
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
+
+				const fileCodeLens = await getCodeLens(editor.document);
+				const targetPos = positionOf("main^() async {");
+
+				const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+				assert.equal(codeLensForTarget.length, 0);
+			} finally {
+				disposable.dispose();
+			}
+		});
+
+		it("suppresses main code lenses but allows override for test folder", async () => {
+			const disposables = [
+				extApi.features.codeLens.suppress([helloWorldFolder], { main: true }),
+				extApi.features.codeLens.suppress([helloWorldTestFolder], { main: false }),
+			];
+
+			try {
+				// Test that main file is suppressed
+				const mainEditor = await openFile(helloWorldMainFile);
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
+
+				const mainCodeLens = await getCodeLens(mainEditor.document);
+				const targetPos = positionOf("main^() async {");
+				const mainLenses = mainCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+				assert.equal(mainLenses.length, 0);
+
+				// Test that test file is NOT suppressed.
+				const testEditor = await openFile(helloWorldTestMainFile);
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+
+				const testCodeLens = await getCodeLens(testEditor.document);
+				const testPos = positionOf("main^() {");
+				const testLenses = testCodeLens.filter((cl) => cl.range.start.line === testPos.line);
+				assert.equal(testLenses.length, 2);
+			} finally {
+				disposeAll(disposables);
+			}
+		});
+
+		it("allows stacking multiple suppressions with latest match winning", async () => {
+			const disposables = [
+				extApi.features.codeLens.suppress([helloWorldFolder], { main: true }),
+				extApi.features.codeLens.suppress([helloWorldFolder], { main: false }),
+			];
+
+			try {
+				const editor = await openFile(helloWorldMainFile);
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
+
+				const fileCodeLens = await getCodeLens(editor.document);
+				const targetPos = positionOf("main^() async {");
+
+				const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+				assert.equal(codeLensForTarget.length, 2);
+			} finally {
+				disposeAll(disposables);
+			}
+		});
+
+		it("removes suppression when disposed", async () => {
+			const disposable = extApi.features.codeLens.suppress([helloWorldFolder], { main: true });
+
+			// First verify suppression works
+			let editor = await openFile(helloWorldMainFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
+			let fileCodeLens = await getCodeLens(editor.document);
+			let targetPos = positionOf("main^() async {");
+			let codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+			assert.equal(codeLensForTarget.length, 0);
+
+			// Dispose and verify it's restored
+			disposable.dispose();
+
+			// Need to wait for the change event to propagate
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			editor = await openFile(helloWorldMainFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
+			fileCodeLens = await getCodeLens(editor.document);
+			targetPos = positionOf("main^() async {");
+			codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+			assert.equal(codeLensForTarget.length, 2);
+		});
+
+		it("does not suppress when main option is undefined", async () => {
+			const disposable = extApi.features.codeLens.suppress([helloWorldFolder], { test: true });
+
+			try {
+				const editor = await openFile(helloWorldMainFile);
+				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldMainFile));
+
+				const fileCodeLens = await getCodeLens(editor.document);
+				const targetPos = positionOf("main^() async {");
+
+				const codeLensForTarget = fileCodeLens.filter((cl) => cl.range.start.line === targetPos.line);
+				assert.equal(codeLensForTarget.length, 2);
+			} finally {
+				disposable.dispose();
+			}
+		});
+	});
 });
