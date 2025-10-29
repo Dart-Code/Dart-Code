@@ -174,7 +174,8 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 		add("extensionKind", data.extensionKind);
 		add("platform", data.platform);
 		add("hostKind", data.hostKind ?? "desktop");
-		add("onlyAnalyzeProjectsWithOpenFiles", data.onlyAnalyzeProjectsWithOpenFiles);
+		// GA Max is 24 chars
+		add("onlyAnalyzeProjectsWithO", data.onlyAnalyzeProjectsWithOpenFiles);
 		add("showTodos", data.showTodos);
 		add("userLanguage", data.language);
 		add("workspaceType", data.workspaceType);
