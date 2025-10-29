@@ -356,7 +356,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			// Only update locations of tests that already have locations if they are from the Outline, because
 			// if they were from results then re-applying the original location might now be inaccurate due to
 			// changes to the file.
-			if (config.experimentalTestTracking || !item.range || node.testSource === TestSource.Outline) {
+			if (config.dynamicTestTracking || !item.range || node.testSource === TestSource.Outline) {
 				item.range = new vs.Range(
 					new vs.Position(node.range.start.line, node.range.start.character),
 					new vs.Position(node.range.end.line, node.range.end.character),

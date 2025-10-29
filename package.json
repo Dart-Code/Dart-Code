@@ -3337,10 +3337,10 @@
 						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) refactors on the lightbulb menu. This setting is intended for use by Dart Analysis Server developers or users that want to try out and provide feedback on in-progress refactors.",
 						"scope": "window"
 					},
-					"dart.experimentalTestTracking": {
+					"dart.dynamicTestTracking": {
 						"type": "boolean",
-						"default": false,
-						"markdownDescription": "Whether to enable experimental tracking of test locations. This may improve the experience when using packages like `pkg:test_reflective_loader` where tests are only discovered during test runs and not during coding.",
+						"default": true,
+						"markdownDescription": "Whether to use the new dynamic test tracking. This is a temporary setting that will be removed in an upcoming release.",
 						"scope": "window"
 					},
 					"dart.experimentalDtdHandlers": {

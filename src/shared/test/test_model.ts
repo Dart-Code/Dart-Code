@@ -175,7 +175,7 @@ export class TestModel {
 	// TODO: Make private?
 	public readonly suites = new DocumentCache<SuiteData>();
 
-	public constructor(private readonly logger: Logger, private readonly config: { experimentalTestTracking: boolean; showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
+	public constructor(private readonly logger: Logger, private readonly config: { dynamicTestTracking: boolean; showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
 
 	public addTestEventListener(listener: TestEventListener) {
 		this.testEventListeners.push(listener);
@@ -393,7 +393,7 @@ export class TestModel {
 			const originalRange = testNode.range;
 			testNode.range = range;
 
-			if (!this.config.experimentalTestTracking) {
+			if (!this.config.dynamicTestTracking) {
 				// If we're an Outline node being updated, and we have Results children that
 				// had the same range as us, they should be updated too, so Results nodes do not
 				// drift away from the location over time.
@@ -461,7 +461,7 @@ export class TestModel {
 
 		// If this node is from a result, track its location so we can keep it
 		// up-to-date as the user edits the file.
-		if (this.config.experimentalTestTracking && source === TestSource.Result && node.testSource === TestSource.Result && range && nodePath) {
+		if (this.config.dynamicTestTracking && source === TestSource.Result && node.testSource === TestSource.Result && range && nodePath) {
 			void this.rangeTracker.trackRangeForUri(
 				URI.file(suitePath),
 				range,

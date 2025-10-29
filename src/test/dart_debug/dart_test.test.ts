@@ -578,7 +578,6 @@ test/tree_test.dart [6/8 passed] Failed
 	}
 
 	it("keeps test model updated as documents change", async () => {
-		await setConfigForTest("dart", "experimentalTestTracking", true);
 		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
 		await openFile(helloWorldTestEmptyFile);
 		await setTestContent(`
