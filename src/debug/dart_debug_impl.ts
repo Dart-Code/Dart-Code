@@ -689,8 +689,8 @@ export abstract class DartDebugSession extends DebugSession {
 		}
 
 		try {
-			let isTruncated = true;
-			let totalFrames = 1;
+			let isTruncated: boolean;
+			let totalFrames: number;
 			let stackFrames: DebugProtocol.StackFrame[] = [];
 
 			// Newer VM Service allows us to cap the frames to avoid fetching more than we need.
