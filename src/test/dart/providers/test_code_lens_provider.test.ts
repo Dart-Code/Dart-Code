@@ -62,7 +62,7 @@ describe("test_code_lens", () => {
 			{
 				codeLens: {
 					for: [`${debugType.type}-test`],
-					title: "${debugType} (browser)",
+					title: `${debugType.name} (browser)`,
 				},
 				env: { MY_VAR: "FOO" },
 				name: "Run in Browser",

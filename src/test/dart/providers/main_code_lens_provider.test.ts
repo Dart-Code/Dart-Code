@@ -70,7 +70,7 @@ describe("main_code_lens", () => {
 						{
 							codeLens: {
 								for: [`${debugType.type}-${testConfig.type}`],
-								title: "${debugType} (terminal)",
+								title: `${debugType.name} (terminal)`,
 							},
 							console: "terminal",
 							name: "Run in Terminal",

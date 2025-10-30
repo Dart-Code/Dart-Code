@@ -40,7 +40,7 @@ export class DartApi implements IAmDisposable {
 		const handler = this.apis[apiName];
 		if (!handler) {
 			if (message.id) {
-				this.postMessage({ id: message.id, error: "No handler for '${apiName}' API" });
+				this.postMessage({ id: message.id, error: `No handler for '${apiName}' API` });
 			}
 			return;
 		}
