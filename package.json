@@ -2218,7 +2218,7 @@
 						],
 						"enumDescriptions": [
 							"Show full documentation",
-							"Show short documentatin summary",
+							"Show short documentation summary",
 							"Do not show documentation"
 						],
 						"markdownDescription": "What level of documentation to show in Hovers and Code Completion details. When `null`, defaults to 'full' when running locally and 'none' in remote workspaces. This setting is only supported for Dart SDKs after v2.18.",
