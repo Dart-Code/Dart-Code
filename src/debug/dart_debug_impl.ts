@@ -1612,8 +1612,6 @@ export abstract class DartDebugSession extends DebugSession {
 		const instanceRef = (event as any).inspectee as VMInstanceRef;
 		const thread = isolateRef ? this.threadManager.getThreadInfoFromRef(isolateRef) : undefined;
 		if (isolateRef && instanceRef && thread) {
-			const text = await this.fullValueAsString(isolateRef, instanceRef, false);
-
 			this.sendVariable(thread.storeData(new InspectedVariable(thread.storeData(instanceRef))));
 		}
 	}
