@@ -41,6 +41,11 @@ export interface PublicDartExtensionApi {
 	 * APIs related to the SDK.
 	 */
 	readonly sdk: PublicSdk;
+
+	/**
+	 * APIs for controlling extension features.
+	 */
+	readonly features: PublicFeatures;
 }
 
 export interface PublicWorkspace {
@@ -195,3 +200,72 @@ export interface PublicRunResult {
 }
 
 export type PublicStartResult = SpawnedProcess;
+
+export interface PublicFeatures {
+	/**
+	 * APIs for controlling CodeLenses added by the Dart extension.
+	 */
+	readonly codeLens: PublicCodeLens;
+}
+
+export interface PublicCodeLens {
+	/**
+	 * Suppresses Run/Debug code lenses for the specified project folders.
+	 *
+	 * This allows another extension to prevent the Dart extension from showing the default
+	 * Run and Debug code lenses (for example because they contribute their own debugger
+	 * for these projects).
+	 *
+	 * Suppressions stack and the latest match (with a boolean value) for a project/folder wins.
+	 * Multiple calls with the same folder will each need to be disposed to clear all suppressions.
+	 *
+	 * @param projectFolders The absolute file URIs projects/folders where code lenses should be suppressed.
+	 * @param options Which types of code lenses to suppress. Only explicit values `true` or `false` cause folders to match.
+	 * @returns A Disposable that, when disposed, removes this specific suppression.
+	 *
+	 * @example
+	 * ```typescript
+	 * // Suppress main code lenses for a project but un-suppress for the `test` and `tool` folders.
+	 * const disposables = [
+	 *     api.features.codeLens.suppress(["/path/to/project"], { main: true }),
+	 *     api.features.codeLens.suppress(["/path/to/project/test", "/path/to/project/tool"], { main: false }),
+	 * ];
+	 *
+	 * // Later, restore the code lenses
+	 * disposables.forEach((d) => d.dispose());
+	 * ```
+	 */
+	suppress(projectFolders: vs.Uri[], options: PublicCodeLensSuppressOptions): vs.Disposable;
+}
+
+export interface PublicCodeLensSuppressOptions {
+	/**
+	 * Whether to suppress Run/Debug code lenses for main entry point functions.
+	 *
+	 * When set to `true`, the Dart extension will not show Run and Debug code
+	 * lenses above `main` functions in the specified folders.
+	 *
+	 * When set to `false`, the Dart extension will show Run and Debug code
+	 * lenses above `main` functions in the specified folders even if a previous
+	 * rule suppressed them.
+	 *
+	 * When undefined, this rule will not be considered when rendering code lenses
+	 * above `main` functions.
+	 */
+	main?: boolean;
+
+	/**
+	 * Whether to suppress Run/Debug code lenses for group/test entries.
+	 *
+	 * When set to `true`, the Dart extension will not show Run and Debug code
+	 * lenses above `group` and `test` function calls in the specified folders.
+	 *
+	 * When set to `false`, the Dart extension will show Run and Debug code
+	 * lenses above `group` and `test` function calls in the specified folders
+	 * even if a previous rule suppressed them.
+	 *
+	 * When undefined, this rule will not be considered when rendering code lenses
+	 * above `group` and `test` functions.
+	 */
+	test?: boolean;
+}
