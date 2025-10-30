@@ -163,11 +163,11 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	}
 
 	public async selectDevice(id: string | undefined): Promise<boolean> {
-		return this.deviceManager?.selectDeviceById(id) ?? false;
+		return (await this.deviceManager?.selectDeviceById(id)) ?? false;
 	}
 
 	public async enablePlatformType(platformType: string): Promise<boolean> {
-		return this.deviceManager?.enablePlatformType(platformType, undefined) ?? false;
+		return (await this.deviceManager?.enablePlatformType(platformType, undefined)) ?? false;
 	}
 
 	public async openDevToolsPage(
