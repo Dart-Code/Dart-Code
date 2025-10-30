@@ -1802,6 +1802,12 @@
 			"files.watcherExclude": {
 				"**/.dart_tool": true
 			},
+			"search.exclude": {
+				"**/.dart_tool": true,
+				"**/flutter/ephemeral": true,
+				"**/.symlinks": true,
+				"**/.plugin_symlinks": true
+			},
 			"explorer.fileNesting.patterns": {
 				"pubspec.yaml": "pubspec.lock,pubspec_overrides.yaml,.packages,.flutter-plugins,.flutter-plugins-dependencies,.metadata",
 				"*.dart": "${capture}.g.dart"
