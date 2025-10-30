@@ -3,7 +3,16 @@ import * as vs from "vscode";
 import { activateWithoutAnalysis, privateApi, setConfigForTest } from "../helpers";
 
 describe("MCP server", () => {
-	beforeEach(async () => activateWithoutAnalysis());
+	let originalCapabilitiesVersion: string;
+
+	beforeEach(async () => {
+		originalCapabilitiesVersion = privateApi.dartCapabilities.version;
+		await activateWithoutAnalysis();
+	});
+
+	afterEach(() => {
+		privateApi.dartCapabilities.version = originalCapabilitiesVersion;
+	});
 
 	function getExcludedTools(server: vs.McpServerDefinition): string[] {
 		server = server as vs.McpStdioServerDefinition;
