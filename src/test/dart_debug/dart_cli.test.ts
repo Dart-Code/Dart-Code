@@ -1142,14 +1142,26 @@ void printSomething() {
 				}),
 			);
 
+			const expectedError = privateApi.dartCapabilities.version.startsWith("3.9.")
+				? "The getter 'ye' isn't defined for the type 'DateTime'."
+				: "Class 'DateTime' has no instance getter 'ye'.";
+
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "repl").catch((e) => e);
-			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the type 'DateTime'"), -1);
+			assert.notEqual(error.message.indexOf(expectedError), -1);
 
 			await dc.terminateRequest();
 		});
 
-		it("returns a short error message for watch context", async () => {
+		it("returns a short error message for watch context", async function () {
+			// This got broke in 3.10, but is fixed for 3.11
+			// https://github.com/dart-lang/sdk/commit/3d601ce7d6b51bf3ead000b67898c31c524f6b4e
+			if (privateApi.dartCapabilities.version.startsWith("3.10."))
+				this.skip();
+			const expectedError = privateApi.dartCapabilities.version.startsWith("3.9.")
+				? "The getter 'ye' isn't defined for the type 'DateTime'."
+				: "Class 'DateTime' has no instance getter 'ye'.";
+
 			await openFile(helloWorldMainFile);
 			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
@@ -1161,7 +1173,7 @@ void printSomething() {
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
-			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the type 'DateTime'." : "not available");
+			assert.equal(error.message, dc.isDartDap ? expectedError : "not available");
 
 			await dc.terminateRequest();
 		});
@@ -1169,6 +1181,7 @@ void printSomething() {
 
 	describe("can evaluate when not at a breakpoint", () => {
 		beforeEach(function () {
+			// TODO(dantup): Understand and document why this is skipped? Related to global eval? Don't we support this now?
 			if (dc.isDartDap)
 				this.skip();
 		});
@@ -1264,14 +1277,26 @@ void printSomething() {
 
 			await dc.tryWaitUntilGlobalEvaluationIsAvailable();
 
+			const expectedError = privateApi.dartCapabilities.version.startsWith("3.9.")
+				? "The getter 'ye' isn't defined for the type 'DateTime'."
+				: "Class 'DateTime' has no instance getter 'ye'.";
+
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "repl" }).catch((e) => e);
-			assert.notEqual(error.message.indexOf("The getter 'ye' isn't defined for the type 'DateTime'"), -1);
+			assert.notEqual(error.message.indexOf(expectedError), -1);
 
 			await dc.terminateRequest();
 		});
 
-		it("returns a short error message for watch context", async () => {
+		it("returns a short error message for watch context", async function () {
+			// This got broke in 3.10, but is fixed for 3.11
+			// https://github.com/dart-lang/sdk/commit/3d601ce7d6b51bf3ead000b67898c31c524f6b4e
+			if (privateApi.dartCapabilities.version.startsWith("3.10."))
+				this.skip();
+			const expectedError = privateApi.dartCapabilities.version.startsWith("3.9.")
+				? "The getter 'ye' isn't defined for the type 'DateTime'."
+				: "Class 'DateTime' has no instance getter 'ye'.";
+
 			await openFile(helloWorldLongRunningFile);
 			const config = await startDebugger(dc, helloWorldLongRunningFile);
 			await waitAllThrowIfTerminates(dc,
@@ -1284,7 +1309,7 @@ void printSomething() {
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
-			assert.equal(error.message, dc.isDartDap ? "The getter 'ye' isn't defined for the type 'DateTime'." : "not available");
+			assert.equal(error.message, dc.isDartDap ? expectedError : "not available");
 
 			await dc.terminateRequest();
 		});
