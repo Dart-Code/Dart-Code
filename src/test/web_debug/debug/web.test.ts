@@ -126,10 +126,8 @@ describe("web debugger", () => {
 	});
 
 	it("hot reloads successfully", async function () {
-		if (!privateApi.dartCapabilities.webSupportsHotReload) {
+		if (!privateApi.dartCapabilities.webSupportsHotReload)
 			this.skip();
-			return;
-		}
 
 		const config = await startDebugger(dc, webHelloWorldIndexFile);
 		await waitAllThrowIfTerminates(dc,
@@ -209,10 +207,8 @@ describe("web debugger", () => {
 
 	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (!privateApi.dartCapabilities.webSupportsHotReload) {
+		if (!privateApi.dartCapabilities.webSupportsHotReload)
 			this.skip();
-			return;
-		}
 
 		await openFile(webHelloWorldMainFile);
 		const config = await startDebugger(dc, webHelloWorldIndexFile);

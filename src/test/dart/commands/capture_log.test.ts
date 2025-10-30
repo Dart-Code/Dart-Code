@@ -12,7 +12,7 @@ describe("capture logs command", () => {
 	async function configureLog(...logCategories: LogCategory[]) {
 		// When prompted for categories, pick just Analyzer.
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
-		if (logCategories)
+		if (logCategories?.length)
 			showQuickPick.resolves(logCategories.map((c) => ({ logCategory: c })));
 		else
 			showQuickPick.resolves(undefined);

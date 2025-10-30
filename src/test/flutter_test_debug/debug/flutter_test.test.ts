@@ -52,13 +52,11 @@ describe("flutter test debugger", () => {
 				const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 				assert.equal(codeLensForTest.length, 2);
 
-				if (!codeLensForTest[0].command) {
-					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-					// race condition. Rather than failing our test runs, skip.
-					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+				// race condition. Rather than failing our test runs, skip.
+				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				if (!codeLensForTest[0].command)
 					this.skip();
-					return;
-				}
 
 				const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 				assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -85,13 +83,11 @@ describe("flutter test debugger", () => {
 				const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 				assert.equal(codeLensForTest.length, 2);
 
-				if (!codeLensForTest[0].command) {
-					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-					// race condition. Rather than failing our test runs, skip.
-					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+				// race condition. Rather than failing our test runs, skip.
+				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				if (!codeLensForTest[0].command)
 					this.skip();
-					return;
-				}
 
 				const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 				assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -118,13 +114,11 @@ describe("flutter test debugger", () => {
 				const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 				assert.equal(codeLensForTest.length, 2);
 
-				if (!codeLensForTest[0].command) {
-					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-					// race condition. Rather than failing our test runs, skip.
-					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+				// race condition. Rather than failing our test runs, skip.
+				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				if (!codeLensForTest[0].command)
 					this.skip();
-					return;
-				}
 
 				const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 				assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");

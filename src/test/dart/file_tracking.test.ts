@@ -13,10 +13,8 @@ export const allowSlowSubscriptionTests = false;
 describe("file tracker", () => {
 	beforeEach("activate", () => activate(null));
 	it("includes visible editors in the priority list", async function () {
-		if (!privateApi.fileTracker.getLastPriorityFiles) {
+		if (!privateApi.fileTracker.getLastPriorityFiles)
 			this.skip();
-			return;
-		}
 
 		await closeAllOpenFiles();
 		assert.deepStrictEqual(privateApi.fileTracker.getLastPriorityFiles(), []);
@@ -25,10 +23,8 @@ describe("file tracker", () => {
 	});
 
 	it("excludes open but not-visible editors from the priority list", async function () {
-		if (!privateApi.fileTracker.getLastPriorityFiles) {
+		if (!privateApi.fileTracker.getLastPriorityFiles)
 			this.skip();
-			return;
-		}
 
 		await closeAllOpenFiles();
 		await openFile(file1);
@@ -39,10 +35,8 @@ describe("file tracker", () => {
 	});
 
 	it("excludes closed editors from the priority list", async function () {
-		if (!privateApi.fileTracker.getLastPriorityFiles) {
+		if (!privateApi.fileTracker.getLastPriorityFiles)
 			this.skip();
-			return;
-		}
 
 		await closeAllOpenFiles();
 		await openFile(file1);
@@ -57,10 +51,9 @@ describe("file tracker", () => {
 		beforeEach(async function () {
 			// These tests are (usually) disabled by default because they're ~3min each.
 			// Toggle the bool at top of file when wanting to run them.
-			if (!allowSlowSubscriptionTests) {
+			if (!allowSlowSubscriptionTests)
 				this.skip();
-				return;
-			}
+
 			// Close all files then wait (up to 3 minutes!) for VS Code to mark all docs
 			// as closed, as these tests require
 			await closeAllOpenFiles();
@@ -68,20 +61,16 @@ describe("file tracker", () => {
 		});
 
 		it("includes visible editors", async function () {
-			if (!privateApi.fileTracker.getLastSubscribedFiles) {
+			if (!privateApi.fileTracker.getLastSubscribedFiles)
 				this.skip();
-				return;
-			}
 
 			await openFile(file1);
 			assert.deepStrictEqual(privateApi.fileTracker.getLastSubscribedFiles(), [fsPath(file1)]);
 		});
 
 		it("includes open but not-visible editors", async function () {
-			if (!privateApi.fileTracker.getLastSubscribedFiles) {
+			if (!privateApi.fileTracker.getLastSubscribedFiles)
 				this.skip();
-				return;
-			}
 
 			// Open first file, which will become visible.
 			await openFile(file1);
@@ -94,10 +83,8 @@ describe("file tracker", () => {
 		});
 
 		it("exclude closed editors", async function () {
-			if (!privateApi.fileTracker.getLastSubscribedFiles) {
+			if (!privateApi.fileTracker.getLastSubscribedFiles)
 				this.skip();
-				return;
-			}
 
 			// Open a file and ensure it's added.
 			await openFile(file1);

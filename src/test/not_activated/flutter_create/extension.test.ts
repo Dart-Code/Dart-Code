@@ -49,10 +49,8 @@ describe("command", () => {
 
 	it("Flutter: New Project can be invoked and creates skeleton trigger file", async function () {
 		// Skip this test if skeleton template is not supported
-		if (!privateApi?.flutterCapabilities?.supportsSkeleton) {
+		if (!privateApi?.flutterCapabilities?.supportsSkeleton)
 			this.skip();
-			return;
-		}
 
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "skeleton", "application");
 	});

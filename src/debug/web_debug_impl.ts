@@ -111,12 +111,10 @@ export class WebDebugSession extends DartDebugSession {
 		const progressId = `flutter-${e.appId}-${e.progressId}`;
 		if (e.finished) {
 			let finalMessage: string | undefined;
-			if (!finalMessage) {
-				if (e.progressId === "hot.reload")
-					finalMessage = "Hot Reload complete!";
-				else if (e.progressId === "hot.restart")
-					finalMessage = "Hot Restart complete!";
-			}
+			if (e.progressId === "hot.reload")
+				finalMessage = "Hot Reload complete!";
+			else if (e.progressId === "hot.restart")
+				finalMessage = "Hot Restart complete!";
 			this.endProgress(progressId, finalMessage);
 		} else {
 			this.startProgress(progressId, e.message);

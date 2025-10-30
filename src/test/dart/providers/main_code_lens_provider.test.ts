@@ -17,13 +17,11 @@ describe("main_code_lens", () => {
 		const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
 		assert.equal(codeLensForMainFunction.length, 2);
 
-		if (!codeLensForMainFunction[0].command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+		// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+		// race condition. Rather than failing our test runs, skip.
+		// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+		if (!codeLensForMainFunction[0].command)
 			this.skip();
-			return;
-		}
 
 		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "dart.startWithoutDebugging");
@@ -44,13 +42,11 @@ describe("main_code_lens", () => {
 		const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
 		assert.equal(codeLensForMainFunction.length, 2);
 
-		if (!codeLensForMainFunction[0].command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+		// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+		// race condition. Rather than failing our test runs, skip.
+		// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+		if (!codeLensForMainFunction[0].command)
 			this.skip();
-			return;
-		}
 
 		const runAction = codeLensForMainFunction.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.arguments![0].launchTemplate.env.LAUNCH_ENV_VAR, "default");
@@ -93,13 +89,11 @@ describe("main_code_lens", () => {
 				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
 				assert.equal(codeLensForMainFunction.length, 3);
 
-				if (!codeLensForMainFunction[0].command) {
-					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-					// race condition. Rather than failing our test runs, skip.
-					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+				// race condition. Rather than failing our test runs, skip.
+				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				if (!codeLensForMainFunction[0].command)
 					this.skip();
-					return;
-				}
 
 				const action = codeLensForMainFunction.find((cl) => cl.command!.title === `${debugType.name} (terminal)`)!;
 				assert.equal(action.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");
@@ -133,13 +127,11 @@ describe("main_code_lens", () => {
 				const codeLensForMainFunction = fileCodeLens.filter((cl) => cl.range.start.line === mainFunctionPos.line);
 				assert.equal(codeLensForMainFunction.length, 2);
 
-				if (!codeLensForMainFunction[0].command) {
-					// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-					// race condition. Rather than failing our test runs, skip.
-					// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+				// race condition. Rather than failing our test runs, skip.
+				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+				if (!codeLensForMainFunction[0].command)
 					this.skip();
-					return;
-				}
 
 				const action = codeLensForMainFunction.find((cl) => cl.command!.title === `${debugType.name}`)!;
 				assert.equal(action.command!.command, debugType.type === "debug" ? "dart.startDebugging" : "dart.startWithoutDebugging");

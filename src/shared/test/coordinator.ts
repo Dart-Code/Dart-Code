@@ -21,10 +21,10 @@ export class TestSessionCoordinator implements IAmDisposable {
 
 	/// For a given debug session, lookups by IDs to get back to the suite.
 	private debugSessionLookups: Record<string, {
-			cwd: string | undefined,
-			suiteForID: Record<string, SuiteData | undefined>,
-			suiteForTestID: Record<string, SuiteData | undefined>,
-		} | undefined> = {};
+		cwd: string | undefined,
+		suiteForID: Record<string, SuiteData | undefined>,
+		suiteForTestID: Record<string, SuiteData | undefined>,
+	} | undefined> = {};
 
 	/// A link between a suite path and a visitor for visiting its latest outline data.
 	/// This data is refreshed when a test suite starts running.
@@ -281,17 +281,13 @@ The test description was: .*
 		// The outline data was captured when the suite started, so we can assume it's reasonable accurate, so try to look up the node
 		// there and use its range. Otherwise, just make a range that goes from the start position to the next line (assuming the rest
 		// of the line is the test name, and we can at least support running it there).
-		const testsOnLine = line ? this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine] : undefined;
+		const testsOnLine = this.suiteOutlineVisitors[suite.path]?.testsByLine[zeroBasedLine];
 		const test = testsOnLine ? testsOnLine.find((t) => t.range.start.character === zeroBasedCharacter) : undefined;
 
-		const range = line && character
-			? test?.range ?? {
-				end: { line: zeroBasedLine + 1, character: zeroBasedCharacter },
-				start: { line: zeroBasedLine, character: zeroBasedCharacter },
-			} as Range
-			: undefined;
-
-		return range;
+		return test?.range ?? {
+			end: { line: zeroBasedLine + 1, character: zeroBasedCharacter },
+			start: { line: zeroBasedLine, character: zeroBasedCharacter },
+		};
 	}
 
 	public dispose(): any {

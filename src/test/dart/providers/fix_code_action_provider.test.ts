@@ -75,7 +75,6 @@ main() {
 			// race condition. Rather than failing our test runs, skip.
 			// TODO: Remove this when https://github.com/microsoft/vscode/issues/86403 is fixed/responded to.
 			this.skip();
-			return;
 		}
 
 		await ensureTestContent(`

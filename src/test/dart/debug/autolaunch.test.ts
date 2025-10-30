@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { debug, Uri, workspace } from "vscode";
 import * as ws from "ws";
-import { autoLaunchFilename, defaultDartCodeConfigurationPath } from "../../../shared/constants";
+import { autoLaunchFilename } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { AutoLaunch } from "../../../shared/vscode/autolaunch";
@@ -197,7 +197,7 @@ function createTestEnvironment(overridePath?: string) {
 		: undefined;
 	const folderPath = overridePath
 		? baseUri
-			? fsPath(Uri.joinPath(baseUri, overridePath ?? defaultDartCodeConfigurationPath))
+			? fsPath(Uri.joinPath(baseUri, overridePath))
 			: overridePath
 		: fsPath(Uri.joinPath(wf.uri, testDartCodeConfigFolder));
 	const filePath = path.join(folderPath, autoLaunchFilename);

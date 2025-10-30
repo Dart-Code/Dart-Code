@@ -16,13 +16,11 @@ describe("test_code_lens", () => {
 		const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 		assert.equal(codeLensForTest.length, 2);
 
-		if (!codeLensForTest[0].command) {
-			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-			// race condition. Rather than failing our test runs, skip.
-			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+		// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+		// race condition. Rather than failing our test runs, skip.
+		// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+		if (!codeLensForTest[0].command)
 			this.skip();
-			return;
-		}
 
 		const runAction = codeLensForTest.find((cl) => cl.command!.title === "Run")!;
 		assert.equal(runAction.command!.command, "_dart.startWithoutDebuggingTestFromOutline");
@@ -84,13 +82,11 @@ describe("test_code_lens", () => {
 			const codeLensForTest = fileCodeLens.filter((cl) => cl.range.start.line === testPos.line);
 			assert.equal(codeLensForTest.length, 3, `Didn't get 3 launch configs, got: ${JSON.stringify(codeLensForTest, undefined, 4)}`);
 
-			if (!codeLensForTest[0].command) {
-				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-				// race condition. Rather than failing our test runs, skip.
-				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			if (!codeLensForTest[0].command)
 				this.skip();
-				return;
-			}
 
 			const action = codeLensForTest.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
 			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");
@@ -111,13 +107,11 @@ describe("test_code_lens", () => {
 			const codeLensForGroup = fileCodeLens.filter((cl) => cl.range.start.line === groupPos.line);
 			assert.equal(codeLensForGroup.length, 3);
 
-			if (!codeLensForGroup[0].command) {
-				// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
-				// race condition. Rather than failing our test runs, skip.
-				// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			// If there's no command, skip the test. This happens very infrequently and appears to be a VS Code
+			// race condition. Rather than failing our test runs, skip.
+			// TODO: Remove this if https://github.com/microsoft/vscode/issues/79805 gets a reliable fix.
+			if (!codeLensForGroup[0].command)
 				this.skip();
-				return;
-			}
 
 			const action = codeLensForGroup.find((cl) => cl.command!.title === `${debugType.name} (browser)`);
 			assert.equal(action!.command!.command, debugType.type === "debug" ? "_dart.startDebuggingTestFromOutline" : "_dart.startWithoutDebuggingTestFromOutline");

@@ -75,7 +75,6 @@ Widget build() {
 			// race condition. Rather than failing our test runs, skip.
 			// https://github.com/microsoft/vscode/issues/86403
 			this.skip();
-			return;
 		}
 
 		await ensureTestContent(`
