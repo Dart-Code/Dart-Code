@@ -918,7 +918,6 @@ export class DebugCommands implements IAmDisposable {
 						this.currentHotReloadProgressId = progressId;
 						return;
 					}
-					this.currentHotReloadProgressId = progressId;
 				}
 				this.currentHotReloadProgressId = progressId;
 			} else if (isHotRestart) {
@@ -932,7 +931,6 @@ export class DebugCommands implements IAmDisposable {
 						this.currentHotRestartProgressId = progressId;
 						return;
 					}
-					this.currentHotRestartProgressId = progressId;
 				}
 				this.currentHotRestartProgressId = progressId;
 			}
