@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
+import * as YAML from "yaml";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { PubPackage } from "../commands/add_dependency";
@@ -44,16 +45,15 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		if (!diagnosticsWithPackageNames.length)
 			return;
 
-		const pubspec = path.join(projectRoot, "pubspec.yaml");
-		const pubspecContent = fs.existsSync(pubspec) ? fs.readFileSync(pubspec).toString() : undefined;
-
-		if (!pubspecContent)
-			return;
+		const pubspecPath = path.join(projectRoot, "pubspec.yaml");
 
 		// Next, filter out any already in pubspec, as that suggests the URI is incorrect
 		// for another reason (and we wouldn't want to try to add something that exists).
+		const existingPackageNames = this.getDependenciesForPubspec(pubspecPath);
+		if (!existingPackageNames) // undefined = failed to parse, don't show any fixes
+			return;
 		diagnosticsWithPackageNames = diagnosticsWithPackageNames
-			.filter((obj) => obj.packageName && !pubspecContent.includes(`  ${obj.packageName}`));
+			.filter((obj) => obj.packageName && !existingPackageNames.has(obj.packageName));
 
 		// Next, remove any diagnostics that have the same package name and overlap with the same range.
 		// https://github.com/Dart-Code/Dart-Code/issues/4896
@@ -76,6 +76,22 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 			return;
 
 		return flatMap(diagnosticsWithPackageNames, (item) => this.createActions(document, item.diagnostic, item.packageName!));
+	}
+
+	private getDependenciesForPubspec(pubspecPath: string): Set<string> | undefined {
+		const existingPackageNames = new Set<string>();
+
+		try {
+			const pubspecContent = fs.readFileSync(pubspecPath).toString();
+			const yaml = YAML.parse(pubspecContent);
+			const dependencies = yaml?.dependencies && typeof yaml.dependencies === "object" ? Object.keys(yaml.dependencies as object) : [];
+			const devDependencies = yaml?.dev_dependencies && typeof yaml.dev_dependencies === "object" ? Object.keys(yaml.dev_dependencies as object) : [];
+			[...dependencies, ...devDependencies].forEach((d) => existingPackageNames.add(d));
+		} catch {
+			return undefined;
+		}
+
+		return existingPackageNames;
 	}
 
 	/// Checks if the diagnostic is a uri_does_not_exist and the URI is a package:
