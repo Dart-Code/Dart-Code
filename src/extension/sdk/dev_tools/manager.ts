@@ -379,7 +379,7 @@ export class DevToolsManager implements vs.Disposable {
 			const fullUrls = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
 			const exposedUrls = await exposeWebViewUrls(fullUrls);
 
-			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext^/, "") };
+			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext$/, "") };
 			await this.launchInEmbeddedWebView(exposedUrls, session, pageInfo, options.location, options.triggeredAutomatically, forceShow);
 		} else {
 			const fullUrls = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
