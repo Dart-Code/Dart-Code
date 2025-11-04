@@ -19,7 +19,6 @@ import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
-import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
@@ -727,62 +726,59 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const dartCodeConfigurationPath = process.env[dartCodeConfigurationPathEnvironmentVariableName] || defaultDartCodeConfigurationPath;
 	context.subscriptions.push(new AutoLaunch(dartCodeConfigurationPath, logger, deviceManager));
 
-	// TODO(dantup): We should only expose the private API required for testing when in test runs, however
-	//  some extensions are currently using this for access to the analyzer. We should provide a replacement
-	//  before removing this to avoid breaking them.
-	// if (!isDartCodeTestRun) {
-	// 	return exportedApi;
-	// } else {
-	const privateApi = {
-		addDependencyCommand,
-		analyzer,
-		context: extContext,
-		currentAnalysis: () => analyzer?.onCurrentAnalysisComplete,
-		daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
-		dartCapabilities,
-		debugAdapterDescriptorFactory,
-		debugCommands,
-		debugProvider,
-		debugSessions,
-		devTools,
-		deviceManager,
-		envUtils,
-		fileTracker: analyzer.fileTracker,
-		flutterCapabilities,
-		flutterOutlineTreeProvider,
-		get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
-		get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
-		getLogHeader,
-		getOutputChannel,
-		getToolEnv,
-		initialAnalysis: analyzer.onInitialAnalysis,
-		interactiveRefactors: analyzer.refactors,
-		logger,
-		mcpServerProvider: isDartCodeTestRun ? mcpServerProvider : undefined,
-		nextAnalysis: () => analyzer?.onNextAnalysisComplete,
-		packageCommands,
-		packagesTreeProvider: dartPackagesProvider,
-		pubGlobal,
-		safeToolSpawn,
-		sdkUtils: isDartCodeTestRun ? sdkUtils : undefined,
-		testController: vsCodeTestController,
-		testCoordinator,
-		testDiscoverer,
-		testModel,
-		toolingDaemon: isDartCodeTestRun ? dartToolingDaemon : undefined,
-		trackerFactories,
-		webClient,
-		workspaceContext,
-	} as InternalExtensionApi;
-	// Copy all fields and getters from privateApi into the existing object so that it works
-	// correctly through exports.
-	Object.defineProperties(
-		(exportedApi as any)[internalApiSymbol] ??= {},
-		Object.getOwnPropertyDescriptors(privateApi)
-	);
+	// Only expose the private APIs during test runs. These are not for use by other extensions, but
+	// by our tests to access the internals of things that aren't otherwise exposed.
+	if (isDartCodeTestRun) {
+		const privateApi = {
+			addDependencyCommand,
+			analyzer,
+			context: extContext,
+			currentAnalysis: () => analyzer?.onCurrentAnalysisComplete,
+			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
+			dartCapabilities,
+			debugAdapterDescriptorFactory,
+			debugCommands,
+			debugProvider,
+			debugSessions,
+			devTools,
+			deviceManager,
+			envUtils,
+			fileTracker: analyzer.fileTracker,
+			flutterCapabilities,
+			flutterOutlineTreeProvider,
+			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
+			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
+			getLogHeader,
+			getOutputChannel,
+			getToolEnv,
+			initialAnalysis: analyzer.onInitialAnalysis,
+			interactiveRefactors: analyzer.refactors,
+			logger,
+			mcpServerProvider,
+			nextAnalysis: () => analyzer?.onNextAnalysisComplete,
+			packageCommands,
+			packagesTreeProvider: dartPackagesProvider,
+			pubGlobal,
+			safeToolSpawn,
+			sdkUtils,
+			testController: vsCodeTestController,
+			testCoordinator,
+			testDiscoverer,
+			testModel,
+			toolingDaemon: dartToolingDaemon,
+			trackerFactories,
+			webClient,
+			workspaceContext,
+		};
+		// Copy all fields and getters from privateApi into the existing object so that it works
+		// correctly through exports.
+		Object.defineProperties(
+			(exportedApi as any)[internalApiSymbol] ??= {},
+			Object.getOwnPropertyDescriptors(privateApi)
+		);
+	}
 
 	return exportedApi;
-	// }
 }
 
 function setupLog(logFile: string | undefined, category: LogCategory, autoDispose = true) {
