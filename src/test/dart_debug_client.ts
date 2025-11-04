@@ -140,11 +140,6 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	public async launch(launchArgs: DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments): Promise<void> {
-		// The new DAP doesn't default to breaking on any exceptions so to simplify tests
-		// set it based on whether we'd in debug mode or not.
-		const isDebugging = !(launchArgs.noDebug ?? false);
-		if (isDebugging)
-			await this.setExceptionBreakpointsRequest({ filters: ["Unhandled"] });
 		const configuration = Object.assign(
 			{
 				name: "Dart & Flutter",
@@ -162,6 +157,12 @@ export class DartDebugClient extends DebugClient {
 			type: configuration.type,
 			workspaceFolder: undefined,
 		};
+
+		// The new DAP doesn't default to breaking on any exceptions so to simplify tests
+		// set it based on whether we'd in debug mode or not.
+		const isDebugging = !(launchArgs.noDebug ?? false);
+		if (isDebugging)
+			await this.setExceptionBreakpointsRequest({ filters: ["Unhandled"] });
 
 		// Set up logging.
 		for (const trackerFactory of this.debugTrackerFactories) {
