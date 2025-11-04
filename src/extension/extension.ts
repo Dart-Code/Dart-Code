@@ -19,6 +19,7 @@ import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
+import { getPubWorkspaceFolderOrPackageFolder } from "../shared/vscode/pub";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
@@ -439,8 +440,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		// https://github.com/flutter/flutter/issues/173550
 		const projectFolders = await projectFinder.findAllProjectFolders({ requirePubspec: true, searchDepth: config.projectSearchDepth });
 		const firstFlutterProject = projectFolders.find(isFlutterProjectFolder);
-		if (firstFlutterProject)
-			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, firstFlutterProject, config.flutterWidgetPreviewLocation));
+		if (firstFlutterProject) {
+			const flutterProjectOrWorkspace = getPubWorkspaceFolderOrPackageFolder(firstFlutterProject);
+			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation));
+		}
 	}
 
 	// Debug commands.

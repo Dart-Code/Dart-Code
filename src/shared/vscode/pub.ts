@@ -223,3 +223,52 @@ export async function promptToRunPubUpgrade(folders: Uri[]) {
 function runPubUpgrade(folders: Uri[]) {
 	return commands.executeCommand("dart.upgradePackages", folders);
 }
+
+/// If `packageFolder` is part of a Pub Workspace, returns the workspace root folder.
+///
+/// Otherwise (or if there is no workspace root), returns `packageFolder`.
+export function getPubWorkspaceFolderOrPackageFolder(packageFolder: string): string {
+	const pubspecPath = path.join(packageFolder, "pubspec.yaml");
+
+	// We shouldn't really have gotten here without a pubspec because that means this isn't
+	// a package, but in that case just return the original string.
+	if (!fs.existsSync(pubspecPath))
+		return packageFolder;
+
+	let pubspecContent: string;
+	try {
+		pubspecContent = fs.readFileSync(pubspecPath, "utf8").toString();
+	} catch {
+		return packageFolder;
+	}
+
+	// If this is not a Pub Workspace project, just return the package itself.
+	if (!pubspecIsWorkspaceProjectRegex.test(pubspecContent))
+		return packageFolder;
+
+	// Walk up the tree to find the workspace root.
+	let currentFolder = path.dirname(packageFolder);
+	while (true) {
+		// Check if the current folder is the workspace root
+		try {
+			const currentPubspecPath = path.join(currentFolder, "pubspec.yaml");
+			const currentPubspecContent = fs.readFileSync(currentPubspecPath, "utf8").toString();
+
+			// We've found the root.
+			if (pubspecIsWorkspaceRootRegex.test(currentPubspecContent))
+				return currentFolder;
+		} catch {
+			// A pubspec may not exist at every level.
+		}
+
+		// Otherwise, continue up.
+		const parent = path.dirname(currentFolder);
+
+		// If we get to the root of the filesystem without finding, use the original package.
+		if (parent === currentFolder)
+			return packageFolder;
+
+		// Otherwise, loop.
+		currentFolder = parent;
+	}
+}
