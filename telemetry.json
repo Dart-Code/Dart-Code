@@ -41,7 +41,11 @@
 			"Command_AddDependency": { },
 			"Command_RestartAnalyzer": { },
 			"Command_ForceReanalyze": { },
-			"Error_FlutterDaemonTimeout": { }
+			"Error_FlutterDaemonTimeout": { },
+			"AnalysisServer_Terminate": {
+				"exitCode":                     { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The exit code of the analysis server process." },
+				"sessionDurationSeconds":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the analysis server session that just ended." }
+			}
 		},
 		"commonProperties": {
 			"common.vscodemachineid":           { "classification": "EndUserPseudonymizedInformation", "purpose": "FeatureInsight", "comment": "An identifier provided by VS Code to relate coding sessions from the same installation together" },

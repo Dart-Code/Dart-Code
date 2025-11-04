@@ -23,6 +23,7 @@ import { LspUriConverters } from "../../shared/vscode/lsp_uri_converters";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
+import { Analytics } from "../analytics";
 import { config } from "../config";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { promptToReloadExtension } from "../utils";
@@ -43,8 +44,9 @@ export class LspAnalyzer extends Analyzer {
 	public readonly dartTextDocumentContentProvider: DartTextDocumentContentProviderFeature | undefined;
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
+	private analysisServerStartTime: number | undefined;
 
-	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext) {
+	constructor(logger: Logger, sdks: DartSdks, private readonly dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, private readonly analytics: Analytics) {
 		super(new CategoryLogger(logger, LogCategory.Analyzer));
 
 		this.setupStatusItem();
@@ -625,6 +627,7 @@ export class LspAnalyzer extends Analyzer {
 		const args = getAnalyzerArgs(logger);
 
 		logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
+		this.analysisServerStartTime = Date.now();
 		const process = safeToolSpawn(undefined, vmPath, args);
 		// Ensure we terminate the process when shutting down even if the graceful shutdown
 		// doesn't work. Wait a short period to give the graceful shutdown change.
@@ -656,6 +659,11 @@ export class LspAnalyzer extends Analyzer {
 		process.on("exit", (code) => {
 			if (code)
 				reportAnalyzerTerminatedWithError(logger);
+
+			if (this.analysisServerStartTime) {
+				const durationMs = Date.now() - this.analysisServerStartTime;
+				this.analytics.logAnalysisServerTerminate(code ?? 0, durationMs);
+			}
 		});
 
 		return Promise.resolve({ reader, writer });

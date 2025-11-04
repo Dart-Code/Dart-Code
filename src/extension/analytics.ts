@@ -34,6 +34,7 @@ export enum AnalyticsEvent {
 	Extension_Restart,
 	Extension_Deactivate,
 	SdkDetectionFailure,
+	AnalysisServer_Terminate,
 	Debugger_Activated,
 	DevTools_Opened,
 	FlutterSurvey_Shown,
@@ -82,6 +83,7 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 					debuggerPreference: data.debuggerPreference,
 					debuggerRunType: data.debuggerRunType,
 					debuggerType: data.debuggerType,
+					exitCode: data.exitCode,
 					reason: data.reason,
 					sessionDurationSeconds: data.sessionDurationSeconds,
 					totalSessionDurationSeconds: data.totalSessionDurationSeconds,
@@ -353,6 +355,14 @@ export class Analytics implements IAmDisposable {
 		this.event(AnalyticsEvent.Extension_Deactivate, customData);
 	}
 
+	public logAnalysisServerTerminate(exitCode: number, sessionDurationMs: number) {
+		const customData: Partial<AnalyticsData> = {
+			sessionDurationSeconds: sessionDurationMs / 1000,
+			exitCode,
+		};
+		this.event(AnalyticsEvent.AnalysisServer_Terminate, customData);
+	}
+
 	public logErrorFlutterDaemonTimeout() { this.event(AnalyticsEvent.Error_FlutterDaemonTimeout); }
 	public logSdkDetectionFailure() { this.event(AnalyticsEvent.SdkDetectionFailure); }
 	public logDebuggerStart(debuggerType: string, debuggerRunType: string, sdkDap: boolean) {
@@ -451,7 +461,8 @@ interface AnalyticsData {
 	// Source of commands, such as launching from sidebar vs command palette.
 	commandSource?: string,
 
-	// Extension lifecycle timings.
+	// Extension + service lifecycle timings.
+	exitCode?: number,
 	sessionDurationSeconds?: number,
 	totalSessionDurationSeconds?: number,
 }
