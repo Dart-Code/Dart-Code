@@ -2280,6 +2280,22 @@
 						"markdownDescription": "Whether to show Inlay Hints. When set to `true`, enables all inlay hints with default settings. When set to `false`, disables all inlay hints. Can also be an object to configure individual hint types. Requires Dart 3.10.",
 						"scope": "window",
 						"properties": {
+							"dotShorthandTypes": {
+								"type": [
+									"boolean",
+									"object"
+								],
+								"default": {
+									"enabled": true
+								},
+								"properties": {
+									"enabled": {
+										"type": "boolean",
+										"default": true,
+										"description": "Whether to show Inlay Hints for dot shorthand types."
+									}
+								}
+							},
 							"parameterNames": {
 								"type": [
 									"boolean",
