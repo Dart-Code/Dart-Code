@@ -13,7 +13,7 @@ import { config } from "../config";
 import * as util from "../utils";
 import { getExcludedFolders } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
-import { BaseSdkCommands, commandState, OperationProgress } from "./sdk";
+import { BaseSdkCommands, commandState, OperationProgress, setProgressItemCounts } from "./sdk";
 
 let isFetchingPackages = false;
 let runPubGetDelayTimer: NodeJS.Timeout | undefined;
@@ -77,6 +77,7 @@ export class PackageCommands extends BaseSdkCommands {
 		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
 			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
+			setProgressItemCounts(operationProgress, uris.length);
 			for (const item of uris) {
 				if (operationProgress.cancellationToken.isCancellationRequested)
 					break;
@@ -170,6 +171,7 @@ export class PackageCommands extends BaseSdkCommands {
 		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
 			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
+			setProgressItemCounts(operationProgress, uris.length);
 			for (const item of uris) {
 				if (operationProgress.cancellationToken.isCancellationRequested)
 					break;

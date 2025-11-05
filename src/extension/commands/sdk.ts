@@ -30,6 +30,20 @@ export interface OperationProgress {
 	cancellationToken: vs.CancellationToken;
 }
 
+interface ProgressWithItemCounts extends vs.Progress<{ message?: string; increment?: number }> {
+	totalItems?: number;
+	currentItem?: number;
+}
+
+export function setProgressItemCounts(operationProgress: OperationProgress | undefined, totalItems: number) {
+	if (!operationProgress)
+		return;
+
+	const progressWithCounts = operationProgress.progressReporter as ProgressWithItemCounts;
+	progressWithCounts.totalItems = totalItems;
+	progressWithCounts.currentItem = 0;
+}
+
 export class BaseSdkCommands implements IAmDisposable {
 	protected readonly sdks: DartSdks;
 	protected readonly disposables: vs.Disposable[] = [];
@@ -134,7 +148,15 @@ export class BaseSdkCommands implements IAmDisposable {
 
 			const process = new ChainedProcess(() => {
 				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
-				progress.report({ message: `${shortPath}...` });
+
+				const progressWithCounts = progress as ProgressWithItemCounts;
+				if (progressWithCounts.totalItems && progressWithCounts.totalItems > 1) {
+					const current = (progressWithCounts.currentItem ?? 0) + 1;
+					progressWithCounts.currentItem = current;
+					progress.report({ message: `${shortPath}... (${current}/${progressWithCounts.totalItems})`, increment: 100 / progressWithCounts.totalItems });
+				} else {
+					progress.report({ message: `${shortPath}...` });
+				}
 				const proc = safeToolSpawn(folder, binPath, args);
 				channels.runProcessInOutputChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
