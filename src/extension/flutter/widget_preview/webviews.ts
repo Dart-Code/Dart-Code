@@ -10,7 +10,14 @@ import { handleUrlAuthFunction, WebViewUrls } from "../../views/shared";
 // TODO(dantup): Consider if we need to handle keydown/launchUrl/clipboard-write as in DevTools?
 //  They would first need implementing in the widget preview to pass up via postMessage.
 
-const pageScript = `
+type WebViewLocation = "editor" | "sideBar";
+
+function getPageScript({ location }: { location: WebViewLocation }) {
+	const backgroundPropertyName = `--vscode-${location}-background`;
+	const foregroundPropertyName = `--vscode-${location}-foreground`;
+	const backgroundColorExpression = `getComputedStyle(document.documentElement).getPropertyValue('${backgroundPropertyName}')`;
+	const foregroundColorExpression = `getComputedStyle(document.documentElement).getPropertyValue('${foregroundPropertyName}')`;
+	return `
 const vscode = acquireVsCodeApi();
 const originalState = vscode.getState()?.${perSessionWebviewStateKey};
 const originalFrameUrl = originalState?.frameUrl;
@@ -20,8 +27,8 @@ let currentBackgroundColor;
 
 function getTheme() {
 	const isDarkMode = !document.body.classList.contains('vscode-light');
-	const backgroundColor = currentBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
-	const foregroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground');
+	const backgroundColor = currentBackgroundColor = ${backgroundColorExpression};
+	const foregroundColor = ${foregroundColorExpression};
 
 	return {
 		isDarkMode: isDarkMode,
@@ -82,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	new MutationObserver((mutationList) => {
 		for (const mutation of mutationList) {
 			if (mutation.type === "attributes" && mutation.attributeName === "class") {
-				let newBackgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background');
+				let newBackgroundColor = ${backgroundColorExpression};
 				if (newBackgroundColor !== currentBackgroundColor) {
 					sendTheme();
 					break;
@@ -92,13 +99,14 @@ document.addEventListener('DOMContentLoaded', function () {
 	}).observe(document.body, { attributeFilter : ['class'], attributeOldValue: true });
 });
 `;
+}
 
 const frameCss = "position: absolute; top: 0; left: 0; width: 100%; height: 100%";
 const cssNonce = Buffer.from(frameCss).toString("base64");
 
-function getPageHtmlSource(widgetPreviewUris: WebViewUrls): string {
+function getPageHtmlSource(widgetPreviewUris: WebViewUrls, { location }: { location: WebViewLocation }): string {
 	const fullPageScript = `
-	${pageScript}
+	${getPageScript({ location })}
 	window.addEventListener('load', (event) => setUrls(${JSON.stringify(widgetPreviewUris)}));
 	`;
 	const scriptNonce = Buffer.from(fullPageScript).toString("base64");
@@ -140,7 +148,7 @@ export class WidgetPreviewEmbeddedView extends WidgetPreviewView {
 		this.panel.onDidDispose(() => this.dispose(true));
 
 		this.previewUrls
-			.then((previewUrls) => this.panel.webview.html = getPageHtmlSource(previewUrls))
+			.then((previewUrls) => this.panel.webview.html = getPageHtmlSource(previewUrls, { location: "editor" }))
 			.catch((e) => this.logger.error(e));
 	}
 
@@ -203,7 +211,7 @@ class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 		};
 
 		const previewUrls = await this.previewUrls;
-		webviewView.webview.html = getPageHtmlSource(previewUrls);
+		webviewView.webview.html = getPageHtmlSource(previewUrls, { location: "sideBar" });
 	}
 
 	public dispose(): void {
