@@ -62,6 +62,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			const view = this.view = this.location === "sidebar"
 				? new WidgetPreviewSidebarView(() => this.showProgressIfRequired(), completer.promise)
 				: new WidgetPreviewEmbeddedView(this.logger, completer.promise, pageTitle);
+			this.disposables.push(view);
 			view.onDispose(() => this.view = undefined);
 
 			const dtdUri = await this.dtdUri;
