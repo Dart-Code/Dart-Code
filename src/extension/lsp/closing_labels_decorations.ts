@@ -119,7 +119,7 @@ export class LspClosingLabelsDecorations implements vs.Disposable {
 	}
 
 	public dispose() {
-		for (const editor of Object.values(this.editors)) {
+		for (const editor of this.editors.values()) {
 			try {
 				editor.setDecorations(this.decorationType, []);
 			} catch {
