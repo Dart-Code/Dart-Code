@@ -2,7 +2,7 @@
 name: Flutter extension bug report
 about: Report something not working as expected in the Flutter extension
 title: ''
-labels: is bug, is flutter
+labels: ["is bug", "in flutter"]
 assignees: ''
 
 ---

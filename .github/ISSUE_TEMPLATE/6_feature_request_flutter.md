@@ -2,7 +2,7 @@
 name: Flutter extension feature request
 about: Suggest an idea for the Flutter extension
 title: ''
-labels: is enhancement, is flutter
+labels: ["is enhancement", "in flutter"]
 assignees: ''
 
 ---

@@ -2,7 +2,7 @@
 name: Dart extension feature request
 about: Suggest an idea for the Dart extension
 title: ''
-labels: is enhancement
+labels: ["is enhancement"]
 assignees: ''
 
 ---
