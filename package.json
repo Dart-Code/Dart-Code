@@ -3225,6 +3225,7 @@
 					"dart.mcpServerTools": {
 						"type": "object",
 						"default": {
+							"analyze_files": false,
 							"run_tests": false
 						},
 						"markdownDescription": "A map of MCP tool names to booleans to enable/disable specific tools from the Dart MCP server. Tools set to `false` will be excluded (if supported). By default, tools that overlap with built-in VS Code functionality will be excluded.",
