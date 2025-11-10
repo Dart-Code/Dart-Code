@@ -363,7 +363,7 @@ describe(`flutter run debugger (only test device)`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldStack60File);
 		await dc.hitBreakpoint(config, {
 			line: positionOf("^// BREAKPOINT1").line + 1,
-			path: dc.isUsingUris ? flutterHelloWorldStack60File.toString() : fsPath(flutterHelloWorldStack60File),
+			path: fsPath(flutterHelloWorldStack60File),
 		});
 
 		// Get the total stack size we should expect and ensure it's a little over the expected current 560
@@ -459,7 +459,7 @@ describe(`flutter run debugger (only test device)`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
-					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
+					path: fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 
@@ -480,7 +480,7 @@ describe(`flutter run debugger (only test device)`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
-					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
+					path: fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 
@@ -501,7 +501,7 @@ describe(`flutter run debugger (only test device)`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT1").line,
-					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
+					path: fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 
@@ -523,7 +523,7 @@ describe(`flutter run debugger (only test device)`, () => {
 			await waitAllThrowIfTerminates(dc,
 				dc.hitBreakpoint(config, {
 					line: positionOf("^// BREAKPOINT2").line,
-					path: dc.isUsingUris ? flutterHelloWorldMainFile.toString() : fsPath(flutterHelloWorldMainFile),
+					path: fsPath(flutterHelloWorldMainFile),
 				}),
 			);
 

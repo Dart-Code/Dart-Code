@@ -24,7 +24,6 @@ export class DartCapabilities {
 	get supportsFlutterSidebar() { return versionIsAtLeast(this.version, "3.2.0-201"); }
 	get requiresDevToolsEmbedFlag() { return !versionIsAtLeast(this.version, "3.7.0-0"); }
 	get supportsDevToolsDtdExposedUri() { return versionIsAtLeast(this.version, "3.6.0-255"); }
-	get supportsMacroGeneratedFiles() { return versionIsAtLeast(this.version, "3.5.0-0"); }
 	get supportsFormatSpecifiers() { return versionIsAtLeast(this.version, "3.0.0-0"); }
 	get supportsDevToolsVsCodeExtensions() { return versionIsAtLeast(this.version, "3.3.0-247"); }
 	get supportsDevToolsDtdSidebar() { return versionIsAtLeast(this.version, "3.6.0-160"); }

@@ -49,9 +49,11 @@ export function forceWindowsDriveLetterToUppercaseInUriString<T extends string |
 }
 
 /**
- * Returns a string for comparing URIs. For file (and dart-macro+file) URIs this will
- * be `fsPath()` (including for fake paths for generated files) with a `file:` or `dart-macro+file`
- * prefix (this will NOT be a valid URI). On Windows, the string will be lowercased.
+ * Returns a string for comparing URIs.
+ *
+ * For file URIs this will be `fsPath()` with a `file:` prefix (this will NOT be a valid URI).
+ * On Windows, the string will be lowercased.
+ *
  * For other URIs, it is the toString().
  *
  * This string is ONLY for comparising URIs to see if they are "the same document".

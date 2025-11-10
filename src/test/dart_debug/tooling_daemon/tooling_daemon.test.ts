@@ -38,7 +38,7 @@ describe("dart tooling daemon", () => {
 		const config = await startDebugger(dc, helloWorldMainFile, { name: sessionName });
 		await dc.hitBreakpoint(config, { // Stop at a breakpoint so the app won't quit while we're verifying.
 			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-			path: dc.isUsingUris ? helloWorldMainFile.toString() : fsPath(helloWorldMainFile),
+			path: fsPath(helloWorldMainFile),
 		});
 
 		// Ensure we have a session with a URI.

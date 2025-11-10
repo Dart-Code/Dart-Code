@@ -61,22 +61,6 @@ describe("uriComparisonString", () => {
 		);
 	});
 
-	it("handles differences in drive letter casing for dart-macro+file scheme", function () {
-		if (!isWin)
-			this.skip();
-
-		// Upper
-		assert.equal(
-			uriComparisonString(Uri.file("C:\\test\\test").with({ scheme: "dart-macro+file" })),
-			"dart-macro+file:c:\\test\\test",
-		);
-		// Lower
-		assert.equal(
-			uriComparisonString(Uri.file("c:\\test\\test").with({ scheme: "dart-macro+file" })),
-			"dart-macro+file:c:\\test\\test",
-		);
-	});
-
 	it("handles URIs", function () {
 		if (!isWin)
 			this.skip();

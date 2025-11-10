@@ -15,7 +15,6 @@ import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { fsPath } from "../../shared/utils/fs";
 import { AnalyzerUpdateDiagnosticInformationFeature } from "../../shared/vscode/analyzer_update_diagnostic_information";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
-import { DartTextDocumentContentProviderFeature } from "../../shared/vscode/dart_text_document_content_provider";
 import { cleanDartdoc, createMarkdownString, extensionVersion } from "../../shared/vscode/extension_utils";
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
@@ -41,7 +40,6 @@ export class LspAnalyzer extends Analyzer {
 	public readonly fileTracker: FileTracker;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
-	public readonly dartTextDocumentContentProvider: DartTextDocumentContentProviderFeature | undefined;
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
 	private readonly statusItem = getLanguageStatusItem("dart.analysisServer", ANALYSIS_FILTERS);
 	private analysisServerStartTime: number | undefined;
@@ -60,8 +58,6 @@ export class LspAnalyzer extends Analyzer {
 
 
 		// Set up other features that require the client.
-		if (this.dartCapabilities.supportsMacroGeneratedFiles) // Just because it's enabled doesn't mean the server actually supports it.
-			this.disposables.push(this.dartTextDocumentContentProvider = new DartTextDocumentContentProviderFeature(logger, this.client, dartCapabilities));
 		this.disposables.push(this.fileTracker = new FileTracker(logger, this.client, wsContext));
 		this.disposables.push(this.updateDiagnosticInformation = new AnalyzerUpdateDiagnosticInformationFeature(logger, this.client));
 
@@ -70,8 +66,6 @@ export class LspAnalyzer extends Analyzer {
 		this.client.registerFeature(this.refactors.feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.client.registerFeature(this.updateDiagnosticInformation.feature);
-		if (this.dartTextDocumentContentProvider)
-			this.client.registerFeature(this.dartTextDocumentContentProvider.feature);
 
 		void this.client.start().then(() => {
 			this.statusItem.text = "Dart Analysis Server";
