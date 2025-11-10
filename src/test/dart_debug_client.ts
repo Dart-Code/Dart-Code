@@ -94,7 +94,15 @@ export class DartDebugClient extends DebugClient {
 		// debug session.
 		if (testCoordinator) {
 			this.on("dart.testNotification", (e: DebugSessionCustomEvent) => testCoordinator.handleDebugSessionCustomEvent(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body));
-			this.on("terminated", () => testCoordinator.handleDebugSessionEnd(this.currentSession!.id, this.currentSession!.configuration.dartCodeDebugSessionID as string | undefined));
+			this.on("terminated", () => {
+				// Sometimes when we get failures on CI, it seems like the errors here (if this happened before launch() completed)
+				// will mask the real errors and we won't get them. I can't repro this locally (I always see failures printed above
+				// this error), but I also don't know for what reason they are failing (the logs show that the debug session has not
+				// launched).
+				if (!this.currentSession)
+					return;
+				testCoordinator.handleDebugSessionEnd(this.currentSession.id, this.currentSession.configuration.dartCodeDebugSessionID as string | undefined);
+			});
 		}
 	}
 
