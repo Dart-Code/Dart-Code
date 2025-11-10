@@ -31,7 +31,7 @@ describe("MCP server", () => {
 		const provider = privateApi.mcpServerProvider!;
 		const servers = await provider.provideMcpServerDefinitions(new vs.CancellationTokenSource().token);
 		const excludedTools = getExcludedTools(servers![0]);
-		assert.deepStrictEqual(excludedTools, ["run_tests"]);
+		assert.deepStrictEqual(excludedTools, ["analyze_files", "run_tests"]);
 	});
 
 	it("merges excluded tools with defaults", async () => {
@@ -42,7 +42,7 @@ describe("MCP server", () => {
 		const provider = privateApi.mcpServerProvider!;
 		const servers = await provider.provideMcpServerDefinitions(new vs.CancellationTokenSource().token);
 		const excludedTools = getExcludedTools(servers![0]);
-		assert.deepStrictEqual(excludedTools, ["run_tests", "tool1"]);
+		assert.deepStrictEqual(excludedTools, ["analyze_files", "run_tests", "tool1"]);
 	});
 
 	it("allows default exclusions to be included", async () => {
@@ -54,7 +54,7 @@ describe("MCP server", () => {
 		const provider = privateApi.mcpServerProvider!;
 		const servers = await provider.provideMcpServerDefinitions(new vs.CancellationTokenSource().token);
 		const excludedTools = getExcludedTools(servers![0]);
-		assert.deepStrictEqual(excludedTools, ["tool1"]);
+		assert.deepStrictEqual(excludedTools, ["analyze_files", "tool1"]);
 	});
 
 	it("does not pass --exclude-tool when unsupported", async () => {
