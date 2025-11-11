@@ -72,9 +72,9 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			};
 			completer.resolve(await exposeWebViewUrls(previewUrls));
 		} catch (e) {
-			const message = `Failed to set up Widget Preview: ${e}`;
+			const message = `Flutter Widget Preview: ${e}`;
 			this.logger.error(message);
-			vs.window.showErrorMessage(message);
+			vs.window.showWarningMessage(message);
 		}
 	}
 

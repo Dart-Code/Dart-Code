@@ -6,7 +6,7 @@ import { window, workspace } from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtools_server";
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
-import { CommandSource, cpuProfilerPage, dartVMPath, devToolsHomePage, devToolsPages, devToolsToolLegacyPath, devToolsToolPath, isDartCodeTestRun, performancePage, skipAction, tryAgainAction, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
+import { CommandSource, cpuProfilerPage, dartVMPath, devToolsHomePage, devToolsPages, devToolsToolLegacyPath, devToolsToolPath, isDartCodeTestRun, performancePage, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
 import { DartWorkspaceContext, DevToolsPage, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
@@ -529,7 +529,7 @@ export class DevToolsManager implements vs.Disposable {
 	}
 
 	/// Starts the devtools server and returns the URL of the running app.
-	private startServer(hasReinstalled = false): Promise<string> {
+	private startServer(): Promise<string> {
 		return new Promise<string>(async (resolve, reject) => {
 			if (this.service) {
 				try {
@@ -591,19 +591,6 @@ export class DevToolsManager implements vs.Disposable {
 					portToBind = 0;
 					const errorMessage = `${devtoolsPackageName} exited with code ${code}.`;
 					this.logger.error(errorMessage);
-
-					// If we haven't tried reinstalling, prompt to retry.
-					if (!hasReinstalled) {
-						const resp = await vs.window.showErrorMessage(`${errorMessage} Would you like to try again?`, tryAgainAction, skipAction);
-						if (resp === tryAgainAction) {
-							try {
-								resolve(await this.startServer(true));
-							} catch (e) {
-								reject(e);
-							}
-							return;
-						}
-					}
 
 					reject(errorMessage);
 				}

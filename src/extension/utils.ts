@@ -217,7 +217,7 @@ export async function promptToReloadExtension(
 	{ prompt, buttonText, offerLog, specificLog, useError, restartReason }:
 		{ prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; restartReason: ExtensionRestartReason, },
 ): Promise<void> {
-	const restartAction = buttonText || "Reload";
+	const restartAction = buttonText || "Restart Extension";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
 
 	logger.warn(`Prompting to reload: (${prompt}) (actions: ${actions.join(", ")})`);
