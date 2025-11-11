@@ -32,7 +32,8 @@ export const isDartCodeTestRun = !!process.env.DART_CODE_IS_TEST_RUN;
 export const isWin = process.platform.startsWith("win");
 export const isMac = process.platform === "darwin";
 export const isLinux = !isWin && !isMac;
-export const isChromeOS = isLinux && fs.existsSync("/dev/.cros_milestone");
+export const isChromeOS = isChromeOsImpl();
+export const isWSL = isWslImpl();
 // Used for code checks and in Dart SDK urls so Chrome OS is considered Linux.
 export const dartPlatformName = isWin ? "win" : isMac ? "mac" : "linux";
 // Used for display (logs, analytics) so Chrome OS is its own.
@@ -272,3 +273,18 @@ export const MAX_VERSION = "999.999.999";
 
 // This indicates the Flutter version file was missing and we are also assuming the highest.
 export const MISSING_VERSION_FILE_VERSION = "999.999.888";
+
+function isChromeOsImpl() {
+	return isLinux && fs.existsSync("/dev/.cros_milestone");
+}
+
+function isWslImpl() {
+	try {
+		return isLinux && (
+			fs.readFileSync("/proc/version", "utf8").toLowerCase().includes("microsoft")
+			|| fs.readFileSync("/proc/sys/kernel/osrelease", "utf8").toLowerCase().includes("microsoft")
+		);
+	} catch {
+		return false;
+	}
+}

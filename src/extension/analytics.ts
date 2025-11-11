@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as https from "https";
 import * as path from "path";
 import { debug, DebugAdapterTracker, DebugAdapterTrackerFactory, env, TelemetryLogger, TelemetrySender } from "vscode";
-import { dartCodeExtensionIdentifier, ExtensionRestartReason, isChromeOS, isDartCodeTestRun, isWin } from "../shared/constants";
+import { dartCodeExtensionIdentifier, ExtensionRestartReason, isChromeOS, isDartCodeTestRun, isWin, isWSL } from "../shared/constants";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { disposeAll } from "../shared/utils";
 import { getRandomInt } from "../shared/utils/fs";
@@ -275,6 +275,11 @@ export class Analytics implements IAmDisposable {
 			? (config.previewFlutterUiGuides ? (config.previewFlutterUiGuidesCustomTracking ? "On + Custom Tracking" : "On") : "Off")
 			: undefined;
 
+		const platformSuffix = isChromeOS
+			? " (ChromeOS)"
+			: isWSL
+				? " (WSL)"
+				: "";
 		const data: AnalyticsData = {
 			analyzerProtocol: "LSP",
 			anonymize: true,
@@ -290,7 +295,7 @@ export class Analytics implements IAmDisposable {
 			formatter: this.formatter,
 			hostKind,
 			language: env.language,
-			platform: isChromeOS ? `${process.platform} (ChromeOS)` : process.platform,
+			platform: `${process.platform}${platformSuffix}`,
 			onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles ? "On" : "Off",
 			showTodos: config.showTodos ? "On" : "Off",
 			workspaceType: this.workspaceContext?.workspaceTypeDescription,
