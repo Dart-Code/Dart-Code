@@ -650,7 +650,12 @@ export class LspAnalyzer extends Analyzer {
 
 			logger.error(errorOutput);
 		});
-		process.on("exit", (code) => {
+
+		const processName = "Analysis server";
+		process.on("close", (code, signal) => logger.info(`${processName} closed (${code}, ${signal})`));
+		process.on("exit", (code, signal) => {
+			logger.info(`${processName} exited (${code}, ${signal})`);
+
 			if (code)
 				reportAnalyzerTerminatedWithError(logger);
 
@@ -741,13 +746,13 @@ function getAnalyzerArgs(logger: Logger) {
 class DartErrorHandler implements ls.ErrorHandler {
 	private readonly restarts: number[] = [];
 
-	readonly maxRestartCount = 4;
+	readonly maxRestartCount = 2;
 
 	constructor(private readonly logger: Logger) { }
 
 	public error(error: Error, message: ls.Message, count: number): ls.ErrorHandlerResult {
 		this.logger.warn(`LSP Client error: (error: ${error}, count: ${count})`);
-		if (count && count <= 3) {
+		if (count && count < this.maxRestartCount) {
 			return { action: ls.ErrorAction.Continue };
 		}
 		return { action: ls.ErrorAction.Shutdown };
@@ -755,13 +760,13 @@ class DartErrorHandler implements ls.ErrorHandler {
 
 	public closed(): ls.CloseHandlerResult {
 		this.restarts.push(Date.now());
-		this.logger.warn(`LSP Client closed (${this.restarts} recent restarts recorded)`);
+		this.logger.warn(`LSP Client closed (${this.restarts.length} recent restarts recorded)`);
 		if (this.restarts.length <= this.maxRestartCount) {
 			return { action: ls.CloseAction.Restart };
 		} else {
 			const diff = this.restarts[this.restarts.length - 1] - this.restarts[0];
 			if (diff <= 3 * 60 * 1000) {
-				const prompt = `The Dart Analysis Server crashed ${this.maxRestartCount + 1} times in the last 3 minutes. See the log for more information.`;
+				const prompt = `The Dart Analysis Server crashed ${this.maxRestartCount + 1} times in the last 3 minutes and will not restart. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.`;
 				void promptToReloadExtension(this.logger, {
 					prompt,
 					offerLog: true,

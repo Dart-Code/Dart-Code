@@ -13,10 +13,11 @@ export function reportAnalyzerTerminatedWithError(logger: Logger, duringStartup 
 	isShowingAnalyzerError = true;
 	const prompt = duringStartup
 		? "The Dart Analyzer could not be started."
-		: "The Dart Analyzer has terminated.";
+		: "The Dart Analyzer has terminated. Please [file an issue on GitHub](https://github.com/dart-lang/sdk/issues/new/choose) with any error from the end of the log.";
 	void promptToReloadExtension(logger, {
 		prompt,
 		offerLog: true,
+		useError: true,
 		specificLog: config.analyzerLogFile,
 		restartReason: ExtensionRestartReason.AnalyzerTerminated,
 	}).then(() => isShowingAnalyzerError = false);
