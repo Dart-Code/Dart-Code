@@ -803,10 +803,52 @@
 				"userDescription": "Gets the URI to connect to the Dart Tooling Daemon (DTD).",
 				"modelDescription": "Gets the URI to connect to the Dart Tooling Daemon (DTD).",
 				"canBeReferencedInPrompt": true,
-				"toolReferenceName": "dtdUri",
+				"toolReferenceName": "get_dtd_uri",
 				"inputSchema": {
 					"type": "object",
 					"properties": {}
+				}
+			},
+			{
+				"NOTE": "This id currently required for Firebase Studio, despite producing a warning in VS Code - https://github.com/Dart-Code/Dart-Code/issues/5569",
+				"id": "dart_format",
+				"name": "dart_format",
+				"when": "dart-code:anyProjectLoaded",
+				"displayName": "Format a Dart document",
+				"userDescription": "Formats the specified Dart document.",
+				"modelDescription": "Formats the code in the specified Dart document by absolute file path. ALWAYS use this tool for formatting Dart files because there may be unsaved changes from the user not visible on disk. NEVER use the terminal or try to fix formatting manually unless EXPLICITLY instructed.",
+				"canBeReferencedInPrompt": true,
+				"toolReferenceName": "dart_format",
+				"inputSchema": {
+					"type": "object",
+					"properties": {
+						"filePath": {
+							"type": "string",
+							"description": "Absolute path to the Dart file to format."
+						}
+					},
+					"required": ["filePath"]
+				}
+			},
+			{
+				"NOTE": "This id currently required for Firebase Studio, despite producing a warning in VS Code - https://github.com/Dart-Code/Dart-Code/issues/5569",
+				"id": "dart_fix",
+				"name": "dart_fix",
+				"when": "dart-code:anyProjectLoaded",
+				"displayName": "Fix All in file/workspace",
+				"userDescription": "Runs all available fixes either in a single file (`source.fixAll`) or across the workspace (**Dart: Fix All in Workspace** command).",
+				"modelDescription": "Runs all available fixes either in a single file (`source.fixAll`) if a filePath is provided, or across the whole workspace (**Dart: Fix All in Workspace** command) if not. This command only fixes issues that have automated fixes and may not solve all problems.",
+				"canBeReferencedInPrompt": true,
+				"toolReferenceName": "dart_fix",
+				"inputSchema": {
+					"type": "object",
+					"properties": {
+						"filePath": {
+							"type": "string",
+							"description": "Absolute path to a single Dart file if fixes should only be run for one file. If not provided, the whole workspace will be fixed."
+
+						}
+					}
 				}
 			}
 		],
@@ -3211,6 +3253,8 @@
 						"type": "object",
 						"default": {
 							"analyze_files": false,
+							"dart_fix": false,
+							"dart_format": false,
 							"run_tests": false
 						},
 						"markdownDescription": "A map of MCP tool names to booleans to enable/disable specific tools from the Dart MCP server. Tools set to `false` will be excluded (if supported). By default, tools that overlap with built-in VS Code functionality will be excluded.",

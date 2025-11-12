@@ -360,6 +360,11 @@ export function stubCreateInputBox(valueToReturn: string) {
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
+	if (!vs.window.visibleTextEditors?.length) {
+		logger.info(`No open files to close`);
+		return;
+	}
+
 	logger.info(`Reverting current editor...`);
 	await vs.commands.executeCommand("workbench.action.files.revert");
 	logger.info(`Closing all open editors...`);
