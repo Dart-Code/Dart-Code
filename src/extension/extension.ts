@@ -19,6 +19,7 @@ import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
+import { McpTools } from "../shared/vscode/mcp";
 import { getPubWorkspaceFolderOrPackageFolder } from "../shared/vscode/pub";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
@@ -619,18 +620,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			logger.warn(e);
 		}
 	}
-	if (vs.lm.registerTool) {
+	if (vs.lm.registerTool as any) { // Since we didn't bump the min VS Code version, check for this explicitly.
 		try {
-			context.subscriptions.push(vs.lm.registerTool("get_dart_tooling_daemon_dtd_uri", {
-				invoke: async () => {
-					if (!dartCapabilities.supportsToolingDaemon)
-						throw new Error("DTD is not available for this version of Flutter/Dart, please upgrade.");
-					const dtdUri = await dartToolingDaemon?.dtdUri;
-					return dtdUri
-						? new vs.LanguageModelToolResult([new vs.LanguageModelTextPart(dtdUri)])
-						: undefined;
-				},
-			}));
+			context.subscriptions.push(new McpTools(dartCapabilities, dartToolingDaemon));
 		} catch (e) {
 			// This is required to swallow the exception on Firebase Studio (older VS Code version)
 			// and prevent failure to activate.
