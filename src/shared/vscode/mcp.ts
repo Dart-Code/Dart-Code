@@ -36,7 +36,7 @@ export class McpTools implements IAmDisposable {
 
 				const fileUri = vs.Uri.file(filePath);
 				const document = await vs.workspace.openTextDocument(fileUri);
-				await vs.window.showTextDocument(document, undefined, true);
+				await vs.window.showTextDocument(document);
 				await vs.commands.executeCommand("editor.action.formatDocument");
 				await document.save();
 
@@ -65,12 +65,10 @@ export class McpTools implements IAmDisposable {
 						throw new Error("The Dart fix tool requires an absolute path for the 'filePath' property if provided.");
 					if (!filePath.toLowerCase().endsWith(".dart"))
 						throw new Error("The Dart fix tool can only fix .dart files.");
-				}
 
-				if (filePath) {
-					const fileUri = vs.Uri.file(filePath as string);
+					const fileUri = vs.Uri.file(filePath);
 					const document = await vs.workspace.openTextDocument(fileUri);
-					await vs.window.showTextDocument(document, undefined, true);
+					await vs.window.showTextDocument(document);
 					await vs.commands.executeCommand("editor.action.fixAll");
 					await document.save();
 
