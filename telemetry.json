@@ -2,11 +2,11 @@
 		"events": {
 			"Extension_Activated": { },
 			"Extension_Restart": {
-				"reason":                       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The reason the extension restarted." }
+				"reason":                       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The reason the extension restarted" }
 			},
 			"Extension_Deactivate": {
-				"sessionDurationSeconds":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the extension session that just ended." },
-				"totalSessionDurationSeconds":  { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the overall session which may have included internal restarts." }
+				"sessionDurationSeconds":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the extension session that just ended" },
+				"totalSessionDurationSeconds":  { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the overall session which may have included internal restarts" }
 			},
 			"SdkDetectionFailure": { },
 			"Debugger_Activated": {
@@ -41,10 +41,12 @@
 			"Command_AddDependency": { },
 			"Command_RestartAnalyzer": { },
 			"Command_ForceReanalyze": { },
-			"Error_FlutterDaemonTimeout": { },
+			"Error_FlutterDaemonTimeout": {
+				"data":                       { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The identifier of the request method that was timed out" }
+			},
 			"AnalysisServer_Terminate": {
-				"exitCode":                     { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The exit code of the analysis server process." },
-				"sessionDurationSeconds":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the analysis server session that just ended." }
+				"exitCode":                     { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The exit code of the analysis server process" },
+				"sessionDurationSeconds":       { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Duration in seconds of the analysis server session that just ended" }
 			}
 		},
 		"commonProperties": {
@@ -53,7 +55,7 @@
 			"common.extversion":                { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight", "comment": "The version of the Dart extension" },
 			"common.vscodeversion":             { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The version of VS Code running the extension" },
 			"isDevExtension":                   { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the extension is running in development mode (this usually means running from source checked out from the Dart Code repo)" },
-			"onlyAnalyzeProjectsWithOpenFiles": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether analysis is restricted to projects with open files." },
+			"onlyAnalyzeProjectsWithOpenFiles": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether analysis is restricted to projects with open files" },
 			"showTodos":                        { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether TODOs in Dart code are being shown in the Problems list" },
 			"analyzerProtocol":                 { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the Dart analysis server is running using the LSP or Legacy communication protocol" },
 			"formatter":                        { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the formatter is enabled, enabled-on-save, disabled, or set to something other than the Dart SDK formatter" },
