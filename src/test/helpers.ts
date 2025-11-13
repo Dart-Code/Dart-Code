@@ -100,6 +100,7 @@ export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorl
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));
 export const helloWorldTestDynamicFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dynamic_test.dart"));
 export const helloWorldProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "project_test.dart"));
+export const helloWorldPrinterFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/printer.dart"));
 export const helloWorldExampleSubFolderProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "test", "project_test.dart"));
 // Go To Tests
 export const helloWorldGoToLibFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/goto/foo.dart"));

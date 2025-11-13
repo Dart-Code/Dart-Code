@@ -4,5 +4,9 @@ publish_to: none
 environment:
   sdk: '>=2.12.0 <4.0.0'
 
+dependencies:
+  hello_world:
+    path: ../
+
 dev_dependencies:
-  test:
+  test: '^1.27.0'

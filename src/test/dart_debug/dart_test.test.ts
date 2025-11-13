@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import { writeFileSync } from "fs";
 import * as path from "path";
+import { SinonStub } from "sinon";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { DebuggerType } from "../../shared/enums";
@@ -9,9 +10,10 @@ import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../shared/utils/outline";
 import { waitFor } from "../../shared/utils/promises";
 import * as testUtils from "../../shared/utils/test";
+import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -634,6 +636,102 @@ test/empty_test.dart
 	MyTest | test_reflected: 18:2-19:2
 			`.trim(),
 		);
+	});
+
+	describe("collects coverage", () => {
+		let addCoverageStub: SinonStub | undefined;
+
+		beforeEach(() => {
+			const controller = privateApi.testController;
+			const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
+			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
+			createTestRunStub.callsFake((request: vs.TestRunRequest) => {
+				const originalResult = createTestRunOriginal(request);
+				addCoverageStub = sb.stub(originalResult, "addCoverage").returns(null);
+				return originalResult;
+			});
+		});
+
+		it("for a basic test", async () => {
+			// Discover tests.
+			await openFile(helloWorldTestMainFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
+			const controller = privateApi.testController;
+
+			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestMainFile)}`)!;
+			const testRequest = new vs.TestRunRequest([suiteNode]);
+
+			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			assert(addCoverageStub?.calledOnce);
+			const coverage = addCoverageStub.firstCall.args[0] as DartFileCoverage;
+			assert.equal(fsPath(coverage.uri), fsPath(helloWorldMainLibFile)); // App file, not test file.
+			assert.ok(coverage.statementCoverage.covered > 0);
+			assert.ok(coverage.statementCoverage.total > 0);
+		});
+
+		it.skip("and includes dependencies", async () => {
+			// Requires --coverage-package for Dart
+			// // Discover tests.
+			// await openFile(helloWorldExampleTestFile);
+			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleTestFile));
+
+			// const controller = privateApi.testController;
+			// const suiteNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldExampleTestFile)}`)!;
+			// const testRequest = new vs.TestRunRequest([suiteNode]);
+
+			// await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			// assert(addCoverageStub?.called);
+			// const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+			// assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldExamplePrinterFile), fsPath(helloWorldPrinterFile)]);
+		});
+
+		it.skip("and excludes configured paths", async () => {
+			// Requires --coverage-package for Dart
+			// await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
+
+			// // Discover tests.
+			// await openFile(helloWorldExampleSubFolderProjectTestFile);
+			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
+
+			// const controller = privateApi.testController;
+			// const suiteNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldExampleSubFolderProjectTestFile)}`)!;
+			// const testRequest = new vs.TestRunRequest([suiteNode]);
+
+			// await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			// assert(addCoverageStub?.called);
+			// const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+			// assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldPrinterFile)]);
+		});
+
+		it.skip("uses correct regex for --coverage-package", () => {
+			// Requires --coverage-package for Dart
+			// const config = testUtils.getLaunchConfig(
+			// 	false, // noDebug
+			// 	true, // includeCoverage
+			// 	true, // isFlutter
+			// 	fsPath(helloWorldExampleTestFile),
+			// 	undefined, // testSelection
+			// 	false, // shouldRunTestByLine
+			// 	undefined, // runSkipped
+			// 	undefined, // template
+			// 	["hello_world", "hello_world_example"], // workspacePackageNames
+			// );
+
+			// const toolArgs = (config as { toolArgs?: string[] }).toolArgs ?? [];
+			// const coveragePackages: string[] = [];
+			// for (let i = 0; i < toolArgs.length - 1; i++) {
+			// 	if (toolArgs[i] === "--coverage-package")
+			// 		coveragePackages.push(toolArgs[i + 1]);
+			// }
+
+			// assert.deepStrictEqual(
+			// 	coveragePackages,
+			// 	[`^flutter_hello_world$`, `^flutter_hello_world_example$`],
+			// );
+		});
 	});
 
 	function getTestRanges(testSuiteUri: vs.Uri) {

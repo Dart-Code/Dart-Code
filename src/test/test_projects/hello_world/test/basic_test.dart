@@ -1,3 +1,4 @@
+import "package:hello_world/basic.dart" as basic;
 import "package:test/test.dart";
 
 void main() {
@@ -40,5 +41,9 @@ void main() {
 
   test('`with backticks`', () {
     expect(1, 1);
+  });
+
+  test('ensure coverage data', () {
+    basic.main();
   });
 }

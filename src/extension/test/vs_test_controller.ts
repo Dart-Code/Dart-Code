@@ -336,6 +336,17 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.nodeForItem.set(item, node);
 		this.itemForNode.set(node, item);
 
+		const tags: vs.TestTag[] = [];
+		if (this.isRunnableTest(node)) {
+			tags.push(runnableTestTag);
+			void node.suiteData.supportsCoverage.then((supportsCoverage) => {
+				if (supportsCoverage) {
+					item.tags = [...item.tags, runnableWithCoverageTestTag]; // Reassign to force update.
+				}
+			});
+		}
+		item.tags = tags;
+
 		item.children.replace(
 			node.children.map((c) => this.createTestItem(c)),
 		);
@@ -344,13 +355,6 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private updateFields(item: vs.TestItem, node: TreeNode) {
-		const tags: vs.TestTag[] = [];
-		if (this.isRunnableTest(node)) {
-			tags.push(runnableTestTag);
-			if (node.suiteData.isFlutterSuite)
-				tags.push(runnableWithCoverageTestTag);
-		}
-		item.tags = tags;
 		item.description = node.description;
 		if ((node instanceof GroupNode || node instanceof TestNode) && node.range) {
 			// Only update locations of tests that already have locations if they are from the Outline, because

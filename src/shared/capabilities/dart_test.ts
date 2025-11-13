@@ -11,6 +11,7 @@ export class DartTestCapabilities {
 
 	get supportsIgnoreTimeouts() { return versionIsAtLeast(this.version, "1.20.1"); }
 	get supportsRunTestsByLine() { return versionIsAtLeast(this.version, "1.23.1"); }
+	get supportsLcovCoverage() { return versionIsAtLeast(this.version, "1.27.0"); }
 }
 
 export class DartTestCapabilitiesFromHelpText extends DartTestCapabilities {
@@ -26,5 +27,8 @@ export class DartTestCapabilitiesFromHelpText extends DartTestCapabilities {
 		// --compiler was added in 1.24 which is after 1.23.1 which is the version runByLine is gated on
 		// above.
 		return this.helpText.includes("--compiler");
+	}
+	get supportsLcovCoverage() {
+		return this.helpText.includes("--coverage-path") && this.helpText.includes("--branch-coverage");
 	}
 }
