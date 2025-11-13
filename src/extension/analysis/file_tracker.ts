@@ -8,9 +8,9 @@ import { disposeAll } from "../../shared/utils";
 import { DocumentCache } from "../../shared/utils/document_cache";
 import { fsPath } from "../../shared/utils/fs";
 import { waitFor } from "../../shared/utils/promises";
+import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { lspToPosition } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
-import { locateBestProjectRoot } from "../project";
 import * as util from "../utils";
 
 export class FileTracker implements IAmDisposable {

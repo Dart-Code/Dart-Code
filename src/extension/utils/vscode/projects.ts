@@ -5,9 +5,9 @@ import { Logger } from "../../../shared/interfaces";
 import { notUndefined } from "../../../shared/utils";
 import { fsPath, homeRelativePath, isFlutterProjectFolder } from "../../../shared/utils/fs";
 import { getActiveRealFileEditor } from "../../../shared/vscode/editors";
+import { locateBestProjectRoot } from "../../../shared/vscode/project";
 import { getAllProjectFolders } from "../../../shared/vscode/utils";
 import { config } from "../../config";
-import { locateBestProjectRoot } from "../../project";
 import { getExcludedFolders } from "../../utils";
 
 export async function getFolderToRunCommandIn(logger: Logger, placeHolder: string, selection?: vs.Uri, flutterOnly = false): Promise<string | undefined> {

@@ -9,10 +9,10 @@ import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
 import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
+import { isWithinWorkspace, locateBestProjectRoot } from "../shared/vscode/project";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
 import { ringLog } from "./extension";
-import { locateBestProjectRoot } from "./project";
 
 function isFlutterWorkspaceFolder(folder?: WorkspaceFolder): boolean {
 	return !!(folder && isDartWorkspaceFolder(folder) && isFlutterProjectFolder(fsPath(folder.uri)));
@@ -30,6 +30,8 @@ export function isInsideFlutterProject(uri?: Uri): boolean {
 }
 
 export function isPathInsideFlutterProject(path: string): boolean {
+	// TODO(dantup): This can be called quite a lot when discovering tests, so consider
+	//  maintaining a model for the workspace.
 	const projectRoot = locateBestProjectRoot(path);
 	if (!projectRoot)
 		return false;
@@ -85,10 +87,6 @@ export function shouldHotReloadFor(file: { uri: Uri, isUntitled?: boolean, langu
 
 export function isAnalyzableAndInWorkspace(file: { uri: Uri, isUntitled?: boolean, languageId?: string }): boolean {
 	return isAnalyzable(file) && isWithinWorkspace(fsPath(file.uri));
-}
-
-export function isWithinWorkspace(file: string) {
-	return !!workspace.getWorkspaceFolder(Uri.file(file));
 }
 
 export function isTestFileOrFolder(path: string | undefined): boolean {

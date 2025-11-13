@@ -52,7 +52,7 @@ async function getCapabilitiesFromHelp(logger: Logger, binPath: string, folder: 
 }
 
 export async function getPackageTestCapabilities(logger: Logger, workspaceContext: WorkspaceContext, folder: string): Promise<DartTestCapabilities> {
-	// Don't ever run the command below in places like the SDK.
+	// Don't ever run the command below in places like g3.
 	if (workspaceContext.config.supportsDartRunTest === false)
 		return DartTestCapabilities.empty;
 

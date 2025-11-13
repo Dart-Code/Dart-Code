@@ -1,7 +1,6 @@
 import * as path from "path";
-import { workspace } from "vscode";
-import { hasPackageMapFile, hasPubspec } from "../shared/utils/fs";
-import { isWithinWorkspace } from "./utils";
+import { Uri, workspace } from "vscode";
+import { hasPackageMapFile, hasPubspec } from "../utils/fs";
 
 export function locateBestProjectRoot(folder: string, allowOutsideWorkspace = false): string | undefined {
 	// TODO(dantup): Review places where allowOutsideWorkspace is effectively false, because opening sub-folders
@@ -21,4 +20,8 @@ export function locateBestProjectRoot(folder: string, allowOutsideWorkspace = fa
 	}
 
 	return undefined;
+}
+
+export function isWithinWorkspace(file: string) {
+	return !!workspace.getWorkspaceFolder(Uri.file(file));
 }

@@ -4,8 +4,8 @@ import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeA
 import * as YAML from "yaml";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { PubPackage } from "../commands/add_dependency";
-import { locateBestProjectRoot } from "../project";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { RankedCodeActionProvider } from "./ranking_code_action_provider";

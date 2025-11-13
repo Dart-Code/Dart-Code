@@ -15,10 +15,10 @@ import { TestOutlineInfo } from "../../shared/utils/outline";
 import { TestSelection, createTestFileAction, defaultTestFileContents, getLaunchConfig, getTestSelectionForNodes, getTestSelectionForOutline } from "../../shared/utils/test";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { getActiveRealFileEditor, isDartDocument } from "../../shared/vscode/editors";
+import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
-import { locateBestProjectRoot } from "../project";
 import { VsCodeTestController } from "../test/vs_test_controller";
 import { ensureDebugLaunchUniqueId, getExcludedFolders, isInsideFlutterProject, isInsideFolderNamed, isPathInsideFlutterProject, isTestFile } from "../utils";
 

@@ -20,6 +20,7 @@ import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants"
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { McpTools } from "../shared/vscode/mcp";
+import { locateBestProjectRoot } from "../shared/vscode/project";
 import { getPubWorkspaceFolderOrPackageFolder } from "../shared/vscode/pub";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
@@ -68,7 +69,6 @@ import { FlutterWidgetPreviewManager } from "./flutter/widget_preview/widget_pre
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToImportsCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
-import { locateBestProjectRoot } from "./project";
 import { AddDependencyCodeActionProvider } from "./providers/add_dependency_code_action_provider";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";

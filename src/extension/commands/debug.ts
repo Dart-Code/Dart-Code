@@ -11,6 +11,7 @@ import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { getLaunchConfigDefaultTemplate } from "../../shared/vscode/debugger";
 import { DartDebugSessionInformation, ProgressMessage } from "../../shared/vscode/interfaces";
+import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { showDevToolsNotificationIfAppropriate } from "../../shared/vscode/user_prompts";
 import { envUtils } from "../../shared/vscode/utils";
@@ -18,7 +19,6 @@ import { Context } from "../../shared/vscode/workspace";
 import { FileTracker } from "../analysis/file_tracker";
 import { config } from "../config";
 import { VmServiceExtensions, timeDilationNormal, timeDilationSlow } from "../flutter/vm_service_extensions";
-import { locateBestProjectRoot } from "../project";
 import { DevToolsLocation, DevToolsManager } from "../sdk/dev_tools/manager";
 import { isDartFile, isValidEntryFile } from "../utils";
 import { LoggingCommands } from "./logging";

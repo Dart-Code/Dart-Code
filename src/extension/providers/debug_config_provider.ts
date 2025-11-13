@@ -17,11 +17,11 @@ import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, i
 import { getProgramPath } from "../../shared/utils/test";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { getActiveRealFileEditor } from "../../shared/vscode/editors";
+import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { getAllProjectFolders, isDartWorkspaceFolder, isRunningLocally, warnIfPathCaseMismatch } from "../../shared/vscode/utils";
 import { debugSessions, LastDebugSession, LastTestDebugSession } from "../commands/debug";
 import { isLogging } from "../commands/logging";
 import { config, ResourceConfig } from "../config";
-import { locateBestProjectRoot } from "../project";
 import { PubGlobal } from "../pub/global";
 import { WebDev } from "../pub/webdev";
 import { DevToolsManager } from "../sdk/dev_tools/manager";

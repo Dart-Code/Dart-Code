@@ -3,6 +3,7 @@ import * as vs from "vscode";
 import { modifyingFilesOutsideWorkspaceInfoUrl, moreInfoAction } from "../../shared/constants";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { isWithinWorkspace } from "../../shared/vscode/project";
 import { envUtils } from "../../shared/vscode/utils";
 import { config } from "../config";
 import * as util from "../utils";
@@ -26,7 +27,7 @@ export class FileChangeWarnings implements vs.Disposable {
 		const filePath = fsPath(e.document.uri);
 
 		if (vs.workspace.workspaceFolders?.length // Only prompt if we actually have workspace folders open
-			&& !util.isWithinWorkspace(filePath)
+			&& !isWithinWorkspace(filePath)
 			&& !this.filesWarnedAbout.has(filePath)) {
 
 			const isInPubCache = filePath.includes(`${path.sep}hosted${path.sep}pub.dartlang.org${path.sep}`) || filePath.includes(`${path.sep}hosted${path.sep}pub.dev${path.sep}`);

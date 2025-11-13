@@ -3,8 +3,9 @@ import { commands, TextDocumentSaveReason, Uri, workspace } from "vscode";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { isWithinWorkspace } from "../../shared/vscode/project";
 import { config } from "../config";
-import { isInsideFlutterProject, isWithinWorkspace } from "../utils";
+import { isInsideFlutterProject } from "../utils";
 
 export class GenerateLocalizationsOnSaveHandler implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
