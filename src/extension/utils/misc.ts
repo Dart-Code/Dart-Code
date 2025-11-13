@@ -17,7 +17,7 @@ export function reportAnalyzerTerminatedWithError(logger: Logger, duringStartup 
 	void promptToReloadExtension(logger, {
 		prompt,
 		offerLog: true,
-		useError: true,
+		severity: "ERROR",
 		specificLog: config.analyzerLogFile,
 		restartReason: ExtensionRestartReason.AnalyzerTerminated,
 	}).then(() => isShowingAnalyzerError = false);

@@ -214,8 +214,8 @@ export function getLatestSdkVersion(): Promise<string> {
 
 export async function promptToReloadExtension(
 	logger: Logger,
-	{ prompt, buttonText, offerLog, specificLog, useError, restartReason }:
-		{ prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; useError?: boolean; restartReason: ExtensionRestartReason, },
+	{ prompt, buttonText, offerLog, specificLog, severity, restartReason }:
+		{ prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; severity?: "ERROR" | "WARNING"; restartReason: ExtensionRestartReason, },
 ): Promise<void> {
 	const restartAction = buttonText || "Restart Extension";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
@@ -227,7 +227,11 @@ export async function promptToReloadExtension(
 	const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
 	while (showPromptAgain) {
 		showPromptAgain = false;
-		const show = useError ? window.showErrorMessage : window.showInformationMessage;
+		const show = severity === "ERROR"
+			? window.showErrorMessage
+			: severity === "WARNING"
+				? window.showWarningMessage
+				: window.showInformationMessage;
 		const chosenAction = prompt && await show(prompt, ...actions);
 		if (chosenAction === showLogAction) {
 			showPromptAgain = true;

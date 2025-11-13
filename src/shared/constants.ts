@@ -86,6 +86,7 @@ export enum ExtensionRestartReason {
 	FlutterDaemonTerminatedExit = "flutterDaemonTerminatedExit",
 	FlutterDaemonTerminatedPing = "flutterDaemonTerminatedPing",
 	FlutterDaemonTerminatedSend = "flutterDaemonTerminatedSend",
+	FlutterDaemonTimeout = "flutterDaemonTimeout",
 	FlutterProjectAdded = "flutterProjectAdded",
 	FlutterSdkActivationFailure = "flutterSdkActivationFailure",
 	LocatedSdk = "locatedSdk",
