@@ -187,7 +187,8 @@ export class TestModel {
 		suite.getAllGroups().forEach((g) => g.isStale = true);
 		suite.getAllTests().forEach((t) => t.isStale = true);
 
-		if (isRunningWholeSuite && suite) {
+		// not mark nodes as potentially deleted when using experimental tracking:
+		if (isRunningWholeSuite && suite && !this.config.experimentalTestTracking) {
 			this.markAllAsPotentiallyDeleted(suite, TestSource.Result);
 		}
 	}
@@ -218,6 +219,10 @@ export class TestModel {
 	}
 
 	public removeAllPotentiallyDeletedNodes(suite: SuiteData) {
+	    // Only remove potentially deleted nodes if we're not using the new test tracking system
+		if (this.config.experimentalTestTracking) {
+			return; // Skip cleanup when using new tracking
+		}
 		// Delete nodes that were marked as potentially deleted and then never updated.
 		// This means they weren't run in the last run, so probably were deleted (or
 		// renamed and got new nodes, which still means the old ones should be removed).
