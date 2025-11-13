@@ -46,4 +46,20 @@ end_of_record
 		assert.deepStrictEqual(result2.coverableLines, new Set<number>([4]));
 		assert.deepStrictEqual(result2.coveredLines, new Set<number>([]));
 	});
+
+	it("handles absolute Windows file paths with colons after drive letters", async () => {
+		const content = `
+SF:C:\\lib\\main.dart
+DA:1,1
+end_of_record
+		`.trim();
+
+		const parser = new CoverageParser(privateApi.logger);
+		const results = parser.parseLcovContent(content);
+
+		assert.equal(results.length, 1);
+		const result1 = results[0];
+
+		assert.equal(result1.sourceFilePath, "C:\\lib\\main.dart");
+	});
 });

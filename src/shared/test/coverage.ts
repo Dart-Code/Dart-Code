@@ -36,14 +36,15 @@ export class CoverageParser {
 		}
 
 		for (const line of record.split("\n").map((l) => l.trim()).filter((l) => l !== "" && !l.startsWith("#"))) {
-			const fields = line.split(":");
-			if (fields.length !== 2) {
+			// Don't _split_ on colons because we might have Windows paths on the right.
+			const colon = line.indexOf(":");
+			if (colon === -1) {
 				this.logger.error(`Skipping invalid lcov record line: "${line}"`);
 				continue;
 			}
 
-			const fieldType = fields[0];
-			const value = fields[1];
+			const fieldType = line.substring(0, colon);
+			const value = line.substring(colon + 1);
 
 			// Format is documented at https://github.com/jandelgado/gcov2lcov?tab=readme-ov-file#tracefile-format-reference
 			// however Dart doesn't strictly follow this. Execution counts are not accurate (only whether 0
