@@ -1,12 +1,14 @@
 import * as path from "path";
 import * as semver from "semver";
 import { DartTestCapabilities, DartTestCapabilitiesFromHelpText } from "../../shared/capabilities/dart_test";
-import { dartVMPath } from "../../shared/constants";
+import { dartVMPath, packageTestCapabilitiesCacheTimeInMs } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { runProcess, safeSpawn } from "../processes";
+import { PromiseCompleter } from "../utils";
+import { SimpleTimeBasedCache } from "../utils/cache";
 import { WorkspaceContext } from "../workspace";
 
-const cachedTestCapabilities: Record<string, DartTestCapabilities> = {};
+export const cachedTestCapabilities = new SimpleTimeBasedCache<Promise<DartTestCapabilities>>();
 
 /// Get the capabilities by using "dart test --version".
 ///
@@ -56,23 +58,29 @@ export async function getPackageTestCapabilities(logger: Logger, workspaceContex
 	if (workspaceContext.config.supportsDartRunTest === false)
 		return DartTestCapabilities.empty;
 
+	const cached = cachedTestCapabilities.get(folder);
+	if (cached !== undefined)
+		return cached;
+
+	const sdks = workspaceContext.sdks as DartSdks;
+	const completer = new PromiseCompleter<DartTestCapabilities>();
+	cachedTestCapabilities.add(folder, completer.promise, packageTestCapabilitiesCacheTimeInMs);
+	const binPath = path.join(sdks.dart, dartVMPath);
+
 	try {
-		const sdks = workspaceContext.sdks as DartSdks;
-		if (!cachedTestCapabilities[folder]) {
-			const binPath = path.join(sdks.dart, dartVMPath);
+		const capabilities =
+			// First try to get the version from "dart run test:test --version".
+			await getCapabilitiesFromVersion(logger, binPath, folder)
+			// If that returns undefined, we should fall back to using "dart test --help".
+			?? await getCapabilitiesFromHelp(logger, binPath, folder);
 
-			const capabilities =
-				// First try to get the version from "dart run test:test --version".
-				await getCapabilitiesFromVersion(logger, binPath, folder)
-				// If that returns undefined, we should fall back to using "dart test --help".
-				?? await getCapabilitiesFromHelp(logger, binPath, folder);
+		completer.resolve(capabilities);
 
-			cachedTestCapabilities[folder] = capabilities;
-		}
-
-		return cachedTestCapabilities[folder];
+		return capabilities;
 	} catch (e) {
 		logger.error(`Failed to get package:test capabilities: ${e}`);
+
+		completer.resolve(DartTestCapabilities.empty);
 		return DartTestCapabilities.empty;
 	}
 }

@@ -10,6 +10,7 @@ import { dartCodeExtensionIdentifier, projectSearchCacheTimeInMs, projectSearchP
 import { EventEmitter } from "../events";
 import { Logger } from "../interfaces";
 import { nullLogger } from "../logging";
+import { cachedTestCapabilities } from "../test/version";
 import { PromiseCompleter, flatMap, notUndefined } from "../utils";
 import { SimpleTimeBasedCache } from "../utils/cache";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPathOrEqual } from "../utils/fs";
@@ -27,6 +28,7 @@ let inProgressProjectFolderSearch: Promise<void> | undefined;
 
 export function clearCaches() {
 	projectFolderCache.clear();
+	cachedTestCapabilities.clear();
 }
 
 // The extension kind is declared as Workspace, but VS Code will return UI in the

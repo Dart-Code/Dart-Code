@@ -243,7 +243,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		logger.error(e);
 	}
 
-
 	// Build log headers now we know analyzer type.
 	rebuildLogHeaders();
 
@@ -714,6 +713,8 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(createWatcher("**/.packages", workspaceContext.events.onPackageMapChange));
 	context.subscriptions.push(createWatcher("**/.dart_tool/package_config.json", workspaceContext.events.onPackageMapChange));
 	workspaceContext.events.onPackageMapChange.fire();
+
+	context.subscriptions.push(workspaceContext.events.onPackageMapChange.listen(() => clearCaches()));
 
 	const dartCodeConfigurationPath = process.env[dartCodeConfigurationPathEnvironmentVariableName] || defaultDartCodeConfigurationPath;
 	context.subscriptions.push(new AutoLaunch(dartCodeConfigurationPath, logger, deviceManager));
