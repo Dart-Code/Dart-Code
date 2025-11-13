@@ -5,10 +5,13 @@ import { IAmDisposable, Logger, Range } from "../interfaces";
 import { ErrorNotification, PrintNotification } from "../test_protocol";
 import { uniq } from "../utils";
 import { DocumentCache } from "../utils/document_cache";
-import { isWithinPath } from "../utils/fs";
+import { isFlutterProjectFolder, isWithinPath } from "../utils/fs";
 import { rangesEqual } from "../utils/positions";
 import { makeRegexForTests } from "../utils/test";
+import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
+import { WorkspaceContext } from "../workspace";
+import { getPackageTestCapabilities } from "./version";
 
 export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
@@ -175,7 +178,12 @@ export class TestModel {
 	// TODO: Make private?
 	public readonly suites = new DocumentCache<SuiteData>();
 
-	public constructor(private readonly logger: Logger, private readonly config: { dynamicTestTracking: boolean; showSkippedTests: boolean }, private readonly isPathInsideFlutterProject: (path: string) => boolean) { }
+	public constructor(
+		private readonly logger: Logger,
+		private readonly workspaceContext: WorkspaceContext,
+		private readonly config: { dynamicTestTracking: boolean; showSkippedTests: boolean },
+		private readonly isPathInsideFlutterProject: (path: string) => boolean,
+	) { }
 
 	public addTestEventListener(listener: TestEventListener) {
 		this.testEventListeners.push(listener);
@@ -231,7 +239,7 @@ export class TestModel {
 	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
 		let suite = this.suites.getForPath(suitePath);
 		if (!suite) {
-			suite = new SuiteData(suitePath, this.isPathInsideFlutterProject(suitePath));
+			suite = new SuiteData(suitePath, this.logger, this.workspaceContext);
 			this.suites.setForPath(suitePath, suite);
 			return [suite, true];
 		}
@@ -562,10 +570,29 @@ export class SuiteData {
 	private readonly groupsByName = new Map<string, GroupNode>();
 	private readonly testsById = new Map<string, TestNode>();
 	private readonly testsByName = new Map<string, TestNode>();
-	constructor(public readonly path: string, public readonly isFlutterSuite: boolean) {
+	public readonly supportsCoverage: Promise<boolean>;
+
+	constructor(public readonly path: string, logger: Logger, context: WorkspaceContext) {
 		this.node = new SuiteNode(this);
+		this.supportsCoverage = this.suiteSupportsCoverage(path, logger, context);
 	}
 	private static unnamedItemMarker = "<!!!###unnamed-test-item###!!!>";
+
+	private async suiteSupportsCoverage(path: string, logger: Logger, context: WorkspaceContext): Promise<boolean> {
+		const projectRoot = locateBestProjectRoot(path);
+		if (!projectRoot)
+			return false;
+
+		if (isFlutterProjectFolder(projectRoot))
+			return true;
+
+		try {
+			const testCapabilities = await getPackageTestCapabilities(logger, context, projectRoot);
+			return testCapabilities.supportsLcovCoverage;
+		} catch {
+			return false;
+		}
+	}
 
 	public getAllGroups(): GroupNode[] {
 		// We need to uniq() these because we store values in the map from

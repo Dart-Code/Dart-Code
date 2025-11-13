@@ -19,7 +19,7 @@ describe("test_outline_visitor", () => {
 		const visitor = new TestOutlineVisitor(logger, fsPath(helloWorldTestMainFile));
 		visitor.visit(outline);
 
-		assert.equal(visitor.tests.length, 11);
+		assert.equal(visitor.tests.length, 12);
 		assert.equal(visitor.tests[0].isGroup, true);
 		assert.equal(visitor.tests[0].fullName, "String");
 		assert.equal(visitor.tests[1].isGroup, false);
@@ -44,5 +44,7 @@ describe("test_outline_visitor", () => {
 		assert.equal(visitor.tests[9].fullName, `greater than with quotes ">= foo"`);
 		assert.equal(visitor.tests[10].isGroup, false);
 		assert.equal(visitor.tests[10].fullName, "`with backticks`");
+		assert.equal(visitor.tests[11].isGroup, false);
+		assert.equal(visitor.tests[11].fullName, "ensure coverage data");
 	});
 });
