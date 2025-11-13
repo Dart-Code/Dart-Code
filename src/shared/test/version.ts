@@ -56,19 +56,23 @@ export async function getPackageTestCapabilities(logger: Logger, workspaceContex
 	if (workspaceContext.config.supportsDartRunTest === false)
 		return DartTestCapabilities.empty;
 
-	const sdks = workspaceContext.sdks as DartSdks;
-	if (!cachedTestCapabilities[folder]) {
-		const binPath = path.join(sdks.dart, dartVMPath);
+	try {
+		const sdks = workspaceContext.sdks as DartSdks;
+		if (!cachedTestCapabilities[folder]) {
+			const binPath = path.join(sdks.dart, dartVMPath);
 
-		const capabilities =
-			// First try to get the version from "dart run test:test --version".
-			await getCapabilitiesFromVersion(logger, binPath, folder)
-			// If that returns undefined, we should fall back to using "dart test --help".
-			?? await getCapabilitiesFromHelp(logger, binPath, folder);
+			const capabilities =
+				// First try to get the version from "dart run test:test --version".
+				await getCapabilitiesFromVersion(logger, binPath, folder)
+				// If that returns undefined, we should fall back to using "dart test --help".
+				?? await getCapabilitiesFromHelp(logger, binPath, folder);
 
-		cachedTestCapabilities[folder] = capabilities;
+			cachedTestCapabilities[folder] = capabilities;
+		}
+
+		return cachedTestCapabilities[folder];
+	} catch (e) {
+		logger.error(`Failed to get package:test capabilities: ${e}`);
+		return DartTestCapabilities.empty;
 	}
-
-	return cachedTestCapabilities[folder];
-
 }

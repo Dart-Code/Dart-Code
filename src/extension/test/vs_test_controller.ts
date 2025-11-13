@@ -336,16 +336,16 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.nodeForItem.set(item, node);
 		this.itemForNode.set(node, item);
 
-		const tags: vs.TestTag[] = [];
 		if (this.isRunnableTest(node)) {
-			tags.push(runnableTestTag);
+			item.tags = [runnableTestTag];
+
+			// Checking if coverage is supported is async, so we need to do this later.
 			void node.suiteData.supportsCoverage.then((supportsCoverage) => {
 				if (supportsCoverage) {
 					item.tags = [...item.tags, runnableWithCoverageTestTag]; // Reassign to force update.
 				}
 			});
 		}
-		item.tags = tags;
 
 		item.children.replace(
 			node.children.map((c) => this.createTestItem(c)),

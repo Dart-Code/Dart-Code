@@ -586,12 +586,8 @@ export class SuiteData {
 		if (isFlutterProjectFolder(projectRoot))
 			return true;
 
-		try {
-			const testCapabilities = await getPackageTestCapabilities(logger, context, projectRoot);
-			return testCapabilities.supportsLcovCoverage;
-		} catch {
-			return false;
-		}
+		const testCapabilities = await getPackageTestCapabilities(logger, context, projectRoot);
+		return testCapabilities.supportsLcovCoverage;
 	}
 
 	public getAllGroups(): GroupNode[] {
