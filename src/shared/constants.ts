@@ -163,6 +163,7 @@ export const projectSearchProgressText = "Searching for projects...";
 // Search for 2s before showing progress notification.
 export const projectSearchProgressNotificationDelayInMs = 2000;
 export const projectSearchCacheTimeInMs = fiveMinutesInMs;
+export const packageTestCapabilitiesCacheTimeInMs = fiveMinutesInMs;
 
 export const DART_CREATE_PROJECT_TRIGGER_FILE = "dart.create";
 export const FLUTTER_CREATE_PROJECT_TRIGGER_FILE = "flutter.create";
