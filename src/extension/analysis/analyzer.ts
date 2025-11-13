@@ -642,7 +642,7 @@ export class LspAnalyzer extends Analyzer {
 					void promptToReloadExtension(logger, {
 						prompt: "Running the analysis server from source failed because of a version mismatch. Is your Dart SDK an older version than this server version requires?",
 						offerLog: true,
-						useError: true,
+						severity: "ERROR",
 						restartReason: ExtensionRestartReason.AnalysisServerFromSourceMismatch
 					});
 				}
@@ -770,7 +770,7 @@ class DartErrorHandler implements ls.ErrorHandler {
 				void promptToReloadExtension(this.logger, {
 					prompt,
 					offerLog: true,
-					useError: true,
+					severity: "ERROR",
 					restartReason: ExtensionRestartReason.AnalysisServerCrashedManyTimes
 				});
 				return {

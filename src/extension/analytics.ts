@@ -368,7 +368,12 @@ export class Analytics implements IAmDisposable {
 		this.event(AnalyticsEvent.AnalysisServer_Terminate, customData);
 	}
 
-	public logErrorFlutterDaemonTimeout() { this.event(AnalyticsEvent.Error_FlutterDaemonTimeout); }
+	public logErrorFlutterDaemonTimeout(requestMethod: string) {
+		const customData: Partial<AnalyticsData> = {
+			data: requestMethod,
+		};
+		this.event(AnalyticsEvent.Error_FlutterDaemonTimeout, customData);
+	}
 	public logSdkDetectionFailure() { this.event(AnalyticsEvent.SdkDetectionFailure); }
 	public logDebuggerStart(debuggerType: string, debuggerRunType: string, sdkDap: boolean) {
 		const customData: Partial<AnalyticsData> = {
