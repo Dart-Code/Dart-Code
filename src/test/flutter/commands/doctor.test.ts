@@ -8,7 +8,7 @@ describe("flutter doctor", () => {
 	beforeEach("activate", () => activate());
 
 	it("runs and prints output", async () => {
-		const buffer = captureOutput("flutter (flutter)");
+		const buffer = captureOutput("flutter");
 		const result: RunProcessResult = await vs.commands.executeCommand("flutter.doctor");
 		assert.equal(result.exitCode, 0);
 

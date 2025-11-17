@@ -8,7 +8,7 @@ import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, Sp
 import { logProcess } from "../../shared/logging";
 import { getPubExecutionInfo, RunProcessResult } from "../../shared/processes";
 import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
+import { fsPath, tryGetPackageName } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
@@ -56,7 +56,7 @@ export class BaseSdkCommands implements IAmDisposable {
 	}
 
 	protected async runCommandForWorkspace(
-		handler: (folder: string, args: string[], shortPath: string, alwaysShowOutput: boolean, operationProgress?: OperationProgress) => Promise<RunProcessResult | undefined>,
+		handler: (folder: string, args: string[], packageOrFolderDisplayName: string, alwaysShowOutput: boolean, operationProgress?: OperationProgress) => Promise<RunProcessResult | undefined>,
 		placeHolder: string,
 		args: string[],
 		selection: vs.Uri | undefined,
@@ -70,25 +70,33 @@ export class BaseSdkCommands implements IAmDisposable {
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
 		const containingWorkspacePath = containingWorkspace ? fsPath(containingWorkspace.uri) : undefined;
 
-		// Display the relative path from the workspace root to the folder we're running up to two segments.
-		let shortPath = path.basename(folderToRunCommandIn);
-		if (containingWorkspacePath) {
-			const relativePath = path.relative(containingWorkspacePath, folderToRunCommandIn);
-			if (relativePath) {
-				shortPath = relativePath.includes(path.sep)
-					? relativePath.split(path.sep).slice(-2).join(path.sep)
-					: relativePath;
+		let packageOrFolderDisplayName: string;
+
+		// Before choosing to use the folder name, try to use `package:foo`.
+		const packageName = tryGetPackageName(folderToRunCommandIn);
+		if (packageName) {
+			packageOrFolderDisplayName = `package:${packageName}`;
+		} else {
+			// Display the relative path from the workspace root to the folder we're running up to two segments.
+			packageOrFolderDisplayName = path.basename(folderToRunCommandIn);
+			if (containingWorkspacePath) {
+				const relativePath = path.relative(containingWorkspacePath, folderToRunCommandIn);
+				if (relativePath) {
+					packageOrFolderDisplayName = relativePath.includes(path.sep)
+						? relativePath.split(path.sep).slice(-2).join(path.sep)
+						: relativePath;
+				}
 			}
 		}
 
-		return handler(folderToRunCommandIn, args, shortPath, alwaysShowOutput, operationProgress);
+		return handler(folderToRunCommandIn, args, packageOrFolderDisplayName, alwaysShowOutput, operationProgress);
 	}
 
 	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
 		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress);
 	}
 
-	protected runFlutterInFolder(folder: string, args: string[], shortPath: string | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress, customScript?: CustomScript): Promise<RunProcessResult | undefined> {
+	protected runFlutterInFolder(folder: string, args: string[], packageOrFolderDisplayName: string, alwaysShowOutput = false, operationProgress?: OperationProgress, customScript?: CustomScript): Promise<RunProcessResult | undefined> {
 		if (!this.sdks.flutter)
 			throw new Error("Flutter SDK not available");
 
@@ -102,14 +110,14 @@ export class BaseSdkCommands implements IAmDisposable {
 			.concat(config.for(vs.Uri.file(folder)).flutterAdditionalArgs)
 			.concat(execution.args);
 
-		return this.runCommandInFolder(shortPath, folder, execution.executable, allArgs, alwaysShowOutput, operationProgress);
+		return this.runCommandInFolder(packageOrFolderDisplayName, folder, execution.executable, allArgs, alwaysShowOutput, operationProgress);
 	}
 
 	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
 		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress);
 	}
 
-	protected runPubInFolder(folder: string, args: string[], shortPath: string, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
+	protected runPubInFolder(folder: string, args: string[], packageOrFolderDisplayName: string, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
 		if (!this.sdks.dart)
 			throw new Error("Dart SDK not available");
 
@@ -117,14 +125,18 @@ export class BaseSdkCommands implements IAmDisposable {
 
 		const pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
 
-		return this.runCommandInFolder(shortPath, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput, operationProgress);
+		return this.runCommandInFolder(packageOrFolderDisplayName, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput, operationProgress);
 	}
 
-	protected async runCommandInFolder(shortPath: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
-		shortPath = shortPath || path.basename(folder);
+	protected async runCommandInFolder(packageOrFolderDisplayName: string | undefined, folder: string, binPath: string, args: string[], alwaysShowOutput: boolean, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
+		packageOrFolderDisplayName = packageOrFolderDisplayName || path.basename(folder);
 		const commandName = path.basename(binPath).split(".")[0]; // Trim file extension.
 
-		const channel = channels.getOutputChannel(`${commandName} (${shortPath})`, true);
+		const channelName =
+			commandName === packageOrFolderDisplayName
+				? commandName
+				: `${commandName} (${packageOrFolderDisplayName})`;
+		const channel = channels.getOutputChannel(channelName, true);
 		if (alwaysShowOutput)
 			channel.show();
 
@@ -147,15 +159,15 @@ export class BaseSdkCommands implements IAmDisposable {
 			}
 
 			const process = new ChainedProcess(() => {
-				channel.appendLine(`[${shortPath}] ${commandName} ${args.join(" ")}`);
+				channel.appendLine(`[${packageOrFolderDisplayName}] ${commandName} ${args.join(" ")}`);
 
 				const progressWithCounts = progress as ProgressWithItemCounts;
 				if (progressWithCounts.totalItems && progressWithCounts.totalItems > 1) {
 					const current = (progressWithCounts.currentItem ?? 0) + 1;
 					progressWithCounts.currentItem = current;
-					progress.report({ message: `${shortPath}... (${current}/${progressWithCounts.totalItems})`, increment: 100 / progressWithCounts.totalItems });
+					progress.report({ message: `${packageOrFolderDisplayName}... (${current}/${progressWithCounts.totalItems})`, increment: 100 / progressWithCounts.totalItems });
 				} else {
-					progress.report({ message: `${shortPath}...` });
+					progress.report({ message: `${packageOrFolderDisplayName}...` });
 				}
 				const proc = safeToolSpawn(folder, binPath, args);
 				channels.runProcessInOutputChannel(proc, channel);

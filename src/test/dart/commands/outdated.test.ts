@@ -8,12 +8,12 @@ describe("pub outdated", () => {
 	beforeEach("activate", () => activate());
 
 	it("runs and prints output", async () => {
-		const buffer = captureOutput("dart (hello_world)");
+		const buffer = captureOutput("dart (package:hello_world)");
 		const result: RunProcessResult = await vs.commands.executeCommand("pub.outdated");
 		assert.equal(result.exitCode, 0);
 
 		const output = buffer.join("").trim();
-		assert.equal(output.startsWith(`--\n\n[hello_world] dart pub outdated`), true);
+		assert.equal(output.startsWith(`--\n\n[package:hello_world] dart pub outdated`), true);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });
