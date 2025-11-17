@@ -9,12 +9,12 @@ describe("flutter packages outdated", () => {
 	beforeEach("activate", () => activate());
 
 	it("runs and prints output", async () => {
-		const buffer = captureOutput("flutter (flutter_hello_world)");
+		const buffer = captureOutput("flutter (package:flutter_hello_world)");
 		const result: RunProcessResult = await vs.commands.executeCommand("flutter.packages.outdated");
 		assert.equal(result.exitCode, 0);
 
 		const output = buffer.join("").trim();
-		assert.equal(output.startsWith(`--\n\n[flutter_hello_world] flutter --suppress-analytics pub outdated`), true);
+		assert.equal(output.startsWith(`--\n\n[package:flutter_hello_world] flutter --suppress-analytics pub outdated`), true);
 		assert.equal(output.endsWith("exit code 0"), true);
 	});
 });
