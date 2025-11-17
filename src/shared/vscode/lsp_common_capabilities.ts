@@ -6,7 +6,7 @@ import { LSP_COMMAND_CONTEXT_PREFIX, LSP_REQUEST_CONTEXT_PREFIX } from "../const
 export class CommonCapabilitiesFeature {
 	public get feature(): StaticFeature {
 		return {
-			dispose() { },
+			clear() { },
 			fillClientCapabilities(capabilities: ClientCapabilities) {
 				capabilities.experimental = capabilities.experimental ?? {};
 				// Set an explicit flag to let the server know we support the window/showMessage request

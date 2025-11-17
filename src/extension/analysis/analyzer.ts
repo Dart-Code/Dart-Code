@@ -515,6 +515,9 @@ export class LspAnalyzer extends Analyzer {
 			middleware,
 			outputChannelName: "LSP",
 			revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
+			textSynchronization: {
+				delayOpenNotifications: true,
+			},
 			uriConverters: {
 				// Don't just use "converters" here because LSP doesn't bind "this".
 				code2Protocol: (uri) => converters.code2Protocol(uri),
@@ -602,7 +605,7 @@ export class LspAnalyzer extends Analyzer {
 			if (ls.TextDocumentEdit.is(change)) {
 				const uri = vs.Uri.parse(change.textDocument.uri);
 				for (const edit of change.edits) {
-					const edit2 = edit as (ls.TextEdit | ls.AnnotatedTextEdit) & { insertTextFormat?: ls.InsertTextFormat; };
+					const edit2 = edit as (ls.TextEdit | ls.AnnotatedTextEdit | ls.SnippetTextEdit) & { insertTextFormat?: ls.InsertTextFormat; newText?: string; };
 					if (edit2.newText && edit2.insertTextFormat === ls.InsertTextFormat.Snippet) {
 						snippetTypes.add(`${fsPath(uri)}:${edit2.newText}:${edit2.range.start.line}:${edit2.range.start.character}`);
 					}
