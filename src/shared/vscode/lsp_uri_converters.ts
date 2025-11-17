@@ -1,6 +1,4 @@
 import * as vs from "vscode";
-import * as c2p from "vscode-languageclient/lib/common/codeConverter";
-import * as p2c from "vscode-languageclient/lib/common/protocolConverter";
 import { fsPath } from "../../shared/utils/fs";
 
 export class LspUriConverters implements LspConverters {
@@ -22,6 +20,6 @@ export class LspUriConverters implements LspConverters {
 }
 
 interface LspConverters {
-	code2Protocol: c2p.URIConverter;
-	protocol2Code: p2c.URIConverter;
+	code2Protocol(value: vs.Uri): string;
+	protocol2Code(value: string): vs.Uri;
 }
