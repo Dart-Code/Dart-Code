@@ -83,7 +83,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
-		this.logTraffic(`Process ${this.description} terminated! ${code}, ${signal}`);
+		const isError = !!code;
+		this.logTraffic(`Process ${this.description} terminated! ${code}, ${signal}`, isError);
 		this.processExited = true;
 	}
 
