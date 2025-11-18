@@ -404,7 +404,7 @@
 			},
 			{
 				"command": "dart.openAnalyzerDiagnostics",
-				"title": "Open Analyzer Diagnostics",
+				"title": "Open Analyzer Diagnostics / Insights",
 				"category": "Dart"
 			},
 			{
