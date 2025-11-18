@@ -1866,7 +1866,7 @@ export abstract class DartDebugSession extends DebugSession {
 	///    [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
 	///    [5:01:50 PM] [General] [Info] [stderr] Dart Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
 	protected logToUserBuffered(message: string, category: string) {
-		this.logBufferFlushes[category]?.unref();
+		this.logBufferFlushes[category]?.close();
 		this.logBuffer[category] = this.logBuffer[category] || "";
 		this.logBuffer[category] += message;
 
@@ -1878,11 +1878,13 @@ export abstract class DartDebugSession extends DebugSession {
 		} else {
 			// If we don't get another message we need to ensure the buffer is flushed after some
 			// small period.
-			this.logBufferFlushes[category] = setTimeout(() => this.flushLogBuffer(category), 50);
+			const timeout = setTimeout(() => this.flushLogBuffer(category), 50);
+			timeout.unref();
+			this.logBufferFlushes[category] = timeout;
 		}
 	}
 	private logBuffer: { [key: string]: string } = {};
-	private logBufferFlushes: { [key: string]: NodeJS.Timer } = {};
+	private logBufferFlushes: { [key: string]: NodeJS.Timeout } = {};
 
 	private flushLogBuffer(category: string) {
 		const processString = this.logBuffer[category];
