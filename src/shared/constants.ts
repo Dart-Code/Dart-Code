@@ -140,6 +140,7 @@ export const cloningFlutterMessage = "Downloading the Flutter SDK. This may take
 
 
 // Seconds.
+export const oneSecondInMs = 1000;
 export const fiveSecondsInMs = 1000 * 5;
 export const tenSecondsInMs = 1000 * 10;
 export const twentySecondsInMs = 1000 * 20;

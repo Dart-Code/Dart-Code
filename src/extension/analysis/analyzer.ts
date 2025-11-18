@@ -7,7 +7,7 @@ import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } 
 import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, ExtensionRestartReason, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason, oneSecondInMs, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -427,7 +427,7 @@ export class LspAnalyzer extends Analyzer {
 	}
 
 	public async getDiagnosticServerPort(): Promise<{ port: number }> {
-		return this.client.sendRequest(DiagnosticServerRequest.type);
+		return this.withProgressIfSlow("Opening Analyzer Diagnostics / Insights...", this.client.sendRequest(DiagnosticServerRequest.type));
 	}
 
 	public async forceReanalyze(): Promise<void> {
@@ -464,6 +464,24 @@ export class LspAnalyzer extends Analyzer {
 			AugmentationRequest.type,
 			params,
 		);
+	}
+
+	private withProgressIfSlow<T>(progressText: string, action: Promise<T>) {
+		// Set a timeout that after 1s will show progress until the action completes.
+		const progressTimer = setTimeout(() => {
+			vs.window.withProgress(
+				{
+					title: progressText,
+					location: vs.ProgressLocation.Notification
+				}, () => action,
+			);
+		}, oneSecondInMs);
+
+		// Don't keep anything alive.
+		progressTimer.unref();
+
+		// If the action completes before the timer fires, cancel it.
+		return action.finally(() => progressTimer.close());
 	}
 
 	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
