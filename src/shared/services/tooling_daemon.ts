@@ -2,7 +2,7 @@
 import * as path from "path";
 import * as ws from "ws";
 import { DartCapabilities } from "../capabilities/dart";
-import { dartVMPath, ExtensionRestartReason, tenMinutesInMs } from "../constants";
+import { dartVMPath, ExtensionRestartReason, fiveSecondsInMs, tenMinutesInMs } from "../constants";
 import { LogCategory } from "../enums";
 import { EventsEmitter } from "../events";
 import { DartSdks, IAmDisposable, Logger } from "../interfaces";
@@ -48,7 +48,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.disposables.push(this.dtdProcess);
 
 		void this.dtdProcess.dtdUri.then(() => this.connect());
-		void this.dtdProcess.processExit.then(() => this.handleClose());
+		void this.dtdProcess.processExit.then((codes) => this.handleProcessExit(codes));
 	}
 
 	public get dtdUri(): Promise<string | undefined> {
@@ -66,7 +66,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		socket.on("open", () => this.handleOpen());
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		socket.on("message", (data) => this.handleData(data.toString()));
-		socket.on("close", () => this.handleClose());
+		socket.on("close", () => this.handleWebSocketClose());
 		socket.on("error", (e) => this.handleError(e));
 
 		this.connection = { socket, dtdUri, dtdSecret };
@@ -260,14 +260,28 @@ export class DartToolingDaemon implements IAmDisposable {
 		this.connection.socket.send(str);
 	}
 
-	protected handleClose() {
-		this.logger.info(`DTD connection closed`);
+	protected handleProcessExit(codes: ProcessExitCodes) {
+		this.logger.info(`DTD process exited (${codes.code}, ${codes.signal})`);
 		if (!this.isShuttingDown && !this.hasShownTerminatedError) {
-			const which = this.dtdProcess.hasTerminated ? "process" : "connection";
-			this.showTerminatedError(which, this.dtdProcess.hasReceivedConnectionInfo ? "has terminated" : "failed to start");
+			this.showTerminatedError("process", this.dtdProcess.hasReceivedConnectionInfo ? "has terminated" : "failed to start");
 		}
 
 		this.dispose();
+	}
+
+	protected handleWebSocketClose() {
+		this.logger.info(`DTD WebSocket connection closed`);
+		// Delay this for a few seconds so if the process terminates, we show that one instead (since it's the most
+		// significant).
+		setTimeout(() => {
+			if (!this.isShuttingDown && !this.hasShownTerminatedError) {
+				this.showTerminatedError("connection", "was closed");
+			}
+		}, fiveSecondsInMs).unref();
+
+		// Don't dispose just because the web socket closed, because if the process is in the process of terminating, we want
+		// to log that, and not have terminated the process ourselves.
+		// this.dispose();
 	}
 
 	private handleError(e: Error) {
@@ -309,12 +323,14 @@ export class DartToolingDaemon implements IAmDisposable {
 	}
 }
 
+interface ProcessExitCodes { code: number | null, signal: NodeJS.Signals | null }
+
 class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 	public hasReceivedConnectionInfo = false;
 
 	private dtdUriCompleter = new PromiseCompleter<string | undefined>();
 	private dtdSecretCompleter = new PromiseCompleter<string>();
-	private processExitCompleter = new PromiseCompleter<void>();
+	private processExitCompleter = new PromiseCompleter<ProcessExitCodes>();
 
 	public hasTerminated = false;
 
@@ -326,7 +342,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 		return this.dtdSecretCompleter.promise;
 	}
 
-	public get processExit(): Promise<void> {
+	public get processExit(): Promise<ProcessExitCodes> {
 		return this.processExitCompleter.promise;
 	}
 
@@ -346,7 +362,7 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
 		this.hasTerminated = true;
 		super.handleExit(code, signal);
-		this.processExitCompleter.resolve();
+		this.processExitCompleter.resolve({ code, signal });
 		this.dtdUriCompleter.resolve(undefined);
 	}
 

@@ -5,6 +5,7 @@ import { DTD_AVAILABLE } from "../../shared/constants.contexts";
 import { DebuggerType } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { DartSdks, IAmDisposable, Logger } from "../../shared/interfaces";
+import { ProcessExitCodes } from "../../shared/processes";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { ActiveLocation, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream, SuccessResult } from "../../shared/services/tooling_daemon_services";
 import { disposeAll, nullToUndefined, PromiseCompleter } from "../../shared/utils";
@@ -187,7 +188,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		}
 	}
 
-	protected handleClose() {
+	protected handleProcessExit(codes: ProcessExitCodes) {
 		// If we failed to start up, overwrite the "Starting..." label and provide a restart option.
 		const statusBarItem = this.statusBarItem;
 		statusBarItem.text = "Dart Tooling Daemon Terminated";
@@ -196,7 +197,7 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 			command: "_dart.reloadExtension",
 			title: "restart",
 		};
-		super.handleClose();
+		super.handleProcessExit(codes);
 	}
 
 	private sendWorkspaceRootsToDaemon() {

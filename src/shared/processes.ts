@@ -83,3 +83,8 @@ export interface ExecutionInfo {
 	cwd?: string;
 	env?: Record<string, string>;
 }
+
+export interface ProcessExitCodes {
+	code: number | null,
+	signal: NodeJS.Signals | null
+};
