@@ -18,8 +18,10 @@
 **/.git
 **/.gitattributes
 **/*.map
+AGENTS.md
 CONTRIBUTING.md
 coverage/**
+eslint.config.js
 lints/**
 logs/**
 media/screenshots/**
