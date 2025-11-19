@@ -480,7 +480,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			const resps = await Promise.all(getPlatformPromises);
 
 			const supportedTypes = unique(flatMap(resps, (r) => r));
-			this.logger.info(`Supported platforms for the workspace are ${supportedTypes.join(", ")}`);
+			this.logger.info(`Supported platforms for the workspace are ${supportedTypes.map((t) => `"${t}"`).join(", ")}.`);
 
 			resolve(supportedTypes);
 			setTimeout(() => this.shortCacheForSupportedPlatforms = undefined, 10000);
