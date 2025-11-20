@@ -163,7 +163,7 @@ export class TestOutlineVisitor extends OutlineVisitor {
 	protected visitCompilationUnit(outline: Outline) {
 		if (outline.children) {
 			for (const child of outline.children) {
-				if (child.element.name === "main")
+				if (child.element.name === "main" && child.element.kind === "FUNCTION")
 					this.isInsideTopLevelMain = true;
 				this.visitNode(child);
 				this.isInsideTopLevelMain = false;
