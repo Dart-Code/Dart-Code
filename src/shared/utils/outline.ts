@@ -18,7 +18,7 @@ export abstract class OutlineVisitor {
 		}
 	}
 
-	private visitNode(outline: Outline) {
+	protected visitNode(outline: Outline) {
 		switch (outline?.element?.kind) {
 			case "CLASS":
 				this.visitClass(outline);
@@ -149,6 +149,8 @@ export class TestOutlineVisitor extends OutlineVisitor {
 
 	private readonly names: string[] = [];
 
+	private isInsideTopLevelMain = false;
+
 	public visit(outline: Outline) {
 		this.tests.length = 0;
 		for (const line of Object.keys(this.testsByLine)) {
@@ -156,6 +158,17 @@ export class TestOutlineVisitor extends OutlineVisitor {
 		}
 
 		super.visit(outline);
+	}
+
+	protected visitCompilationUnit(outline: Outline) {
+		if (outline.children) {
+			for (const child of outline.children) {
+				if (child.element.name === "main")
+					this.isInsideTopLevelMain = true;
+				this.visitNode(child);
+				this.isInsideTopLevelMain = false;
+			}
+		}
 	}
 
 	protected visitUnitTestTest(outline: Outline) {
@@ -174,6 +187,7 @@ export class TestOutlineVisitor extends OutlineVisitor {
 		const isGroup = outline.element.kind === "UNIT_TEST_GROUP";
 		const range = outline.codeRange || outline.range || (outline.element ? outline.element.range : undefined);
 		const info = {
+			isOutlineNodeNotFromMainFunction: !this.isInsideTopLevelMain,
 			file: this.file,
 			fullName,
 			isGroup,
@@ -194,6 +208,7 @@ export class TestOutlineVisitor extends OutlineVisitor {
 }
 
 export interface TestOutlineInfo {
+	isOutlineNodeNotFromMainFunction: boolean;
 	fullName: string;
 	file: string;
 	isGroup: boolean;

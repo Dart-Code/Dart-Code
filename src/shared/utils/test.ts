@@ -59,13 +59,21 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 	) as { program: string } & BasicDebugConfiguration;
 }
 
-export interface TestSelection { name: string, isGroup: boolean, position: Position | undefined }
+export interface TestSelection {
+	/// Whether this node is a test that wasn't discovered inside the top
+	/// level `main()` function which means we need to skip adding `^` to
+	/// the start of the regex.
+	isOutlineNodeNotFromMainFunction?: boolean,
+	name: string,
+	isGroup: boolean,
+	position: Position | undefined
+}
 
 const regexEscapedInterpolationExpressionPattern = /\\\$(?:(?:\w+)|(?:\\\{.*\\\}))/g;
 export function makeRegexForTests(names: TestSelection[]) {
 	const regexSegments: string[] = [];
 	for (const name of names) {
-		const prefix = "^";
+		const prefix = name.isOutlineNodeNotFromMainFunction ? "" : "^";
 		// We can't anchor to the end for groups, as we want them to run all children.
 		const suffix = name.isGroup ? "" : "( \\(variant: .*\\))?$";
 		let escapedName = escapeRegExp(name.name);
@@ -123,7 +131,7 @@ function getTestSelectionForNode(treeNode: GroupNode | TestNode): TestSelection 
 
 export function getTestSelectionForOutline(test: TestOutlineInfo): TestSelection {
 	const position = test.range.start;
-	return { name: test.fullName, isGroup: test.isGroup, position };
+	return { isOutlineNodeNotFromMainFunction: test.isOutlineNodeNotFromMainFunction, name: test.fullName, isGroup: test.isGroup, position };
 }
 
 export const createTestFileAction = (file: string) => `Create ${path.basename(file)}`;

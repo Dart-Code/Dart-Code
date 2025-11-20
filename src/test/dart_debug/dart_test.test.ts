@@ -579,6 +579,31 @@ test/tree_test.dart [6/8 passed] Failed
 		});
 	}
 
+	it("can run tests outside of main()", async () => {
+		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
+		await openFile(helloWorldTestEmptyFile);
+		await setTestContent(`
+import 'package:test/test.dart';
+
+void main() {
+  group('group1', () {
+    t();
+  });
+}
+
+void t() {
+  group('group2', () {
+    test('test1', () {
+      expect(1, 1);
+    });
+  });
+}
+		`.trim());
+		await currentEditor().document.save();
+
+		await checkRunSingleTestFromCodeLens(helloWorldTestEmptyFile, "tes^t1", "group2 test1"); // We won't build the full name because we can't see it.
+	});
+
 	it("keeps test model updated as documents change", async () => {
 		writeFileSync(fsPath(helloWorldTestEmptyFile), "");
 		await openFile(helloWorldTestEmptyFile);
