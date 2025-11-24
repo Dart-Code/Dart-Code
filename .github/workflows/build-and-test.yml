@@ -55,7 +55,7 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       # upload-artifact fails if the path does not exist (it only supports
       # silent failure for no-files-found, but the path must exist), so
