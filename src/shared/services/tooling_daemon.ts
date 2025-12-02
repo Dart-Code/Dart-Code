@@ -8,6 +8,7 @@ import { EventsEmitter } from "../events";
 import { DartSdks, IAmDisposable, Logger } from "../interfaces";
 import { CategoryLogger } from "../logging";
 import { disposeAll, PromiseCompleter, PromiseOr } from "../utils";
+import { attachPing } from "../utils/ws";
 import { UnknownNotification } from "./interfaces";
 import { StdIOService } from "./stdio_service";
 import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
@@ -63,6 +64,7 @@ export class DartToolingDaemon implements IAmDisposable {
 
 		this.logger.info(`Connecting to DTD at ${dtdUri}...`);
 		const socket = new ws.WebSocket(dtdUri, { followRedirects: true });
+		attachPing(socket);
 		socket.on("open", () => this.handleOpen());
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		socket.on("message", (data) => this.handleData(data.toString()));
