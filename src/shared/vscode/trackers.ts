@@ -178,7 +178,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 		const callbacksToCall: Array<() => void> = [];
 		for (const entry of trackers) {
 			const newOffset = this.updateOffset(entry.offset, e);
-			const newPosition = newOffset ? e.document.positionAt(newOffset) : undefined;
+			const newPosition = newOffset !== undefined ? e.document.positionAt(newOffset) : undefined;
 
 			callbacksToCall.push(() => entry.callback(newPosition));
 			if (newOffset === undefined) {
