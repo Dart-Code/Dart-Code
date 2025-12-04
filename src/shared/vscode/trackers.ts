@@ -164,28 +164,35 @@ export class DocumentPositionTracker implements vs.Disposable {
 	}
 
 	private handleDocumentChange(e: vs.TextDocumentChangeEvent) {
+		// Some "document changes" are things like metadata and don't
+		// actually change the content. We don't care about those.
+		if (!e.contentChanges.length)
+			return;
+
 		const trackers = this.trackers.get(e.document);
 		if (!trackers)
 			return;
 
 		const trackersToDispose: PositionTrackerEntry[] = [];
+		// Don't call callbacks inline, as they might try to modify the trackers.
+		const callbacksToCall: Array<() => void> = [];
 		for (const entry of trackers) {
 			const newOffset = this.updateOffset(entry.offset, e);
+			const newPosition = newOffset ? e.document.positionAt(newOffset) : undefined;
 
+			callbacksToCall.push(() => entry.callback(newPosition));
 			if (newOffset === undefined) {
-				// Position is removed, so will update to undefined and dispose the tracker.
-				entry.callback(undefined);
 				trackersToDispose.push(entry);
 			} else {
-				const newPosition = e.document.positionAt(newOffset);
 				entry.offset = newOffset;
-				entry.callback(newPosition);
 			}
 		}
 
-		for (const tracker of trackersToDispose) {
+		for (const callback of callbacksToCall)
+			callback();
+
+		for (const tracker of trackersToDispose)
 			tracker.dispose();
-		}
 	}
 
 	private handleDocumentClose(doc: vs.TextDocument) {
@@ -241,6 +248,12 @@ export class DocumentRangeTracker implements vs.Disposable {
 	public trackRange(document: vs.TextDocument, range: Range, callback: (newRange: Range | undefined) => void): vs.Disposable {
 		let start: Position | undefined = range.start;
 		let end: Position | undefined = range.end;
+
+		// TODO(dantup): If start/end are the same, just short-cut this with one position tracker.
+		// TODO(dantup): Because both the start/end positions move when content is modified before
+		//  this range and we track both start/end, we end up firing once after the start moves, then
+		//  the end. It would be better if we just atomically update the range once (which might
+		//  mean just not using position tracker as-is?)
 
 		const startDisposable = this.positionTracker.trackPosition(document, range.start, (newPos) => {
 			start = newPos;

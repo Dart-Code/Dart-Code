@@ -528,4 +528,27 @@ describe("multi-document range tracker", () => {
 
 		assert.equal(range, undefined);
 	});
+
+	it("handles deletion of one tracked range without messing up the next - issue 5831", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const editor = await vs.window.showTextDocument(doc);
+		let range1: Range | undefined = rangeOf("|22|", doc);
+		let range2: Range | undefined = rangeOf("|4444|", doc);
+
+		// Set up trackers for both ranges.
+		tracker.trackRange(doc, range1, (newRange) => range1 = newRange);
+		tracker.trackRange(doc, range2, (newRange) => range2 = newRange);
+
+		// Delete the text for the first range (including surrounding spaces to ensure it's deleted).
+		await editor.edit((eb) => eb.delete(rangeOf("| 22 |", doc)));
+
+		// The first range should be undefined (deleted).
+		assert.equal(range1, undefined);
+
+		// The second range should still be tracked and correct.
+		assert.ok(rangesEqual(range2, rangeOf("|4444|", doc)));
+	});
 });
