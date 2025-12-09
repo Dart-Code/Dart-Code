@@ -1,10 +1,11 @@
+import * as path from "path";
 import { CancellationToken, CodeLens, CodeLensProvider, Event, EventEmitter, TextDocument } from "vscode";
 import { Outline } from "../../shared/analysis/lsp/custom_protocol";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { getTemplatedLaunchConfigs } from "../../shared/vscode/debugger";
-import { lspToRange } from "../../shared/vscode/utils";
+import { lspToPosition, lspToRange } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { extensionApiModel } from "../api/extension_api";
 import { isInsideFlutterProject, isTestFile } from "../utils";
@@ -30,8 +31,16 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 
 		// Without version numbers, the best we have to tell if an outline is likely correct or stale is
 		// if its length matches the document exactly.
+		const filename = path.basename(fsPath(document.uri));
 		const expectedLength = document.getText().length;
-		const outline = await this.analyzer.fileTracker.waitForOutlineWithLength(document, expectedLength, token);
+		const outline = await this.analyzer.fileTracker.waitForOutline(document, token);
+		if (!outline)
+			this.logger.warn(`Failed to get outline for ${filename}, so unable to provide main CodeLens`);
+		else {
+			const actualLength = document.offsetAt(lspToPosition(outline.range.end));
+			if (actualLength !== expectedLength)
+				this.logger.warn(`Outline for ${filename} has length ${actualLength} but expected ${actualLength}, so unable to provide main CodeLens`);
+		}
 		if (!outline?.children?.length)
 			return;
 
