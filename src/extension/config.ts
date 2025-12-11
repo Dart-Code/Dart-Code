@@ -182,6 +182,8 @@ class Config {
 	get experimentalDtdHandlers(): boolean { return this.getConfig<boolean>("experimentalDtdHandlers", false); }
 	get experimentalPropertyEditor(): boolean { return this.getConfig<boolean>("experimentalPropertyEditor", false); }
 	get experimentalFlutterWidgetPreview(): boolean { return this.getConfig<boolean>("experimentalFlutterWidgetPreview", false); }
+	// TODO(dantup): Consider making this eager by default once more polished.
+	get flutterWidgetPreview(): "startEagerly" | "startLazily" | "disabled" { return this.getConfig<"startEagerly" | "startLazily" | "disabled">("flutterWidgetPreview", "startLazily"); }
 	get flutterWidgetPreviewLocation(): "beside" | "sidebar" { return this.getConfig<"beside" | "sidebar">("flutterWidgetPreviewLocation", "sidebar"); }
 	get dynamicTestTracking(): boolean { return this.getConfig<boolean>("dynamicTestTracking", true); }
 	get dtdEditorActiveLocationDelay(): number { return this.getConfig<number>("dtdEditorActiveLocationDelay", 200); }

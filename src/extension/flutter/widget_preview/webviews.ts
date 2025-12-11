@@ -184,6 +184,8 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 		this.webViewProvider.webviewView?.show(true);
 	}
 
+	public get onDidResolve(): vs.Event<void> { return this.webViewProvider.onDidResolve; }
+
 	public dispose(): void {
 		disposeAll(this.disposables);
 	}
@@ -192,6 +194,8 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 	protected readonly disposables: vs.Disposable[] = [];
 	public webviewView: vs.WebviewView | undefined;
+	private onDidResolveEmitter = new vs.EventEmitter<void>();
+	public readonly onDidResolve = this.onDidResolveEmitter.event;
 
 	constructor(
 		private readonly showProgressIfRequired: () => void,
@@ -199,6 +203,8 @@ class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 	) { }
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
+		this.onDidResolveEmitter.fire();
+
 		if (this.webviewView !== webviewView) {
 			this.webviewView = webviewView;
 		}

@@ -11,7 +11,8 @@ import { WidgetPreviewEmbeddedView, WidgetPreviewSidebarView, WidgetPreviewView 
  */
 export class FlutterWidgetPreviewManager implements IAmDisposable {
 	private readonly disposables: vs.Disposable[] = [];
-	private server: FlutterWidgetPreviewServer;
+	private server: FlutterWidgetPreviewServer | undefined;
+	private serverCompleter = new PromiseCompleter<FlutterWidgetPreviewServer>();
 	private view?: WidgetPreviewView;
 	private setUpPreviewPromise: Promise<void> | undefined;
 	private hasShownProgress = false;
@@ -20,20 +21,11 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 		private readonly logger: Logger,
 		readonly flutterSdkPath: string,
 		private readonly dtdUri: Promise<string | undefined> | undefined,
-		devtoolsServerUri: Promise<string | undefined> | undefined,
+		private readonly devtoolsServerUri: Promise<string | undefined> | undefined,
 		readonly tempWorkingDirectory: string,
 		private readonly location: "sidebar" | "beside",
+		private readonly behavior: "startEagerly" | "startLazily",
 	) {
-		// Start the preview server.
-		this.server = new FlutterWidgetPreviewServer(
-			this.logger,
-			flutterSdkPath,
-			dtdUri,
-			devtoolsServerUri,
-			tempWorkingDirectory,
-		);
-		this.disposables.push(this.server);
-
 		// Register a command to show the preview.
 		this.disposables.push(vs.commands.registerCommand("flutter.showWidgetPreview", () => this.showPreview()));
 
@@ -45,6 +37,25 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 		// command.
 		if (this.location === "sidebar")
 			void this.setUpPreview();
+
+		if (this.behavior === "startEagerly")
+			this.startServer();
+	}
+
+	private startServer() {
+		if (this.server)
+			return;
+
+		// Start the preview server.
+		this.server = new FlutterWidgetPreviewServer(
+			this.logger,
+			this.flutterSdkPath,
+			this.dtdUri,
+			this.devtoolsServerUri,
+			this.tempWorkingDirectory,
+		);
+		this.disposables.push(this.server);
+		this.serverCompleter.resolve(this.server);
 	}
 
 	private async setUpPreview(): Promise<void> {
@@ -65,9 +76,14 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 			this.disposables.push(view);
 			view.onDispose(() => this.view = undefined);
 
+			if (view instanceof WidgetPreviewSidebarView) {
+				view.onDidResolve(() => this.startServer());
+			}
+
+			const server = await this.serverCompleter.promise;
 			const dtdUri = await this.dtdUri;
 			const previewUrls: WebViewUrls = {
-				viewUrl: await this.server.previewUrl,
+				viewUrl: await server.previewUrl,
 				authUrls: dtdUri ? [dtdUri] : undefined,
 			};
 			completer.resolve(await exposeWebViewUrls(previewUrls));
@@ -79,21 +95,23 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 	}
 
 	public showProgressIfRequired() {
-		// Ensure progress is shown if the server is not ready yet.
-		if (!this.hasShownProgress) {
-			this.hasShownProgress = true;
-			vs.window.withProgress(
-				{
-					title: "Initializing Flutter Widget Preview…",
-					location: vs.ProgressLocation.Notification,
-					cancellable: false,
-				},
-				() => this.server.previewUrl,
-			);
-		}
+		const server = this.server;
+		if (this.hasShownProgress || !server)
+			return;
+
+		this.hasShownProgress = true;
+		vs.window.withProgress(
+			{
+				title: "Initializing Flutter Widget Preview…",
+				location: vs.ProgressLocation.Notification,
+				cancellable: false,
+			},
+			() => server.previewUrl,
+		);
 	}
 
 	public async showPreview(): Promise<void> {
+		this.startServer();
 		this.showProgressIfRequired();
 		await this.setUpPreview();
 		this.view?.show();
