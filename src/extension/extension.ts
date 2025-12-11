@@ -426,8 +426,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Initialize Widget Preview if enabled+supported.
 	const flutterSdk = workspaceContext.sdks.flutter;
-	if (
-		(
+	const flutterWidgetPreviewBehavior = config.flutterWidgetPreview;
+	if (flutterWidgetPreviewBehavior !== "disabled"
+		&& (
 			// Preview enabled and supportsWidgetPreview (3.36)
 			(config.experimentalFlutterWidgetPreview && flutterCapabilities.supportsWidgetPreview) ||
 			// Or supportsWidgetPreviewByDefault (3.38 beta)
@@ -441,7 +442,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const firstFlutterProject = projectFolders.find(isFlutterProjectFolder);
 		if (firstFlutterProject) {
 			const flutterProjectOrWorkspace = getPubWorkspaceFolderOrPackageFolder(firstFlutterProject);
-			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation));
+			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation, flutterWidgetPreviewBehavior));
 		}
 	}
 
