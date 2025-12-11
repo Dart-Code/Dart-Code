@@ -200,7 +200,9 @@ class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
 	constructor(
 		private readonly showProgressIfRequired: () => void,
 		private readonly previewUrls: Promise<WebViewUrls>
-	) { }
+	) {
+		this.disposables.push(this.onDidResolveEmitter);
+	}
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, _context: vs.WebviewViewResolveContext<unknown>, _token: vs.CancellationToken): Promise<void> {
 		this.onDidResolveEmitter.fire();
