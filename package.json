@@ -2747,12 +2747,12 @@
 							"disabled"
 						],
 						"enumDescriptions": [
-							"Start the Widget Preview server immediately when a Flutter project is open (if the sidebar is visible)",
-							"Start the Widget Preview server only when the preview is made visible",
+							"Start the Widget Preview server immediately when a Flutter project is opened",
+							"Start the Widget Preview server only the first time the preview is shown",
 							"Do not enable the Widget Preview"
 						],
 						"default": "startLazily",
-						"markdownDescription": "Controls whether the Widget Preview is enabled, and if so whether it is started eagerly or lazily. Starting lazily will avoid consuming any resources until you first use the Widget Preview, but will cause the first load to be slower.",
+						"markdownDescription": "Controls whether the Widget Preview is enabled, and if so whether it is started eagerly or lazily. Starting lazily will avoid consuming any resources until you first use the Widget Preview, but will cause the first load to be slower. Requires restart.",
 						"scope": "window"
 					},
 					"dart.flutterWidgetPreviewLocation": {
@@ -2766,7 +2766,7 @@
 							"Open the Flutter Widget Preview in the sidebar"
 						],
 						"default": "sidebar",
-						"markdownDescription": "Where to display the Flutter Widget Preview.",
+						"markdownDescription": "Where to display the Flutter Widget Preview. Requires restart.",
 						"scope": "window"
 					},
 					"dart.useFlutterDev": {
