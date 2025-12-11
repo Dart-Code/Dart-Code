@@ -155,15 +155,37 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				testNodes.push(node);
 			});
 
-			const suppressPrompts = testsBySuite.size > 1;
-			for (const suite of testsBySuite.keys()) {
-				const nodes = testsBySuite.get(suite);
-				if (!nodes) continue;
+			const command = debug
+				? "_dart.startDebuggingTestsFromVsTestController"
+				: "_dart.startWithoutDebuggingTestsFromVsTestController";
+			const totalItems = testsBySuite.size;
 
-				const command = debug
-					? "_dart.startDebuggingTestsFromVsTestController"
-					: "_dart.startWithoutDebuggingTestsFromVsTestController";
-				await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, includeCoverage, run);
+			if (totalItems === 0)
+				return; // Shouldn't get here
+			else if (totalItems === 1) {
+				const [[suite, nodes]] = testsBySuite.entries();
+				await vs.commands.executeCommand(command, suite, nodes, false, includeCoverage, run, undefined);
+			} else {
+				const title = debug ? "Debugging" : "Running";
+				await vs.window.withProgress({
+					cancellable: true,
+					location: vs.ProgressLocation.Notification,
+					title,
+				}, async (progress, token) => {
+					let currentItem = 0;
+
+					for (const [suite, nodes] of testsBySuite.entries()) {
+						if (token?.isCancellationRequested || !nodes?.length)
+							continue;
+
+						currentItem++;
+						const suiteName = path.basename(suite.path);
+						progress.report({ message: `${suiteName}... (${currentItem}/${totalItems})`, increment: 100 / totalItems });
+
+						const suppressPrompts = true;
+						await vs.commands.executeCommand(command, suite, nodes, suppressPrompts, includeCoverage, run, token);
+					}
+				});
 			}
 		} finally {
 			run.end();
