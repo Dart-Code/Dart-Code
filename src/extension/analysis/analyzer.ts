@@ -682,8 +682,10 @@ export class LspAnalyzer extends Analyzer {
 			if (code)
 				reportAnalyzerTerminatedWithError(logger);
 
-			const durationMs = Date.now() - analysisServerStartTime;
-			this.analytics.logAnalysisServerTerminate(code ?? 0, durationMs);
+			if (!config.analyzerPath) { // Don't report for devs running from source.
+				const durationMs = Date.now() - analysisServerStartTime;
+				this.analytics.logAnalysisServerTerminate(code ?? 0, durationMs);
+			}
 		});
 
 		return Promise.resolve({ reader, writer });
