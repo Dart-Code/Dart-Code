@@ -111,7 +111,7 @@ let analytics: Analytics;
 const extensionTotalSessionStart = Date.now(); // Set for overall session.
 let extensionThisSessionStart = extensionTotalSessionStart; // Reset during every activation.
 
-let previousSettings: string;
+let previousSettingsObject: Record<string, string | number | boolean | undefined> | undefined;
 let experiments: KnownExperiments;
 
 const loggers: IAmDisposable[] = [];
@@ -154,10 +154,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	util.logTime("Code called activate");
 
 	// Wire up a reload command that will re-initialise everything.
-	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (reason?: ExtensionRestartReason) => {
+	context.subscriptions.push(vs.commands.registerCommand("_dart.reloadExtension", async (reason?: ExtensionRestartReason, data?: string) => {
 		reason ??= ExtensionRestartReason.Unknown;
-		logger.warn(`Performing extension reload (${reason})...`);
-		analytics.logExtensionRestart(reason);
+		logger.warn(`Performing extension reload (${reason}, ${data})...`);
+		analytics.logExtensionRestart(reason, data);
 		await deactivate(true, reason);
 		disposeAll(context.subscriptions);
 		await activate(context, true);
@@ -167,7 +167,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Configure if using flutter-dev.
 	setFlutterDev(config.useFlutterDev);
 
-	previousSettings = getSettingsThatRequireRestart();
+	previousSettingsObject = getSettingsThatRequireRestart();
 
 	util.logTime();
 	analytics = new Analytics(logger);
@@ -822,45 +822,46 @@ function buildLogHeaders(logger?: Logger, workspaceContext?: WorkspaceContext) {
 function handleConfigurationChange() {
 	// TODOs
 	// SDK
-	const newSettings = getSettingsThatRequireRestart();
-	const settingsChanged = previousSettings !== newSettings;
-	previousSettings = newSettings;
+	const prevObject = previousSettingsObject;
+	const newObject = getSettingsThatRequireRestart();
+	const changedSettingsNames = prevObject
+		? Object.keys(prevObject).filter((k) => prevObject[k] !== newObject[k])
+		: [];
+	previousSettingsObject = newObject;
 
-	if (settingsChanged) {
+	if (changedSettingsNames.length > 0) {
 		// Delay the restart slightly, because the config change may be transmitted to the LSP server
 		// and shutting the server down too quickly results in that trying to write to a closed
 		// stream.
 		logger.warn(`Configuration changed, reloading`);
-		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange }), 50);
+		changedSettingsNames.sort();
+		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData: changedSettingsNames.join(",") }), 50);
 	}
 }
 
-function getSettingsThatRequireRestart() {
-	// The return value here is used to detect when any config option changes that requires a project reload.
-	// It doesn't matter how these are combined; it just gets called on every config change and compared.
-	// Usually these are options that affect the analyzer and need a reload, but config options used at
-	// activation time will also need to be included.
-	return "CONF-"
-		+ config.sdkPath
-		+ config.sdkPaths?.length
-		+ config.analyzerPath
-		+ config.analyzerDiagnosticsPort
-		+ config.analyzerVmServicePort
-		+ config.analyzerInstrumentationLogFile
-		+ config.extensionLogFile
-		+ config.analyzerAdditionalArgs?.join(",")
-		+ config.analyzerVmAdditionalArgs?.join(",")
-		+ config.flutterSdkPath
-		+ config.flutterSdkPaths?.length
-		+ config.flutterSelectDeviceWhenConnected
-		+ config.closingLabels
-		+ config.analyzeAngularTemplates
-		+ config.analysisServerFolding
-		+ config.showMainCodeLens
-		+ config.showTestCodeLens
-		+ config.updateImportsOnRename
-		+ config.flutterOutline
-		+ config.flutterAdbConnectOnChromeOs;
+function getSettingsThatRequireRestart(): Record<string, string | number | boolean | undefined> {
+	return {
+		sdkPath: config.sdkPath,
+		sdkPathsLength: config.sdkPaths?.length,
+		analyzerPath: config.analyzerPath,
+		analyzerDiagnosticsPort: config.analyzerDiagnosticsPort,
+		analyzerVmServicePort: config.analyzerVmServicePort,
+		analyzerInstrumentationLogFile: config.analyzerInstrumentationLogFile,
+		extensionLogFile: config.extensionLogFile,
+		analyzerAdditionalArgs: config.analyzerAdditionalArgs?.join(","),
+		analyzerVmAdditionalArgs: config.analyzerVmAdditionalArgs?.join(","),
+		flutterSdkPath: config.flutterSdkPath,
+		flutterSdkPathsLength: config.flutterSdkPaths?.length,
+		flutterSelectDeviceWhenConnected: config.flutterSelectDeviceWhenConnected,
+		closingLabels: config.closingLabels,
+		analyzeAngularTemplates: config.analyzeAngularTemplates,
+		analysisServerFolding: config.analysisServerFolding,
+		showMainCodeLens: config.showMainCodeLens,
+		showTestCodeLens: config.showTestCodeLens,
+		updateImportsOnRename: config.updateImportsOnRename,
+		flutterOutline: config.flutterOutline,
+		flutterAdbConnectOnChromeOs: config.flutterAdbConnectOnChromeOs,
+	};
 }
 
 export async function deactivate(isRestart = false, reason: ExtensionRestartReason | undefined): Promise<void> {

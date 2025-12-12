@@ -345,9 +345,10 @@ export class Analytics implements IAmDisposable {
 
 	// All events below should be included in telemetry.json.
 	public logExtensionActivated() { this.event(AnalyticsEvent.Extension_Activated); }
-	public logExtensionRestart(reason: ExtensionRestartReason) {
+	public logExtensionRestart(reason: ExtensionRestartReason, data: string | undefined) {
 		const customData: Partial<AnalyticsData> = {
 			reason,
+			data,
 		};
 		this.event(AnalyticsEvent.Extension_Restart, customData);
 	}

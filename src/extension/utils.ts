@@ -212,8 +212,8 @@ export function getLatestSdkVersion(): Promise<string> {
 
 export async function promptToReloadExtension(
 	logger: Logger,
-	{ prompt, buttonText, offerLog, specificLog, severity, restartReason }:
-		{ prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; severity?: "ERROR" | "WARNING"; restartReason: ExtensionRestartReason, },
+	{ prompt, buttonText, offerLog, specificLog, severity, restartReason, restartData }:
+		{ prompt?: string; buttonText?: string; offerLog?: boolean; specificLog?: string; severity?: "ERROR" | "WARNING"; restartReason: ExtensionRestartReason, restartData?: string, },
 ): Promise<void> {
 	const restartAction = buttonText || "Restart Extension";
 	const actions = offerLog ? [restartAction, showLogAction] : [restartAction];
@@ -238,7 +238,7 @@ export async function promptToReloadExtension(
 			else
 				void openLogContents(undefined, ringLogContents, tempLogPath);
 		} else if (!prompt || chosenAction === restartAction) {
-			void commands.executeCommand("_dart.reloadExtension", restartReason);
+			void commands.executeCommand("_dart.reloadExtension", restartReason, restartData);
 		}
 	}
 }
