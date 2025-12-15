@@ -575,11 +575,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	if (config.flutterOutline) {
 		// TODO: Extract this out - it's become messy since TreeView was added in.
 
+		let numFlutterOutlineUserInteractions = 0;
 		flutterOutlineTreeProvider = new FlutterOutlineProvider(analyzer);
 		const tree = vs.window.createTreeView<FlutterWidgetItem>("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
 		tree.onDidChangeSelection(async (e) => {
-			if (flutterOutlineTreeProvider!.numOutstandingSelectionEvents === 0)
-				analytics.logFlutterOutlineActivated();
+			numFlutterOutlineUserInteractions++;
+
+			if (numFlutterOutlineUserInteractions >= 3) // Log after 3 interactions to avoid noise from curious clicks and capture real usage.
+				analytics.logFlutterOutlineFirstInteracted();
 			// TODO: This should be in a tree, not the data provider.
 			await flutterOutlineTreeProvider!.handleSelection(e.selection);
 		});
@@ -588,9 +591,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			if (e.selections?.length) {
 				const node = flutterOutlineTreeProvider!.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
 				if (node && tree.visible) {
-					flutterOutlineTreeProvider!.numOutstandingSelectionEvents++;
+					// Calling reveal() will trigger onDidChangeSelection above, so to offset this
+					// automatic selection being counted as a user-selection, decrement the count
+					// ahead of time.
+					numFlutterOutlineUserInteractions--;
 					await tree.reveal(node, { select: true, focus: false, expand: true });
-					setTimeout(() => flutterOutlineTreeProvider!.numOutstandingSelectionEvents--, 500);
 				}
 			}
 		}));

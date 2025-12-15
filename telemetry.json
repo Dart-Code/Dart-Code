@@ -20,7 +20,7 @@
 			"FlutterSurvey_Shown": { },
 			"FlutterSurvey_Clicked": { },
 			"FlutterSurvey_Dismissed": { },
-			"FlutterOutline_Activated": { },
+			"FlutterOutline_FirstInteracted": { },
 			"Command_AddSdkToPath": {
 				"addSdkToPathResult":         { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "Whether the request to add the SDK to path was successful" }
 			},

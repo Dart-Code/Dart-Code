@@ -40,7 +40,7 @@ export enum AnalyticsEvent {
 	FlutterSurvey_Shown,
 	FlutterSurvey_Clicked,
 	FlutterSurvey_Dismissed,
-	FlutterOutline_Activated,
+	FlutterOutline_FirstInteracted,
 	Command_AddSdkToPath,
 	ExtensionRecommendation_Shown,
 	ExtensionRecommendation_Accepted,
@@ -198,7 +198,7 @@ export class Analytics implements IAmDisposable {
 
 	// Some things we only want to log the first use per session to get an idea of
 	// number of sessions using.
-	private hasLoggedFlutterOutline = false;
+	private hasLoggedFlutterOutlineFirstInteracted = false;
 
 	private telemetryLogger: TelemetryLogger | undefined;
 	private readonly exceptionBreakTrackerFactory: DebugAdapterExceptionSettingTrackerFactory;
@@ -414,11 +414,11 @@ export class Analytics implements IAmDisposable {
 	public logFlutterSurveyShown() { this.event(AnalyticsEvent.FlutterSurvey_Shown); }
 	public logFlutterSurveyClicked() { this.event(AnalyticsEvent.FlutterSurvey_Clicked); }
 	public logFlutterSurveyDismissed() { this.event(AnalyticsEvent.FlutterSurvey_Dismissed); }
-	public logFlutterOutlineActivated() {
-		if (this.hasLoggedFlutterOutline)
+	public logFlutterOutlineFirstInteracted() {
+		if (this.hasLoggedFlutterOutlineFirstInteracted)
 			return;
-		this.hasLoggedFlutterOutline = true;
-		this.event(AnalyticsEvent.FlutterOutline_Activated);
+		this.hasLoggedFlutterOutlineFirstInteracted = true;
+		this.event(AnalyticsEvent.FlutterOutline_FirstInteracted);
 	}
 	public log(category: AnalyticsEvent) { this.event(category); }
 
