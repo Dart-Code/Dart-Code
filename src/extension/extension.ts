@@ -829,11 +829,13 @@ function handleConfigurationChange() {
 		: [];
 	previousSettingsObject = newObject;
 
-	if (changedSettingsNames.length > 0) {
+	if (prevObject && changedSettingsNames.length > 0) {
 		// Delay the restart slightly, because the config change may be transmitted to the LSP server
 		// and shutting the server down too quickly results in that trying to write to a closed
 		// stream.
-		logger.warn(`Configuration changed, reloading`);
+		logger.warn(`Configuration changed, reloading:`);
+		for (const changedSettingsName of changedSettingsNames)
+			logger.info(`    Setting ${changedSettingsName} changed from "${prevObject[changedSettingsName]}" to "${newObject[changedSettingsName]}"`);
 		changedSettingsNames.sort();
 		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData: changedSettingsNames.join(",") }), 50);
 	}
