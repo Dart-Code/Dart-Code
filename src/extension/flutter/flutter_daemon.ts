@@ -31,6 +31,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	public daemonStarted = this.daemonStartedCompleter.promise;
 	private pingIntervalId?: NodeJS.Timeout;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
+	private didSpawnWithAdditionalArgs = false;
 
 	constructor(logger: Logger, private readonly analytics: Analytics, private readonly workspaceContext: FlutterWorkspaceContext, flutterCapabilities: FlutterCapabilities, private readonly runIfNoDevices?: () => void, portFromLocalExtension?: number) {
 		super(new CategoryLogger(logger, LogCategory.FlutterDaemon), config.maxLogLineLength, true, true);
@@ -68,6 +69,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			);
 
 			const flutterAdditionalArgs = config.for(vs.Uri.file(folder)).flutterAdditionalArgs;
+			this.didSpawnWithAdditionalArgs = !!flutterAdditionalArgs.length;
 			const args = getGlobalFlutterArgs().concat(flutterAdditionalArgs).concat(execution.args);
 			this.createProcess(folder, execution.executable, args, { toolEnv: getToolEnv() });
 		}
@@ -146,6 +148,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			offerLog: true,
 			specificLog: config.flutterDaemonLogFile,
 			restartReason: ExtensionRestartReason.FlutterDaemonTerminatedExit,
+			restartData: this.didSpawnWithAdditionalArgs ? "hasAdditionalArgs" : "noAdditionalArgs",
 		});
 	}
 
