@@ -141,7 +141,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		// something tries to interact with the API (`notifyRequestAfterExit`).
 		this.hasShownTerminatedError = true;
 		void promptToReloadExtension(this.logger, {
-			prompt: `The Flutter Daemon ${message}.`,
+			prompt: `The Flutter Daemon ${message}. Please review the log and file an issue on GitHub.`,
+			severity: "WARNING",
 			offerLog: true,
 			specificLog: config.flutterDaemonLogFile,
 			restartReason: ExtensionRestartReason.FlutterDaemonTerminatedExit,
