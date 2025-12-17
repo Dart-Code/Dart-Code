@@ -1,9 +1,10 @@
+import * as os from "os";
 import * as path from "path";
 import * as process from "process";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
-import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev } from "../shared/constants";
+import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev, showLogAction } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SIDEBAR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, OBSERVATORY_SUPPORTED_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
@@ -133,7 +134,7 @@ export const perSessionWebviewStateKey = `webviewState_${(new Date()).getTime()}
 export async function activate(context: vs.ExtensionContext, isRestart = false) {
 	extensionThisSessionStart = Date.now();
 
-	// Ring logger is only set up once and presist over silent restarts.
+	// Ring logger is only set up once and persists over silent restarts.
 	if (!ringLogger)
 		ringLogger = logger.onLog((message) => ringLog.log(message.toLine(800)));
 
@@ -842,6 +843,31 @@ function handleConfigurationChange() {
 		for (const changedSettingsName of changedSettingsNames)
 			logger.info(`    Setting ${changedSettingsName} changed from "${prevObject[changedSettingsName]}" to "${newObject[changedSettingsName]}"`);
 		changedSettingsNames.sort();
+
+		// If the SDK path changed and it's been < 1s since we started activating, it suggests something may be changing the SDK path automatically and
+		// could be negatively affecting performance (we'll start an analysis server, terminate it, start another). In this case, prompt users to try
+		// file issues so we can try to track down what's causing it.
+		if (changedSettingsNames.includes("sdkPath") || changedSettingsNames.includes("flutterSdkPath")) {
+			const sessionDurationMs = Date.now() - extensionThisSessionStart;
+			if (sessionDurationMs <= 1000) {
+				const ringLogContents = ringLog.toString();
+				const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
+
+				void vs.window.showWarningMessage(`Your SDK path changed unexpectedly during startup. Please review the log and file an issue on GitHub.`, showLogAction).then(async (action) => {
+					if (action === showLogAction) {
+						const logContents = `
+Your SDK path changed unexpectedly during startup.
+
+Please file an issue at https://github.com/Dart-Code/Dart-Code/issues/new?template=BLANK_ISSUE&title=SDK%20path%20changed%20during%20startup
+
+${ringLogContents.split("\n").filter((l) => l.includes("[General]") || l.includes("[Warn]") || l.includes("[Error]")).join("\n")}
+						`.trim();
+						await util.openLogContents(undefined, logContents, tempLogPath);
+					}
+				});
+			}
+		}
+
 		setTimeout(() => util.promptToReloadExtension(logger, { restartReason: ExtensionRestartReason.ConfigurationChange, restartData: changedSettingsNames.join(",") }), 50);
 	}
 }
