@@ -514,7 +514,7 @@ export class LspAnalyzer extends Analyzer {
 			middleware,
 			outputChannelName: "LSP",
 			revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
-			// DO NOT enable delayed open notifications until this issue is resolved
+			// Do not enable delayed open notifications until this issue is resolved
 			// AND we have updated to an LSP client that includes the fix.
 			// https://github.com/microsoft/vscode-languageserver-node/issues/1695
 			// textSynchronization: {
@@ -607,7 +607,7 @@ export class LspAnalyzer extends Analyzer {
 			if (ls.TextDocumentEdit.is(change)) {
 				const uri = vs.Uri.parse(change.textDocument.uri);
 				for (const edit of change.edits) {
-					const edit2 = edit as (ls.TextEdit | ls.AnnotatedTextEdit | ls.SnippetTextEdit) & { insertTextFormat?: ls.InsertTextFormat; newText?: string; };
+					const edit2 = edit as (ls.TextEdit | ls.AnnotatedTextEdit) & { insertTextFormat?: ls.InsertTextFormat; newText?: string; };
 					if (edit2.newText && edit2.insertTextFormat === ls.InsertTextFormat.Snippet) {
 						snippetTypes.add(`${fsPath(uri)}:${edit2.newText}:${edit2.range.start.line}:${edit2.range.start.character}`);
 					}

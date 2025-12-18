@@ -3901,7 +3901,7 @@
 		"@vscode/debugprotocol": "^1.68.0",
 		"minimatch": "^10.0.1",
 		"semver": "^7.7.1",
-		"vscode-languageclient": "10.0.0-next.18",
+		"vscode-languageclient": "^9.0.1",
 		"vscode-uri": "^3.1.0",
 		"ws": "^8.18.0",
 		"yaml": "^2.7.0"
