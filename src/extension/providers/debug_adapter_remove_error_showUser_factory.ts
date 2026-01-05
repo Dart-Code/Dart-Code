@@ -14,7 +14,7 @@ class DartDebugAdapterRemoveErrorShowUser implements vs.DebugAdapterTracker {
 		// - https://github.com/Dart-Code/Dart-Code/issues/4930
 		// - https://github.com/google/go-dap/issues/87
 		// - https://github.com/microsoft/vscode/issues/180488
-		if (message?.success === false && message?.body?.error && message?.body?.error?.showUser !== undefined) {
+		if (message?.success === false && message?.body?.error?.showUser !== undefined) {
 			message.body.error.showUser = undefined;
 		}
 	}

@@ -136,7 +136,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	public async deviceRemoved(dev: f.Device) {
 		this.devices = this.devices.filter((d) => d.id !== dev.id);
-		if (this.currentDevice && this.currentDevice.id === dev.id) {
+		if (this.currentDevice?.id === dev.id) {
 			let nextDevice: f.Device | undefined;
 
 			// Try to select the next-best device

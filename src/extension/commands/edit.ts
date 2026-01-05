@@ -24,7 +24,7 @@ export class EditCommands implements vs.Disposable {
 	}
 
 	private async jumpToLineColInUri(uri: vs.Uri, lineNumber?: number, columnNumber?: number, inOtherEditorColumn?: boolean) {
-		if (!uri || uri.scheme !== "file")
+		if (uri?.scheme !== "file")
 			return;
 
 		// When navigating while using the inspector, we don't expect this file to replace

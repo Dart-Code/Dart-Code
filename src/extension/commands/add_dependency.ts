@@ -225,7 +225,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		});
 
 		const selectedOption = await new Promise<string | PickablePackage | undefined>((resolve) => {
-			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0] ? quickPick.selectedItems[0] : quickPick.value));
+			quickPick.onDidAccept(() => resolve(quickPick.selectedItems?.[0] ? quickPick.selectedItems[0] : quickPick.value));
 			quickPick.onDidHide(() => resolve(undefined));
 			quickPick.show();
 		});
@@ -244,7 +244,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 				openLabel: "Select package folder",
 			});
 
-			if (!packagePaths || packagePaths.length !== 1)
+			if (packagePaths?.length !== 1)
 				return;
 
 			packagePath = fsPath(packagePaths[0]);

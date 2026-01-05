@@ -99,7 +99,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		if (editor && isAnalyzable(editor.document)) {
 			this.activeEditor = editor;
 			void this.loadExistingOutline();
-		} else if (editor && editor.document.uri.scheme === "file") {
+		} else if (editor?.document.uri.scheme === "file") {
 			// HACK: We can't currently reliably tell when editors are changed that are only real
 			// text editors (debug window is considered an editor) so we should only hide the tree
 			// when we know a file that is not ours is selected.
@@ -135,7 +135,7 @@ export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidget
 		}
 
 		// Set up the new contexts for our node and mark is as current.
-		if (this.activeEditor && selection && selection.length === 1 && isWidget(selection[0].outline)) {
+		if (this.activeEditor && selection?.length === 1 && isWidget(selection[0].outline)) {
 			const fixes = (await getFixes(this.activeEditor, selection[0].outline))
 				.filter((f): f is vs.CodeAction => f instanceof vs.CodeAction)
 				.filter((ca) => ca.kind?.value && flutterOutlineCommands.includes(ca.kind.value));

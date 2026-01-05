@@ -14,7 +14,6 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private messageBuffers: Buffer[] = [];
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
-	private readonly requestErrorSubscriptions: Array<(notification: any) => void> = [];
 	protected processExited = false;
 	private description: string | undefined;
 
@@ -167,7 +166,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			msg = JSON.parse(message);
 
-			if (this.messagesWrappedInBrackets && msg && msg.length === 1)
+			if (this.messagesWrappedInBrackets && msg?.length === 1)
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				msg = msg[0];
 		} catch (e: any) {
@@ -232,14 +231,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			this.logger.error(`Unable to handle response with ID ${evt.id} because its handler is not available`);
 			return;
 		}
-		const method: string = handler[2];
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const error = evt.error;
-
-		if (error && error.code === "SERVER_ERROR") {
-			error.method = method;
-			this.notify(this.requestErrorSubscriptions, error).catch((e) => this.logger.error(e));
-		}
 
 		if (error) {
 			await handler[1](error);
@@ -248,8 +241,9 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 	}
 
-	protected notify<T>(subscriptions: Array<(notification: T) => void>, notification: T): Promise<unknown> {
-		return Promise.all(subscriptions.slice().map((sub) => sub(notification))).catch((e) => this.logger.error(e));
+	protected notify<T>(subscriptions: Array<(notification: T) => Promise<void> | void>, notification: T): Promise<unknown> {
+		const promises = subscriptions.map(async (sub) => await sub(notification));
+		return Promise.all(promises).catch((e) => this.logger.error(e));
 	}
 
 	protected subscribe<T>(subscriptions: Array<(notification: T) => void>, subscriber: (notification: T) => void): IAmDisposable {
@@ -273,10 +267,6 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		this.disposables.push(disposable);
 
 		return disposable;
-	}
-
-	public registerForRequestError(subscriber: (notification: any) => void): IAmDisposable {
-		return this.subscribe(this.requestErrorSubscriptions, subscriber);
 	}
 
 	protected logTraffic(message: string, isError = false): void {

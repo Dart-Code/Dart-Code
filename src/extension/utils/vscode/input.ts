@@ -68,7 +68,7 @@ export async function showSimpleSettingsEditor(title: string, placeholder: strin
 		quickPick.items = getItems();
 
 		const selectedSetting = await new Promise<PickableSetting | undefined>((resolve) => {
-			quickPick.onDidAccept(() => resolve(quickPick.selectedItems && quickPick.selectedItems[0]));
+			quickPick.onDidAccept(() => resolve(quickPick.selectedItems?.[0]));
 			quickPick.onDidHide(() => resolve(undefined));
 			quickPick.show();
 		});
