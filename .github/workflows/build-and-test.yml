@@ -12,6 +12,10 @@ jobs:
 
   build_exclusions:
 
+    # We want to run on external PRs, but not on our own internal PRs as they'll be run
+    # by the push to the branch.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+
     permissions:
       contents: none
     runs-on: ubuntu-latest
@@ -31,15 +35,11 @@ jobs:
         # - macOS
         run: echo "excludes=[{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
 
-
   build:
 
     name: "${{ matrix.bot }} (${{ matrix.build-version }} ${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
     needs: build_exclusions
-    # We want to run on external PRs, but not on our own internal PRs as they'll be run
-    # by the push to the branch.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
 
     strategy:
       fail-fast: false
