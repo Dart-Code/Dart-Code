@@ -1,0 +1,14 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5
+        paths:
+          - "src/extension"
+          - "src/shared"
+        branches:
+          - master
+        informational: true
+        only_pulls: true
+        if_ci_failed: success
