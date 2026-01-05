@@ -449,7 +449,7 @@ export class DebugCommands implements IAmDisposable {
 	}
 
 	private async createLaunchConfiguration(resourceUri: vs.Uri) {
-		if (!resourceUri || resourceUri.scheme !== "file")
+		if (resourceUri?.scheme !== "file")
 			return;
 
 		const entryScriptPath = fsPath(resourceUri);
@@ -1049,7 +1049,7 @@ export class DebugCommands implements IAmDisposable {
 	private updateRunnableContexts(): void {
 		const editor = vs.window.activeTextEditor;
 		const documentUri = editor?.document.uri;
-		if (!documentUri || documentUri.scheme !== "file")
+		if (documentUri?.scheme !== "file")
 			return;
 
 		const documentPath = fsPath(documentUri);

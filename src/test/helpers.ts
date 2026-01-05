@@ -168,7 +168,7 @@ const startOfDocument = new vs.Range(new vs.Position(0, 0), new vs.Position(0, 0
 
 export function currentEditor(): vs.TextEditor {
 	let editor = vs.window.activeTextEditor;
-	if (!editor || editor.document.uri.scheme !== "file") {
+	if (editor?.document.uri.scheme !== "file") {
 		const firstEditor = vs.window.visibleTextEditors.find((e) => e.document.uri.scheme === "file");
 		if (firstEditor)
 			logger.info(`Current active editor is not a file (${editor ? editor.document.uri : "none"}) so using first visible editor (${firstEditor.document.uri})`);

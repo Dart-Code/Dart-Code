@@ -47,7 +47,7 @@ export class FlutterUiGuideDecorations implements vs.Disposable {
 	}
 
 	private buildFromUpdatedGuides(doc: vs.TextDocument, guides: WidgetGuide[]) {
-		if (vs.window.activeTextEditor && vs.window.activeTextEditor.document === doc)
+		if (vs.window.activeTextEditor?.document === doc)
 			this.renderGuides(vs.window.activeTextEditor, guides);
 	}
 

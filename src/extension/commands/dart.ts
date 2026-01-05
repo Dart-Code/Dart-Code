@@ -86,7 +86,7 @@ export class DartCommands extends BaseSdkCommands {
 			defaultUri: this.context.lastUsedNewProjectPath ? vs.Uri.file(this.context.lastUsedNewProjectPath) : undefined,
 			openLabel: "Select a folder to create the project in",
 		});
-		if (!folders || folders.length !== 1)
+		if (folders?.length !== 1)
 			return;
 		const folderPath = fsPath(folders[0]);
 		this.context.lastUsedNewProjectPath = folderPath;

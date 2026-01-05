@@ -379,7 +379,7 @@ export class DartDebugClient extends DebugClient {
 			this.waitForTestNotification<TestDoneNotification>(
 				"testDone",
 				(e) => {
-					if (test && e.testID === test.id) {
+					if (e.testID === test?.id) {
 						assert.equal(e.result, expectedStatus, `Test ${test.name} result was not as expected`);
 						return true;
 					} else {

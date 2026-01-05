@@ -19,7 +19,7 @@ export class RankingCodeActionProvider implements CodeActionProvider {
 		// Sort the providers, because then their results will be sorted (flatMap doesn't change the order, and
 		// Promise.all preserves order).
 		const applicableProviders = this.codeActionProviders.filter((p) => languages.match(p.selector, document));
-		const promises = applicableProviders.map((p) => p.provideCodeActions(document, range, context, token));
+		const promises = applicableProviders.map(async (p) => await p.provideCodeActions(document, range, context, token));
 		const allResults = await Promise.all(promises);
 		const flatResults = flatMap(allResults, (x) => x || []);
 		return flatResults;

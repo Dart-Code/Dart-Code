@@ -205,7 +205,7 @@ export async function getAllProjectFoldersAndExclusions(
 }
 
 export function isDartWorkspaceFolder(folder?: WorkspaceFolder): boolean {
-	if (!folder || folder.uri.scheme !== "file")
+	if (folder?.uri.scheme !== "file")
 		return false;
 
 	// Currently we don't have good logic to know what's a Dart folder.

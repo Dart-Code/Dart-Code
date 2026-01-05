@@ -121,9 +121,9 @@ class GoogleAnalyticsTelemetrySender implements TelemetrySender {
 						const json = chunks.join("");
 						try {
 							const gaDebugResp = JSON.parse(json);
-							if (gaDebugResp?.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === true)
+							if (gaDebugResp?.hitParsingResult?.[0].valid === true)
 								this.logger.info("Sent OK!");
-							else if (gaDebugResp?.hitParsingResult && gaDebugResp.hitParsingResult[0].valid === false)
+							else if (gaDebugResp?.hitParsingResult?.[0].valid === false)
 								this.logger.warn(json);
 							else
 								this.logger.warn(`Unexpected GA debug response: ${json}`);

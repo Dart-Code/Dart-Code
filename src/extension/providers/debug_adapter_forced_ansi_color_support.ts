@@ -20,7 +20,7 @@ export class DartDebugForcedAnsiColorSupportFactory implements vs.DebugAdapterTr
  */
 class DartDebugForcedAnsiColorSupport implements vs.DebugAdapterTracker {
 	onDidSendMessage(message: any): void {
-		if (message && message.command === "initialize" && message.type === "response" && message.body && message.body.supportsANSIStyling === undefined)
+		if (message?.command === "initialize" && message.type === "response" && message.body && message.body.supportsANSIStyling === undefined)
 			message.body.supportsANSIStyling = true;
 	}
 }

@@ -3,12 +3,12 @@ import { URI } from "vscode-uri";
 import { uriComparisonString } from "../utils/fs";
 
 export function isDartDocument(document: vs.TextDocument): boolean {
-	return document && document.languageId === "dart";
+	return document?.languageId === "dart";
 }
 
 export function getActiveDartEditor(): vs.TextEditor | undefined {
 	const editor = vs.window.activeTextEditor;
-	if (!editor || editor.document.languageId !== "dart")
+	if (editor?.document.languageId !== "dart")
 		return undefined;
 	return editor;
 }

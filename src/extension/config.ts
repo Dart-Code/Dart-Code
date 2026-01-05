@@ -31,10 +31,10 @@ class Config {
 	private getWorkspaceConfig<T>(key: string): NullAsUndefined<T> {
 		const c = this.config.inspect<T>(key);
 
-		if (c && c.workspaceValue)
+		if (c?.workspaceValue)
 			return c.workspaceValue;
 
-		if (c && c.workspaceFolderValue) {
+		if (c?.workspaceFolderValue) {
 			return c.workspaceFolderValue;
 		}
 

@@ -249,7 +249,7 @@ export class SdkUtils {
 				openLabel: `Clone Flutter`,
 				title: "Select Folder for Flutter SDK",
 			});
-		if (selectedFolders && selectedFolders.length === 1) {
+		if (selectedFolders?.length === 1) {
 			const workingDirectory = fsPath(selectedFolders[0]);
 			const cloneResult = await this.cloneFlutterWithProgress(gitExecutable, workingDirectory);
 			const didClone = cloneResult === GitOperationResult.success;

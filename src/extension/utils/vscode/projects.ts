@@ -40,7 +40,7 @@ export async function getProjectSelection(logger: Logger, placeHolder: string): 
 	// Attempt to find a project based on the supplied folder of active file so we can pre-selected it.
 	const activeEditor = getActiveRealFileEditor();
 	const activeUri = activeEditor ? activeEditor.document.uri : undefined;
-	const activeFilePath = activeUri && activeUri.scheme === "file" ? fsPath(activeUri) : undefined;
+	const activeFilePath = activeUri?.scheme === "file" ? fsPath(activeUri) : undefined;
 	const activeProjectFolder = activeFilePath ? locateBestProjectRoot(activeFilePath) : undefined;
 
 	// Find all possible projects.

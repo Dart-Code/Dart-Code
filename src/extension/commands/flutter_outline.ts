@@ -22,7 +22,7 @@ export class FlutterOutlineCommands {
 	}
 
 	private async applyRefactoring(refactorType: string): Promise<void> {
-		if (!this.tree.selection || this.tree.selection.length !== 1) {
+		if (this.tree.selection?.length !== 1) {
 			console.error(`Invalid selection when running Flutter Outline refactor: ${refactorType}`);
 			return;
 		}
