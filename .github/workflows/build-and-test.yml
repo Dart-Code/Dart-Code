@@ -260,7 +260,9 @@ jobs:
 
     name: Merge Artifacts
     needs: build
-    if: always()
+    # Using always() (to run on failure) will cause us to also run regardless of whether "build" ran, so
+    # explicitly check that ran and passed or failed (and was not skipped/cancelled).
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'failure')
     runs-on: ubuntu-latest
 
     steps:
