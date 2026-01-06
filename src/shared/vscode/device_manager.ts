@@ -329,9 +329,9 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	protected shortCacheForSupportedPlatforms: Promise<f.PlatformType[]> | undefined;
 
-	/// Like [getDevice] but will wait up to [timeMs] for the device.
-	public async waitForDevice(id: string | undefined, timeMs: number): Promise<f.Device | undefined> {
-		let device = this.devices.find((d) => d.id === id);
+	/// Like [findBestDevice] but will wait up to [timeMs] for the device.
+	public async waitForBestDevice(id: string, timeMs: number): Promise<f.Device | undefined> {
+		let device = this.findBestDevice(id);
 		if (device)
 			return device;
 
@@ -340,7 +340,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			title: `Waiting for device...`,
 		}, async () => {
 			for (let i = 0; i < timeMs / 100; i++) {
-				device = this.devices.find((d) => d.id === id);
+				device = this.findBestDevice(id);
 				if (device)
 					return device;
 				await new Promise((resolve) => setTimeout(resolve, 100));
@@ -374,28 +374,31 @@ export class FlutterDeviceManager implements vs.Disposable {
 	}
 
 	public findBestDevice(search: string): f.Device | undefined {
-		return this.devices.find((d) => d.id === search)
-			?? this.devices.find((d) => d.name === search)
-			?? this.devices.find((d) => d.id.startsWith(search))
-			?? this.devices.find((d) => d.name.startsWith(search))
-			?? this.devices.find((d) => d.id.includes(search))
-			?? this.devices.find((d) => d.name.includes(search));
+		search = search.toLowerCase();
+		return this.devices.find((d) => d.id.toLowerCase() === search)
+			?? this.devices.find((d) => d.name.toLowerCase() === search)
+			?? this.devices.find((d) => d.id.toLowerCase().startsWith(search))
+			?? this.devices.find((d) => d.name.toLowerCase().startsWith(search))
+			?? this.devices.find((d) => d.id.toLowerCase().includes(search))
+			?? this.devices.find((d) => d.name.toLowerCase().includes(search));
 	}
 
 	public findBestEmulatorDevice(search: string): f.Device | undefined {
-		return this.devices.find((d) => d.emulatorId === search)
-			?? this.devices.find((d) => d.emulatorId?.startsWith(search))
-			?? this.devices.find((d) => d.emulatorId?.includes(search));
+		search = search.toLowerCase();
+		return this.devices.find((d) => d.emulatorId?.toLowerCase() === search)
+			?? this.devices.find((d) => d.emulatorId?.toLowerCase().startsWith(search))
+			?? this.devices.find((d) => d.emulatorId?.toLowerCase().includes(search));
 	}
 
 	public async findBestEmulator(search: string): Promise<Emulator | undefined> {
+		search = search.toLowerCase();
 		const emulators = await this.getEmulators();
-		return emulators.find((e) => e.id === search)
-			?? emulators.find((e) => e.name === search)
-			?? emulators.find((e) => e.id.startsWith(search))
-			?? emulators.find((e) => e.name.startsWith(search))
-			?? emulators.find((e) => e.id.includes(search))
-			?? emulators.find((e) => e.name.includes(search));
+		return emulators.find((e) => e.id.toLowerCase() === search)
+			?? emulators.find((e) => e.name.toLowerCase() === search)
+			?? emulators.find((e) => e.id.toLowerCase().startsWith(search))
+			?? emulators.find((e) => e.name.toLowerCase().startsWith(search))
+			?? emulators.find((e) => e.id.toLowerCase().includes(search))
+			?? emulators.find((e) => e.name.toLowerCase().includes(search));
 	}
 
 	/// Calls the daemon's getSupportedPlatforms, but returns undefined if any error occurs (such as the process

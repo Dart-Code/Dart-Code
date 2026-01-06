@@ -285,6 +285,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		// If the debug config has an emulatorId, use that emulator.
 		const emulatorId = debugConfig.emulatorId;
+		const deviceId = debugConfig.deviceId;
 		if (typeof emulatorId === "string") {
 			deviceToLaunchOn = this.deviceManager?.findBestEmulatorDevice(emulatorId);
 
@@ -299,11 +300,11 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				await this.deviceManager?.launchEmulator(emulator, false);
 				deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(emulator.id);
 			}
-		} else if (debugConfig.deviceId) {
-			deviceToLaunchOn = await this.deviceManager?.waitForDevice(debugConfig.deviceId as string | undefined, fiveSecondsInMs);
+		} else if (typeof deviceId === "string") {
+			deviceToLaunchOn = await this.deviceManager?.waitForBestDevice(deviceId, fiveSecondsInMs);
 			if (!deviceToLaunchOn) {
-				logger.warn(`Unable to launch because device ${debugConfig.deviceId} could not be found`);
-				void window.showInformationMessage(`Device "${debugConfig.deviceId}" was not found`);
+				logger.warn(`Unable to launch because device ${deviceId} could not be found`);
+				void window.showInformationMessage(`Device "${deviceId}" was not found`);
 				return "UNABLE_TO_LAUNCH";
 			}
 		}
