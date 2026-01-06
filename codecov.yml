@@ -1,24 +1,12 @@
 coverage:
   status:
     project:
-      default: false
-      extension:
+      default:
         target: auto
         threshold: 2
         paths:
           - "src/extension"
           - "src/shared"
-        branches:
-          - master
-        only_pulls: true
-        if_ci_failed: success
-
-      # Report coverage in test files, because it may be useful for finding dead code.
-      tests:
-        target: 100%
-        informational: true
-        paths:
-          - "src/test"
         branches:
           - master
         only_pulls: true
