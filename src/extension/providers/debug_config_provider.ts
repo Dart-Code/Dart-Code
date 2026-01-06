@@ -284,19 +284,20 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		let deviceToLaunchOn = this.deviceManager?.currentDevice;
 
 		// If the debug config has an emulatorId, use that emulator.
-		if (typeof debugConfig.emulatorId === "string") {
-			deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(debugConfig.emulatorId);
+		const emulatorId = debugConfig.emulatorId;
+		if (typeof emulatorId === "string") {
+			deviceToLaunchOn = this.deviceManager?.findBestEmulatorDevice(emulatorId);
 
 			// If we didn't have such a device, try to launch the emulator.
 			if (!deviceToLaunchOn) {
-				const emulator = await this.deviceManager?.getEmulator(debugConfig.emulatorId);
+				const emulator = await this.deviceManager?.findBestEmulator(emulatorId);
 				if (!emulator) {
-					logger.warn(`Unable to launch because emulator ${debugConfig.emulatorId} could not be found`);
-					void window.showInformationMessage(`Emulator "${debugConfig.emulatorId}" was not found`);
+					logger.warn(`Unable to launch because emulator ${emulatorId} could not be found`);
+					void window.showInformationMessage(`Emulator "${emulatorId}" was not found`);
 					return "UNABLE_TO_LAUNCH";
 				}
 				await this.deviceManager?.launchEmulator(emulator, false);
-				deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(debugConfig.emulatorId);
+				deviceToLaunchOn = this.deviceManager?.getDeviceByEmulatorId(emulator.id);
 			}
 		} else if (debugConfig.deviceId) {
 			deviceToLaunchOn = await this.deviceManager?.waitForDevice(debugConfig.deviceId as string | undefined, fiveSecondsInMs);
