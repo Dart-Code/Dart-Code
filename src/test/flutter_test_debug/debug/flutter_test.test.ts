@@ -277,6 +277,9 @@ describe("flutter test debugger", () => {
 					endSub.dispose();
 				}
 
+				// Allow some time for all events to be processed to try and reduce flakes?
+				await delay(100);
+
 				const testFiles = [
 					flutterTestMainFile,
 					flutterTestOtherFile,
