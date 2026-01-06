@@ -188,7 +188,7 @@ export class AutoLaunch implements IAmDisposable {
 		try {
 			const deviceId = configuration.deviceId as string | undefined;
 			if (this.deviceManager && deviceId) {
-				await this.deviceManager.waitForDevice(deviceId, thirtySecondsInMs);
+				await this.deviceManager.waitForBestDevice(deviceId, thirtySecondsInMs);
 				if (this.isDisposed)
 					return;
 
