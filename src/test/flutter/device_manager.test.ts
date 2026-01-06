@@ -299,7 +299,7 @@ describe("device_manager", () => {
 		assert.equal(dm.findBestDevice("Contains-Name")?.id, matchNameContains.id);
 	});
 
-	it("fuzzy matches prefers ID over name", async () => {
+	it("fuzzy matching prefers ID over name", async () => {
 		const matchIdContains2 = { id: "xx-fuzzy-match", name: "bad name", type: "device" } as f.Device;
 		const matchNameContains2 = { id: "bad-id-4", name: "xx-fuzzy-match", type: "device" } as f.Device;
 
