@@ -275,6 +275,80 @@ describe("device_manager", () => {
 		const platforms = await dm.tryGetSupportedPlatformTypes("fake");
 		assert.equal(platforms, undefined);
 	});
+
+	it("fuzzy matches devices by ID", async () => {
+		const matchExactId = { id: "exact-id-match", name: "bad name", type: "device" } as f.Device;
+		const matchExactName = { id: "bad-id-1", name: "exact-name-match", type: "device" } as f.Device;
+		const matchIdStartsWith = { id: "starts-with-id-match", name: "bad name", type: "device" } as f.Device;
+		const matchNameStartsWith = { id: "bad-id-2", name: "starts-with-name-match", type: "device" } as f.Device;
+		const matchIdContains = { id: "bad-contains-id-match-bad", name: "bad name", type: "device" } as f.Device;
+		const matchNameContains = { id: "bad-id-3", name: "bad-contains-name-match-bad", type: "device" } as f.Device;
+
+		await daemon.connect(matchExactId, false);
+		await daemon.connect(matchExactName, false);
+		await daemon.connect(matchIdStartsWith, false);
+		await daemon.connect(matchNameStartsWith, false);
+		await daemon.connect(matchIdContains, false);
+		await daemon.connect(matchNameContains, false);
+
+		assert.equal(dm.findBestDevice("exact-id-match")?.id, matchExactId.id);
+		assert.equal(dm.findBestDevice("exact-name-match")?.id, matchExactName.id);
+		assert.equal(dm.findBestDevice("starts-with")?.id, matchIdStartsWith.id);
+		assert.equal(dm.findBestDevice("starts-with-name")?.id, matchNameStartsWith.id);
+		assert.equal(dm.findBestDevice("contains-id")?.id, matchIdContains.id);
+		assert.equal(dm.findBestDevice("contains-name")?.id, matchNameContains.id);
+	});
+
+	it("fuzzy matches prefers ID over name", async () => {
+		const matchIdContains2 = { id: "xx-fuzzy-match", name: "bad name", type: "device" } as f.Device;
+		const matchNameContains2 = { id: "bad-id-4", name: "xx-fuzzy-match", type: "device" } as f.Device;
+
+		await daemon.connect(matchIdContains2, false);
+		await daemon.connect(matchNameContains2, false);
+
+		assert.equal(dm.findBestDevice("fuzzy-match")?.id, matchIdContains2.id);
+	});
+
+	it("fuzzy matches devices by Emulator ID", async () => {
+		const matchExactId = { id: "d1", emulatorId: "exact-id-match", name: "bad name", type: "device" } as f.Device;
+		const matchIdStartsWith = { id: "d3", emulatorId: "starts-with-id-match", name: "bad name", type: "device" } as f.Device;
+		const matchIdContains = { id: "d5", emulatorId: "xx-contains-id-match", name: "bad name", type: "device" } as f.Device;
+
+		await daemon.connect(matchExactId, false);
+		await daemon.connect(matchIdStartsWith, false);
+		await daemon.connect(matchIdContains, false);
+
+		assert.equal(dm.findBestEmulatorDevice("exact-id-match")?.id, matchExactId.id);
+		assert.equal(dm.findBestEmulatorDevice("starts-with")?.id, matchIdStartsWith.id);
+		assert.equal(dm.findBestEmulatorDevice("contains-id")?.id, matchIdContains.id);
+	});
+
+	it("fuzzy matches emulators by ID and Name", async () => {
+		const matchExactId = { id: "exact-match", name: "bad name", category: "mobile", platformType: "android" } as f.FlutterEmulator;
+		const matchExactName = { id: "bad-id-1", name: "exact-match", category: "mobile", platformType: "android" } as f.FlutterEmulator;
+		const matchIdStartsWith = { id: "exact-match-starts-with", name: "bad name", category: "mobile", platformType: "android" } as f.FlutterEmulator;
+		const matchNameStartsWith = { id: "bad-id-2", name: "exact-match-starts-with", category: "mobile", platformType: "android" } as f.FlutterEmulator;
+		const matchIdContains = { id: "contains-exact-match-contains", name: "bad name", category: "mobile", platformType: "android" } as f.FlutterEmulator;
+		const matchNameContains = { id: "bad-id-3", name: "contains-exact-match-contains", category: "mobile", platformType: "android" } as f.FlutterEmulator;
+
+		daemon.emulators = [matchExactId, matchExactName, matchIdStartsWith, matchNameStartsWith, matchIdContains, matchNameContains];
+		assert.equal((await dm.findBestEmulator("exact-match"))?.id, matchExactId.id);
+
+		daemon.emulators = [matchExactName, matchIdStartsWith, matchNameStartsWith, matchIdContains, matchNameContains];
+		assert.equal((await dm.findBestEmulator("exact-match"))?.id, matchExactName.id);
+
+		daemon.emulators = [matchIdStartsWith, matchNameStartsWith, matchIdContains, matchNameContains];
+		assert.equal((await dm.findBestEmulator("exact-match"))?.id, matchIdStartsWith.id);
+
+		daemon.emulators = [matchNameStartsWith, matchIdContains, matchNameContains];
+		assert.equal((await dm.findBestEmulator("exact-match"))?.id, matchNameStartsWith.id);
+
+		daemon.emulators = [matchIdContains, matchNameContains];
+		assert.equal((await dm.findBestEmulator("exact-match"))?.id, matchIdContains.id);
+
+		daemon.emulators = [matchNameContains];
+		assert.equal((await dm.findBestEmulator("exact-match"))?.id, matchNameContains.id);
+	});
 });
 
 class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlutterDaemon {
@@ -319,8 +393,10 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	public deviceEnable(): Thenable<UnknownResponse> {
 		throw new Error("Method not implemented.");
 	}
+	public emulators: f.FlutterEmulator[] = [androidEmulator, androidBogusEmulatorId, androidBogusEmulatorName, androidEmulatorToOverride];
+
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
-		return [androidEmulator, androidBogusEmulatorId, androidBogusEmulatorName, androidEmulatorToOverride];
+		return this.emulators;
 	}
 	public launchEmulator(_emulatorId: string): Thenable<void> {
 		throw new Error("Method not implemented.");

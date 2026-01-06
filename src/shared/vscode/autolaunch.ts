@@ -192,7 +192,7 @@ export class AutoLaunch implements IAmDisposable {
 				if (this.isDisposed)
 					return;
 
-				if (!this.deviceManager.getDevice(deviceId)) {
+				if (!this.deviceManager.findBestDevice(deviceId)) {
 					this.logger.warn(`[AutoLaunch] Failed to autolaunch because device ${deviceId} was not found`);
 					return;
 				}

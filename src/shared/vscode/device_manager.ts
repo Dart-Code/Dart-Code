@@ -373,6 +373,31 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return sortedDevices.filter((d) => this.isSupported(supportedPlatforms, d));
 	}
 
+	public findBestDevice(search: string): f.Device | undefined {
+		return this.devices.find((d) => d.id === search)
+			?? this.devices.find((d) => d.name === search)
+			?? this.devices.find((d) => d.id.startsWith(search))
+			?? this.devices.find((d) => d.name.startsWith(search))
+			?? this.devices.find((d) => d.id.includes(search))
+			?? this.devices.find((d) => d.name.includes(search));
+	}
+
+	public findBestEmulatorDevice(search: string): f.Device | undefined {
+		return this.devices.find((d) => d.emulatorId === search)
+			?? this.devices.find((d) => d.emulatorId?.startsWith(search))
+			?? this.devices.find((d) => d.emulatorId?.includes(search));
+	}
+
+	public async findBestEmulator(search: string): Promise<Emulator | undefined> {
+		const emulators = await this.getEmulators();
+		return emulators.find((e) => e.id === search)
+			?? emulators.find((e) => e.name === search)
+			?? emulators.find((e) => e.id.startsWith(search))
+			?? emulators.find((e) => e.name.startsWith(search))
+			?? emulators.find((e) => e.id.includes(search))
+			?? emulators.find((e) => e.name.includes(search));
+	}
+
 	/// Calls the daemon's getSupportedPlatforms, but returns undefined if any error occurs (such as the process
 	/// having exited) or there is no response within 5 seconds.
 	public async tryGetSupportedPlatformTypes(projectRoot: string): Promise<string[] | undefined> {
@@ -548,11 +573,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 		} else {
 			this.statusBarItem.tooltip = undefined;
 		}
-	}
-
-	public async getEmulator(id: string | undefined): Promise<Emulator | undefined> {
-		const emulators = await this.getEmulators();
-		return emulators.find((e) => e.id === id);
 	}
 
 	private async getEmulators(): Promise<Emulator[]> {
