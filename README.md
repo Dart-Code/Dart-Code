@@ -2,6 +2,7 @@
 [![Follow on Twitter](https://img.shields.io/badge/twitter-dartcode-blue.svg)](https://twitter.com/DartCode)
 [![Follow on Bluesky](https://img.shields.io/badge/bluesky-dartcode.org-blue.svg)](https://bsky.app/profile/dartcode.org)
 [![Contribute to Dart Code](https://img.shields.io/badge/help-contribute-551A8B.svg)](https://github.com/Dart-Code/Dart-Code/blob/master/CONTRIBUTING.md)
+[![Coverage](https://codecov.io/github/Dart-Code/Dart-Code/graph/badge.svg?token=EPDiJkMrZM)](https://codecov.io/github/Dart-Code/Dart-Code)
 
 ## Introduction
 
