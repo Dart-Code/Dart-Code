@@ -175,7 +175,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		const requiresDevice = (debuggerType === DebuggerType.Flutter && !isAttachRequest)
 			|| (DebuggerType.FlutterTest && isIntegrationTest);
 		if (requiresDevice) {
-			if (this.deviceManager && this.daemon && debugConfig.deviceId !== "flutter-tester") {
+			if (this.deviceManager && this.daemon && deviceToLaunchOn?.id !== "flutter-tester") {
 				let supportedPlatforms = this.daemon.capabilities.providesPlatformTypes && debugConfig.cwd
 					? (await this.deviceManager.tryGetSupportedPlatformTypes(debugConfig.cwd))
 					: undefined;
@@ -595,7 +595,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		if (!debugConfig.name)
 			debugConfig.name = isFlutter ? "Flutter" : "Dart";
 
-		if (isFlutter && !debugConfig.deviceId && device) {
+		if (isFlutter && device) {
 			const deviceLabel = deviceManager ? deviceManager.labelForDevice(device) : device.name;
 
 			// Append the device name onto the session name to make it easier to start a config on multiple devices.
