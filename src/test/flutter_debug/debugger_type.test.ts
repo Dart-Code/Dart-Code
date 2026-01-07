@@ -17,7 +17,8 @@ describe(`flutter debugger type`, async () => {
 	});
 
 	const tests: Array<{ program: string, cwd?: string, debuggerType?: DebuggerType, expectedDebuggerType: DebuggerType }> = [
-		// All POSIX paths, Windows handled below.
+		// All POSIX paths, Windows handled inside runDebuggerTypeTests.
+
 		// These files should not exist, they are created as part of the test.
 		{ program: "bin/temp_tool.dart", expectedDebuggerType: DebuggerType.Dart },
 		{ program: "lib/temp.dart", expectedDebuggerType: DebuggerType.Flutter },

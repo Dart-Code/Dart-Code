@@ -3539,6 +3539,18 @@
 				"configurationAttributes": {
 					"launch": {
 						"properties": {
+							"debuggerType": {
+								"type": "string",
+								"enum": [
+									"dart",
+									"dartTest",
+									"flutter",
+									"flutterTest",
+									"web",
+									"webTest"
+								],
+								"markdownDescription": "Allows overriding the the type of Dart/Flutter debugger to use. The type of debugger is usually determined automatically and use of this setting is discouraged unless you are doing something that doesn't matching conventions (for example having a script ending `_test.dart` inside `test/` that should not be run with the test runner)."
+							},
 							"cwd": {
 								"type": "string",
 								"description": "Workspace root."

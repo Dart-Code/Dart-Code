@@ -6,7 +6,7 @@ import { DebuggerType } from "../../shared/enums";
 import { fsPath } from "../../shared/utils/fs";
 import { createTempTestFile, getResolvedDebugConfiguration, setConfigForTest } from "../helpers";
 
-export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string; debuggerType?: DebuggerType; expectedDebuggerType: DebuggerType; }>, defaultFolder: Uri): Promise<void> {
+export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string; debuggerType?: DebuggerType | string; expectedDebuggerType: DebuggerType; }>, defaultFolder: Uri): Promise<void> {
 	for (const test of tests) {
 		let program = test.program;
 		const { cwd, debuggerType, expectedDebuggerType } = test;
