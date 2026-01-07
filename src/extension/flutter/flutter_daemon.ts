@@ -12,7 +12,6 @@ import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
 import { PromiseCompleter, usingCustomScript, withTimeout } from "../../shared/utils";
-import { isDevExtension, isPreReleaseExtension } from "../../shared/vscode/extension_utils";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -344,7 +343,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 					this.analytics.logErrorFlutterDaemonTimeout(requestMethod);
 					this.hasLoggedDaemonTimeout = true;
 
-					if ((isDevExtension || isPreReleaseExtension) && isMac) {
+					if (isMac) {
 						void promptToReloadExtension(this.logger, {
 							prompt: `The Flutter daemon did not respond to a request within ${(timeoutMs / 1000).toFixed(0)}s. Please post any "FlutterDaemon" errors from the log to [this GitHub issue](https://github.com/Dart-Code/Dart-Code/issues/5793#issuecomment-3527504661).`,
 							offerLog: true,
