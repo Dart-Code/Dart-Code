@@ -7,6 +7,14 @@ export enum DebuggerType {
 	WebTest,
 }
 
+export function debuggerTypeFromString(debuggerType: string): DebuggerType | undefined {
+	const enumKeys = Object.keys(DebuggerType).filter((key) => isNaN(Number(key))) as Array<keyof typeof DebuggerType>;
+	const matchedKey = enumKeys.find((key) => key.toLowerCase() === debuggerType.toLowerCase());
+	return matchedKey !== undefined
+		? DebuggerType[matchedKey]
+		: undefined;
+}
+
 export enum TestStatus {
 	// This should be in order such that the highest number is the one to show
 	// when aggregating (eg. from children).

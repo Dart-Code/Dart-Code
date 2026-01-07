@@ -6,7 +6,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { fiveSecondsInMs, isDartCodeTestRun, runAnywayAction, showErrorsAction } from "../../shared/constants";
 import { HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG } from "../../shared/constants.contexts";
 import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
-import { DebuggerType, VmServiceExtension } from "../../shared/enums";
+import { DebuggerType, debuggerTypeFromString, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { DartWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/interfaces";
@@ -355,10 +355,17 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return false;
 	}
 
-	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs & { debuggerType?: DebuggerType }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): { debuggerType: DebuggerType, projectRoot: string | undefined } {
+	protected selectDebuggerType(debugConfig: vs.DebugConfiguration & DartLaunchArgs & { debuggerType?: DebuggerType | string }, argsHaveTestFilter: boolean, isTest: boolean, logger: Logger): { debuggerType: DebuggerType, projectRoot: string | undefined } {
 		if (debugConfig.debuggerType !== undefined) {
-			logger.info(`Debugger type is explicitly set in launch configuration as ${DebuggerType[debugConfig.debuggerType]}, using that.`);
-			return { debuggerType: debugConfig.debuggerType, projectRoot: undefined };
+			// User can specify the numbers or the names.
+			const specifiedDebuggerType = typeof debugConfig.debuggerType === "string"
+				? debuggerTypeFromString(debugConfig.debuggerType)
+				: debugConfig.debuggerType;
+
+			if (specifiedDebuggerType !== undefined && Object.values(DebuggerType).includes(specifiedDebuggerType)) {
+				logger.info(`Debugger type is explicitly set in launch configuration as "${debugConfig.debuggerType}", so using "${DebuggerType[specifiedDebuggerType]}".`);
+				return { debuggerType: specifiedDebuggerType, projectRoot: undefined };
+			}
 		}
 
 		const isIntegrationTest = debugConfig.program && isInsideFolderNamed(debugConfig.program, "integration_test");
