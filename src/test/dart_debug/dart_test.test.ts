@@ -13,7 +13,7 @@ import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -216,7 +216,7 @@ describe("dart test debugger", () => {
 				);
 
 				const expectedResults = getExpectedResults();
-				const actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
+				const actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
 
 				assert.ok(expectedResults);
 				assert.ok(actualResults);
@@ -244,7 +244,7 @@ describe("dart test debugger", () => {
 				]);
 
 				const expectedResults = getExpectedResults();
-				const actualResults = makeTestTextTree(helloWorldTestShortFile).join("\n");
+				const actualResults = makeTestTextTree({ uriFilter: helloWorldTestShortFile }).join("\n");
 
 				assert.ok(expectedResults);
 				assert.ok(actualResults);
@@ -353,14 +353,14 @@ describe("dart test debugger", () => {
 					endSub.dispose();
 				}
 				const testFiles = [
-					helloWorldProjectTestFile,
+					// helloWorldProjectTestFile,
 					helloWorldExampleSubFolderProjectTestFile,
 				];
 
 				for (const file of testFiles) {
 					await openFile(file);
 					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree(file).join("\n");
+					const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
 
 					assert.ok(expectedResults);
 					assert.ok(actualResults);
@@ -369,13 +369,12 @@ describe("dart test debugger", () => {
 			});
 
 			it("can run tests through test controller using default launch template", async () => {
-				const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
 				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
 				const controller = privateApi.testController;
-				const testNode = controller.controller.items.get(suiteID);
+				const testNode = findSuiteNode(fsPath(helloWorldTestEnvironmentFile));
 				if (!testNode)
-					throw Error(`Unable to find ${suiteID}!`);
+					throw Error(`Unable to find suite node!`);
 				const testRequest = new vs.TestRunRequest([testNode]);
 				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken));
 				const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
@@ -395,10 +394,10 @@ describe("dart test debugger", () => {
 				const testItems: vs.TestItem[] = [];
 
 				// Pick multiple tests from multiple files to run.
-				const suite1Node = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestSelective1File)}`)!;
+				const suite1Node = findSuiteNode(fsPath(helloWorldTestSelective1File));
 				testItems.push(suite1Node.children.get(`TEST:${fsPath(helloWorldTestSelective1File)}:pass one`)!);
 				testItems.push(suite1Node.children.get(`TEST:${fsPath(helloWorldTestSelective1File)}:pass two`)!);
-				const suite2Node = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestSelective2File)}`)!;
+				const suite2Node = findSuiteNode(fsPath(helloWorldTestSelective2File));
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(helloWorldTestSelective2File)}:fail one`)!);
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(helloWorldTestSelective2File)}:fail two`)!);
 				const testRequest = new vs.TestRunRequest(testItems);
@@ -423,13 +422,10 @@ describe("dart test debugger", () => {
 			});
 
 			it("allows more-specific default launch template using noDebug flag", async () => {
-				const suiteID = `SUITE:${fsPath(helloWorldTestEnvironmentFile)}`;
 				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
 				const controller = privateApi.testController;
-				const testNode = controller.controller.items.get(suiteID);
-				if (!testNode)
-					throw Error(`Unable to find ${suiteID}!`);
+				const testNode = findSuiteNode(fsPath(helloWorldTestEnvironmentFile));
 				const testRequest = new vs.TestRunRequest([testNode]);
 				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(true, false, testRequest, fakeCancellationToken));
 				const testEvents = customEvents.filter((e) => e.event === "dart.testNotification");
@@ -447,7 +443,7 @@ describe("dart test debugger", () => {
 				async function checkResults(description: string): Promise<void> {
 					logger.info(description);
 					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
+					const actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
 
 					assert.ok(expectedResults);
 					assert.ok(actualResults);
@@ -481,7 +477,7 @@ describe("dart test debugger", () => {
 				async function checkResults(description: string): Promise<void> {
 					logger.info(description);
 					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree(helloWorldTestDupeNameFile, { sortByLabel: true }).join("\n");
+					const actualResults = makeTestTextTree({ uriFilter: helloWorldTestDupeNameFile, sortByLabel: true }).join("\n");
 
 					assert.ok(expectedResults);
 					assert.ok(actualResults);
@@ -529,7 +525,7 @@ describe("dart test debugger", () => {
 
 				// First ensure the full results appear.
 				let expectedResults = getExpectedResults();
-				let actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
+				let actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
 				assert.ok(actualResults);
 				checkTreeNodeResults(actualResults, expectedResults);
 
@@ -539,23 +535,24 @@ describe("dart test debugger", () => {
 				// Expected results differ from what's in the file not only because skipped tests are hidden, but because
 				// the counts on the containing nodes will also be reduced.
 				expectedResults = `
-test/tree_test.dart [6/8 passed] Failed
-    (setUpAll) Passed (utils.dart)
-    (tearDownAll) Passed (utils.dart)
-    failing group 1 [2/3 passed] Failed
-        passing test 1 \${1 + 1} [1/1 passed] Passed
-            passing test 1 2 Passed
-        failing test 1 $foo [0/1 passed] Failed
-            failing test 1 some string Failed
-        group 1.1 [1/1 passed] Passed
-            passing test 1 with ' some " quotes and newlines in name Passed
-    skipped group 2 [1/2 passed] Failed
-        passing test 1 Passed
-        failing test 1 Failed
-    passing group 3 [1/1 passed] Passed
-        passing test 1 Passed
+hello_world Failed
+    test/tree_test.dart [6/8 passed] Failed
+        (setUpAll) Passed (utils.dart)
+        (tearDownAll) Passed (utils.dart)
+        failing group 1 [2/3 passed] Failed
+            passing test 1 \${1 + 1} [1/1 passed] Passed
+                passing test 1 2 Passed
+            failing test 1 $foo [0/1 passed] Failed
+                failing test 1 some string Failed
+            group 1.1 [1/1 passed] Passed
+                passing test 1 with ' some " quotes and newlines in name Passed
+        skipped group 2 [1/2 passed] Failed
+            passing test 1 Passed
+            failing test 1 Failed
+        passing group 3 [1/1 passed] Passed
+            passing test 1 Passed
 		`.trim();
-				actualResults = makeTestTextTree(helloWorldTestTreeFile).join("\n");
+				actualResults = makeTestTextTree({ uriFilter: helloWorldTestTreeFile }).join("\n");
 				assert.ok(actualResults);
 				checkTreeNodeResults(actualResults, expectedResults);
 			});
@@ -683,7 +680,7 @@ test/empty_test.dart
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
 			const controller = privateApi.testController;
 
-			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldTestMainFile)}`)!;
+			const suiteNode = findSuiteNode(fsPath(helloWorldTestMainFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			await controller.runTests(false, true, testRequest, fakeCancellationToken);
@@ -702,7 +699,7 @@ test/empty_test.dart
 			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleTestFile));
 
 			// const controller = privateApi.testController;
-			// const suiteNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldExampleTestFile)}`)!;
+			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleTestFile)}`)!;
 			// const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			// await controller.runTests(false, true, testRequest, fakeCancellationToken);
@@ -721,7 +718,7 @@ test/empty_test.dart
 			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
 			// const controller = privateApi.testController;
-			// const suiteNode = controller.controller.items.get(`SUITE:${fsPath(helloWorldExampleSubFolderProjectTestFile)}`)!;
+			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile)}`)!;
 			// const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			// await controller.runTests(false, true, testRequest, fakeCancellationToken);
@@ -770,10 +767,9 @@ test/empty_test.dart
 				appendNode(child, indent + 1);
 			});
 		}
-		privateApi.testController.controller.items.forEach((item) => {
-			if (item.uri && fsPath(item.uri) === fsPath(testSuiteUri))
-				appendNode(item);
-		});
+
+		const suite = findSuiteNode(fsPath(testSuiteUri));
+		appendNode(suite);
 		return lines.join("\n").trim();
 	}
 

@@ -10,7 +10,7 @@ describe("dart tests", () => {
 
 	it("discovers test when opening a file", async () => {
 		// Ensure no results before we start.
-		const initialResults = makeTestTextTree(helloWorldTestDiscoveryFile).join("\n");
+		const initialResults = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryFile }).join("\n");
 		assert.equal(initialResults, "");
 
 		// Open the file and allow time for the outline.
@@ -20,7 +20,7 @@ describe("dart tests", () => {
 		await delay(1500); // Account for debounce.
 
 		const expectedResults = getExpectedResults();
-		const actualResults = makeTestTextTree(helloWorldTestDiscoveryFile).join("\n");
+		const actualResults = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryFile }).join("\n");
 
 		assert.ok(expectedResults);
 		assert.ok(actualResults);
@@ -37,7 +37,7 @@ void main() => test("test 1", () {});
 		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
 		await delay(1500); // Account for debounce.
 
-		let actualResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
+		let actualResults = makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n");
 		checkTreeNodeResults(actualResults, `
 test/rename_test.dart [0/1 passed] Unknown
     test 1 Unknown
@@ -51,7 +51,7 @@ void main() => test("test 2", () {});
 		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
 		await delay(1500); // Account for debounce.
 
-		actualResults = makeTestTextTree(helloWorldRenameTestFile).join("\n");
+		actualResults = makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n");
 		checkTreeNodeResults(actualResults, `
 test/rename_test.dart [0/1 passed] Unknown
     test 2 Unknown
@@ -60,7 +60,7 @@ test/rename_test.dart [0/1 passed] Unknown
 
 	it("discovers a large number of tests in a reasonable time", async () => {
 		// Ensure no results before we start.
-		const initialResults = makeTestTextTree(helloWorldTestDiscoveryLargeFile).join("\n");
+		const initialResults = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryLargeFile }).join("\n");
 		assert.equal(initialResults, "");
 
 		// Open the file and allow time for the outline.
@@ -70,7 +70,7 @@ test/rename_test.dart [0/1 passed] Unknown
 
 		await delay(1500); // Account for debounce.
 
-		const testTree = makeTestTextTree(helloWorldTestDiscoveryLargeFile);
+		const testTree = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryLargeFile });
 		assert.equal(testTree.length, 1250 /* tests */ + 5 /* groups */ + 1 /* file */);
 		const timeTaken = process.hrtime(startTime);
 		const timeTakenMs = Math.round(timeTaken[0] * 1000 + timeTaken[1] / 1000000);

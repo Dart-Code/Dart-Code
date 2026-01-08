@@ -24,6 +24,7 @@ import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/uti
 import { Context } from "../shared/vscode/workspace";
 // eslint-disable-next-line no-restricted-imports
 import { PublicDartExtensionApi } from "../extension/api/interfaces";
+import { locateBestProjectRoot } from "../shared/vscode/project";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
 export let privateApi: InternalExtensionApi;
@@ -386,8 +387,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 
 export async function clearTestTree(): Promise<void> {
 	logger.info(`Clearing test tree...`);
-	privateApi.testModel.suites.clear();
-	privateApi.testModel.updateNode();
+	privateApi.testModel.clearAll();
 	await delay(50); // Allow tree to be updated.
 	if (privateApi.testDiscoverer)
 		privateApi.testDiscoverer.testDiscoveryPerformed = undefined;
@@ -1284,17 +1284,32 @@ export function isTestDoneSuccessNotification(e: vs.DebugSessionCustomEvent) {
 	return notification.type === "testDone" && notification.result !== "error" && !notification.hidden;
 }
 
-export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffer = [], indent = 0, onlyFailures, onlyActive, sortByLabel }: { buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean, sortByLabel?: boolean } = {}): string[] {
+export function findSuiteNode(suitePath: string): vs.TestItem {
+	const suiteID = `SUITE:${suitePath}`;
+	const projectPath = locateBestProjectRoot(suitePath);
+	const projectID = projectPath ? `PROJECT:${projectPath}` : undefined;
+	const workspaceFolder = projectPath ? vs.workspace.getWorkspaceFolder(vs.Uri.file(projectPath)) : undefined;
+	const workspaceFolderPath = workspaceFolder ? fsPath(workspaceFolder.uri) : undefined;
+	const workspaceFolderID = workspaceFolderPath ? `WF:${workspaceFolderPath}` : undefined;
+
+	const controller = privateApi.testController;
+	const node = controller.controller.items.get(suiteID)
+		?? (projectID ? controller.controller.items.get(projectID)?.children.get(suiteID) : undefined)
+		?? (workspaceFolderID && projectID ? controller.controller.items.get(workspaceFolderID)?.children.get(projectID)?.children.get(suiteID) : undefined);
+
+	if (!node)
+		throw new Error(`Could not find suite node for ${suitePath}`);
+
+	return node;
+}
+
+export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, onlyFailures, onlyActive, sortByLabel }: { items?: vs.TestItemCollection, uriFilter?: vs.Uri, buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean, sortByLabel?: boolean } = {}): string[] {
 	const collection = items instanceof vs.Uri
 		? privateApi.testController.controller.items
 		: items ?? privateApi.testController.controller.items;
-	const parentResourceUri = items instanceof vs.Uri ? items : undefined;
 
 	const testItems: vs.TestItem[] = [];
-	collection.forEach((item) => {
-		if (!parentResourceUri || item.uri?.toString() === parentResourceUri.toString())
-			testItems.push(item);
-	});
+	collection.forEach((item) => testItems.push(item));
 
 	// Sort the items by their locations by default so we get stable results. Otherwise the order that items
 	// are created would be used, which is usually source-order, but could be different if the user
@@ -1304,8 +1319,12 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 	sortBy(testItems, sortByLabel ? (item) => item.label : getSourceLine);
 
 	for (const item of testItems) {
-		const lastResult = privateApi.testController.getLatestData(item);
-		const lastResultTestNode = lastResult as TestNode;
+		const lastResult = privateApi.testController.getLatestData(item) as TestNode | undefined;
+
+		// Only include statuses on WF/Project nodes if we aren't filtering, otherwise
+		// the status may look wrong (because it might be skewed by filtered out nodes).
+		const isWorkspaceFolderOrProject = item.id.startsWith("WF:") || item.id.startsWith("PROJECT:");
+		const includeStatus = !isWorkspaceFolderOrProject || !uriFilter;
 
 		let nodeString = item.label;
 		if (item.description)
@@ -1313,27 +1332,40 @@ export function makeTestTextTree(items?: vs.TestItemCollection | vs.Uri, { buffe
 
 		let includeNode = true;
 		if (lastResult) {
-			if (lastResultTestNode.status)
-				nodeString += ` ${TestStatus[lastResultTestNode.status]}`;
-			else if (lastResult.children.length)
-				nodeString += ` ${TestStatus[lastResult.getHighestChildStatus(true)]}`;
+			if (includeStatus) {
+				if (lastResult.status)
+					nodeString += ` ${TestStatus[lastResult.status]}`;
+				else if (lastResult.children.length)
+					nodeString += ` ${TestStatus[lastResult.getHighestChildStatus(true)]}`;
+			}
 
 			// If this node has a different file to the parent, include that in the output.
-			if (lastResult.path && lastResult.parent?.path && lastResult.path !== lastResult.parent?.path)
+			// Don't include it if it's already in the label though.
+			if (lastResult.path && lastResult.parent?.path && lastResult.path !== lastResult.parent?.path && !item.label.endsWith(path.basename(lastResult.path)))
 				nodeString += ` (${path.basename(lastResult.path)})`;
 
 			const isStale = lastResult.isStale;
-			const isFailure = lastResultTestNode.status === TestStatus.Failed;
+			const isFailure = lastResult.status === TestStatus.Failed;
 			if ((isStale && onlyActive) || (!isFailure && onlyFailures))
 				includeNode = false;
-		} else {
+		} else if (!isWorkspaceFolderOrProject) {
 			nodeString += " (not found in model)";
 		}
 
-		if (includeNode)
-			buffer.push(`${" ".repeat(indent * 4)}${nodeString}`);
+		// Stop filtering children at the point that we match the filter (eg. we match the suite, include all children).
+		const nodeMatches = uriFilter && item.uri?.toString() === uriFilter.toString();
+		const filterChildren = !nodeMatches;
 
-		makeTestTextTree(item.children, { buffer, indent: indent + 1, onlyFailures, onlyActive, sortByLabel });
+		const childBuffer: string[] = [];
+		makeTestTextTree({ items: item.children, uriFilter: filterChildren ? uriFilter : undefined, buffer: childBuffer, indent: indent + 1, onlyFailures, onlyActive, sortByLabel });
+
+		// Only include this node if:
+		// - there are children
+		// - it matches our URI filter
+		if (includeNode && (childBuffer.length || !uriFilter || nodeMatches)) {
+			buffer.push(`${" ".repeat(indent * 4)}${nodeString}`);
+			buffer.push(...childBuffer);
+		}
 	}
 
 	return buffer;

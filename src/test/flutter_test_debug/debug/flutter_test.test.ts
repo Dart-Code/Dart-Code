@@ -11,7 +11,7 @@ import { getLaunchConfig } from "../../../shared/utils/test";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
 import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findSuiteNode, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activateWithoutAnalysis(flutterTestMainFile));
@@ -204,7 +204,7 @@ describe("flutter test debugger", () => {
 				for (const file of testFiles) {
 					await openFile(file);
 					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree(file).join("\n");
+					const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
 
 					assert.ok(expectedResults);
 					assert.ok(actualResults);
@@ -223,10 +223,10 @@ describe("flutter test debugger", () => {
 				const testItems: vs.TestItem[] = [];
 
 				// Pick multiple tests from multiple files to run.
-				const suite1Node = controller.controller.items.get(`SUITE:${fsPath(flutterTestSelective1File)}`)!;
+				const suite1Node = findSuiteNode(fsPath(flutterTestSelective1File));
 				testItems.push(suite1Node.children.get(`TEST:${fsPath(flutterTestSelective1File)}:pass one`)!);
 				testItems.push(suite1Node.children.get(`TEST:${fsPath(flutterTestSelective1File)}:pass two`)!);
-				const suite2Node = controller.controller.items.get(`SUITE:${fsPath(flutterTestSelective2File)}`)!;
+				const suite2Node = findSuiteNode(fsPath(flutterTestSelective2File));
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail one`)!);
 				testItems.push(suite2Node.children.get(`TEST:${fsPath(flutterTestSelective2File)}:fail two`)!);
 				const testRequest = new vs.TestRunRequest(testItems);
@@ -291,7 +291,7 @@ describe("flutter test debugger", () => {
 				for (const file of testFiles) {
 					await openFile(file);
 					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree(file).join("\n");
+					const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
 
 					assert.ok(expectedResults);
 					assert.ok(actualResults);
@@ -304,7 +304,7 @@ describe("flutter test debugger", () => {
 				const hasRunFile = prepareHasRunFile(root, "flutter_test");
 
 				const config = await startDebugger(dc, flutterTestMainFile, {
-					customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
+					customTool: path.join(root, `scripts / custom_flutter_test.${customScriptExt}`),
 					customToolReplacesArgs: 0,
 				});
 				await waitAllThrowIfTerminates(dc,
@@ -321,7 +321,7 @@ describe("flutter test debugger", () => {
 				const hasRunFile = prepareHasRunFile(root, "flutter_test");
 
 				const config = await startDebugger(dc, flutterTestMainFile, {
-					customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
+					customTool: path.join(root, `scripts / custom_flutter_test.${customScriptExt}`),
 					customToolReplacesArgs: 999999,
 					// These differ to the usual ones so we can detect they replaced them.
 					toolArgs: ["test", "--total-shards", "1", "--shard-index", "0", "--start-paused", "--machine", "-d", "flutter-tester"],
@@ -483,7 +483,7 @@ describe("flutter test debugger", () => {
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile));
 			const controller = privateApi.testController;
 
-			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterTestMainFile)}`)!;
+			const suiteNode = findSuiteNode(fsPath(flutterTestMainFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			await controller.runTests(false, true, testRequest, fakeCancellationToken);
@@ -501,7 +501,7 @@ describe("flutter test debugger", () => {
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
 
 			const controller = privateApi.testController;
-			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterHelloWorldExampleTestFile)}`)!;
+			const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			await controller.runTests(false, true, testRequest, fakeCancellationToken);
@@ -519,7 +519,7 @@ describe("flutter test debugger", () => {
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
 
 			const controller = privateApi.testController;
-			const suiteNode = controller.controller.items.get(`SUITE:${fsPath(flutterHelloWorldExampleTestFile)}`)!;
+			const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			await controller.runTests(false, true, testRequest, fakeCancellationToken);
@@ -551,7 +551,7 @@ describe("flutter test debugger", () => {
 
 			assert.deepStrictEqual(
 				coveragePackages,
-				[`^flutter_hello_world$`, `^flutter_hello_world_example$`],
+				[`^ flutter_hello_world$`, ` ^ flutter_hello_world_example$`],
 			);
 		});
 	});
