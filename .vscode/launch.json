@@ -24,7 +24,7 @@
 			]
 		},
 		{
-			"name": "Extension (Debuggable)",
+			"name": "Extension (Debuggable Legacy DAPs)",
 			"type": "extensionHost",
 			"runtimeExecutable": "${execPath}",
 			"args": [
@@ -648,9 +648,9 @@
 	],
 	"compounds": [
 		{
-			"name": "Extension (Debuggable) + DAs",
+			"name": "Extension (Debuggable Legacy DAPs) + DAs",
 			"configurations": [
-				"Extension (Debuggable)",
+				"Extension (Debuggable Legacy DAPs)",
 				"Web Debug Server",
 				"Web Test Debug Server"
 			],
