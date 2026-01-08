@@ -6,7 +6,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
-import { GroupNode, SuiteData, SuiteNode, TestNode, TreeNode } from "../../shared/test/test_model";
+import { RunnableTreeNode, SuiteData, SuiteNode, TestNode, TreeNode } from "../../shared/test/test_model";
 import { getPackageTestCapabilities } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
@@ -35,8 +35,8 @@ export class TestCommands implements vs.Disposable {
 		this.disposables.push(
 			vs.commands.registerCommand("_dart.startDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(false, test, launchTemplate)),
 			vs.commands.registerCommand("_dart.startWithoutDebuggingTestFromOutline", (test: TestOutlineInfo, launchTemplate: any | undefined) => this.startTestFromOutline(true, test, launchTemplate)),
-			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
-			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: Array<SuiteNode | GroupNode | TestNode>, suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
+			vs.commands.registerCommand("_dart.startDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: RunnableTreeNode[], suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, true, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
+			vs.commands.registerCommand("_dart.startWithoutDebuggingTestsFromVsTestController", (suiteData: SuiteData, treeNodes: RunnableTreeNode[], suppressPrompts: boolean, includeCoverage: boolean, testRun: vs.TestRun | undefined, token?: vs.CancellationToken) => this.runTestsForNode(suiteData, treeNodes, false, suppressPrompts, treeNodes.length === 1 && treeNodes[0] instanceof TestNode, includeCoverage, token, testRun)),
 			vs.commands.registerCommand("_dart.runAllTestsWithoutDebugging", (suitesToRun: SuiteNode[] | undefined, nodesToExclude: TestNode[] | undefined, includeCoverage: boolean, testRun: vs.TestRun | undefined, isRunningAll: boolean) => this.runAllTestsWithoutDebugging(suitesToRun, nodesToExclude, includeCoverage, testRun, isRunningAll)),
 			vs.commands.registerCommand("dart.goToTests", (resource: vs.Uri | undefined) => this.goToTestOrImplementationFile(resource), this),
 			vs.commands.registerCommand("dart.goToTestOrImplementationFile", () => this.goToTestOrImplementationFile(), this),
@@ -72,7 +72,7 @@ export class TestCommands implements vs.Disposable {
 				return;
 
 			let testPaths = suites
-				.map((suite) => suite.suiteData.path)
+				.map((suite) => suite.path)
 				.filter((suitePath) => isWithinPath(suitePath, projectFolder))
 				.filter((suitePath) => isInsideFolderNamed(suitePath, "integration_test") === integrationTests)
 				.filter((suitePath) => closestProjectFolder(suitePath) === projectFolder);

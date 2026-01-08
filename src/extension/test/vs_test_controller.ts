@@ -4,10 +4,9 @@ import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { CoverageParser } from "../../shared/test/coverage";
-import { GroupNode, NodeDidChangeEvent, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode } from "../../shared/test/test_model";
+import { GroupNode, NodeDidChangeEvent, ProjectNode, RunnableTreeNode, SuiteData, SuiteNode, TestEventListener, TestModel, TestNode, TestSource, TreeNode, WorkspaceFolderNode } from "../../shared/test/test_model";
 import { ErrorNotification, PrintNotification } from "../../shared/test_protocol";
 import { disposeAll, notUndefined } from "../../shared/utils";
-import { fsPath } from "../../shared/utils/fs";
 import { isSetupOrTeardownTestName } from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { config } from "../config";
@@ -116,6 +115,26 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		return this.nodeForItem.get(test);
 	}
 
+	/**
+	 * Extracts the runnable nodes (suites, groups, tests) from a set of test items that might
+	 * include workspace folder or project nodes.
+	 */
+	private extractRunnableNodes(items: Set<vs.TestItem>): RunnableTreeNode[] {
+		const nodes: RunnableTreeNode[] = [];
+		const add = (item: vs.TestItem) => {
+			const node = this.nodeForItem.get(item);
+			if (node instanceof RunnableTreeNode) {
+				// If this node is runnable, add it.
+				nodes.push(node);
+			} else {
+				// Otherwise, try adding children.
+				item.children.forEach(add);
+			}
+		};
+		items.forEach(add);
+		return nodes;
+	}
+
 	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, _token: vs.CancellationToken): Promise<void> {
 		await this.discoverer?.ensureSuitesDiscovered();
 
@@ -136,8 +155,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		try {
 			// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
 			// suites), we can run the "fast path" in a single `dart test` invocation.
-			const nodesToRun = [...testsToRun].map((item) => this.nodeForItem.get(item));
-			const nodesToExclude = [...testsToExclude].map((item) => this.nodeForItem.get(item));
+			const nodesToRun = this.extractRunnableNodes(testsToRun);
+			const nodesToExclude = this.extractRunnableNodes(testsToExclude);
 			if (!debug && nodesToRun.every((item) => item instanceof SuiteNode) && nodesToExclude.every((item) => item instanceof SuiteNode)) {
 				await vs.commands.executeCommand("_dart.runAllTestsWithoutDebugging", nodesToRun, nodesToExclude, includeCoverage, run, isRunningAll);
 				return;
@@ -145,11 +164,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 			// Group into suites since we need to run each seperately (although we can run
 			// multiple tests witthin one suite together).
-			const testsBySuite = new Map<SuiteData, TreeNode[]>();
+			const testsBySuite = new Map<SuiteData, RunnableTreeNode[]>();
 
-			testsToRun.forEach((test) => {
-				const node = this.nodeForItem.get(test);
-				if (!node) return;
+			nodesToRun.forEach((node) => {
 				const testNodes = testsBySuite.get(node.suiteData) ?? [];
 				testsBySuite.set(node.suiteData, testNodes);
 				testNodes.push(node);
@@ -205,10 +222,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 
 	/// Replace the whole tree.
 	private replaceAll() {
-		const suiteTestItems = Array.from(this.model.suites.values())
-			.map((suite) => this.createOrUpdateNode(suite.node, true))
+		const roots = this.model.getRoots()
+			.map((node) => this.createOrUpdateNode(node, true))
 			.filter(notUndefined);
-		this.controller.items.replace(suiteTestItems);
+		this.controller.items.replace(roots);
 	}
 
 	private onDidChangeTreeData(event: NodeDidChangeEvent | undefined): void {
@@ -225,6 +242,27 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.createOrUpdateNode(event.node, false);
 	}
 
+	/**
+	 * Gets the parent collection that a node belongs to.
+	 *
+	 * If this is a top-level node, returns the root items collection.
+	 */
+	private getParentCollection(node: TreeNode): vs.TestItemCollection | undefined {
+		let collection: vs.TestItemCollection | undefined;
+
+		// Find the parent whose child collection we belong to.
+		const parent = node.parent;
+		if (parent) {
+			const parentItem = this.itemForNode.get(parent);
+			collection = parentItem?.children;
+		} else {
+			// No parent, so we are top level.
+			collection = this.controller.items;
+		}
+
+		return collection;
+	}
+
 	/// Creates a node or if it already exists, updates it.
 	///
 	/// Recursively creates/updates children unless `updateChildren` is `false` and this node
@@ -236,13 +274,18 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	/// Returns undefined if in the case of an error or a node that should
 	/// not be shown in the tree.
 	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
-		const shouldShowNode = this.shouldShowNode(node);
-		let collection;
-		if (node instanceof SuiteNode) {
-			collection = this.controller.items;
-		} else {
-			collection = this.itemForNode.get(node.parent!)?.children;
+		// If we're not showing workspace folder nodes and this is a workspace folder, skip over it to
+		// its children.
+		const shouldShowWorkspaceFolders = (vs.workspace.workspaceFolders?.length ?? 0) <= 1;
+		if (node instanceof WorkspaceFolderNode && !shouldShowWorkspaceFolders) {
+			if (updateChildren) {
+				node.children.forEach((c) => this.createOrUpdateNode(c, updateChildren));
+			}
+			return undefined;
 		}
+
+		const shouldShowNode = this.shouldShowNode(node);
+		const collection = this.getParentCollection(node);
 
 		if (!collection) {
 			this.logger.error(`Failed to find parent (${node.parent?.label}) of node (${node.label})`);
@@ -284,18 +327,19 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	/// Removes a node from the tree.
-	private removeNode(node: TreeNode): undefined {
-		const collection = node instanceof SuiteNode
-			? this.controller.items
-			: this.itemForNode.get(node.parent!)?.children;
-
+	private removeNode(node: TreeNode): void {
+		const collection = this.getParentCollection(node);
 		if (!collection)
 			return;
 
 		const nodeId = this.idForNode(node);
 		const existingItem = collection.get(nodeId);
-		if (existingItem)
+		if (existingItem) {
 			collection.delete(nodeId);
+			// TODO(dantup): Should we be deleting here?
+			// this.nodeForItem.delete(existingItem);
+		}
+		this.itemForNode.delete(node);
 	}
 
 	private shouldShowNode(node: TreeNode): boolean {
@@ -311,16 +355,19 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private idForNode(node: TreeNode) {
+		if (node instanceof WorkspaceFolderNode)
+			return `WF:${node.path}`;
+		if (node instanceof ProjectNode)
+			return `PROJECT:${node.path}`;
 		if (node instanceof SuiteNode)
-			return `SUITE:${node.suiteData.path}`;
+			return `SUITE:${node.path}`;
 		// We use suiteData.path here because we want to treat (tearDownAll) from a shared
 		// file as a child of the suite node for the instances where it ran in that suite.
 		if (node instanceof GroupNode)
-			return `GROUP:${node.suiteData.path}:${node.name}`;
+			return `GROUP:${node.path}:${node.name}`;
 		if (node instanceof TestNode)
-			return `TEST:${node.suiteData.path}:${node.name}`;
+			return `TEST:${node.path}:${node.name}`;
 		throw new Error(`Tried to create ID for unknown node type! ${node.label}`);
-
 	}
 
 	private cleanLabel(label: string) {
@@ -328,19 +375,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	private labelForSuite(node: SuiteNode): string {
-		const suitePath = node.suiteData.path;
-		const wf = vs.workspace.getWorkspaceFolder(vs.Uri.file(suitePath));
-
-		// No workspace folder, so can't show a relative path. Just show filename.
-		if (!wf)
-			return path.basename(suitePath);
-
-		// Multi-root workspace, include workspace folder name.
-		if ((vs.workspace.workspaceFolders?.length ?? 0) > 1)
-			return path.join(wf.name, path.relative(fsPath(wf.uri), node.suiteData.path));
-
-		// Single root, no need to show the folder name.
-		return path.relative(fsPath(wf.uri), node.suiteData.path);
+		const parent = node.parent;
+		if (parent instanceof ProjectNode || parent instanceof WorkspaceFolderNode)
+			return path.relative(parent.path, node.path);
+		return path.basename(node.path);
 	}
 
 	private createTestItem(node: TreeNode): vs.TestItem {
@@ -358,7 +396,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.nodeForItem.set(item, node);
 		this.itemForNode.set(node, item);
 
-		if (this.isRunnableTest(node)) {
+		if (node instanceof RunnableTreeNode && this.isRunnableTest(node)) {
 			item.tags = [runnableTestTag];
 
 			// Checking if coverage is supported is async, so we need to do this later.
@@ -391,7 +429,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
-	private isRunnableTest(node: TreeNode): boolean {
+	private isRunnableTest(node: RunnableTreeNode): boolean {
 		const label = node.label;
 		if (!label)
 			return false;
