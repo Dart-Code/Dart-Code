@@ -3,10 +3,11 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, tryDeleteFile } from "../../../shared/utils/fs";
-import { activate, checkTreeNodeResults, defer, delay, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
+	beforeEach("clear test tree", () => clearTestTree());
 
 	it("discovers test when opening a file", async () => {
 		// Ensure no results before we start.
@@ -39,8 +40,9 @@ void main() => test("test 1", () {});
 
 		let actualResults = makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n");
 		checkTreeNodeResults(actualResults, `
-test/rename_test.dart [0/1 passed] Unknown
-    test 1 Unknown
+hello_world
+    test/rename_test.dart [0/1 passed] Unknown
+        test 1 Unknown
 		`);
 
 		await setTestContent(`
@@ -53,8 +55,9 @@ void main() => test("test 2", () {});
 
 		actualResults = makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n");
 		checkTreeNodeResults(actualResults, `
-test/rename_test.dart [0/1 passed] Unknown
-    test 2 Unknown
+hello_world
+    test/rename_test.dart [0/1 passed] Unknown
+        test 2 Unknown
 		`);
 	});
 
@@ -71,7 +74,7 @@ test/rename_test.dart [0/1 passed] Unknown
 		await delay(1500); // Account for debounce.
 
 		const testTree = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryLargeFile });
-		assert.equal(testTree.length, 1250 /* tests */ + 5 /* groups */ + 1 /* file */);
+		assert.equal(testTree.length, 1250 /* tests */ + 5 /* groups */ + 1 /* file */ + 1 /* project */);
 		const timeTaken = process.hrtime(startTime);
 		const timeTakenMs = Math.round(timeTaken[0] * 1000 + timeTaken[1] / 1000000);
 
