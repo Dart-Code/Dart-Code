@@ -265,8 +265,13 @@ export class TestModel {
 		toDelete.forEach((node) => this.removeNode(node));
 	}
 
-	public getRoots(): WorkspaceFolderNode[] {
-		return [...this.workspaceFolderNodes.values()];
+	public getRoots(): Array<WorkspaceFolderNode | ProjectNode> {
+		return [
+			// WF or Projects can be roots (projects are roots if zero or one WF).
+			...this.workspaceFolderNodes.values(),
+			...this.projectNodes.values(),
+		]
+			.filter((n) => !n.parent);
 	}
 
 	public clearAll(): void {
