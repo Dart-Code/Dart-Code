@@ -276,7 +276,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	private createOrUpdateNode(node: TreeNode, updateChildren: boolean): vs.TestItem | undefined {
 		// If we're not showing workspace folder nodes and this is a workspace folder, skip over it to
 		// its children.
-		const shouldShowWorkspaceFolders = (vs.workspace.workspaceFolders?.length ?? 0) <= 1;
+		const shouldShowWorkspaceFolders = (vs.workspace.workspaceFolders?.length ?? 0) > 1;
 		if (node instanceof WorkspaceFolderNode && !shouldShowWorkspaceFolders) {
 			if (updateChildren) {
 				node.children.forEach((c) => this.createOrUpdateNode(c, updateChildren));
@@ -312,7 +312,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				return;
 		}
 
-		// For new suites without chilren, set canResolveChildren because we can
+		// For new suites without children, set canResolveChildren because we can
 		// open the file and discover tests from the Outline if the user expands them.
 		if (node instanceof SuiteNode && node.children.length === 0)
 			existingItem.canResolveChildren = true;
