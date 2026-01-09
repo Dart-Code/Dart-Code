@@ -5,8 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// test/widget_test.dart Passed
-//     Hello world test Passed
+// flutter_hello_world
+//     test/widget_test.dart Passed
+//         Hello world test Passed
 // == /EXPECTED RESULTS ==
 
 void main() {

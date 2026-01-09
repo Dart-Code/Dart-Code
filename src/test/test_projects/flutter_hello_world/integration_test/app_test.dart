@@ -7,11 +7,12 @@ import 'package:integration_test/integration_test.dart';
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// integration_test/app_test.dart [3/3 passed] Passed
-//     Counter App [2/2 passed] Passed
-//         starts at 0 Passed
-//         increments the counter Passed
-//     (tearDownAll) Passed (integration_test.dart)
+// flutter_hello_world
+//     integration_test/app_test.dart [3/3 passed] Passed
+//         Counter App [2/2 passed] Passed
+//             starts at 0 Passed
+//             increments the counter Passed
+//         (tearDownAll) Passed (integration_test.dart)
 // == /EXPECTED RESULTS ==
 
 void main() {

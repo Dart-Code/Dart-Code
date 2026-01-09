@@ -1,3 +1,4 @@
+import * as path from "path";
 import { URI } from "vscode-uri";
 import { TestStatus } from "../enums";
 import { Event, EventEmitter } from "../events";
@@ -29,9 +30,7 @@ export abstract class TreeNode {
 	public description: string | undefined;
 	public rangeTracker: IAmDisposable | undefined;
 
-	constructor(public readonly suiteData: SuiteData) { }
-
-	public readonly children: Array<GroupNode | TestNode> = [];
+	public readonly children: TreeNode[] = [];
 
 	getHighestChildStatus(includeSkipped: boolean): TestStatus {
 		const statuses = new Set<TestStatus>();
@@ -90,20 +89,47 @@ export abstract class TreeNode {
 	}
 }
 
-export class SuiteNode extends TreeNode {
-	constructor(suiteData: SuiteData) {
-		super(suiteData);
+export class WorkspaceFolderNode extends TreeNode {
+	declare parent: undefined;
+	declare children: Array<ProjectNode | SuiteNode>;
+
+	constructor(public readonly name: string, public readonly path: string) {
+		super();
 	}
 
-	get parent(): undefined { return undefined; }
+	get label(): string { return this.name; }
+}
+
+export class ProjectNode extends TreeNode {
+	declare children: SuiteNode[];
+
+	constructor(public readonly parent: WorkspaceFolderNode | undefined, public readonly name: string, public readonly path: string) {
+		super();
+	}
+
+	get label(): string { return this.name; }
+}
+
+export abstract class RunnableTreeNode extends TreeNode {
+	declare children: Array<GroupNode | TestNode>;
+
+	constructor(public readonly suiteData: SuiteData) {
+		super();
+	}
+}
+
+export class SuiteNode extends RunnableTreeNode {
+	constructor(suiteData: SuiteData, public parent: ProjectNode | WorkspaceFolderNode | undefined) {
+		super(suiteData);
+	}
 
 	get path(): string {
 		return this.suiteData.path;
 	}
 }
 
-export class GroupNode extends TreeNode {
-	constructor(public readonly suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string, public range: Range | undefined) {
+export class GroupNode extends RunnableTreeNode {
+	constructor(suiteData: SuiteData, public parent: SuiteNode | GroupNode, public name: string | undefined, public path: string, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -117,14 +143,14 @@ export class GroupNode extends TreeNode {
 	}
 }
 
-export class TestNode extends TreeNode {
+export class TestNode extends RunnableTreeNode {
 	private _status = TestStatus.Unknown;
 
 	public readonly outputEvents: Array<PrintNotification | ErrorNotification> = [];
 	public testStartTime: number | undefined;
 
 	// TODO: Flatten test into this class so we're not tied to the test protocol.
-	constructor(public suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, public range: Range | undefined) {
+	constructor(suiteData: SuiteData, public parent: TreeNode, public name: string | undefined, public path: string, public range: Range | undefined) {
 		super(suiteData);
 	}
 
@@ -175,14 +201,17 @@ export class TestModel {
 	private readonly testEventListeners: TestEventListener[] = [];
 	private readonly rangeTracker = new DocumentRangeTracker();
 
-	// TODO: Make private?
+	private readonly workspaceFolderNodes = new Map<string, WorkspaceFolderNode>();
+	private readonly projectNodes = new Map<string, ProjectNode>();
+	// TODO(dantup): Make private?
 	public readonly suites = new DocumentCache<SuiteData>();
 
 	public constructor(
 		private readonly logger: Logger,
 		private readonly workspaceContext: WorkspaceContext,
 		private readonly config: { dynamicTestTracking: boolean; showSkippedTests: boolean },
-		private readonly isPathInsideFlutterProject: (path: string) => boolean,
+		private readonly getWorkspaceFolders: () => Array<{ name: string, path: string, uri: URI }>,
+		private readonly getWorkspaceFolder: (projectPath: string) => { name: string, path: string, uri: URI } | undefined,
 	) { }
 
 	public addTestEventListener(listener: TestEventListener) {
@@ -236,34 +265,105 @@ export class TestModel {
 		toDelete.forEach((node) => this.removeNode(node));
 	}
 
+	public getRoots(): Array<WorkspaceFolderNode | ProjectNode> {
+		return [
+			// WF or Projects can be roots (projects are roots if zero or one WF).
+			...this.workspaceFolderNodes.values(),
+			...this.projectNodes.values(),
+		]
+			.filter((n) => !n.parent);
+	}
+
+	public clearAll(): void {
+		this.suites.clear();
+		this.projectNodes.clear();
+		this.workspaceFolderNodes.clear();
+		this.updateNode();
+	}
+
 	public getOrCreateSuite(suitePath: string): [SuiteData, boolean] {
-		let suite = this.suites.getForPath(suitePath);
-		if (!suite) {
-			suite = new SuiteData(suitePath, this.logger, this.workspaceContext);
-			this.suites.setForPath(suitePath, suite);
-			return [suite, true];
+		const existingSuite = this.suites.getForPath(suitePath);
+		if (existingSuite)
+			return [existingSuite, false];
+
+		const projectPath = locateBestProjectRoot(suitePath);
+		const parent = projectPath ? this.getOrCreateProjectNode(projectPath) : undefined;
+		const suite = new SuiteData(suitePath, projectPath, this.logger, this.workspaceContext, parent);
+
+		if (parent) {
+			parent.children.push(suite.node);
+			this.updateNode({ node: parent });
 		}
-		return [suite, false];
+		this.suites.setForPath(suitePath, suite);
+		return [suite, true];
+	}
+
+	private getOrCreateProjectNode(projectPath: string): ProjectNode {
+		const existingProject = this.projectNodes.get(projectPath);
+		if (existingProject)
+			return existingProject;
+
+		// If we have multiple workspace folders (and we're inside one), we may need a parent workspace
+		// folder node.
+		let workspaceFolder = this.getWorkspaceFolders().length > 1
+			? this.getWorkspaceFolder(projectPath)
+			: undefined;
+
+		// If the workspace folder and project are the same, we don't need the workspace folder node.
+		if (workspaceFolder && path.resolve(workspaceFolder.path) === path.resolve(projectPath))
+			workspaceFolder = undefined;
+
+		const parent = workspaceFolder ? this.getOrCreateWorkspaceFolderNode(workspaceFolder) : undefined;
+		const name = workspaceFolder
+			? path.join(path.relative(workspaceFolder.path, projectPath), path.basename(projectPath))
+			: path.basename(projectPath);
+		const node = new ProjectNode(parent, name, projectPath);
+		this.projectNodes.set(projectPath, node);
+
+		if (parent) {
+			parent.children.push(node);
+			this.updateNode({ node: parent });
+		}
+
+		return node;
+	}
+
+	private getOrCreateWorkspaceFolderNode(wf: { name: string, path: string, uri: URI }): WorkspaceFolderNode {
+		let node = this.workspaceFolderNodes.get(wf.path);
+
+		if (!node) {
+			node = new WorkspaceFolderNode(wf.name, wf.path);
+			this.workspaceFolderNodes.set(wf.path, node);
+			this.updateNode({ node });
+		}
+
+		return node;
 	}
 
 	public clearSuiteOrDirectory(suiteOrDirectoryPath: string): void {
 		// We can't tell if it's a file or directory because it's already been deleted, so just
 		// try both.
-		let found = false;
-		if (this.suites.hasForPath(suiteOrDirectoryPath)) {
-			found = true;
+		const nodesToRemove = new Set<TreeNode>();
+		const suite = this.suites.getForPath(suiteOrDirectoryPath);
+		if (suite) {
+			nodesToRemove.add(suite.node);
 			this.suites.deleteForPath(suiteOrDirectoryPath);
 		} else {
 			for (const suitePath of Object.keys(this.suites)) {
 				if (isWithinPath(suitePath, suiteOrDirectoryPath)) {
+					const suite = this.suites.getForPath(suitePath);
+					if (suite)
+						nodesToRemove.add(suite.node);
 					this.suites.deleteForPath(suitePath);
-					found = true;
 				}
 			}
 		}
 
-		if (found)
-			this.updateNode();
+		if (nodesToRemove.size) {
+			for (const node of nodesToRemove) {
+				this.removeNode(node);
+			}
+		}
 	}
 
 	public handleConfigChange(): void {
@@ -288,10 +388,11 @@ export class TestModel {
 	}
 
 	/// Recomputes the test counts and labels for a node and it's parent/children (based on `direction`).
-	private updateTestCountLabels(node: SuiteNode | GroupNode | TestNode, forceUpdate: boolean, direction: "UP" | "DOWN"): void {
+	private updateTestCountLabels(node: RunnableTreeNode, forceUpdate: boolean, direction: "UP" | "DOWN"): void {
 		if (direction === "DOWN") {
-			for (const child of node.children)
+			for (const child of node.children) {
 				this.updateTestCountLabels(child, forceUpdate, direction);
+			}
 		}
 
 		// Update the cached counts on this node.
@@ -314,7 +415,7 @@ export class TestModel {
 
 		if (direction === "UP") {
 			const parent = node.parent;
-			if (parent instanceof SuiteNode || parent instanceof GroupNode || parent instanceof TestNode)
+			if (parent instanceof RunnableTreeNode)
 				this.updateTestCountLabels(parent, false, direction);
 		}
 	}
@@ -383,7 +484,7 @@ export class TestModel {
 		const suite = this.suites.getForPath(suitePath)!;
 		const existingTest = suite.reuseMatchingTest(testName);
 		const oldParent = existingTest?.parent;
-		let parent: TreeNode = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
+		let parent = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
 
 		/// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
 		/// the analyzer.
@@ -448,7 +549,7 @@ export class TestModel {
 
 	/// Find a matching node in 'parent' that might be a node for a dynamic test/group that name is
 	/// an instance of.
-	private findMatchingDynamicNode<T extends TreeNode>(parent: T, name: string): T | undefined {
+	private findMatchingDynamicNode<T extends GroupNode | SuiteNode>(parent: T, name: string): T | undefined {
 		// If the parent has any children exactly named us, they should be used regardless.
 		if (parent.children.find((c) => c.name === name))
 			return;
@@ -555,11 +656,13 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.testErrorOutput(dartCodeDebugSessionID, test, message, isFailure, stack));
 	}
 
-	private removeNode(node: GroupNode | TestNode) {
+	private removeNode(node: TreeNode) {
 		const parent = node.parent;
-		const index = parent.children.indexOf(node);
-		if (index > -1)
-			parent.children.splice(index, 1);
+		if (parent) {
+			const index = parent.children.indexOf(node);
+			if (index > -1)
+				parent.children.splice(index, 1);
+		}
 		this.updateNode({ node, nodeWasRemoved: true });
 	}
 }
@@ -572,21 +675,21 @@ export class SuiteData {
 	private readonly testsByName = new Map<string, TestNode>();
 	public readonly supportsCoverage: Promise<boolean>;
 
-	constructor(public readonly path: string, logger: Logger, context: WorkspaceContext) {
-		this.node = new SuiteNode(this);
-		this.supportsCoverage = this.suiteSupportsCoverage(path, logger, context);
+	constructor(public readonly path: string, public readonly projectPath: string | undefined, logger: Logger, context: WorkspaceContext, parent: ProjectNode | WorkspaceFolderNode | undefined) {
+		this.node = new SuiteNode(this, parent);
+		this.supportsCoverage = this.suiteSupportsCoverage(logger, context);
 	}
+
 	private static unnamedItemMarker = "<!!!###unnamed-test-item###!!!>";
 
-	private async suiteSupportsCoverage(path: string, logger: Logger, context: WorkspaceContext): Promise<boolean> {
-		const projectRoot = locateBestProjectRoot(path);
-		if (!projectRoot)
+	private async suiteSupportsCoverage(logger: Logger, context: WorkspaceContext): Promise<boolean> {
+		if (!this.projectPath)
 			return false;
 
-		if (isFlutterProjectFolder(projectRoot))
+		if (isFlutterProjectFolder(this.projectPath))
 			return true;
 
-		const testCapabilities = await getPackageTestCapabilities(logger, context, projectRoot);
+		const testCapabilities = await getPackageTestCapabilities(logger, context, this.projectPath);
 		return testCapabilities.supportsLcovCoverage;
 	}
 

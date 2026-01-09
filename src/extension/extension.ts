@@ -467,7 +467,16 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	util.logTime("All other stuff before debugger..");
 
-	const testModel = new TestModel(logger, workspaceContext, config, util.isPathInsideFlutterProject);
+	const testModel = new TestModel(
+		logger,
+		workspaceContext,
+		config,
+		() => (vs.workspace.workspaceFolders ?? []).map((wf) => ({ name: wf.name, uri: wf.uri, path: fsPath(wf.uri) })),
+		(path: string) => {
+			const wf = vs.workspace.getWorkspaceFolder(vs.Uri.file(path));
+			return wf ? { name: wf.name, uri: wf.uri, path: fsPath(wf.uri) } : undefined;
+		}
+	);
 	const testCoordinator = new TestSessionCoordinator(logger, testModel, analyzer.fileTracker);
 	context.subscriptions.push(
 		testCoordinator,

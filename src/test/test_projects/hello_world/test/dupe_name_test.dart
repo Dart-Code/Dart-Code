@@ -4,11 +4,12 @@ import "package:test/test.dart";
 // built from the tree provider in the test. It must be maintained to match
 // the results from the tests below.
 // == EXPECTED RESULTS ==
-// test/dupe_name_test.dart [0/3 passed] Failed
-//     group [0/3 passed] Failed
-//         test Failed
-//         test 1 Failed
-//         test 2 Skipped
+// hello_world
+//     test/dupe_name_test.dart [0/3 passed] Failed
+//         group [0/3 passed] Failed
+//             test Failed
+//             test 1 Failed
+//             test 2 Skipped
 // == /EXPECTED RESULTS ==
 
 void main() {
