@@ -343,21 +343,27 @@ export class TestModel {
 	public clearSuiteOrDirectory(suiteOrDirectoryPath: string): void {
 		// We can't tell if it's a file or directory because it's already been deleted, so just
 		// try both.
-		let found = false;
-		if (this.suites.hasForPath(suiteOrDirectoryPath)) {
-			found = true;
+		const nodesToRemove = new Set<TreeNode>();
+		const suite = this.suites.getForPath(suiteOrDirectoryPath);
+		if (suite) {
+			nodesToRemove.add(suite.node);
 			this.suites.deleteForPath(suiteOrDirectoryPath);
 		} else {
 			for (const suitePath of Object.keys(this.suites)) {
 				if (isWithinPath(suitePath, suiteOrDirectoryPath)) {
+					const suite = this.suites.getForPath(suitePath);
+					if (suite)
+						nodesToRemove.add(suite.node);
 					this.suites.deleteForPath(suitePath);
-					found = true;
 				}
 			}
 		}
 
-		if (found)
-			this.updateNode();
+		if (nodesToRemove.size) {
+			for (const node of nodesToRemove) {
+				this.removeNode(node);
+			}
+		}
 	}
 
 	public handleConfigChange(): void {
@@ -650,11 +656,13 @@ export class TestModel {
 			this.testEventListeners.forEach((l) => l.testErrorOutput(dartCodeDebugSessionID, test, message, isFailure, stack));
 	}
 
-	private removeNode(node: GroupNode | TestNode) {
+	private removeNode(node: TreeNode) {
 		const parent = node.parent;
-		const index = parent.children.indexOf(node);
-		if (index > -1)
-			parent.children.splice(index, 1);
+		if (parent) {
+			const index = parent.children.indexOf(node);
+			if (index > -1)
+				parent.children.splice(index, 1);
+		}
 		this.updateNode({ node, nodeWasRemoved: true });
 	}
 }
