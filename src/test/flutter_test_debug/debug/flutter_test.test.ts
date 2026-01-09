@@ -304,7 +304,7 @@ describe("flutter test debugger", () => {
 				const hasRunFile = prepareHasRunFile(root, "flutter_test");
 
 				const config = await startDebugger(dc, flutterTestMainFile, {
-					customTool: path.join(root, `scripts / custom_flutter_test.${customScriptExt}`),
+					customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
 					customToolReplacesArgs: 0,
 				});
 				await waitAllThrowIfTerminates(dc,
@@ -321,7 +321,7 @@ describe("flutter test debugger", () => {
 				const hasRunFile = prepareHasRunFile(root, "flutter_test");
 
 				const config = await startDebugger(dc, flutterTestMainFile, {
-					customTool: path.join(root, `scripts / custom_flutter_test.${customScriptExt}`),
+					customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
 					customToolReplacesArgs: 999999,
 					// These differ to the usual ones so we can detect they replaced them.
 					toolArgs: ["test", "--total-shards", "1", "--shard-index", "0", "--start-paused", "--machine", "-d", "flutter-tester"],
@@ -551,7 +551,7 @@ describe("flutter test debugger", () => {
 
 			assert.deepStrictEqual(
 				coveragePackages,
-				[`^ flutter_hello_world$`, ` ^ flutter_hello_world_example$`],
+				[`^flutter_hello_world$`, `^flutter_hello_world_example$`],
 			);
 		});
 	});
