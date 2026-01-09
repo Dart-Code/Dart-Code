@@ -303,11 +303,15 @@ export class TestModel {
 		if (existingProject)
 			return existingProject;
 
-		// If we have multiple workspace folders (and we're inside one), we need a parent workspace
+		// If we have multiple workspace folders (and we're inside one), we may need a parent workspace
 		// folder node.
-		const workspaceFolder = this.getWorkspaceFolders().length > 1
+		let workspaceFolder = this.getWorkspaceFolders().length > 1
 			? this.getWorkspaceFolder(projectPath)
 			: undefined;
+
+		// If the workspace folder and project are the same, we don't need the workspace folder node.
+		if (workspaceFolder && path.resolve(workspaceFolder.path) === path.resolve(projectPath))
+			workspaceFolder = undefined;
 
 		const parent = workspaceFolder ? this.getOrCreateWorkspaceFolderNode(workspaceFolder) : undefined;
 		const name = workspaceFolder
