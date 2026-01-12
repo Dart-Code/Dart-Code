@@ -336,8 +336,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const existingItem = collection.get(nodeId);
 		if (existingItem) {
 			collection.delete(nodeId);
-			// TODO(dantup): Should we be deleting here?
-			// this.nodeForItem.delete(existingItem);
+			this.nodeForItem.delete(existingItem);
 		}
 		this.itemForNode.delete(node);
 	}
