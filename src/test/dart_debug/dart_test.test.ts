@@ -699,7 +699,7 @@ test/empty_test.dart
 			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleTestFile));
 
 			// const controller = privateApi.testController;
-			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleTestFile)}`)!;
+			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleTestFile))!;
 			// const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			// await controller.runTests(false, true, testRequest, fakeCancellationToken);
@@ -718,7 +718,7 @@ test/empty_test.dart
 			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
 			// const controller = privateApi.testController;
-			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile)}`)!;
+			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile))!;
 			// const testRequest = new vs.TestRunRequest([suiteNode]);
 
 			// await controller.runTests(false, true, testRequest, fakeCancellationToken);

@@ -16,7 +16,7 @@ import { getPackageTestCapabilities } from "./version";
 
 export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
-	public abstract path: string;
+	public abstract readonly path: string;
 
 	public _isStale = false;
 	public testSource = TestSource.Outline;
@@ -315,7 +315,7 @@ export class TestModel {
 
 		const parent = workspaceFolder ? this.getOrCreateWorkspaceFolderNode(workspaceFolder) : undefined;
 		const name = workspaceFolder
-			? path.join(path.relative(workspaceFolder.path, projectPath), path.basename(projectPath))
+			? path.relative(workspaceFolder.path, projectPath)
 			: path.basename(projectPath);
 		const node = new ProjectNode(parent, name, projectPath);
 		this.projectNodes.set(projectPath, node);
