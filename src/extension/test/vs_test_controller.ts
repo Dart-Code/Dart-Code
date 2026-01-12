@@ -361,12 +361,14 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			return `PROJECT:${node.path}`;
 		if (node instanceof SuiteNode)
 			return `SUITE:${node.path}`;
+
+		// IMPORTANT:
 		// We use suiteData.path here because we want to treat (tearDownAll) from a shared
 		// file as a child of the suite node for the instances where it ran in that suite.
 		if (node instanceof GroupNode)
-			return `GROUP:${node.path}:${node.name}`;
+			return `GROUP:${node.suiteData.path}:${node.name}`;
 		if (node instanceof TestNode)
-			return `TEST:${node.path}:${node.name}`;
+			return `TEST:${node.suiteData.path}:${node.name}`;
 		throw new Error(`Tried to create ID for unknown node type! ${node.label}`);
 	}
 

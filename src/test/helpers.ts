@@ -12,7 +12,6 @@ import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";
 import { internalApiSymbol } from "../shared/symbols";
-import { TestNode } from "../shared/test/test_model";
 import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
@@ -1319,7 +1318,7 @@ export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, on
 	sortBy(testItems, sortByLabel ? (item) => item.label : getSourceLine);
 
 	for (const item of testItems) {
-		const lastResult = privateApi.testController.getLatestData(item) as TestNode | undefined;
+		const lastResult = privateApi.testController.getLatestData(item);
 
 		// Only include statuses on WF/Project nodes if we aren't filtering, otherwise
 		// the status may look wrong (because it might be skewed by filtered out nodes).
@@ -1332,9 +1331,10 @@ export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, on
 
 		let includeNode = true;
 		if (lastResult) {
+			const status = "status" in lastResult ? lastResult?.status as TestStatus : undefined;
 			if (includeStatus) {
-				if (lastResult.status)
-					nodeString += ` ${TestStatus[lastResult.status]}`;
+				if (status)
+					nodeString += ` ${TestStatus[status]}`;
 				else if (lastResult.children.length)
 					nodeString += ` ${TestStatus[lastResult.getHighestChildStatus(true)]}`;
 			}
@@ -1345,7 +1345,7 @@ export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, on
 				nodeString += ` (${path.basename(lastResult.path)})`;
 
 			const isStale = lastResult.isStale;
-			const isFailure = lastResult.status === TestStatus.Failed;
+			const isFailure = status === TestStatus.Failed;
 			if ((isStale && onlyActive) || (!isFailure && onlyFailures))
 				includeNode = false;
 		} else if (!isWorkspaceFolderOrProject) {
