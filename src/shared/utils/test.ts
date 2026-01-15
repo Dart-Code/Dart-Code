@@ -3,12 +3,13 @@ import * as path from "path";
 import { URI } from "vscode-uri";
 import { BasicDebugConfiguration } from "../../shared/debug/interfaces";
 import { escapeRegExp } from "../../shared/utils";
+import { DartTestCapabilities } from "../capabilities/dart_test";
 import { OpenedFileInformation, Position } from "../interfaces";
 import { GroupNode, SuiteNode, TestNode, TreeNode } from "../test/test_model";
 import { fsPath, getRandomInt } from "./fs";
 import { TestOutlineInfo } from "./outline";
 
-export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFlutter: boolean, programPath: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests: boolean | undefined, template: any | undefined, workspacePackageNames?: string[]): { program: string } & BasicDebugConfiguration {
+export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFlutter: boolean, programPath: string, testSelection: TestSelection[] | undefined, shouldRunTestByLine: boolean, runSkippedTests: boolean | undefined, template: any | undefined, dartTestCapabilities: DartTestCapabilities | undefined, workspacePackageNames?: string[]): { program: string } & BasicDebugConfiguration {
 	let programString = programPath;
 	let toolArgs: string[] = [];
 	if (template?.toolArgs)
@@ -31,7 +32,7 @@ export function getLaunchConfig(noDebug: boolean, includeCoverage: boolean, isFl
 		if (isFlutter)
 			toolArgs.push("--coverage");
 
-		if (workspacePackageNames && (isFlutter || false /* TODO: Dart capability when it supports coverae-package */)) {
+		if (workspacePackageNames && (isFlutter || dartTestCapabilities?.supportsCoveragePackage)) {
 			for (const packageName of workspacePackageNames) {
 				toolArgs.push("--coverage-package", `^${escapeRegExp(packageName)}$`);
 			}

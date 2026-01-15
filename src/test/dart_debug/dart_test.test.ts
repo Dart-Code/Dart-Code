@@ -5,6 +5,7 @@ import { SinonStub } from "sinon";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { DebuggerType } from "../../shared/enums";
+import { getPackageTestCapabilities } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../shared/utils/outline";
@@ -13,7 +14,7 @@ import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -267,6 +268,7 @@ describe("dart test debugger", () => {
 						[{ name: "group test", isGroup: false, position: undefined }],
 						runByLine,
 						false,
+						undefined,
 						undefined,
 					),
 				);
@@ -692,67 +694,77 @@ test/empty_test.dart
 			assert.ok(coverage.statementCoverage.total > 0);
 		});
 
-		it.skip("and includes dependencies", async () => {
-			// Requires --coverage-package for Dart
-			// // Discover tests.
-			// await openFile(helloWorldExampleTestFile);
-			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleTestFile));
+		it("and includes dependencies", async function () {
+			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
+			if (!testCapabilities.supportsCoveragePackage)
+				this.skip();
 
-			// const controller = privateApi.testController;
-			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleTestFile))!;
-			// const testRequest = new vs.TestRunRequest([suiteNode]);
+			// Discover tests.
+			await openFile(helloWorldExampleSubFolderProjectTestFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
-			// await controller.runTests(false, true, testRequest, fakeCancellationToken);
+			const controller = privateApi.testController;
+			const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
+			const testRequest = new vs.TestRunRequest([suiteNode]);
 
-			// assert(addCoverageStub?.called);
-			// const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
-			// assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldExamplePrinterFile), fsPath(helloWorldPrinterFile)]);
+			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			assert(addCoverageStub?.called);
+			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+			assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldExampleSubFolderPrinterFile), fsPath(helloWorldPrinterFile)]);
 		});
 
-		it.skip("and excludes configured paths", async () => {
-			// Requires --coverage-package for Dart
-			// await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
+		it("and excludes configured paths", async function () {
+			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
+			if (!testCapabilities.supportsCoveragePackage)
+				this.skip();
 
-			// // Discover tests.
-			// await openFile(helloWorldExampleSubFolderProjectTestFile);
-			// await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
+			await setConfigForTest("dart", "coverageExcludePatterns", ["**/example/**"]);
 
-			// const controller = privateApi.testController;
-			// const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile))!;
-			// const testRequest = new vs.TestRunRequest([suiteNode]);
+			// Discover tests.
+			await openFile(helloWorldExampleSubFolderProjectTestFile);
+			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
-			// await controller.runTests(false, true, testRequest, fakeCancellationToken);
+			const controller = privateApi.testController;
+			const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
+			const testRequest = new vs.TestRunRequest([suiteNode]);
 
-			// assert(addCoverageStub?.called);
-			// const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
-			// assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldPrinterFile)]);
+			await controller.runTests(false, true, testRequest, fakeCancellationToken);
+
+			assert(addCoverageStub?.called);
+			const coverageFiles = addCoverageStub.getCalls().map((call) => fsPath((call.args[0] as DartFileCoverage).uri));
+			assert.deepStrictEqual(coverageFiles, [fsPath(helloWorldPrinterFile)]);
 		});
 
-		it.skip("uses correct regex for --coverage-package", () => {
-			// Requires --coverage-package for Dart
-			// const config = testUtils.getLaunchConfig(
-			// 	false, // noDebug
-			// 	true, // includeCoverage
-			// 	true, // isFlutter
-			// 	fsPath(helloWorldExampleTestFile),
-			// 	undefined, // testSelection
-			// 	false, // shouldRunTestByLine
-			// 	undefined, // runSkipped
-			// 	undefined, // template
-			// 	["hello_world", "hello_world_example"], // workspacePackageNames
-			// );
+		it("uses correct regex for --coverage-package", async function () {
+			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
+			if (!testCapabilities.supportsCoveragePackage)
+				this.skip();
 
-			// const toolArgs = (config as { toolArgs?: string[] }).toolArgs ?? [];
-			// const coveragePackages: string[] = [];
-			// for (let i = 0; i < toolArgs.length - 1; i++) {
-			// 	if (toolArgs[i] === "--coverage-package")
-			// 		coveragePackages.push(toolArgs[i + 1]);
-			// }
+			const config = testUtils.getLaunchConfig(
+				false, // noDebug
+				true, // includeCoverage
+				true, // isFlutter
+				fsPath(helloWorldExampleSubFolderProjectTestFile),
+				undefined, // testSelection
+				false, // shouldRunTestByLine
+				undefined, // runSkipped
+				undefined, // template
+				testCapabilities,
+				["hello_world", "hello_world_example"], // workspacePackageNames
+			);
 
-			// assert.deepStrictEqual(
-			// 	coveragePackages,
-			// 	[`^flutter_hello_world$`, `^flutter_hello_world_example$`],
-			// );
+			const toolArgs = (config as { toolArgs?: string[] }).toolArgs ?? [];
+			const coveragePackages: string[] = [];
+			for (let i = 0; i < toolArgs.length - 1; i++) {
+				if (toolArgs[i] === "--coverage-package")
+					coveragePackages.push(toolArgs[i + 1]);
+			}
+
+			assert.deepStrictEqual(
+				coveragePackages,
+				[`^hello_world$`, `^hello_world_example$`],
+			);
 		});
 	});
 

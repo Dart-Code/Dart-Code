@@ -70,9 +70,6 @@ export const helloWorldHttpFile = vs.Uri.file(path.join(fsPath(helloWorldFolder)
 export const helloWorldLocalPackageFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/local_package.dart"));
 export const helloWorldCreateMethodClassAFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_a.dart"));
 export const helloWorldCreateMethodClassBFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/create_method/class_b.dart"));
-export const helloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "example"));
-export const helloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "bin/main.dart"));
-export const helloWorldExampleSubFolderPubspecFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "pubspec.yaml"));
 export const emptyFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/empty.dart"));
 export const missingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/missing.dart"));
 export const emptyFileInExcludedBySettingFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/excluded_by_setting/empty.dart"));
@@ -80,7 +77,12 @@ export const helloWorldCompletionFile = vs.Uri.file(path.join(fsPath(helloWorldF
 export const helloWorldDeferredScriptFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/deferred_script.dart"));
 export const helloWorldPartWrapperFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/part_wrapper.dart"));
 export const helloWorldPartFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/part.dart"));
+export const helloWorldPrinterFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/printer.dart"));
 export const everythingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/everything.dart"));
+export const helloWorldExampleSubFolder = vs.Uri.file(path.join(fsPath(helloWorldFolder), "example"));
+export const helloWorldExampleSubFolderMainFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "bin/main.dart"));
+export const helloWorldExampleSubFolderPubspecFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "pubspec.yaml"));
+export const helloWorldExampleSubFolderPrinterFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "lib/printer.dart"));
 // Package
 export const myPackageFolder = vs.Uri.file(path.join(testProjectsFolder, "my_package"));
 export const myPackageThingFile = vs.Uri.file(path.join(fsPath(myPackageFolder), "lib/my_thing.dart"));
@@ -100,7 +102,6 @@ export const helloWorldTestDupeNameFile = vs.Uri.file(path.join(fsPath(helloWorl
 export const helloWorldTestBrokenFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "broken_test.dart"));
 export const helloWorldTestDynamicFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "dynamic_test.dart"));
 export const helloWorldProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldTestFolder), "project_test.dart"));
-export const helloWorldPrinterFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/printer.dart"));
 export const helloWorldExampleSubFolderProjectTestFile = vs.Uri.file(path.join(fsPath(helloWorldExampleSubFolder), "test", "project_test.dart"));
 // Go To Tests
 export const helloWorldGoToLibFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/goto/foo.dart"));
@@ -1297,7 +1298,7 @@ export function findSuiteNode(suitePath: string): vs.TestItem {
 		?? (workspaceFolderID && projectID ? controller.controller.items.get(workspaceFolderID)?.children.get(projectID)?.children.get(suiteID) : undefined);
 
 	if (!node)
-		throw new Error(`Could not find suite node for ${suitePath}`);
+		throw new Error(`Could not find suite node for ${suitePath}:\n  ${workspaceFolderID}\n    ${projectID}\n      ${suiteID}`);
 
 	return node;
 }

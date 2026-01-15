@@ -539,6 +539,7 @@ describe("flutter test debugger", () => {
 				false, // shouldRunTestByLine
 				undefined, // runSkipped
 				undefined, // template
+				undefined, // dartTestCapabilities, not used  for Flutter
 				["flutter_hello_world", "flutter_hello_world_example"], // workspacePackageNames
 			);
 
