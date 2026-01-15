@@ -744,7 +744,7 @@ test/empty_test.dart
 			const config = testUtils.getLaunchConfig(
 				false, // noDebug
 				true, // includeCoverage
-				true, // isFlutter
+				false, // isFlutter
 				fsPath(helloWorldExampleSubFolderProjectTestFile),
 				undefined, // testSelection
 				false, // shouldRunTestByLine
