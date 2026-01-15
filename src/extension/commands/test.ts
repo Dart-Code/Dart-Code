@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { DartCapabilities } from "../../shared/capabilities/dart";
+import { DartTestCapabilities } from "../../shared/capabilities/dart_test";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
@@ -168,9 +169,18 @@ export class TestCommands implements vs.Disposable {
 
 		// Get all workspace packages for coverage
 		let workspacePackageNames: string[] | undefined;
-		if (includeCoverage && isFlutter) {
+		if (includeCoverage) {
 			const workspacePackagePaths = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
 			workspacePackageNames = workspacePackagePaths.map((packagePath) => getPackageName(packagePath));
+		}
+
+		// Compute package:test capabilities for Dart (non-Flutter) projects. Flutter test
+		// capabilities are pinned by the SDK.
+		let dartTestCapabilities: DartTestCapabilities | undefined;
+		if (!isFlutter) {
+			const projectFolderPath = locateBestProjectRoot(programPath);
+			if (projectFolderPath)
+				dartTestCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext, projectFolderPath);
 		}
 
 		let shouldRunTestsByLine = false;
@@ -178,14 +188,8 @@ export class TestCommands implements vs.Disposable {
 		if (testSelection?.length && config.testInvocationMode === "line") {
 			if (isFlutter) {
 				shouldRunTestsByLine = true;
-			} else {
-				const projectFolderPath = locateBestProjectRoot(programPath);
-				if (projectFolderPath) {
-					const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext, projectFolderPath);
-					if (testCapabilities.supportsRunTestsByLine) {
-						shouldRunTestsByLine = true;
-					}
-				}
+			} else if (dartTestCapabilities?.supportsRunTestsByLine) {
+				shouldRunTestsByLine = true;
 			}
 		}
 
@@ -202,6 +206,7 @@ export class TestCommands implements vs.Disposable {
 					shouldRunTestsByLine,
 					shouldRunSkippedTests,
 					launchTemplate,
+					dartTestCapabilities,
 					workspacePackageNames,
 				),
 				name: launchTemplate?.name ?? `${path.basename(programPath)} tests`,
