@@ -15,6 +15,9 @@ export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: bo
 	// eslint-disable-next-line no-restricted-properties
 	let newPath = typeof uri === "string" ? uri : uri.fsPath;
 
+	// Fix drive letter first, so we won't write warnings if that's the only difference.
+	newPath = forceWindowsDriveLetterToUppercase(newPath);
+
 	if (useRealCasing) {
 		const realPath = fs.existsSync(newPath) && fs.realpathSync.native(newPath);
 		// Since realpathSync.native will resolve symlinks, only do anything if the paths differ
@@ -25,8 +28,6 @@ export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: bo
 			newPath = realPath;
 		}
 	}
-
-	newPath = forceWindowsDriveLetterToUppercase(newPath);
 
 	return newPath;
 }

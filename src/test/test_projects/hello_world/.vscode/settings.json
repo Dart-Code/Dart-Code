@@ -20,4 +20,5 @@
 		"CUSTOM_DART_ENV": "x"
 	},
 	"dart.experimentalDtdHandlers": true,
+	"dart.normalizeFileCasing": true,
 }
