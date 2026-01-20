@@ -383,6 +383,7 @@ export async function closeAllOpenFiles(): Promise<void> {
 	await delay(50);
 	logger.info(`Done closing editors!`);
 	logOpenEditors();
+	logger.info(`Forcing close events`);
 }
 
 export async function clearTestTree(): Promise<void> {
@@ -394,24 +395,58 @@ export async function clearTestTree(): Promise<void> {
 	logger.info(`Done clearing test tree!`);
 }
 
-export async function waitUntilAllTextDocumentsAreClosed(): Promise<void> {
-	logger.info(`Waiting for VS Code to mark all documents as closed...`);
-	const getAllOpenDocs = () => vs.workspace.textDocuments.filter((td) => !td.isUntitled && td.uri.scheme === "file");
-	await waitForResult(() => getAllOpenDocs().length === 0, "Some TextDocuments did not close", threeMinutesInMilliseconds, false);
-	const openDocs = getAllOpenDocs();
-	if (openDocs.length) {
-		throw new Error(`All open files were not closed (for ex: ${fsPath(openDocs[0].uri)})`);
+/**
+ * Closes all editor tabs with the provided URIs.
+ */
+function closeTabs(uris: vs.Uri[]): void {
+	const uriSet = new Set<string>();
+	uris.forEach((uri) => uriSet.add(uri.toString()));
+
+	const allTextTabs = vs.window.tabGroups.all.flatMap((tg) => tg.tabs);
+	for (const tab of allTextTabs) {
+		const tabInput = tab.input as any;
+		const tabUri = tabInput && "uri" in tabInput ? tabInput.uri : undefined;
+		const tabUriString = tabUri.toString() as string;
+		if (uriSet.has(tabUriString)) {
+			vs.window.tabGroups.close(tab);
+		}
 	}
 }
 
-export async function closeFile(file: vs.Uri): Promise<void> {
-	for (const editor of vs.window.visibleTextEditors) {
-		if (fsPath(editor.document.uri) === fsPath(file)) {
-			console.log(`Closing visible editor ${editor.document.uri}...`);
-			await vs.window.showTextDocument(editor.document);
-			await vs.commands.executeCommand("workbench.action.closeActiveEditor");
+export async function forceDocumentCloseEvents(fileUri?: vs.Uri) {
+	// To ensure that onDidCloseTextDocument fires for it, we need to fill
+	// VS Codes text model buffer with dummy files. This is a horrible hack, but
+	// otherwise, we'd have to wait 3 mins for the event to fire (which isn't practical)
+	// or have tests behave differently (for example even if we mock the close/open,
+	// we'd still see onDidChangeTextDocument events that might interfere with things
+	// like the position trackers).
+	const openedDummyUris: vs.Uri[] = [];
+	for (let i = 0; i < 100; i++) {
+		// If we had a file uri, we only care about that one and can stop creating dummies when we see it's gone.
+		if (fileUri && !vs.workspace.textDocuments.find((d) => d.uri.toString() === fileUri.toString())) {
+			// File is already gone so we don't need to open any more dummies.
+			break;
 		}
+
+		// Otherwise, open a dummy.
+		// Unfortunately we have to also open the editor here, because otherwise
+		// tabgroups will not contain it (at least not immediately), despite the editor
+		// becoming visible. However this shouldn't interfere with anything because it's
+		// a non-Dart file that we don't do anything with.
+		const dummyUri = vs.Uri.parse(`untitled:dummy-${i}`);
+		await vs.window.showTextDocument(await vs.workspace.openTextDocument(dummyUri));
+		openedDummyUris.push(dummyUri);
 	}
+
+	closeTabs(openedDummyUris);
+}
+
+/**
+ * Closes a file, and ensures VS Code's onDidCloseTextDocument event fires.
+ */
+export async function closeFile(fileUri: vs.Uri): Promise<void> {
+	closeTabs([fileUri]);
+	await forceDocumentCloseEvents(fileUri);
 }
 
 export async function openFile(file: vs.Uri, column?: vs.ViewColumn): Promise<vs.TextEditor> {

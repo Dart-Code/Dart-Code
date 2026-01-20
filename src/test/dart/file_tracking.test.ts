@@ -2,13 +2,12 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../shared/utils/fs";
-import { activate, closeAllOpenFiles, closeFile, helloWorldBrokenFile, helloWorldFolder, helloWorldMainFile, openFile, privateApi, threeMinutesInMilliseconds, waitForResult, waitUntilAllTextDocumentsAreClosed } from "../helpers";
+import { activate, closeAllOpenFiles, closeFile, forceDocumentCloseEvents, helloWorldBrokenFile, helloWorldFolder, helloWorldMainFile, openFile, privateApi, threeMinutesInMilliseconds, waitForResult } from "../helpers";
 
 export const outlineTrackingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/outline_tracking/empty.dart"));
 
 const file1 = helloWorldBrokenFile;
 const file2 = helloWorldMainFile;
-export const allowSlowSubscriptionTests = false;
 
 describe("file tracker", () => {
 	beforeEach("activate", () => activate(null));
@@ -45,19 +44,10 @@ describe("file tracker", () => {
 		assert.deepStrictEqual(privateApi.fileTracker.getLastPriorityFiles(), []);
 	});
 
-	describe("subscriptions", function () {
-		this.timeout(threeMinutesInMilliseconds + (1000 * 30));
-
-		beforeEach(async function () {
-			// These tests are (usually) disabled by default because they're ~3min each.
-			// Toggle the bool at top of file when wanting to run them.
-			if (!allowSlowSubscriptionTests)
-				this.skip();
-
-			// Close all files then wait (up to 3 minutes!) for VS Code to mark all docs
-			// as closed, as these tests require
+	describe("subscriptions", () => {
+		beforeEach(async () => {
 			await closeAllOpenFiles();
-			await waitUntilAllTextDocumentsAreClosed();
+			await forceDocumentCloseEvents();
 		});
 
 		it("includes visible editors", async function () {
