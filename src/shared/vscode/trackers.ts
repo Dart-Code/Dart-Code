@@ -202,25 +202,20 @@ export class DocumentPositionTracker implements vs.Disposable {
 			return;
 
 		// When a document opens, verify that the offsets are still valid.
-		// If the file was modified outside of VS Code while closed, the offsets might be invalid.
-		// If they are valid, we should update the position (as the consumer might have an old position
-		// from before the document was closed).
-		const trackersToDispose: PositionTrackerEntry[] = [];
-		const callbacksToCall: Array<() => void> = [];
-
-		for (const entry of trackers) {
-			const loadedOffset = doc.offsetAt(doc.positionAt(entry.offset));
-			if (loadedOffset !== entry.offset) {
-				trackersToDispose.push(entry);
-				callbacksToCall.push(() => entry.callback(undefined));
+		// If the file was modified outside of VS Code while closed, the offsets might be invalid
+		// in which case we should clear all trackers for that file. If all positions are still
+		// valid we will just assume no changes.
+		const docLength = doc.getText().length;
+		const docMaxOffset = docLength - 1;
+		const hasInvalidOffsets = trackers.some((entry) => entry.offset > docMaxOffset);
+		if (hasInvalidOffsets) {
+			const trackersToDispose = [...trackers];
+			for (const tracker of trackersToDispose) {
+				tracker.callback(undefined);
 			}
+			for (const tracker of trackersToDispose)
+				tracker.dispose();
 		}
-
-		for (const callback of callbacksToCall)
-			callback();
-
-		for (const tracker of trackersToDispose)
-			tracker.dispose();
 	}
 
 	private updateOffset(offset: number, change: vs.TextDocumentChangeEvent): number | undefined {

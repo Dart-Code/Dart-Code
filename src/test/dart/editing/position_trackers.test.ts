@@ -368,7 +368,7 @@ describe("multi-document position tracker", () => {
 		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
-		defer("Delete test file", () => vs.workspace.fs.delete(workingFile));
+		defer("Delete test file", () => tryDelete(workingFile));
 
 		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
@@ -399,7 +399,7 @@ describe("multi-document position tracker", () => {
 		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
-		defer("Delete test file", () => vs.workspace.fs.delete(workingFile));
+		defer("Delete test file", () => tryDelete(workingFile));
 
 		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
@@ -420,6 +420,40 @@ describe("multi-document position tracker", () => {
 		// Tracked position should have become undefined.
 		await waitFor(() => position === undefined); // Allow some time.
 		assert.equal(position, undefined);
+	});
+
+	it("invalidates all trackers if any become invalid references", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_mixed.txt"));
+		defer("Delete temp file", () => tryDelete(workingFile));
+
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
+
+		let doc = await vs.workspace.openTextDocument(workingFile);
+		await vs.window.showTextDocument(doc);
+		let position1: Position | undefined = positionOf("^1", doc);
+		let position5: Position | undefined = positionOf("^5", doc);
+
+		tracker.trackPosition(doc, position1, (newPosition) => position1 = newPosition);
+		tracker.trackPosition(doc, position5, (newPosition) => position5 = newPosition);
+
+		await closeFile(workingFile);
+
+		// Modify the document on disk to be shorter ("123")
+		// position1 is still valid.
+		// position5 is invalid.
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("123"));
+		await delay(10);
+
+		// Re-open the document.
+		doc = await vs.workspace.openTextDocument(workingFile);
+
+		// Tracked position should have become undefined.
+		await waitFor(() => position1 === undefined && position5 === undefined); // Allow some time.
+		assert.equal(position1, undefined);
+		assert.equal(position5, undefined);
 	});
 
 	it("updates to undefined if text is deleted", async () => {
@@ -559,7 +593,7 @@ describe("multi-document range tracker", () => {
 		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test.txt"));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
-		defer("Delete test file", () => vs.workspace.fs.delete(workingFile));
+		defer("Delete test file", () => tryDelete(workingFile));
 
 		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
@@ -578,7 +612,7 @@ describe("multi-document range tracker", () => {
 		// Edit the document.
 		await editor2.edit((eb) => eb.insert(new vs.Position(0, 0), "start "));
 
-		// Tracked position should have moved.
+		// Tracked range should have moved.
 		assert.ok(rangesEqual(range, rangeOf("|333|", doc2)));
 	});
 
@@ -590,7 +624,7 @@ describe("multi-document range tracker", () => {
 		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
-		defer("Delete test file", () => vs.workspace.fs.delete(workingFile));
+		defer("Delete test file", () => tryDelete(workingFile));
 
 		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
@@ -612,6 +646,40 @@ describe("multi-document range tracker", () => {
 		// Tracked range should have become undefined.
 		await waitFor(() => range === undefined); // Allow some time.
 		assert.equal(range, undefined);
+	});
+
+	it("invalidates all trackers if any become invalid references", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_mixed_range.txt"));
+		defer("Delete temp file", () => tryDelete(workingFile));
+
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
+
+		let doc = await vs.workspace.openTextDocument(workingFile);
+		await vs.window.showTextDocument(doc);
+		let range1: Range | undefined = rangeOf("|1|", doc);
+		let range5: Range | undefined = rangeOf("|5|", doc);
+
+		tracker.trackRange(doc, range1, (newRange) => range1 = newRange);
+		tracker.trackRange(doc, range5, (newRange) => range5 = newRange);
+
+		await closeFile(workingFile);
+
+		// Modify the document on disk to be shorter ("123")
+		// range1 is still valid.
+		// range5 is invalid.
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("123"));
+		await delay(10);
+
+		// Re-open the document.
+		doc = await vs.workspace.openTextDocument(workingFile);
+
+		// Tracked range should have become undefined.
+		await waitFor(() => range1 === undefined && range5 === undefined); // Allow some time.
+		assert.equal(range1, undefined);
+		assert.equal(range5, undefined);
 	});
 
 	it("updates to undefined if text is deleted", async () => {
