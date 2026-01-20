@@ -383,7 +383,6 @@ export async function closeAllOpenFiles(): Promise<void> {
 	await delay(50);
 	logger.info(`Done closing editors!`);
 	logOpenEditors();
-	logger.info(`Forcing close events`);
 }
 
 export async function clearTestTree(): Promise<void> {
@@ -406,7 +405,7 @@ function closeTabs(uris: vs.Uri[]): void {
 	for (const tab of allTextTabs) {
 		const tabInput = tab.input as any;
 		const tabUri = tabInput && "uri" in tabInput ? tabInput.uri : undefined;
-		const tabUriString = tabUri.toString() as string;
+		const tabUriString = tabUri?.toString() as string;
 		if (uriSet.has(tabUriString)) {
 			vs.window.tabGroups.close(tab);
 		}
@@ -415,13 +414,13 @@ function closeTabs(uris: vs.Uri[]): void {
 
 export async function forceDocumentCloseEvents(fileUri?: vs.Uri) {
 	// To ensure that onDidCloseTextDocument fires for it, we need to fill
-	// VS Codes text model buffer with dummy files. This is a horrible hack, but
+	// VS Code's text model buffer with dummy files. This is a horrible hack, but
 	// otherwise, we'd have to wait 3 mins for the event to fire (which isn't practical)
 	// or have tests behave differently (for example even if we mock the close/open,
 	// we'd still see onDidChangeTextDocument events that might interfere with things
 	// like the position trackers).
 	const openedDummyUris: vs.Uri[] = [];
-	for (let i = 0; i < 100; i++) {
+	for (let i = 0; i < 65; i++) {
 		// If we had a file uri, we only care about that one and can stop creating dummies when we see it's gone.
 		if (fileUri && !vs.workspace.textDocuments.find((d) => d.uri.toString() === fileUri.toString())) {
 			// File is already gone so we don't need to open any more dummies.
@@ -583,7 +582,7 @@ export function enableLint(project: string, lintName: string): void {
 	const analysisOptions = path.join(project, "analysis_options.yaml");
 	let contents = "";
 	if (fs.existsSync(analysisOptions)) {
-		contents = fs.readFileSync(analysisOptions).toString();
+		contents = fs.readFileSync(analysisOptions).toString().replace(/\r\n/g, "\n");
 		// Restore after test.
 		defer("Restore original analysis_options", () => fs.writeFileSync(analysisOptions, contents));
 	} else {

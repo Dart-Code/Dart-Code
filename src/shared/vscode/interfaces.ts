@@ -111,8 +111,6 @@ export interface InternalExtensionApi {
 	fileTracker: {
 		getOutlineFor(uri: Uri): lsp.Outline | undefined;
 		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
-		getLastPriorityFiles?: () => string[];
-		getLastSubscribedFiles?: () => string[];
 	};
 	flutterCapabilities: FlutterCapabilities;
 	flutterOutlineTreeProvider: TreeDataProvider<TreeNode> | undefined;
