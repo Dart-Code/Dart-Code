@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
-import { findCommonAncestorFolder, fsPath, getPackageName, uriComparisonString } from "../../../shared/utils/fs";
+import { extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, fsPath, getPackageName, uriComparisonString } from "../../../shared/utils/fs";
 import { defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldTestFolder, testProjectsFolder, tryDeleteDirectoryRecursive } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
@@ -90,5 +90,63 @@ describe("getPackageName", () => {
 
 		fs.mkdirSync(projectFolder, { recursive: true });
 		assert.equal(getPackageName(projectFolder), "workspace_project");
+	});
+});
+
+describe("extractFlutterSdkPathFromPackagesFile", () => {
+	let tempFolder: string;
+	let flutterRoot: string;
+
+	beforeEach(() => {
+		tempFolder = getRandomTempFolder();
+		defer("delete temp folder", () => tryDeleteDirectoryRecursive(tempFolder));
+		flutterRoot = path.join(tempFolder, "flutter");
+	});
+
+	function createPackageConfig({ flutterRoot, flutterPackageRoot }: { flutterRoot?: string, flutterPackageRoot?: string }) {
+		const dartToolDir = path.join(tempFolder, ".dart_tool");
+		fs.mkdirSync(dartToolDir, { recursive: true });
+
+		const packages = [];
+		if (flutterPackageRoot) {
+			packages.push({
+				languageVersion: "2.12",
+				name: "flutter",
+				packageUri: "lib/",
+				rootUri: Uri.file(flutterPackageRoot).toString(),
+			});
+		}
+
+		const config = {
+			configVersion: 2,
+			flutterRoot: flutterRoot ? Uri.file(flutterRoot).toString() : undefined,
+			packages,
+		};
+
+		fs.writeFileSync(path.join(dartToolDir, "package_config.json"), JSON.stringify(config));
+	}
+
+	it("returns SDK path from package path", () => {
+		const flutterPackageRoot = path.join(flutterRoot, "packages", "flutter");
+
+		createPackageConfig({ flutterPackageRoot });
+
+		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
+		const expectedSdkPath = path.join(flutterRoot, "bin") + path.sep;
+		assert.equal(sdkPath?.toLowerCase(), expectedSdkPath.toLowerCase());
+	});
+
+	it("returns SDK path from flutterRoot, prioritizing it over package path", () => {
+		const fakeFlutterRoot = path.join(tempFolder, "flutter_fake");
+		const fakeFlutterPackageRoot = path.join(fakeFlutterRoot, "packages", "flutter");
+
+		createPackageConfig({
+			flutterPackageRoot: fakeFlutterPackageRoot,
+			flutterRoot,
+		});
+
+		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
+		const expectedSdkPath = path.join(flutterRoot, "bin") + path.sep;
+		assert.equal(sdkPath?.toLowerCase(), expectedSdkPath.toLowerCase());
 	});
 });
