@@ -102,8 +102,10 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 
 	private getOptions(def: DartTaskDefinition): DartTaskOptions | undefined {
 		let taskCommand = [def.command, ...(def.args ?? [])];
-		// Strip ""dart" or flutter" from the front for easier matching.
-		if (taskCommand[0] === "flutter" || taskCommand[0] === "dart")
+		// Strip ""dart", flutter", "pub" from the front for easier matching.
+		if (taskCommand.length && (taskCommand[0] === "flutter" || taskCommand[0] === "dart"))
+			taskCommand = taskCommand.slice(1);
+		if (taskCommand.length && taskCommand[0] === "pub")
 			taskCommand = taskCommand.slice(1);
 		for (const knownOption of taskOptions) {
 			const [command, options] = knownOption;
