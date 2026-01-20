@@ -403,11 +403,10 @@ function closeTabs(uris: vs.Uri[]): void {
 
 	const allTextTabs = vs.window.tabGroups.all.flatMap((tg) => tg.tabs);
 	for (const tab of allTextTabs) {
-		const tabInput = tab.input as any;
-		const tabUri = tabInput && "uri" in tabInput ? tabInput.uri : undefined;
-		const tabUriString = tabUri?.toString() as string;
-		if (uriSet.has(tabUriString)) {
-			vs.window.tabGroups.close(tab);
+		const tabInput = tab.input as { uri?: vs.Uri } | undefined;
+		const tabUriString = tabInput?.uri?.toString();
+		if (tabUriString && uriSet.has(tabUriString)) {
+			void vs.window.tabGroups.close(tab);
 		}
 	}
 }
@@ -420,7 +419,8 @@ export async function forceDocumentCloseEvents(fileUri?: vs.Uri) {
 	// we'd still see onDidChangeTextDocument events that might interfere with things
 	// like the position trackers).
 	const openedDummyUris: vs.Uri[] = [];
-	for (let i = 0; i < 65; i++) {
+	const MAX_DUMMY_FILES = 65; // In testing, it seems to require around 58 files to trigger the cleanup. Round up a little to give some margin.
+	for (let i = 0; i < MAX_DUMMY_FILES; i++) {
 		// If we had a file uri, we only care about that one and can stop creating dummies when we see it's gone.
 		if (fileUri && !vs.workspace.textDocuments.find((d) => d.uri.toString() === fileUri.toString())) {
 			// File is already gone so we don't need to open any more dummies.
