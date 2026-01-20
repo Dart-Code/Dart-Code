@@ -128,7 +128,7 @@ interface PositionTrackerEntry {
 
 export class DocumentPositionTracker implements vs.Disposable {
 	private readonly disposables: vs.Disposable[] = [];
-	private readonly trackers: Map<vs.TextDocument, PositionTrackerEntry[]> = new Map<vs.TextDocument, PositionTrackerEntry[]>();
+	private readonly trackers: Map<string, PositionTrackerEntry[]> = new Map<string, PositionTrackerEntry[]>();
 
 	constructor() {
 		this.disposables.push(vs.workspace.onDidChangeTextDocument((e) => this.handleDocumentChange(e)));
@@ -137,7 +137,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 
 	public trackPosition(document: vs.TextDocument, position: Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
 		const offset = document.offsetAt(new vs.Position(position.line, position.character));
-		const key = document;
+		const key = document.uri.toString();
 		const entry: PositionTrackerEntry = {
 			offset,
 			callback,
@@ -170,7 +170,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 		if (!e.contentChanges.length)
 			return;
 
-		const trackers = this.trackers.get(e.document);
+		const trackers = this.trackers.get(e.document.uri.toString());
 		if (!trackers)
 			return;
 
@@ -197,7 +197,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 	}
 
 	private handleDocumentOpen(doc: vs.TextDocument) {
-		const trackers = this.trackers.get(doc);
+		const trackers = this.trackers.get(doc.uri.toString());
 		if (!trackers)
 			return;
 
