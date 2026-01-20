@@ -158,8 +158,9 @@ async function runAllTests(): Promise<void> {
 			if (process.env.FLUTTER_REPO_PATH) {
 				await runTests("flutter_repository", process.env.FLUTTER_REPO_PATH);
 			} else {
-				console.error("process.env.FLUTTER_REPO_PATH not set, not running flutter_repo tests");
-				exitCode = 1;
+				console.error("process.env.FLUTTER_REPO_PATH not set, skipping flutter_repo tests");
+				if (process.env.BOT)
+					exitCode = 1;
 			}
 		}
 	} catch (e) {
