@@ -56,6 +56,10 @@ export abstract class PackageMap {
 		return this.packages[name];
 	}
 
+	public get flutterRootPath(): string | undefined {
+		return undefined;
+	}
+
 	public resolvePackageUri(uri: string): string | undefined {
 		if (!uri)
 			return undefined;
@@ -187,6 +191,11 @@ class PackageConfigJsonPackageMap extends PackageMap {
 
 	public get packages(): Record<string, string> { return Object.assign({}, this.map); }
 
+	public get flutterRootPath(): string | undefined {
+		const flutterRootUri = this.config?.flutterRoot;
+		return flutterRootUri ? this.getPathForUri(flutterRootUri) : undefined;
+	}
+
 	public getPackagePath(name: string): string | undefined {
 		return this.map[name];
 	}
@@ -195,6 +204,7 @@ class PackageConfigJsonPackageMap extends PackageMap {
 interface PackageJsonConfig {
 	configVersion: number,
 	packages: PackageJsonConfigPackage[];
+	flutterRoot?: string;
 }
 
 interface PackageJsonConfigPackage {

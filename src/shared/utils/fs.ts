@@ -227,7 +227,8 @@ export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): st
 	if (!fs.existsSync(projectFolder))
 		return undefined;
 
-	let packagePath = PackageMap.loadForProject(nullLogger, projectFolder).getPackagePath("flutter");
+	const packageMap = PackageMap.loadForProject(nullLogger, projectFolder);
+	let packagePath = packageMap.flutterRootPath ?? packageMap.getPackagePath("flutter");
 
 	if (!packagePath)
 		return undefined;
