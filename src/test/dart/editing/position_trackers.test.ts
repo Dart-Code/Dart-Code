@@ -1,9 +1,12 @@
 import { strict as assert } from "assert";
+import * as fs from "fs";
+import * as path from "path";
 import * as vs from "vscode";
 import { Position, Range } from "../../../shared/interfaces";
+import { fsPath } from "../../../shared/utils/fs";
 import { positionsEqual, rangesEqual } from "../../../shared/utils/positions";
 import { DocumentPositionTracker, DocumentRangeTracker, SingleDocumentOffsetTracker, SingleDocumentPositionTracker } from "../../../shared/vscode/trackers";
-import { activate, closeFile, currentDoc, currentEditor, defer, positionOf, rangeOf, setTestContent } from "../../helpers";
+import { activate, closeFile, currentDoc, currentEditor, defer, helloWorldFolder, positionOf, rangeOf, setTestContent, tryDelete } from "../../helpers";
 
 describe("offset tracker", () => {
 	beforeEach("activate emptyFile", () => activate());
@@ -356,18 +359,35 @@ describe("multi-document position tracker", () => {
 		assert.ok(positionsEqual(position2, position1));
 	});
 
-	it("updates to undefined when document is closed", async () => {
+	it("retains tracking when document is closed and re-opened", async () => {
 		const tracker = new DocumentPositionTracker();
 		defer("Dispose tracker", () => tracker.dispose());
 
-		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test.txt"));
+		defer("Delete temp file", () => tryDelete(workingFile));
+
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
+		defer("Delete test file", () => vs.workspace.fs.delete(workingFile));
+
+		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
 		let position: Position | undefined = positionOf("^333", doc);
 
 		tracker.trackPosition(doc, position, (newPosition) => position = newPosition);
-		await closeFile(doc.uri);
+		await closeFile(workingFile);
 
-		assert.equal(position, undefined);
+		// Should not become undefined.
+		assert.ok(position);
+
+		// Re-open the document.
+		const doc2 = await vs.workspace.openTextDocument(workingFile);
+		const editor2 = await vs.window.showTextDocument(doc2);
+
+		// Edit the document.
+		await editor2.edit((eb) => eb.insert(new vs.Position(0, 0), "start "));
+
+		// Tracked position should have moved.
+		assert.ok(positionsEqual(position, positionOf("start 1 22 ^333 4444 55555", doc2)));
 	});
 
 	it("updates to undefined if text is deleted", async () => {
@@ -500,18 +520,34 @@ describe("multi-document range tracker", () => {
 		assert.ok(rangesEqual(range2, range1));
 	});
 
-	it("updates to undefined when document is closed", async () => {
+	it("retains tracking when document is closed and re-opened", async () => {
 		const tracker = new DocumentRangeTracker();
 		defer("Dispose tracker", () => tracker.dispose());
 
-		const doc = await vs.workspace.openTextDocument({ content: "1 22 333 4444 55555", language: "plaintext" });
+		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test.txt"));
+
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
+		defer("Delete test file", () => vs.workspace.fs.delete(workingFile));
+
+		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
 		let range: Range | undefined = rangeOf("|333|", doc);
 
 		tracker.trackRange(doc, range, (newRange) => range = newRange);
-		await closeFile(doc.uri);
+		await closeFile(workingFile);
 
-		assert.equal(range, undefined);
+		// Should not become undefined.
+		assert.ok(range);
+
+		// Re-open the document.
+		const doc2 = await vs.workspace.openTextDocument(workingFile);
+		const editor2 = await vs.window.showTextDocument(doc2);
+
+		// Edit the document.
+		await editor2.edit((eb) => eb.insert(new vs.Position(0, 0), "start "));
+
+		// Tracked position should have moved.
+		assert.ok(rangesEqual(range, rangeOf("|333|", doc2)));
 	});
 
 	it("updates to undefined if text is deleted", async () => {

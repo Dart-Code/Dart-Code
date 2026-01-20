@@ -132,16 +132,17 @@ export class DocumentPositionTracker implements vs.Disposable {
 
 	constructor() {
 		this.disposables.push(vs.workspace.onDidChangeTextDocument((e) => this.handleDocumentChange(e)));
-		this.disposables.push(vs.workspace.onDidCloseTextDocument((doc) => this.handleDocumentClose(doc)));
+		this.disposables.push(vs.workspace.onDidOpenTextDocument((doc) => this.handleDocumentOpen(doc)));
 	}
 
 	public trackPosition(document: vs.TextDocument, position: Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
 		const offset = document.offsetAt(new vs.Position(position.line, position.character));
+		const key = document;
 		const entry: PositionTrackerEntry = {
 			offset,
 			callback,
 			dispose: () => {
-				const trackers = this.trackers.get(document);
+				const trackers = this.trackers.get(key);
 				if (!trackers)
 					return;
 
@@ -150,15 +151,15 @@ export class DocumentPositionTracker implements vs.Disposable {
 					trackers.splice(index, 1);
 				}
 				if (trackers.length === 0) {
-					this.trackers.delete(document);
+					this.trackers.delete(key);
 				}
 			}
 		};
 
-		if (!this.trackers.has(document)) {
-			this.trackers.set(document, []);
+		if (!this.trackers.has(key)) {
+			this.trackers.set(key, []);
 		}
-		this.trackers.get(document)!.push(entry);
+		this.trackers.get(key)!.push(entry);
 
 		return entry;
 	}
@@ -195,15 +196,31 @@ export class DocumentPositionTracker implements vs.Disposable {
 			tracker.dispose();
 	}
 
-	private handleDocumentClose(doc: vs.TextDocument) {
+	private handleDocumentOpen(doc: vs.TextDocument) {
 		const trackers = this.trackers.get(doc);
 		if (!trackers)
 			return;
 
-		for (const entry of trackers)
-			entry.callback(undefined);
+		// When a document opens, verify that the offsets are still valid.
+		// If the file was modified outside of VS Code while closed, the offsets might be invalid.
+		// If they are valid, we should update the position (as the consumer might have an old position
+		// from before the document was closed).
+		const trackersToDispose: PositionTrackerEntry[] = [];
+		const callbacksToCall: Array<() => void> = [];
 
-		this.trackers.delete(doc);
+		for (const entry of trackers) {
+			const loadedOffset = doc.offsetAt(doc.positionAt(entry.offset));
+			if (loadedOffset !== entry.offset) {
+				trackersToDispose.push(entry);
+				callbacksToCall.push(() => entry.callback(undefined));
+			}
+		}
+
+		for (const callback of callbacksToCall)
+			callback();
+
+		for (const tracker of trackersToDispose)
+			tracker.dispose();
 	}
 
 	private updateOffset(offset: number, change: vs.TextDocumentChangeEvent): number | undefined {
