@@ -228,7 +228,8 @@ export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): st
 		return undefined;
 
 	const packageMap = PackageMap.loadForProject(nullLogger, projectFolder);
-	let packagePath = packageMap.flutterRootPath ?? packageMap.getPackagePath("flutter");
+	const flutterRootPath = packageMap.flutterRootPath;
+	let packagePath = flutterRootPath ?? packageMap.getPackagePath("flutter");
 
 	if (!packagePath)
 		return undefined;
@@ -244,7 +245,7 @@ export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): st
 
 	// Trim suffix we don't need.
 	const pathSuffix = "/packages/flutter/lib/";
-	if (packagePath.endsWith(pathSuffix)) {
+	if (!flutterRootPath && packagePath.endsWith(pathSuffix)) {
 		packagePath = packagePath.substr(0, packagePath.length - pathSuffix.length);
 	}
 
