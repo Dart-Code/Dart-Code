@@ -27,13 +27,8 @@ describe.skip("renames", () => {
 		ensureError(errors, "isn't a lower_case_with_underscores identifier");
 
 		// Close the file, rename it and reopen.
-		console.log(`Closing all!`);
 		await closeAllOpenFiles();
-		await delay(3000);
-
-		console.log(`Forcing close`);
 		await forceDocumentCloseEvents();
-		await delay(3000);
 
 		fs.renameSync(fsPath(originalFileUri), fsPath(fixedFileUri));
 
