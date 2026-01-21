@@ -206,8 +206,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 		// in which case we should clear all trackers for that file. If all positions are still
 		// valid we will just assume no changes.
 		const docLength = doc.getText().length;
-		const docMaxOffset = docLength - 1;
-		const hasInvalidOffsets = trackers.some((entry) => entry.offset > docMaxOffset);
+		const hasInvalidOffsets = trackers.some((entry) => entry.offset > docLength);
 		if (hasInvalidOffsets) {
 			const trackersToDispose = [...trackers];
 			for (const tracker of trackersToDispose) {

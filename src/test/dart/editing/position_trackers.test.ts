@@ -365,7 +365,6 @@ describe("multi-document position tracker", () => {
 		defer("Dispose tracker", () => tracker.dispose());
 
 		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test.txt"));
-		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
 		defer("Delete test file", () => tryDelete(workingFile));
@@ -396,7 +395,6 @@ describe("multi-document position tracker", () => {
 		defer("Dispose tracker", () => tracker.dispose());
 
 		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod.txt"));
-		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
 		defer("Delete test file", () => tryDelete(workingFile));
@@ -413,6 +411,7 @@ describe("multi-document position tracker", () => {
 
 		// Modify the document on disk.
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("123"));
+		await delay(10);
 
 		// Re-open the document.
 		await vs.workspace.openTextDocument(workingFile);
@@ -427,11 +426,11 @@ describe("multi-document position tracker", () => {
 		defer("Dispose tracker", () => tracker.dispose());
 
 		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_mixed.txt"));
-		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
+		defer("Delete test file", () => tryDelete(workingFile));
 
-		let doc = await vs.workspace.openTextDocument(workingFile);
+		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
 		let position1: Position | undefined = positionOf("^1", doc);
 		let position5: Position | undefined = positionOf("^5", doc);
@@ -448,7 +447,7 @@ describe("multi-document position tracker", () => {
 		await delay(10);
 
 		// Re-open the document.
-		doc = await vs.workspace.openTextDocument(workingFile);
+		await vs.workspace.openTextDocument(workingFile);
 
 		// Tracked position should have become undefined.
 		await waitFor(() => position1 === undefined && position5 === undefined); // Allow some time.
@@ -621,7 +620,6 @@ describe("multi-document range tracker", () => {
 		defer("Dispose tracker", () => tracker.dispose());
 
 		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_range.txt"));
-		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("1 22 333 4444 55555"));
 		defer("Delete test file", () => tryDelete(workingFile));
@@ -638,10 +636,10 @@ describe("multi-document range tracker", () => {
 
 		// Modify the document on disk.
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("123"));
+		await delay(10);
 
 		// Re-open the document.
 		await vs.workspace.openTextDocument(workingFile);
-		await delay(1000);
 
 		// Tracked range should have become undefined.
 		await waitFor(() => range === undefined); // Allow some time.
@@ -653,11 +651,11 @@ describe("multi-document range tracker", () => {
 		defer("Dispose tracker", () => tracker.dispose());
 
 		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_mixed_range.txt"));
-		defer("Delete temp file", () => tryDelete(workingFile));
 
 		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
+		defer("Delete test file", () => tryDelete(workingFile));
 
-		let doc = await vs.workspace.openTextDocument(workingFile);
+		const doc = await vs.workspace.openTextDocument(workingFile);
 		await vs.window.showTextDocument(doc);
 		let range1: Range | undefined = rangeOf("|1|", doc);
 		let range5: Range | undefined = rangeOf("|5|", doc);
@@ -674,7 +672,7 @@ describe("multi-document range tracker", () => {
 		await delay(10);
 
 		// Re-open the document.
-		doc = await vs.workspace.openTextDocument(workingFile);
+		await vs.workspace.openTextDocument(workingFile);
 
 		// Tracked range should have become undefined.
 		await waitFor(() => range1 === undefined && range5 === undefined); // Allow some time.
