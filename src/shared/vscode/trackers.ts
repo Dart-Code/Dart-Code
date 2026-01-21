@@ -202,9 +202,9 @@ export class DocumentPositionTracker implements vs.Disposable {
 			return;
 
 		// When a document opens, verify that the offsets are still valid.
-		// If the file was modified outside of VS Code while closed, the offsets might be invalid
-		// in which case we should clear all trackers for that file. If all positions are still
-		// valid we will just assume no changes.
+		// If the file was modified outside of VS Code while closed, the offsets might be invalid.
+		// If we can detect this, we should clear all trackers for that file. If all positions are
+		// still valid we will just assume no changes.
 		const docLength = doc.getText().length;
 		const hasInvalidOffsets = trackers.some((entry) => entry.offset > docLength);
 		if (hasInvalidOffsets) {
