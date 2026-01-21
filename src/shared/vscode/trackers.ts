@@ -122,6 +122,7 @@ export class SingleDocumentOffsetTracker implements vs.Disposable {
 
 interface PositionTrackerEntry {
 	offset: number;
+	position: vs.Position;
 	callback: (newPosition: vs.Position | undefined) => void;
 	dispose(): void;
 }
@@ -136,10 +137,12 @@ export class DocumentPositionTracker implements vs.Disposable {
 	}
 
 	public trackPosition(document: vs.TextDocument, position: Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
-		const offset = document.offsetAt(new vs.Position(position.line, position.character));
+		const vsPosition = new vs.Position(position.line, position.character);
+		const offset = document.offsetAt(vsPosition);
 		const key = document.uri.toString();
 		const entry: PositionTrackerEntry = {
 			offset,
+			position: vsPosition,
 			callback,
 			dispose: () => {
 				const trackers = this.trackers.get(key);
@@ -186,6 +189,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 				trackersToDispose.push(entry);
 			} else {
 				entry.offset = newOffset;
+				entry.position = newPosition!;
 			}
 		}
 
@@ -206,7 +210,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 		// If we can detect this, we should clear all trackers for that file. If all positions are
 		// still valid we will just assume no changes.
 		const docLength = doc.getText().length;
-		const hasInvalidOffsets = trackers.some((entry) => entry.offset > docLength);
+		const hasInvalidOffsets = trackers.some((entry) => entry.offset > docLength || !entry.position.isEqual(doc.positionAt(entry.offset)));
 		if (hasInvalidOffsets) {
 			const trackersToDispose = [...trackers];
 			for (const tracker of trackersToDispose) {
