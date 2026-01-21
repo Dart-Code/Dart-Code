@@ -209,7 +209,20 @@ export async function activateWithoutAnalysis(file?: vs.Uri | null): Promise<voi
 	if (file === undefined) // undefined means use default, but explicit null will result in no file open.
 		file = getDefaultFile();
 
-	await closeAllOpenFiles();
+	const hasOtherOpenFiles = !!vs.window.visibleTextEditors
+		// Only care about files, because other kinds of open files are not going to cause us any issues
+		// (and it might include things like output windows we really don't care about).
+		.filter((editor) => editor.document.uri.scheme === "file")
+		.filter((editor) => {
+			const uri = editor.document.uri;
+			const isFileToClose = !file || fsPath(uri) !== fsPath(file);
+			if (isFileToClose) {
+				console.warn(`Need to close because of open file ${uri}`);
+			}
+			return isFileToClose;
+		}).length;
+	if (hasOtherOpenFiles)
+		await closeAllOpenFiles();
 	if (file) {
 		await openFile(file);
 	} else {
@@ -362,7 +375,7 @@ export function stubCreateInputBox(valueToReturn: string) {
 }
 
 export async function closeAllOpenFiles(): Promise<void> {
-	if (!vs.window.visibleTextEditors?.length) {
+	if (!vs.window.visibleTextEditors?.filter((editor) => editor.document.uri.scheme === "file").length) {
 		logger.info(`No open files to close`);
 		return;
 	}
