@@ -424,6 +424,37 @@ describe("multi-document position tracker", () => {
 		assert.equal(position5, undefined);
 	});
 
+	it("invalidates all trackers if file is modified externally causing position mismatch", async () => {
+		const tracker = new DocumentPositionTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_newline.txt"));
+
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
+		defer("Delete test file", () => tryDelete(workingFile));
+
+		const doc = await vs.workspace.openTextDocument(workingFile);
+		await vs.window.showTextDocument(doc);
+		let position1: Position | undefined = positionOf("^3", doc);
+
+		tracker.trackPosition(doc, position1, (newPosition) => position1 = newPosition);
+
+		await closeFile(workingFile);
+
+		// Modify the document on disk to include a newline at the start.
+		// The offsets are still valid, but the position for offset
+		// has changed.
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("\n12345"));
+		await delay(10);
+
+		// Re-open the document.
+		await vs.workspace.openTextDocument(workingFile);
+
+		// Tracked position should have become undefined because offset->position changed.
+		await waitFor(() => position1 === undefined); // Allow some time.
+		assert.equal(position1, undefined);
+	});
+
 	it("updates to undefined if text is deleted", async () => {
 		const tracker = new DocumentPositionTracker();
 		defer("Dispose tracker", () => tracker.dispose());
@@ -616,6 +647,36 @@ describe("multi-document range tracker", () => {
 		await waitFor(() => range1 === undefined && range5 === undefined); // Allow some time.
 		assert.equal(range1, undefined);
 		assert.equal(range5, undefined);
+	});
+
+	it("invalidates all range trackers if file is modified externally causing position mismatch", async () => {
+		const tracker = new DocumentRangeTracker();
+		defer("Dispose tracker", () => tracker.dispose());
+
+		const workingFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "tracker_test_disk_mod_newline_range.txt"));
+
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("12345"));
+		defer("Delete test file", () => tryDelete(workingFile));
+
+		const doc = await vs.workspace.openTextDocument(workingFile);
+		await vs.window.showTextDocument(doc);
+		let range: Range | undefined = rangeOf("|1|", doc);
+
+		tracker.trackRange(doc, range, (newRange) => range = newRange);
+
+		await closeFile(workingFile);
+
+		// Modify the document on disk to include a newline at the start.
+		// The offsets are still valid, but the positions are not.
+		fs.writeFileSync(fsPath(workingFile), Buffer.from("\n12345"));
+		await delay(10);
+
+		// Re-open the document.
+		await vs.workspace.openTextDocument(workingFile);
+
+		// Tracked range should have become undefined because offset->position changed.
+		await waitFor(() => range === undefined); // Allow some time.
+		assert.equal(range, undefined);
 	});
 
 	it("updates to undefined if text is deleted", async () => {
