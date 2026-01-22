@@ -460,7 +460,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(dartCapabilities, "snippets/dart.json", () => true)));
 	context.subscriptions.push(vs.languages.registerCompletionItemProvider(DART_MODE, new SnippetCompletionItemProvider(dartCapabilities, "snippets/flutter.json", (uri) => util.isInsideFlutterProject(uri))));
 
-	context.subscriptions.push(vs.languages.setLanguageConfiguration(DART_LANGUAGE, new DartLanguageConfiguration()));
+	context.subscriptions.push(DartLanguageConfiguration.register(DART_LANGUAGE));
 
 	context.subscriptions.push(new FileChangeWarnings());
 	context.subscriptions.push(new DiagnosticReport(logger, workspaceContext, rebuildLogHeaders));

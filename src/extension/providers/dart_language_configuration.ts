@@ -1,7 +1,37 @@
-import { IndentAction, LanguageConfiguration, OnEnterRule } from "vscode";
+import { Disposable, IndentAction, LanguageConfiguration, languages, OnEnterRule, workspace } from "vscode";
 import { config } from "../config";
 
 export class DartLanguageConfiguration implements LanguageConfiguration {
+	public static register(language: string): Disposable {
+		// Track the current active subscription for the language config.
+		let subscription: Disposable | undefined;
+
+		// Helper to register the current language config, unregistering
+		// any existing config first.
+		const register = () => {
+			subscription?.dispose();
+			subscription = languages.setLanguageConfiguration(language, new DartLanguageConfiguration());
+		};
+
+		// Watch the config and re-register any time the automaticCommentSlashes setting changes.
+		const configWatcher = workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.automaticCommentSlashes"))
+				register();
+		});
+
+		// Perform initial registration.
+		register();
+
+		// Return a wrapper that disposes both the config watcher and the current active
+		// config.
+		return {
+			dispose: () => {
+				configWatcher.dispose();
+				subscription?.dispose();
+			},
+		};
+	}
+
 	private readonly doubleSlashRules: OnEnterRule[] = [
 		{
 			// Double-slash with space.
