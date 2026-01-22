@@ -136,7 +136,9 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	}
 
 	public async runTests(debug: boolean, includeCoverage: boolean, request: vs.TestRunRequest, _token: vs.CancellationToken): Promise<void> {
-		await this.discoverer?.ensureSuitesDiscovered();
+		// If we're running all tests, ensure we have discovered them first.
+		if (!request.include)
+			await this.discoverer?.ensureSuitesDiscovered();
 
 		const testsToRun = new Set<vs.TestItem>();
 		const testsToExclude = new Set<vs.TestItem>();
