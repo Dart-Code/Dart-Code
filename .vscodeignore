@@ -20,6 +20,7 @@
 **/*.map
 AGENTS.md
 CONTRIBUTING.md
+codecov.yml
 coverage/**
 eslint.config.js
 lints/**
