@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, tryDeleteFile } from "../../../shared/utils/fs";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -148,14 +148,25 @@ void main() => test("test inside ${newFilename}", () {});
 	});
 
 	it("discovers tests if runTests is called with undefined include", async () => {
+		preventTestSpawning();
+
 		const request = new vs.TestRunRequest();
 		await privateApi.testController.runTests(false, false, request, fakeCancellationToken);
 		assert.ok(privateApi.testDiscoverer.testDiscoveryPerformed);
 	});
 
-	it("does not discover tests if runTests is called with empty include", async () => {
+	it("does not discover tests if runTests is called with a test", async () => {
+		preventTestSpawning();
+
 		const request = new vs.TestRunRequest([]);
 		await privateApi.testController.runTests(false, false, request, fakeCancellationToken);
 		assert.ok(!privateApi.testDiscoverer.testDiscoveryPerformed);
 	});
+
+	function preventTestSpawning() {
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
+		executeCommand.withArgs("_dart.runAllTestsWithoutDebugging").resolves();
+		executeCommand.withArgs("_dart.startDebuggingTestsFromVsTestController").resolves();
+		executeCommand.withArgs("_dart.startWithoutDebuggingTestsFromVsTestController").resolves();
+	}
 });
