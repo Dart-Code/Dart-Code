@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, tryDeleteFile } from "../../../shared/utils/fs";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, setTestContent, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -84,7 +84,7 @@ hello_world
 	});
 
 	it("does not discover tests in folders excluded by settings", async () => {
-		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
 		const results = makeTestTextTree();
 		// Ensure results are valid.
 		assert.equal(!!results.find((suite) => suite.includes("basic_test")), true, "basic_test was missing from the test list");
@@ -93,7 +93,7 @@ hello_world
 	});
 
 	it("does not discover tests in folders excluded by analysis_options", async () => {
-		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
 		const results = makeTestTextTree();
 		// Ensure results are valid.
 		assert.equal(!!results.find((suite) => suite.includes("basic_test")), true);
@@ -102,7 +102,7 @@ hello_world
 	});
 
 	it("handles create/delete of test files on disk", async () => {
-		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
 
 		const newFilename = "disk_create_test.dart";
 		const newFilePath = path.join(fsPath(helloWorldTestFolder), newFilename);
@@ -127,7 +127,7 @@ void main() => test("test inside ${newFilename}", () {});
 	});
 
 	it("handles renaming of test files on disk", async () => {
-		await privateApi.testController?.discoverer?.ensureSuitesDiscovered();
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
 
 		const originalFilename = "disk_rename_original_test.dart";
 		const originalFilePath = path.join(fsPath(helloWorldTestFolder), originalFilename);
@@ -145,5 +145,17 @@ void main() => test("test inside ${newFilename}", () {});
 
 		await waitForResult(() => !makeTestTextTree().some((s) => s.includes(originalFilename)));
 		await waitForResult(() => makeTestTextTree().some((s) => s.includes(newFilename)));
+	});
+
+	it("discovers tests if runTests is called with undefined include", async () => {
+		const request = new vs.TestRunRequest();
+		await privateApi.testController.runTests(false, false, request, fakeCancellationToken);
+		assert.ok(privateApi.testDiscoverer.testDiscoveryPerformed);
+	});
+
+	it("does not discover tests if runTests is called with empty include", async () => {
+		const request = new vs.TestRunRequest([]);
+		await privateApi.testController.runTests(false, false, request, fakeCancellationToken);
+		assert.ok(!privateApi.testDiscoverer.testDiscoveryPerformed);
 	});
 });

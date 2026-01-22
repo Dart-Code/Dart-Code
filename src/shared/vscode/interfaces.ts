@@ -138,10 +138,9 @@ export interface InternalExtensionApi {
 		getLatestData(test: TestItem): TreeNode | undefined,
 		handleDebugSessionEnd(e: DebugSession): void,
 		coverageParser: CoverageParser,
-		discoverer?: { ensureSuitesDiscovered(): Promise<void> }
 	};
 	testCoordinator: TestSessionCoordinator;
-	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined } | undefined,
+	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined },
 	testModel: TestModel;
 	toolingDaemon: DartToolingDaemon | undefined;
 	webClient: WebClient;
