@@ -213,14 +213,8 @@ export async function activateWithoutAnalysis(file?: vs.Uri | null): Promise<voi
 		// Only care about files, because other kinds of open files are not going to cause us any issues
 		// (and it might include things like output windows we really don't care about).
 		.filter((editor) => editor.document.uri.scheme === "file")
-		.filter((editor) => {
-			const uri = editor.document.uri;
-			const isFileToClose = !file || fsPath(uri) !== fsPath(file);
-			if (isFileToClose) {
-				console.warn(`Need to close because of open file ${uri}`);
-			}
-			return isFileToClose;
-		}).length;
+		.filter((editor) => !file || fsPath(editor.document.uri) !== fsPath(file))
+		.length;
 	if (hasOtherOpenFiles)
 		await closeAllOpenFiles();
 	if (file) {
