@@ -1,40 +1,22 @@
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { disposeAll } from "../../shared/utils";
-import { uriComparisonString } from "../../shared/utils/fs";
 import * as editors from "../../shared/vscode/editors";
-import { showCode } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 
 abstract class LspGoToCommand implements vs.Disposable {
 	protected disposables: vs.Disposable[] = [];
 
+	abstract get failureMessage(): string;
+
 	constructor(protected readonly analyzer: LspAnalyzer) { }
-
-	protected async goToLocation(location: ls.Location): Promise<void> {
-		const codeLocation = this.analyzer.client.protocol2CodeConverter.asLocation(location);
-		const uri = codeLocation.uri;
-		const elementDocument = await vs.workspace.openTextDocument(uri);
-
-		const sourceUriString = uriComparisonString(uri);
-		const existingTab = vs.window.tabGroups.all
-			.flatMap((group) => group.tabs)
-			.find((tab) => tab.input instanceof vs.TabInputText && uriComparisonString(tab.input.uri) === sourceUriString);
-		const tabGroup = existingTab?.group.viewColumn;
-
-		const elementEditor = await vs.window.showTextDocument(elementDocument, tabGroup);
-		showCode(elementEditor, codeLocation.range, codeLocation.range, codeLocation.range);
-	}
 
 	protected async goToLocations(locations: ls.Location | ls.Location[], sourceUri: vs.Uri, sourcePosition: vs.Position): Promise<void> {
 		if (!Array.isArray(locations))
-			return this.goToLocation(locations);
-
-		if (locations.length === 1)
-			return this.goToLocation(locations[0]);
+			locations = [locations];
 
 		const codeLocations = locations.map((l) => this.analyzer.client.protocol2CodeConverter.asLocation(l));
-		void vs.commands.executeCommand("editor.action.goToLocations", sourceUri, sourcePosition, codeLocations, "gotoAndPeek", "No imports found for this element");
+		void vs.commands.executeCommand("editor.action.goToLocations", sourceUri, sourcePosition, codeLocations, "gotoAndPeek", this.failureMessage);
 	}
 
 	public dispose(): any {
@@ -75,6 +57,8 @@ abstract class LspGoToRequestCommand extends LspGoToCommand {
 }
 
 export class LspGoToSuperCommand extends LspGoToRequestCommand {
+	public readonly failureMessage = "No super class/member found for this element";
+
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToSuper", this.goTo.bind(this)));
@@ -86,6 +70,8 @@ export class LspGoToSuperCommand extends LspGoToRequestCommand {
 }
 
 export class LspGoToImportsCommand extends LspGoToRequestCommand {
+	public readonly failureMessage = "No imports found for this element";
+
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToImports", this.goTo.bind(this)));
@@ -97,6 +83,8 @@ export class LspGoToImportsCommand extends LspGoToRequestCommand {
 }
 
 export class LspGoToAugmentedCommand extends LspGoToRequestCommand {
+	public readonly failureMessage = "No augmented entity found for this element";
+
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToAugmented", this.goTo.bind(this)));
@@ -108,6 +96,8 @@ export class LspGoToAugmentedCommand extends LspGoToRequestCommand {
 }
 
 export class LspGoToAugmentationCommand extends LspGoToRequestCommand {
+	public readonly failureMessage = "No augmentation found for this element";
+
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToAugmentation", this.goTo.bind(this)));
@@ -122,6 +112,9 @@ export class LspGoToAugmentationCommand extends LspGoToRequestCommand {
  * Supports the dart.goToLocation command that the LSP server may use.
  */
 export class LspGoToLocationCommand extends LspGoToCommand {
+	// This should never be shown, as this command is only ever called by the server with a location.
+	public readonly failureMessage = "No location found";
+
 	constructor(analyzer: LspAnalyzer) {
 		super(analyzer);
 		this.disposables.push(vs.commands.registerCommand("dart.goToLocation", this.goToLocations.bind(this)));

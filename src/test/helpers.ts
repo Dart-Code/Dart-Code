@@ -867,12 +867,12 @@ export function ensureNoLocation(locations: vs.Location[], uri: vs.Uri, range: v
 	);
 }
 
-export function ensureIsRange(actual: vs.Range, expected: vs.Range) {
+export function ensureRangeIsPosition(actual: vs.Range, expected: vs.Position) {
 	assert.ok(actual);
-	assert.equal(actual.start.line, expected.start.line, "Start lines did not match");
-	assert.equal(actual.start.character, expected.start.character, "Start characters did not match");
-	assert.equal(actual.end.line, expected.end.line, "End lines did not match");
-	assert.equal(actual.end.character, expected.end.character, "End characters did not match");
+	assert.equal(actual.start.line, expected.line, "Start line did not match");
+	assert.equal(actual.start.character, expected.character, "Start character did not match");
+	assert.equal(actual.end.line, expected.line, "End line did not match");
+	assert.equal(actual.end.character, expected.character, "End character did not match");
 }
 
 export function snippetValue(text: string | vs.SnippetString | undefined) {
