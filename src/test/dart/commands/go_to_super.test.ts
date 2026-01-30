@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, currentEditor, ensureIsRange, helloWorldFolder, positionOf, privateApi, rangeOf, waitForResult } from "../../helpers";
+import { activate, currentDoc, currentEditor, ensureRangeIsPosition, helloWorldFolder, positionOf, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/super.dart"));
 const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/derived.dart"));
@@ -19,9 +19,9 @@ describe("go_to_super", () => {
 		editor.selection = new vs.Selection(e.start, e.end);
 		await vs.commands.executeCommand("dart.goToSuper");
 		assert.equal(fsPath(editor.document.uri), fsPath(derivedFile));
-		ensureIsRange(
+		ensureRangeIsPosition(
 			editor.selection,
-			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class D"), positionOf("^// blahD"))),
+			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class D"), positionOf("^// blahD"))).start,
 		);
 	});
 
@@ -32,9 +32,9 @@ describe("go_to_super", () => {
 		await vs.commands.executeCommand("dart.goToSuper");
 		assert.equal(fsPath(editor.document.uri), fsPath(derivedFile));
 		// Check we went to B and not C (because B doesn't have an implementation).
-		ensureIsRange(
+		ensureRangeIsPosition(
 			editor.selection,
-			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class B"), positionOf("^// blahB"))),
+			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class B"), positionOf("^// blahB"))).start,
 		);
 	});
 
@@ -44,9 +44,9 @@ describe("go_to_super", () => {
 		await vs.commands.executeCommand("dart.goToSuper");
 		// Check we went to the super file.
 		assert.equal(fsPath(currentDoc().uri), fsPath(superFile));
-		ensureIsRange(
+		ensureRangeIsPosition(
 			currentEditor().selection,
-			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class A"), positionOf("^// blahA"))),
+			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class A"), positionOf("^// blahA"))).start,
 		);
 	});
 });
