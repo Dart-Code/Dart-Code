@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, currentEditor, ensureRangeIsPosition, helloWorldFolder, positionOf, privateApi, rangeOf, waitForResult } from "../../helpers";
+import { activate, currentDoc, currentEditor, ensureCurrentEditorSelectedRangeIsPosition, helloWorldFolder, positionOf, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/super.dart"));
 const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/derived.dart"));
@@ -19,8 +19,7 @@ describe("go_to_super", () => {
 		editor.selection = new vs.Selection(e.start, e.end);
 		await vs.commands.executeCommand("dart.goToSuper");
 		assert.equal(fsPath(editor.document.uri), fsPath(derivedFile));
-		ensureRangeIsPosition(
-			editor.selection,
+		await ensureCurrentEditorSelectedRangeIsPosition(
 			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class D"), positionOf("^// blahD"))).start,
 		);
 	});
@@ -32,8 +31,7 @@ describe("go_to_super", () => {
 		await vs.commands.executeCommand("dart.goToSuper");
 		assert.equal(fsPath(editor.document.uri), fsPath(derivedFile));
 		// Check we went to B and not C (because B doesn't have an implementation).
-		ensureRangeIsPosition(
-			editor.selection,
+		await ensureCurrentEditorSelectedRangeIsPosition(
 			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class B"), positionOf("^// blahB"))).start,
 		);
 	});
@@ -44,8 +42,7 @@ describe("go_to_super", () => {
 		await vs.commands.executeCommand("dart.goToSuper");
 		// Check we went to the super file.
 		assert.equal(fsPath(currentDoc().uri), fsPath(superFile));
-		ensureRangeIsPosition(
-			currentEditor().selection,
+		await ensureCurrentEditorSelectedRangeIsPosition(
 			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class A"), positionOf("^// blahA"))).start,
 		);
 	});

@@ -867,8 +867,14 @@ export function ensureNoLocation(locations: vs.Location[], uri: vs.Uri, range: v
 	);
 }
 
-export function ensureRangeIsPosition(actual: vs.Range, expected: vs.Position) {
-	assert.ok(actual);
+export async function ensureCurrentEditorSelectedRangeIsPosition(expected: vs.Position) {
+	// Some operations (like VS Code's goToLocation) can take a short time, so allow a delay.
+	await waitFor(() => {
+		const editor = currentEditor();
+		return editor.selection.start.line === expected.line && editor.selection.end.line === expected.line;
+	});
+
+	const actual = currentEditor().selection;
 	assert.equal(actual.start.line, expected.line, "Start line did not match");
 	assert.equal(actual.start.character, expected.character, "Start character did not match");
 	assert.equal(actual.end.line, expected.line, "End line did not match");
