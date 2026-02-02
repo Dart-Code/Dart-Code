@@ -1,8 +1,7 @@
-import { strict as assert } from "assert";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, currentEditor, ensureCurrentEditorSelectedRangeIsPosition, helloWorldFolder, positionOf, privateApi, rangeOf, waitForResult } from "../../helpers";
+import { activate, checkCurrentEditorSelectionIsPosition, currentEditor, helloWorldFolder, positionOf, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const superFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/super.dart"));
 const derivedFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_super/derived.dart"));
@@ -18,10 +17,10 @@ describe("go_to_super", () => {
 		const e = rangeOf("|// blahE|");
 		editor.selection = new vs.Selection(e.start, e.end);
 		await vs.commands.executeCommand("dart.goToSuper");
-		assert.equal(fsPath(editor.document.uri), fsPath(derivedFile));
-		await ensureCurrentEditorSelectedRangeIsPosition(
+		await waitForResult(() => checkCurrentEditorSelectionIsPosition(
+			derivedFile,
 			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class D"), positionOf("^// blahD"))).start,
-		);
+		));
 	});
 
 	it("skips over classes with no implementation", async () => {
@@ -29,11 +28,11 @@ describe("go_to_super", () => {
 		const d = rangeOf("|// blahD|");
 		editor.selection = new vs.Selection(d.start, d.end);
 		await vs.commands.executeCommand("dart.goToSuper");
-		assert.equal(fsPath(editor.document.uri), fsPath(derivedFile));
 		// Check we went to B and not C (because B doesn't have an implementation).
-		await ensureCurrentEditorSelectedRangeIsPosition(
+		await waitForResult(() => checkCurrentEditorSelectionIsPosition(
+			derivedFile,
 			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class B"), positionOf("^// blahB"))).start,
-		);
+		));
 	});
 
 	it("can navigate to other files", async () => {
@@ -41,9 +40,9 @@ describe("go_to_super", () => {
 		currentEditor().selection = new vs.Selection(b.start, b.end);
 		await vs.commands.executeCommand("dart.goToSuper");
 		// Check we went to the super file.
-		assert.equal(fsPath(currentDoc().uri), fsPath(superFile));
-		await ensureCurrentEditorSelectedRangeIsPosition(
+		await waitForResult(() => checkCurrentEditorSelectionIsPosition(
+			superFile,
 			rangeOf("void |blah|()", undefined, new vs.Range(positionOf("^class A"), positionOf("^// blahA"))).start,
-		);
+		));
 	});
 });

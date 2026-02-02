@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, mkDirRecursive } from "../../../shared/utils/fs";
-import { activate, currentEditor, ensureCurrentEditorSelectedRangeIsPosition, helloWorldFolder, helloWorldPubspec, openFile, privateApi, rangeOf, waitForResult } from "../../helpers";
+import { activate, checkCurrentEditorSelectionIsPosition, currentEditor, helloWorldFolder, helloWorldPubspec, openFile, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const libFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib.dart"));
 const augmentationFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib_augmentation.dart"));
@@ -47,17 +47,15 @@ describe("go to", () => {
 		});
 
 		it("navigates to augmented class", async () => {
-			let editor = currentEditor();
 			const e = rangeOf("class |A|");
-			editor.selection = new vs.Selection(e.start, e.end);
+			currentEditor().selection = new vs.Selection(e.start, e.end);
 
 			await vs.commands.executeCommand("dart.goToAugmentation");
 
-			editor = currentEditor();
-			assert.equal(fsPath(editor.document.uri), fsPath(augmentationFile));
-			await ensureCurrentEditorSelectedRangeIsPosition(
+			await waitForResult(() => checkCurrentEditorSelectionIsPosition(
+				augmentationFile,
 				rangeOf("augment class |A| {}").start,
-			);
+			));
 		});
 
 		it("navigates to augmented class that was open in another column", async () => {
@@ -66,18 +64,15 @@ describe("go to", () => {
 			await openFile(helloWorldPubspec, vs.ViewColumn.Two);
 			await openFile(libFile, vs.ViewColumn.One);
 
-
-			let editor = currentEditor();
 			const e = rangeOf("class |A|");
-			editor.selection = new vs.Selection(e.start, e.end);
+			currentEditor().selection = new vs.Selection(e.start, e.end);
 			await vs.commands.executeCommand("dart.goToAugmentation");
 
 			// Check correct editor has focus.
-			editor = currentEditor();
-			assert.equal(fsPath(editor.document.uri), fsPath(augmentationFile));
-			await ensureCurrentEditorSelectedRangeIsPosition(
+			await waitForResult(() => checkCurrentEditorSelectionIsPosition(
+				augmentationFile,
 				rangeOf("augment class |A| {}").start,
-			);
+			));
 
 			// Check active file in each group is as expected.
 			const activeFiles = vs.window.tabGroups.all
@@ -99,17 +94,15 @@ describe("go to", () => {
 		});
 
 		it("navigates to augmented class", async () => {
-			let editor = currentEditor();
 			const e = rangeOf("augment class |A|");
-			editor.selection = new vs.Selection(e.start, e.end);
+			currentEditor().selection = new vs.Selection(e.start, e.end);
 
 			await vs.commands.executeCommand("dart.goToAugmented");
 
-			editor = currentEditor();
-			assert.equal(fsPath(editor.document.uri), fsPath(libFile));
-			await ensureCurrentEditorSelectedRangeIsPosition(
+			await waitForResult(() => checkCurrentEditorSelectionIsPosition(
+				libFile,
 				rangeOf("class |A| {}").start,
-			);
+			));
 		});
 	});
 });
