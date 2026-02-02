@@ -12,10 +12,8 @@ describe("go_to_location", () => {
 		assert.equal(editor.document.uri.toString(), helloWorldMainFile.toString());
 		assert.equal(editor.selection.start.line, 0);
 		assert.equal(editor.selection.start.character, 0);
-		// Note: We only get a _position_ now, because we've moved to VS Code's goToLocation
-		// command, which flashes the range, but leaves the selection at just the start.
-		assert.equal(editor.selection.end.line, 0);
-		assert.equal(editor.selection.end.character, 0);
+		assert.equal(editor.selection.end.line, 1);
+		assert.equal(editor.selection.end.character, 1);
 	}
 
 	it("navigates to expected location for a VS Code location", async () => {
