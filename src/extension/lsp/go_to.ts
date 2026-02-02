@@ -1,7 +1,9 @@
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
 import { disposeAll } from "../../shared/utils";
+import { uriComparisonString } from "../../shared/utils/fs";
 import * as editors from "../../shared/vscode/editors";
+import { showCode } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 
 abstract class LspGoToCommand implements vs.Disposable {
@@ -111,12 +113,32 @@ export class LspGoToAugmentationCommand extends LspGoToRequestCommand {
 /**
  * Supports the dart.goToLocation command that the LSP server may use.
  */
-export class LspGoToLocationCommand extends LspGoToCommand {
-	// This should never be shown, as this command is only ever called by the server with a location.
-	public readonly failureMessage = "No location found";
+export class LspGoToLocationCommand implements vs.Disposable {
+	protected disposables: vs.Disposable[] = [];
 
-	constructor(analyzer: LspAnalyzer) {
-		super(analyzer);
-		this.disposables.push(vs.commands.registerCommand("dart.goToLocation", this.goToLocations.bind(this)));
+	constructor(protected readonly analyzer: LspAnalyzer) {
+		this.disposables.push(vs.commands.registerCommand("dart.goToLocation", this.goToLocation.bind(this)));
+	}
+
+	protected async goToLocation(location: ls.Location): Promise<void> {
+		const codeLocation = this.analyzer.client.protocol2CodeConverter.asLocation(location);
+		const uri = codeLocation.uri;
+		const elementDocument = await vs.workspace.openTextDocument(uri);
+
+		let editor = vs.window.activeTextEditor?.document === elementDocument ? vs.window.activeTextEditor : undefined;
+		if (!editor) {
+			const sourceUriString = uriComparisonString(uri);
+			const existingTab = vs.window.tabGroups.all
+				.flatMap((group) => group.tabs)
+				.find((tab) => tab.input instanceof vs.TabInputText && uriComparisonString(tab.input.uri) === sourceUriString);
+			const tabGroup = existingTab?.group.viewColumn;
+
+			editor = await vs.window.showTextDocument(elementDocument, tabGroup);
+		}
+		showCode(editor, codeLocation.range, codeLocation.range, codeLocation.range);
+	}
+
+	public dispose(): any {
+		disposeAll(this.disposables);
 	}
 }
