@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, mkDirRecursive } from "../../../shared/utils/fs";
-import { activate, currentEditor, ensureRangeIsPosition, helloWorldFolder, helloWorldPubspec, openFile, privateApi, rangeOf, waitForResult } from "../../helpers";
+import { activate, currentEditor, ensureCurrentEditorSelectedRangeIsPosition, helloWorldFolder, helloWorldPubspec, openFile, privateApi, rangeOf, waitForResult } from "../../helpers";
 
 const libFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib.dart"));
 const augmentationFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/go_to_augmentations/lib_augmentation.dart"));
@@ -55,8 +55,7 @@ describe("go to", () => {
 
 			editor = currentEditor();
 			assert.equal(fsPath(editor.document.uri), fsPath(augmentationFile));
-			ensureRangeIsPosition(
-				editor.selection,
+			await ensureCurrentEditorSelectedRangeIsPosition(
 				rangeOf("augment class |A| {}").start,
 			);
 		});
@@ -76,8 +75,7 @@ describe("go to", () => {
 			// Check correct editor has focus.
 			editor = currentEditor();
 			assert.equal(fsPath(editor.document.uri), fsPath(augmentationFile));
-			ensureRangeIsPosition(
-				editor.selection,
+			await ensureCurrentEditorSelectedRangeIsPosition(
 				rangeOf("augment class |A| {}").start,
 			);
 
@@ -109,8 +107,7 @@ describe("go to", () => {
 
 			editor = currentEditor();
 			assert.equal(fsPath(editor.document.uri), fsPath(libFile));
-			ensureRangeIsPosition(
-				editor.selection,
+			await ensureCurrentEditorSelectedRangeIsPosition(
 				rangeOf("class |A| {}").start,
 			);
 		});
