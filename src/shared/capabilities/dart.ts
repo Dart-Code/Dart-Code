@@ -21,6 +21,8 @@ export class DartCapabilities {
 	get needsNoExampleForPubGet() { return versionIsAtLeast(this.version, "3.1.0"); }
 	get omitsClassNameForConstructors() { return versionIsAtLeast(this.version, "3.10.0-0"); }
 	get omitsVoidForSetters() { return versionIsAtLeast(this.version, "3.3.0-0"); }
+	get usesDartRunForCli() { return versionIsAtLeast(this.version, "3.12.0-0"); }
+	get includesClassNameInNamedConstructorInWorkspaceSymbols() { return versionIsAtLeast(this.version, "3.12.0-0"); }
 	// TODO(dantup): Fix this when it's clearer what augmentations will look like.
 	get supportsAugmentations() { return versionIsAtLeast(this.version, "9.9.0-0"); }
 	get supportsGoToImports() { return versionIsAtLeast(this.version, "3.7.0-0"); }

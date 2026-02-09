@@ -68,7 +68,7 @@ describe("dart_formatting_edit_provider", () => {
 	it("formats the code when typing a }", async () => {
 		// Currently we just format the whole doc on format as out formatter doesn't support ranges.
 		await setTestContent(unformattedContent);
-		await formatOnType("{ ^", "}");
+		await formatOnType("}^", "}");
 		assert.equal(currentDoc().getText(), formattedContent);
 	});
 

@@ -1507,7 +1507,8 @@ insp=<inspected variable>
 		await dc.waitForEvent("terminated");
 
 		const expectedPath = dc.isDartDap ? fsPath(helloWorldMainFile) : path.join("bin", "main.dart");
-		ensureHasRunWithArgsStarting(root, hasRunFile, `${expectedPath}`);
+		const expectedArgs = privateApi.dartCapabilities.usesDartRunForCli ? `run ${expectedPath}` : expectedPath;
+		ensureHasRunWithArgsStarting(root, hasRunFile, expectedArgs);
 	});
 
 	describe("attaches", () => {
