@@ -155,6 +155,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.removeRedundantChildNodes(testsToExclude);
 
 		const run = this.controller.createTestRun(request);
+
+		// Mark each node we will run as enqueued.
+		this.markEnqueued(run, testsToRun, testsToExclude);
+
 		try {
 			// As an optimisation, if we're no-debug and running complete files (eg. all included or excluded items are
 			// suites), we can run the "fast path" in a single `dart test` invocation.
@@ -210,6 +214,20 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		} finally {
 			run.end();
 		}
+	}
+
+	private markEnqueued(run: vs.TestRun, testsToRun: Set<vs.TestItem>, testsToExclude: Set<vs.TestItem>) {
+		const markTestEnqueued = (item: vs.TestItem) => {
+			if (testsToExclude.has(item))
+				return;
+
+			if (item.children.size === 0)
+				run.enqueued(item); // Enqueue only leaf items (VS Code will handle showing the status for parents).
+			else
+				item.children.forEach(markTestEnqueued); // Otherwise recurse.
+		};
+
+		testsToRun.forEach(markTestEnqueued);
 	}
 
 	/// Removes any items from a set that are children of other items in the set.
