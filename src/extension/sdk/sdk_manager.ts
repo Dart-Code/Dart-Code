@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { dartVMPath, flutterPath } from "../../shared/constants";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
-import { getChildFolders, getSdkVersion, homeRelativePath } from "../../shared/utils/fs";
+import { getChildFolders, getSdkVersion, homeRelativePath, safeRealpathSync } from "../../shared/utils/fs";
 import { config } from "../config";
 
 abstract class SdkManager {
@@ -46,7 +46,7 @@ abstract class SdkManager {
 
 		const sdkItems: SdkPickItem[] = sdkFolders.map((f) => {
 			// Resolve symlinks so we look in correct folder for version file.
-			const actualBinary = fs.realpathSync(path.join(f, this.executablePath));
+			const actualBinary = safeRealpathSync(path.join(f, this.executablePath));
 			// Then we need to take the executable name and /bin back off
 			const actualFolder = path.dirname(path.dirname(actualBinary));
 

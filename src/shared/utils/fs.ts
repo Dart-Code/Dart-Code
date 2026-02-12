@@ -19,7 +19,7 @@ export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: bo
 	newPath = forceWindowsDriveLetterToUppercase(newPath);
 
 	if (useRealCasing) {
-		const realPath = fs.existsSync(newPath) && fs.realpathSync.native(newPath);
+		const realPath = fs.existsSync(newPath) && safeRealpathSync(newPath, { useNative: true });
 		// Since realpathSync.native will resolve symlinks, only do anything if the paths differ
 		// _only_ by case.
 		// when there was no symlink (eg. the lowercase version of both paths match).
@@ -30,6 +30,16 @@ export function fsPath(uri: URI, { useRealCasing = false }: { useRealCasing?: bo
 	}
 
 	return newPath;
+}
+
+export function safeRealpathSync(filePath: string, { useNative = false }: { useNative?: boolean; } = {}): string {
+	try {
+		return useNative
+			? fs.realpathSync.native(filePath)
+			: fs.realpathSync(filePath);
+	} catch {
+		return filePath;
+	}
 }
 
 export function forceWindowsDriveLetterToUppercase<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
