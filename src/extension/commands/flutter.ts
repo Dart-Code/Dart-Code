@@ -24,7 +24,8 @@ import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
 import { PickableSetting, showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
-import { BaseSdkCommands, commandState, OperationProgress, packageNameRegex, setProgressItemCounts } from "./sdk";
+import { runBatchFolderOperation } from "./batch_progress";
+import { BaseSdkCommands, commandState, OperationProgress, packageNameRegex } from "./sdk";
 
 export class FlutterCommands extends BaseSdkCommands {
 	private flutterScreenshotPath?: string;
@@ -61,13 +62,7 @@ export class FlutterCommands extends BaseSdkCommands {
 
 		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
-			setProgressItemCounts(operationProgress, uri.length);
-			for (const item of uri) {
-				if (operationProgress.cancellationToken.isCancellationRequested)
-					break;
-
-				await this.flutterClean(item, operationProgress);
-			}
+			await runBatchFolderOperation(uri, operationProgress, this.flutterCleanForUri.bind(this));
 			return;
 		}
 
@@ -78,6 +73,10 @@ export class FlutterCommands extends BaseSdkCommands {
 			uri = vs.Uri.file(path);
 		}
 
+		return this.flutterCleanForUri(uri, operationProgress);
+	}
+
+	private async flutterCleanForUri(uri: vs.Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
 		return this.runFlutter(["clean"], uri, false, operationProgress);
 	}
 

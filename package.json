@@ -2934,6 +2934,12 @@
 						"default": "none",
 						"markdownDescription": "Whether to automatically run `pub get` on nested projects above or below the one where the pubspec was changed.",
 						"scope": "window"
+					},
+					"dart.runPubConcurrently": {
+						"type": "boolean",
+						"default": true,
+						"markdownDescription": "Whether to run Pub operations across multiple folders concurrently.",
+						"scope": "window"
 					}
 				}
 			},

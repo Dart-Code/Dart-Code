@@ -13,7 +13,8 @@ import { config } from "../config";
 import * as util from "../utils";
 import { getExcludedFolders } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
-import { BaseSdkCommands, commandState, OperationProgress, setProgressItemCounts } from "./sdk";
+import { runBatchFolderOperation } from "./batch_progress";
+import { BaseSdkCommands, commandState, OperationProgress } from "./sdk";
 
 let isFetchingPackages = false;
 let runPubGetDelayTimer: NodeJS.Timeout | undefined;
@@ -77,26 +78,15 @@ export class PackageCommands extends BaseSdkCommands {
 		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
 			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
-			setProgressItemCounts(operationProgress, uris.length);
-			for (const item of uris) {
-				if (operationProgress.cancellationToken.isCancellationRequested)
-					break;
-
-				await this.getPackages(item, operationProgress);
-			}
+			await runBatchFolderOperation(uris, operationProgress, this.getPackagesForUri.bind(this));
 			return;
 		}
 
-		if (!uri || !(uri instanceof vs.Uri)) {
-			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to get packages for");
-			// If the user cancelled, bail out (otherwise we'll prompt them again below).
-			if (!uri)
-				return;
-		}
-		if (typeof uri === "string")
-			uri = vs.Uri.file(uri);
+		const resolvedUri = await this.resolvePackageTargetUri(uri, "Select which folder to get packages for");
+		if (!resolvedUri)
+			return;
 
-		return this.getPackagesForUri(uri, operationProgress);
+		return this.getPackagesForUri(resolvedUri, operationProgress);
 	}
 
 	private async getPackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress) {
@@ -171,26 +161,15 @@ export class PackageCommands extends BaseSdkCommands {
 		// If we are a batch, run for each item.
 		if (Array.isArray(uri)) {
 			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
-			setProgressItemCounts(operationProgress, uris.length);
-			for (const item of uris) {
-				if (operationProgress.cancellationToken.isCancellationRequested)
-					break;
-
-				await this.upgradePackages(item, operationProgress);
-			}
+			await runBatchFolderOperation(uris, operationProgress, this.upgradePackagesForUri.bind(this));
 			return;
 		}
 
-		if (!uri || !(uri instanceof vs.Uri)) {
-			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages in");
-			// If the user cancelled, bail out (otherwise we'll prompt them again below).
-			if (!uri)
-				return;
-		}
-		if (typeof uri === "string")
-			uri = vs.Uri.file(uri);
+		const resolvedUri = await this.resolvePackageTargetUri(uri, "Select which folder to upgrade packages in");
+		if (!resolvedUri)
+			return;
 
-		return this.upgradePackagesForUri(uri, operationProgress);
+		return this.upgradePackagesForUri(resolvedUri, operationProgress);
 	}
 
 	private async upgradePackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress) {
@@ -202,6 +181,17 @@ export class PackageCommands extends BaseSdkCommands {
 			return this.runFlutter(["pub", "upgrade"], uri, false, operationProgress);
 		else
 			return this.runPub(["upgrade"], uri, false, operationProgress);
+	}
+
+	private async resolvePackageTargetUri(uri: string | vs.Uri | undefined, placeHolder: string): Promise<vs.Uri | undefined> {
+		if (!uri || !(uri instanceof vs.Uri)) {
+			const folder = await getFolderToRunCommandIn(this.logger, placeHolder);
+			if (!folder)
+				return; // User cancelled.
+			return vs.Uri.file(folder);
+		}
+
+		return uri;
 	}
 
 	private async upgradePackagesMajorVersions(uri: string | vs.Uri | undefined) {
