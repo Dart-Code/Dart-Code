@@ -276,7 +276,7 @@ export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): st
 			packagePath = packagePath.substring(1);
 	}
 
-	return packagePath;
+	return fs.existsSync(packagePath) ? packagePath : undefined;
 }
 
 async function fileExists(p: string): Promise<boolean> {

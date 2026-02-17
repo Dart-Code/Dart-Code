@@ -180,13 +180,19 @@ class PackageConfigJsonPackageMap extends PackageMap {
 		if (!uri)
 			return undefined;
 
-		const parsedPath = normalizeSlashes(
-			uri.startsWith("file:")
-				? url.fileURLToPath(uri)
-				: unescape(uri),
-		);
+		try {
+			const parsedPath = normalizeSlashes(
+				uri.startsWith("file:")
+					? url.fileURLToPath(uri)
+					: unescape(uri),
+			);
 
-		return parsedPath.endsWith(path.sep) ? parsedPath : `${parsedPath}${path.sep}`;
+			return parsedPath.endsWith(path.sep) ? parsedPath : `${parsedPath}${path.sep}`;
+		} catch {
+			// Could be an invalid path such as a package_config on Linux being run on Windows.
+			// https://github.com/Dart-Code/Dart-Code/issues/5909
+			return undefined;
+		}
 	}
 
 	public get packages(): Record<string, string> { return Object.assign({}, this.map); }
