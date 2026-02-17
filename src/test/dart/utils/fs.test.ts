@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
-import { extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, fsPath, getPackageName, uriComparisonString } from "../../../shared/utils/fs";
+import { extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, fsPath, getPackageName, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
 import { defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldTestFolder, testProjectsFolder, tryDeleteDirectoryRecursive } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
@@ -95,31 +95,38 @@ describe("getPackageName", () => {
 
 describe("extractFlutterSdkPathFromPackagesFile", () => {
 	let tempFolder: string;
-	let flutterRoot: string;
+	let fakeFlutterRoot: string;
 
 	beforeEach(() => {
 		tempFolder = getRandomTempFolder();
+		fakeFlutterRoot = path.join(tempFolder, "flutter_fake");
+		mkDirRecursive(path.join(fakeFlutterRoot, "bin"));
 		defer("delete temp folder", () => tryDeleteDirectoryRecursive(tempFolder));
-		flutterRoot = path.join(tempFolder, "flutter");
 	});
 
-	function createPackageConfig({ flutterRoot, flutterPackageRoot }: { flutterRoot?: string, flutterPackageRoot?: string }) {
+	function createPackageConfig({
+		flutterRootUri,
+		flutterPackageRootUri,
+	}: {
+		flutterRootUri?: Uri,
+		flutterPackageRootUri?: Uri,
+	}) {
 		const dartToolDir = path.join(tempFolder, ".dart_tool");
 		fs.mkdirSync(dartToolDir, { recursive: true });
 
 		const packages = [];
-		if (flutterPackageRoot) {
+		if (flutterPackageRootUri) {
 			packages.push({
 				languageVersion: "2.12",
 				name: "flutter",
 				packageUri: "lib/",
-				rootUri: Uri.file(flutterPackageRoot).toString(),
+				rootUri: flutterPackageRootUri?.toString(),
 			});
 		}
 
 		const config = {
 			configVersion: 2,
-			flutterRoot: flutterRoot ? Uri.file(flutterRoot).toString() : undefined,
+			flutterRoot: flutterRootUri?.toString(),
 			packages,
 		};
 
@@ -127,26 +134,74 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 	}
 
 	it("returns SDK path from package path", () => {
-		const flutterPackageRoot = path.join(flutterRoot, "packages", "flutter");
+		const flutterPackageRootUri = Uri.file(path.join(fakeFlutterRoot, "packages", "flutter"));
 
-		createPackageConfig({ flutterPackageRoot });
+		createPackageConfig({ flutterPackageRootUri });
 
 		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
-		const expectedSdkPath = path.join(flutterRoot, "bin") + path.sep;
+		const expectedSdkPath = path.join(fakeFlutterRoot, "bin") + path.sep;
 		assert.equal(sdkPath?.toLowerCase(), expectedSdkPath.toLowerCase());
 	});
 
 	it("returns SDK path from flutterRoot, prioritizing it over package path", () => {
-		const fakeFlutterRoot = path.join(tempFolder, "flutter_fake");
-		const fakeFlutterPackageRoot = path.join(fakeFlutterRoot, "packages", "flutter");
+		const fakeFlutterRootUri = Uri.file(fakeFlutterRoot);
+		const fakeFlutterPackageRootUri = Uri.file(path.join(fakeFlutterRoot, "packages", "flutter"));
 
 		createPackageConfig({
-			flutterPackageRoot: fakeFlutterPackageRoot,
-			flutterRoot,
+			flutterPackageRootUri: fakeFlutterPackageRootUri,
+			flutterRootUri: fakeFlutterRootUri,
 		});
 
 		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
-		const expectedSdkPath = path.join(flutterRoot, "bin") + path.sep;
+		const expectedSdkPath = path.join(fakeFlutterRoot, "bin") + path.sep;
 		assert.equal(sdkPath?.toLowerCase(), expectedSdkPath.toLowerCase());
+	});
+
+	it("handles non-Windows file URI in package path on Windows", function () {
+		if (!isWin)
+			this.skip();
+
+		createPackageConfig({
+			flutterPackageRootUri: Uri.parse("file:///home/test/flutter/packages/flutter"),
+		});
+
+		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
+		assert.equal(sdkPath, undefined);
+	});
+
+	it("handles Windows file URI in package path on non-Windows", function () {
+		if (isWin)
+			this.skip();
+
+		createPackageConfig({
+			flutterPackageRootUri: Uri.parse("file:///C:/src/flutter/packages/flutter"),
+		});
+
+		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
+		assert.equal(sdkPath, undefined);
+	});
+
+	it("handles non-Windows file URI in flutterRoot on Windows", function () {
+		if (!isWin)
+			this.skip();
+
+		createPackageConfig({
+			flutterRootUri: Uri.parse("file:///home/test/flutter"),
+		});
+
+		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
+		assert.equal(sdkPath, undefined);
+	});
+
+	it("handles Windows file URI in flutterRoot on non-Windows", function () {
+		if (isWin)
+			this.skip();
+
+		createPackageConfig({
+			flutterRootUri: Uri.parse("file:///C:/src/flutter"),
+		});
+
+		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
+		assert.equal(sdkPath, undefined);
 	});
 });
