@@ -165,13 +165,13 @@ class PackageConfigJsonPackageMap extends PackageMap {
 
 		this.map = {};
 		for (const pkg of this.config.packages) {
-			try {
-				const packageConfigFolderPath = path.dirname(this.packageConfigPath);
-				const packageRootPath = this.getPathForUri(pkg.rootUri);
+			const packageConfigFolderPath = path.dirname(this.packageConfigPath);
+			const packageRootPath = this.getPathForUri(pkg.rootUri);
+			if (packageRootPath) {
 				const packageLibPath = this.getPathForUri(pkg.packageUri);
-				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath ?? "", packageLibPath ?? "");
-			} catch (e) {
-				this.logger.error(`Failed to resolve path for package ${pkg.name}: ${e}`);
+				this.map[pkg.name] = path.resolve(packageConfigFolderPath, packageRootPath, packageLibPath ?? "");
+			} else {
+				this.logger.error(`Failed to resolve path for package ${pkg.name}, did not resolve a valid rootUri`);
 			}
 		}
 	}
@@ -184,13 +184,16 @@ class PackageConfigJsonPackageMap extends PackageMap {
 			const parsedPath = normalizeSlashes(
 				uri.startsWith("file:")
 					? url.fileURLToPath(uri)
-					: unescape(uri),
+					: decodeURIComponent(uri),
 			);
 
 			return parsedPath.endsWith(path.sep) ? parsedPath : `${parsedPath}${path.sep}`;
-		} catch {
+		} catch (e) {
 			// Could be an invalid path such as a package_config on Linux being run on Windows.
 			// https://github.com/Dart-Code/Dart-Code/issues/5909
+			// This only happens on Windows because the Linux paths with no drive letters are invalid
+			// for Windows, however the opposite is not true (`file:///C:/foo` parses fine on Linux).
+			this.logger.warn(`Failed to extract path from URI: ${uri}: ${e}`);
 			return undefined;
 		}
 	}
