@@ -157,6 +157,16 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 		assert.equal(sdkPath?.toLowerCase(), expectedSdkPath.toLowerCase());
 	});
 
+	it("handles missing URIs", function () {
+		if (!isWin)
+			this.skip();
+
+		createPackageConfig({});
+
+		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
+		assert.equal(sdkPath, undefined);
+	});
+
 	it("handles non-Windows file URI in package path on Windows", function () {
 		if (!isWin)
 			this.skip();
