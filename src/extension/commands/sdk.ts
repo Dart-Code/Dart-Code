@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, ExtensionRestartReason, flutterPath } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason, flutterPath, thirtySecondsInMs } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { CustomScript, DartSdks, DartWorkspaceContext, IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { logProcess } from "../../shared/logging";
@@ -28,20 +28,6 @@ export const commandState = {
 export interface OperationProgress {
 	progressReporter: vs.Progress<{ message?: string; increment?: number }>;
 	cancellationToken: vs.CancellationToken;
-}
-
-interface ProgressWithItemCounts extends vs.Progress<{ message?: string; increment?: number }> {
-	totalItems?: number;
-	currentItem?: number;
-}
-
-export function setProgressItemCounts(operationProgress: OperationProgress | undefined, totalItems: number) {
-	if (!operationProgress)
-		return;
-
-	const progressWithCounts = operationProgress.progressReporter as ProgressWithItemCounts;
-	progressWithCounts.totalItems = totalItems;
-	progressWithCounts.currentItem = 0;
 }
 
 export class BaseSdkCommands implements IAmDisposable {
@@ -70,9 +56,8 @@ export class BaseSdkCommands implements IAmDisposable {
 		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
 		const containingWorkspacePath = containingWorkspace ? fsPath(containingWorkspace.uri) : undefined;
 
-		let packageOrFolderDisplayName: string;
-
 		// Before choosing to use the folder name, try to use `package:foo`.
+		let packageOrFolderDisplayName: string;
 		const packageName = tryGetPackageName(folderToRunCommandIn);
 		if (packageName) {
 			packageOrFolderDisplayName = `package:${packageName}`;
@@ -160,15 +145,7 @@ export class BaseSdkCommands implements IAmDisposable {
 
 			const process = new ChainedProcess(() => {
 				channel.appendLine(`[${packageOrFolderDisplayName}] ${commandName} ${args.join(" ")}`);
-
-				const progressWithCounts = progress as ProgressWithItemCounts;
-				if (progressWithCounts.totalItems && progressWithCounts.totalItems > 1) {
-					const current = (progressWithCounts.currentItem ?? 0) + 1;
-					progressWithCounts.currentItem = current;
-					progress.report({ message: `${packageOrFolderDisplayName}... (${current}/${progressWithCounts.totalItems})`, increment: 100 / progressWithCounts.totalItems });
-				} else {
-					progress.report({ message: `${packageOrFolderDisplayName}...` });
-				}
+				progress.report({ message: `${packageOrFolderDisplayName}...` });
 				const proc = safeToolSpawn(folder, binPath, args);
 				channels.runProcessInOutputChannel(proc, channel);
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
@@ -177,7 +154,7 @@ export class BaseSdkCommands implements IAmDisposable {
 				// If we complete with a non-zero code, or don't complete within 10s, we should show
 				// the output pane.
 				const completedWithErrorPromise = new Promise((resolve) => proc.on("close", resolve));
-				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), 10000));
+				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), thirtySecondsInMs));
 				void Promise.race([completedWithErrorPromise, timedOutPromise]).then((showOutput) => {
 					if (showOutput)
 						channel.show(true);
@@ -192,7 +169,7 @@ export class BaseSdkCommands implements IAmDisposable {
 		};
 
 		if (operationProgress)
-			return runWithProgress(operationProgress.progressReporter, operationProgress.cancellationToken);
+			return runWithProgress(operationProgress.progressReporter ?? { report: () => undefined }, operationProgress.cancellationToken);
 
 		return await vs.window.withProgress({
 			cancellable: true,
