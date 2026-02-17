@@ -184,14 +184,14 @@ export class PackageCommands extends BaseSdkCommands {
 	}
 
 	private async resolvePackageTargetUri(uri: string | vs.Uri | undefined, placeHolder: string): Promise<vs.Uri | undefined> {
-		if (!uri || !(uri instanceof vs.Uri)) {
-			const folder = await getFolderToRunCommandIn(this.logger, placeHolder);
-			if (!folder)
-				return; // User cancelled.
-			return vs.Uri.file(folder);
-		}
+		if (uri)
+			return typeof uri === "string"
+				? vs.Uri.file(uri)
+				: uri;
 
-		return uri;
+		const folder = await getFolderToRunCommandIn(this.logger, placeHolder);
+		return folder ? vs.Uri.file(folder) : undefined;
+
 	}
 
 	private async upgradePackagesMajorVersions(uri: string | vs.Uri | undefined) {

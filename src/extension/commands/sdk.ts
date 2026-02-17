@@ -53,27 +53,8 @@ export class BaseSdkCommands implements IAmDisposable {
 		if (!folderToRunCommandIn)
 			return;
 
-		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
-		const containingWorkspacePath = containingWorkspace ? fsPath(containingWorkspace.uri) : undefined;
 
-		// Before choosing to use the folder name, try to use `package:foo`.
-		let packageOrFolderDisplayName: string;
-		const packageName = tryGetPackageName(folderToRunCommandIn);
-		if (packageName) {
-			packageOrFolderDisplayName = `package:${packageName}`;
-		} else {
-			// Display the relative path from the workspace root to the folder we're running up to two segments.
-			packageOrFolderDisplayName = path.basename(folderToRunCommandIn);
-			if (containingWorkspacePath) {
-				const relativePath = path.relative(containingWorkspacePath, folderToRunCommandIn);
-				if (relativePath) {
-					packageOrFolderDisplayName = relativePath.includes(path.sep)
-						? relativePath.split(path.sep).slice(-2).join(path.sep)
-						: relativePath;
-				}
-			}
-		}
-
+		const packageOrFolderDisplayName = getPackageOrFolderDisplayName(folderToRunCommandIn);
 		return handler(folderToRunCommandIn, args, packageOrFolderDisplayName, alwaysShowOutput, operationProgress);
 	}
 
@@ -151,7 +132,7 @@ export class BaseSdkCommands implements IAmDisposable {
 				this.logger.info(`(PROC ${proc.pid}) Spawned ${binPath} ${args.join(" ")} in ${folder}`, LogCategory.CommandProcesses);
 				logProcess(this.logger, LogCategory.CommandProcesses, proc);
 
-				// If we complete with a non-zero code, or don't complete within 10s, we should show
+				// If we complete with a non-zero code, or don't complete within 30s, we should show
 				// the output pane.
 				const completedWithErrorPromise = new Promise((resolve) => proc.on("close", resolve));
 				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), thirtySecondsInMs));
@@ -252,6 +233,28 @@ export class SdkCommands extends BaseSdkCommands {
 		});
 
 		this.disposables.push({ dispose() { watcher.close(); } });
+	}
+}
+
+export function getPackageOrFolderDisplayName(folderToRunCommandIn: string) {
+	// Before choosing to use the folder name, try to use `package:foo`.
+	const packageName = tryGetPackageName(folderToRunCommandIn);
+	if (packageName) {
+		return `package:${packageName}`;
+	} else {
+		// Display the relative path from the workspace root to the folder we're running up to two segments.
+		const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(folderToRunCommandIn));
+		const containingWorkspacePath = containingWorkspace ? fsPath(containingWorkspace.uri) : undefined;
+		let packageOrFolderDisplayName = path.basename(folderToRunCommandIn);
+		if (containingWorkspacePath) {
+			const relativePath = path.relative(containingWorkspacePath, folderToRunCommandIn);
+			if (relativePath) {
+				packageOrFolderDisplayName = relativePath.includes(path.sep)
+					? relativePath.split(path.sep).slice(-2).join(path.sep)
+					: relativePath;
+			}
+		}
+		return packageOrFolderDisplayName;
 	}
 }
 

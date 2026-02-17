@@ -1,9 +1,8 @@
-import * as path from "path";
 import * as vs from "vscode";
 import { maxConcurrentProcesses, runWithConcurrencyLimit } from "../../shared/pub/utils";
-import { fsPath, tryGetPackageName } from "../../shared/utils/fs";
+import { fsPath } from "../../shared/utils/fs";
 import { config } from "../config";
-import { OperationProgress } from "./sdk";
+import { getPackageOrFolderDisplayName, OperationProgress } from "./sdk";
 
 export async function runBatchFolderOperation(
 	uris: vs.Uri[],
@@ -57,14 +56,7 @@ export async function runBatchFolderOperation(
 		(item: vs.Uri) => {
 			const itemPath = fsPath(item);
 			// Before choosing to use the folder name, try to use `package:foo`.
-			let packageOrFolderDisplayName: string;
-			const packageName = tryGetPackageName(itemPath);
-			if (packageName) {
-				packageOrFolderDisplayName = `package:${packageName}`;
-			} else {
-				// Display the relative path from the workspace root to the folder we're running up to two segments.
-				packageOrFolderDisplayName = path.basename(itemPath);
-			}
+			const packageOrFolderDisplayName = getPackageOrFolderDisplayName(itemPath);
 			activePackages.set(itemPath, packageOrFolderDisplayName);
 			updateProgress();
 		},

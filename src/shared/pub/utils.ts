@@ -13,7 +13,7 @@ export const maxConcurrentProcesses = getMaxConcurrentPubProcesses();
 /**
  * Gets the maximum number of pub processes to run at once.
  *
- * Callers should generally use `maxConcurrentProcesses`, this is the implememtation
+ * Callers should generally use `maxConcurrentProcesses`, this is the implementation
  * exposed only for tests.
  */
 export function getMaxConcurrentPubProcesses(cpuCount = os.cpus().length): number {
@@ -36,7 +36,7 @@ export async function runWithConcurrencyLimit<T>(
 	let completed = 0;
 	let firstError: unknown;
 
-	/// A worker that continiously processes items until there are none left.
+	/// A worker that continuously processes items until there are none left.
 	const worker = async () => {
 		while (!firstError && !cancellationToken.isCancellationRequested) {
 			// Grab the index of the next item.
