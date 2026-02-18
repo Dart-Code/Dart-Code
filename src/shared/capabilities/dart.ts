@@ -9,14 +9,10 @@ export class DartCapabilities {
 		this.version = dartVersion;
 	}
 
-	// Support for Dart prior to 3.1 (Flutter 3.13) is deprecated as of Aug 2025.
-	// https://blog.flutter.dev/whats-new-in-flutter-3-35-c58ef72e3766#:~:text=Deprecated%20IDE%20support%20for%20older%20Flutter%20SDKs
-	get isUnsupportedNow() { return !versionIsAtLeast(this.version, "3.1.0"); }
+	// Support for Dart prior to 3.2 (Flutter 3.16) is deprecated as of Nov 2025, we warned starting end of Dec 2025, and stopped supporting early Mar 2026
+	get isUnsupportedNow() { return !versionIsAtLeast(this.version, "3.2.0"); }
 
-	// Support for Dart prior to 3.2 (Flutter 3.16) is reprecated as of Nov 2025, however we only started warning in
-	// the end-of-Dec-2025/start-of-Jan-2026 release so are only warning for a release or two.
-	// https://blog.flutter.dev/whats-new-in-flutter-3-35-c58ef72e3766#:~:text=In%20our%20next%20stable%20release%2C%20Flutter%20SDKs%20before%203.16%20will%20be%20deprecated.
-	get isUnsupportedSoon() { return !versionIsAtLeast(this.version, "3.2.0");; }
+	get isUnsupportedSoon() { return false; }
 
 	get needsNoExampleForPubGet() { return versionIsAtLeast(this.version, "3.1.0"); }
 	get omitsClassNameForConstructors() { return versionIsAtLeast(this.version, "3.10.0-0"); }
