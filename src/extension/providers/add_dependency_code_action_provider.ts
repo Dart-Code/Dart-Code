@@ -34,10 +34,6 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		if (!context?.diagnostics?.length)
 			return;
 
-		const projectRoot = locateBestProjectRoot(fsPath(document.uri));
-		if (!projectRoot)
-			return;
-
 		let diagnosticsWithPackageNames = context.diagnostics
 			.filter((d) => d.range.intersection(range) && d.source === "dart")
 			.map((diagnostic) => ({ diagnostic, packageName: this.extractPackageNameForUriNotFoundDiagnostic(document, diagnostic) }))
@@ -45,11 +41,16 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		if (!diagnosticsWithPackageNames.length)
 			return;
 
+		const projectRoot = locateBestProjectRoot(fsPath(document.uri));
+		if (!projectRoot)
+			return;
+
 		const pubspecPath = path.join(projectRoot, "pubspec.yaml");
+		const includeDevDependencies = !(document.uri.path.includes("/lib/") || document.uri.path.includes("/bin/"));
 
 		// Next, filter out any already in pubspec, as that suggests the URI is incorrect
 		// for another reason (and we wouldn't want to try to add something that exists).
-		const existingPackageNames = this.getDependenciesForPubspec(pubspecPath);
+		const existingPackageNames = this.getDependenciesForPubspec(pubspecPath, { includeDevDependencies });
 		if (!existingPackageNames) // undefined = failed to parse, don't show any fixes
 			return;
 		diagnosticsWithPackageNames = diagnosticsWithPackageNames
@@ -75,17 +76,17 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		if (!diagnosticsWithPackageNames.length)
 			return;
 
-		return flatMap(diagnosticsWithPackageNames, (item) => this.createActions(document, item.diagnostic, item.packageName!));
+		return flatMap(diagnosticsWithPackageNames, (item) => this.createActions(document, item.diagnostic, item.packageName!, { includeDevDependencies }));
 	}
 
-	private getDependenciesForPubspec(pubspecPath: string): Set<string> | undefined {
+	private getDependenciesForPubspec(pubspecPath: string, { includeDevDependencies }: { includeDevDependencies: boolean }): Set<string> | undefined {
 		const existingPackageNames = new Set<string>();
 
 		try {
 			const pubspecContent = fs.readFileSync(pubspecPath).toString();
 			const yaml = YAML.parse(pubspecContent);
 			const dependencies = yaml?.dependencies && typeof yaml.dependencies === "object" ? Object.keys(yaml.dependencies as object) : [];
-			const devDependencies = yaml?.dev_dependencies && typeof yaml.dev_dependencies === "object" ? Object.keys(yaml.dev_dependencies as object) : [];
+			const devDependencies = includeDevDependencies && yaml?.dev_dependencies && typeof yaml.dev_dependencies === "object" ? Object.keys(yaml.dev_dependencies as object) : [];
 			[...dependencies, ...devDependencies].forEach((d) => existingPackageNames.add(d));
 		} catch {
 			return undefined;
@@ -114,7 +115,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		return match[1];
 	}
 
-	private createActions(document: TextDocument, diagnostic: Diagnostic, packageName: string): CodeAction[] {
+	private createActions(document: TextDocument, diagnostic: Diagnostic, packageName: string, { includeDevDependencies }: { includeDevDependencies: boolean }): CodeAction[] {
 		const createAction = (isDevDependency: boolean) => {
 			const dependencyTypeName = isDevDependency ? "dev_dependencies" : "dependencies";
 			const title = `Add '${packageName}' to ${dependencyTypeName}`;
@@ -132,8 +133,7 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 		};
 		const actions = [createAction(false)];
 
-		// When outside of lib, dev_dependency is an option too.
-		if (!document.uri.path.includes("/lib/"))
+		if (includeDevDependencies)
 			actions.push(createAction(true));
 
 		return actions;
