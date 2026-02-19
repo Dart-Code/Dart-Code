@@ -143,6 +143,18 @@ describe("pub add", () => {
 		assert.equal(pubspecContainsPackage(packageName), true);
 	});
 
+	it("can add from a quick fix if listed only in dev_dependencies and imported from lib", async () => {
+		const packageName = "meta";
+		assert.equal(pubspecContainsPackage(packageName), true);
+		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/meta.dart';`));
+
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
+		const addDependencyFixes = fixResults.filter((r) => r.title.includes(`Add '${packageName}' to dependencies`));
+		const addDevDependencyFixes = fixResults.filter((r) => r.title.includes(`Add '${packageName}' to dev_dependencies`));
+		assert.equal(addDependencyFixes.length, 1);
+		assert.equal(addDevDependencyFixes.length, 0);
+	});
+
 	it("cannot add from a quick fix if already listed in pubspec.yaml", async () => {
 		const packageName = "convert";
 		assert.equal(pubspecContainsPackage(packageName), true);
