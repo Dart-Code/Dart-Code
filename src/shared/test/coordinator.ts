@@ -161,11 +161,11 @@ export class TestSessionCoordinator implements IAmDisposable {
 		// https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
 		const useRootLocation = !isSetupOrTeardownTestName(evt.test.name) && !!evt.test.root_url && !!evt.test.root_line && !!evt.test.root_column;
 
-		const path = maybeUriToFilePath(useRootLocation ? evt.test.root_url : evt.test.url);
+		const path = maybeUriToFilePath(useRootLocation ? evt.test.root_url ?? undefined : evt.test.url ?? undefined);
 		const line = useRootLocation ? evt.test.root_line : evt.test.line;
 		const character = useRootLocation ? evt.test.root_column : evt.test.column;
 
-		const range = this.getRangeForNode(suite, line, character);
+		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
 		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
 
 		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
@@ -204,7 +204,7 @@ export class TestSessionCoordinator implements IAmDisposable {
 		const path = (evt.group.root_url || evt.group.url) ? uriToFilePath(evt.group.root_url || evt.group.url!) : undefined;
 		const line = evt.group.root_line || evt.group.line;
 		const character = evt.group.root_column || evt.group.column;
-		const range = this.getRangeForNode(suite, line, character);
+		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
 		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
 	}
 
