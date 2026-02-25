@@ -216,15 +216,20 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
-	private markEnqueued(run: vs.TestRun, testsToRun: Set<vs.TestItem>, testsToExclude: Set<vs.TestItem>) {
+	private markEnqueued(run: vs.TestRun, testsToRun: Set<vs.TestItem>, testsToExclude?: Set<vs.TestItem>) {
 		const markTestEnqueued = (item: vs.TestItem) => {
-			if (testsToExclude.has(item))
+			if (testsToExclude?.has(item))
 				return;
 
-			if (item.children.size === 0)
-				run.enqueued(item); // Enqueue only leaf items (VS Code will handle showing the status for parents).
-			else
-				item.children.forEach(markTestEnqueued); // Otherwise recurse.
+			if (item.children.size === 0) {
+				// Enqueue only leaf items (VS Code will handle showing the status for parents).
+				if (!isSetupOrTeardownTestName(item.label)) {
+					run.enqueued(item);
+				}
+			} else {
+				// Otherwise recurse.
+				item.children.forEach(markTestEnqueued);
+			}
 		};
 
 		testsToRun.forEach(markTestEnqueued);
@@ -471,6 +476,27 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			this.registerTestRun(sessionID, run, true);
 		}
 		return run;
+	}
+
+	public suiteStarted(sessionID: string, node: SuiteNode): void {
+		const hasExistingRun = this.testRuns[sessionID]?.run;
+		// If we started a suite without an existing test run (provided by VS Code), then
+		// our code to mark test nodes as queued will not have been run. In order to provide
+		// approximately the same functionality, mark the suite and children as queued.
+		//
+		// This is not perfectly accurate, because the tests that actually run might be
+		// different to the whole set (for example you added `solo: true` and then pressed
+		// `F5` to run the file), but it's the best approximation we have, and skipped
+		// tests will still send `testDone` events to update them, and any nodes left as
+		// queued at the end of the run are automatically cleared.
+		if (!hasExistingRun) {
+			const run = this.getOrCreateTestRun(sessionID);
+			const item = this.itemForNode.get(node);
+			if (item)
+				this.markEnqueued(run, new Set([item]));
+		}
+
+
 	}
 
 	public suiteDiscovered(_sessionID: string | undefined, _node: SuiteNode): void {

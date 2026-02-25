@@ -433,6 +433,22 @@ export class TestModel {
 		return suite;
 	}
 
+	/**
+	 * Handles when a suite is discovered during a test run.
+	 *
+	 * This is similar to suiteDiscovered, however that method fires also when a suite is discovered
+	 * statically, whereas this is specifically when it's discovered as part of a test run (eg. from
+	 * a pkg:test JSON notification).
+	 */
+	public suiteStarted(dartCodeDebugSessionID: string, suitePath: string): SuiteData {
+		const [suite] = this.getOrCreateSuite(suitePath);
+		this.updateNode({ node: suite.node });
+
+		this.testEventListeners.forEach((l) => l.suiteStarted(dartCodeDebugSessionID, suite.node));
+
+		return suite;
+	}
+
 	public groupDiscovered(dartCodeDebugSessionID: string, suitePath: string, source: TestSource, groupID: number, groupName: string | undefined, parentID: number | undefined, groupPath: string | undefined, range: Range | undefined, _hasStarted = false): GroupNode {
 		groupPath ??= suitePath;
 		const suite = this.suites.getForPath(suitePath)!;
@@ -731,6 +747,7 @@ export class SuiteData {
 }
 
 export interface TestEventListener {
+	suiteStarted(sessionID: string, node: SuiteNode): void;
 	suiteDiscovered(sessionID: string | undefined, node: SuiteNode): void;
 	groupDiscovered(sessionID: string | undefined, node: GroupNode): void;
 	testDiscovered(sessionID: string | undefined, node: TestNode): void;
