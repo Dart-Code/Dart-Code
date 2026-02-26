@@ -22,7 +22,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 	public readonly coverageParser: CoverageParser;
 	private itemForNode = new WeakMap<TreeNode, vs.TestItem>();
 	private nodeForItem = new WeakMap<vs.TestItem, TreeNode>();
-	private testRuns: Record<string, { run: vs.TestRun, shouldEndWithSession: boolean } | undefined> = {};
+	private testRuns: Record<string, { run: vs.TestRun, wasStartedByTestRunner: boolean } | undefined> = {};
 
 	constructor(private readonly logger: Logger, private readonly model: TestModel, public readonly discoverer: TestDiscoverer | undefined) {
 		const controller = this.controller = vs.tests.createTestController("dart", "Dart & Flutter");
@@ -72,13 +72,13 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			await this.discoverer.discoverTestsForSuite(node);
 	}
 
-	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun, shouldEndWithSession: boolean): void {
-		this.testRuns[dartCodeDebugSessionID] = { run, shouldEndWithSession };
+	public registerTestRun(dartCodeDebugSessionID: string, run: vs.TestRun, { wasStartedByTestRunner }: { wasStartedByTestRunner: boolean }): void {
+		this.testRuns[dartCodeDebugSessionID] = { run, wasStartedByTestRunner };
 	}
 
 	public handleDebugSessionEnd(e: vs.DebugSession): void {
 		const run = this.testRuns[e.configuration.dartCodeDebugSessionID];
-		if (run?.shouldEndWithSession)
+		if (run && !run.wasStartedByTestRunner)
 			run.run.end();
 
 		this.testRuns[e.configuration.dartCodeDebugSessionID] = undefined;
@@ -473,30 +473,22 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			const request = new vs.TestRunRequest();
 			(request as any).preserveFocus = false; // TODO(dantup): Remove this when we crank VS Code min version in future.
 			run = this.controller.createTestRun(request, undefined, true);
-			this.registerTestRun(sessionID, run, true);
+			this.registerTestRun(sessionID, run, { wasStartedByTestRunner: false });
 		}
 		return run;
 	}
 
 	public suiteStarted(sessionID: string, node: SuiteNode): void {
-		const hasExistingRun = this.testRuns[sessionID]?.run;
-		// If we started a suite without an existing test run (provided by VS Code), then
-		// our code to mark test nodes as queued will not have been run. In order to provide
-		// approximately the same functionality, mark the suite and children as queued.
-		//
-		// This is not perfectly accurate, because the tests that actually run might be
-		// different to the whole set (for example you added `solo: true` and then pressed
-		// `F5` to run the file), but it's the best approximation we have, and skipped
-		// tests will still send `testDone` events to update them, and any nodes left as
-		// queued at the end of the run are automatically cleared.
-		if (!hasExistingRun) {
-			const run = this.getOrCreateTestRun(sessionID);
+		this.getOrCreateTestRun(sessionID);
+		const run = this.testRuns[sessionID]!;
+
+		// If the tests were not started by the test runner, they won't have been marked
+		// as queued, so we do this for each suite as it starts.
+		if (!run.wasStartedByTestRunner) {
 			const item = this.itemForNode.get(node);
 			if (item)
-				this.markEnqueued(run, new Set([item]));
+				this.markEnqueued(run.run, new Set([item]));
 		}
-
-
 	}
 
 	public suiteDiscovered(_sessionID: string | undefined, _node: SuiteNode): void {
