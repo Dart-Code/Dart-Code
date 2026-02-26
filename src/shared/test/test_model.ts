@@ -103,7 +103,11 @@ export class WorkspaceFolderNode extends TreeNode {
 export class ProjectNode extends TreeNode {
 	declare children: SuiteNode[];
 
-	constructor(public readonly parent: WorkspaceFolderNode | undefined, public readonly name: string, public readonly path: string) {
+	constructor(
+		public readonly parent: WorkspaceFolderNode | undefined,
+		public readonly name: string,
+		public readonly path: string,
+		public readonly supportsCoverage: Promise<boolean>) {
 		super();
 	}
 
@@ -288,7 +292,7 @@ export class TestModel {
 
 		const projectPath = locateBestProjectRoot(suitePath);
 		const parent = projectPath ? this.getOrCreateProjectNode(projectPath) : undefined;
-		const suite = new SuiteData(suitePath, projectPath, this.logger, this.workspaceContext, parent);
+		const suite = new SuiteData(suitePath, projectPath, parent);
 
 		if (parent) {
 			parent.children.push(suite.node);
@@ -317,7 +321,12 @@ export class TestModel {
 		const name = workspaceFolder
 			? path.relative(workspaceFolder.path, projectPath)
 			: path.basename(projectPath);
-		const node = new ProjectNode(parent, name, projectPath);
+
+		// Pass a promise that resolves to whether this project supports coverage so we don't need to look
+		// it up for each suite.
+		const checkProjectSupportsCoverage = async () => isFlutterProjectFolder(projectPath) || (await getPackageTestCapabilities(this.logger, this.workspaceContext, projectPath)).supportsLcovCoverage;
+
+		const node = new ProjectNode(parent, name, projectPath, checkProjectSupportsCoverage());
 		this.projectNodes.set(projectPath, node);
 
 		if (parent) {
@@ -689,25 +698,12 @@ export class SuiteData {
 	private readonly groupsByName = new Map<string, GroupNode>();
 	private readonly testsById = new Map<string, TestNode>();
 	private readonly testsByName = new Map<string, TestNode>();
-	public readonly supportsCoverage: Promise<boolean>;
 
-	constructor(public readonly path: string, public readonly projectPath: string | undefined, logger: Logger, context: WorkspaceContext, parent: ProjectNode | WorkspaceFolderNode | undefined) {
+	constructor(public readonly path: string, public readonly projectPath: string | undefined, parent: ProjectNode | WorkspaceFolderNode | undefined) {
 		this.node = new SuiteNode(this, parent);
-		this.supportsCoverage = this.suiteSupportsCoverage(logger, context);
 	}
 
 	private static unnamedItemMarker = "<!!!###unnamed-test-item###!!!>";
-
-	private async suiteSupportsCoverage(logger: Logger, context: WorkspaceContext): Promise<boolean> {
-		if (!this.projectPath)
-			return false;
-
-		if (isFlutterProjectFolder(this.projectPath))
-			return true;
-
-		const testCapabilities = await getPackageTestCapabilities(logger, context, this.projectPath);
-		return testCapabilities.supportsLcovCoverage;
-	}
 
 	public getAllGroups(): GroupNode[] {
 		// We need to uniq() these because we store values in the map from
