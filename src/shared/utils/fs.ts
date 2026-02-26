@@ -213,7 +213,6 @@ export function projectReferencesFlutter(folder?: string): boolean {
 	if (folder && hasPubspec(folder)) {
 		const pubspecPath = path.join(folder, "pubspec.yaml");
 		try {
-			console.log(`projectReferencesFlutter: ${folder}`);
 			const pubspecContent = fs.readFileSync(pubspecPath);
 			return pubspecContentReferencesFlutter(pubspecContent.toString());
 		} catch (e: any) {

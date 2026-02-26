@@ -427,7 +427,11 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 			item.tags = [runnableTestTag];
 
 			// Checking if coverage is supported is async, so we need to do this later.
-			void node.suiteData.supportsCoverage.then((supportsCoverage) => {
+			let project: TreeNode | undefined = node;
+			while (project && !(project instanceof ProjectNode))
+				project = project.parent;
+
+			void project?.supportsCoverage.then((supportsCoverage) => {
 				if (supportsCoverage) {
 					item.tags = [...item.tags, runnableWithCoverageTestTag]; // Reassign to force update.
 				}
