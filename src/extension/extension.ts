@@ -15,7 +15,7 @@ import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
 import { disposeAll, uniq, withTimeout } from "../shared/utils";
-import { fsPath, getRandomInt, isFlutterProjectFolder } from "../shared/utils/fs";
+import { fsPath, getRandomInt } from "../shared/utils/fs";
 import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
@@ -439,8 +439,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		&& vs.workspace.workspaceFolders?.length) {
 		// TODO(dantup): Support multiple projects better.
 		// https://github.com/flutter/flutter/issues/173550
-		const projectFolders = await projectFinder.findAllProjectFolders({ requirePubspec: true, searchDepth: config.projectSearchDepth });
-		const firstFlutterProject = projectFolders.find(isFlutterProjectFolder);
+		const firstFlutterProject = workspaceContext.firstFlutterProject;
 		if (firstFlutterProject) {
 			const flutterProjectOrWorkspace = getPubWorkspaceFolderOrPackageFolder(firstFlutterProject);
 			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation, flutterWidgetPreviewBehavior));

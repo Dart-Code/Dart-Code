@@ -331,7 +331,7 @@ export class SdkUtils {
 				dartSdkIsFromFlutter: false,
 				flutter: undefined,
 				isPreReleaseSdk: false,
-			}, {}, false, false, false, false);
+			}, {}, false, false, false, false, undefined);
 		}
 
 		// TODO: This has gotten very messy and needs tidying up...
@@ -546,6 +546,7 @@ export class SdkUtils {
 			hasAnyWebProject,
 			hasAnyStandardDartProject,
 			!!fuchsiaRoot && hasAnyStandardDartProject,
+			firstFlutterProject,
 		);
 	}
 
