@@ -157,24 +157,52 @@ function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
 	));
 }
 
+export function existsAndIsFileSync(file: string): boolean {
+	const stat = fs.statSync(file, { throwIfNoEntry: false });
+	return stat?.isFile() ?? false;
+}
+
+export function existsAndIsDirectorySync(file: string): boolean {
+	const stat = fs.statSync(file, { throwIfNoEntry: false });
+	return stat?.isDirectory() ?? false;
+}
+
+export async function existsAndIsFileAsync(file: string): Promise<boolean> {
+	try {
+		const stat = await fs.promises.stat(file);
+		return stat?.isFile() ?? false;
+	} catch {
+		return false;
+	}
+}
+
+export async function existsAndIsDirectoryAsync(file: string): Promise<boolean> {
+	try {
+		const stat = await fs.promises.stat(file);
+		return stat?.isDirectory() ?? false;
+	} catch {
+		return false;
+	}
+}
+
 export function hasPackageMapFile(folder: string): boolean {
-	return fs.existsSync(path.join(folder, ".dart_tool", "package_config.json")) || fs.existsSync(path.join(folder, ".packages"));
+	return existsAndIsFileSync(path.join(folder, ".dart_tool", "package_config.json")) || existsAndIsFileSync(path.join(folder, ".packages"));
 }
 
 export function hasPubspec(folder: string): boolean {
-	return fs.existsSync(path.join(folder, "pubspec.yaml"));
+	return existsAndIsFileSync(path.join(folder, "pubspec.yaml"));
 }
 
 async function hasPubspecAsync(folder: string): Promise<boolean> {
-	return await fileExists(path.join(folder, "pubspec.yaml"));
+	return await existsAndIsFileAsync(path.join(folder, "pubspec.yaml"));
 }
 
 async function hasCreateTriggerFileAsync(folder: string): Promise<boolean> {
-	return await fileExists(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
+	return await existsAndIsFileAsync(path.join(folder, FLUTTER_CREATE_PROJECT_TRIGGER_FILE));
 }
 
 async function isFlutterRepoAsync(folder: string): Promise<boolean> {
-	return await fileExists(path.join(folder, "bin/flutter")) && await fileExists(path.join(folder, "bin/cache/dart-sdk"));
+	return await existsAndIsDirectoryAsync(path.join(folder, "bin/flutter")) && await existsAndIsFileAsync(path.join(folder, "bin/cache/dart-sdk"));
 }
 
 export function isFlutterProjectFolder(folder?: string): boolean {
@@ -185,6 +213,7 @@ export function projectReferencesFlutter(folder?: string): boolean {
 	if (folder && hasPubspec(folder)) {
 		const pubspecPath = path.join(folder, "pubspec.yaml");
 		try {
+			console.log(`projectReferencesFlutter: ${folder}`);
 			const pubspecContent = fs.readFileSync(pubspecPath);
 			return pubspecContentReferencesFlutter(pubspecContent.toString());
 		} catch (e: any) {
@@ -195,9 +224,9 @@ export function projectReferencesFlutter(folder?: string): boolean {
 	return false;
 }
 
-export function pubspecContentReferencesFlutter(content: string) {
+export function pubspecContentReferencesFlutter(content: string): boolean {
 	try {
-		const yaml = YAML.parse(content.toString());
+		const yaml = YAML.parse(content);
 		return !!(
 			yaml?.dependencies?.flutter
 			|| yaml?.dev_dependencies?.flutter
@@ -279,14 +308,6 @@ export function extractFlutterSdkPathFromPackagesFile(projectFolder: string): st
 	return fs.existsSync(packagePath) ? packagePath : undefined;
 }
 
-async function fileExists(p: string): Promise<boolean> {
-	try {
-		await fs.promises.access(p);
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 export function resolveTildePaths<T extends string | undefined>(p: T): string | (undefined extends T ? undefined : never) {
 	if (typeof p !== "string")
