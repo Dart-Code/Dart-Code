@@ -144,8 +144,8 @@ jobs:
         run: flutter config --enable-web
 
       - name: Flutter precache
-        if: startsWith(matrix.bot, 'flutter') && matrix.bot != 'flutter_snap'
-        run: flutter precache
+        if: matrix.bot == 'flutter_debug_chrome'
+        run: flutter precache --web
 
       - run: |
           dart pub global activate --no-executables crypto
