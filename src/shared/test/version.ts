@@ -4,10 +4,12 @@ import { DartTestCapabilities, DartTestCapabilitiesFromHelpText } from "../../sh
 import { dartVMPath, packageTestCapabilitiesCacheTimeInMs } from "../../shared/constants";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { runProcess, safeSpawn } from "../processes";
+import { PackageMap } from "../pub/package_map";
 import { PromiseCompleter } from "../utils";
 import { SimpleTimeBasedCache } from "../utils/cache";
 import { WorkspaceContext } from "../workspace";
 
+/// A cache of both project folder + package config paths, to the capabilities.
 export const cachedTestCapabilities = new SimpleTimeBasedCache<Promise<DartTestCapabilities>>();
 
 /// Get the capabilities by using "dart test --version".
@@ -53,26 +55,40 @@ async function getCapabilitiesFromHelp(logger: Logger, binPath: string, folder: 
 	}
 }
 
-export async function getPackageTestCapabilities(logger: Logger, workspaceContext: WorkspaceContext, folder: string): Promise<DartTestCapabilities> {
+export async function getPackageTestCapabilities(logger: Logger, workspaceContext: WorkspaceContext, folderPath: string): Promise<DartTestCapabilities> {
 	// Don't ever run the command below in places like g3.
 	if (workspaceContext.config.supportsDartRunTest === false)
 		return DartTestCapabilities.empty;
 
-	const cached = cachedTestCapabilities.get(folder);
+	// We cache by both folder and package map so we can look up a cache value without
+	// having to locate the package map.
+	let cached = cachedTestCapabilities.get(folderPath);
+	if (cached !== undefined)
+		return cached;
+
+	// Test capabilities are the same for projects in a workspace, so look up the package map path and we'll also cache
+	// on that. If there is no package map, there is no pkg:test.
+	const packageFile = PackageMap.findPackagesFile(folderPath);
+	if (!packageFile)
+		return DartTestCapabilities.empty;
+
+	// Check the cache again for the package map.
+	cached = cachedTestCapabilities.get(packageFile);
 	if (cached !== undefined)
 		return cached;
 
 	const sdks = workspaceContext.sdks as DartSdks;
 	const completer = new PromiseCompleter<DartTestCapabilities>();
-	cachedTestCapabilities.add(folder, completer.promise, packageTestCapabilitiesCacheTimeInMs);
+	cachedTestCapabilities.add(folderPath, completer.promise, packageTestCapabilitiesCacheTimeInMs);
+	cachedTestCapabilities.add(packageFile, completer.promise, packageTestCapabilitiesCacheTimeInMs);
 	const binPath = path.join(sdks.dart, dartVMPath);
 
 	try {
 		const capabilities =
 			// First try to get the version from "dart run test:test --version".
-			await getCapabilitiesFromVersion(logger, binPath, folder)
+			await getCapabilitiesFromVersion(logger, binPath, folderPath)
 			// If that returns undefined, we should fall back to using "dart test --help".
-			?? await getCapabilitiesFromHelp(logger, binPath, folder);
+			?? await getCapabilitiesFromHelp(logger, binPath, folderPath);
 
 		completer.resolve(capabilities);
 
