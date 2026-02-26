@@ -16,8 +16,9 @@ export const cachedTestCapabilities = new SimpleTimeBasedCache<Promise<DartTestC
 async function getCapabilitiesFromVersion(logger: Logger, binPath: string, folder: string): Promise<DartTestCapabilities | undefined> {
 	const proc = await runProcess(logger, binPath, ["run", "test:test", "--version"], folder, {}, safeSpawn);
 	if (proc.exitCode === 0) {
-		const output = proc.stdout.trim();
-		if (semver.valid(output))
+		// Take the last line of the output, because we can get "Resolving dependencies..." in front of it.
+		const output = proc.stdout.trim().split("\n").pop()?.trim();
+		if (output && semver.valid(output))
 			return new DartTestCapabilities(output);
 		else
 			console.warn(`Failed to parse pkg:test version number: ${output}`);
