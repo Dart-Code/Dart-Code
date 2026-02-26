@@ -55,7 +55,7 @@ describe("DartFileUriTerminalLinkProvider", () => {
 });
 
 describe("DartPackageUriTerminalLinkProvider", () => {
-	const workspaceContext = new WorkspaceContext({ dartSdkIsFromFlutter: false } as Sdks, {} as WorkspaceConfig, false, false, false, false);
+	const workspaceContext = new WorkspaceContext({ dartSdkIsFromFlutter: false } as Sdks, {} as WorkspaceConfig, false, false, false, false, undefined);
 	const provider = new DartPackageUriLinkProvider(logger, workspaceContext, () => undefined, () => [], 0);
 	const file1 = fsPath(helloWorldMainFile);
 	const file2 = fsPath(helloWorldMainLibFile);
