@@ -225,6 +225,9 @@ export function projectReferencesFlutter(folder?: string): boolean {
 }
 
 export function pubspecContentReferencesFlutter(content: string): boolean {
+	// Do a fast string check first, because YAML parse can be slow in comparison.
+	if (!content.includes("flutter"))
+		return false;
 	try {
 		const yaml = YAML.parse(content);
 		return !!(
