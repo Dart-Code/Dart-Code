@@ -218,7 +218,7 @@ export class TestCommands implements vs.Disposable {
 			// If we were given a test to use by VS Code, use it. Otherwise we'll lazily create one at the
 			// other end.
 			if (testRun)
-				this.vsCodeTestController?.registerTestRun(dartCodeDebugSessionID, testRun, false);
+				this.vsCodeTestController?.registerTestRun(dartCodeDebugSessionID, testRun, { wasStartedByTestRunner: true });
 
 			if (token) {
 				subs.push(vs.debug.onDidStartDebugSession((e) => {
