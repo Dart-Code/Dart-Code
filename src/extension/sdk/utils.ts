@@ -5,7 +5,7 @@ import { commands, ExtensionContext, extensions, ProgressLocation, Uri, window, 
 import { analyzerSnapshotPath, cloningFlutterMessage, DART_DOWNLOAD_URL, dartPlatformName, dartVMPath, executableNames, ExtensionRestartReason, FLUTTER_CREATE_PROJECT_TRIGGER_FILE, FLUTTER_DOWNLOAD_URL, flutterPath, isLinux, MISSING_VERSION_FILE_VERSION, openSettingsAction, SdkTypeString, showLogAction } from "../../shared/constants";
 import { GetSDKCommandConfig, GetSDKCommandResult, Logger, SdkSearchResult, SdkSearchResults, WorkspaceConfig, WritableWorkspaceConfig } from "../../shared/interfaces";
 import { flatMap, isDartSdkFromFlutter, notUndefined } from "../../shared/utils";
-import { extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter, safeRealpathSync } from "../../shared/utils/fs";
+import { existsAndIsDirectorySync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, fsPath, getSdkVersion, hasPubspec, projectReferencesFlutter, safeRealpathSync } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { processBazelWorkspace, processDartSdkRepository, processFuchsiaWorkspace } from "../../shared/utils/workspace";
 import { envUtils, getAllProjectFolders, getDartWorkspaceFolders, resolvePaths } from "../../shared/vscode/utils";
@@ -649,9 +649,9 @@ export class SdkUtils {
 		);
 	}
 
-	private containsFile(folder: string, filePath: string) {
+	private containsFile(folder: string, filePath: string): boolean {
 		const fullPath = path.join(folder, filePath);
-		return fs.existsSync(fullPath) && fs.statSync(fullPath).isFile();
+		return existsAndIsFileSync(fullPath);
 	}
 
 	public searchPaths(paths: string[], executableFilename: string, postFilter?: (s: string) => boolean): SdkSearchResults {
@@ -768,10 +768,9 @@ function findRootContaining(folder: string, childName: string, expect: "FILE" | 
 		let child = folder;
 		while (child) {
 			try {
-				const stat = fs.statSync(path.join(child, childName));
-				if (expect === "ANY" || (expect === "FILE" ? stat.isFile() : stat.isDirectory())) {
+				const fullPath = path.join(child, childName);
+				if (expect === "ANY" || (expect === "FILE" ? existsAndIsFileSync(fullPath) : existsAndIsDirectorySync(fullPath)))
 					return child;
-				}
 			} catch { }
 
 			const parentDir = path.dirname(child);

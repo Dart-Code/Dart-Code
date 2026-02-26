@@ -8,7 +8,7 @@ import { ExtensionRestartReason, showLogAction } from "../shared/constants";
 import { BasicDebugConfiguration } from "../shared/debug/interfaces";
 import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
-import { fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
+import { existsAndIsDirectorySync, existsAndIsFileSync, fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
 import { isWithinWorkspace, locateBestProjectRoot } from "../shared/vscode/project";
 import { isDartWorkspaceFolder } from "../shared/vscode/utils";
 import { config } from "./config";
@@ -111,7 +111,7 @@ export function isTestFile(file: string): boolean {
 // Similar to isTestFile, but requires that the file is _test.dart because it will be used as
 // an entry point for pub test running.
 export function isRunnableTestFile(file: string): boolean {
-	return !!file && isDartFile(file) && file.toLowerCase().endsWith("_test.dart");
+	return !!file && file.toLowerCase().endsWith("_test.dart") && isDartFile(file);
 }
 
 export function isTestFolder(path: string | undefined): boolean {
@@ -119,8 +119,7 @@ export function isTestFolder(path: string | undefined): boolean {
 		&& (
 			isInsideFolderNamed(path, "test")
 			|| isInsideFolderNamed(path, "integration_test")
-		) && fs.existsSync(path)
-		&& fs.statSync(path).isDirectory();
+		) && existsAndIsDirectorySync(path);
 }
 
 export function projectCanUsePackageTest(folder: string, config: WorkspaceConfig): boolean {
@@ -134,7 +133,7 @@ export function projectCanUsePackageTest(folder: string, config: WorkspaceConfig
 }
 
 export function isDartFile(file: string): boolean {
-	return !!file && path.extname(file.toLowerCase()) === ".dart" && fs.existsSync(file) && fs.statSync(file).isFile();
+	return !!file && path.extname(file).toLowerCase() === ".dart" && existsAndIsFileSync(file);
 }
 
 export function isInsideFolderNamed(file: string | undefined, folderName: string): boolean {
