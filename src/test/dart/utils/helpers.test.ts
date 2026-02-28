@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { IAmDisposable } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, closeFile, defer, helloWorldMainFile, openFile } from "../../helpers";
+import { activate, closeFile, defer, delay, helloWorldMainFile, openFile } from "../../helpers";
 
 describe("helpers", () => {
 	beforeEach("activate emptyFile", () => activate());
@@ -29,6 +29,7 @@ describe("helpers", () => {
 			await openFile(helloWorldMainFile);
 			await closeFile(helloWorldMainFile);
 		}
+		await delay(100);
 
 		assert.equal(openEvents, 10);
 		assert.equal(closeEvents, 10);
