@@ -130,8 +130,10 @@ async function runAllTests(): Promise<void> {
 	if (!fs.existsSync(".dart_code_test_logs"))
 		fs.mkdirSync(".dart_code_test_logs");
 
-	function shouldRunBot(name: string) {
-		return !process.env.BOT || process.env.BOT === name || process.env.BOT.startsWith(`${name}-`);
+	function shouldRunBot(name: string, { runIfNoBotSet } = { runIfNoBotSet: true }) {
+		return (runIfNoBotSet && !process.env.BOT)
+			|| process.env.BOT === name
+			|| process.env.BOT?.startsWith(`${name}-`);
 	}
 
 	try {
@@ -142,7 +144,7 @@ async function runAllTests(): Promise<void> {
 		if (shouldRunBot("flutter")) {
 			await runTests("flutter", "flutter_hello_world", undefined);
 		}
-		if (shouldRunBot("flutter_snap")) {
+		if (shouldRunBot("flutter_snap", { runIfNoBotSet: false })) {
 			await runTests("flutter_snap", "empty");
 		}
 		if (shouldRunBot("dart_debug")) {
