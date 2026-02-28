@@ -3917,7 +3917,7 @@
 	"dependencies": {
 		"@vscode/debugadapter": "^1.68.0",
 		"@vscode/debugprotocol": "^1.68.0",
-		"minimatch": "^10.2.1",
+		"minimatch": "^10.2.4",
 		"semver": "^7.7.1",
 		"vscode-languageclient": "^9.0.1",
 		"vscode-uri": "^3.1.0",
