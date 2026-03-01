@@ -6,7 +6,7 @@ import { versionIsAtLeast } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureServiceExtensionValue, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureHasRunWithArgsStarting, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
+import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureHasRunWithArgsStarting, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
 
 describe(`flutter run debugger (only test device)`, () => {
 	beforeEach("Skip test-device tests on web", function () {
@@ -14,6 +14,7 @@ describe(`flutter run debugger (only test device)`, () => {
 			this.skip();
 	});
 
+	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activateWithoutAnalysis(flutterHelloWorldMainFile));
 
 	let dc: DartDebugClient;

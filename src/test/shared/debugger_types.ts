@@ -4,6 +4,7 @@ import { Uri } from "vscode";
 import { isWin } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { fsPath } from "../../shared/utils/fs";
+import { flutterTestDeviceId } from "../debug_helpers";
 import { createTempTestFile, getResolvedDebugConfiguration, setConfigForTest } from "../helpers";
 
 export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?: string; debuggerType?: DebuggerType | string; expectedDebuggerType: DebuggerType; }>, defaultFolder: Uri): Promise<void> {
@@ -32,6 +33,8 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 					cwd: absoluteCwd,
 					debuggerType,
 					program: absolutePath,
+					suppressPrompts: true,
+					deviceId: flutterTestDeviceId,
 				});
 				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 			});
@@ -42,6 +45,8 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 						cwd: absoluteCwd,
 						debuggerType,
 						program: absolutePath,
+						suppressPrompts: true,
+						deviceId: flutterTestDeviceId,
 					});
 					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 				});
@@ -51,6 +56,8 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 					cwd,
 					debuggerType,
 					program,
+					suppressPrompts: true,
+					deviceId: flutterTestDeviceId,
 				});
 				assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 			});
@@ -62,6 +69,8 @@ export async function runDebuggerTypeTests(tests: Array<{ program: string; cwd?:
 						cwd: windowsCwd,
 						debuggerType,
 						program: windowsProgram,
+						suppressPrompts: true,
+						deviceId: flutterTestDeviceId,
 					});
 					assert.equal(DebuggerType[resolvedConfig.debuggerType], DebuggerType[expectedDebuggerType]);
 				});

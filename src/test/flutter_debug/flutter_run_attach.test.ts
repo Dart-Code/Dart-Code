@@ -7,7 +7,7 @@ import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import { DebuggerType } from "../../shared/enums";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, deferUntilLast, delay, fileSafeCurrentTestName, flutterHelloWorldMainFile, getAttachConfiguration, logger, watchPromise } from "../helpers";
+import { activateWithoutAnalysis, deferUntilLast, delay, fileSafeCurrentTestName, flutterHelloWorldMainFile, getAttachConfiguration, getPackages, logger, watchPromise } from "../helpers";
 
 describe("flutter run debugger (attach)", () => {
 	beforeEach("Skip attach tests for web devices", function () {
@@ -15,6 +15,7 @@ describe("flutter run debugger (attach)", () => {
 			this.skip();
 	});
 
+	before("get packages", () => getPackages());
 	beforeEach("activate flutterHelloWorldMainFile", () => activateWithoutAnalysis(flutterHelloWorldMainFile));
 
 	beforeEach(() => {

@@ -310,7 +310,7 @@ export async function activate(file?: vs.Uri | null): Promise<void> {
 }
 
 export async function getPackages(uri?: vs.Uri) {
-	await activateWithoutAnalysis();
+	await activateWithoutAnalysis(null);
 	if (!(uri || (vs.workspace.workspaceFolders?.length))) {
 		logger.error("Cannot getPackages because there is no workspace folder and no URI was supplied");
 		return;
