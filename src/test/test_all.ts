@@ -20,7 +20,7 @@ if (testFilterArgs.length > 0) {
 // without DART_CODE_NO_FILTER_TEST_OUTPUT.
 //
 // TODO(dantup): Tidy this up once this ships:
-//  https://github.com/microsoft/vscode-test/pull/324 
+//  https://github.com/microsoft/vscode-test/pull/324
 if (!process.env.DART_CODE_NO_FILTER_TEST_OUTPUT)
 	installOutputFiltering();
 
@@ -229,7 +229,7 @@ function installOutputFiltering(): void {
 		/Failed to autolaunch/i,
 		/Failed to register VM Service ws:\/\/fake-host:123\/ws/i,
 		/Performing extension reload/i,
-		/Exit code:   0/i,
+		/Exit code:\s+0/i,
 		// Verbose stack traces from VS Code errors
 		/resources\/app\/out\/vs/i,
 	];
