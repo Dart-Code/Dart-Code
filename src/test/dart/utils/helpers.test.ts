@@ -3,12 +3,18 @@ import * as vs from "vscode";
 import { IAmDisposable } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, closeFile, defer, delay, helloWorldMainFile, openFile } from "../../helpers";
+import { activate, closeAllOpenFiles, closeFile, defer, delay, forceDocumentCloseEvents, helloWorldMainFile, openFile } from "../../helpers";
 
 describe("helpers", () => {
 	beforeEach("activate emptyFile", () => activate());
 
 	it("closeFile forces VS Code to run onDidCloseTextDocument", async () => {
+		// Ensure there are no existing docs that could interfere with our numbers, since
+		// we check for an exact count.
+		await closeAllOpenFiles();
+		await forceDocumentCloseEvents();
+		await delay(100);
+
 		let openEvents = 0;
 		let closeEvents = 0;
 
