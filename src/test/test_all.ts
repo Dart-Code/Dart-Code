@@ -130,9 +130,13 @@ async function runAllTests(): Promise<void> {
 	if (!fs.existsSync(".dart_code_test_logs"))
 		fs.mkdirSync(".dart_code_test_logs");
 
-	function shouldRunBot(name: string, { runIfNoBotSet } = { runIfNoBotSet: true }) {
-		return (runIfNoBotSet && !process.env.BOT)
-			|| process.env.BOT === name
+	function shouldRunBot(name: string, { onlyIfExplicit } = { onlyIfExplicit: false }) {
+		// If there's no BOT defined and onlyIfExplicit=false, run this bot.
+		if (!onlyIfExplicit && !process.env.BOT)
+			return true;
+
+		// Otherwise, run it if it's explicitly named.
+		return process.env.BOT === name
 			|| process.env.BOT?.startsWith(`${name}-`);
 	}
 
@@ -144,20 +148,22 @@ async function runAllTests(): Promise<void> {
 		if (shouldRunBot("flutter")) {
 			await runTests("flutter", "flutter_hello_world", undefined);
 		}
-		if (shouldRunBot("flutter_snap", { runIfNoBotSet: false })) {
+		if (shouldRunBot("flutter_snap", { onlyIfExplicit: true })) {
 			await runTests("flutter_snap", "empty");
 		}
 		if (shouldRunBot("dart_debug")) {
 			await runTests("dart_debug", "hello_world", undefined);
 		}
-		if (shouldRunBot("dart_web_debug")) {
+		if (shouldRunBot("dart_web_debug", { onlyIfExplicit: true })) {
 			await runTests("web_debug", "web");
 		}
 		if (shouldRunBot("flutter_debug")) {
 			await runTests("flutter_debug", "flutter_hello_world", undefined);
-			await runTests("flutter_bazel", "bazel.code-workspace", undefined);
+			if (shouldRunBot("flutter_debug", { onlyIfExplicit: true })) {
+				await runTests("flutter_bazel", "bazel.code-workspace", undefined);
+			}
 		}
-		if (shouldRunBot("flutter_debug_chrome")) {
+		if (shouldRunBot("flutter_debug_chrome", { onlyIfExplicit: true })) {
 			await runTests("flutter_debug", "flutter_hello_world", "chrome", { FLUTTER_TEST_DEVICE_ID: "chrome" });
 		}
 		if (shouldRunBot("flutter_test_debug")) {
@@ -174,13 +180,12 @@ async function runAllTests(): Promise<void> {
 			await runTests("dart_nested_flutter", "dart_nested_flutter");
 			await runTests("dart_nested_flutter2", "dart_nested_flutter2");
 		}
-		if (shouldRunBot("flutter_repo")) {
+		if (shouldRunBot("flutter_repo", { onlyIfExplicit: true })) {
 			if (process.env.FLUTTER_REPO_PATH) {
 				await runTests("flutter_repository", process.env.FLUTTER_REPO_PATH);
 			} else {
 				console.error("process.env.FLUTTER_REPO_PATH not set, skipping flutter_repo tests");
-				if (process.env.BOT)
-					exitCode = 1;
+				exitCode = 1;
 			}
 		}
 	} catch (e) {
