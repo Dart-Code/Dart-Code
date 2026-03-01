@@ -16,6 +16,14 @@ if (testFilterArgs.length > 0) {
 	console.log(`Running tests with filter(s): ${testFilterArgs.join(", ")}`);
 }
 
+// Replace process.stdout and process.stderr so we can filter the output if running
+// without DART_CODE_NO_FILTER_TEST_OUTPUT.
+//
+// TODO(dantup): Tidy this up once this ships:
+//  https://github.com/microsoft/vscode-test/pull/324 
+if (!process.env.DART_CODE_NO_FILTER_TEST_OUTPUT)
+	installOutputFiltering();
+
 async function runTests(testFolderName: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
 	const testFolder = path.join(cwd, "out", "src", "test", testFolderName);
 	const files = await getTestSuites(testFolder, testFilterArgs);
@@ -192,6 +200,92 @@ async function runAllTests(): Promise<void> {
 		exitCode = 1;
 		console.error(e);
 	}
+}
+
+function installOutputFiltering(): void {
+	// There's a lot of noisy output during test runs even when all test pass, much
+	// of which is from VS Code and we can't suppress. Filter it out as it's written
+	// to stdout or stderr to make the logs easier to review.
+	const suppressOutputPatterns = [
+		/Found --crash-reporter-directory argument/i,
+		/ERROR:dbus/i,
+		/Exiting GPU process/i,
+		/update#setState disabled/i,
+		/update#ctor - updates are disabled by the environment/i,
+		/Started local extension host with pid/i,
+		/MCP Registry configured/i,
+		/Loading development extension/i,
+		/Authentication provider is not declared/i,
+		/Settings Sync:/i,
+		/This is a flutter daemon ERROR event/i,
+		/fallback to software WebGL has been deprecated/i,
+		/GPU stall due to/i,
+		/Closing VS Code gracefully/i,
+		/FATAL:electron/i,
+		/ERROR:(ui|gpu|third_party)/i,
+		/Failed to check for extension recommendations/i,
+		/Extension host with pid \d+ exited with code: 0/i,
+		/\[DEP0040\] DeprecationWarning:/i,
+		/Failed to autolaunch/i,
+		/Failed to register VM Service ws:\/\/fake-host:123\/ws/i,
+		/Performing extension reload/i,
+		/Exit code:   0/i,
+		// Verbose stack traces from VS Code errors
+		/resources\/app\/out\/vs/i,
+	];
+	const shouldDropLine = (line: string) => suppressOutputPatterns.some((pattern) => pattern.test(line));
+
+	installOutputFilter(process.stdout, shouldDropLine);
+	installOutputFilter(process.stderr, shouldDropLine);
+}
+
+type WriteCallback = (error?: Error | null) => void;
+
+function installOutputFilter(stream: NodeJS.WriteStream, shouldDropLine: (line: string) => boolean): void {
+	const originalWrite = stream.write.bind(stream);
+	let pendingLine = "";
+
+	const flushPending = () => {
+		if (pendingLine && !shouldDropLine(pendingLine))
+			originalWrite(pendingLine);
+		pendingLine = "";
+	};
+
+	process.once("beforeExit", flushPending);
+	process.once("exit", flushPending);
+
+	stream.write = ((
+		chunk: string | Uint8Array,
+		encoding?: BufferEncoding | WriteCallback,
+		callback?: WriteCallback,
+	): boolean => {
+		const writeCallback = typeof encoding === "function" ? encoding : callback;
+		const writeEncoding = typeof encoding === "function" ? undefined : encoding;
+
+		pendingLine += Buffer.isBuffer(chunk)
+			? chunk.toString(writeEncoding)
+			: String(chunk);
+
+		const lines = pendingLine.split("\n");
+		pendingLine = lines.pop() ?? "";
+
+		const linesToWrite = lines
+			.map((line) => `${line}\n`)
+			.filter((line) => !shouldDropLine(line));
+
+		if (!linesToWrite.length) {
+			writeCallback?.();
+			return true;
+		}
+
+		let writeResult = true;
+		for (let i = 0; i < linesToWrite.length - 1; i++) {
+			writeResult = originalWrite(linesToWrite[i], writeEncoding) && writeResult;
+		}
+		writeResult = originalWrite(linesToWrite[linesToWrite.length - 1], writeEncoding, writeCallback) && writeResult;
+
+		return writeResult;
+	}) as typeof stream.write;
 }
 
 void runAllTests().then(() => process.exit(exitCode));
