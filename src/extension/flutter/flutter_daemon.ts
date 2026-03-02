@@ -26,8 +26,10 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private hasLoggedDaemonTimeout = false;
 	private isShuttingDown = false;
 	private startupReporter: vs.Progress<{ message?: string; increment?: number }> | undefined;
-	private daemonStartedCompleter = new PromiseCompleter<void>();
-	public daemonStarted = this.daemonStartedCompleter.promise;
+	private daemonResponsiveCompleter = new PromiseCompleter<void>();
+	private daemonResponsive = this.daemonResponsiveCompleter.promise;
+	private daemonInitializedCompleter = new PromiseCompleter<void>();
+	private daemonInitialized = this.daemonInitializedCompleter.promise;
 	private pingIntervalId?: NodeJS.Timeout;
 	public capabilities: DaemonCapabilities = DaemonCapabilities.empty;
 	private didSpawnWithAdditionalArgs = false;
@@ -42,7 +44,15 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			this.capabilities.version = e.version;
 			void vs.commands.executeCommand("setContext", FLUTTER_SUPPORTS_ATTACH, this.capabilities.canFlutterAttach);
 
-			void this.deviceEnable();
+			// Delay marking as initialized for a few seconds to see whether it helps prevent
+			// the first emulator requests from hanging.
+			// https://github.com/Dart-Code/Dart-Code/issues/5793
+			const completer = this.daemonInitializedCompleter;
+			async function markInitializedAfterDelay() {
+				setTimeout(() => completer.resolve(), 2000);
+			}
+
+			void this.deviceEnable().then(markInitializedAfterDelay, markInitializedAfterDelay);
 		});
 
 		const daemonArgs = [];
@@ -184,7 +194,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			// When we get the first message to handle, complete the status notifications.
 			if (!this.hasStarted) {
 				this.startTime = new Date();
-				this.daemonStartedCompleter.resolve();
+				this.daemonResponsiveCompleter.resolve();
 			}
 			return true;
 		}
@@ -230,7 +240,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 					}, (progressReporter) => {
 						this.startupReporter = progressReporter;
 						this.startupReporter.report({ message });
-						return this.daemonStartedCompleter.promise;
+						return this.daemonResponsive;
 					});
 				}
 			}
@@ -295,7 +305,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("device.enable");
 	}
 
-	public getEmulators(): Thenable<f.FlutterEmulator[]> {
+	public async getEmulators(): Promise<f.FlutterEmulator[]> {
+		await this.daemonInitialized;
 		return this.withRecordedTimeout("emulator.getEmulators", this.sendRequest("emulator.getEmulators"));
 	}
 
@@ -307,7 +318,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("emulator.create", { name });
 	}
 
-	public getSupportedPlatforms(projectRoot: string): Thenable<f.SupportedPlatformsResponse> {
+	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
+		await this.daemonInitialized;
 		return this.withRecordedTimeout("daemon.getSupportedPlatforms", this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }));
 	}
 
