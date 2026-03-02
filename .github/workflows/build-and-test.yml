@@ -251,7 +251,7 @@ jobs:
         run: ps -x
 
       - name: Store logs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-logs-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
@@ -260,7 +260,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Store test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
@@ -269,7 +269,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Store coverage
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: success() && matrix.build-version == 'stable'
         with:
           name: coverage-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
@@ -277,7 +277,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Store crash dumps
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: crash-dumps-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
@@ -297,7 +297,7 @@ jobs:
     steps:
 
       - name: Merge logs
-        uses: actions/upload-artifact/merge@v6
+        uses: actions/upload-artifact/merge@v7
         if: always()
         with:
           name: test-logs
@@ -307,7 +307,7 @@ jobs:
         continue-on-error: true # fails if empty
 
       - name: Merge test results
-        uses: actions/upload-artifact/merge@v6
+        uses: actions/upload-artifact/merge@v7
         if: always()
         with:
           name: test-results
@@ -317,7 +317,7 @@ jobs:
         continue-on-error: true # fails if empty
 
       - name: Merge coverage
-        uses: actions/upload-artifact/merge@v6
+        uses: actions/upload-artifact/merge@v7
         if: success()
         with:
           name: coverage
@@ -326,7 +326,7 @@ jobs:
         continue-on-error: true # fails if empty
 
       - name: Merge crash dumps
-        uses: actions/upload-artifact/merge@v6
+        uses: actions/upload-artifact/merge@v7
         if: always()
         with:
           name: crash-dumps
