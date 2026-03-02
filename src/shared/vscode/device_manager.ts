@@ -405,7 +405,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 	/// having exited) or there is no response within 5 seconds.
 	public async tryGetSupportedPlatformTypes(projectRoot: string): Promise<string[] | undefined> {
 		return withTimeout(
-			this.daemon.daemonStarted.then(() => this.daemon.getSupportedPlatforms(projectRoot)),
+			this.daemon.getSupportedPlatforms(projectRoot),
 			"The daemon did not respond to getSupportedPlatforms",
 			this.unresponsiveTimeoutPeriodSeconds,
 		).then(
@@ -580,7 +580,6 @@ export class FlutterDeviceManager implements vs.Disposable {
 
 	private async getEmulators(): Promise<Emulator[]> {
 		try {
-			await this.daemon.daemonStarted;
 			const emus = await this.daemon.getEmulators();
 
 			const allEmulatorsByID: Record<string, Emulator> = {};

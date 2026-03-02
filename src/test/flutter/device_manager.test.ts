@@ -355,7 +355,7 @@ class FakeFlutterDaemon extends FakeProcessStdIOService<unknown> implements IFlu
 	public capabilities = DaemonCapabilities.empty;
 	public supportedPlatforms: f.PlatformType[] | undefined;
 	public supportedPlatformsDelaySeconds: number | undefined;
-	public daemonStarted = Promise.resolve();
+	public daemonInitialized = Promise.resolve();
 
 	public async enablePlatformGlobally(_platformType: string): Promise<void> { }
 
