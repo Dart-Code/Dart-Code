@@ -48,10 +48,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 			// the first emulator requests from hanging.
 			// https://github.com/Dart-Code/Dart-Code/issues/5793
 			const completer = this.daemonInitializedCompleter;
-			async function markInitializedAfterDelay() {
-				setTimeout(() => completer.resolve(), 2000);
-			}
-
+			const markInitializedAfterDelay = () => setTimeout(() => completer.resolve(), 2000);
 			void this.deviceEnable().then(markInitializedAfterDelay, markInitializedAfterDelay);
 		});
 
