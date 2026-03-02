@@ -3,7 +3,7 @@ import { flutterTestDeviceIsWeb } from "../debug_helpers";
 import { activateWithoutAnalysis, flutterHelloWorldFolder } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
-describe.only(`flutter debugger type`, async () => {
+describe(`flutter debugger type`, async () => {
 	beforeEach("Skip not-device-specific tests on web", function () {
 		if (flutterTestDeviceIsWeb)
 			this.skip();
