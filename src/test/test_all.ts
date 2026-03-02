@@ -230,6 +230,10 @@ function installOutputFiltering(): void {
 		/Failed to register VM Service ws:\/\/fake-host:123\/ws/i,
 		/Performing extension reload/i,
 		/Exit code:\s+0/i,
+		/filterEnabledExtensions/i,
+		/ExtensionHostDataProvider\.scannedExtensions:/i,
+		/ProcessExtensionHostDataProvider\.localExtensions:/i,
+		/Asking native host service to exit with code 0/i,
 		// Verbose stack traces from VS Code errors
 		/resources\/app\/out\/vs/i,
 	];
