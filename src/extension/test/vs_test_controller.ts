@@ -222,8 +222,10 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				return;
 
 			if (item.children.size === 0) {
-				// Enqueue only leaf items (VS Code will handle showing the status for parents).
-				if (!isSetupOrTeardownTestName(item.label)) {
+				// Enqueue only test items (VS Code will handle showing the status for containers).
+				const node = this.nodeForItem.get(item);
+				const isTest = node instanceof TestNode;
+				if (isTest && !isSetupOrTeardownTestName(item.label)) {
 					run.enqueued(item);
 				}
 			} else {
