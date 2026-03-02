@@ -1,20 +1,15 @@
 import { DebuggerType } from "../../shared/enums";
-import { waitFor } from "../../shared/utils/promises";
-import { flutterTestDeviceId, flutterTestDeviceIsWeb } from "../debug_helpers";
-import { activateWithoutAnalysis, flutterHelloWorldFolder, privateApi } from "../helpers";
+import { flutterTestDeviceIsWeb } from "../debug_helpers";
+import { activateWithoutAnalysis, flutterHelloWorldFolder } from "../helpers";
 import { runDebuggerTypeTests } from "../shared/debugger_types";
 
 describe(`flutter debugger type`, async () => {
-	beforeEach("activate", () => activateWithoutAnalysis(null));
-
-	beforeEach("Wait for device to be available", async () => {
-		// For web, the device doesn't show up immediately so we need to wait
-		// otherwise we will prompt to select a device when starting the debug
-		// session in the test. This is not required for flutter-tester as that
-		// bypasses the device check.
+	beforeEach("Skip not-device-specific tests on web", function () {
 		if (flutterTestDeviceIsWeb)
-			await waitFor(() => privateApi.deviceManager!.getDevice(flutterTestDeviceId));
+			this.skip();
 	});
+
+	beforeEach("activate", () => activateWithoutAnalysis(null));
 
 	const tests: Array<{ program: string, cwd?: string, debuggerType?: DebuggerType, expectedDebuggerType: DebuggerType }> = [
 		// All POSIX paths, Windows handled inside runDebuggerTypeTests.
