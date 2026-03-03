@@ -8,7 +8,7 @@ import { faint } from "../../shared/utils/colors";
 import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, deferUntilLast, delay, flutterHelloWorldBrokenFile, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getPackages, myPackageFolder, openFile, positionOf, privateApi, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
@@ -831,23 +831,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
 
-		for (const variable of allVariables) {
-			const evaluateName = (variable as any).evaluateName as string | undefined;
-			if (!evaluateName)
-				continue;
-			const evaluateResult = await dc.evaluateForFrame(evaluateName);
-			assert.ok(evaluateResult);
-			if (variable.value.endsWith("…\"")) {
-				// If the value was truncated, the evaluate responses should be longer
-				const prefix = variable.value.slice(1, -2); // Strip quotes
-				assert.ok(evaluateResult.result.length > prefix.length);
-				assert.equal(evaluateResult.result.slice(1, prefix.length + 1), prefix);
-			} else {
-				// Otherwise it should be the same.
-				assert.equal(evaluateResult.result, variable.value);
-			}
-			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
-		}
+		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),

@@ -440,7 +440,7 @@ export async function forceDocumentCloseEvents(fileUri?: vs.Uri) {
 		// becoming visible. However this shouldn't interfere with anything because it's
 		// a non-Dart file that we don't do anything with.
 		const dummyUri = vs.Uri.parse(`untitled:dummy-${i}`);
-		await vs.window.showTextDocument(await vs.workspace.openTextDocument(dummyUri));
+		await vs.window.showTextDocument(dummyUri);
 		openedDummyUris.push(dummyUri);
 	}
 

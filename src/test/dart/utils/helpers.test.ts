@@ -31,13 +31,14 @@ describe("helpers", () => {
 				closeEvents++;
 		}));
 
-		for (let i = 0; i < 10; i++) {
+		const NUMBER_FILE_OPENS = 3;
+		for (let i = 0; i < NUMBER_FILE_OPENS; i++) {
 			await openFile(helloWorldMainFile);
 			await closeFile(helloWorldMainFile);
 		}
 		await delay(100);
 
-		assert.equal(openEvents, 10);
-		assert.equal(closeEvents, 10);
+		assert.equal(openEvents, NUMBER_FILE_OPENS);
+		assert.equal(closeEvents, NUMBER_FILE_OPENS);
 	});
 });

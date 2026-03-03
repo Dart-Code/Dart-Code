@@ -140,6 +140,24 @@ export function ensureVariableWithIndex(variables: DebugProtocol.Variable[], ind
 	ensureVariable(variables, evaluateName, name, value);
 }
 
+export async function ensureVariableEvaluateName(dc: DartDebugClient, variable: DebugProtocol.Variable) {
+	const evaluateName = (variable as any).evaluateName as string | undefined;
+	if (!evaluateName)
+		return;
+	const evaluateResult = await dc.evaluateForFrame(evaluateName);
+	assert.ok(evaluateResult);
+	if (variable.value.endsWith("…\"")) {
+		// If the value was truncated, the evaluate responses should be longer
+		const prefix = variable.value.slice(1, -2); // Strip quotes
+		assert.ok(evaluateResult.result.length > prefix.length);
+		assert.equal(evaluateResult.result.slice(1, prefix.length + 1), prefix);
+	} else {
+		// Otherwise it should be the same.
+		assert.equal(evaluateResult.result, variable.value);
+	}
+	assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
+}
+
 interface MapEntry {
 	key: {
 		evaluateName: string | undefined;

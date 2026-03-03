@@ -13,7 +13,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureHasRunWithArgsStarting, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, rangeFor, sb, setConfigForTest, setTestContent, tryDeleteDirectoryRecursive, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
@@ -990,23 +990,7 @@ void printSomething() {
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
 		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
 
-		for (const variable of allVariables) {
-			const evaluateName = (variable as any).evaluateName as string | undefined;
-			if (!evaluateName)
-				continue;
-			const evaluateResult = await dc.evaluateForFrame(evaluateName);
-			assert.ok(evaluateResult);
-			if (variable.value.endsWith("…\"")) {
-				// If the value was truncated, the evaluate responses should be longer
-				const prefix = variable.value.slice(1, -2); // Strip quotes
-				assert.ok(evaluateResult.result.length > prefix.length);
-				assert.equal(evaluateResult.result.slice(1, prefix.length + 1), prefix);
-			} else {
-				// Otherwise it should be the same.
-				assert.equal(evaluateResult.result, variable.value);
-			}
-			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
-		}
+		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
 
 		await dc.terminateRequest();
 	});
