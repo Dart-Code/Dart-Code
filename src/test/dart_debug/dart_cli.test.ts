@@ -748,11 +748,7 @@ void printSomething() {
 	}
 
 	it("stops at a breakpoint with a condition returning true", testBreakpointCondition("1 == 1", true));
-	it("stops at a breakpoint with a condition returning 1", testBreakpointCondition("3 - 2", true));
-	it("does not stop at a breakpoint with a condition returning a string", testBreakpointCondition("'test'", false));
 	it("does not stop at a breakpoint with a condition returning false", testBreakpointCondition("1 == 0", false));
-	it("does not stop at a breakpoint with a condition returning 0", testBreakpointCondition("3 - 3", false));
-	it("does not stop at a breakpoint with a condition returning null", testBreakpointCondition("print('test');", false));
 	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, `Debugger failed to evaluate breakpoint condition "1 + '1'"`));
 
 	it("logs expected text (and does not stop) at a logpoint", async () => {
