@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as url from "url";
 import { Logger } from "../interfaces";
-import { findFileInAncestor, uriToFilePath } from "../utils";
+import { findFileInAncestor } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
 
 export class PackageMapLoader {
@@ -18,7 +18,7 @@ export abstract class PackageMap {
 		if (!entryPoint)
 			return undefined;
 
-		const file = findFileInAncestor([path.join(".dart_tool/package_config.json"), ".packages"], entryPoint);
+		const file = findFileInAncestor([path.join(".dart_tool/package_config.json")], entryPoint);
 		return file;
 	}
 
@@ -38,10 +38,7 @@ export abstract class PackageMap {
 		if (!file)
 			return new MissingPackageMap();
 		try {
-			if (path.basename(file).toLowerCase() === ".packages")
-				return new DotPackagesPackageMap(file);
-			else
-				return new PackageConfigJsonPackageMap(logger, file);
+			return new PackageConfigJsonPackageMap(logger, file);
 		} catch (e) {
 			logger.error(e);
 			return new MissingPackageMap();
@@ -93,51 +90,6 @@ export class MissingPackageMap extends PackageMap {
 		return undefined;
 	}
 	public reload() { }
-}
-
-class DotPackagesPackageMap extends PackageMap {
-	private map: Record<string, string> = {};
-	private readonly file: string | undefined;
-	private readonly localPackageRoot: string | undefined;
-	public get packages(): Record<string, string> { return Object.assign({}, this.map); }
-
-	constructor(file?: string) {
-		super();
-		if (!file) return;
-		this.file = file;
-		this.localPackageRoot = path.dirname(file);
-
-		this.load();
-	}
-
-	public reload(): void {
-		this.load();
-	}
-
-	private load(): void {
-		if (!this.file || !this.localPackageRoot)
-			return;
-
-		this.map = {};
-		const lines: string[] = fs.readFileSync(this.file, { encoding: "utf8" }).split("\n");
-		for (let line of lines) {
-			line = line.trim();
-
-			if (line.length === 0 || line.startsWith("#"))
-				continue;
-
-			const index = line.indexOf(":");
-			if (index !== -1) {
-				const name = line.substr(0, index);
-				const rest = line.substring(index + 1);
-
-				if (rest.startsWith("file:"))
-					this.map[name] = uriToFilePath(rest);
-				else
-					this.map[name] = path.join(this.localPackageRoot, rest);
-			}
-		}
-	}
 }
 
 class PackageConfigJsonPackageMap extends PackageMap {

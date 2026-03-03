@@ -186,7 +186,7 @@ export async function existsAndIsDirectoryAsync(file: string): Promise<boolean> 
 }
 
 export function hasPackageMapFile(folder: string): boolean {
-	return existsAndIsFileSync(path.join(folder, ".dart_tool", "package_config.json")) || existsAndIsFileSync(path.join(folder, ".packages"));
+	return existsAndIsFileSync(path.join(folder, ".dart_tool", "package_config.json"));
 }
 
 export function hasPubspec(folder: string): boolean {

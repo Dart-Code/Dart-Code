@@ -725,7 +725,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		checkForPackages();
 	}));
 
-	context.subscriptions.push(createWatcher("**/.packages", workspaceContext.events.onPackageMapChange));
 	context.subscriptions.push(createWatcher("**/.dart_tool/package_config.json", workspaceContext.events.onPackageMapChange));
 	workspaceContext.events.onPackageMapChange.fire();
 
