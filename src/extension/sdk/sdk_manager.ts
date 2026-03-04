@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { dartVMPath, flutterPath } from "../../shared/constants";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { versionIsAtLeast } from "../../shared/utils";
-import { getChildFolders, getSdkVersion, homeRelativePath, safeRealpathSync } from "../../shared/utils/fs";
+import { existsAndIsFileSync, getChildFolders, getSdkVersion, homeRelativePath, safeRealpathSync } from "../../shared/utils/fs";
 import { config } from "../config";
 
 abstract class SdkManager {
@@ -39,10 +39,7 @@ abstract class SdkManager {
 			allPaths.push(this.currentSdk);
 
 		const sdkFolders = allPaths
-			// We don't need to check isDirectory, since existsSync() will just return false
-			// if we join a filename on the end of another.
-			// .filter((f) => fs.statSync(f).isDirectory()) // Only directories.
-			.filter((f) => fs.existsSync(path.join(f, this.executablePath))); // Only those that look like SDKs.
+			.filter((f) => existsAndIsFileSync(path.join(f, this.executablePath))); // Only those that look like SDKs.
 
 		const sdkItems: SdkPickItem[] = sdkFolders.map((f) => {
 			// Resolve symlinks so we look in correct folder for version file.

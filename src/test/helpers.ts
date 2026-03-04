@@ -15,7 +15,7 @@ import { internalApiSymbol } from "../shared/symbols";
 import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
-import { createFolderForFile, fsPath, getRandomInt, tryDeleteFile } from "../shared/utils/fs";
+import { createFolderForFile, existsAndIsDirectorySync, fsPath, getRandomInt, tryDeleteFile } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -478,13 +478,14 @@ export function tryDelete(file: vs.Uri) {
 export function tryDeleteDirectoryRecursive(folder: string) {
 	if (!fs.existsSync(folder))
 		return;
-	if (!fs.statSync(folder).isDirectory()) {
+	if (!existsAndIsDirectorySync(folder)) {
 		logger.error(`deleteDirectoryRecursive was passed a file: ${folder}`);
+		return;
 	}
 	fs.readdirSync(folder)
 		.map((item) => path.join(folder, item))
 		.forEach((item) => {
-			if (fs.statSync(item).isDirectory()) {
+			if (existsAndIsDirectorySync(item)) {
 				tryDeleteDirectoryRecursive(item);
 			} else
 				tryDeleteFile(item);
