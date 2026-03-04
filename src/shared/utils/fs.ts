@@ -158,13 +158,27 @@ function readDirAsync(logger: Logger, folder: string): Promise<fs.Dirent[]> {
 }
 
 export function existsAndIsFileSync(file: string): boolean {
-	const stat = fs.statSync(file, { throwIfNoEntry: false });
-	return stat?.isFile() ?? false;
+	try {
+		const stat = fs.statSync(file, { throwIfNoEntry: false });
+		return stat?.isFile() ?? false;
+	} catch {
+		// Although I can't repro on any OS, some users see ENOTDIR if the path
+		// looks like `/path/to/file.dart/foo` which is possible because of
+		// how we call some of the helpers.
+		return false;
+	}
 }
 
 export function existsAndIsDirectorySync(file: string): boolean {
-	const stat = fs.statSync(file, { throwIfNoEntry: false });
-	return stat?.isDirectory() ?? false;
+	try {
+		const stat = fs.statSync(file, { throwIfNoEntry: false });
+		return stat?.isDirectory() ?? false;
+	} catch {
+		// Although I can't repro on any OS, some users see ENOTDIR if the path
+		// looks like `/path/to/file.dart/foo` which is possible because of
+		// how we call some of the helpers.
+		return false;
+	}
 }
 
 export async function existsAndIsFileAsync(file: string): Promise<boolean> {
