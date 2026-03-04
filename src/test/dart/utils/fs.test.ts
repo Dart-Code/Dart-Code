@@ -3,8 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
-import { extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, fsPath, getPackageName, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
-import { defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldTestFolder, testProjectsFolder, tryDeleteDirectoryRecursive } from "../../helpers";
+import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
+import { defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, testProjectsFolder, tryDeleteDirectoryRecursive } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
 	it("handles empty array", () => {
@@ -213,5 +213,99 @@ describe("extractFlutterSdkPathFromPackagesFile", () => {
 
 		const sdkPath = extractFlutterSdkPathFromPackagesFile(tempFolder);
 		assert.equal(sdkPath, undefined);
+	});
+});
+
+describe("existsAndIsFileSync", () => {
+	it("should return true for an existing file", () => {
+		assert.equal(existsAndIsFileSync(fsPath(helloWorldMainFile)), true);
+	});
+
+	it("should return false for a non-existent path", () => {
+		const missingFile = path.join(fsPath(helloWorldFolder), "does_not_exist.dart");
+		assert.equal(existsAndIsFileSync(missingFile), false);
+	});
+
+	it("should return false for a folder", () => {
+		assert.equal(existsAndIsFileSync(fsPath(helloWorldFolder)), false);
+	});
+
+	it("should return false for a path that is a subpath of a file", () => {
+		const fileInsideFile = path.join(fsPath(helloWorldMainFile), "pubspec.yaml");
+		assert.equal(existsAndIsFileSync(fileInsideFile), false);
+	});
+});
+
+describe("existsAndIsDirectorySync", () => {
+	it("should return true for an existing folder", () => {
+		assert.equal(existsAndIsDirectorySync(fsPath(helloWorldFolder)), true);
+	});
+
+	it("should return false for a non-existent path", () => {
+		const missingFile = path.join(fsPath(helloWorldFolder), "does_not_exist");
+		assert.equal(existsAndIsDirectorySync(missingFile), false);
+	});
+
+	it("should return false for a file", () => {
+		assert.equal(existsAndIsDirectorySync(fsPath(helloWorldMainFile)), false);
+	});
+
+	it("should return false for a path that is a subpath of a file", () => {
+		const fileInsideFile = path.join(fsPath(helloWorldMainFile), "pubspec.yaml");
+		assert.equal(existsAndIsDirectorySync(fileInsideFile), false);
+	});
+});
+
+describe("existsAndIsFileAsync", () => {
+	it("should return true for an existing file", async () => {
+		assert.equal(await existsAndIsFileAsync(fsPath(helloWorldMainFile)), true);
+	});
+
+	it("should return false for a non-existent path", async () => {
+		const missingFile = path.join(fsPath(helloWorldFolder), "does_not_exist.dart");
+		assert.equal(await existsAndIsFileAsync(missingFile), false);
+	});
+
+	it("should return false for a folder", async () => {
+		assert.equal(await existsAndIsFileAsync(fsPath(helloWorldFolder)), false);
+	});
+
+	it("should return false for a path that is a subpath of a file", async () => {
+		const fileInsideFile = path.join(fsPath(helloWorldMainFile), "pubspec.yaml");
+		assert.equal(await existsAndIsFileAsync(fileInsideFile), false);
+	});
+});
+
+describe("existsAndIsDirectoryAsync", () => {
+	it("should return true for an existing folder", async () => {
+		assert.equal(await existsAndIsDirectoryAsync(fsPath(helloWorldFolder)), true);
+	});
+
+	it("should return false for a non-existent path", async () => {
+		const missingFile = path.join(fsPath(helloWorldFolder), "does_not_exist");
+		assert.equal(await existsAndIsDirectoryAsync(missingFile), false);
+	});
+
+	it("should return false for a file", async () => {
+		assert.equal(await existsAndIsDirectoryAsync(fsPath(helloWorldMainFile)), false);
+	});
+
+	it("should return false for a path that is a subpath of a file", async () => {
+		const fileInsideFile = path.join(fsPath(helloWorldMainFile), "pubspec.yaml");
+		assert.equal(await existsAndIsDirectoryAsync(fileInsideFile), false);
+	});
+});
+
+describe("hasPubspec", () => {
+	it("should return false for a path that is a subpath of a file", () => {
+		const fileInsideFile = path.join(fsPath(helloWorldMainFile), "pubspec.yaml");
+		assert.equal(hasPubspec(fileInsideFile), false);
+	});
+});
+
+describe("hasPackageMapFile", () => {
+	it("should return false for a path that is a subpath of a file", () => {
+		const fileInsideFile = path.join(fsPath(helloWorldMainFile), "pubspec.yaml");
+		assert.equal(hasPackageMapFile(fileInsideFile), false);
 	});
 });
