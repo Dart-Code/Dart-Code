@@ -85,6 +85,7 @@ jobs:
           curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg | sudo gpg --dearmor --yes -o /etc/apt/keyrings/antigravity-repo-key.gpg
           echo "deb [signed-by=/etc/apt/keyrings/antigravity-repo-key.gpg] https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev antigravity-debian main" | sudo tee /etc/apt/sources.list.d/antigravity.list
           sudo apt-get update && sudo apt-get install antigravity -y
+          echo "ANTIGRAVITY_EXE=/usr/share/antigravity/antigravity" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Install Antigravity (macOS)
@@ -92,7 +93,7 @@ jobs:
         run: |
           brew install --cask antigravity
           echo "$(dirname "$(command -v agy)")" >> "$GITHUB_PATH"
-          echo "ANTIGRAVITY_EXE=agy" >> "$GITHUB_ENV"
+          echo "ANTIGRAVITY_EXE=/Applications/Antigravity.app/Contents/MacOS/Electron" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Install Antigravity (Windows)
