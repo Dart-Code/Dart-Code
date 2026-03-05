@@ -3951,7 +3951,6 @@
 		"vscode-tmgrammar-test": "^0.1.3",
 		"webpack-cli": "^6.0.1",
 		"webpack": "^5.102.0",
-		"which": "^6.0.1",
 		"xvfb-maybe": "^0.2.1"
 	},
 	"optionalDependencies": {

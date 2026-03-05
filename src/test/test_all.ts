@@ -1,7 +1,6 @@
 import * as vstest from "@vscode/test-electron";
 import * as fs from "fs";
 import * as path from "path";
-import which from "which";
 import { getTestSuites } from "./test_runner";
 
 let exitCode = 0;
@@ -27,8 +26,10 @@ if (!process.env.DART_CODE_NO_FILTER_TEST_OUTPUT)
 async function runTests(testFolderName: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
 	const testFolder = path.join(cwd, "out", "src", "test", testFolderName);
 	const files = await getTestSuites(testFolder, testFilterArgs);
-	if (!files.length)
+	if (!files.length) {
+		console.warn(`No tests found, skipping!`);
 		return;
+	}
 
 	console.log("\n\n");
 	console.log(`Starting "${testFolderName}" tests folder in workspace "${workspaceFolder}"...`);
@@ -74,12 +75,10 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		}
 	} else {
 		ideOverride = process.env[`${ideOverride.toUpperCase()}_EXE`] ?? ideOverride;
-		try {
-			ideOverride = await which(ideOverride);
-		} catch (err) {
-			const message = err instanceof Error ? err.message : String(err);
-			throw new Error(`IDE override executable "${ideOverride}" could not be found in PATH. Ensure it is installed and available on PATH: ${message}`);
-		}
+		if (!path.isAbsolute(ideOverride))
+			throw new Error(`IDE override executable (${ideOverride.toUpperCase()}_EXE) must be a full absolute path (got: ${ideOverride})`);
+
+		console.log(`Running tests with ideOverride: ${ideOverride}`);
 	}
 
 	try {
