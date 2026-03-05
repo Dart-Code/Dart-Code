@@ -233,6 +233,16 @@ function installOutputFiltering(): void {
 		/ExtensionHostDataProvider\.scannedExtensions:/i,
 		/ProcessExtensionHostDataProvider\.localExtensions:/i,
 		/Asking native host service to exit with code 0/i,
+		/product\.json#extensionEnabledApiProposals/i,
+		/AbstractExtensionService\./i,
+		/IExtensionHostStarter\./i,
+		/NativeExtensionHostFactory\./i,
+		/MODULE_TYPELESS_PACKAGE_JSON/i,
+		/Reparsing as ES module because module syntax was detected/i,
+		/To eliminate this warning, add "type": "module"/i,
+		/depends on UNKNOWN service agentSessions/i,
+		/command 'antigravity\.isFileGitIgnored' not found/i,
+		/An unknown error occurred. Please consult the log for more details./i,
 		// Verbose stack traces from VS Code errors
 		/resources\/app\/out\/vs/i,
 	];
