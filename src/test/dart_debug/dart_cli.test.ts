@@ -61,7 +61,7 @@ describe("dart cli debugger", () => {
 			}
 		));
 		const session: vs.DebugSession = await new Promise((resolve) => vs.debug.onDidStartDebugSession(resolve));
-		await delay(1000);
+		await delay(300);
 		await vs.debug.stopDebugging(session);
 	});
 
@@ -255,7 +255,7 @@ void printSomething() {
 
 		// Wait before the hot reload because the change needs to be flushed to disk and the above
 		// await doesn't seem to be enough.
-		await delay(100);
+		await delay(50);
 		await vs.commands.executeCommand("dart.hotReload");
 		await dc.assertOutputContains("stdout", "NEW CONTENT");
 
@@ -426,7 +426,7 @@ void printSomething() {
 			path: fsPath(helloWorldMainFile),
 		});
 		await dc.customRequest("updateDebugOptions", { debugSdkLibraries: true });
-		await delay(100);
+		await delay(50);
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {}).then((response) => {
 				// Ensure the top stack frame matches

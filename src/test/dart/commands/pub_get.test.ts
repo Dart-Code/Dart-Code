@@ -32,13 +32,14 @@ describe("pub get", () => {
 		await setTestContent(doc.getText() + " # test");
 		await doc.save();
 
-		// Wait for 1s then ensure it still hadn't run.
-		await delay(1000);
+		// Wait for 500ms then ensure it still hadn't run.
+		await delay(500);
 		assert.ok(!fetchPackagesOrPrompt.called);
 	});
 
 	it("runs delayed when pubspec is auto-saved", async () => {
 		await setConfigForTest("files", "autoSave", "afterDelay");
+		await setConfigForTest("files", "autoSaveDelay", 500);
 
 		const fetchPackagesOrPrompt = sb.stub(privateApi.packageCommands, "fetchPackagesOrPrompt").withArgs(sinon.match.any, sinon.match.any).resolves();
 
@@ -46,16 +47,16 @@ describe("pub get", () => {
 		const doc = editor.document;
 		await setTestContent(doc.getText() + " # test");
 
-		// Wait for 1sec and ensure it wasn't called.
-		await delay(1000);
+		// Wait for 300ms and ensure it wasn't called.
+		await delay(300);
 		assert.ok(!fetchPackagesOrPrompt.called);
 
-		// Wait another 1s and make another change to test debouncing.
-		await delay(1000);
+		// Wait another 300ms and make another change to test debouncing.
+		await delay(300);
 		await setTestContent(doc.getText() + " # test");
 
-		// Wait for 2sec and ensure it still wasn't called (because it was pushed back to 3sec again).
-		await delay(2000);
+		// Wait for 600ms and ensure it still wasn't called (because it was pushed back to 1.5sec again).
+		await delay(600);
 		assert.ok(!fetchPackagesOrPrompt.called);
 
 		// Wait for it to be called.

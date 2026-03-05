@@ -151,7 +151,7 @@ describe("web debugger", () => {
 		);
 
 		// If we restart too fast, things fail :-/
-		await delay(1000);
+		await delay(500);
 
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("stdout", "Restarted app"),

@@ -45,7 +45,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	});
 
 	/// If we restart too fast, things fail :-/
-	const delayBeforeRestart = () => delay(1000);
+	const delayBeforeRestart = () => delay(500);
 
 	it("runs and remains active until told to quit", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);

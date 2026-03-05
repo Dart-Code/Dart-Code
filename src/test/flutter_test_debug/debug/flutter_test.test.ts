@@ -266,7 +266,7 @@ describe("flutter test debugger", () => {
 					await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
 					// Allow some time for sessions to start so the startedSessions check doesn't
 					// fire immediately after only creating the first session.
-					await delay(1000);
+					await delay(500);
 					await waitFor(
 						() => startedSessions >= 0 && runningSessions === 0,
 						50, // check every 50ms
@@ -278,7 +278,7 @@ describe("flutter test debugger", () => {
 				}
 
 				// Allow some time for all events to be processed to try and reduce flakes?
-				await delay(100);
+				await delay(50);
 
 				const testFiles = [
 					flutterTestMainFile,

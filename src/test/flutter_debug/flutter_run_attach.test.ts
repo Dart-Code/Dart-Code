@@ -71,7 +71,7 @@ describe("flutter run debugger (attach)", () => {
 
 		// Remains active.
 		{
-			await delay(1000);
+			await delay(500);
 			await watchPromise("attaches_and_waits->threadsRequest", dc.threadsRequest());
 		}
 
@@ -81,7 +81,7 @@ describe("flutter run debugger (attach)", () => {
 				watchPromise("attaches_and_waits->waitForEvent:terminated", dc.waitForEvent("terminated")),
 				watchPromise("attaches_and_waits->terminateRequest", dc.terminateRequest()),
 			);
-			await delay(1000);
+			await delay(500);
 			assert.equal(process.hasExited, false);
 		}
 	});

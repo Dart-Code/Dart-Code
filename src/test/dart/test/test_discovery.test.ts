@@ -18,7 +18,7 @@ describe("dart tests", () => {
 		await openFile(helloWorldTestDiscoveryFile);
 		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryFile));
 
-		await delay(1500); // Account for debounce.
+		await delay(800); // Account for debounce.
 
 		const expectedResults = getExpectedResults();
 		const actualResults = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryFile }).join("\n");
@@ -71,7 +71,7 @@ hello_world
 		await openFile(helloWorldTestDiscoveryLargeFile);
 		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryLargeFile));
 
-		await delay(1500); // Account for debounce.
+		await delay(800); // Account for debounce.
 
 		const testTree = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryLargeFile });
 		assert.equal(testTree.length, 1250 /* tests */ + 5 /* groups */ + 1 /* file */ + 1 /* project */);

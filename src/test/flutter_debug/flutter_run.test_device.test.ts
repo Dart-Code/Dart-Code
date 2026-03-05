@@ -38,7 +38,7 @@ describe(`flutter run debugger (only test device)`, () => {
 	});
 
 	/// If we restart too fast, things fail :-/
-	const delayBeforeRestart = () => delay(1000);
+	const delayBeforeRestart = () => delay(500);
 
 	describe("prompts the user if trying to run with errors", () => {
 		it("and cancels launch if they click Show Errors");
@@ -444,7 +444,7 @@ describe(`flutter run debugger (only test device)`, () => {
 				}))
 				.then(() => dc.configurationDoneRequest()),
 			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
-				.then(() => delay(2000))
+				.then(() => delay(500))
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),

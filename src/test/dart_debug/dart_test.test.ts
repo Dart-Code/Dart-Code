@@ -344,9 +344,9 @@ describe("dart test debugger", () => {
 					await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
 					// Allow some time for sessions to start so the startedSessions check doesn't
 					// fire immediately after only creating the first session.
-					await delay(1000);
+					await delay(500);
 					await waitFor(
-						() => startedSessions >= 0 && runningSessions === 0,
+						() => startedSessions > 0 && runningSessions === 0,
 						300, // check every 300ms
 						60000, // wait up to 60 seconds
 					);
@@ -533,7 +533,7 @@ describe("dart test debugger", () => {
 
 				// Check toggling the setting results in the skipped nodes being removed.
 				await setConfigForTest("dart", "showSkippedTests", false);
-				await delay(500); // Allow time for tree to rebuild.
+				await delay(300); // Allow time for tree to rebuild.
 				// Expected results differ from what's in the file not only because skipped tests are hidden, but because
 				// the counts on the containing nodes will also be reduced.
 				expectedResults = `

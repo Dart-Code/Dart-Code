@@ -10,7 +10,7 @@ import { FlutterDeviceManager } from "./device_manager";
 
 export class AutoLaunch implements IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
-	private readonly debounceDelayMs = 500; // Debounce file changes for 500ms.
+	public static readonly debounceDelayMs = 500; // Debounce file changes for 500ms.
 	private readonly debounceTimers = new Map<string, NodeJS.Timeout>(); // Debounce timers per autolaunch file.
 	private processingQueue: Promise<void> = Promise.resolve(); // A queue to ensure no overlapped processing due to async work.
 	private isDisposed = false;
@@ -55,7 +55,7 @@ export class AutoLaunch implements IAmDisposable {
 			setTimeout(() => {
 				this.debounceTimers.delete(uriString);
 				void this.handleChange(uri);
-			}, this.debounceDelayMs),
+			}, AutoLaunch.debounceDelayMs),
 		);
 	}
 

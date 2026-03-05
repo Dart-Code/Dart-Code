@@ -52,7 +52,7 @@ describe("debug autolaunch", () => {
 
 			// Create file initially with empty config.
 			await writeAutoLaunch(filePath);
-			await delay(600); // Wait for initial debounce.
+			await delay(AutoLaunch.debounceDelayMs + 100); // Wait for initial debounce.
 
 			assert.ok(!startDebugSession.called, "Should not have called startDebugSession for empty config");
 
@@ -81,7 +81,7 @@ describe("debug autolaunch", () => {
 
 			// Wait for debounce a session to start, and then for the debounce time.
 			await waitFor(() => startDebugSession.called);
-			await delay(600);
+			await delay(AutoLaunch.debounceDelayMs + 100);
 
 			// Should only be called once with the final configuration.
 			assert.ok(startDebugSession.calledOnceWith(wf, launchConfig2));
