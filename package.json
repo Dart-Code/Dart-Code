@@ -3932,7 +3932,6 @@
 		"@types/semver": "^7.7.1",
 		"@types/sinon": "5.0.5",
 		"@types/vscode": "^1.75.0",
-		"@types/which": "^3.0.4",
 		"@types/ws": "^8.18.1",
 		"@typescript-eslint/eslint-plugin": "^8.35.1",
 		"@typescript-eslint/parser": "^8.35.1",

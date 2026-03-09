@@ -93,7 +93,6 @@ jobs:
         if: endsWith(matrix.bot, '-antigravity') && matrix.os == 'macOS-latest'
         run: |
           brew install --cask antigravity
-          echo "$(dirname "$(command -v agy)")" >> "$GITHUB_PATH"
           echo "ANTIGRAVITY_EXE=/Applications/Antigravity.app/Contents/MacOS/Electron" >> "$GITHUB_ENV"
         shell: bash
 

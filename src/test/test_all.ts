@@ -74,10 +74,10 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 			}
 		}
 	} else {
-		const originalIdeOverride = ideOverride;
-		ideOverride = process.env[`${originalIdeOverride.toUpperCase()}_EXE`] ?? originalIdeOverride;
-		if (!path.isAbsolute(ideOverride))
-			throw new Error(`IDE override executable (${originalIdeOverride.toUpperCase()}_EXE) must be a full absolute path (got: ${ideOverride})`);
+		const envVarName = `${ideOverride.toUpperCase()}_EXE`;
+		ideOverride = process.env[envVarName];
+		if (!ideOverride || !path.isAbsolute(ideOverride))
+			throw new Error(`IDE override executable (${envVarName}) must be a full absolute path (got: ${ideOverride})`);
 
 		console.log(`Running tests with ideOverride: ${ideOverride}`);
 	}
