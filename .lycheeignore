@@ -1,0 +1,5 @@
+# Ignore all local file URLs
+^file://
+
+# Ignore URLs containing template variables like ${versionLink}
+\$\{.*\}
