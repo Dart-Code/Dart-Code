@@ -1206,7 +1206,6 @@ export abstract class DartDebugSession extends DebugSession {
 
 		// Stack frame scope; if not specified, the expression is evaluated in the global scope.
 		const frameId = args.frameId;
-		// const context: string = args.context; // "watch", "repl", "hover", file:///foo.dart
 
 		const data = frameId ? this.threadManager.getStoredData(frameId) : undefined;
 		const thread = data ? data.thread : this.threadManager.threads[0];
@@ -1863,7 +1862,8 @@ export abstract class DartDebugSession extends DebugSession {
 	///    [5:01:50 PM] [General] [Info] [stderr] 0
 	///    [5:01:50 PM] [General] [Info] [stderr]
 	///    [5:01:50 PM] [General] [Info] [stderr]
-	///    [5:01:50 PM] [General] [Info] [stderr]     main (file:///D:/a/
+	///    [5:01:50 PM] [General] [Info] [stderr]     main (fil
+	///    [5:01:50 PM] [General] [Info] [stderr] e:///D:/a/
 	///    [5:01:50 PM] [General] [Info] [stderr] Dart Code/Dart-Code/src/test/test_projects/hello_world/bin/broken.dart:2:3)
 	protected logToUserBuffered(message: string, category: string) {
 		this.logBufferFlushes[category]?.close();
