@@ -206,6 +206,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	// Add the PATHs to the Terminal environment so if the user runs commands
 	// there they match the versions (and can be resolved, if not already on PATH).
+	//
+	// We do not set other env vars (such as the `DASH__` vars, or anything else
+	// that ends up in toolEnv) because the terminal is just considered a
+	// terminal.
 	if (config.addSdkToTerminalPath) {
 		const baseSdk = workspaceContext.hasAnyFlutterProjects
 			? sdks.flutter

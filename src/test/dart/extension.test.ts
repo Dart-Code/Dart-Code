@@ -3,6 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
+import { extensionVersion } from "../../shared/vscode/extension_utils";
 import { activateWithoutAnalysis, ext, extApi, logger, privateApi } from "../helpers";
 
 describe("test environment", () => {
@@ -49,5 +50,20 @@ describe("extension", () => {
 	it("did read custom env", async () => {
 		await activateWithoutAnalysis();
 		assert.equal(privateApi.getToolEnv().CUSTOM_DART_ENV, "x");
+	});
+	it("did set the expected DASH__ env variables", async () => {
+		await activateWithoutAnalysis();
+		const toolEnv = privateApi.getToolEnv();
+		assert.equal(toolEnv.DASH__IDE_NAME, vs.env.appName);
+		assert.equal(toolEnv.DASH__IDE_VERSION, vs.version);
+		assert.equal(toolEnv.DASH__PLUGIN_NAME, "Dart-Code");
+		assert.equal(toolEnv.DASH__PLUGIN_VERSION, extensionVersion);
+		assert.equal(toolEnv.DASH__IDE_ENVIRONMENT, "desktop");
+
+		// Sanity check some values that are variable.
+		assert.match(String(toolEnv.DASH__IDE_NAME), /Visual Studio Code|Antigravity/);
+		// Don't anchor to the end, allow suffixes for pre-releases.
+		assert.match(String(toolEnv.DASH__IDE_VERSION), /^\d+.\d+.\d/);
+		assert.match(String(toolEnv.DASH__PLUGIN_VERSION), /^3.\d+.\d/);
 	});
 });

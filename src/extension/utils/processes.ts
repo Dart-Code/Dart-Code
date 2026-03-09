@@ -1,7 +1,9 @@
-import { CancellationToken } from "vscode";
+import * as vs from "vscode";
 import { isDartCodeTestRun } from "../../shared/constants";
 import { Logger, SpawnedProcess } from "../../shared/interfaces";
 import { RunProcessResult, runProcess, safeSpawn } from "../../shared/processes";
+import { extensionVersion } from "../../shared/vscode/extension_utils";
+import { hostKind } from "../../shared/vscode/utils";
 
 // Environment used when spawning Dart and Flutter processes.
 let flutterRoot: string | undefined;
@@ -38,6 +40,13 @@ export function setupToolEnv(envOverrides?: any) {
 
 	if (!toolEnv.FLUTTER_ROOT && !process.env.FLUTTER_ROOT && flutterRoot)
 		toolEnv.FLUTTER_ROOT = flutterRoot;
+
+	// Add the names/versions of each part of the tool.
+	toolEnv.DASH__IDE_NAME = vs.env.appName;
+	toolEnv.DASH__IDE_VERSION = vs.version;
+	toolEnv.DASH__PLUGIN_NAME = "Dart-Code";
+	toolEnv.DASH__PLUGIN_VERSION = extensionVersion;
+	toolEnv.DASH__IDE_ENVIRONMENT = hostKind ?? "desktop";
 }
 
 export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>): SpawnedProcess {
@@ -46,6 +55,6 @@ export function safeToolSpawn(workingDirectory: string | undefined, binPath: str
 }
 
 /// Runs a process and returns the exit code, stdout, stderr. Always resolves even for non-zero exit codes.
-export function runToolProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>, cancellationToken?: CancellationToken): Promise<RunProcessResult> {
+export function runToolProcess(logger: Logger, workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>, cancellationToken?: vs.CancellationToken): Promise<RunProcessResult> {
 	return runProcess(logger, binPath, args, workingDirectory, envOverrides, safeToolSpawn, cancellationToken);
 }
