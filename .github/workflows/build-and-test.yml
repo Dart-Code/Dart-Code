@@ -305,6 +305,8 @@ jobs:
             --root-dir ./
             --exclude-all-private
             --verbose
+            --exclude "^file://"
+            --exclude "$%7B.*%7D"
             ./src/**/*.ts
             ./*.md
             ./**/*.license
