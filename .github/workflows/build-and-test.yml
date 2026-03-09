@@ -25,15 +25,17 @@ jobs:
       - id: no_exclude
         name: Run all builds
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-        run: echo "excludes=[]" >> $GITHUB_OUTPUT
+        # We only exclude beta versions of "other IDEs" that don't have insiders versions.
+        run: echo 'excludes=[{"build-version":"beta","bot":"dart-antigravity"},{"build-version":"beta","bot":"dart_debug-antigravity"}]]' >> $GITHUB_OUTPUT
       - id: exclude
         name: Exclude some builds if not running on schedule
         if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
         # Exclude:
+        # - The same as above, plus
         # - all betas
         # - windows
         # - macOS
-        run: echo "excludes=[{\"build-version\":\"beta\"},{\"os\":\"windows-latest\"},{\"os\":\"macos-latest\"}]" >> $GITHUB_OUTPUT
+        run: echo 'excludes=[{"build-version":"beta","bot":"dart-antigravity"},{"build-version":"beta","bot":"dart_debug-antigravity"},{"build-version":"beta"},{"os":"windows-latest"},{"os":"macos-latest"}]' >> $GITHUB_OUTPUT
 
   build:
 
