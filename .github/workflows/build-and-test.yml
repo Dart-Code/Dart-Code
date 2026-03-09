@@ -287,6 +287,31 @@ jobs:
           include-hidden-files: true
           if-no-files-found: ignore
 
+  link_check:
+    name: Check Links (Lychee)
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run Lychee Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >
+            --root-dir ./
+            --exclude-all-private
+            --verbose
+            --exclude '\$\%7B[^}]+\%7D'
+            --exclude "^file://"
+            ./src/**/*.ts
+            ./*.md
+            ./**/*.license
+            package.json
+
   merge_artifacts:
 
     name: Merge Artifacts
