@@ -226,6 +226,11 @@ export class TestSessionCoordinator implements IAmDisposable {
 	}
 
 	private handlePrintNotification(dartCodeDebugSessionID: string, evt: PrintNotification) {
+		// Drop print events that are just solo-skip messages, because they can be very noisy.
+		// https://github.com/Dart-Code/Dart-Code/issues/5938
+		if (evt.messageType === "skip" && evt.message === 'Skip: does not have "solo"')
+			return;
+
 		const suite = this.debugSessionLookups[dartCodeDebugSessionID]?.suiteForTestID[evt.testID];
 		if (!suite) {
 			this.logger.warn(`Could not find suite for test ${evt.testID} for session ${dartCodeDebugSessionID}`);
