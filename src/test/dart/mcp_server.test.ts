@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
 import { fsPath } from "../../shared/utils/fs";
-import { activate, activateWithoutAnalysis, closeAllOpenFiles, currentDoc, emptyFile, privateApi, sb, setConfigForTest } from "../helpers";
+import { activate, activateWithoutAnalysis, closeAllOpenFiles, currentDoc, emptyFile, validateExpectedEnv as ensureExpectedEnvVariables, privateApi, sb, setConfigForTest } from "../helpers";
 
 describe("MCP server", () => {
 	let originalCapabilitiesVersion: string;
@@ -25,6 +25,17 @@ describe("MCP server", () => {
 		}
 		return excludedTools;
 	}
+
+	it("sets expected dash env vars", async () => {
+		privateApi.dartCapabilities.version = "3.10.0";
+
+		const provider = privateApi.mcpServerProvider!;
+		const servers = await provider.provideMcpServerDefinitions(new vs.CancellationTokenSource().token);
+		const server = servers![0] as vs.McpStdioServerDefinition;
+
+		// Just check some basics, there's another test for more specific values.
+		ensureExpectedEnvVariables(server.env);
+	});
 
 	it("passes --exclude-tool for run_tests by default", async () => {
 		privateApi.dartCapabilities.version = "3.10.0";
