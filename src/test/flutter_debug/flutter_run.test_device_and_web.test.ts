@@ -4,7 +4,6 @@ import * as path from "path";
 import * as vs from "vscode";
 import { isLinux } from "../../shared/constants";
 import { DebuggerType, VmService, VmServiceExtension } from "../../shared/enums";
-import { faint } from "../../shared/utils/colors";
 import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
@@ -99,7 +98,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		const expectHotReload = true;
-		const expectOtherServices = !dc.isDartDap;
+		const expectOtherServices = false;
 
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === expectHotReload, "Hot reload registered");
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === expectOtherServices, "Debug paint loaded");
@@ -185,14 +184,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	const numReloads = 1;
 	it(`stops at a breakpoint after each reload (${numReloads})`, async function () {
-		if (!dc.isDartDap && flutterTestDeviceIsWeb && (privateApi.flutterCapabilities?.version.startsWith("3.19") || privateApi.flutterCapabilities?.version.startsWith("3.20"))) {
-			// This is known broken in Flutter 3.19+3.20 (for legacy DAP) so skip for this version and re-enable
-			// for the next version.
-			// https://github.com/dart-lang/sdk/issues/54925
-			this.skip();
-		}
-
-		// Also broken in SDK DAP for web because of https://github.com/dart-lang/webdev/issues/1416
+		// Broken in SDK DAP for web because of https://github.com/dart-lang/webdev/issues/1416
 		if (flutterTestDeviceIsWeb)
 			this.skip();
 
@@ -297,7 +289,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
 		const printDef = await getDefinition(printCall);
-		const expectedPrintDefinitionPath = dc.isDartDap ? fsPath(uriFor(printDef)) : undefined;
+		const expectedPrintDefinitionPath = fsPath(uriFor(printDef));
 		const config = await startDebugger(dc, flutterHelloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
@@ -495,10 +487,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async function () {
-		if (!dc.isDartDap) // This fails because we think we stop on "pause interrupted", but since legacy DAP is going away we will just skip.
-			this.skip();
-
+	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async () => {
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
 		await waitAllThrowIfTerminates(dc,
@@ -660,8 +649,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
 		ensureVariable(mapVariables, undefined, "3", `"hundredDates" -> List (100 items)`);
 		ensureVariable(mapVariables, undefined, "4", `"s" -> "Hello!"`);
-		ensureVariable(mapVariables, undefined, "5", dc.isDartDap ? `DateTime (2000-02-14 00:00:00.000) -> "valentines-2000"` : `DateTime -> "valentines-2000"`);
-		ensureVariable(mapVariables, undefined, "6", dc.isDartDap ? `DateTime (2005-01-01 00:00:00.000) -> "new-year-2005"` : `DateTime -> "new-year-2005"`);
+		ensureVariable(mapVariables, undefined, "5", `DateTime (2000-02-14 00:00:00.000) -> "valentines-2000"`);
+		ensureVariable(mapVariables, undefined, "6", `DateTime (2005-01-01 00:00:00.000) -> "new-year-2005"`);
 		ensureVariable(mapVariables, undefined, "7", `true -> true`);
 		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
@@ -1014,50 +1003,19 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		const timingRegex = /\[[ \d]+\] /g;
 		stdErrLines = stdErrLines.map((line) => line.replace(timingRegex, ""));
 
-		const expectedErrorLines = dc.isDartDap && privateApi.flutterCapabilities.hasSdkDapWithStructuredErrors
-			? [
-				`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
-				`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
-				`stderr: Exception: Oops`,
-				`stdout:`,
-				`stdout: The relevant error-causing widget was:`,
-				`stdout:     MyBrokenHomePage MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
-				`stdout:`,
-				`stdout: When the exception was thrown, this was the stack:`,
-				`stdout: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
-				`stdout: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
-				// Don't check any more past this, since they can change with Flutter framework changes.
-			]
-			: dc.isDartDap
-				? [
-					`stderr: ══╡ exception caught by widgets library ╞═══════════════════════════════════════════════════════════`,
-					`stderr: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
-					`stderr: Exception: Oops`,
-					`stderr:`,
-					`stderr: The relevant error-causing widget was:`,
-					`stderr:   MyBrokenHomePage`,
-					`stderr:   MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
-					`stderr:`,
-					`stderr: When the exception was thrown, this was the stack:`,
-					`stderr: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
-					`stderr: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
-					// Don't check any more past this, since they can change with Flutter framework changes.
-				]
-				: [
-					`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
-					`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
-					`stderr: Exception: Oops`,
-					`stdout:`,
-					`stdout: The relevant error-causing widget was`,
-					`stdout: MyBrokenHomePage`,
-					`stdout: When the exception was thrown, this was the stack`,
-					`stdout: #0      MyBrokenHomePage._throwAnException`,
-					`stdout: #1      MyBrokenHomePage.build`,
-					`stdout: ${faint("#2      StatelessElement.build")}`,
-					`stdout: ${faint("#3      ComponentElement.performRebuild")}`,
-					`stdout: ${faint("#4      Element.rebuild")}`,
-					// Don't check any more past this, since they can change with Flutter framework changes.
-				];
+		const expectedErrorLines = [
+			`stderr: ════════ Exception caught by widgets library ═══════════════════════════════════`,
+			`stdout: The following _Exception was thrown building MyBrokenHomePage(dirty):`,
+			`stderr: Exception: Oops`,
+			`stdout:`,
+			`stdout: The relevant error-causing widget was:`,
+			`stdout:     MyBrokenHomePage MyBrokenHomePage:${flutterHelloWorldBrokenFile.toString(true)}:11:13`,
+			`stdout:`,
+			`stdout: When the exception was thrown, this was the stack:`,
+			`stdout: #0      MyBrokenHomePage._throwAnException (package:flutter_hello_world/broken.dart:26:5)`,
+			`stdout: #1      MyBrokenHomePage.build (package:flutter_hello_world/broken.dart:21:5)`,
+			// Don't check any more past this, since they can change with Flutter framework changes.
+		];
 
 		assert.deepStrictEqual(
 			// Only check top expectedErrorLines.length to avoid all the frames that are

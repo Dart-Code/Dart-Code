@@ -18,7 +18,6 @@ describe(`flutter run debugger (only test device)`, () => {
 	beforeEach("activate flutterHelloWorldMainFile", () => activateWithoutAnalysis(flutterHelloWorldMainFile));
 
 	let dc: DartDebugClient;
-	let consoleOutputCategory: string;
 	beforeEach("create debug client", () => {
 		if (privateApi.debugSessions.length > 0) {
 			privateApi.logger.warn(`Some debug sessions are already running before test started:`);
@@ -30,7 +29,6 @@ describe(`flutter run debugger (only test device)`, () => {
 		}
 
 		dc = createDebugClient(DebuggerType.Flutter);
-		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
 	beforeEach(() => {
@@ -48,13 +46,6 @@ describe(`flutter run debugger (only test device)`, () => {
 	});
 
 	describe("inspector can navigate", () => {
-		beforeEach(function () {
-			// These tests only work for the new DAP because they rely on the mapping of
-			// package URIs into file URIs that we didn't support in the legacy DAPs.
-			if (!dc.isDartDap)
-				this.skip();
-		});
-
 		it("in debug mode", async () => {
 			await closeAllOpenFiles();
 			await openFile(flutterHelloWorldNavigateFromFile);
@@ -443,7 +434,7 @@ describe(`flutter run debugger (only test device)`, () => {
 					source: { path: fsPath(flutterHelloWorldMainFile) },
 				}))
 				.then(() => dc.configurationDoneRequest()),
-			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
+			dc.assertOutputContains("console", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`)
 				.then(() => delay(500))
 				.then(() => dc.terminateRequest()),
 			dc.waitForEvent("terminated"),
@@ -542,8 +533,8 @@ describe(`flutter run debugger (only test device)`, () => {
 
 	describe("can evaluate when not at a breakpoint (global expression evaluation)", function () {
 		this.beforeEach(function () {
-			if (dc.isDartDap)
-				this.skip();
+			// TODO(dantup): Understand and document why this is skipped? Related to global eval? Don't we support this now?
+			this.skip();
 		});
 
 		it("simple expressions", async () => {
