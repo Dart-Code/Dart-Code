@@ -60,7 +60,7 @@ export function isAnalyzable(file: { uri: Uri, isUntitled?: boolean, languageId?
 	const analyzableFilenames = [".analysis_options", "analysis_options.yaml", "pubspec.yaml"];
 	// We have to include dart/html extensions as this function may be called without a language ID
 	// (for example when triggered by a file system watcher).
-	const analyzableFileExtensions = ["dart", "htm", "html"].concat(config.additionalAnalyzerFileExtensions);
+	const analyzableFileExtensions = ["dart", "htm", "html"];
 
 	const extName = path.extname(fsPath(file.uri));
 	const extension = extName ? extName.substr(1) : undefined;

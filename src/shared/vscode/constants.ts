@@ -12,4 +12,3 @@ export const ANALYSIS_FILTERS: DocumentSelector = [
 	PUBSPEC_FILTER,
 	ANALYSIS_OPTIONS_FILTER,
 ];
-export const HTML_MODE: DocumentFilter = { language: "html", scheme: "file" };

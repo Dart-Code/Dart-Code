@@ -51,10 +51,8 @@ export abstract class DartDebugSession extends DebugSession {
 	public vmService?: VmServiceConnection;
 	protected cwd?: string;
 	public noDebug?: boolean;
-	private logFile?: string;
 	private sendLogsToClient = false;
 	protected toolEnv?: any;
-	private logStream?: fs.WriteStream;
 	public debugSdkLibraries = false;
 	public debugExternalPackageLibraries = false;
 	public showDartDeveloperLogs = true;
@@ -202,7 +200,6 @@ export abstract class DartDebugSession extends DebugSession {
 		this.debugSdkLibraries = args.debugSdkLibraries;
 		this.evaluateGettersInDebugViews = args.evaluateGettersInDebugViews;
 		this.evaluateToStringInDebugViews = args.evaluateToStringInDebugViews;
-		this.logFile = args.vmServiceLogFile;
 		this.maxLogLineLength = args.maxLogLineLength;
 		this.sendLogsToClient = !!args.sendLogsToClient;
 		this.showDartDeveloperLogs = args.showDartDeveloperLogs;
@@ -230,17 +227,6 @@ export abstract class DartDebugSession extends DebugSession {
 	}
 
 	protected log(message: string, severity = LogSeverity.Info) {
-		if (this.logFile) {
-			if (!this.logStream) {
-				this.logStream = fs.createWriteStream(this.logFile);
-			}
-			this.logStream.write(`[${(new Date()).toLocaleTimeString()}]: `);
-			if (this.maxLogLineLength && message.length > this.maxLogLineLength)
-				this.logStream.write(message.substring(0, this.maxLogLineLength) + "…\r\n");
-			else
-				this.logStream.write(message.trim() + "\r\n");
-		}
-
 		if (this.sendLogsToClient)
 			this.sendEvent(new Event("dart.log", { message, severity, category: LogCategory.VmService } as LogMessage));
 	}
@@ -355,13 +341,6 @@ export abstract class DartDebugSession extends DebugSession {
 			this.vmService.onClose((code: number, message: string) => {
 
 				this.log(`VM service connection closed: ${code} (${message})`);
-				if (this.logStream) {
-					this.logStream.end();
-					this.logStream = undefined;
-					// Wipe out the filename so if a message arrives late, it doesn't
-					// wipe out the logfile with just a "process exited" or similar message.
-					this.logFile = undefined;
-				}
 				// If we don't have a process (eg. we're attached) or we ran as a terminal, then this is our signal to quit,
 				// since we won't get a process exit event.
 				if (!this.childProcess || this.childProcess instanceof RemoteEditorTerminalProcess) {

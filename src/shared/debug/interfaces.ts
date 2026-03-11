@@ -9,7 +9,6 @@ export interface DartLaunchArgs {
 	customToolReplacesArgs?: number,
 	cwd?: string;
 	dartSdkPath: string;
-	dartTestLogFile?: string;
 	daemonPort?: number;
 	debugExternalPackageLibraries: boolean;
 	debugSdkLibraries: boolean;
@@ -19,9 +18,7 @@ export interface DartLaunchArgs {
 	showGettersInDebugViews: boolean;
 	evaluateToStringInDebugViews: boolean;
 	expectSingleTest?: boolean;
-	flutterRunLogFile?: string;
 	flutterSdkPath?: string;
-	flutterTestLogFile?: string;
 	maxLogLineLength: number;
 	name: string;
 	noDebug?: boolean;
@@ -39,7 +36,6 @@ export interface DartLaunchArgs {
 	toolArgs?: string[];
 	vmAdditionalArgs?: string[];
 	vmServiceInfoFile?: string;
-	vmServiceLogFile?: string;
 	vmServicePort?: number;
 	vmServiceUri?: string;
 	webDaemonLogFile?: string;
