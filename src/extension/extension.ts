@@ -880,6 +880,7 @@ function getSettingsThatRequireRestart(): Record<string, string | number | boole
 		flutterSdkPath: config.flutterSdkPath,
 		flutterSdkPathsLength: config.flutterSdkPaths?.length,
 		flutterSelectDeviceWhenConnected: config.flutterSelectDeviceWhenConnected,
+		closingLabels: config.closingLabels,
 		showMainCodeLens: config.showMainCodeLens,
 		showTestCodeLens: config.showTestCodeLens,
 		flutterOutline: config.flutterOutline,
