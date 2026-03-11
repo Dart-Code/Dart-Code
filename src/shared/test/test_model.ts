@@ -12,7 +12,7 @@ import { makeRegexForTests } from "../utils/test";
 import { locateBestProjectRoot } from "../vscode/project";
 import { DocumentRangeTracker } from "../vscode/trackers";
 import { WorkspaceContext } from "../workspace";
-import { getPackageTestCapabilities } from "./version";
+import { getPackageTestCapabilitiesForDartProject } from "./version";
 
 export abstract class TreeNode {
 	public abstract parent: TreeNode | undefined;
@@ -107,7 +107,7 @@ export class ProjectNode extends TreeNode {
 		public readonly parent: WorkspaceFolderNode | undefined,
 		public readonly name: string,
 		public readonly path: string,
-		public readonly supportsCoverage: Promise<boolean>) {
+		public readonly supportsCoverage: boolean) {
 		super();
 	}
 
@@ -322,11 +322,9 @@ export class TestModel {
 			? path.relative(workspaceFolder.path, projectPath)
 			: path.basename(projectPath);
 
-		// Pass a promise that resolves to whether this project supports coverage so we don't need to look
-		// it up for each suite.
-		const checkProjectSupportsCoverage = async () => isFlutterProjectFolder(projectPath) || (await getPackageTestCapabilities(this.logger, this.workspaceContext, projectPath)).supportsLcovCoverage;
+		const supportsCoverage = isFlutterProjectFolder(projectPath) || getPackageTestCapabilitiesForDartProject(this.logger, this.workspaceContext, projectPath).supportsLcovCoverage;
 
-		const node = new ProjectNode(parent, name, projectPath, checkProjectSupportsCoverage());
+		const node = new ProjectNode(parent, name, projectPath, supportsCoverage);
 		this.projectNodes.set(projectPath, node);
 
 		if (parent) {
@@ -393,7 +391,7 @@ export class TestModel {
 		this.updateTestCountLabels(suite.node, forceUpdate, "DOWN");
 	}
 
-	/// Recomputes the test counts and labels for a node and it's parent/children (based on `direction`).
+	/** Recomputes the test counts and labels for a node and its parent/children (based on `direction`). */
 	private updateTestCountLabels(node: RunnableTreeNode, forceUpdate: boolean, direction: "UP" | "DOWN"): void {
 		if (direction === "DOWN") {
 			for (const child of node.children) {
@@ -462,8 +460,10 @@ export class TestModel {
 		const oldParent = existingGroup?.parent;
 		let parent = parentID ? suite.getMyGroup(dartCodeDebugSessionID, parentID)! : suite.node;
 
-		/// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
-		/// the analyzer.
+		/**
+		 * If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
+		 * the analyzer.
+		 */
 		if (groupName && source === TestSource.Result)
 			parent = this.findMatchingDynamicNode(parent, groupName) ?? parent;
 
@@ -508,8 +508,10 @@ export class TestModel {
 		const oldParent = existingTest?.parent;
 		let parent = groupID ? suite.getMyGroup(dartCodeDebugSessionID, groupID)! : suite.node;
 
-		/// If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
-		/// the analyzer.
+		/**
+		 * If we're a dynamic test/group, we should be re-parented under the dynamic node that came from
+		 * the analyzer.
+		 */
 		if (testName && source === TestSource.Result)
 			parent = this.findMatchingDynamicNode(parent, testName) ?? parent;
 
@@ -569,8 +571,10 @@ export class TestModel {
 		return testNode;
 	}
 
-	/// Find a matching node in 'parent' that might be a node for a dynamic test/group that name is
-	/// an instance of.
+	/**
+	 * Find a matching node in 'parent' that might be a node for a dynamic test/group that name is
+	 * an instance of.
+	 */
 	private findMatchingDynamicNode<T extends GroupNode | SuiteNode>(parent: T, name: string): T | undefined {
 		// If the parent has any children exactly named us, they should be used regardless.
 		if (parent.children.find((c) => c.name === name))

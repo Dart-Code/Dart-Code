@@ -11,7 +11,7 @@ import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRenderer } from "../../shared/flutter/utils";
 import { DartWorkspaceContext, IFlutterDaemon, Logger } from "../../shared/interfaces";
 import { TestModel } from "../../shared/test/test_model";
-import { getPackageTestCapabilities } from "../../shared/test/version";
+import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
 import { isWebDevice, notNullOrUndefined } from "../../shared/utils";
 import { findCommonAncestorFolder, forceWindowsDriveLetterToUppercase, fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { getProgramPath } from "../../shared/utils/test";
@@ -679,23 +679,23 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 
 		switch (debuggerType) {
 			case DebuggerType.Dart:
-				args = args.concat(await this.buildDartToolArgs(debugConfig, conf));
+				args = args.concat(this.buildDartToolArgs(debugConfig, conf));
 				break;
 			case DebuggerType.DartTest:
-				args = args.concat(await this.buildDartTestToolArgs(debugConfig, conf));
+				args = args.concat(this.buildDartTestToolArgs(debugConfig, conf));
 				break;
 			case DebuggerType.Flutter:
 				args = args.concat(await this.buildFlutterToolArgs(debugConfig, conf));
 				break;
 			case DebuggerType.FlutterTest:
-				args = args.concat(await this.buildFlutterTestToolArgs(debugConfig, conf));
+				args = args.concat(this.buildFlutterTestToolArgs(debugConfig, conf));
 				break;
 		}
 
 		return args;
 	}
 
-	protected async buildDartToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+	protected buildDartToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): string[] {
 		const args: string[] = [];
 
 		this.addArgsIfNotExist(args, ...conf.cliAdditionalArgs);
@@ -706,7 +706,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return args;
 	}
 
-	protected async buildDartTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+	protected buildDartTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): string[] {
 		const args: string[] = [];
 
 		this.addArgsIfNotExist(args, ...conf.testAdditionalArgs);
@@ -714,7 +714,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 			// Check whether package:test supports --ignore-timeouts
 			let useIgnoreTimeouts = false;
 			if (debugConfig.cwd) {
-				const testCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext, debugConfig.cwd);
+				const testCapabilities = getPackageTestCapabilitiesForDartProject(this.logger, this.wsContext, debugConfig.cwd);
 				useIgnoreTimeouts = testCapabilities.supportsIgnoreTimeouts;
 			}
 			if (useIgnoreTimeouts)
@@ -802,7 +802,7 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		return args;
 	}
 
-	protected async buildFlutterTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): Promise<string[]> {
+	protected buildFlutterTestToolArgs(debugConfig: DartVsCodeLaunchArgs, conf: ResourceConfig): string[] {
 		const args: string[] = [];
 
 		this.addArgsIfNotExist(args, ...getGlobalFlutterArgs());
