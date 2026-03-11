@@ -632,10 +632,8 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 		debugConfig.toolArgs = await this.buildToolArgs(debuggerType, debugConfig, conf);
 		debugConfig.vmServicePort = debugConfig.vmServicePort ?? 0;
 		debugConfig.dartSdkPath = this.wsContext.sdks.dart!;
-		debugConfig.vmServiceLogFile = insertSessionName(debugConfig, debugConfig.vmServiceLogFile || conf.vmServiceLogFile);
 		debugConfig.webDaemonLogFile = insertSessionName(debugConfig, debugConfig.webDaemonLogFile || conf.webDaemonLogFile);
 		debugConfig.maxLogLineLength = debugConfig.maxLogLineLength || config.maxLogLineLength;
-		debugConfig.dartTestLogFile = insertSessionName(debugConfig, debugConfig.dartTestLogFile || conf.dartTestLogFile);
 		debugConfig.debugSdkLibraries = debugConfig.debugSdkLibraries !== undefined && debugConfig.debugSdkLibraries !== null
 			? debugConfig.debugSdkLibraries
 			: !!config.debugSdkLibraries;
@@ -664,8 +662,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 				debugConfig.customTool = customScript?.script;
 				debugConfig.customToolReplacesArgs = customScript?.replacesArgs;
 			}
-			debugConfig.flutterRunLogFile = insertSessionName(debugConfig, debugConfig.flutterRunLogFile || conf.flutterRunLogFile);
-			debugConfig.flutterTestLogFile = insertSessionName(debugConfig, debugConfig.flutterTestLogFile || conf.flutterTestLogFile);
 		}
 	}
 
@@ -757,8 +753,6 @@ export class DebugConfigProvider implements DebugConfigurationProvider {
 					const futterVmServicePortOption = "host-vmservice-port";
 					if (debugConfig.vmServicePort && isDebug)
 						this.addArgsIfNotExist(args, `--${futterVmServicePortOption}`, debugConfig.vmServicePort.toString());
-					if (!conf.flutterTrackWidgetCreation && !args.includes("--no-track-widget-creation"))
-						this.addArgsIfNotExist(args, "--no-track-widget-creation");
 					break;
 				}
 			}

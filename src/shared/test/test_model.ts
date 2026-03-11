@@ -375,11 +375,8 @@ export class TestModel {
 		}
 	}
 
-	public handleConfigChange(): void {
-		// When config changes, some things may change (for example
-		// skipped tests may be hidden, so the test counts need
-		// recomputing).
-
+	public handleSkippedTestsConfigChange(): void {
+		// Skipped tests affect the total count labels.
 		for (const suite of this.suites.values()) {
 			this.updateSuiteTestCountLabels(suite, true);
 		}

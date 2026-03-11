@@ -14,10 +14,10 @@ import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
-import { disposeAll, uniq, withTimeout } from "../shared/utils";
+import { disposeAll, withTimeout } from "../shared/utils";
 import { fsPath, getRandomInt } from "../shared/utils/fs";
 import { AutoLaunch } from "../shared/vscode/autolaunch";
-import { DART_LANGUAGE, DART_MODE, HTML_MODE } from "../shared/vscode/constants";
+import { DART_LANGUAGE, DART_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
 import { McpTools } from "../shared/vscode/mcp";
@@ -369,23 +369,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// TODO: Do we need to push all these to subscriptions?!
 	context.subscriptions.push(new LspClosingLabelsDecorations(analyzer.client));
 
-	const activeFileFilters: vs.DocumentFilter[] = [...DART_MODE];
-
-	// Analyze Angular2 templates, requires the angular_analyzer_plugin.
-	if (config.analyzeAngularTemplates) {
-		activeFileFilters.push(HTML_MODE);
-	}
-	// Analyze files supported by plugins.
-	for (const ext of uniq(config.additionalAnalyzerFileExtensions)) {
-		// We can't check that these don't overlap with the existing language filters
-		// because vs.languages.match() won't take an extension, only a TextDocument.
-		// So we'll just manually exclude file names we know for sure overlap with them.
-		if (ext === "dart" || (config.analyzeAngularTemplates && (ext === "htm" || ext === "html")))
-			continue;
-
-		activeFileFilters.push({ scheme: "file", pattern: `**/*.${ext}` });
-	}
-
 	// This is registered with VS Code further down, so it's metadata can be collected from all
 	// registered providers.
 	const rankingCodeActionProvider = new RankingCodeActionProvider();
@@ -411,7 +394,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(loggingCommands);
 
 	// Register the ranking provider from VS Code now that it has all of its delegates.
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider(activeFileFilters, rankingCodeActionProvider, rankingCodeActionProvider.metadata));
+	context.subscriptions.push(vs.languages.registerCodeActionsProvider([...DART_MODE], rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
 	const extensionRecommendations = new ExtensionRecommentations(logger, analytics, extContext);
 
@@ -482,7 +465,10 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		vs.debug.onDidStartDebugSession((session) => testCoordinator.handleDebugSessionStart(session.id, session.configuration.dartCodeDebugSessionID as string | undefined, session.configuration.cwd as string | undefined)),
 		vs.debug.onDidReceiveDebugSessionCustomEvent((e) => testCoordinator.handleDebugSessionCustomEvent(e.session.id, e.session.configuration.dartCodeDebugSessionID as string | undefined, e.event, e.body)),
 		vs.debug.onDidTerminateDebugSession((session) => testCoordinator.handleDebugSessionEnd(session.id, session.configuration.dartCodeDebugSessionID as string | undefined)),
-		vs.workspace.onDidChangeConfiguration(() => testModel.handleConfigChange()),
+		vs.workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration("dart.showSkippedTests"))
+				testModel.handleSkippedTestsConfigChange();
+		}),
 	);
 	const testDiscoverer = new TestDiscoverer(logger, analyzer.fileTracker, testModel);
 	context.subscriptions.push(testDiscoverer);
@@ -836,6 +822,7 @@ function handleConfigurationChange() {
 	// TODOs
 	// SDK
 	const prevObject = previousSettingsObject;
+	// TODO(dantup): Could we switch this to using `affectsConfiguration`?
 	const newObject = getSettingsThatRequireRestart();
 	const changedSettingsNames = prevObject
 		? Object.keys(prevObject).filter((k) => prevObject[k] !== newObject[k])
@@ -893,12 +880,8 @@ function getSettingsThatRequireRestart(): Record<string, string | number | boole
 		flutterSdkPath: config.flutterSdkPath,
 		flutterSdkPathsLength: config.flutterSdkPaths?.length,
 		flutterSelectDeviceWhenConnected: config.flutterSelectDeviceWhenConnected,
-		closingLabels: config.closingLabels,
-		analyzeAngularTemplates: config.analyzeAngularTemplates,
-		analysisServerFolding: config.analysisServerFolding,
 		showMainCodeLens: config.showMainCodeLens,
 		showTestCodeLens: config.showTestCodeLens,
-		updateImportsOnRename: config.updateImportsOnRename,
 		flutterOutline: config.flutterOutline,
 		flutterAdbConnectOnChromeOs: config.flutterAdbConnectOnChromeOs,
 	};
