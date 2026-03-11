@@ -97,8 +97,7 @@ export class PackageCommands extends BaseSdkCommands {
 		const additionalArgs: string[] = [];
 		if (config.offline)
 			additionalArgs.push("--offline");
-		if (this.dartCapabilities.needsNoExampleForPubGet)
-			additionalArgs.push("--no-example");
+		additionalArgs.push("--no-example");
 
 		let result: RunProcessResult | undefined;
 		if (util.isInsideFlutterProject(uri))

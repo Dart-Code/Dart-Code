@@ -13,7 +13,7 @@ import { sortBy } from "../../shared/utils/array";
 import { fsPath, getRandomInt } from "../../shared/utils/fs";
 import { resolvedPromise } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
-import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, faintTextForNonSdkDap, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForSdkDap, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
+import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, getVariablesTree, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, sdkPathForFile, spawnDartProcessPaused, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
 import { activateWithoutAnalysis, closeAllOpenFiles, currentDoc, currentEditor, customScriptExt, defer, delay, emptyFile, ensureHasRunWithArgsStarting, getAttachConfiguration, getDefinition, getLaunchConfiguration, getPackages, helloWorldAssertFile, helloWorldAutoLaunchFile, helloWorldBrokenFile, helloWorldDeferredEntryFile, helloWorldDeferredScriptFile, helloWorldDotDartCodeFolder, helloWorldExampleSubFolder, helloWorldExampleSubFolderMainFile, helloWorldFolder, helloWorldGettersFile, helloWorldGoodbyeFile, helloWorldHttpFile, helloWorldInspectionFile as helloWorldInspectFile, helloWorldLocalPackageFile, helloWorldLongRunningFile, helloWorldMainFile, helloWorldPartEntryFile, helloWorldPartFile, helloWorldStack60File, helloWorldThrowInExternalPackageFile, helloWorldThrowInLocalPackageFile, helloWorldThrowInSdkFile, myPackageFolder, openFile, positionOf, prepareHasRunFile, privateApi, rangeFor, sb, setConfigForTest, setTestContent, tryDeleteDirectoryRecursive, uriFor, waitForResult, watchPromise, writeBrokenDartCodeIntoFileForTest } from "../helpers";
 
 describe("dart cli debugger", () => {
@@ -22,10 +22,8 @@ describe("dart cli debugger", () => {
 	beforeEach("activate helloWorldMainFile", () => activateWithoutAnalysis(helloWorldMainFile));
 
 	let dc: DartDebugClient;
-	let consoleOutputCategory: string;
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.Dart);
-		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
 	async function attachDebugger(vmServiceUri: string | undefined, extraConfiguration?: { program: string | undefined, [key: string]: any }): Promise<vs.DebugConfiguration & DartVsCodeLaunchArgs> {
@@ -146,7 +144,7 @@ describe("dart cli debugger", () => {
 		await waitAllThrowIfTerminates(dc,
 			dc.configurationSequence(),
 			dc.assertOutput("stdout", "Hello, world!"),
-			dc.assertOutputContains("console", `${faintTextForNonSdkDap(dc, "[log] ")}Logging from dart:developer!`),
+			dc.assertOutputContains("console", "[log] Logging from dart:developer!"),
 			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.waitForEvent("terminated"),
 			dc.launch(config),
@@ -391,9 +389,7 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const expectedDefPath = dc.isDartDap
-			? sdkPathForSdkDap(dc, "lib/core/print.dart")
-			: undefined;
+		const expectedDefPath = sdkPathForFile("lib/core/print.dart");
 		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
@@ -417,9 +413,7 @@ void printSomething() {
 		await openFile(helloWorldMainFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const expectedPrintDefPath = dc.isDartDap
-			? sdkPathForSdkDap(dc, "lib/core/print.dart")
-			: undefined;
+		const expectedPrintDefPath = sdkPathForFile("lib/core/print.dart");
 		const config = await startDebugger(dc, helloWorldMainFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
@@ -766,7 +760,7 @@ void printSomething() {
 				source: { path: fsPath(helloWorldMainFile) },
 			})).then(() => dc.configurationDoneRequest()),
 			dc.waitForEvent("terminated"),
-			dc.assertOutputContains(consoleOutputCategory, `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
+			dc.assertOutputContains("console", `Hello! The {year} is """${(new Date()).getFullYear()}"""\n`),
 			dc.launch(config),
 		);
 	});
@@ -807,8 +801,8 @@ void printSomething() {
 		ensureVariable(mapVariables, undefined, "2", `"tenDates" -> List (10 items)`);
 		ensureVariable(mapVariables, undefined, "3", `"hundredDates" -> List (100 items)`);
 		ensureVariable(mapVariables, undefined, "4", `"s" -> "Hello!"`);
-		ensureVariable(mapVariables, undefined, "5", dc.isDartDap ? `DateTime (2000-02-14 00:00:00.000) -> "valentines-2000"` : `DateTime -> "valentines-2000"`);
-		ensureVariable(mapVariables, undefined, "6", dc.isDartDap ? `DateTime (2005-01-01 00:00:00.000) -> "new-year-2005"` : `DateTime -> "new-year-2005"`);
+		ensureVariable(mapVariables, undefined, "5", `DateTime (2000-02-14 00:00:00.000) -> "valentines-2000"`);
+		ensureVariable(mapVariables, undefined, "6", `DateTime (2005-01-01 00:00:00.000) -> "new-year-2005"`);
 		ensureVariable(mapVariables, undefined, "7", `true -> true`);
 		ensureVariable(mapVariables, undefined, "8", `1 -> "one"`);
 		ensureVariable(mapVariables, undefined, "9", `1.1 -> "one-point-one"`);
@@ -849,10 +843,7 @@ void printSomething() {
 		await dc.terminateRequest();
 	});
 
-	it("formats local variables as hex when configured", async function () {
-		if (!dc.isDartDap || !privateApi.dartCapabilities.supportsFormatSpecifiers)
-			this.skip();
-
+	it("formats local variables as hex when configured", async () => {
 		await setConfigForTest("dart", "showDebuggerNumbersAsHex", true);
 		await openFile(helloWorldMainFile);
 		const debugConfig = await startDebugger(dc, helloWorldMainFile);
@@ -1014,10 +1005,7 @@ void printSomething() {
 			await dc.terminateRequest();
 		});
 
-		it("with format specifiers", async function () {
-			if (!dc.isDartDap || !privateApi.dartCapabilities.supportsFormatSpecifiers)
-				this.skip();
-
+		it("with format specifiers", async () => {
 			await openFile(helloWorldMainFile);
 			const config = await startDebugger(dc, helloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
@@ -1148,7 +1136,7 @@ void printSomething() {
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			const error = await dc.evaluateForFrame("DateTime.now().ye", "watch").catch((e) => e);
-			assert.equal(error.message, dc.isDartDap ? expectedError : "not available");
+			assert.equal(error.message, expectedError);
 
 			await dc.terminateRequest();
 		});
@@ -1157,8 +1145,7 @@ void printSomething() {
 	describe("can evaluate when not at a breakpoint", () => {
 		beforeEach(function () {
 			// TODO(dantup): Understand and document why this is skipped? Related to global eval? Don't we support this now?
-			if (dc.isDartDap)
-				this.skip();
+			this.skip();
 		});
 		it("simple expressions", async () => {
 			await openFile(helloWorldLongRunningFile);
@@ -1284,7 +1271,7 @@ void printSomething() {
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			const error = await dc.evaluateRequest({ expression: "DateTime.now().ye", context: "watch" }).catch((e) => e);
-			assert.equal(error.message, dc.isDartDap ? expectedError : "not available");
+			assert.equal(error.message, expectedError);
 
 			await dc.terminateRequest();
 		});
@@ -1292,8 +1279,8 @@ void printSomething() {
 
 	it("prints the output of inspected variables", async function () {
 		// SDK Dap doesn't handle this currently.
-		if (dc.isDartDap)
-			this.skip();
+		// TODO(dantup): Understand and document why this is skipped?
+		this.skip();
 
 		await openFile(helloWorldInspectFile);
 		const debugConfig = await startDebugger(dc, helloWorldInspectFile);
@@ -1486,7 +1473,7 @@ insp=<inspected variable>
 		void dc.launch(config);
 		await dc.waitForEvent("terminated");
 
-		const expectedPath = dc.isDartDap ? fsPath(helloWorldMainFile) : path.join("bin", "main.dart");
+		const expectedPath = fsPath(helloWorldMainFile);
 		const expectedArgs = privateApi.dartCapabilities.usesDartRunForCli ? `run ${expectedPath}` : expectedPath;
 		ensureHasRunWithArgsStarting(root, hasRunFile, expectedArgs);
 	});

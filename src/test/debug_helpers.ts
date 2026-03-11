@@ -8,7 +8,6 @@ import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";
 import { withTimeout } from "../shared/utils";
-import { faint } from "../shared/utils/colors";
 import { fsPath } from "../shared/utils/fs";
 import { DartDebugClient } from "./dart_debug_client";
 import { currentTestName, defer, delay, getLaunchConfiguration, logger, privateApi, watchPromise } from "./helpers";
@@ -353,16 +352,7 @@ export async function ensureServiceExtensionValue(id: VmServiceExtension, expect
 	assert.equal(value, expected);
 }
 
-export function sdkPathForSdkDap(dc: DartDebugClient, file: string) {
-	if (dc.isDartDap)
-		return path.join(privateApi.workspaceContext.sdks.dart, isWin ? file.replace(/\//g, "\\") : file);
-	// When not using the new DAPs, we don't translate SDK paths back to the local file paths.
-	return undefined;
+export function sdkPathForFile(file: string) {
+	return path.join(privateApi.workspaceContext.sdks.dart, isWin ? file.replace(/\//g, "\\") : file);
 }
 
-export function faintTextForNonSdkDap(dc: DartDebugClient, input: string) {
-	// Currently the SDK DAPs don't use colours.
-	if (dc.isDartDap)
-		return input;
-	return faint(input);
-}

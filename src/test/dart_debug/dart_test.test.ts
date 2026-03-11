@@ -22,10 +22,8 @@ describe("dart test debugger", () => {
 	beforeEach("activate", () => activateWithoutAnalysis(null));
 
 	let dc: DartDebugClient;
-	let consoleOutputCategory: string;
 	beforeEach("create debug client", () => {
 		dc = createDebugClient(DebuggerType.DartTest);
-		consoleOutputCategory = dc.isDartDap ? "console" : "stdout";
 	});
 
 	beforeEach("clear test tree", () => clearTestTree());
@@ -129,7 +127,7 @@ describe("dart test debugger", () => {
 				const config = await startDebugger(dc, helloWorldTestMainFile);
 				await waitAllThrowIfTerminates(dc,
 					dc.configurationSequence(),
-					dc.assertOutputContains(consoleOutputCategory, `✓ String .split() splits the string on the delimiter`),
+					dc.assertOutputContains("console", `✓ String .split() splits the string on the delimiter`),
 					dc.assertPassingTest("String .split() splits the string on the delimiter"),
 					dc.waitForEvent("terminated"),
 					dc.launch(config),
@@ -255,8 +253,7 @@ describe("dart test debugger", () => {
 			it("warns if multiple tests run when one was expected", async function () {
 				// SDK DAP doesn't warn on this, but will be handled by package:test in future
 				// https://github.com/dart-lang/test/issues/1571
-				if (dc.isDartDap)
-					this.skip();
+				this.skip();
 
 				await openFile(helloWorldTestDupeNameFile);
 				const config = await getResolvedDebugConfiguration(
@@ -469,7 +466,7 @@ describe("dart test debugger", () => {
 						// Ensure the output contained the test name as a sanity check
 						// that it ran. Because some tests have variables added to the
 						// end, just stop at the $ to avoid failing on them.
-						dc.assertOutputContains(consoleOutputCategory, test.fullName.split("$")[0]),
+						dc.assertOutputContains("console", test.fullName.split("$")[0]),
 					);
 					await checkResults(`After running ${numRuns++} tests (most recently ${test.fullName})`);
 				}

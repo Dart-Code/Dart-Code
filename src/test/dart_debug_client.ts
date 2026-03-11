@@ -25,7 +25,6 @@ export class DartDebugClient extends DebugClient {
 	public currentTrackers: DebugAdapterTracker[] = [];
 	public hasStarted = false;
 	public hasTerminated = false;
-	public readonly isDartDap: boolean;
 
 	constructor(public readonly debuggerType: DebuggerType, daArgs: DebugClientArgs, private readonly debugCommands: DebugCommandHandler, readonly testCoordinator: TestSessionCoordinator | undefined, private readonly debugTrackerFactories: DebugAdapterTrackerFactory[], private readonly dartCapabitilies: DartCapabilities) {
 		const useShell = daArgs.runtime?.endsWith(".sh") || daArgs.runtime?.endsWith(".bat");
@@ -33,7 +32,6 @@ export class DartDebugClient extends DebugClient {
 		const executable = useShell ? `"${daArgs.executable}"` : daArgs.executable;
 		const args = useShell ? daArgs.args?.map((a) => `"${a}"`) : daArgs.args;
 		super(runtime, executable, args, "dart", { shell: useShell ? true : undefined }, true);
-		this.isDartDap = daArgs.runtime !== undefined && daArgs.runtime !== "node";
 		this.port = daArgs.port;
 
 		// HACK to handle incoming requests..
@@ -203,7 +201,7 @@ export class DartDebugClient extends DebugClient {
 		}
 		// Attach will be paused by default and issue a step when we connect; but our tests
 		// generally assume we will automatically resume.
-		if (launchArgs.request === "attach" && (this.isDartDap || launchArgs.deviceId !== "flutter-tester")) {
+		if (launchArgs.request === "attach") {
 			logger.info("Attaching to process...");
 			const stoppedEvent = watchPromise("launch->attach->waitForEvent:stopped", this.waitForEvent("stopped", "waiting for stop event on attach to paused"));
 			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
@@ -230,11 +228,6 @@ export class DartDebugClient extends DebugClient {
 					this.resume(),
 				]),
 			);
-		} else if (launchArgs.request === "attach") {
-			// For Flutter, we don't need all the crazy stuff above, just issue a standard
-			// attach request.
-			logger.info("Attaching to flutter-tester process...");
-			await watchPromise("launch->attach->attachRequest", this.attachRequest(launchArgs));
 		} else {
 			await watchPromise("launch()->launchRequest", this.launchRequest(launchArgs));
 		}
@@ -301,7 +294,7 @@ export class DartDebugClient extends DebugClient {
 		return withTimeout(
 			new Promise<DebugProtocol.OutputEvent>((resolve) => {
 				function handleOutput(event: DebugProtocol.OutputEvent) {
-					if (!category || (event.body.category ?? "console" === category)) {
+					if (!category || (event.body.category ?? "console") === category) {
 						output += event.body.output;
 						if (output.includes(textLF) || output.includes(textCRLF)) {
 							resolve(event);
