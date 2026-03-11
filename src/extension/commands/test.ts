@@ -8,7 +8,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
 import { Logger } from "../../shared/interfaces";
 import { RunnableTreeNode, SuiteData, SuiteNode, TestNode, TreeNode } from "../../shared/test/test_model";
-import { getPackageTestCapabilities } from "../../shared/test/version";
+import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";
 import { fsPath, getPackageName, isWithinPath, mkDirRecursive } from "../../shared/utils/fs";
@@ -180,7 +180,7 @@ export class TestCommands implements vs.Disposable {
 		if (!isFlutter) {
 			const projectFolderPath = locateBestProjectRoot(programPath);
 			if (projectFolderPath)
-				dartTestCapabilities = await getPackageTestCapabilities(this.logger, this.wsContext, projectFolderPath);
+				dartTestCapabilities = getPackageTestCapabilitiesForDartProject(this.logger, this.wsContext, projectFolderPath);
 		}
 
 		let shouldRunTestsByLine = false;

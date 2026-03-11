@@ -5,7 +5,7 @@ import { SinonStub } from "sinon";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { DebuggerType } from "../../shared/enums";
-import { getPackageTestCapabilities } from "../../shared/test/version";
+import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
 import { SuiteNotification, TestStartNotification } from "../../shared/test_protocol";
 import { fsPath } from "../../shared/utils/fs";
 import { TestOutlineVisitor } from "../../shared/utils/outline";
@@ -692,7 +692,7 @@ test/empty_test.dart
 		});
 
 		it("and includes dependencies", async function () {
-			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
+			const testCapabilities = getPackageTestCapabilitiesForDartProject(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
 			if (!testCapabilities.supportsCoveragePackage)
 				this.skip();
 
@@ -712,7 +712,7 @@ test/empty_test.dart
 		});
 
 		it("and excludes configured paths", async function () {
-			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
+			const testCapabilities = getPackageTestCapabilitiesForDartProject(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
 			if (!testCapabilities.supportsCoveragePackage)
 				this.skip();
 
@@ -734,7 +734,7 @@ test/empty_test.dart
 		});
 
 		it("uses correct regex for --coverage-package", async function () {
-			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
+			const testCapabilities = getPackageTestCapabilitiesForDartProject(privateApi.logger, privateApi.workspaceContext, fsPath(helloWorldExampleSubFolder));
 			if (!testCapabilities.supportsCoveragePackage)
 				this.skip();
 

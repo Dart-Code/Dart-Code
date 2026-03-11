@@ -245,6 +245,7 @@ void printSomething() {
 			dc.assertOutputContains("stdout", "ORIGINAL CONTENT"),
 			dc.launch(config),
 		);
+		await delay(50); // Without this, this test can flake when run in a batch.
 
 		// Replace the content and trigger hot reload.
 		const editor = currentEditor();

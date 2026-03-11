@@ -10,28 +10,34 @@ import { TestOutlineVisitor } from "../utils/outline";
 import { isSetupOrTeardownTestName } from "../utils/test";
 import { SuiteData, TestModel, TestSource } from "./test_model";
 
-/// Handles results from a test debug session and provides them to the test model.
+/** Handles results from a test debug session and provides them to the test model. */
 export class TestSessionCoordinator implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
-	/// A link between a suite path and the debug session ID that owns it, so we can ensure
-	/// it is correctly ended when the debug session ends, even if we don't get the correct
-	/// end events.
+	/**
+	 * A link between a suite path and the debug session ID that owns it, so we can ensure
+	 * it is correctly ended when the debug session ends, even if we don't get the correct
+	 * end events.
+	 */
 	private owningDebugSessions: Record<string, string | undefined> = {};
 
-	/// For a given debug session, lookups by IDs to get back to the suite.
+	/** For a given debug session, lookups by IDs to get back to the suite. */
 	private debugSessionLookups: Record<string, {
 		cwd: string | undefined,
 		suiteForID: Record<string, SuiteData | undefined>,
 		suiteForTestID: Record<string, SuiteData | undefined>,
 	} | undefined> = {};
 
-	/// A link between a suite path and a visitor for visiting its latest outline data.
-	/// This data is refreshed when a test suite starts running.
+	/**
+	 * A link between a suite path and a visitor for visiting its latest outline data.
+	 * This data is refreshed when a test suite starts running.
+	 */
 	private suiteOutlineVisitors: Record<string, TestOutlineVisitor | undefined> = {};
 
-	/// For each debug session ID, stores a mapping of phantom (empty) groups and their parent IDs so we can
-	/// jump over them.
+	/**
+	 * For each debug session ID, stores a mapping of phantom (empty) groups and their parent IDs so we can
+	 * jump over them.
+	 */
 	private phantomGroupParents: Record<string, Record<number, number | null | undefined>> = {};
 
 	constructor(private readonly logger: Logger, private readonly data: TestModel, private readonly fileTracker: { getOutlineFor(uri: URI): Outline | undefined }) { }
@@ -158,10 +164,12 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForTestID[evt.test.id] = suite;
 
-		/// We prefer the root location (the location inside the executed test suite) for normal tests, but for
-		// setup/tearDown we want to consider them in their actual locations so that failures will be attributed
-		// to them correctly.
-		// https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
+		/**
+		 * We prefer the root location (the location inside the executed test suite) for normal tests, but for
+		 * setup/tearDown we want to consider them in their actual locations so that failures will be attributed
+		 * to them correctly.
+		 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
+		 */
 		const useRootLocation = !isSetupOrTeardownTestName(evt.test.name) && !!evt.test.root_url && !!evt.test.root_line && !!evt.test.root_column;
 
 		const path = maybeUriToFilePath(useRootLocation ? evt.test.root_url ?? undefined : evt.test.url ?? undefined);

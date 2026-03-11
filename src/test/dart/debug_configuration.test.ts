@@ -1,5 +1,5 @@
 import { strict as assert } from "assert";
-import { getPackageTestCapabilities } from "../../shared/test/version";
+import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
 import { fsPath } from "../../shared/utils/fs";
 import { activate, ensureArrayContainsArray, getResolvedDebugConfiguration, helloWorldFolder, helloWorldMainFile, helloWorldTestMainFile, openFile, privateApi, setConfigForTest } from "../helpers";
 
@@ -81,7 +81,7 @@ describe("dart test debugger", () => {
 				program: fsPath(helloWorldTestMainFile),
 			});
 
-			const testCapabilities = await getPackageTestCapabilities(privateApi.logger, privateApi.workspaceContext, resolvedConfig.cwd!);
+			const testCapabilities = getPackageTestCapabilitiesForDartProject(privateApi.logger, privateApi.workspaceContext, resolvedConfig.cwd!);
 			if (testCapabilities.supportsIgnoreTimeouts)
 				ensureArrayContainsArray(resolvedConfig.toolArgs!, ["--ignore-timeouts"]);
 			else
