@@ -439,7 +439,8 @@ export class LspAnalyzer extends Analyzer {
 				return undefined;
 			else
 				throw e;
-
+		} finally {
+			cancellationTokenSource.dispose();
 		}
 	}
 

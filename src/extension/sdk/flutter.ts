@@ -21,8 +21,8 @@ import { safeToolSpawn } from "../utils/processes";
  */
 export async function ensureFlutterInitialized(logger: Logger, flutterScript: string): Promise<void> {
 	logger.info("Running 'flutter --help' to ensure the Flutter SDK is initialized");
+	const cancellationTokenSource = new CancellationTokenSource();
 	try {
-		const cancellationTokenSource = new CancellationTokenSource();
 		await withProgressIfSlow(
 			runFlutterHelp(logger, flutterScript, cancellationTokenSource.token),
 			cancellationTokenSource,
@@ -32,6 +32,8 @@ export async function ensureFlutterInitialized(logger: Logger, flutterScript: st
 		logger.info(`Flutter initialized!`);
 	} catch (e) {
 		logger.warn(`Flutter initialization failed, proceeding without! ${e}`);
+	} finally {
+		cancellationTokenSource.dispose();
 	}
 }
 

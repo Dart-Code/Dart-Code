@@ -653,6 +653,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				},
 				cancellationTokenSource.token);
 		void waitingForRealDeviceSubscription.dispose();
+		cancellationTokenSource.dispose();
 
 		if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator-creator") {
 			return this.createEmulator();
