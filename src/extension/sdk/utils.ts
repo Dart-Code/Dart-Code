@@ -446,7 +446,9 @@ export class SdkUtils {
 
 		// If we're a Flutter workspace, ensure Flutter is initialized.
 		// Do this before searching for the Dart SDK, as it might download the Dart SDK we'd like to find.
+		let hasAttemptedFlutterInitialization = false;
 		if (hasAnyFlutterProject && flutterSdkPath && !workspaceConfig.skipFlutterInitialization) {
+			hasAttemptedFlutterInitialization = true;
 			await ensureFlutterInitialized(this.logger, path.join(flutterSdkPath, flutterPath));
 		}
 
@@ -480,10 +482,19 @@ export class SdkUtils {
 			void this.warnIfBadConfigSdk(config.sdkPath, dartSdkResult, "dart.sdkPath", !!config.workspaceSdkPath);
 		}
 
-		const dartSdkPath = dartSdkResult.sdkPath;
+		let dartSdkPath = dartSdkResult.sdkPath;
 
 		// Since we just blocked on a lot of sync FS, yield.
 		await resolvedPromise;
+
+		// If we still don't have a Dart SDK, but we do have a Flutter SDK and we did not already try to initialize, then
+		// try again here. This could happen if we were not in a Flutter project (so didn't try to initialize before) but
+		// still need a Dart SDK (for example, we were activated by running Flutter: New Project in an empty workspace.. we
+		// wouldn't trigger the code above).
+		if (!hasAttemptedFlutterInitialization && flutterSdkPath && !dartSdkPath) {
+			await ensureFlutterInitialized(this.logger, path.join(flutterSdkPath, flutterPath));
+			dartSdkPath = this.findDartSdk([path.join(flutterSdkPath, "bin/cache/dart-sdk")]).sdkPath;
+		}
 
 		// It's possible we've opened a folder without a pubspec/etc., so before assuming this is a non-Dart project, check
 		// for any Dart files in the top few folders.

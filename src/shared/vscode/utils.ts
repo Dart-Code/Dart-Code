@@ -145,9 +145,9 @@ export async function getAllProjectFoldersAndExclusions(
 	// Track this search so other searches can wait on it.
 	const completer = new PromiseCompleter<void>();
 	inProgressProjectFolderSearch = completer.promise;
+	const tokenSource = new vs.CancellationTokenSource();
 	try {
 		let startTimeMs = new Date().getTime();
-		const tokenSource = new vs.CancellationTokenSource();
 
 		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
 		let allExcludedFolders = getExcludedFolders ? flatMap(workspaceFolders, getExcludedFolders) : [];
@@ -162,6 +162,7 @@ export async function getAllProjectFoldersAndExclusions(
 			projectSearchProgressText,
 			{ showAfterMs: projectSearchProgressNotificationDelayInMs },
 		);
+		tokenSource.dispose();
 
 		let projectFolders = await resultsPromise;
 		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for ${projectFolders.length} projects (${options.searchDepth} levels)`);
@@ -192,6 +193,7 @@ export async function getAllProjectFoldersAndExclusions(
 		completer.resolve();
 		if (inProgressProjectFolderSearch === completer.promise)
 			inProgressProjectFolderSearch = undefined;
+		tokenSource.dispose();
 	}
 }
 

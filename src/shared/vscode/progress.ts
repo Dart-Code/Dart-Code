@@ -9,7 +9,7 @@ export function withProgressIfSlow<T>(
 	action: Promise<T>,
 	cancellationTokenSource: vs.CancellationTokenSource,
 	progressText: string,
-	{ showAfterMs }: { showAfterMs?: number } = { showAfterMs: oneSecondInMs },
+	{ showAfterMs = oneSecondInMs }: { showAfterMs?: number } = {},
 ): Promise<T> {
 	// Show progress until the action completes, but only start after the specified time.
 	const progressTimer = setTimeout(() => {
@@ -29,5 +29,5 @@ export function withProgressIfSlow<T>(
 	progressTimer.unref();
 
 	// If the action completes before the timer fires, cancel it.
-	return action.finally(() => progressTimer.close());
+	return action.finally(() => clearTimeout(progressTimer));
 }
