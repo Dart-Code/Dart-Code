@@ -36,7 +36,11 @@ export function setupToolEnv(envOverrides?: any) {
 	if (envOverrides)
 		toolEnv = Object.assign(toolEnv, envOverrides);
 
-	if (!toolEnv.FLUTTER_ROOT && !process.env.FLUTTER_ROOT && flutterRoot)
+	// Always set FLUTTER_ROOT to match the SDK we are using if we have one.
+	// We used to only set this if it wasn't already, and there wasn't one on the global process, but
+	// this means if the user has an invalid path set (or a different version of the SDK), things could
+	// fail oddly.
+	if (flutterRoot)
 		toolEnv.FLUTTER_ROOT = flutterRoot;
 }
 
