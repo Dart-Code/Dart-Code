@@ -18,7 +18,8 @@ export class AnalyzerCommands {
 	constructor(context: vs.ExtensionContext, private readonly logger: Logger, analyzer: Analyzer, analytics: Analytics) {
 		context.subscriptions.push(vs.commands.registerCommand("dart.openAnalyzerDiagnostics", async () => {
 			const res = await analyzer.getDiagnosticServerPort();
-			await envUtils.openInBrowser(`http://127.0.0.1:${res.port}/`);
+			if (res)
+				await envUtils.openInBrowser(`http://127.0.0.1:${res.port}/`);
 		}));
 		context.subscriptions.push(vs.commands.registerCommand("dart.restartAnalysisServer", async () => {
 			logger.warn(`dart.restartAnalysisServer was invoked, restarting analysis server...`);

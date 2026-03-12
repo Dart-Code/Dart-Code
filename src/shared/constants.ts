@@ -135,8 +135,8 @@ export const addToPathInstructionsUrl = isWin
 			: undefined;
 
 export const modifyingFilesOutsideWorkspaceInfoUrl = "https://dartcode.org/docs/modifying-files-outside-workspace/";
-export const initializingFlutterMessage = "Initializing the Flutter SDK. This may take a few minutes.";
-export const cloningFlutterMessage = "Downloading the Flutter SDK. This may take a few minutes.";
+export const initializingFlutterMessage = "Initializing the Flutter SDK. This could take a few minutes.";
+export const cloningFlutterMessage = "Downloading the Flutter SDK. This could take a few minutes.";
 
 
 // Seconds.

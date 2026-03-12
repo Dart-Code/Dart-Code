@@ -14,6 +14,7 @@ import { cachedTestCapabilities } from "../test/version";
 import { PromiseCompleter, flatMap, notUndefined } from "../utils";
 import { SimpleTimeBasedCache } from "../utils/cache";
 import { findProjectFolders, forceWindowsDriveLetterToUppercase, fsPath, isWithinPathOrEqual, safeRealpathSync } from "../utils/fs";
+import { withProgressIfSlow } from "./progress";
 import { isKnownCloudIde } from "./utils_cloud";
 
 export const SourceSortMembersCodeActionKind = CodeActionKind.Source.append("sortMembers");
@@ -147,32 +148,22 @@ export async function getAllProjectFoldersAndExclusions(
 	try {
 		let startTimeMs = new Date().getTime();
 		const tokenSource = new vs.CancellationTokenSource();
-		let isComplete = false;
 
 		const topLevelFolders = workspaceFolders.map((w) => fsPath(w.uri));
 		let allExcludedFolders = getExcludedFolders ? flatMap(workspaceFolders, getExcludedFolders) : [];
 		const resultsPromise = findProjectFolders(logger, topLevelFolders, allExcludedFolders, options, tokenSource.token);
 
-		// After some time, if we still have not completed, show a progress notification that can be cancelled
-		// to stop the search, which automatically hides when `resultsPromise` resolves.
-		setTimeout(() => {
-			if (!isComplete) {
-				void vs.window.withProgress({
-					cancellable: true,
-					location: vs.ProgressLocation.Notification,
-					title: projectSearchProgressText,
-				}, (progress, token) => {
-					token.onCancellationRequested(() => {
-						tokenSource.cancel();
-						logger.info(`Project search was cancelled after ${new Date().getTime() - startTimeMs}ms (was searching ${options.searchDepth} levels)`);
-					});
-					return resultsPromise;
-				});
-			}
-		}, projectSearchProgressNotificationDelayInMs);
+		tokenSource.token.onCancellationRequested((_) => {
+			logger.info(`Project search was cancelled after ${new Date().getTime() - startTimeMs}ms (was searching ${options.searchDepth} levels)`);
+		});
+		await withProgressIfSlow(
+			resultsPromise,
+			tokenSource,
+			projectSearchProgressText,
+			{ showAfterMs: projectSearchProgressNotificationDelayInMs },
+		);
 
 		let projectFolders = await resultsPromise;
-		isComplete = true;
 		logger.info(`Took ${new Date().getTime() - startTimeMs}ms to search for ${projectFolders.length} projects (${options.searchDepth} levels)`);
 		logger.info(`    Found projects:`);
 		for (const projectFolder of projectFolders)
