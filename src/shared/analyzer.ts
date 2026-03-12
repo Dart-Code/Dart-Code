@@ -21,7 +21,7 @@ export abstract class Analyzer implements IAmDisposable {
 	public readonly onAnalysisStatusChange = this.onAnalysisStatusChangeEmitter.event;
 	private isAnalyzing = false;
 
-	public abstract getDiagnosticServerPort(): Promise<{ port: number }>;
+	public abstract getDiagnosticServerPort(): Promise<{ port: number } | undefined>;
 	public abstract forceReanalyze(): Promise<void>;
 
 	constructor(protected readonly logger: Logger) {

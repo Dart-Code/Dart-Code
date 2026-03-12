@@ -7,7 +7,7 @@ import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } 
 import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, ExtensionRestartReason, oneSecondInMs, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -19,6 +19,7 @@ import { cleanDartdoc, createMarkdownString, extensionVersion } from "../../shar
 import { InteractiveRefactors } from "../../shared/vscode/interactive_refactors";
 import { CommonCapabilitiesFeature } from "../../shared/vscode/lsp_common_capabilities";
 import { LspUriConverters } from "../../shared/vscode/lsp_uri_converters";
+import { withProgressIfSlow } from "../../shared/vscode/progress";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils";
 import { WorkspaceContext } from "../../shared/workspace";
@@ -425,8 +426,21 @@ export class LspAnalyzer extends Analyzer {
 		};
 	}
 
-	public async getDiagnosticServerPort(): Promise<{ port: number }> {
-		return this.withProgressIfSlow("Opening Analyzer Diagnostics / Insights...", this.client.sendRequest(DiagnosticServerRequest.type));
+	public async getDiagnosticServerPort(): Promise<{ port: number } | undefined> {
+		const cancellationTokenSource = new vs.CancellationTokenSource();
+		try {
+			return await withProgressIfSlow(
+				this.client.sendRequest(DiagnosticServerRequest.type, cancellationTokenSource.token),
+				cancellationTokenSource,
+				"Opening Analyzer Diagnostics / Insights..."
+			);
+		} catch (e) {
+			if (cancellationTokenSource.token.isCancellationRequested)
+				return undefined;
+			else
+				throw e;
+
+		}
 	}
 
 	public async forceReanalyze(): Promise<void> {
@@ -463,24 +477,6 @@ export class LspAnalyzer extends Analyzer {
 			AugmentationRequest.type,
 			params,
 		);
-	}
-
-	private withProgressIfSlow<T>(progressText: string, action: Promise<T>) {
-		// Set a timeout that after 1s will show progress until the action completes.
-		const progressTimer = setTimeout(() => {
-			vs.window.withProgress(
-				{
-					title: progressText,
-					location: vs.ProgressLocation.Notification
-				}, () => action,
-			);
-		}, oneSecondInMs);
-
-		// Don't keep anything alive.
-		progressTimer.unref();
-
-		// If the action completes before the timer fires, cancel it.
-		return action.finally(() => progressTimer.close());
 	}
 
 	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
