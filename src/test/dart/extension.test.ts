@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { Sdks } from "../../shared/interfaces";
 import { fsPath } from "../../shared/utils/fs";
-import { activateWithoutAnalysis, ext, extApi, logger, privateApi } from "../helpers";
+import { activateWithoutAnalysis, ext, extApi, logger, privateApi, validateExpectedEnv } from "../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -49,5 +49,10 @@ describe("extension", () => {
 	it("did read custom env", async () => {
 		await activateWithoutAnalysis();
 		assert.equal(privateApi.getToolEnv().CUSTOM_DART_ENV, "x");
+	});
+	it("did set the expected DASH__ env variables", async () => {
+		await activateWithoutAnalysis();
+		const toolEnv = privateApi.getToolEnv();
+		validateExpectedEnv(toolEnv);
 	});
 });

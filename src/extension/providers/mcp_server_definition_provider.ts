@@ -5,6 +5,7 @@ import { dartVMPath } from "../../shared/constants";
 import { DartSdks, IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { config } from "../config";
+import { getToolEnv } from "../utils/processes";
 
 export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionProvider, IAmDisposable {
 	private readonly disposables: IAmDisposable[] = [];
@@ -50,7 +51,7 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 		}
 
 		return [
-			new vs.McpStdioServerDefinition("Dart SDK MCP Server", binPath, args),
+			new vs.McpStdioServerDefinition("Dart SDK MCP Server", binPath, args, getToolEnv()),
 		];
 	}
 

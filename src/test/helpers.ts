@@ -23,6 +23,7 @@ import { SourceSortMembersCodeActionKind, treeLabel } from "../shared/vscode/uti
 import { Context } from "../shared/vscode/workspace";
 // eslint-disable-next-line no-restricted-imports
 import { PublicDartExtensionApi } from "../extension/api/interfaces";
+import { extensionVersion } from "../shared/vscode/extension_utils";
 import { locateBestProjectRoot } from "../shared/vscode/project";
 
 export const ext = vs.extensions.getExtension(dartCodeExtensionIdentifier)!;
@@ -1448,4 +1449,18 @@ export function createTempTestFile(absolutePath: string) {
 	createFolderForFile(absolutePath);
 	fs.writeFileSync(absolutePath, "");
 	defer("delete temp file", () => tryDeleteFile(absolutePath));
+}
+
+export function validateExpectedEnv(e: Record<string, string | number | null>) {
+	assert.equal(e.DASH__IDE_NAME, vs.env.appName);
+	assert.equal(e.DASH__IDE_VERSION, vs.version);
+	assert.equal(e.DASH__PLUGIN_NAME, "Dart-Code");
+	assert.equal(e.DASH__PLUGIN_VERSION, extensionVersion);
+	assert.equal(e.DASH__IDE_ENVIRONMENT, "desktop");
+
+	// Sanity check some values that are variable.
+	assert.match(String(e.DASH__IDE_NAME), /Visual Studio Code|Antigravity/);
+	// Don't anchor to the end, allow suffixes for pre-releases.
+	assert.match(String(e.DASH__IDE_VERSION), /^\d+.\d+.\d/);
+	assert.match(String(e.DASH__PLUGIN_VERSION), /^3.\d+.\d/);
 }
