@@ -1461,6 +1461,6 @@ export function validateExpectedEnv(e: Record<string, string | number | null>) {
 	// Sanity check some values that are variable.
 	assert.match(String(e.DASH__IDE_NAME), /Visual Studio Code|Antigravity/);
 	// Don't anchor to the end, allow suffixes for pre-releases.
-	assert.match(String(e.DASH__IDE_VERSION), /^\d+.\d+.\d/);
-	assert.match(String(e.DASH__PLUGIN_VERSION), /^3.\d+.\d/);
+	assert.match(String(e.DASH__IDE_VERSION), /^\d+\.\d+\.\d/);
+	assert.match(String(e.DASH__PLUGIN_VERSION), /^3\.\d+\.\d/);
 }

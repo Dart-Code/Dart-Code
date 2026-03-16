@@ -10,8 +10,13 @@ let flutterRoot: string | undefined;
 let toolEnv: Record<string, string> = {};
 let globalFlutterArgs: string[] = [];
 
-export function getToolEnv() {
-	return toolEnv;
+/**
+ * Returns a copy of the tool env object.
+ *
+ * Mutations to toolEnv should be done via setupToolEnv/etc.
+ */
+export function getToolEnv(): Record<string, string> {
+	return Object.assign({}, toolEnv);
 }
 
 export function getGlobalFlutterArgs() {
