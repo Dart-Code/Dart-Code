@@ -475,7 +475,8 @@ export class TestModel {
 			groupNode.parent = parent;
 			groupNode.name = groupName;
 			groupNode.path = groupPath;
-			groupNode.range = range;
+			if (range)
+				groupNode.range = range;
 		} else {
 			groupNode.testSource = source;
 		}

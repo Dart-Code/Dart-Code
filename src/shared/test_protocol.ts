@@ -13,7 +13,7 @@ interface Suite {
 	path: string;
 }
 
-interface Item {
+export interface TestItem {
 	id: number;
 	name?: string;
 	suiteID: number;
@@ -25,7 +25,7 @@ interface Item {
 	root_url: string | undefined | null;
 }
 
-export interface Test extends Item {
+export interface Test extends TestItem {
 	groupIDs: number[];
 }
 
@@ -33,7 +33,7 @@ export interface GroupNotification extends Notification {
 	group: Group;
 }
 
-interface Group extends Item {
+interface Group extends TestItem {
 	parentID?: number;
 	testCount: number;
 }
