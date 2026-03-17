@@ -523,19 +523,21 @@ export class TestModel {
 			testNode.parent = parent;
 			testNode.name = testName;
 			testNode.path = testPath;
-			const originalRange = testNode.range;
-			testNode.range = range;
+			if (range) {
+				const originalRange = testNode.range;
+				testNode.range = range;
 
-			if (!this.config.dynamicTestTracking) {
-				// If we're an Outline node being updated, and we have Results children that
-				// had the same range as us, they should be updated too, so Results nodes do not
-				// drift away from the location over time.
-				if (testNode.testSource === TestSource.Outline) {
-					const children = testNode.children
-						.filter((c) => c.testSource === TestSource.Result)
-						.filter((c) => !c.range || (originalRange && rangesEqual(c.range, originalRange)));
-					for (const child of children)
-						child.range = range;
+				if (!this.config.dynamicTestTracking) {
+					// If we're an Outline node being updated, and we have Results children that
+					// had the same range as us, they should be updated too, so Results nodes do not
+					// drift away from the location over time.
+					if (testNode.testSource === TestSource.Outline) {
+						const children = testNode.children
+							.filter((c) => c.testSource === TestSource.Result)
+							.filter((c) => !c.range || (originalRange && rangesEqual(c.range, originalRange)));
+						for (const child of children)
+							child.range = range;
+					}
 				}
 			}
 		} else {
@@ -589,30 +591,35 @@ export class TestModel {
 		}
 	}
 
+	/**
+	 * If this node is from a result, track its location so we can keep it up-to-date as the user edits the file.
+	 */
 	private setupRangeTracking(node: GroupNode | TestNode, source: TestSource, suitePath: string, range: Range | undefined, nodePath: string | undefined): void {
 		// Dispose any previous tracker, because we may create a new one below if this new
 		// location needs tracking.
 		node.dispose();
 
-		// If this node is from a result, track its location so we can keep it
-		// up-to-date as the user edits the file.
-		if (this.config.dynamicTestTracking && source === TestSource.Result && node.testSource === TestSource.Result && range && nodePath) {
-			void this.rangeTracker.trackRangeForUri(
-				URI.file(suitePath),
-				range,
-				(newRange) => {
-					if (newRange) {
-						node.range = newRange;
-						this.updateNode({ node });
-					} else {
-						this.removeNode(node);
-					}
-				},
-			).then(
-				(tracker) => node.rangeTracker = tracker,
-				(e) => this.logger.error(e),
-			);
-		}
+		if (!range || !nodePath || !this.config.dynamicTestTracking)
+			return;
+
+		if (source !== TestSource.Result || node.testSource !== TestSource.Result)
+			return;
+
+		void this.rangeTracker.trackRangeForUri(
+			URI.file(suitePath),
+			range,
+			(newRange) => {
+				if (newRange) {
+					node.range = newRange;
+					this.updateNode({ node });
+				} else {
+					this.removeNode(node);
+				}
+			},
+		).then(
+			(tracker) => node.rangeTracker = tracker,
+			(e) => this.logger.error(e),
+		);
 	}
 
 	public testDone(dartCodeDebugSessionID: string, suitePath: string, testID: number, result: "skipped" | "success" | "failure" | "error" | undefined, endTime: number | undefined): void {

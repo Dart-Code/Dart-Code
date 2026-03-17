@@ -172,9 +172,19 @@ export class TestSessionCoordinator implements IAmDisposable {
 		 */
 		const useRootLocation = !isSetupOrTeardownTestName(evt.test.name) && !!evt.test.root_url && !!evt.test.root_line && !!evt.test.root_column;
 
-		const path = maybeUriToFilePath(useRootLocation ? evt.test.root_url ?? undefined : evt.test.url ?? undefined);
-		const line = useRootLocation ? evt.test.root_line : evt.test.line;
-		const character = useRootLocation ? evt.test.root_column : evt.test.column;
+		const url = useRootLocation ? evt.test.root_url ?? undefined : evt.test.url ?? undefined;
+
+		let { path, line, character } =
+			!url?.startsWith("file://")
+				? { path: undefined, line: undefined, character: undefined }
+				: useRootLocation
+					? { path: maybeUriToFilePath(url), line: evt.test.root_line, character: evt.test.root_column }
+					: { path: maybeUriToFilePath(url), line: evt.test.line, character: evt.test.column };
+
+		// If we don't have them all, don't use any.
+		if (!path || !line || !character) {
+			path = line = character = undefined;
+		}
 
 		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
 		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
