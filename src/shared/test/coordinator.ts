@@ -3,8 +3,8 @@ import { URI } from "vscode-uri";
 import { Outline } from "../analysis/lsp/custom_protocol";
 import { isWin } from "../constants";
 import { IAmDisposable, Logger, Range } from "../interfaces";
-import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestStartNotification } from "../test_protocol";
-import { disposeAll, maybeUriToFilePath, uriToFilePath } from "../utils";
+import { ErrorNotification, GroupNotification, Notification, PrintNotification, SuiteNotification, TestDoneNotification, TestItem, TestStartNotification } from "../test_protocol";
+import { disposeAll, maybeUriToFilePath } from "../utils";
 import { normalizeSlashes } from "../utils/fs";
 import { TestOutlineVisitor } from "../utils/outline";
 import { isSetupOrTeardownTestName } from "../utils/test";
@@ -164,32 +164,47 @@ export class TestSessionCoordinator implements IAmDisposable {
 		}
 		this.debugSessionLookups[dartCodeDebugSessionID]!.suiteForTestID[evt.test.id] = suite;
 
-		/**
-		 * We prefer the root location (the location inside the executed test suite) for normal tests, but for
-		 * setup/tearDown we want to consider them in their actual locations so that failures will be attributed
-		 * to them correctly.
-		 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
-		 */
-		const useRootLocation = !isSetupOrTeardownTestName(evt.test.name) && !!evt.test.root_url && !!evt.test.root_line && !!evt.test.root_column;
+		const { path, line, character } = this.getLocation(evt.test);
 
-		const url = useRootLocation ? evt.test.root_url ?? undefined : evt.test.url ?? undefined;
+		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
+		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
 
-		let { path, line, character } =
-			!url?.startsWith("file://")
-				? { path: undefined, line: undefined, character: undefined }
-				: useRootLocation
-					? { path: maybeUriToFilePath(url), line: evt.test.root_line, character: evt.test.root_column }
-					: { path: maybeUriToFilePath(url), line: evt.test.line, character: evt.test.column };
+		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
+	}
+
+	/**
+	 * We prefer the root location (the location inside the executed test suite) for normal tests, but for
+	 * setup/tearDown we want to consider them in their actual locations so that failures will be attributed
+	 * to them correctly.
+	 * https://github.com/Dart-Code/Dart-Code/issues/4681#issuecomment-1671191742
+	 */
+	private getLocation(item: TestItem): { path?: string, line?: number, character?: number } {
+		const useRootLocation = !isSetupOrTeardownTestName(item.name) && !!item.root_url && !!item.root_line && !!item.root_column;
+
+		const url = useRootLocation
+			? item.root_url ?? undefined
+			: item.url ?? undefined;
+
+		let path: string | undefined;
+		let line: number | undefined;
+		let character: number | undefined;
+		if (url?.startsWith("file:")) {
+			path = maybeUriToFilePath(url);
+			if (useRootLocation) {
+				line = item.root_line ?? undefined;
+				character = item.root_column ?? undefined;
+			} else {
+				line = item.line ?? undefined;
+				character = item.column ?? undefined;
+			}
+		}
 
 		// If we don't have them all, don't use any.
 		if (!path || !line || !character) {
 			path = line = character = undefined;
 		}
 
-		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
-		const groupID = evt.test.groupIDs?.length ? evt.test.groupIDs[evt.test.groupIDs.length - 1] : undefined;
-
-		this.data.testDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.test.id, evt.test.name, this.getRealGroupId(dartCodeDebugSessionID, groupID), path, range, evt.time, true);
+		return { path, line, character };
 	}
 
 	private handleTestDoneNotification(dartCodeDebugSessionID: string, evt: TestDoneNotification) {
@@ -222,9 +237,8 @@ export class TestSessionCoordinator implements IAmDisposable {
 			return;
 		}
 
-		const path = (evt.group.root_url || evt.group.url) ? uriToFilePath(evt.group.root_url || evt.group.url!) : undefined;
-		const line = evt.group.root_line || evt.group.line;
-		const character = evt.group.root_column || evt.group.column;
+		const { path, line, character } = this.getLocation(evt.group);
+
 		const range = this.getRangeForNode(suite, line ?? undefined, character ?? undefined);
 		this.data.groupDiscovered(dartCodeDebugSessionID, suite.path, TestSource.Result, evt.group.id, evt.group.name, this.getRealGroupId(dartCodeDebugSessionID, evt.group.parentID), path, range, true);
 	}
