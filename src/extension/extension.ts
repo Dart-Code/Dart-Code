@@ -196,11 +196,27 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const sdks = workspaceContext.sdks;
 	const writableConfig = workspaceContext.config as WritableWorkspaceConfig;
 
-	// Record the Flutter SDK path so we can set FLUTTER_ROOT for spawned processes.
+	// TODO(dantup): This is legacy and should be removed.
+	void vs.commands.executeCommand("setContext", SDK_IS_PRE_RELEASE, sdks.isPreReleaseSdk);
+
+
+	// Record the Flutter SDK path for FLUTTER_ROOT which will be used in the tool env.
 	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter)
 		setFlutterRoot(workspaceContext.sdks.flutter);
-	setupToolEnv(config.env);
-	void vs.commands.executeCommand("setContext", SDK_IS_PRE_RELEASE, sdks.isPreReleaseSdk);
+
+	// Helper to set the tool env using current analytics/env settings.
+	const setEnvHelper = () => setupToolEnv({ suppressAnalytics: analytics.isSuppressed, envOverrides: config.env });
+
+	// Set initial value
+	setEnvHelper();
+
+	// Rebuild toolEnv when related config changes.
+	vs.workspace.onDidChangeConfiguration((e) => {
+		config.reload();
+		if (e.affectsConfiguration("dart.env"))
+			setEnvHelper();
+	});
+
 
 	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
 

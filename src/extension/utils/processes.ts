@@ -28,7 +28,7 @@ export function setFlutterRoot(root: string) {
 	flutterRoot = root;
 }
 
-export function setupToolEnv(envOverrides?: any) {
+export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnalytics: boolean, envOverrides?: any }) {
 	toolEnv = {};
 	globalFlutterArgs = [];
 
@@ -56,6 +56,9 @@ export function setupToolEnv(envOverrides?: any) {
 	toolEnv.DASH__PLUGIN_NAME = "Dart-Code";
 	toolEnv.DASH__PLUGIN_VERSION = extensionVersion;
 	toolEnv.DASH__IDE_ENVIRONMENT = hostKind ?? "desktop";
+	// And those for unified analytics.
+	toolEnv.DASH__TOOL = "vscode-plugins"; // This matches the "label" of the enum constant DashTool defined in unified analytics.
+	toolEnv.DASH__SUPPRESS_ANALYTICS = `${suppressAnalytics}`; // This should be a string bool parsed with bool.parse() in Dart.
 }
 
 export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>): SpawnedProcess {

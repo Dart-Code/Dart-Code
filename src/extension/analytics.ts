@@ -260,15 +260,28 @@ export class Analytics implements IAmDisposable {
 		}
 	}
 
-	private event(category: AnalyticsEvent, customData?: Partial<AnalyticsData>): void {
-		if (this.disableAnalyticsForSession
-			|| !this.telemetryLogger
+	/**
+	 * Whether analytics are suppressed for any reason.
+	 *
+	 * This value is computed live and considers many values, including (but possibly not limited to)
+	 *
+	 * - the VS Code opt-out
+	 * - the legacy Dart-Code opt-out
+	 * - the Dart tooling opt-out
+	 * - whether we're in an automated test run
+	 * - whether we're in the extension dev host (dummy machineId)
+	 */
+	public get isSuppressed(): boolean {
+		return !this.telemetryLogger
 			|| !machineId
 			|| !config.allowAnalytics /* Kept for users that opted-out when we used own flag */
 			|| this.workspaceContext?.config.disableAnalytics
 			|| !env.isTelemetryEnabled
-			|| isDartCodeTestRun
-		)
+			|| isDartCodeTestRun;
+	}
+
+	private event(category: AnalyticsEvent, customData?: Partial<AnalyticsData>): void {
+		if (this.disableAnalyticsForSession || this.isSuppressed)
 			return;
 
 		const flutterUiGuides = this.workspaceContext?.hasAnyFlutterProjects
@@ -302,7 +315,7 @@ export class Analytics implements IAmDisposable {
 			...customData,
 		};
 
-		this.telemetryLogger.logUsage("event", data);
+		this.telemetryLogger?.logUsage("event", data);
 	}
 
 	private getFormatterSetting(): string {
