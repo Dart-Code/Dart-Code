@@ -32,16 +32,16 @@ export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnal
 	toolEnv = {};
 	globalFlutterArgs = [];
 
+	// Add any user overrides first. Our values always override user set values.
+	if (envOverrides)
+		toolEnv = Object.assign(toolEnv, envOverrides);
+
 	toolEnv.FLUTTER_HOST = "VSCode";
 	toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";
 	if (isDartCodeTestRun) {
 		toolEnv.PUB_ENVIRONMENT += ".test.bot";
 		globalFlutterArgs.push("--suppress-analytics");
 	}
-
-	// Add on any overrides.
-	if (envOverrides)
-		toolEnv = Object.assign(toolEnv, envOverrides);
 
 	// Always set FLUTTER_ROOT to match the SDK we are using if we have one.
 	// We used to only set this if it wasn't already, and there wasn't one on the global process, but
