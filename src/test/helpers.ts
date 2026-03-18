@@ -273,8 +273,8 @@ function setupTestLogging(): boolean {
 			// Wait a little before closing, to ensure we capture anything in-progress.
 			await delay(100);
 			await testLogger.dispose();
-			// On CI, we delete logs for passing tests to save space.
-			if (process.env.CI && testResult === "passed") {
+			// On CI, we delete logs for passing/skipped tests to save space.
+			if (process.env.CI && testResult !== "failed") {
 				try {
 					fs.unlinkSync(logPath);
 				} catch { }
