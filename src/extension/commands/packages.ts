@@ -6,7 +6,7 @@ import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { RunProcessResult } from "../../shared/processes";
 import { uniq } from "../../shared/utils";
 import { fsPath, touchFile } from "../../shared/utils/fs";
-import { getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
+import { getPubWorkspaceOrPackageFolders, getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
@@ -118,7 +118,8 @@ export class PackageCommands extends BaseSdkCommands {
 			return;
 
 		const allFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
-		const uriFolders = allFolders.map((f) => vs.Uri.file(f));
+		const allRoots = getPubWorkspaceOrPackageFolders(allFolders);
+		const uriFolders = allRoots.map((f) => vs.Uri.file(f));
 		await vs.commands.executeCommand("dart.getPackages", uriFolders);
 	}
 

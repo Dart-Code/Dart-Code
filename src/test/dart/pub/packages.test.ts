@@ -1,9 +1,13 @@
 import { strict as assert } from "assert";
+import * as fs from "fs";
+import * as path from "path";
+import * as sinon from "sinon";
 import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
 import { getPubWorkspaceStatus } from "../../../shared/vscode/pub";
-import { activate, privateApi } from "../../helpers";
+import { clearCaches } from "../../../shared/vscode/utils";
+import { activate, defer, privateApi, sb, tryDeleteDirectoryRecursive } from "../../helpers";
 
 describe("pub package status", () => {
 	before("activate", () => activate());
@@ -399,6 +403,47 @@ describe("pub package status", () => {
 		expectedStatuses.sort((a, b) => a.folder.localeCompare(b.folder));
 		assert.deepStrictEqual(results, expectedStatuses);
 	}
+});
+
+describe("pub package status", () => {
+	it(`"Get Packages for All Projects" runs pub get once per workspace root and once per standalone package`, async () => {
+		const currentWorkspaceRoot = fsPath(vs.workspace.workspaceFolders![0].uri);
+		const tempRoot = path.join(currentWorkspaceRoot, "temp", `pub_get_all_test_${Date.now()}`);
+		defer("clean up temp test projects", () => tryDeleteDirectoryRecursive(tempRoot));
+
+		const workspaceRoot = path.join(tempRoot, "workspace_root");
+		const workspaceProject1 = path.join(workspaceRoot, "proj1");
+		const workspaceProject2 = path.join(workspaceRoot, "proj2");
+		const standalone1 = path.join(tempRoot, "standalone1");
+		const standalone2 = path.join(tempRoot, "standalone2");
+
+		const write = (filePath: string, content: string) => {
+			fs.mkdirSync(path.dirname(filePath), { recursive: true });
+			fs.writeFileSync(filePath, content);
+		};
+
+		write(path.join(workspaceRoot, "pubspec.yaml"), "workspace:\n- proj1\n- proj2");
+		write(path.join(workspaceProject1, "pubspec.yaml"), "resolution: workspace\ndependencies:");
+		write(path.join(workspaceProject2, "pubspec.yaml"), "resolution: workspace\ndependencies:");
+		write(path.join(standalone1, "pubspec.yaml"), "dependencies:");
+		write(path.join(standalone2, "pubspec.yaml"), "dependencies:");
+
+		// Clear caches in case another test recently cached the package results.
+		clearCaches();
+
+		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
+		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();
+
+		await vs.commands.executeCommand("dart.getPackages.all");
+
+		assert.ok(getPackagesCommand.calledOnce);
+		const paths = (getPackagesCommand.args[0][1] as vs.Uri[])
+			.map((uri) => fsPath(uri))
+			.sort();
+		const tempWorkspacePaths = paths.filter((p) => p.startsWith(tempRoot)).sort();
+		// Expect just the workspace root and the standalone projects, not the workspace projects.
+		assert.deepStrictEqual(tempWorkspacePaths.sort(), [standalone1, standalone2, workspaceRoot].sort());
+	});
 });
 
 interface WorkspaceInfo {

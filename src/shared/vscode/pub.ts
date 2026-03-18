@@ -6,6 +6,7 @@ import * as YAML from "yaml";
 import { Logger, Sdks } from "../../shared/interfaces";
 import { PackageMap } from "../../shared/pub/package_map";
 import { fsPath, getPubGeneratorVersion, isWithinPath } from "../../shared/utils/fs";
+import { uniq } from "../utils";
 
 interface PubPackageStatus { folderUri: Uri, pubRequired: false | "GET" | "UPGRADE", reason?: string, workspace: "NONE" | "ROOT" | "PROJECT" }
 
@@ -224,9 +225,21 @@ function runPubUpgrade(folders: Uri[]) {
 	return commands.executeCommand("dart.upgradePackages", folders);
 }
 
-/// If `packageFolder` is part of a Pub Workspace, returns the workspace root folder.
-///
-/// Otherwise (or if there is no workspace root), returns `packageFolder`.
+/**
+ * Returns the set of "pub roots" for a set of package folders, where "pub root" is
+ * the Pub Workspace root (if the package is part of a workspace) or the package folder.
+ *
+ * If multiple packages belong to the same Pub Workspace, it will only be returned once.
+  */
+export function getPubWorkspaceOrPackageFolders(packageFolders: string[]): string[] {
+	return uniq(packageFolders.map(getPubWorkspaceFolderOrPackageFolder));
+}
+
+/**
+ * If `packageFolder` is part of a Pub Workspace, returns the workspace root folder.
+ *
+ * Otherwise (or if there is no workspace root), returns `packageFolder`.
+ */
 export function getPubWorkspaceFolderOrPackageFolder(packageFolder: string): string {
 	const pubspecPath = path.join(packageFolder, "pubspec.yaml");
 
