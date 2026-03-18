@@ -172,10 +172,16 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	util.logTime();
 	analytics = new Analytics(logger);
+
+	// Helper to set the tool env using current analytics/env settings.
+	const setEnvHelper = () => setupToolEnv({ suppressAnalytics: analytics.isSuppressed, envOverrides: config.env });
+	setEnvHelper(); // Set initial values.
+
 	const sdkUtils = new SdkUtils(logger, context, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
 	extensionApiModel.setSdks(workspaceContextUnverified.sdks);
 	analytics.workspaceContext = workspaceContextUnverified;
+	setEnvHelper(); // analytics.workspaceContext could affect suppression.
 	util.logTime("initWorkspace");
 
 	// Set up log files.
@@ -201,21 +207,17 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 
 	// Record the Flutter SDK path for FLUTTER_ROOT which will be used in the tool env.
-	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter)
+	if (workspaceContext.hasAnyFlutterProjects && workspaceContext.sdks.flutter) {
 		setFlutterRoot(workspaceContext.sdks.flutter);
-
-	// Helper to set the tool env using current analytics/env settings.
-	const setEnvHelper = () => setupToolEnv({ suppressAnalytics: analytics.isSuppressed, envOverrides: config.env });
-
-	// Set initial value
-	setEnvHelper();
+		setEnvHelper(); // Update
+	}
 
 	// Rebuild toolEnv when related config changes.
-	vs.workspace.onDidChangeConfiguration((e) => {
+	context.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
 		config.reload();
-		if (e.affectsConfiguration("dart.env"))
+		if (e.affectsConfiguration("dart.env") || e.affectsConfiguration("dart.allowAnalytics") || e.affectsConfiguration("telemetry.telemetryLevel"))
 			setEnvHelper();
-	});
+	}));
 
 
 	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
