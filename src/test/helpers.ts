@@ -1457,6 +1457,8 @@ export function validateExpectedEnv(e: Record<string, string | number | null>) {
 	assert.equal(e.DASH__PLUGIN_NAME, "Dart-Code");
 	assert.equal(e.DASH__PLUGIN_VERSION, extensionVersion);
 	assert.equal(e.DASH__IDE_ENVIRONMENT, "desktop");
+	assert.equal(e.DASH__TOOL, "vscode-plugins");
+	assert.equal(e.DASH__SUPPRESS_ANALYTICS, "true"); // This is always set in test runs.
 
 	// Sanity check some values that are variable.
 	assert.match(String(e.DASH__IDE_NAME), /Visual Studio Code|Antigravity/);

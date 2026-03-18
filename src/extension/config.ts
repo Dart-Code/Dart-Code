@@ -5,7 +5,6 @@ import { createFolderForFile } from "../shared/utils/fs";
 import { resolvePaths } from "../shared/vscode/utils";
 import { DevToolsLocations, DevToolsLocationsWithDefault } from "./sdk/dev_tools/manager";
 import { insertWorkspaceName } from "./utils";
-import { setupToolEnv } from "./utils/processes";
 
 class Config {
 	private config: WorkspaceConfiguration;
@@ -13,16 +12,10 @@ class Config {
 	// TODO(dantup): We might not need defaults here, they are read from package.json!
 
 	constructor() {
-		workspace.onDidChangeConfiguration((e) => {
-			this.reloadConfig();
-			if (e.affectsConfiguration("dart.env"))
-				setupToolEnv(this.env);
-		});
 		this.config = workspace.getConfiguration("dart");
-		setupToolEnv(this.env);
 	}
 
-	private reloadConfig() {
+	public reload() {
 		this.config = workspace.getConfiguration("dart");
 	}
 
