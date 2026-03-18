@@ -304,7 +304,6 @@ jobs:
           args: >
             --root-dir ./
             --exclude-all-private
-            --verbose
             --exclude '\$\%7B[^}]+\%7D'
             --exclude "^file://"
             ./src/**/*.ts
