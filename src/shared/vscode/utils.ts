@@ -28,6 +28,7 @@ const projectFolderCache = new SimpleTimeBasedCache<ProjectFolderSearchResults>(
 let inProgressProjectFolderSearch: Promise<void> | undefined;
 
 export function clearCaches() {
+	inProgressProjectFolderSearch = undefined;
 	projectFolderCache.clear();
 	cachedTestCapabilities.clear();
 }
@@ -187,8 +188,9 @@ export async function getAllProjectFoldersAndExclusions(
 
 		const result = { projectFolders, excludedFolders: new Set(allExcludedFolders) };
 
-		// Cache the results.
-		projectFolderCache.add(cacheKey, result, projectSearchCacheTimeInMs);
+		// Cache the results only if we're still the active run.
+		if (inProgressProjectFolderSearch === completer.promise)
+			projectFolderCache.add(cacheKey, result, projectSearchCacheTimeInMs);
 
 		return result;
 	} finally {
