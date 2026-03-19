@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, ensureTestContent, ensureTestContentWithSelection, flutterEmptyFile, getPackages, openFile, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, ensureTestContent, ensureTestContentWithSelection, flutterEmptyFile, getCodeActions, getPackages, openFile, rangeOf, setTestContent } from "../../helpers";
 
 describe("assist_code_action_provider", () => {
 	// We have tests that require external packages.
@@ -55,12 +55,9 @@ Widget build() {
   return const Text('\\$123');
 }
 `);
-		const actionResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf("Te||xt("));
-		assert.ok(actionResults);
-		assert.ok(actionResults.length);
-
-		const wrapAction = actionResults.find((r) => r.title.includes("Wrap with Center"));
-		assert.ok(wrapAction, "Action was not found");
+		const actionResults = await getCodeActions({ title: "Wrap with Center", requireExactlyOne: true }, rangeOf("Te||xt("));
+		assert.equal(actionResults.length, 1);
+		const wrapAction = actionResults[0];
 
 		// Older servers have simple edit, but newer has snippets.
 		if (wrapAction.edit) {
