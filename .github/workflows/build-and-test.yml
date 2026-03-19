@@ -117,7 +117,7 @@ jobs:
 
       - name: Set up Dart ${{ matrix.build-version }}
         if: startsWith(matrix.bot, 'dart') || matrix.bot == 'misc'
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@6e0ff0bc3a029a9532ae6a86b1ea4906038921bc
         with:
           sdk: ${{ matrix.build-version }}
 
