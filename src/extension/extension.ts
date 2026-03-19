@@ -3,7 +3,7 @@ import * as path from "path";
 import * as process from "process";
 import * as vs from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
-import { DaemonCapabilities, FlutterCapabilities } from "../shared/capabilities/flutter";
+import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableName, dartPlatformName, defaultDartCodeConfigurationPath, flutterExtensionIdentifier, isDartCodeTestRun, isMac, platformDisplayName, setFlutterDev, showLogAction } from "../shared/constants";
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, OBSERVATORY_SUPPORTED_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
@@ -20,6 +20,7 @@ import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE } from "../shared/vscode/constants";
 import { FlutterDeviceManager } from "../shared/vscode/device_manager";
 import { extensionVersion, isDevExtension } from "../shared/vscode/extension_utils";
+import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { McpTools } from "../shared/vscode/mcp";
 import { locateBestProjectRoot } from "../shared/vscode/project";
 import { getPubWorkspaceFolderOrPackageFolder } from "../shared/vscode/pub";
@@ -725,12 +726,11 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Only expose the private APIs during test runs. These are not for use by other extensions, but
 	// by our tests to access the internals of things that aren't otherwise exposed.
 	if (isDartCodeTestRun) {
-		const privateApi = {
+		const privateApi: InternalExtensionApi = {
 			addDependencyCommand,
 			analyzer,
 			context: extContext,
 			currentAnalysis: () => analyzer?.onCurrentAnalysisComplete,
-			daemonCapabilities: flutterDaemon ? flutterDaemon.capabilities : DaemonCapabilities.empty,
 			dartCapabilities,
 			debugAdapterDescriptorFactory,
 			debugCommands,

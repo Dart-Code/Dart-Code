@@ -370,7 +370,7 @@ describe("dart test debugger", () => {
 			it("can run tests through test controller using default launch template", async () => {
 				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
-				const controller = privateApi.testController;
+				const controller = privateApi.testController!;
 				const testNode = findSuiteNode(fsPath(helloWorldTestEnvironmentFile));
 				if (!testNode)
 					throw Error(`Unable to find suite node!`);
@@ -388,7 +388,7 @@ describe("dart test debugger", () => {
 				await openFile(helloWorldTestSelective2File);
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective1File));
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestSelective2File));
-				const controller = privateApi.testController;
+				const controller = privateApi.testController!;
 
 				const testItems: vs.TestItem[] = [];
 
@@ -423,7 +423,7 @@ describe("dart test debugger", () => {
 			it("allows more-specific default launch template using noDebug flag", async () => {
 				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
-				const controller = privateApi.testController;
+				const controller = privateApi.testController!;
 				const testNode = findSuiteNode(fsPath(helloWorldTestEnvironmentFile));
 				const testRequest = new vs.TestRunRequest([testNode]);
 				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(true, false, testRequest, fakeCancellationToken));
@@ -663,7 +663,7 @@ test/empty_test.dart
 		let addCoverageStub: SinonStub | undefined;
 
 		beforeEach(() => {
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 			const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
 			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
 			createTestRunStub.callsFake((request: vs.TestRunRequest) => {
@@ -677,7 +677,7 @@ test/empty_test.dart
 			// Discover tests.
 			await openFile(helloWorldTestMainFile);
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestMainFile));
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 
 			const suiteNode = findSuiteNode(fsPath(helloWorldTestMainFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
@@ -700,7 +700,7 @@ test/empty_test.dart
 			await openFile(helloWorldExampleSubFolderProjectTestFile);
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 			const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
@@ -722,7 +722,7 @@ test/empty_test.dart
 			await openFile(helloWorldExampleSubFolderProjectTestFile);
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldExampleSubFolderProjectTestFile));
 
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 			const suiteNode = findSuiteNode(fsPath(helloWorldExampleSubFolderProjectTestFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 

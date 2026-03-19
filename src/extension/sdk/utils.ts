@@ -544,7 +544,7 @@ export class SdkUtils {
 		);
 	}
 
-	private async runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult> {
+	public async runCustomGetSDKCommand(command: GetSDKCommandConfig, sdkConfigName: "dart.getDartSdkCommand" | "dart.getFlutterSdkCommand", isWorkspaceSetting: boolean): Promise<GetSDKCommandResult> {
 		const baseWorkDir = this.getWorkingDirectoryForGetSdkCommand();
 		// No workspace open, nothing to do
 		if (!baseWorkDir) return { path: undefined };

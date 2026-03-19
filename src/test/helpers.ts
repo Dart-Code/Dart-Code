@@ -1336,7 +1336,7 @@ export function findSuiteNode(suitePath: string): vs.TestItem {
 	const workspaceFolderPath = workspaceFolder ? fsPath(workspaceFolder.uri) : undefined;
 	const workspaceFolderID = workspaceFolderPath ? `WF:${workspaceFolderPath}` : undefined;
 
-	const controller = privateApi.testController;
+	const controller = privateApi.testController!;
 	const node = controller.controller.items.get(suiteID)
 		?? (projectID ? controller.controller.items.get(projectID)?.children.get(suiteID) : undefined)
 		?? (workspaceFolderID && projectID ? controller.controller.items.get(workspaceFolderID)?.children.get(projectID)?.children.get(suiteID) : undefined);
@@ -1348,9 +1348,10 @@ export function findSuiteNode(suitePath: string): vs.TestItem {
 }
 
 export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, onlyFailures, onlyActive, sortByLabel }: { items?: vs.TestItemCollection, uriFilter?: vs.Uri, buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean, sortByLabel?: boolean } = {}): string[] {
+	const controller = privateApi.testController!;
 	const collection = items instanceof vs.Uri
-		? privateApi.testController.controller.items
-		: items ?? privateApi.testController.controller.items;
+		? controller.controller.items
+		: items ?? controller.controller.items;
 
 	const testItems: vs.TestItem[] = [];
 	collection.forEach((item) => testItems.push(item));
@@ -1363,7 +1364,7 @@ export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, on
 	sortBy(testItems, sortByLabel ? (item) => item.label : getSourceLine);
 
 	for (const item of testItems) {
-		const lastResult = privateApi.testController.getLatestData(item);
+		const lastResult = controller.getLatestData(item);
 
 		// Only include statuses on WF/Project nodes if we aren't filtering, otherwise
 		// the status may look wrong (because it might be skewed by filtered out nodes).

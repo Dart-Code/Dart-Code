@@ -113,7 +113,7 @@ export interface InternalExtensionApi {
 		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
 	};
 	flutterCapabilities: FlutterCapabilities;
-	flutterOutlineTreeProvider: TreeDataProvider<TreeNode> | undefined;
+	flutterOutlineTreeProvider: TreeDataProvider<TreeItem> | undefined;
 	getLogHeader: () => string;
 	getOutputChannel: (name: string) => OutputChannel;
 	getToolEnv: () => Record<string, string>;
@@ -138,7 +138,7 @@ export interface InternalExtensionApi {
 		getLatestData(test: TestItem): TreeNode | undefined,
 		handleDebugSessionEnd(e: DebugSession): void,
 		coverageParser: CoverageParser,
-	};
+	} | undefined;
 	testCoordinator: TestSessionCoordinator;
 	testDiscoverer: { forceUpdate(uri: Uri): void, ensureSuitesDiscovered(): Promise<void>, testDiscoveryPerformed: Promise<void> | undefined },
 	testModel: TestModel;

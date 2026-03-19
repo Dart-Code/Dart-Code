@@ -216,7 +216,7 @@ describe("flutter test debugger", () => {
 				await openFile(flutterTestSelective2File);
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective1File));
 				await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestSelective2File));
-				const controller = privateApi.testController;
+				const controller = privateApi.testController!;
 
 				const testItems: vs.TestItem[] = [];
 
@@ -465,7 +465,7 @@ describe("flutter test debugger", () => {
 		let addCoverageStub: SinonStub | undefined;
 
 		beforeEach(() => {
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 			const createTestRunOriginal = controller.controller.createTestRun.bind(controller.controller);
 			const createTestRunStub = sb.stub(controller.controller, "createTestRun");
 			createTestRunStub.callsFake((request: vs.TestRunRequest) => {
@@ -479,7 +479,7 @@ describe("flutter test debugger", () => {
 			// Discover tests.
 			await openFile(flutterTestMainFile);
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterTestMainFile));
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 
 			const suiteNode = findSuiteNode(fsPath(flutterTestMainFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
@@ -498,7 +498,7 @@ describe("flutter test debugger", () => {
 			await openFile(flutterHelloWorldExampleTestFile);
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
 
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 			const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
@@ -516,7 +516,7 @@ describe("flutter test debugger", () => {
 			await openFile(flutterHelloWorldExampleTestFile);
 			await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(flutterHelloWorldExampleTestFile));
 
-			const controller = privateApi.testController;
+			const controller = privateApi.testController!;
 			const suiteNode = findSuiteNode(fsPath(flutterHelloWorldExampleTestFile));
 			const testRequest = new vs.TestRunRequest([suiteNode]);
 
