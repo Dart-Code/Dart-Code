@@ -34,6 +34,9 @@ export class DartDebugClient extends DebugClient {
 		super(runtime, executable, args, "dart", { shell: useShell ? true : undefined }, true);
 		this.port = daArgs.port;
 
+		// Tests can attach a lot of listeners, so bump the threshold for warning.
+		this.setMaxListeners(30);
+
 		// HACK to handle incoming requests..
 		const me = (this as unknown as { dispatch(body: string): void });
 		const oldDispatch = me.dispatch.bind(this);
