@@ -6,7 +6,6 @@ import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
 import { getPubWorkspaceStatus } from "../../../shared/vscode/pub";
-import { clearCaches } from "../../../shared/vscode/utils";
 import { activate, defer, privateApi, sb, tryDeleteDirectoryRecursive } from "../../helpers";
 
 describe("pub package status", () => {
@@ -429,7 +428,7 @@ describe("pub package status", () => {
 		write(path.join(standalone2, "pubspec.yaml"), "dependencies:");
 
 		// Clear caches in case another test recently cached the package results.
-		clearCaches();
+		privateApi.clearCaches();
 
 		const executeCommand = sb.stub(vs.commands, "executeCommand").callThrough();
 		const getPackagesCommand = executeCommand.withArgs("dart.getPackages", sinon.match.any).resolves();

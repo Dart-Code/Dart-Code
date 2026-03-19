@@ -729,6 +729,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		const privateApi: InternalExtensionApi = {
 			addDependencyCommand,
 			analyzer,
+			clearCaches,
 			context: extContext,
 			currentAnalysis: () => analyzer?.onCurrentAnalysisComplete,
 			dartCapabilities,
