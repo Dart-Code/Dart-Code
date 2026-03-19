@@ -14,7 +14,7 @@ import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -380,6 +380,24 @@ describe("dart test debugger", () => {
 				const printEvent = testEvents.find((e) => e.body.messageType === "print" && (e.body.message as string).startsWith("LAUNCH_ENV_VAR"));
 
 				assert.equal(printEvent?.body.message, "LAUNCH_ENV_VAR=default");
+			});
+
+			it("can run tests through test controller using a project node", async () => {
+				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
+
+				const controller = privateApi.testController;
+				const projectNode = findProjectNode(fsPath(helloWorldExampleSubFolder));
+				const testRequest = new vs.TestRunRequest([projectNode]);
+				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);
+				const testEvents = customEvents
+					.filter((e) => e.event === "dart.testNotification")
+					.filter((e) => e.body.type === "testStart")
+					.map((e) => e.body as TestStartNotification)
+					.filter((e) => !e.test.name?.startsWith("loading"));
+				const suiteFilenames = testEvents.map((e) => `${path.basename(fsPath(URI.parse(e.test.url!)))}`);
+
+				// Only the test from the example sub-project should have run.
+				assert.deepStrictEqual(suiteFilenames, ["project_test.dart"]);
 			});
 
 			it("can run a selection of tests across multiple files", async () => {

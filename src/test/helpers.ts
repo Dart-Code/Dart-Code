@@ -1347,6 +1347,22 @@ export function findSuiteNode(suitePath: string): vs.TestItem {
 	return node;
 }
 
+export function findProjectNode(projectPath: string): vs.TestItem {
+	const projectID = `PROJECT:${projectPath}`;
+	const workspaceFolder = vs.workspace.getWorkspaceFolder(vs.Uri.file(projectPath));
+	const workspaceFolderPath = workspaceFolder ? fsPath(workspaceFolder.uri) : undefined;
+	const workspaceFolderID = workspaceFolderPath ? `WF:${workspaceFolderPath}` : undefined;
+
+	const controller = privateApi.testController;
+	const node = controller.controller.items.get(projectID)
+		?? (workspaceFolderID ? controller.controller.items.get(workspaceFolderID)?.children.get(projectID) : undefined);
+
+	if (!node)
+		throw new Error(`Could not find project node for ${projectPath}:\n  ${workspaceFolderID}\n    ${projectID}`);
+
+	return node;
+}
+
 export function makeTestTextTree({ items, uriFilter, buffer = [], indent = 0, onlyFailures, onlyActive, sortByLabel }: { items?: vs.TestItemCollection, uriFilter?: vs.Uri, buffer?: string[]; indent?: number, onlyFailures?: boolean, onlyActive?: boolean, sortByLabel?: boolean } = {}): string[] {
 	const controller = privateApi.testController!;
 	const collection = items instanceof vs.Uri

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath, tryDeleteFile } from "../../../shared/utils/fs";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, getExpectedResults, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, waitForResult } from "../../helpers";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -163,6 +163,13 @@ void main() => test("test inside ${newFilename}", () {});
 		const controller = privateApi.testController!;
 		await controller.runTests(false, false, request, fakeCancellationToken);
 		assert.ok(!privateApi.testDiscoverer.testDiscoveryPerformed);
+	});
+
+	it("tags project nodes as runnable", async () => {
+		await privateApi.testDiscoverer.ensureSuitesDiscovered();
+
+		const projectNode = findProjectNode(fsPath(helloWorldExampleSubFolder));
+		assert.ok(projectNode.tags.some((tag) => tag.id === "DartRunnableTest"));
 	});
 
 	function preventTestSpawning() {
