@@ -404,7 +404,9 @@ describe("pub package status", () => {
 	}
 });
 
-describe("pub package status", () => {
+describe("pub package commands", () => {
+	before("activate", () => activate());
+
 	it(`"Get Packages for All Projects" runs pub get once per workspace root and once per standalone package`, async () => {
 		const currentWorkspaceRoot = fsPath(vs.workspace.workspaceFolders![0].uri);
 		const tempRoot = path.join(currentWorkspaceRoot, "temp", `pub_get_all_test_${Date.now()}`);
