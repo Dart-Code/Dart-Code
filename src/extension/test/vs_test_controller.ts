@@ -127,7 +127,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				// If this node is runnable, add it.
 				nodes.push(node);
 			} else {
-				// Otherwise, try adding children.
+				// Otherwise, try adding children (this may be a workspace folder, project, etc.).
 				item.children.forEach(add);
 			}
 		};
@@ -425,7 +425,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		this.nodeForItem.set(item, node);
 		this.itemForNode.set(node, item);
 
-		if (node instanceof RunnableTreeNode && this.isRunnableTest(node)) {
+		if (this.isRunnableNode(node)) {
 			let project: TreeNode | undefined = node;
 			while (project && !(project instanceof ProjectNode))
 				project = project.parent;
@@ -457,7 +457,13 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		}
 	}
 
-	private isRunnableTest(node: RunnableTreeNode): boolean {
+	private isRunnableNode(node: TreeNode): boolean {
+		if (node instanceof ProjectNode)
+			return true;
+
+		if (!(node instanceof RunnableTreeNode))
+			return false;
+
 		const label = node.label;
 		if (!label)
 			return false;
