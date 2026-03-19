@@ -230,9 +230,9 @@ function runPubUpgrade(folders: Uri[]) {
  * the Pub Workspace root (if the package is part of a workspace) or the package folder.
  *
  * If multiple packages belong to the same Pub Workspace, it will only be returned once.
-  */
+ */
 export function getPubWorkspaceOrPackageFolders(packageFolders: string[]): string[] {
-	return uniq(packageFolders.map(getPubWorkspaceFolderOrPackageFolder));
+	return uniq(packageFolders.map(getPubWorkspaceFolderOrPackageFolder)).sort();
 }
 
 /**
