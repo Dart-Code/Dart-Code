@@ -111,7 +111,7 @@ jobs:
       - name: Set up Flutter ${{ matrix.build-version }}
         id: flutter
         if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
-        uses: DanTup/gh-actions/setup-flutter@ca35b836161b1f7f8659345bad839ede5f4e3b94
+        uses: DanTup/gh-actions/setup-flutter@27c44eb7d43bced080fc5c9b6c3e4cfdd4cdcc41
         with:
           channel: ${{ matrix.build-version }}
 
