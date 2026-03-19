@@ -27,7 +27,10 @@ interface ProjectFolderSearchResults { projectFolders: string[], excludedFolders
 const projectFolderCache = new SimpleTimeBasedCache<ProjectFolderSearchResults>();
 let inProgressProjectFolderSearch: Promise<void> | undefined;
 
-export function clearCaches() {
+export function clearCaches(): void {
+	// TODO(dantup): shared is not supposed to have state. A recent test issue was because
+	//  this function was called int he test version and not the extension.
+	//  Perhaps it's time to just drop the shared folder now the legacy DAPs are (mostly) gone.
 	inProgressProjectFolderSearch = undefined;
 	projectFolderCache.clear();
 	cachedTestCapabilities.clear();

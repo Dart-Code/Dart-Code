@@ -88,6 +88,7 @@ export interface DebugCommandHandler {
 
 export interface InternalExtensionApi {
 	addDependencyCommand: any,
+	clearCaches: () => void;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
 	interactiveRefactors: InteractiveRefactors | undefined;
