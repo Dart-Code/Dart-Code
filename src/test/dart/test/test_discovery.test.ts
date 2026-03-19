@@ -151,7 +151,8 @@ void main() => test("test inside ${newFilename}", () {});
 		preventTestSpawning();
 
 		const request = new vs.TestRunRequest();
-		await privateApi.testController.runTests(false, false, request, fakeCancellationToken);
+		const controller = privateApi.testController!;
+		await controller.runTests(false, false, request, fakeCancellationToken);
 		assert.ok(privateApi.testDiscoverer.testDiscoveryPerformed);
 	});
 
@@ -159,7 +160,8 @@ void main() => test("test inside ${newFilename}", () {});
 		preventTestSpawning();
 
 		const request = new vs.TestRunRequest([]);
-		await privateApi.testController.runTests(false, false, request, fakeCancellationToken);
+		const controller = privateApi.testController!;
+		await controller.runTests(false, false, request, fakeCancellationToken);
 		assert.ok(!privateApi.testDiscoverer.testDiscoveryPerformed);
 	});
 

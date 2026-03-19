@@ -1,4 +1,4 @@
-export const resolvedPromise = Promise.resolve(true);
+export const resolvedPromise = Promise.resolve();
 
 export async function waitFor<T>(action: () => T | Promise<T>, checkEveryMilliseconds = 50, tryForMilliseconds = 10000, token?: { isCancellationRequested: boolean }): Promise<T | undefined> {
 	let timeRemaining = tryForMilliseconds;

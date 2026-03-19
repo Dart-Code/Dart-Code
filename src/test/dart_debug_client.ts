@@ -188,7 +188,7 @@ export class DartDebugClient extends DebugClient {
 		this.waitForEvent("terminated", "for handleDebugSessionEnd", tenMinutesInMs)
 			.then(() => {
 				this.debugCommands.handleDebugSessionEnd(currentSession);
-				privateApi.testController.handleDebugSessionEnd(currentSession);
+				privateApi.testController?.handleDebugSessionEnd(currentSession);
 			})
 			.catch((e) => console.error(`Error while waiting for termination: ${e}`));
 
