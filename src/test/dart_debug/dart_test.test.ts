@@ -385,7 +385,7 @@ describe("dart test debugger", () => {
 			it("can run tests through test controller using a project node", async () => {
 				await privateApi.testDiscoverer?.ensureSuitesDiscovered();
 
-				const controller = privateApi.testController;
+				const controller = privateApi.testController!;
 				const projectNode = findProjectNode(fsPath(helloWorldExampleSubFolder));
 				const testRequest = new vs.TestRunRequest([projectNode]);
 				const customEvents = await captureDebugSessionCustomEvents(async () => controller.runTests(false, false, testRequest, fakeCancellationToken), true);

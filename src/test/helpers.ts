@@ -1353,7 +1353,7 @@ export function findProjectNode(projectPath: string): vs.TestItem {
 	const workspaceFolderPath = workspaceFolder ? fsPath(workspaceFolder.uri) : undefined;
 	const workspaceFolderID = workspaceFolderPath ? `WF:${workspaceFolderPath}` : undefined;
 
-	const controller = privateApi.testController;
+	const controller = privateApi.testController!;
 	const node = controller.controller.items.get(projectID)
 		?? (workspaceFolderID ? controller.controller.items.get(workspaceFolderID)?.children.get(projectID) : undefined);
 
