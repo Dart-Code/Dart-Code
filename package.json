@@ -2429,12 +2429,6 @@
 						"markdownDescription": "Whether to insert argument placeholders during code completions. This feature is automatically disabled when `enableCompletionCommitCharacters` is enabled.",
 						"scope": "resource"
 					},
-					"dart.lineLength": {
-						"type": "integer",
-						"default": 80,
-						"markdownDescription": "The maximum length of a line of code. This is used by the document formatter. If you change this value, you may wish to update `editor.rulers` (which draws vertical lines in the editor) in the `[\"dart\"]` section of your settings to match.",
-						"scope": "resource"
-					},
 					"dart.lspSnippetTextEdits": {
 						"type": "boolean",
 						"default": true,
@@ -3432,6 +3426,12 @@
 				"title": "Legacy",
 				"order": 4,
 				"properties": {
+					"dart.lineLength": {
+						"type": "integer",
+						"default": 80,
+						"markdownDescription": "**LEGACY SETTING: Use `formatter.page_width` in `analysis_options.yaml` instead.**\n\nThe maximum length of a line of code. This is used by the document formatter. If you change this value, you may wish to update `editor.rulers` (which draws vertical lines in the editor) in the `[\"dart\"]` section of your settings to match.",
+						"scope": "resource"
+					},
 					"dart.webDaemonLogFile": {
 						"type": [
 							"null",
