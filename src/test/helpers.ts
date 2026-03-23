@@ -15,7 +15,7 @@ import { internalApiSymbol } from "../shared/symbols";
 import { TestDoneNotification } from "../shared/test_protocol";
 import { BufferedLogger, filenameSafe, flatMap, withTimeout } from "../shared/utils";
 import { arrayContainsArray, sortBy } from "../shared/utils/array";
-import { createFolderForFile, existsAndIsDirectorySync, fsPath, getRandomInt, tryDeleteFile } from "../shared/utils/fs";
+import { createFolderForFile, fsPath, getRandomInt } from "../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../shared/utils/promises";
 import { getProgramString } from "../shared/utils/test";
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
@@ -472,26 +472,24 @@ export async function openFile(file: vs.Uri, column?: vs.ViewColumn): Promise<vs
 	}
 }
 
-export function tryDelete(file: vs.Uri) {
-	tryDeleteFile(fsPath(file));
-}
-
-export function tryDeleteDirectoryRecursive(folder: string) {
-	if (!fs.existsSync(folder))
-		return;
-	if (!existsAndIsDirectorySync(folder)) {
-		logger.error(`deleteDirectoryRecursive was passed a file: ${folder}`);
-		return;
+export function tryDelete(item: string | vs.Uri) {
+	if (typeof item !== "string") {
+		if (item.scheme !== "file")
+			return;
+		else
+			item = fsPath(item);
 	}
-	fs.readdirSync(folder)
-		.map((item) => path.join(folder, item))
-		.forEach((item) => {
-			if (existsAndIsDirectorySync(item)) {
-				tryDeleteDirectoryRecursive(item);
-			} else
-				tryDeleteFile(item);
-		});
-	fs.rmdirSync(folder);
+	try {
+		fs.rmSync(item,
+			{
+				force: true,
+				recursive: true,
+				maxRetries: 5,
+				retryDelay: 500
+			});
+	} catch (e) {
+		console.warn(`Failed to clean up folder ${item}: ${e}`);
+	}
 }
 
 export let currentTestName = "unknown";
@@ -596,7 +594,7 @@ export function enableLint(project: string, lintName: string): void {
 		defer("Restore original analysis_options", () => fs.writeFileSync(analysisOptions, contents));
 	} else {
 		// Delete after test.
-		defer("Remove created analysis_options", () => tryDeleteFile(analysisOptions));
+		defer("Remove created analysis_options", () => tryDelete(analysisOptions));
 	}
 	if (!contents.includes("linter:\n  rules:\n"))
 		contents += "\nlinter:\n  rules:\n";
@@ -1465,7 +1463,7 @@ export async function makeTextTreeUsingCustomTree(parent: vs.TreeItem | vs.Uri |
 export function createTempTestFile(absolutePath: string) {
 	createFolderForFile(absolutePath);
 	fs.writeFileSync(absolutePath, "");
-	defer("delete temp file", () => tryDeleteFile(absolutePath));
+	defer("delete temp file", () => tryDelete(absolutePath));
 }
 
 export function validateExpectedEnv(e: Record<string, string | number | null>) {

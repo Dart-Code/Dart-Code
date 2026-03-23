@@ -7,7 +7,7 @@ import { autoLaunchFilename } from "../../../shared/constants";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
 import { AutoLaunch } from "../../../shared/vscode/autolaunch";
-import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryDeleteDirectoryRecursive } from "../../helpers";
+import { defer, delay, getRandomTempFolder, helloWorldMainFile, logger, sb, tryDelete } from "../../helpers";
 
 /// Use a unique named config folder so we don't trigger the built-in AutoLaunch for the main extension that's running.
 const testDartCodeConfigFolder = ".test_dart_code";
@@ -203,7 +203,7 @@ function createTestEnvironment(overridePath?: string) {
 	const filePath = path.join(folderPath, autoLaunchFilename);
 
 	fs.mkdirSync(folderPath, { recursive: true });
-	defer(`delete ${folderPath}`, () => tryDeleteDirectoryRecursive(folderPath));
+	defer(`delete ${folderPath}`, () => tryDelete(folderPath));
 
 	const startDebugSession = sb.stub(debug, "startDebugging").callsFake(() => Promise.resolve());
 	return { wf, baseUri, filePath, startDebugSession };

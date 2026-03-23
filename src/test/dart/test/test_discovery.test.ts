@@ -2,8 +2,8 @@ import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
-import { fsPath, tryDeleteFile } from "../../../shared/utils/fs";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, waitForResult } from "../../helpers";
+import { fsPath } from "../../../shared/utils/fs";
+import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -106,7 +106,7 @@ hello_world
 
 		const newFilename = "disk_create_test.dart";
 		const newFilePath = path.join(fsPath(helloWorldTestFolder), newFilename);
-		defer("Cleanup new", () => tryDeleteFile(newFilePath));
+		defer("Cleanup new", () => tryDelete(newFilePath));
 
 		fs.writeFileSync(newFilePath, `
 import "package:test/test.dart";
@@ -131,11 +131,11 @@ void main() => test("test inside ${newFilename}", () {});
 
 		const originalFilename = "disk_rename_original_test.dart";
 		const originalFilePath = path.join(fsPath(helloWorldTestFolder), originalFilename);
-		defer("Cleanup original", () => tryDeleteFile(originalFilePath));
+		defer("Cleanup original", () => tryDelete(originalFilePath));
 
 		const newFilename = "disk_rename_new_test.dart";
 		const newFilePath = path.join(fsPath(helloWorldTestFolder), newFilename);
-		defer("Cleanup new", () => tryDeleteFile(newFilePath));
+		defer("Cleanup new", () => tryDelete(newFilePath));
 
 		fs.writeFileSync(originalFilePath, "");
 

@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
-import { createFolderForFile, fsPath, tryDeleteFile } from "../../../shared/utils/fs";
+import { createFolderForFile, fsPath } from "../../../shared/utils/fs";
 import { createTestFileAction, defaultDartTestFileContents } from "../../../shared/utils/test";
 import { activate, createTempTestFile, currentDoc, currentEditor, defer, emptyFile, helloWorldFolder, helloWorldGoToLibFile, helloWorldGoToLibSrcFile, helloWorldGoToTestFile, helloWorldGoToTestSrcFile, helloWorldMainLibFile, helloWorldTestEmptyFile, helloWorldTestMainFile, helloWorldTestTreeFile, openFile, privateApi, sb, tryDelete, waitForResult } from "../../helpers";
 
@@ -170,7 +170,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 			it("can create a test file that doesn't already exist", async () => {
 				const testFilePath = fsPath(helloWorldTestEmptyFile);
 				const testFileRelativePath = "test/empty_test.dart";
-				tryDeleteFile(testFilePath);
+				tryDelete(testFilePath);
 
 				const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
 				const createNewTestFilePrompt = showInformationMessage
@@ -184,7 +184,7 @@ for (const commandName of ["dart.goToTestOrImplementationFile", "dart.findTestOr
 
 				// Also ensure the file doesn't already exist.
 				assert.ok(!fs.existsSync(testFilePath));
-				defer("Delete test file for implementation", () => tryDeleteFile(testFilePath));
+				defer("Delete test file for implementation", () => tryDelete(testFilePath));
 
 				// Run the command as if we clicked it in the context menu.
 				await vs.commands.executeCommand("dart.goToTests", emptyFile);

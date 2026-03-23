@@ -6,7 +6,7 @@ import * as vs from "vscode";
 import { isWin } from "../../../shared/constants";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
 import { getPubWorkspaceStatus } from "../../../shared/vscode/pub";
-import { activate, defer, privateApi, sb, tryDeleteDirectoryRecursive } from "../../helpers";
+import { activate, defer, privateApi, sb, tryDelete } from "../../helpers";
 
 describe("pub package status", () => {
 	before("activate", () => activate());
@@ -410,7 +410,7 @@ describe("pub package commands", () => {
 	it(`"Get Packages for All Projects" runs pub get once per workspace root and once per standalone package`, async () => {
 		const currentWorkspaceRoot = fsPath(vs.workspace.workspaceFolders![0].uri);
 		const tempRoot = path.join(currentWorkspaceRoot, "temp", `pub_get_all_test_${Date.now()}`);
-		defer("clean up temp test projects", () => tryDeleteDirectoryRecursive(tempRoot));
+		defer("clean up temp test projects", () => tryDelete(tempRoot));
 
 		const workspaceRoot = path.join(tempRoot, "workspace_root");
 		const workspaceProject1 = path.join(workspaceRoot, "proj1");
