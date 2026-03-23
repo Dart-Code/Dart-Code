@@ -14,7 +14,7 @@ import { fsPath, isFlutterProjectFolder, mkDirRecursive, nextAvailableFilename }
 import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../../shared/utils/projects";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
-import { FlutterSampleSnippet } from "../../shared/vscode/interfaces";
+import { FlutterSampleSnippet, OperationProgress } from "../../shared/vscode/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
@@ -25,7 +25,7 @@ import * as util from "../utils";
 import { PickableSetting, showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
-import { BaseSdkCommands, commandState, OperationProgress, packageNameRegex } from "./sdk";
+import { BaseSdkCommands, commandState, packageNameRegex } from "./sdk";
 
 export class FlutterCommands extends BaseSdkCommands {
 	private flutterScreenshotPath?: string;

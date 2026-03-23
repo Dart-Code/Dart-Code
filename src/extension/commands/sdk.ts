@@ -9,6 +9,7 @@ import { logProcess } from "../../shared/logging";
 import { getPubExecutionInfo, RunProcessResult } from "../../shared/processes";
 import { disposeAll, nullToUndefined, PromiseCompleter, usingCustomScript } from "../../shared/utils";
 import { fsPath, tryGetPackageName } from "../../shared/utils/fs";
+import { OperationProgress } from "../../shared/vscode/interfaces";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
 import { DartSdkManager, FlutterSdkManager } from "../sdk/sdk_manager";
@@ -24,11 +25,6 @@ export const commandState = {
 	numProjectCreationsInProgress: 0,
 	promptToReloadOnVersionChanges: true,
 };
-
-export interface OperationProgress {
-	progressReporter: vs.Progress<{ message?: string; increment?: number }>;
-	cancellationToken: vs.CancellationToken;
-}
 
 export class BaseSdkCommands implements IAmDisposable {
 	protected readonly sdks: DartSdks;

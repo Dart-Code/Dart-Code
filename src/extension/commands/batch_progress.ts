@@ -1,8 +1,9 @@
 import * as vs from "vscode";
 import { maxConcurrentProcesses, runWithConcurrencyLimit } from "../../shared/pub/utils";
 import { fsPath } from "../../shared/utils/fs";
+import { OperationProgress } from "../../shared/vscode/interfaces";
 import { config } from "../config";
-import { getPackageOrFolderDisplayName, OperationProgress } from "./sdk";
+import { getPackageOrFolderDisplayName } from "./sdk";
 
 export async function runBatchFolderOperation(
 	uris: vs.Uri[],

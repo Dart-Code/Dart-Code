@@ -23,7 +23,7 @@ import { extensionVersion, isDevExtension } from "../shared/vscode/extension_uti
 import { InternalExtensionApi } from "../shared/vscode/interfaces";
 import { McpTools } from "../shared/vscode/mcp";
 import { locateBestProjectRoot } from "../shared/vscode/project";
-import { getPubWorkspaceFolderOrPackageFolder } from "../shared/vscode/pub";
+import { getPubWorkspaceFolderOrPackageFolderPath } from "../shared/vscode/pub";
 import { DartFileUriLinkProvider } from "../shared/vscode/terminal/file_uri_link_provider";
 import { DartPackageUriLinkProvider } from "../shared/vscode/terminal/package_uri_link_provider";
 import { DartUriHandler } from "../shared/vscode/uri_handlers/uri_handler";
@@ -446,7 +446,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		// https://github.com/flutter/flutter/issues/173550
 		const firstFlutterProject = workspaceContext.firstFlutterProject;
 		if (firstFlutterProject) {
-			const flutterProjectOrWorkspace = getPubWorkspaceFolderOrPackageFolder(firstFlutterProject);
+			const flutterProjectOrWorkspace = getPubWorkspaceFolderOrPackageFolderPath(firstFlutterProject);
 			context.subscriptions.push(new FlutterWidgetPreviewManager(logger, flutterSdk, dartToolingDaemon?.dtdUri, devTools?.devtoolsUrl, flutterProjectOrWorkspace, config.flutterWidgetPreviewLocation, flutterWidgetPreviewBehavior));
 		}
 	}

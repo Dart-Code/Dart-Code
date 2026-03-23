@@ -6,7 +6,8 @@ import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { RunProcessResult } from "../../shared/processes";
 import { uniq } from "../../shared/utils";
 import { fsPath, touchFile } from "../../shared/utils/fs";
-import { getPubWorkspaceOrPackageFolders, getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
+import { OperationProgress } from "../../shared/vscode/interfaces";
+import { getPubWorkspaceFolderOrPackageFolderPath, getPubWorkspaceFolderOrPackageFolderUri, getPubWorkspaceOrPackageFolderUris, getPubWorkspaceStatus, isValidPubGetTarget, promptToRunPubGet, promptToRunPubUpgrade, runPubGet } from "../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
 import { config } from "../config";
@@ -14,7 +15,7 @@ import * as util from "../utils";
 import { getExcludedFolders } from "../utils";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
-import { BaseSdkCommands, commandState, OperationProgress } from "./sdk";
+import { BaseSdkCommands, commandState } from "./sdk";
 
 let isFetchingPackages = false;
 let runPubGetDelayTimer: NodeJS.Timeout | undefined;
@@ -53,13 +54,15 @@ export class PackageCommands extends BaseSdkCommands {
 
 	/// Touches pubspec.lock and .dart_tool/package_config.json to update their modification times.
 	/// This is a workaround for https://github.com/Dart-Code/Dart-Code/issues/5549.
-	private touchPubFiles(uri: vs.Uri): void {
-		const folder = fsPath(uri);
+	private touchPubFiles(pubRootUri: vs.Uri): void {
+		const folder = fsPath(pubRootUri);
 		touchFile(path.join(folder, "pubspec.lock"));
 		touchFile(path.join(folder, ".dart_tool", "package_config.json"));
 	}
 
 	private async getPackages(
+		// URI could be a file path or a URI.
+		// It could be a pubspec.yaml directly, or a project folder.
 		uri: string | vs.Uri | vs.Uri[] | undefined,
 		operationProgress?: OperationProgress,
 	): Promise<RunProcessResult | undefined> {
@@ -73,6 +76,17 @@ export class PackageCommands extends BaseSdkCommands {
 				location: vs.ProgressLocation.Notification,
 				title: "pub get",
 			}, (progress, token) => this.getPackages(uri, { progressReporter: progress, cancellationToken: token }));
+		}
+
+		// Map any packages on to their workspaces.
+		if (Array.isArray(uri)) {
+			uri = getPubWorkspaceOrPackageFolderUris(uri);
+			if (uri.length === 1)
+				uri = uri[0];
+		} else if (typeof uri === "string") {
+			uri = getPubWorkspaceFolderOrPackageFolderPath(uri);
+		} else if (uri) {
+			uri = getPubWorkspaceFolderOrPackageFolderUri(uri);
 		}
 
 		// If we are a batch, run for each item.
@@ -89,7 +103,7 @@ export class PackageCommands extends BaseSdkCommands {
 		return this.getPackagesForUri(resolvedUri, operationProgress);
 	}
 
-	private async getPackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress) {
+	public async getPackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
 		// Exclude folders we should never run pub get for.
 		if (!isValidPubGetTarget(uri).valid)
 			return;
@@ -118,8 +132,7 @@ export class PackageCommands extends BaseSdkCommands {
 			return;
 
 		const allFolders = await getAllProjectFolders(this.logger, getExcludedFolders, { requirePubspec: true, sort: true, searchDepth: config.projectSearchDepth });
-		const allRoots = getPubWorkspaceOrPackageFolders(allFolders);
-		const uriFolders = allRoots.map((f) => vs.Uri.file(f));
+		const uriFolders = allFolders.map((f) => vs.Uri.file(f));
 		await vs.commands.executeCommand("dart.getPackages", uriFolders);
 	}
 
@@ -314,6 +327,7 @@ export class PackageCommands extends BaseSdkCommands {
 			//   1 - then just do that one
 			//   more than 1 - prompt to do all
 			const projectFolders = await getAllProjectFolders(this.logger, util.getExcludedFolders, { requirePubspec: true, searchDepth: config.projectSearchDepth });
+			// TODO(dantup): See if we can migrate this to use the getPubWorkspaceFolderOrPackageFolderPath/Uri and getPubWorkspaceOrPackageFolderUris helpers which might simplify this?
 			const pubStatuses = getPubWorkspaceStatus(
 				this.sdks,
 				this.logger,

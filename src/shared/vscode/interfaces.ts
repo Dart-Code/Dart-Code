@@ -8,6 +8,7 @@ import { DebuggerType, VersionStatus, VmService, VmServiceExtension } from "../e
 import { WebClient } from "../fetch";
 import { CustomScript, DartWorkspaceContext, GetSDKCommandConfig, GetSDKCommandResult, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
+import { RunProcessResult } from "../processes";
 import { PubDeps } from "../pub/deps";
 import { PackageMapLoader } from "../pub/package_map";
 import { DartToolingDaemon } from "../services/tooling_daemon";
@@ -124,6 +125,7 @@ export interface InternalExtensionApi {
 	nextAnalysis: () => Promise<void>;
 	packageCommands: {
 		fetchPackagesOrPrompt(uri: Uri | undefined, options?: { alwaysPrompt?: boolean, upgradeOnSdkChange?: boolean }): Promise<void>;
+		getPackagesForUri(uri: Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined>;
 	},
 	packagesTreeProvider: TreeDataProvider<TreeItem> & { deps?: PubDeps, packageMapLoader?: PackageMapLoader, projectFinder?: ProjectFinder };
 	pubGlobal: {
@@ -162,4 +164,9 @@ export interface FlutterSampleSnippet {
 	readonly id: string;
 	readonly file: string;
 	readonly description: string;
+}
+
+export interface OperationProgress {
+	progressReporter: Progress<{ message?: string; increment?: number }>;
+	cancellationToken: CancellationToken;
 }

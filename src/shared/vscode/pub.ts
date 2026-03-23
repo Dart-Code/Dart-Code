@@ -226,41 +226,72 @@ function runPubUpgrade(folders: Uri[]) {
 }
 
 /**
- * Returns the set of "pub roots" for a set of package folders, where "pub root" is
+ * Returns the paths of "pub roots" for a set of package folders/pubspecs, where "pub root" is
  * the Pub Workspace root (if the package is part of a workspace) or the package folder.
  *
  * If multiple packages belong to the same Pub Workspace, it will only be returned once.
  */
-export function getPubWorkspaceOrPackageFolders(packageFolders: string[]): string[] {
-	return uniq(packageFolders.map(getPubWorkspaceFolderOrPackageFolder)).sort();
+export function getPubWorkspaceOrPackageFolderPaths(packageFolderOrPubspecPaths: string[]): string[] {
+	return uniq(packageFolderOrPubspecPaths.map(getPubWorkspaceFolderOrPackageFolderPath)).sort();
 }
 
 /**
- * If `packageFolder` is part of a Pub Workspace, returns the workspace root folder.
+ * Returns the uris of "pub roots" for a set of package folders/pubspecs, where "pub root" is
+ * the Pub Workspace root (if the package is part of a workspace) or the package folder.
  *
- * Otherwise (or if there is no workspace root), returns `packageFolder`.
+ * If multiple packages belong to the same Pub Workspace, it will only be returned once.
+ *
+ * If any URIs are non-file URIs, they will be dropped.
  */
-export function getPubWorkspaceFolderOrPackageFolder(packageFolder: string): string {
-	const pubspecPath = path.join(packageFolder, "pubspec.yaml");
+export function getPubWorkspaceOrPackageFolderUris(packageFolderOrPubspecUris: Uri[]): Uri[] {
+	const packageFolderPaths = packageFolderOrPubspecUris
+		.filter((uri) => uri.scheme === "file")
+		.map((uri) => fsPath(uri));
+	const mappedPaths = getPubWorkspaceOrPackageFolderPaths(packageFolderPaths);
+	return mappedPaths.map((mappedPath) => Uri.file(mappedPath));
+}
+
+/**
+ * If `packageFolderOrPubspecUri` is part of a Pub Workspace, returns the workspace root folder URI.
+ *
+ * Otherwise (or if there is no workspace root, or URI is not file-scheme), returns `packageFolderOrPubspecUri`.
+ */
+export function getPubWorkspaceFolderOrPackageFolderUri(packageFolderOrPubspecUri: Uri): Uri {
+	return packageFolderOrPubspecUri.scheme === "file"
+		? Uri.file(getPubWorkspaceFolderOrPackageFolderPath(fsPath(packageFolderOrPubspecUri)))
+		: packageFolderOrPubspecUri;
+}
+
+/**
+ * If `packageFolderOrPubspecPath` is part of a Pub Workspace, returns the workspace root folder.
+ *
+ * Otherwise (or if there is no workspace root), returns `packageFolderOrPubspecPath` (or if it's a pubspec path, the
+ * containing folder).
+ */
+export function getPubWorkspaceFolderOrPackageFolderPath(packageFolderOrPubspecPath: string): string {
+	const pubspecPath = path.basename(packageFolderOrPubspecPath) === "pubspec.yaml"
+		? packageFolderOrPubspecPath
+		: path.join(packageFolderOrPubspecPath, "pubspec.yaml");
+	const packageFolderPath = path.dirname(pubspecPath);
 
 	// We shouldn't really have gotten here without a pubspec because that means this isn't
-	// a package, but in that case just return the original string.
+	// a package, but in that case just return the containing folder.
 	if (!fs.existsSync(pubspecPath))
-		return packageFolder;
+		return packageFolderPath;
 
 	let pubspecContent: string;
 	try {
 		pubspecContent = fs.readFileSync(pubspecPath, "utf8").toString();
 	} catch {
-		return packageFolder;
+		return packageFolderPath;
 	}
 
 	// If this is not a Pub Workspace project, just return the package itself.
 	if (!pubspecIsWorkspaceProjectRegex.test(pubspecContent))
-		return packageFolder;
+		return packageFolderPath;
 
 	// Walk up the tree to find the workspace root.
-	let currentFolder = path.dirname(packageFolder);
+	let currentFolder = path.dirname(packageFolderPath);
 	while (true) {
 		// Check if the current folder is the workspace root
 		try {
@@ -279,7 +310,7 @@ export function getPubWorkspaceFolderOrPackageFolder(packageFolder: string): str
 
 		// If we get to the root of the filesystem without finding, use the original package.
 		if (parent === currentFolder)
-			return packageFolder;
+			return packageFolderPath;
 
 		// Otherwise, loop.
 		currentFolder = parent;
