@@ -172,6 +172,12 @@ describe("dart cli debugger", () => {
 			dc.waitForEvent("terminated"),
 			dc.resume(),
 		);
+
+		// Without a small delay here, we see a popup saying the process termianted with exit code -1 even
+		// though it ends cleanly. I suspect this is something to do with the debug client shutting down before
+		// the exit even is delivered correctly, so just delay to avoid it.
+		// https://github.com/Dart-Code/Dart-Code/issues/5977
+		await delay(100);
 	});
 
 	it("resolves relative paths", async () => {
