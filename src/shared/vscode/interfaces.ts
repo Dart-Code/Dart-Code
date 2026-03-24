@@ -126,6 +126,7 @@ export interface InternalExtensionApi {
 	packageCommands: {
 		fetchPackagesOrPrompt(uri: Uri | undefined, options?: { alwaysPrompt?: boolean, upgradeOnSdkChange?: boolean }): Promise<void>;
 		getPackagesForUri(uri: Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined>;
+		upgradePackagesForUri(uri: Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined>;
 	},
 	packagesTreeProvider: TreeDataProvider<TreeItem> & { deps?: PubDeps, packageMapLoader?: PackageMapLoader, projectFinder?: ProjectFinder };
 	pubGlobal: {

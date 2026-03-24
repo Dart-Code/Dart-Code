@@ -484,7 +484,8 @@ export function tryDelete(item: string | vs.Uri) {
 			{
 				force: true,
 				recursive: true,
-				maxRetries: 5,
+				// Sometimes Windows can take a while to let us delete.
+				maxRetries: 10,
 				retryDelay: 500
 			});
 	} catch (e) {

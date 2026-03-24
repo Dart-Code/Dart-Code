@@ -440,82 +440,93 @@ describe("pub package commands", () => {
 		privateApi.clearCaches();
 	});
 
-	it(`"Get Packages" works with a single project folder path`, async () => {
-		const getPackagesForUri = sb.stub(privateApi.packageCommands, "getPackagesForUri").callThrough();
-		const getPackagesForUriCall = getPackagesForUri.withArgs(sinon.match.any).resolves();
+	const packageCommandTestConfigs = [
+		{
+			commandName: "dart.getPackages",
+			methodName: "getPackagesForUri",
+		},
+		{
+			commandName: "dart.upgradePackages",
+			methodName: "upgradePackagesForUri",
+		},
+	] as const;
 
-		await vs.commands.executeCommand("dart.getPackages", standalone1);
+	for (const { commandName, methodName } of packageCommandTestConfigs) {
+		/**
+		 * Verifies that when calling executing the command `commandName` with `inputPaths`, that the packageCommands
+		 * method `methodName` is executed exactly once for each of `expectedPaths`.
+		 */
+		async function verifyCommandInvocationPaths(
+			inputPaths: string | vs.Uri | vs.Uri[],
+			expectedPaths: string[],
+			commandToExecute: string = commandName,
+		) {
+			const packageCommandForUri = sb.stub(privateApi.packageCommands, methodName).callThrough();
+			const packageCommandForUriCall = packageCommandForUri.withArgs(sinon.match.any).resolves();
 
-		assert.ok(getPackagesForUriCall.calledOnce);
-		const calledPath = fsPath(getPackagesForUriCall.args[0][0] as vs.Uri);
-		assert.equal(calledPath, standalone1);
-	});
+			await vs.commands.executeCommand(commandToExecute, inputPaths);
 
-	it(`"Get Packages" works with a single project pubspec file path`, async () => {
-		const getPackagesForUri = sb.stub(privateApi.packageCommands, "getPackagesForUri").callThrough();
-		const getPackagesForUriCall = getPackagesForUri.withArgs(sinon.match.any).resolves();
+			assert.ok(packageCommandForUriCall.called);
+			const actualPaths = packageCommandForUriCall.getCalls()
+				.map((call) => fsPath(call.args[0] as vs.Uri))
+				// Filter out entries outside of our test project, because "Get for all" will also trigger the
+				// main workspace.
+				.filter((p) => p.startsWith(tempRoot));
+			assert.deepStrictEqual(actualPaths.sort(), expectedPaths.sort());
+		}
 
-		await vs.commands.executeCommand("dart.getPackages", path.join(standalone1, "pubspec.yaml"));
+		describe(commandName, () => {
+			it(`works with a single project folder path`, async () => {
+				await verifyCommandInvocationPaths(
+					standalone1,
+					[standalone1],
+				);
+			});
 
-		assert.ok(getPackagesForUriCall.calledOnce);
-		const calledPath = fsPath(getPackagesForUriCall.args[0][0] as vs.Uri);
-		assert.equal(calledPath, standalone1);
-	});
+			it(`works with a single project pubspec file path`, async () => {
+				await verifyCommandInvocationPaths(
+					path.join(standalone1, "pubspec.yaml"),
+					[standalone1],
+				);
+			});
 
-	it(`"Get Packages" works with a single project folder uri`, async () => {
-		const getPackagesForUri = sb.stub(privateApi.packageCommands, "getPackagesForUri").callThrough();
-		const getPackagesForUriCall = getPackagesForUri.withArgs(sinon.match.any).resolves();
+			it(`works with a single project folder uri`, async () => {
+				await verifyCommandInvocationPaths(
+					vs.Uri.file(standalone1),
+					[standalone1],
+				);
+			});
 
-		await vs.commands.executeCommand("dart.getPackages", vs.Uri.file(standalone1));
+			it(`works with a single project pubspec file uri`, async () => {
+				await verifyCommandInvocationPaths(
+					vs.Uri.file(path.join(standalone1, "pubspec.yaml")),
+					[standalone1],
+				);
+			});
 
-		assert.ok(getPackagesForUriCall.calledOnce);
-		const calledPath = fsPath(getPackagesForUriCall.args[0][0] as vs.Uri);
-		assert.equal(calledPath, standalone1);
-	});
+			it(`works with an array`, async () => {
+				const uris = [
+					vs.Uri.file(path.join(standalone1, "pubspec.yaml")),
+					vs.Uri.file(path.join(standalone2)),
+					vs.Uri.file(path.join(workspaceProject1)),
+				];
+				await verifyCommandInvocationPaths(
+					uris,
+					[standalone1, standalone2, workspaceRoot],
+				);
+			});
 
-	it(`"Get Packages" works with a single project pubspec file uri`, async () => {
-		const getPackagesForUri = sb.stub(privateApi.packageCommands, "getPackagesForUri").callThrough();
-		const getPackagesForUriCall = getPackagesForUri.withArgs(sinon.match.any).resolves();
-
-		await vs.commands.executeCommand("dart.getPackages", vs.Uri.file(path.join(standalone1, "pubspec.yaml")));
-
-		assert.ok(getPackagesForUriCall.calledOnce);
-		const calledPath = fsPath(getPackagesForUriCall.args[0][0] as vs.Uri);
-		assert.equal(calledPath, standalone1);
-	});
-
-	it(`"Get Packages" works with an array`, async () => {
-		const getPackagesForUri = sb.stub(privateApi.packageCommands, "getPackagesForUri").callThrough();
-		const getPackagesForUriCall = getPackagesForUri.withArgs(sinon.match.any).resolves();
-
-		const uris = [
-			vs.Uri.file(path.join(standalone1, "pubspec.yaml")),
-			vs.Uri.file(path.join(standalone2)),
-			vs.Uri.file(path.join(workspaceProject1)),
-		];
-		await vs.commands.executeCommand("dart.getPackages", uris);
-
-		assert.ok(getPackagesForUriCall.called);
-		const paths = (getPackagesForUriCall.getCalls().map((call) => call.args[0] as vs.Uri))
-			.map((uri) => fsPath(uri))
-			.sort();
-		assert.deepStrictEqual(paths.sort(), [standalone1, standalone2, workspaceRoot].sort());
-	});
-
-	it(`"Get Packages for All Projects" runs pub get once per workspace root and once per standalone package`, async () => {
-		const getPackagesForUri = sb.stub(privateApi.packageCommands, "getPackagesForUri").callThrough();
-		const getPackagesForUriCall = getPackagesForUri.withArgs(sinon.match.any).resolves();
-
-		await vs.commands.executeCommand("dart.getPackages.all");
-
-		assert.ok(getPackagesForUriCall.called);
-		const paths = (getPackagesForUriCall.getCalls().map((call) => call.args[0] as vs.Uri))
-			.map((uri) => fsPath(uri))
-			.sort();
-		const tempWorkspacePaths = paths.filter((p) => p.startsWith(tempRoot)).sort();
-		// Expect just the workspace root and the standalone projects, not the workspace projects.
-		assert.deepStrictEqual(tempWorkspacePaths.sort(), [standalone1, standalone2, workspaceRoot].sort());
-	});
+			if (commandName === "dart.getPackages") {
+				it(`"...for All Projects" runs pub once per workspace root and once per standalone package`, async () => {
+					await verifyCommandInvocationPaths(
+						[],
+						[standalone1, standalone2, workspaceRoot],
+						"dart.getPackages.all"
+					);
+				});
+			}
+		});
+	}
 });
 
 interface WorkspaceInfo {
