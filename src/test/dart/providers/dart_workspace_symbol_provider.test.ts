@@ -10,7 +10,7 @@ describe("workspace_symbol_provider", () => {
 	it("includes nothing given no query", async () => {
 		const symbols = await getWorkspaceSymbols("");
 
-		assert.equal(symbols.length, 0);
+		assert.equal(symbols, []);
 	});
 
 	it("includes items from 'everything.dart'", async () => {
