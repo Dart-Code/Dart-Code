@@ -66,58 +66,20 @@ export class PackageCommands extends BaseSdkCommands {
 		uri: string | vs.Uri | vs.Uri[] | undefined,
 		operationProgress?: OperationProgress,
 	): Promise<RunProcessResult | undefined> {
-		if (!config.enablePub)
-			return;
-
-		// If we don't have a parent progress, add one.
-		if (!operationProgress) {
-			return vs.window.withProgress({
-				cancellable: true,
-				location: vs.ProgressLocation.Notification,
-				title: "pub get",
-			}, (progress, token) => this.getPackages(uri, { progressReporter: progress, cancellationToken: token }));
-		}
-
-		// Map any packages on to their workspaces.
-		if (Array.isArray(uri)) {
-			uri = getPubWorkspaceOrPackageFolderUris(uri);
-			if (uri.length === 1)
-				uri = uri[0];
-		} else if (typeof uri === "string") {
-			uri = getPubWorkspaceFolderOrPackageFolderPath(uri);
-		} else if (uri) {
-			uri = getPubWorkspaceFolderOrPackageFolderUri(uri);
-		}
-
-		// If we are a batch, run for each item.
-		if (Array.isArray(uri)) {
-			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
-			await runBatchFolderOperation(uris, operationProgress, this.getPackagesForUri.bind(this));
-			return;
-		}
-
-		const resolvedUri = await this.resolvePackageTargetUri(uri, "Select which folder to get packages for");
-		if (!resolvedUri)
-			return;
-
-		return this.getPackagesForUri(resolvedUri, operationProgress);
+		return this.runPackageCommand(uri, operationProgress, {
+			placeHolder: "Select which folder to get packages for",
+			progressTitle: "pub get",
+			runForUri: this.getPackagesForUri.bind(this),
+		});
 	}
 
 	public async getPackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
-		// Exclude folders we should never run pub get for.
-		if (!isValidPubGetTarget(uri).valid)
-			return;
-
 		const additionalArgs: string[] = [];
 		if (config.offline)
 			additionalArgs.push("--offline");
 		additionalArgs.push("--no-example");
 
-		let result: RunProcessResult | undefined;
-		if (util.isInsideFlutterProject(uri))
-			result = await this.runFlutter(["pub", "get", ...additionalArgs], uri, false, operationProgress);
-		else
-			result = await this.runPub(["get", ...additionalArgs], uri, false, operationProgress);
+		const result = await this.runPackageCommandForUri(uri, ["get", ...additionalArgs], operationProgress);
 
 		// Touch the files to update their modification times.
 		// This is a workaround for https://github.com/Dart-Code/Dart-Code/issues/5549.
@@ -159,41 +121,69 @@ export class PackageCommands extends BaseSdkCommands {
 		uri: string | vs.Uri | vs.Uri[] | undefined,
 		operationProgress?: OperationProgress
 	): Promise<RunProcessResult | undefined> {
+		return this.runPackageCommand(uri, operationProgress, {
+			placeHolder: "Select which folder to upgrade packages in",
+			progressTitle: "pub upgrade",
+			runForUri: this.upgradePackagesForUri.bind(this),
+		});
+	}
+
+	public async upgradePackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
+		return this.runPackageCommandForUri(uri, ["upgrade"], operationProgress);
+	}
+
+	private async runPackageCommand(
+		uri: string | vs.Uri | vs.Uri[] | undefined,
+		operationProgress: OperationProgress | undefined,
+		options: {
+			placeHolder: string,
+			progressTitle: string,
+			runForUri: (uri: vs.Uri, operationProgress?: OperationProgress) => Promise<RunProcessResult | undefined>,
+		},
+	): Promise<RunProcessResult | undefined> {
 		if (!config.enablePub)
 			return;
 
-		// If we don't have a parent progress, add one.
 		if (!operationProgress) {
 			return vs.window.withProgress({
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
-				title: "pub upgrade",
-			}, (progress, token) => this.upgradePackages(uri, { progressReporter: progress, cancellationToken: token }));
+				title: options.progressTitle,
+			}, (progress, token) => this.runPackageCommand(uri, { progressReporter: progress, cancellationToken: token }, options));
 		}
 
-		// If we are a batch, run for each item.
+		if (Array.isArray(uri)) {
+			uri = getPubWorkspaceOrPackageFolderUris(uri);
+			if (uri.length === 1)
+				uri = uri[0];
+		} else if (typeof uri === "string") {
+			uri = getPubWorkspaceFolderOrPackageFolderPath(uri);
+		} else if (uri) {
+			uri = getPubWorkspaceFolderOrPackageFolderUri(uri);
+		}
+
 		if (Array.isArray(uri)) {
 			const uris = uri.map((item) => typeof item === "string" ? vs.Uri.file(item) : item);
-			await runBatchFolderOperation(uris, operationProgress, this.upgradePackagesForUri.bind(this));
+			await runBatchFolderOperation(uris, operationProgress, options.runForUri);
 			return;
 		}
 
-		const resolvedUri = await this.resolvePackageTargetUri(uri, "Select which folder to upgrade packages in");
+		const resolvedUri = await this.resolvePackageTargetUri(uri, options.placeHolder);
 		if (!resolvedUri)
 			return;
 
-		return this.upgradePackagesForUri(resolvedUri, operationProgress);
+		return options.runForUri(resolvedUri, operationProgress);
 	}
 
-	private async upgradePackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress) {
-		// Exclude folders we should never run pub get for.
+	private async runPackageCommandForUri(uri: vs.Uri, args: string[], operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
+		// Exclude folders we should never run pub commands for.
 		if (!isValidPubGetTarget(uri).valid)
 			return;
 
 		if (util.isInsideFlutterProject(uri))
-			return this.runFlutter(["pub", "upgrade"], uri, false, operationProgress);
+			return this.runFlutter(["pub", ...args], uri, false, operationProgress);
 		else
-			return this.runPub(["upgrade"], uri, false, operationProgress);
+			return this.runPub(args, uri, false, operationProgress);
 	}
 
 	private async resolvePackageTargetUri(uri: string | vs.Uri | undefined, placeHolder: string): Promise<vs.Uri | undefined> {
