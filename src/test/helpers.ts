@@ -135,7 +135,7 @@ export const flutterHelloWorldThrowInLocalPackageFile = vs.Uri.file(path.join(fs
 export const flutterHelloWorldStack60File = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/stack60.dart"));
 export const flutterHelloWorldPrinterFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/printer.dart"));
 // Flutter example
-const flutterHelloWorldExampleFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
+export const flutterHelloWorldExampleFolder = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "example"));
 export const flutterHelloWorldExamplePrinterFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleFolder), "lib/printer.dart"));
 export const flutterHelloWorldExampleTestFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldExampleFolder), "test/printer_test.dart"));
 // Flutter Bazel

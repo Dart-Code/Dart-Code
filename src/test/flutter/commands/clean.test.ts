@@ -10,7 +10,7 @@ describe("flutter clean", () => {
 	describe("all", () => {
 		it("cleans all packages", async () => {
 			const rootBuffer = captureOutput("flutter (package:flutter_hello_world)");
-			const exampleBuffer = captureOutput("flutter (package:flutter_hello_world_example)");
+			const exampleBuffer = captureOutput("flutter (package:flutter_hello_world_example (example))");
 
 			await vs.commands.executeCommand("flutter.clean.all");
 
@@ -19,7 +19,7 @@ describe("flutter clean", () => {
 			assert.equal(rootOutput.endsWith("exit code 0"), true);
 
 			const exampleOutput = exampleBuffer.join("").trim();
-			assert.equal(exampleOutput.startsWith(`--\n\n[package:flutter_hello_world_example] flutter --suppress-analytics clean`), true);
+			assert.equal(exampleOutput.startsWith(`--\n\n[package:flutter_hello_world_example (example)] flutter --suppress-analytics clean`), true);
 			assert.equal(exampleOutput.endsWith("exit code 0"), true);
 		});
 	});
