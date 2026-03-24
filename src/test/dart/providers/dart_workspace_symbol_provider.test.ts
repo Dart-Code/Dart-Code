@@ -15,7 +15,7 @@ describe("workspace_symbol_provider", () => {
 		// https://github.com/microsoft/vscode/issues/304477
 		symbols = symbols.filter((s) => !s.name.startsWith("#"));
 
-		assert.equal(symbols, []);
+		assert.deepStrictEqual(symbols, []);
 	});
 
 	it("includes items from 'everything.dart'", async () => {
