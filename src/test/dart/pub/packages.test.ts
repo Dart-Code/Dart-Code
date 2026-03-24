@@ -453,7 +453,7 @@ describe("pub package commands", () => {
 
 	for (const { commandName, methodName } of packageCommandTestConfigs) {
 		/**
-		 * Verifies that when calling executing the command `commandName` with `inputPaths`, that the packageCommands
+		 * Verifies that when executing the command `commandName` with `inputPaths`, that the packageCommands
 		 * method `methodName` is executed exactly once for each of `expectedPaths`.
 		 */
 		async function verifyCommandInvocationPaths(
