@@ -225,7 +225,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 				// Enqueue only test items (VS Code will handle showing the status for containers).
 				const node = this.nodeForItem.get(item);
 				const isTest = node instanceof TestNode;
-				if (isTest && !isSetupOrTeardownTestName(item.label)) {
+				if (isTest) {
 					run.enqueued(item);
 				}
 			} else {
