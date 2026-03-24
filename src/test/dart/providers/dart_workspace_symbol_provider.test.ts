@@ -8,7 +8,12 @@ describe("workspace_symbol_provider", () => {
 	beforeEach("activate", () => activate());
 
 	it("includes nothing given no query", async () => {
-		const symbols = await getWorkspaceSymbols("");
+		let symbols = await getWorkspaceSymbols("");
+
+		// Filter out markdown titles that are showing up here from a readme in
+		// .dart_tool/extension_discovery despite being excluded.
+		// https://github.com/microsoft/vscode/issues/304477
+		symbols = symbols.filter((s) => !s.name.startsWith("#"));
 
 		assert.equal(symbols, []);
 	});
