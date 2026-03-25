@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
 import * as YAML from "yaml";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -8,15 +8,12 @@ import { locateBestProjectRoot } from "../../shared/vscode/project";
 import { PubPackage } from "../commands/add_dependency";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
-import { RankedCodeActionProvider } from "./ranking_code_action_provider";
 
 const applicableErrorCodes = ["uri_does_not_exist", "conditional_uri_does_not_exist", "depend_on_referenced_packages"];
 const packageUriSourceCodePattern = new RegExp(`r?['"]+package:([\\w\\-]+)\\/`);
 
-export class AddDependencyCodeActionProvider implements RankedCodeActionProvider {
+export class AddDependencyCodeActionProvider implements CodeActionProvider {
 	constructor(public readonly selector: DocumentSelector) { }
-
-	public readonly rank = 90;
 
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
@@ -129,6 +126,9 @@ export class AddDependencyCodeActionProvider implements RankedCodeActionProvider
 				command: "_dart.addDependency",
 				title,
 			};
+			// We must attach the diagnostic because VS Code sorts things with diagnostics to the top and
+			// the server ones (like "ignore") do have them.
+			action.diagnostics = [diagnostic];
 			return action;
 		};
 		const actions = [createAction(false)];

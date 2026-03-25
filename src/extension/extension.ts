@@ -84,7 +84,6 @@ import { DartDebugAdapterLoggerFactory } from "./providers/debug_adapter_logger_
 import { DartDebugAdapterRemoveErrorShowUserFactory } from "./providers/debug_adapter_remove_error_showUser_factory";
 import { DebugConfigProvider, DynamicDebugConfigProvider, InitialLaunchJsonDebugConfigProvider } from "./providers/debug_config_provider";
 import { DartMcpServerDefinitionProvider } from "./providers/mcp_server_definition_provider";
-import { RankingCodeActionProvider } from "./providers/ranking_code_action_provider";
 import { SnippetCompletionItemProvider } from "./providers/snippet_completion_item_provider";
 import { PubGlobal } from "./pub/global";
 import { ExtensionRecommentations } from "./recommendations/recommendations";
@@ -378,8 +377,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	let analysisStartTime: Date;
 	const analysisCompleteEvents = analyzer.onAnalysisStatusChange((status) => {
 		// Analysis started for the first time.
-		if (status.isAnalyzing && !analysisStartTime)
+		if (status.isAnalyzing && !analysisStartTime) {
 			analysisStartTime = new Date();
+
+			// VS Code sorts most recently registered code actions at the top when all else is equal, so don't
+			// register this one until we know the LSP server has started up, so this appears above ignores etc.
+			const addDependencyCodeActionProvider = new AddDependencyCodeActionProvider(DART_MODE);
+			context.subscriptions.push(vs.languages.registerCodeActionsProvider([...DART_MODE], addDependencyCodeActionProvider, addDependencyCodeActionProvider.metadata));
+		}
 
 		// Analysis ends for the first time.
 		if (!status.isAnalyzing && analysisStartTime) {
@@ -390,11 +395,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	// Set up providers.
 	// TODO: Do we need to push all these to subscriptions?!
 	context.subscriptions.push(new LspClosingLabelsDecorations(analyzer.client));
-
-	// This is registered with VS Code further down, so it's metadata can be collected from all
-	// registered providers.
-	const rankingCodeActionProvider = new RankingCodeActionProvider();
-	rankingCodeActionProvider.registerProvider(new AddDependencyCodeActionProvider(DART_MODE));
 
 	if (config.showMainCodeLens) {
 		const codeLensProvider = new MainCodeLensProvider(logger, analyzer);
@@ -415,8 +415,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const loggingCommands = new LoggingCommands(logger, context.logPath);
 	context.subscriptions.push(loggingCommands);
 
-	// Register the ranking provider from VS Code now that it has all of its delegates.
-	context.subscriptions.push(vs.languages.registerCodeActionsProvider([...DART_MODE], rankingCodeActionProvider, rankingCodeActionProvider.metadata));
 
 	const extensionRecommendations = new ExtensionRecommentations(logger, analytics, extContext);
 

@@ -126,6 +126,27 @@ describe("pub add", () => {
 		assert.equal(pubspecContainsText("git: https://github.com/dart-lang/timing"), true);
 	});
 
+	it.skip("is available as a quick fix before the ignores", async () => {
+		// Because we've enabled the depend_on_referenced_packages lint, we'll get two diagnostics
+		// for this, but expect only one fix.
+		const packageName = "built_value";
+		assert.equal(pubspecContainsPackage(packageName), false);
+		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart';`));
+
+		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
+		const addDependencyIndex = fixResults.findIndex((r) => r.title.includes(`Add '${packageName}' to dependencies`));
+		const firstIgnoreIndex = fixResults.findIndex((r) => r.title.startsWith(`Ignore`));
+
+		// TODO(dantup): This test fails because vscode.executeCodeActionProvider doesn't allow us to pass the diagnostic
+		//  and therefore it's not attached to the fix, and VS Code sorts using the diagnostics.
+		//  The functionality works when manually tested, and we should try to add a test if there becomes a way to
+		//  fetch all code actions with context.
+
+		assert.ok(addDependencyIndex >= 0);
+		assert.ok(firstIgnoreIndex >= 0);
+		assert.ok(firstIgnoreIndex >= addDependencyIndex);
+	});
+
 	it("can add from a quick fix if not listed in pubspec.yaml", async () => {
 		// Because we've enabled the depend_on_referenced_packages lint, we'll get two diagnostics
 		// for this, but expect only one fix.
