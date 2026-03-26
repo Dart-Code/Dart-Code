@@ -3844,7 +3844,7 @@
 		"vscode-languageclient": "^9.0.1",
 		"vscode-uri": "^3.1.0",
 		"ws": "^8.18.0",
-		"yaml": "^2.7.0"
+		"yaml": "^2.8.3"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.3.1",
