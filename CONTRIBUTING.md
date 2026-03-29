@@ -52,10 +52,6 @@ This folder contains all shared code that can be used by `extension`, `debug` an
 
 Code for automated tests, including some test projects (in `src/test/test_projects`) required by the tests. Code here should not be imported into any files outside of this folder. Small classes are tested with unit tests, but classes that interact directly with VS Code are usually tested with integration tests which can run with both Dart Code+SDK implementations of the DAP (via different launch configurations).
 
-### src/tool
-
-Util scripts for helping with project maintenance. For example, a script to generate the `launch.json` file because it contains a lot of boilerplate for a large number of launch configurations.
-
 
 ## Cloning and Running Dart Code
 
@@ -81,7 +77,7 @@ All tests will be run on all supported platforms via GitHub Actions periodically
 
 ## Debugging the Debug Adapters
 
-Debug adapters run out-of-process so are not directly debuggable with the extension. There are generated launch configurations that will run them in server-mode and attach the debugger so that they can be debugged simultaneously with the extension code (this also applies to running automated tests), although this only applies to the original Dart Code implementations of the DAP. The new SDK DAPs cannot currently be debugged this way (and should be developed/debugged in the SDK repo using its own tests).
+Debug adapters run out-of-process so are not directly debuggable with the extension. There are launch configurations that will run them in server-mode and attach the debugger so that they can be debugged simultaneously with the extension code (this also applies to running automated tests), although this only applies to the legacy Dart Code implementations of the DAP. The new SDK DAPs cannot currently be debugged this way (and should be developed/debugged in the SDK repo using its own tests).
 
 ## Code Etiquette and Style
 

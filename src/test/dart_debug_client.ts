@@ -17,10 +17,9 @@ import { delay, logger, privateApi, watchPromise } from "./helpers";
 
 const customEventsToForward = ["dart.log", "dart.serviceExtensionAdded", "dart.serviceRegistered", "dart.debuggerUris", "dart.startTerminalProcess", "dart.exposeUrl", "flutter.appStart", "flutter.appStarted", "dart.toolEvent"];
 
-type DebugClientArgs = { runtime: string, executable: string, args: string[], port?: undefined } | { runtime?: undefined, executable?: undefined, args?: undefined, port: number };
+type DebugClientArgs = { runtime: string, executable: string, args: string[] } | { runtime?: undefined, executable?: undefined, args?: undefined };
 
 export class DartDebugClient extends DebugClient {
-	private readonly port: number | undefined;
 	public currentSession?: DebugSession;
 	public currentTrackers: DebugAdapterTracker[] = [];
 	public hasStarted = false;
@@ -32,7 +31,6 @@ export class DartDebugClient extends DebugClient {
 		const executable = useShell ? `"${daArgs.executable}"` : daArgs.executable;
 		const args = useShell ? daArgs.args?.map((a) => `"${a}"`) : daArgs.args;
 		super(runtime, executable, args, "dart", { shell: useShell ? true : undefined }, true);
-		this.port = daArgs.port;
 
 		// Tests can attach a lot of listeners, so bump the threshold for warning.
 		this.setMaxListeners(30);
@@ -117,7 +115,7 @@ export class DartDebugClient extends DebugClient {
 		this.hasStarted = true;
 		if (port)
 			throw new Error("Do not provide a port to DartDebugClient.start!");
-		return super.start(this.port);
+		return super.start();
 	}
 
 	private sendResponse(request: DebugProtocol.Request, body: any): void {
