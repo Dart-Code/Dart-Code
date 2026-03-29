@@ -1,11 +1,11 @@
 import * as path from "path";
-import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterExecutableOptions, DebugAdapterServer, DebugSession } from "vscode";
+import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory, DebugAdapterExecutable, DebugAdapterExecutableOptions, DebugSession } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { dartVMPath, debugAdapterPath, executableNames, flutterPath } from "../../shared/constants";
 import { DebuggerType } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
-import { getDebugAdapterName, getDebugAdapterPort } from "../../shared/utils/debug";
+import { getDebugAdapterName } from "../../shared/utils/debug";
 import { Context } from "../../shared/vscode/workspace";
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
@@ -76,12 +76,6 @@ export class DartDebugAdapterDescriptorFactory implements DebugAdapterDescriptor
 			this.logger.info(`Running SDK DAP Dart VM in ${executableOptions.cwd}: ${executable} ${args.join("    ")} and options ${JSON.stringify(executableOptions)}`);
 			logDebuggerStart(true);
 			return new DebugAdapterExecutable(executable, args, executableOptions);
-		}
-
-		if (process.env.DART_CODE_USE_DEBUG_SERVERS) {
-			const port = getDebugAdapterPort(debuggerName);
-			this.logger.info(`Running debugger in server mode on port ${port} because DART_CODE_USE_DEBUG_SERVERS is set`);
-			return new DebugAdapterServer(port);
 		}
 
 		const args = [this.extensionContext.asAbsolutePath(debugAdapterPath), debuggerName];

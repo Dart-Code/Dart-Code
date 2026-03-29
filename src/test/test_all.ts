@@ -148,7 +148,6 @@ async function runAllTests(): Promise<void> {
 	}
 
 	try {
-		// TODO: Generate this from shared code with generate_launch_configs.ts.
 		if (shouldRunBot("dart")) {
 			await runTests("dart", "hello_world", undefined);
 		}

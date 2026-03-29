@@ -27,18 +27,3 @@ export function getDebugAdapterName(debuggerType: DebuggerType) {
 
 	return debuggerName;
 }
-
-export function getDebugAdapterPort(debuggerName: string) {
-	const debugAdapterNames = [
-		"flutter",
-		"flutter_test",
-		"web",
-		"web_test",
-		"dart",
-		"dart_test",
-	];
-	const index = debugAdapterNames.indexOf(debuggerName);
-	if (index === -1)
-		throw new Error(`Unknown debugger type: ${debuggerName}`);
-	return 4711 + index;
-}
