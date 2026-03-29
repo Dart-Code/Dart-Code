@@ -8,7 +8,7 @@ export function isCloudShell(appName: string | undefined) {
 	return appName?.includes("Cloud Shell");
 }
 
-export function isFirebaseStudio() {
+function isFirebaseStudio() {
 	return !!process.env[firebaseStudioEnvironmentVariableName];
 }
 

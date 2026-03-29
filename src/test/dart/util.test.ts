@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { isWin } from "../../shared/constants";
 import { escapeDartString, generateTestNameFromFileName, isDartSdkFromFlutter, isStableSdk, pubVersionIsAtLeast, versionIsAtLeast } from "../../shared/utils";
 import { arrayContainsArray } from "../../shared/utils/array";
-import { applyColor, red } from "../../shared/utils/colors";
+import { applyColor, faint } from "../../shared/utils/colors";
 import { fsPath, homeRelativePath, isWithinPath, isWithinPathOrEqual } from "../../shared/utils/fs";
 import { resolvePaths } from "../../shared/vscode/utils";
 import { emptyFile, everythingFile, ext, flutterEmptyFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, helloWorldFolder, helloWorldMainFile, sb } from "../helpers";
@@ -102,19 +102,19 @@ describe("util.isDartSdkFromFlutter", () => {
 });
 
 describe("applyColor", () => {
-	const redPrefix = "\u001b[38;5;1m";
+	const faintPrefix = "\u001b[2m";
 	const reset = "\u001b[0m";
 	it("should work with strings with no whitespace", () => {
-		assert.equal(applyColor("This is a test", red), `${redPrefix}This is a test${reset}`);
+		assert.equal(applyColor("This is a test", faint), `${faintPrefix}This is a test${reset}`);
 	});
 	it("should work with leading whitespace", () => {
-		assert.equal(applyColor("\n\n  This is a test", red), `\n\n  ${redPrefix}This is a test${reset}`);
+		assert.equal(applyColor("\n\n  This is a test", faint), `\n\n  ${faintPrefix}This is a test${reset}`);
 	});
 	it("should work with trailing whitespace", () => {
-		assert.equal(applyColor("This is a test  \n\n", red), `${redPrefix}This is a test${reset}  \n\n`);
+		assert.equal(applyColor("This is a test  \n\n", faint), `${faintPrefix}This is a test${reset}  \n\n`);
 	});
 	it("should work with leading and trailing whitespace", () => {
-		assert.equal(applyColor("\n \n This is a test \n \n", red), `\n \n ${redPrefix}This is a test${reset} \n \n`);
+		assert.equal(applyColor("\n \n This is a test \n \n", faint), `\n \n ${faintPrefix}This is a test${reset} \n \n`);
 	});
 });
 

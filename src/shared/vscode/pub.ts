@@ -231,7 +231,7 @@ function runPubUpgrade(folders: Uri[]) {
  *
  * If multiple packages belong to the same Pub Workspace, it will only be returned once.
  */
-export function getPubWorkspaceOrPackageFolderPaths(packageFolderOrPubspecPaths: string[]): string[] {
+function getPubWorkspaceOrPackageFolderPaths(packageFolderOrPubspecPaths: string[]): string[] {
 	return uniq(packageFolderOrPubspecPaths.map(getPubWorkspaceFolderOrPackageFolderPath)).sort();
 }
 

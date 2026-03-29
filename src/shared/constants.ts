@@ -18,10 +18,6 @@ export const defaultDartCodeConfigurationPath = ".dart_code";
 /// or an absolute path (in which case there is just one for the whole workspace).
 export const dartCodeConfigurationPathEnvironmentVariableName = "DART_CODE_CONFIGURATION_PATH";
 
-/// The name of the environment variable that allows forcing a delay before starting any services
-/// that must be exposed to the front-end client.
-export const dartCodeServiceActivationDelayEnvironmentVariableName = "DART_CODE_SERVICE_ACTIVATION_DELAY";
-
 /// The name of an environment variable set by Firebase Studio.
 export const firebaseStudioEnvironmentVariableName = "MONOSPACE_ENV";
 
@@ -189,7 +185,6 @@ export const showRecommendedSettingsAction = "Show Recommended Settings";
 export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-settings/";
 export const onlyAnalyzeProjectsWithOpenFilesDeprecationUrl = "https://github.com/dart-lang/sdk/issues/61742";
 export const openSettingsAction = "Open Settings File";
-export const tryAgainAction = "Try Again";
 export const vmServiceListeningBannerPattern = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
 
 export const sdkDeprecationInformationUrl = "https://dartcode.org/sdk-version-compatibility/";
