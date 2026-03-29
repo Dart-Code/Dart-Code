@@ -63,7 +63,7 @@ export async function exposeWebViewUrls(urls: WebViewUrls): Promise<WebViewUrls>
 /// Given a string like wss://12345-firebase-test-connect-1234567.cluster-abcdef.cloudworkstations.dev/iN6zXu7VpYc=/ws
 /// returns a HTTP(S) url like https://12345-firebase-test-connect-1234567.cluster-abcdef.cloudworkstations.dev/iN6zXu7VpYc=/ws
 /// that can be used inside a hidden iframe to trigger auth cookies so that client apps like DevTools can connect over WebSockets.
-export function computeAuthFrameUri(urlString: string): string {
+function computeAuthFrameUri(urlString: string): string {
 	let uri: URL;
 	try {
 		uri = new URL(urlString);

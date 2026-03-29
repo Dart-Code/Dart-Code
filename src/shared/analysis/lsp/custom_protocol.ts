@@ -1,18 +1,10 @@
 import { Location, NotificationType, Range, RequestType, RequestType0, TextDocumentPositionParams, URI } from "vscode-languageclient";
 
-export class AnalyzerStatusNotification {
-	public static type = new NotificationType<AnalyzerStatusParams>("$/analyzerStatus");
-}
-
-export interface AnalyzerStatusParams {
-	readonly isAnalyzing: boolean;
-}
-
 export class OpenUriNotification {
 	public static type = new NotificationType<OpenUriParams>("dart/openUri");
 }
 
-export interface OpenUriParams {
+interface OpenUriParams {
 	readonly uri: URI;
 }
 
