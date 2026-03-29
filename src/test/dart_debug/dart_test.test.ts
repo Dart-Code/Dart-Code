@@ -14,7 +14,7 @@ import * as testUtils from "../../shared/utils/test";
 import { DartFileCoverage } from "../../shared/vscode/coverage";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, clearTestTree, currentEditor, customScriptExt, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findProjectNode, findSuiteNode, getCodeLens, getExpectedResults, getPackages, getResolvedDebugConfiguration, helloWorldExampleSubFolder, helloWorldExampleSubFolderPrinterFile, helloWorldExampleSubFolderProjectTestFile, helloWorldFolder, helloWorldMainLibFile, helloWorldPrinterFile, helloWorldProjectTestFile, helloWorldTestBrokenFile, helloWorldTestDupeNameFile, helloWorldTestDynamicFile, helloWorldTestEmptyFile, helloWorldTestEnvironmentFile, helloWorldTestMainFile, helloWorldTestSelective1File, helloWorldTestSelective2File, helloWorldTestShortFile, helloWorldTestTreeFile, isTestDoneSuccessNotification, logger, makeTestTextTree, openFile as openFileBasic, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, setTestContent, waitForResult } from "../helpers";
 
 describe("dart test debugger", () => {
 	// We have tests that require external packages.
@@ -352,7 +352,7 @@ describe("dart test debugger", () => {
 					endSub.dispose();
 				}
 				const testFiles = [
-					// helloWorldProjectTestFile,
+					helloWorldProjectTestFile,
 					helloWorldExampleSubFolderProjectTestFile,
 				];
 
