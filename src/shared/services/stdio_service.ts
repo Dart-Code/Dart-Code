@@ -2,6 +2,7 @@ import * as fs from "fs";
 import { IAmDisposable, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { Request, UnknownResponse } from "../../shared/services/interfaces";
 import { safeSpawn } from "../processes";
+import { PromiseCompleter } from "../utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -15,6 +16,8 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private openLogFile: string | undefined;
 	private logStream?: fs.WriteStream;
 	protected processExited = false;
+	private processExitCompleter = new PromiseCompleter<ProcessExitCodes>();
+	public processExit = this.processExitCompleter.promise;
 	private description: string | undefined;
 
 	constructor(
@@ -85,6 +88,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		const isError = !!code;
 		this.logTraffic(`Process ${this.description} terminated! ${code}, ${signal}`, isError);
 		this.processExited = true;
+		this.processExitCompleter.resolve({ code, signal });
 	}
 
 	protected handleError(error: unknown) {
@@ -124,6 +128,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	}
 
 	public cancelAllRequests() {
+		// TODO(dantup): Consider/test rejecting all active requests?
 		Object.keys(this.activeRequests).forEach((key) => this.activeRequests[key] = "CANCELLED");
 	}
 
@@ -350,3 +355,5 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 	}
 }
+
+export interface ProcessExitCodes { code: number | null, signal: NodeJS.Signals | null }

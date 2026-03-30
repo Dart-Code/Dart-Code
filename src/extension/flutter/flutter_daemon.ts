@@ -12,6 +12,7 @@ import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
 import { PromiseCompleter, usingCustomScript, withTimeout } from "../../shared/utils";
+import { resolvedPromise } from "../../shared/utils/promises";
 import { isRunningLocally } from "../../shared/vscode/utils";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -161,9 +162,8 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	public dispose() {
 		this.isShuttingDown = true;
 
-		if (this.pingIntervalId) {
+		if (this.pingIntervalId)
 			clearInterval(this.pingIntervalId);
-		}
 
 		super.dispose();
 	}
@@ -324,9 +324,17 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		return this.sendRequest("devtools.serve");
 	}
 
-	public shutdown(): Thenable<void> {
+	public async shutdown(): Promise<void> {
 		this.isShuttingDown = true;
-		return this.hasStarted && !this.hasShownTerminatedError ? this.sendRequest("daemon.shutdown") : new Promise<void>((resolve) => resolve());
+		if (!this.hasStarted || this.hasShownTerminatedError || this.processExited)
+			return resolvedPromise;
+		// It's possible this shutdown will never complete, because if dispose() is also called, the process will be terminated.
+		// Since this is only called during shutdown, we should not hang here, because it will slow down VS Code exiting.
+		// https://github.com/Dart-Code/Dart-Code/issues/6015
+		await Promise.race([
+			this.sendRequest("daemon.shutdown"),
+			this.processExit,
+		]);
 	}
 
 	private async withRecordedTimeout<T>(requestMethod: string, promise: Thenable<T>): Promise<T> {

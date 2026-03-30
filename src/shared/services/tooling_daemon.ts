@@ -10,7 +10,7 @@ import { CategoryLogger } from "../logging";
 import { disposeAll, PromiseCompleter, PromiseOr } from "../utils";
 import { attachPing } from "../utils/ws";
 import { UnknownNotification } from "./interfaces";
-import { StdIOService } from "./stdio_service";
+import { ProcessExitCodes, StdIOService } from "./stdio_service";
 import { ActiveLocation, ActiveLocationChangedEvent, DebugSessionChangedEvent, DebugSessionStartedEvent, DebugSessionStoppedEvent, DeviceAddedEvent, DeviceChangedEvent, DeviceRemovedEvent, DeviceSelectedEvent, DtdMessage, DtdNotification, DtdRequest, DtdResponse, DtdResult, EnablePlatformTypeParams, Event, EventKind, GetDebugSessionsResult, GetDevicesResult, GetIDEWorkspaceRootsParams, GetIDEWorkspaceRootsResult, GetVmServicesResult, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, ReadFileAsStringParams, ReadFileAsStringResult, RegisterServiceParams, RegisterServiceResult, RegisterVmServiceParams, RegisterVmServiceResult, SelectDeviceParams, Service, ServiceMethod, ServiceRegisteredEventData, ServiceUnregisteredEventData, SetIDEWorkspaceRootsParams, SetIDEWorkspaceRootsResult, Stream, SuccessResult, UnregisterVmServiceParams, UnregisterVmServiceResult } from "./tooling_daemon_services";
 
 export class DartToolingDaemon implements IAmDisposable {
@@ -325,14 +325,11 @@ export class DartToolingDaemon implements IAmDisposable {
 	}
 }
 
-interface ProcessExitCodes { code: number | null, signal: NodeJS.Signals | null }
-
 class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 	public hasReceivedConnectionInfo = false;
 
 	private dtdUriCompleter = new PromiseCompleter<string | undefined>();
 	private dtdSecretCompleter = new PromiseCompleter<string>();
-	private processExitCompleter = new PromiseCompleter<ProcessExitCodes>();
 
 	public hasTerminated = false;
 
@@ -342,10 +339,6 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 
 	public get dtdSecret(): Promise<string> {
 		return this.dtdSecretCompleter.promise;
-	}
-
-	public get processExit(): Promise<ProcessExitCodes> {
-		return this.processExitCompleter.promise;
 	}
 
 	constructor(logger: Logger, private readonly sdks: DartSdks, additionalArgs: string[], maxLogLineLength: number | undefined, getToolEnv: () => any) {
@@ -364,7 +357,6 @@ class DartToolingDaemonProcess extends StdIOService<UnknownNotification> {
 	protected handleExit(code: number | null, signal: NodeJS.Signals | null) {
 		this.hasTerminated = true;
 		super.handleExit(code, signal);
-		this.processExitCompleter.resolve({ code, signal });
 		this.dtdUriCompleter.resolve(undefined);
 	}
 
