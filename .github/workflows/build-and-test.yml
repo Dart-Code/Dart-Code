@@ -379,7 +379,7 @@ jobs:
           path: coverage
 
       - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           directory: coverage
           verbose: true
