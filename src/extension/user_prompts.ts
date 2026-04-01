@@ -243,9 +243,9 @@ async function createDartProject(projectPath: string, templateName: string): Pro
 	return code === 0;
 }
 
-async function createFlutterProject(projectPath: string, triggerData: FlutterCreateTriggerData | undefined): Promise<boolean> {
-	const projectName = triggerData?.sample ? "sample" : undefined;
-	const args = { projectPath, projectName, triggerData } as FlutterCreateCommandArgs;
+async function createFlutterProject(packagePath: string, triggerData: FlutterCreateTriggerData | undefined): Promise<boolean> {
+	const packageName = triggerData?.sample ? "sample" : path.basename(packagePath);
+	const args = { packagePath, packageName, triggerData } as FlutterCreateCommandArgs;
 	const code = await vs.commands.executeCommand<number>("_flutter.create", args);
 	return code === 0;
 }

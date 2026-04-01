@@ -7,7 +7,7 @@ import { LogCategory } from "../../shared/enums";
 import { internalApiSymbol } from "../../shared/symbols";
 import { fsPath } from "../../shared/utils/fs";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
-import { activate, logger, waitForResult } from "../helpers";
+import { activate, activateWithoutAnalysis, logger, privateApi, waitForResult } from "../helpers";
 
 describe("flutter", () => {
 	beforeEach("activate", () => activate());
@@ -56,6 +56,20 @@ describe("flutter", () => {
 		assert.equal(api.workspaceContext.hasAnyFlutterProjects, true);
 	});
 
+	it("used the correct output channel name", async () => {
+		await activateWithoutAnalysis(null);
+
+		const channels = privateApi.getOutputChannelNames();
+		assert.deepStrictEqual(channels, [
+			"flutter (package:flutter_create_basic)",
+			"flutter (package:flutter_create_module)",
+			"flutter (package:flutter_create_package)",
+			"flutter (package:flutter_create_plugin)",
+			"flutter (package:sample (flutter_create_sample))",
+			"flutter daemon",
+			"flutter initialization",
+		]);
+	});
 });
 
 async function projectFileContainsExpectedString(fileToCheck: string, expectedString: string): Promise<void> {

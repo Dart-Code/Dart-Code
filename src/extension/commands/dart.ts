@@ -7,6 +7,7 @@ import { DartProjectTemplate, DartWorkspaceContext, Logger } from "../../shared/
 import { sortBy } from "../../shared/utils/array";
 import { fsPath, nextAvailableFilename } from "../../shared/utils/fs";
 import { writeDartSdkSettingIntoProject } from "../../shared/utils/projects";
+import { getPackageOrFolderDisplayName } from "../../shared/vscode/display_names";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
@@ -25,10 +26,10 @@ export class DartCommands extends BaseSdkCommands {
 
 	private dartCreate(projectPath: string, templateName: string) {
 		const binPath = path.join(this.sdks.dart, dartVMPath);
-		const projectContainer = path.dirname(projectPath);
-		const projectName = path.basename(projectPath);
-		const args = ["create", "-t", templateName, projectName, "--force"];
-		return this.runCommandInFolder(templateName, projectContainer, binPath, args, false);
+		const packageName = path.basename(projectPath);
+		const args = ["create", "-t", templateName, ".", "--force"];
+		const packageOrFolderDisplayName = getPackageOrFolderDisplayName(projectPath, { packageName });
+		return this.runCommandInFolder(packageOrFolderDisplayName, projectPath, binPath, args, false);
 	}
 
 

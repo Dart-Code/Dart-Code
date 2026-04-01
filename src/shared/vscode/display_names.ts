@@ -11,9 +11,9 @@ import { fsPath, tryGetPackageName } from "../utils/fs";
  * - The parent folder name is only included if it's within the workspace (and not the workspace root or outside of it)
  * - In the case where the parent folder name is not displayed and the project folder name matches the package, we only show `package:foo`
  */
-export function getPackageOrFolderDisplayName(packageFolder: string): string {
-	// Before choosing to use the folder name, try to use `package:foo`.
-	const packageName = tryGetPackageName(packageFolder);
+export function getPackageOrFolderDisplayName(packageFolder: string, { packageName }: { packageName?: string } = {}): string {
+	// If we weren't passed one, try to get the packages name from the pubspec.
+	packageName ??= tryGetPackageName(packageFolder);
 
 	// Get the relative path from the workspace root to the folder we're running up to two segments.
 	const containingWorkspace = vs.workspace.getWorkspaceFolder(vs.Uri.file(packageFolder));

@@ -6,7 +6,7 @@ import { dartCodeExtensionIdentifier } from "../../shared/constants";
 import { internalApiSymbol } from "../../shared/symbols";
 import { fsPath } from "../../shared/utils/fs";
 import { InternalExtensionApi } from "../../shared/vscode/interfaces";
-import { waitForResult } from "../helpers";
+import { activateWithoutAnalysis, privateApi, waitForResult } from "../helpers";
 
 describe("dart", () => {
 	it("created a templated project", async () => {
@@ -30,6 +30,13 @@ describe("dart", () => {
 
 		// Ensure we fetched packages too.
 		await waitForResult(() => fs.existsSync(packagesFile), ".dart_tool/package_config.json did not exist", 10000);
+	});
+
+	it("used the correct output channel name", async () => {
+		await activateWithoutAnalysis(null);
+
+		const channels = privateApi.getOutputChannelNames();
+		assert.deepStrictEqual(channels, ["dart (package:dart_create_template)"]);
 	});
 
 	it("did not trigger Flutter mode", async () => {

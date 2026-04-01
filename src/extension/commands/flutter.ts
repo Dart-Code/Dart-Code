@@ -13,6 +13,7 @@ import { stripMarkdown } from "../../shared/utils/dartdocs";
 import { fsPath, isFlutterProjectFolder, mkDirRecursive, nextAvailableFilename } from "../../shared/utils/fs";
 import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../../shared/utils/projects";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
+import { getPackageOrFolderDisplayName } from "../../shared/vscode/display_names";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
 import { FlutterSampleSnippet, OperationProgress } from "../../shared/vscode/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
@@ -171,10 +172,10 @@ export class FlutterCommands extends BaseSdkCommands {
 		await util.promptToReloadExtension(this.logger, { restartReason: ExtensionRestartReason.AfterFlutterUpgrade });
 	}
 
-	private async flutterCreate({ projectName, projectPath, triggerData, platform }: FlutterCreateCommandArgs) {
-		if (!projectPath) {
-			projectPath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, undefined, true);
-			if (!projectPath)
+	private async flutterCreate({ packageName, packagePath, triggerData, platform }: FlutterCreateCommandArgs) {
+		if (!packagePath) {
+			packagePath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, undefined, true);
+			if (!packagePath)
 				return;
 		}
 
@@ -199,9 +200,9 @@ export class FlutterCommands extends BaseSdkCommands {
 				}
 			}
 		}
-		if (projectName) {
+		if (packageName) {
 			args.push("--project-name");
-			args.push(projectName);
+			args.push(packageName);
 		}
 		if (config.flutterCreateOrganization) {
 			args.push("--org");
@@ -229,10 +230,11 @@ export class FlutterCommands extends BaseSdkCommands {
 			args.push("--empty");
 		args.push(".");
 
-		const exitCode = await this.runFlutterInFolder(projectPath, args, projectName);
+		const packageOrFolderDisplayName = getPackageOrFolderDisplayName(packagePath, { packageName });
+		const exitCode = await this.runFlutterInFolder(packagePath, args, packageOrFolderDisplayName);
 
 		if (!vsCodeVersion.supportsDebugWithoutLaunchJson) {
-			this.writeDefaultLaunchJson(projectPath);
+			this.writeDefaultLaunchJson(packagePath);
 		}
 
 		return exitCode;
