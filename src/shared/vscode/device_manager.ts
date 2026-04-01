@@ -284,12 +284,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 		return true;
 	}
 
-	public async enablePlatformType(platformType: string, projectRoot: string | undefined): Promise<boolean> {
+	public async enablePlatformType(platformType: string, packageRoot: string | undefined): Promise<boolean> {
 		const platformNeedsGloballyEnabling = await this.daemon.checkIfPlatformGloballyDisabled(platformType);
 		if (platformNeedsGloballyEnabling)
 			await this.daemon.enablePlatformGlobally(platformType);
 
-		const createArgs = { platform: platformType, projectPath: projectRoot } as FlutterCreateCommandArgs;
+		const createArgs = { platform: platformType, packagePath: packageRoot } as FlutterCreateCommandArgs;
 		await vs.commands.executeCommand("_flutter.create", createArgs);
 
 		if (platformNeedsGloballyEnabling) {

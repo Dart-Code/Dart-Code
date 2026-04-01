@@ -41,7 +41,7 @@ import { TestCodeLensProvider } from "./code_lens/test_code_lens_provider";
 import { AddDependencyCommand } from "./commands/add_dependency";
 import { AddSdkToPathCommands } from "./commands/add_sdk_to_path";
 import { AnalyzerCommands } from "./commands/analyzer";
-import { getOutputChannel } from "./commands/channels";
+import { getOutputChannel, getOutputChannelNames } from "./commands/channels";
 import { DartCommands } from "./commands/dart";
 import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
@@ -763,6 +763,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
 			getLogHeader,
 			getOutputChannel,
+			getOutputChannelNames,
 			getToolEnv,
 			initialAnalysis: analyzer.onInitialAnalysis,
 			interactiveRefactors: analyzer.refactors,

@@ -188,8 +188,8 @@ export interface PlatformEnabler {
 }
 
 export interface FlutterCreateCommandArgs {
-	projectPath?: string;
-	projectName?: string;
+	packagePath?: string;
+	packageName?: string;
 	triggerData?: FlutterCreateTriggerData;
 	platform?: string;
 }

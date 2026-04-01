@@ -3,6 +3,10 @@ import { SpawnedProcess } from "../../shared/interfaces";
 
 const channels: Record<string, vs.OutputChannel> = {};
 
+export function getOutputChannelNames(): string[] {
+	return Object.keys(channels).sort();
+}
+
 export function getOutputChannel(name: string, insertDivider = false): vs.OutputChannel {
 	if (!channels[name]) {
 		channels[name] = vs.window.createOutputChannel(name);
