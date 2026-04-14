@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { PackageNameCompletionData, PubApi } from "../../shared/pub/api";
-import { PackageCacheData } from "../../shared/pub/pub_add";
+import { GitPubPackage, PackageCacheData, PackageInfo, PathPubPackage, PickablePackage, PubPackage } from "../../shared/pub/pub_add";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics, AnalyticsEvent } from "../analytics";
@@ -24,7 +24,7 @@ const knownFlutterSdkPackages = [
 
 export class AddDependencyCommand extends BaseSdkCommands {
 	private readonly extensionStorageUri: vs.Uri;
-	private cache: PackageCacheData | undefined;
+	public cache: PackageCacheData | undefined;
 	private nextPackageNameFetchTimeout: NodeJS.Timeout | undefined;
 
 	constructor(logger: Logger, context: Context, workspace: DartWorkspaceContext, dartCapabilities: DartCapabilities, private readonly pubApi: PubApi, private readonly analytics: Analytics) {
@@ -215,7 +215,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 
 	/// Prompts the user to select a package name, or the option to select a path or Git package (in
 	/// which case they must also provide package name etc).
-	private async promptForPackageInfo(): Promise<string | PickablePackage | undefined> {
+	public async promptForPackageInfo(): Promise<string | PickablePackage | undefined> {
 		const quickPick = vs.window.createQuickPick<PickablePackage>();
 		quickPick.placeholder = "package name(s), URL or path (use commas or spaces to separate multiple package names)";
 		quickPick.title = "Enter package name(s), URL or local path";
@@ -288,7 +288,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		};
 	}
 
-	private promptForGitUrl(): string | PromiseLike<string | undefined> | undefined {
+	public promptForGitUrl(): PromiseLike<string | undefined> {
 		return vs.window.showInputBox({
 			ignoreFocusOut: true,
 			placeHolder: "git repo url",
@@ -296,7 +296,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		});
 	}
 
-	private promptForGitPath() {
+	public promptForGitPath(): PromiseLike<string | undefined> {
 		return vs.window.showInputBox({
 			ignoreFocusOut: true,
 			placeHolder: "path to package",
@@ -304,7 +304,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		});
 	}
 
-	private async promptForGitRef() {
+	public async promptForGitRef() {
 		return vs.window.showInputBox({
 			ignoreFocusOut: true,
 			placeHolder: "commit/branch",
@@ -312,7 +312,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		});
 	}
 
-	private async promptForPackageName(name: string) {
+	public async promptForPackageName(name: string) {
 		return await vs.window.showInputBox({
 			ignoreFocusOut: true,
 			placeHolder: "package name",
@@ -321,7 +321,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		});
 	}
 
-	private getPackageEntries(userInput?: string): PickablePackage[] {
+	public getPackageEntries(userInput?: string): PickablePackage[] {
 		let currentSearchString = userInput;
 		let completionItemPrefixes = "";
 		if (userInput) {
@@ -385,26 +385,3 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	}
 }
 
-type PickablePackage = vs.QuickPickItem & (PubPackage | LocalPubPackageMarker | GitPubPackageMarker);
-type PackageInfo = PubPackage | PathPubPackage | GitPubPackage;
-
-
-export interface PubPackage {
-	marker: undefined;
-	packageNames: string;
-}
-
-interface LocalPubPackageMarker { marker: "PATH"; }
-interface GitPubPackageMarker { marker: "GIT"; }
-
-interface PathPubPackage extends LocalPubPackageMarker {
-	path: string;
-	packageName: string;
-}
-
-interface GitPubPackage extends GitPubPackageMarker {
-	url: string;
-	packageName: string;
-	ref?: string;
-	path?: string;
-}

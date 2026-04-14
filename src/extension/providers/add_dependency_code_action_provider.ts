@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as path from "path";
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
 import * as YAML from "yaml";
+import { PubPackage } from "../../shared/pub/pub_add";
 import { flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { locateBestProjectRoot } from "../../shared/vscode/project";
-import { PubPackage } from "../commands/add_dependency";
 import { isAnalyzableAndInWorkspace } from "../utils";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 

@@ -78,3 +78,35 @@ interface PackageCache {
 	packages: Map<string, string | undefined>;
 	version: number;
 }
+
+interface QuickPickItem {
+	label: string;
+	description?: string;
+	detail?: string;
+	picked?: boolean;
+	alwaysShow?: boolean;
+}
+
+export type PickablePackage = QuickPickItem & (PubPackage | LocalPubPackageMarker | GitPubPackageMarker);
+export type PackageInfo = PubPackage | PathPubPackage | GitPubPackage;
+
+
+export interface PubPackage {
+	marker: undefined;
+	packageNames: string;
+}
+
+export interface LocalPubPackageMarker { marker: "PATH"; }
+export interface GitPubPackageMarker { marker: "GIT"; }
+
+export interface PathPubPackage extends LocalPubPackageMarker {
+	path: string;
+	packageName: string;
+}
+
+export interface GitPubPackage extends GitPubPackageMarker {
+	url: string;
+	packageName: string;
+	ref?: string;
+	path?: string;
+}

@@ -11,6 +11,7 @@ import { EmittingLogger } from "../logging";
 import { RunProcessResult } from "../processes";
 import { PubDeps } from "../pub/deps";
 import { PackageMapLoader } from "../pub/package_map";
+import { PackageCacheData, PickablePackage } from "../pub/pub_add";
 import { DartToolingDaemon } from "../services/tooling_daemon";
 import { TestSessionCoordinator } from "../test/coordinator";
 import { CoverageParser } from "../test/coverage";
@@ -88,7 +89,15 @@ export interface DebugCommandHandler {
 }
 
 export interface InternalExtensionApi {
-	addDependencyCommand: any,
+	addDependencyCommand: {
+		cache: PackageCacheData | undefined;
+		getPackageEntries(userInput?: string): PickablePackage[];
+		promptForGitRef(): Promise<string | undefined>;
+		promptForGitUrl(): PromiseLike<string | undefined>;
+		promptForGitPath(): PromiseLike<string | undefined>;
+		promptForPackageName(name: string): Promise<string | undefined>;
+		promptForPackageInfo(): Promise<string | PickablePackage | undefined>;
+	},
 	clearCaches: () => void;
 	context: Context;
 	currentAnalysis: () => Promise<void>;
