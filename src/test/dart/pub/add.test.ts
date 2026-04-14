@@ -186,4 +186,57 @@ describe("pub add", () => {
 		const addDependencyFixes = fixResults.filter((r) => r.title.includes(`Add '${packageName}' to dependencies`));
 		assert.equal(addDependencyFixes.length, 0);
 	});
+
+	describe("returns the correct completion items", () => {
+		beforeEach(() => {
+			privateApi.addDependencyCommand.cache = PackageCacheData.fromPackageNames([
+				"collection",
+				"convert",
+				"crypto",
+				"path",
+				"pedantic",
+			]);
+		});
+
+		it("for a single package prefix", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"collection",
+				"convert",
+			]);
+		});
+
+		it("for multiple packages separated by spaces", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("path co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"path collection",
+				"path convert",
+			]);
+		});
+
+		it("for multiple packages separated by commas", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("path,co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"path,collection",
+				"path,convert",
+			]);
+		});
+
+		it("for multiple packages separated by commas and spaces", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("path, co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"path, collection",
+				"path, convert",
+			]);
+		});
+	});
+
 });
