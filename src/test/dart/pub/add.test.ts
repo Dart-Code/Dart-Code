@@ -198,6 +198,33 @@ describe("pub add", () => {
 			]);
 		});
 
+		it("with no user input", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"Local Path Package",
+				"Git Repository URL",
+				"collection",
+				"convert",
+				"crypto",
+				"path",
+				"pedantic",
+			]);
+		});
+
+		it("for Flutter SDK packages", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("flutter")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"flutter",
+				"flutter_test",
+				"flutter_driver",
+				"flutter_localizations",
+			]);
+		});
+
 		it("for a single package prefix", () => {
 			const results = privateApi.addDependencyCommand.getPackageEntries("co")
 				.map((item) => item.label);
@@ -238,7 +265,7 @@ describe("pub add", () => {
 			]);
 		});
 
-		describe(`returns only the matching item when input ends with`, () => {
+		describe("returns only the matching item when input ends with", () => {
 			// We shouldn't provide the full package list for the next package due to
 			// https://github.com/Dart-Code/Dart-Code/issues/5952, they should only show
 			// up when a character is typed.
@@ -253,6 +280,7 @@ describe("pub add", () => {
 				const results = privateApi.addDependencyCommand.getPackageEntries("foo,")
 					.map((item) => item.label);
 
+				// Th improve formatting, we inject a space if the user doesn't type it.
 				assert.deepStrictEqual(results, ["foo, "]);
 			});
 
