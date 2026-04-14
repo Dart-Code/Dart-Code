@@ -144,7 +144,7 @@ export class PubGlobal {
 	}
 
 	private runCommand(packageName: string, args: string[]): Thenable<string> {
-		const pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
+		const pubExecution = getPubExecutionInfo(this.sdks.dart, args);
 
 		return new Promise((resolve, reject) => {
 			this.logger.info(`Spawning ${pubExecution.executable} with args ${JSON.stringify(pubExecution.args)}`);

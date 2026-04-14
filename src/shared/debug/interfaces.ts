@@ -55,11 +55,6 @@ export interface DartVsCodeLaunchArgs extends DartLaunchArgs {
 	flutterPlatform?: "default" | "android-arm" | "android-arm64" | "android-x86" | "android-x64";
 }
 
-export interface FileLocation {
-	line: number;
-	column: number;
-}
-
 export interface BasicDebugConfiguration {
 	name: string;
 	type: string;

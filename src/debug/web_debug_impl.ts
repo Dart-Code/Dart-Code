@@ -1,13 +1,12 @@
 import { ContinuedEvent, Event, OutputEvent, TerminatedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
-import { FlutterCapabilities } from "../shared/capabilities/flutter";
 import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
 import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory } from "../shared/enums";
-import { AppProgress } from "../shared/flutter/daemon_interfaces";
 import { Logger, SpawnedProcess } from "../shared/interfaces";
 import { getPubExecutionInfo } from "../shared/processes";
 import { errorString, usingCustomScript } from "../shared/utils";
+import { AppProgress } from "./daemon_interfaces";
 import { DartDebugSession } from "./dart_debug_impl";
 import { VMEvent } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
@@ -23,7 +22,6 @@ export class WebDebugSession extends DartDebugSession {
 	private appHasStarted = false;
 	private appHasBeenToldToStopOrDetach = false;
 	private vmServiceUri?: string;
-	protected readonly flutterCapabilities = FlutterCapabilities.empty;
 
 	// Allow flipping into stderr mode for red exceptions when we see the start/end of a Flutter exception dump.
 	private outputCategory: "stdout" | "stderr" | "console" = "console";
@@ -284,7 +282,6 @@ export class WebDebugSession extends DartDebugSession {
 			allArgs = allArgs.concat(args.toolArgs);
 
 		const pubExecution = getPubExecutionInfo(
-			this.dartCapabilities,
 			args.dartSdkPath,
 			allArgs,
 		);
@@ -309,6 +306,6 @@ export class WebDebugSession extends DartDebugSession {
 		};
 
 		// TODO: Attach?
-		return new WebRun(this.dartCapabilities, execution, args.cwd, { envOverrides: args.env, toolEnv: this.toolEnv }, args.webDaemonLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
+		return new WebRun(execution, args.cwd, { envOverrides: args.env, toolEnv: this.toolEnv }, args.webDaemonLogFile, logger, (url) => this.exposeUrl(url), this.maxLogLineLength);
 	}
 }

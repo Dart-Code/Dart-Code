@@ -1,13 +1,11 @@
-import { DartCapabilities } from "../shared/capabilities/dart";
-import * as f from "../shared/flutter/daemon_interfaces";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { ExecutionInfo } from "../shared/processes";
 import { UnknownNotification, UnknownResponse } from "../shared/services/interfaces";
 import { StdIOService } from "../shared/services/stdio_service";
+import * as f from "./daemon_interfaces";
 
 export class WebRun extends StdIOService<UnknownNotification> {
 	constructor(
-		private readonly dartCapabilties: DartCapabilities,
 		execution: ExecutionInfo,
 		projectFolder: string | undefined,
 		env: { envOverrides?: { [key: string]: string | undefined }, toolEnv: any },

@@ -185,7 +185,6 @@ export const showRecommendedSettingsAction = "Show Recommended Settings";
 export const recommendedSettingsUrl = "https://dartcode.org/docs/recommended-settings/";
 export const onlyAnalyzeProjectsWithOpenFilesDeprecationUrl = "https://github.com/dart-lang/sdk/issues/61742";
 export const openSettingsAction = "Open Settings File";
-export const vmServiceListeningBannerPattern = new RegExp("(?:Observatory|Dart VM [Ss]ervice) .* (?:listening on|available at:) (http:.+)");
 
 export const sdkDeprecationInformationUrl = "https://dartcode.org/sdk-version-compatibility/";
 

@@ -3,22 +3,21 @@ import { DebugSession, Event, InitializedEvent, OutputEvent, Scope, Source, Stac
 import { DebugProtocol } from "@vscode/debugprotocol";
 import * as fs from "fs";
 import * as path from "path";
-import { DartCapabilities } from "../shared/capabilities/dart";
-import { VmServiceCapabilities } from "../shared/capabilities/vm_service";
-import { debugLaunchProgressId, debugTerminatingProgressId, pleaseReportBug, vmServiceListeningBannerPattern } from "../shared/constants";
-import { DartLaunchArgs, FileLocation } from "../shared/debug/interfaces";
+import { debugLaunchProgressId, debugTerminatingProgressId, pleaseReportBug } from "../shared/constants";
+import { DartLaunchArgs } from "../shared/debug/interfaces";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";
 import { PromiseCompleter, errorString, notUndefined, uniq, uriToFilePath } from "../shared/utils";
 import { sortBy } from "../shared/utils/array";
-import { applyColor, faint } from "../shared/utils/colors";
-import { getSdkVersion } from "../shared/utils/fs";
-import { mayContainStackFrame, parseStackFrame } from "../shared/utils/stack_trace";
+import { applyColor, faint } from "./colors";
+import { vmServiceListeningBannerPattern } from "./constants";
 import { DebuggerResult, VM, VMClass, VMClassRef, VMErrorRef, VMEvent, VMFrame, VMInstance, VMInstanceRef, VMIsolate, VMIsolateRef, VMMapEntry, VMObj, VMScript, VMScriptRef, VMSentinel, VMStack, VMTypeRef, VMWriteEvent, Version, VmExceptionMode, VmServiceConnection } from "./dart_debug_protocol";
 import { DebugAdapterLogger } from "./logging";
+import { mayContainStackFrame, parseStackFrame } from "./stack_trace";
 import { ThreadInfo, ThreadManager } from "./threads";
 import { formatPathForVm } from "./utils";
+import { VmServiceCapabilities } from "./vm_service";
 
 const maxValuesToCallToString = 100;
 // Prefix that appears at the start of stack frame names that are unoptimized
@@ -59,7 +58,6 @@ export abstract class DartDebugSession extends DebugSession {
 	protected subscribeToStdout = false;
 	public evaluateGettersInDebugViews = false;
 	protected evaluateToStringInDebugViews = false;
-	public readonly dartCapabilities = DartCapabilities.empty;
 	public readonly vmServiceCapabilities = VmServiceCapabilities.empty;
 	protected threadManager: ThreadManager;
 	public packageMap?: PackageMap;
@@ -134,7 +132,6 @@ export abstract class DartDebugSession extends DebugSession {
 		// the exception mode.
 		await this.threadManager.setExceptionPauseMode(this.noDebug ? "None" : "Unhandled");
 		this.packageMap = PackageMap.load(this.logger, PackageMap.findPackagesFile(args.program || args.cwd));
-		this.dartCapabilities.version = getSdkVersion(this.logger, { sdkRoot: args.dartSdkPath }) ?? this.dartCapabilities.version;
 		this.readSharedArgs(args);
 
 		this.sendResponse(response);
@@ -1803,7 +1800,7 @@ export abstract class DartDebugSession extends DebugSession {
 			|| path.includes("\\third_party\\");
 	}
 
-	private resolveFileLocation(script: VMScript, tokenPos: number): FileLocation | undefined {
+	private resolveFileLocation(script: VMScript, tokenPos: number): { line: number; column: number; } | undefined {
 		const table: number[][] = script.tokenPosTable;
 		for (const entry of table) {
 			// [lineNumber, (tokenPos, columnNumber)*]

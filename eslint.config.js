@@ -254,4 +254,11 @@ export default defineConfig([
 			}],
 		},
 	},
+	{
+		// Allow tests to import anything.
+		files: ["src/test/**/*.ts"],
+		rules: {
+			"no-restricted-imports": "off",
+		},
+	},
 ]);

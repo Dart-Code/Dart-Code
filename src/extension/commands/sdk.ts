@@ -85,7 +85,7 @@ export class BaseSdkCommands implements IAmDisposable {
 
 		args = args.concat(...config.for(vs.Uri.file(folder)).pubAdditionalArgs);
 
-		const pubExecution = getPubExecutionInfo(this.dartCapabilities, this.sdks.dart, args);
+		const pubExecution = getPubExecutionInfo(this.sdks.dart, args);
 
 		return this.runCommandInFolder(packageOrFolderDisplayName, folder, pubExecution.executable, pubExecution.args, alwaysShowOutput, operationProgress);
 	}
