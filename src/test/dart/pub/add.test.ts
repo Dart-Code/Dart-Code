@@ -237,6 +237,46 @@ describe("pub add", () => {
 				"path, convert",
 			]);
 		});
+
+		it("with dev: prefix for a single package prefix", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("dev:co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"dev:collection",
+				"dev:convert",
+			]);
+		});
+
+		it("with dev: prefix for multiple packages separated by spaces", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("path dev:co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"path dev:collection",
+				"path dev:convert",
+			]);
+		});
+
+		it("with dev: prefix for multiple packages separated by commas", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("path,dev:co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"path,dev:collection",
+				"path,dev:convert",
+			]);
+		});
+
+		it("with dev: prefix for multiple packages separated by commas and spaces", () => {
+			const results = privateApi.addDependencyCommand.getPackageEntries("path, dev:co")
+				.map((item) => item.label);
+
+			assert.deepStrictEqual(results, [
+				"path, dev:collection",
+				"path, dev:convert",
+			]);
+		});
 	});
 
 });

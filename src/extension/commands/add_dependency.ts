@@ -21,6 +21,7 @@ const knownFlutterSdkPackages = [
 	"flutter_localizations",
 	"integration_test",
 ];
+const devPrefix = "dev:";
 
 export class AddDependencyCommand extends BaseSdkCommands {
 	private readonly extensionStorageUri: vs.Uri;
@@ -185,7 +186,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			args.push("--dev");
 
 		// Handle some known Flutter dependencies.
-		const isFlutterSdkPackage = knownFlutterSdkPackages.includes(packageName);
+		const isFlutterSdkPackage = knownFlutterSdkPackages.some((flutterPackageName) => packageName === flutterPackageName || packageName === `${devPrefix}${flutterPackageName}`);
 		if (isFlutterSdkPackage) {
 			args.push("--sdk");
 			args.push("flutter");
@@ -332,6 +333,12 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			completionItemPrefixes = userInput.substring(0, startOfCurrentPackageName + 1);
 			if (currentSearchString === "" && completionItemPrefixes.endsWith(","))
 				completionItemPrefixes = `${completionItemPrefixes} `;
+
+			// If the current search term starts with "dev:", move it from the search to the prefix.
+			if (currentSearchString.startsWith(devPrefix)) {
+				currentSearchString = currentSearchString.substring(devPrefix.length);
+				completionItemPrefixes = `${completionItemPrefixes}${devPrefix}`;
+			}
 		}
 
 		const max = 50;
