@@ -1,10 +1,10 @@
-import { CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
-import { DebuggerType, VersionStatus, VmService, VmServiceExtension } from "../enums";
+import { DebuggerType, DebugOption, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { CustomScript, DartWorkspaceContext, GetSDKCommandConfig, GetSDKCommandResult, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
@@ -77,6 +77,11 @@ export class ProgressMessage {
 }
 
 export interface DebugCommandHandler {
+	applyNewDebugOption(): void;
+	currentDebugOption: DebugOption;
+	getDebugSession(): Promise<{ session: DebugSession } | undefined>;
+	handleBreakpointChange(e: BreakpointsChangeEvent): void;
+	hasPromptedAboutDebugSettings: boolean;
 	vmServices: {
 		serviceIsRegistered(service: VmService): boolean;
 		serviceExtensionIsLoaded(extension: VmServiceExtension): boolean;

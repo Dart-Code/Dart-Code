@@ -43,8 +43,6 @@ const dynamicDebugSessionName = "Dart ";
 // replace them when the start event comes through.
 let pendingCustomEvents: vs.DebugSessionCustomEvent[] = [];
 
-let hasPromptedAboutDebugSettings = false;
-
 export let isInFlutterDebugModeDebugSession = false;
 export let isInFlutterProfileModeDebugSession = false;
 
@@ -61,7 +59,7 @@ export class LastTestDebugSession {
 export class DebugCommands implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
 	private debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
-	private currentDebugOption = DebugOption.MyCode;
+	public currentDebugOption = DebugOption.MyCode;
 	private debugMetrics = vs.window.createStatusBarItem("dartStatusDebugMetrics", vs.StatusBarAlignment.Right, 0);
 	private readonly debugSessionsStatusItem = getLanguageStatusItem("dart.debugSessions", ANALYSIS_FILTERS);
 	private onWillHotReloadEmitter = new vs.EventEmitter<void>();
@@ -75,6 +73,8 @@ export class DebugCommands implements IAmDisposable {
 
 	public isInspectingWidget = false;
 	private autoCancelNextInspectWidgetMode = false;
+
+	public hasPromptedAboutDebugSettings = false;
 
 	/// The ID of the currently-shown hot reload progress indicator.
 	private currentHotReloadProgressId: string | undefined;
@@ -498,7 +498,7 @@ export class DebugCommands implements IAmDisposable {
 		}
 	}
 
-	private async getDebugSession(): Promise<DartDebugSessionInformation | undefined> {
+	public async getDebugSession(): Promise<DartDebugSessionInformation | undefined> {
 		if (debugSessions.length === 0) {
 			this.logger.info("No debug session to use!");
 			return undefined;
@@ -525,7 +525,7 @@ export class DebugCommands implements IAmDisposable {
 	}
 
 	public handleBreakpointChange(e: vs.BreakpointsChangeEvent): void {
-		if (hasPromptedAboutDebugSettings)
+		if (this.hasPromptedAboutDebugSettings)
 			return;
 
 		for (const bp of e.added)
@@ -533,7 +533,7 @@ export class DebugCommands implements IAmDisposable {
 	}
 
 	public promptAboutDebuggerSettingsIfBreakpointOutsideWorkspace(e: vs.Breakpoint): void {
-		if (hasPromptedAboutDebugSettings || this.context.breakpointInNonDebuggableFileDoNotShowAgain || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
+		if (this.hasPromptedAboutDebugSettings || this.context.breakpointInNonDebuggableFileDoNotShowAgain || !(e instanceof vs.SourceBreakpoint) || !e.enabled)
 			return;
 
 		// Don't consider non-files or non-Dart files.
@@ -551,7 +551,7 @@ export class DebugCommands implements IAmDisposable {
 		if (!isSdkBreakpoint && config.debugExternalPackageLibraries)
 			return;
 
-		hasPromptedAboutDebugSettings = true;
+		this.hasPromptedAboutDebugSettings = true;
 		const message = `You have a breakpoint outside of your workspace but debug settings are set to 'my code'. Would you like to change settings? You can also change this from the status bar while debugging.`;
 
 		const debugJustMyCodeAction = "Debug my code";
@@ -1016,7 +1016,7 @@ export class DebugCommands implements IAmDisposable {
 		this.applyNewDebugOption();
 	}
 
-	private applyNewDebugOption() {
+	public applyNewDebugOption() {
 		this.debugOptions.text = `Debug ${debugOptionNames[this.currentDebugOption]}`;
 
 		const debugExternalPackageLibraries = this.currentDebugOption === DebugOption.MyCodePackages || this.currentDebugOption === DebugOption.MyCodePackagesSdk;
