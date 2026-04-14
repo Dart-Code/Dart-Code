@@ -346,6 +346,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		let matches = new Set<string>();
 		// This list can be quite large, so avoid using .filter() if we can bail out early.
 		if (currentSearchString) {
+			// There is a search term, filter the packages.
 			currentSearchString = currentSearchString.trim();
 			for (let i = 0; i < packageNames.length && matches.size < max; i++) {
 				const packageName = packageNames[i];
@@ -357,7 +358,14 @@ export class AddDependencyCommand extends BaseSdkCommands {
 				if (packageName.startsWith(currentSearchString))
 					matches.add(packageName);
 			}
+		} else if (userInput && (userInput.endsWith(" ") || userInput.endsWith(","))) {
+			// The user is after a separator and we don't want to show the full list until they type a character.
+			// https://github.com/Dart-Code/Dart-Code/issues/5952
+			// Add a blank entry that will be prefixed with the current user input prefix below.
+			matches.add("");
 		} else {
+			// The current search may be empty or just a prefix like "dev:", so show
+			// the full list.
 			matches = new Set(packageNames.slice(0, Math.min(max, packageNames.length)));
 		}
 
@@ -370,7 +378,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 			} as PickablePackage;
 		});
 
-		if (currentSearchString) {
+		if (userInput) {
 			return pickablePackageNames;
 		} else {
 			return [

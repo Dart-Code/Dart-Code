@@ -238,44 +238,85 @@ describe("pub add", () => {
 			]);
 		});
 
-		it("with dev: prefix for a single package prefix", () => {
-			const results = privateApi.addDependencyCommand.getPackageEntries("dev:co")
-				.map((item) => item.label);
+		describe(`returns only the matching item when input ends with`, () => {
+			// We shouldn't provide the full package list for the next package due to
+			// https://github.com/Dart-Code/Dart-Code/issues/5952, they should only show
+			// up when a character is typed.
+			it("space", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("foo ")
+					.map((item) => item.label);
 
-			assert.deepStrictEqual(results, [
-				"dev:collection",
-				"dev:convert",
-			]);
+				assert.deepStrictEqual(results, ["foo "]);
+			});
+
+			it("comma", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("foo,")
+					.map((item) => item.label);
+
+				assert.deepStrictEqual(results, ["foo, "]);
+			});
+
+			it("comma space", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("foo, ")
+					.map((item) => item.label);
+
+				assert.deepStrictEqual(results, ["foo, "]);
+			});
 		});
 
-		it("with dev: prefix for multiple packages separated by spaces", () => {
-			const results = privateApi.addDependencyCommand.getPackageEntries("path dev:co")
-				.map((item) => item.label);
+		describe("with dev: prefix", () => {
+			it("and no package name", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("dev:")
+					.map((item) => item.label);
 
-			assert.deepStrictEqual(results, [
-				"path dev:collection",
-				"path dev:convert",
-			]);
-		});
+				assert.deepStrictEqual(results, [
+					"dev:collection",
+					"dev:convert",
+					"dev:crypto",
+					"dev:path",
+					"dev:pedantic",
+				]);
+			});
 
-		it("with dev: prefix for multiple packages separated by commas", () => {
-			const results = privateApi.addDependencyCommand.getPackageEntries("path,dev:co")
-				.map((item) => item.label);
+			it("for a single package prefix", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("dev:co")
+					.map((item) => item.label);
 
-			assert.deepStrictEqual(results, [
-				"path,dev:collection",
-				"path,dev:convert",
-			]);
-		});
+				assert.deepStrictEqual(results, [
+					"dev:collection",
+					"dev:convert",
+				]);
+			});
 
-		it("with dev: prefix for multiple packages separated by commas and spaces", () => {
-			const results = privateApi.addDependencyCommand.getPackageEntries("path, dev:co")
-				.map((item) => item.label);
+			it("for multiple packages separated by spaces", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("path dev:co")
+					.map((item) => item.label);
 
-			assert.deepStrictEqual(results, [
-				"path, dev:collection",
-				"path, dev:convert",
-			]);
+				assert.deepStrictEqual(results, [
+					"path dev:collection",
+					"path dev:convert",
+				]);
+			});
+
+			it("for multiple packages separated by commas", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("path,dev:co")
+					.map((item) => item.label);
+
+				assert.deepStrictEqual(results, [
+					"path,dev:collection",
+					"path,dev:convert",
+				]);
+			});
+
+			it("for multiple packages separated by commas and spaces", () => {
+				const results = privateApi.addDependencyCommand.getPackageEntries("path, dev:co")
+					.map((item) => item.label);
+
+				assert.deepStrictEqual(results, [
+					"path, dev:collection",
+					"path, dev:convert",
+				]);
+			});
 		});
 	});
 
