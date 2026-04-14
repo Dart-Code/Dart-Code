@@ -1,7 +1,7 @@
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { strict as assert } from "assert";
 import * as path from "path";
-import { DebugAdapterExecutable, DebugAdapterTrackerFactory, DebugConfiguration, Uri } from "vscode";
+import { DebugAdapterExecutable, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, Uri } from "vscode";
 import { vmServiceListeningBannerPattern } from "../debug/constants";
 import { dartVMPath, flutterPath, isWin } from "../shared/constants";
 import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
@@ -85,6 +85,43 @@ export function createDebugClient(debuggerType: DebuggerType) {
 		}
 	});
 	return thisDc;
+}
+
+export function startFakeDebugSession(options?: {
+	debuggerType?: DebuggerType;
+	hasStarted?: boolean;
+	id?: string;
+	name?: string;
+}): DebugSession & { hotReloadCount: number } {
+	const debuggerType = options?.debuggerType;
+	const configuration = {
+		debuggerType,
+		name: options?.name ?? "Fake Debug Session",
+		request: "launch",
+		type: "dart",
+	};
+
+	let hotReloadCount = 0;
+	const session = {
+		configuration,
+		id: options?.id ?? `fake-${debuggerType ?? "session"}`,
+		name: configuration.name,
+		type: configuration.type,
+		workspaceFolder: undefined,
+		async getDebugProtocolBreakpoint() { return undefined; },
+		async customRequest(command: string) {
+			if (command === "hotReload")
+				hotReloadCount++;
+		},
+		get hotReloadCount() { return hotReloadCount; },
+	} as DebugSession & { hotReloadCount: number };
+
+	const dartSession = privateApi.debugCommands.handleDebugSessionStart(session);
+	if (options?.hasStarted && dartSession)
+		dartSession.hasStarted = true;
+	defer("Remove fake debug session", () => privateApi.debugCommands.handleDebugSessionEnd(session));
+
+	return session;
 }
 
 /// Waits for all the provided promises, but throws if the debugger terminates before they complete.

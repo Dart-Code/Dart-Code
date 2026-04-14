@@ -1,26 +1,10 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, defer, privateApi, sb } from "../../helpers";
+import { startFakeDebugSession } from "../../debug_helpers";
+import { activate, privateApi, sb } from "../../helpers";
 
 describe("DevTools", async () => {
 	beforeEach("activate", () => activate());
-
-	function startFakeDebugSession() {
-		// Set up a fake debug session.
-		const debugSession = {
-			configuration: {
-				name: "Fake Debug Session (DevTools tests)",
-				request: "launch",
-				type: "dart",
-			},
-			id: "fake-session",
-			type: "dart",
-		} as vs.DebugSession;
-		privateApi.debugCommands.handleDebugSessionStart(debugSession);
-		defer("Remove fake debug session", () => privateApi.debugCommands.handleDebugSessionEnd(debugSession));
-
-		return debugSession;
-	}
 
 	function assertDevToolsUriWithVmService(openedUri: string, expectedVmServiceUri: string) {
 		const encodedVmServiceUri = encodeURIComponent(expectedVmServiceUri);
