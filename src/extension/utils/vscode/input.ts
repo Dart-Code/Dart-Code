@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { PickableSetting, UserInputOrSettings } from "../../../shared/vscode/input";
 import { Context } from "../../../shared/vscode/workspace";
 
 export async function showInputBoxWithSettings(
@@ -156,16 +157,3 @@ async function editSetting(setting: PickableSetting) {
 		}
 	}
 }
-
-type UserInputOrSettings = { value: string } | "SETTINGS";
-export type PickableSetting = vs.QuickPickItem & ({
-	settingKind: "STRING" | "ENUM" | "BOOL",
-	currentValue: any,
-	setValue: (newValue: any) => Promise<void>,
-	enumValues?: string[],
-} | {
-	settingKind: "MULTI_ENUM",
-	currentValue: any[],
-	setValue: (newValue: any[]) => Promise<void>,
-	enumValues: Array<{ group?: string, values: string[] }>,
-});
