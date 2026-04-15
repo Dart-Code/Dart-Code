@@ -1,8 +1,9 @@
 import { strict as assert } from "assert";
 import * as fs from "fs";
 import * as vs from "vscode";
+import { versionIsAtLeast } from "../../../shared/utils";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, currentDoc, defer, emptyFile, ensureTestContent, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
+import { activate, currentDoc, defer, emptyFile, ensureTestContent, helloWorldCreateMethodClassAFile, helloWorldCreateMethodClassBFile, missingFile, openFile, privateApi, rangeOf, setTestContent, tryDelete, uncommentTestFile, waitForNextAnalysis } from "../../helpers";
 
 describe("fix_code_action_provider", () => {
 	beforeEach("activate", () => activate());
@@ -77,13 +78,13 @@ main() {
 			this.skip();
 		}
 
+		const functionBody = versionIsAtLeast(privateApi.dartCapabilities.version, "3.12.0-0") ? "" : "\n";
 		await ensureTestContent(`
 main() {
 	missing();
 }
 
-void missing() {
-}
+void missing() {${functionBody}}
 		`);
 	});
 
