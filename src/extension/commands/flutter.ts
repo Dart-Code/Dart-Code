@@ -15,6 +15,7 @@ import { writeFlutterSdkSettingIntoProject, writeFlutterTriggerFile } from "../.
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { getPackageOrFolderDisplayName } from "../../shared/vscode/display_names";
 import { createFlutterSampleInTempFolder } from "../../shared/vscode/flutter_samples";
+import { PickableSetting } from "../../shared/vscode/input";
 import { FlutterSampleSnippet, OperationProgress } from "../../shared/vscode/interfaces";
 import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { Context } from "../../shared/vscode/workspace";
@@ -23,7 +24,7 @@ import { config } from "../config";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
-import { PickableSetting, showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
+import { showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
 import { BaseSdkCommands, commandState, packageNameRegex } from "./sdk";
@@ -240,7 +241,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		return exitCode;
 	}
 
-	private writeDefaultLaunchJson(projectPath: string) {
+	public writeDefaultLaunchJson(projectPath: string) {
 		const launchJsonFolder = path.join(projectPath, vsCodeVersion.editorConfigFolder);
 		const launchJsonFile = path.join(launchJsonFolder, "launch.json");
 		if (!fs.existsSync(launchJsonFile)) {
@@ -249,7 +250,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 	}
 
-	private getFlutterTemplates(): Array<vs.QuickPickItem & { template?: FlutterProjectTemplate }> {
+	public getFlutterTemplates(): Array<vs.QuickPickItem & { template?: FlutterProjectTemplate }> {
 		const templates: Array<vs.QuickPickItem & { template?: FlutterProjectTemplate }> = [
 			{
 				kind: vs.QuickPickItemKind.Separator,
@@ -391,7 +392,7 @@ export class FlutterCommands extends BaseSdkCommands {
 				await showSimpleSettingsEditor(
 					"Settings for new Flutter projects",
 					"Select a setting to change (or 'Escape' to cancel)",
-					() => getCurrentFlutterCreateSettings(),
+					() => this.getCurrentFlutterCreateSettings(),
 				);
 				continue;
 			} else if (response) {
@@ -460,63 +461,63 @@ export class FlutterCommands extends BaseSdkCommands {
 
 		return "application";
 	}
-}
 
-function getCurrentFlutterCreateSettings(): PickableSetting[] {
-	return [
-		{
-			currentValue: config.flutterCreateOrganization || "com.example",
-			description: config.flutterCreateOrganization || "com.example",
-			detail: "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier.",
-			label: "Organization",
-			setValue: (newValue: string | undefined) => config.setFlutterCreateOrganization(newValue),
-			settingKind: "STRING",
-		},
-		{
-			currentValue: config.flutterCreateAndroidLanguage || "kotlin",
-			description: config.flutterCreateAndroidLanguage || "kotlin",
-			detail: "The language to use for Android-specific code, either Java (legacy) or Kotlin (recommended).",
-			enumValues: ["kotlin", "java"],
-			label: "Android Language",
-			setValue: (newValue: "kotlin" | "java" | undefined) => config.setFlutterCreateAndroidLanguage(newValue),
-			settingKind: "ENUM",
-		},
-		{
-			currentValue: config.flutterCreateIOSLanguage || "swift",
-			description: config.flutterCreateIOSLanguage || "swift",
-			detail: "The language to use for iOS-specific code (Flutter <= 3.22 only), either ObjectiveC (legacy) or Swift (recommended).",
-			enumValues: ["swift", "objc"],
-			label: "iOS Language",
-			setValue: (newValue: "swift" | "objc" | undefined) => config.setFlutterCreateIOSLanguage(newValue),
-			settingKind: "ENUM",
-		},
-		{
-			currentValue: config.offline ? "enabled" : "not enabled",
-			description: config.offline ? "enabled" : "not enabled",
-			detail: "When commands like \"flutter pub get\" or \"flutter create\" are run, this indicates whether to run in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
-			label: "Offline Mode",
-			setValue: (newValue: boolean | undefined) => config.setOffline(newValue),
-			settingKind: "BOOL",
-		},
-		{
-			currentValue: config.flutterCreatePlatforms ?? flutterCreateAvailablePlatforms,
-			description: config.flutterCreatePlatforms ? config.flutterCreatePlatforms.join(", ") : "all",
-			detail: "The platforms that should be enabled for new Flutter applications.",
-			enumValues: [{
-				values: flutterCreateAvailablePlatforms,
+	public getCurrentFlutterCreateSettings(): PickableSetting[] {
+		return [
+			{
+				currentValue: config.flutterCreateOrganization || "com.example",
+				description: config.flutterCreateOrganization || "com.example",
+				detail: "The organization responsible for your new Flutter project, in reverse domain name notation. This string is used in Java package names and as prefix in the iOS bundle identifier.",
+				label: "Organization",
+				setValue: (newValue: string | undefined) => config.setFlutterCreateOrganization(newValue),
+				settingKind: "STRING",
 			},
-			/* {
-				group: "Defaults",
-				values: ["Set as default..."],
-			} */ ],
-			label: "Platforms",
-			setValue: async (newValues: any[]) => {
-				const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
-					? undefined // all
-					: newValues;
-				await config.setFlutterCreatePlatforms(valueToSave);
+			{
+				currentValue: config.flutterCreateAndroidLanguage || "kotlin",
+				description: config.flutterCreateAndroidLanguage || "kotlin",
+				detail: "The language to use for Android-specific code, either Java (legacy) or Kotlin (recommended).",
+				enumValues: ["kotlin", "java"],
+				label: "Android Language",
+				setValue: (newValue: "kotlin" | "java" | undefined) => config.setFlutterCreateAndroidLanguage(newValue),
+				settingKind: "ENUM",
 			},
-			settingKind: "MULTI_ENUM",
-		},
-	];
+			{
+				currentValue: config.flutterCreateIOSLanguage || "swift",
+				description: config.flutterCreateIOSLanguage || "swift",
+				detail: "The language to use for iOS-specific code (Flutter <= 3.22 only), either ObjectiveC (legacy) or Swift (recommended).",
+				enumValues: ["swift", "objc"],
+				label: "iOS Language",
+				setValue: (newValue: "swift" | "objc" | undefined) => config.setFlutterCreateIOSLanguage(newValue),
+				settingKind: "ENUM",
+			},
+			{
+				currentValue: config.offline ? "enabled" : "not enabled",
+				description: config.offline ? "enabled" : "not enabled",
+				detail: "When commands like \"flutter pub get\" or \"flutter create\" are run, this indicates whether to run in offline mode or not. In offline mode, it will need to have all dependencies already available in the pub cache to succeed.",
+				label: "Offline Mode",
+				setValue: (newValue: boolean | undefined) => config.setOffline(newValue),
+				settingKind: "BOOL",
+			},
+			{
+				currentValue: config.flutterCreatePlatforms ?? flutterCreateAvailablePlatforms,
+				description: config.flutterCreatePlatforms ? config.flutterCreatePlatforms.join(", ") : "all",
+				detail: "The platforms that should be enabled for new Flutter applications.",
+				enumValues: [{
+					values: flutterCreateAvailablePlatforms,
+				},
+				/* {
+					group: "Defaults",
+					values: ["Set as default..."],
+				} */ ],
+				label: "Platforms",
+				setValue: async (newValues: any[]) => {
+					const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
+						? undefined // all
+						: newValues;
+					await config.setFlutterCreatePlatforms(valueToSave);
+				},
+				settingKind: "MULTI_ENUM",
+			},
+		];
+	}
 }

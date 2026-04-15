@@ -1,4 +1,4 @@
-import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
+import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
 import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
@@ -6,7 +6,7 @@ import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
 import { DebuggerType, DebugOption, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
-import { CustomScript, DartWorkspaceContext, GetSDKCommandConfig, GetSDKCommandResult, SpawnedProcess } from "../interfaces";
+import { CustomScript, DartWorkspaceContext, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, SpawnedProcess } from "../interfaces";
 import { EmittingLogger } from "../logging";
 import { RunProcessResult } from "../processes";
 import { PubDeps } from "../pub/deps";
@@ -18,6 +18,7 @@ import { CoverageParser } from "../test/coverage";
 import { TestModel, TreeNode } from "../test/test_model";
 import { PromiseCompleter } from "../utils";
 import { FlutterDeviceManager } from "./device_manager";
+import { PickableSetting } from "./input";
 import { InteractiveRefactors } from "./interactive_refactors";
 import { ProjectFinder } from "./utils";
 import { Context } from "./workspace";
@@ -93,6 +94,13 @@ export interface DebugCommandHandler {
 	handleDebugSessionCustomEvent(e: DebugSessionCustomEvent): void;
 }
 
+export interface FlutterCommandHandler {
+	runFlutterInFolder(folder: string, args: string[], packageOrFolderDisplayName: string | undefined, alwaysShowOutput: boolean, operationProgress?: OperationProgress, customScript?: CustomScript): Promise<RunProcessResult | undefined>;
+	writeDefaultLaunchJson(projectPath: string): void;
+	getFlutterTemplates(): Array<QuickPickItem & { template?: FlutterProjectTemplate }>;
+	getCurrentFlutterCreateSettings(): PickableSetting[];
+}
+
 export interface InternalExtensionApi {
 	addDependencyCommand: {
 		cache: PackageCacheData | undefined;
@@ -129,6 +137,7 @@ export interface InternalExtensionApi {
 		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
 	};
 	flutterCapabilities: FlutterCapabilities;
+	flutterCommands: FlutterCommandHandler;
 	flutterOutlineTreeProvider: TreeDataProvider<TreeItem> | undefined;
 	getLogHeader: () => string;
 	getOutputChannel: (name: string) => OutputChannel;

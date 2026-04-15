@@ -758,6 +758,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			envUtils,
 			fileTracker: analyzer.fileTracker,
 			flutterCapabilities,
+			flutterCommands,
 			flutterOutlineTreeProvider,
 			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
