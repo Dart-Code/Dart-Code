@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { versionIsAtLeast } from "../../../shared/utils";
 import { activate, currentDoc, everythingFile, getPackages, positionOf, privateApi, rangeOf } from "../../helpers";
 
 describe("dart_hover_provider", () => {
@@ -55,11 +56,13 @@ describe("dart_hover_provider", () => {
 			return `${returnType} ${method.startsWith("(") ? `Function${method}` : method}`;
 	}
 
-	function getExpectedDoc(doc: string, packagePath: string, className?: string): string {
+	function getExpectedDoc(doc: string | undefined, packagePath: string, className?: string): string {
+		doc ??= "";
+		const em = versionIsAtLeast(privateApi.dartCapabilities.version, "3.12.0-0") ? "*" : "_";
 		return className
-			? `Declared in \`${className}\` in _${packagePath}_.\n\n${doc}`
+			? `Declared in \`${className}\` in ${em}${packagePath}${em}.\n\n${doc}`.trim()
 			: packagePath
-				? `Declared in _${packagePath}_.\n\n${doc}`
+				? `Declared in ${em}${packagePath}${em}.\n\n${doc}`.trim()
 				: doc;
 
 	}
@@ -163,7 +166,7 @@ describe("dart_hover_provider", () => {
 			assert.equal(hover.displayText, "abstract interface class Client");
 		else
 			assert.equal(hover.displayText, "abstract class Client");
-		assert.ok(hover.documentation!.startsWith("Declared in _package:http/src/client.dart_"));
+		assert.ok(hover.documentation!.startsWith(getExpectedDoc(undefined, "package:http/src/client.dart")));
 		assert.deepStrictEqual(hover.range, rangeOf("http.|Client|"));
 	});
 
@@ -173,7 +176,7 @@ describe("dart_hover_provider", () => {
 			assert.equal(hover.displayText, "abstract interface class Future<T>");
 		else
 			assert.equal(hover.displayText, "abstract class Future<T>");
-		assert.ok(hover.documentation!.startsWith("Declared in _dart:async_"));
+		assert.ok(hover.documentation!.startsWith(getExpectedDoc(undefined, "dart:async")));
 		assert.deepStrictEqual(hover.range, rangeOf("|Future|<String>"));
 	});
 
