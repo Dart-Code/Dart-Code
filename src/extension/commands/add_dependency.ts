@@ -156,49 +156,59 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	private async addDependency(urisOrPaths: Array<string | vs.Uri>, selectedPackage: PackageInfo, isDevDependency: boolean) {
 		const uris = urisOrPaths.map((uriOrPath) => typeof uriOrPath === "string" ? vs.Uri.file(uriOrPath) : uriOrPath);
 
-		const args = ["add"];
-		let packageName: string;
+		const commandsArgs: string[][] = [];
+		let forceFlutter = false;
 		if (selectedPackage.marker === "GIT") {
-			packageName = selectedPackage.packageName;
-			args.push(packageName);
-			args.push(`--git-url=${selectedPackage.url}`);
+			const args = ["add", selectedPackage.packageName, `--git-url=${selectedPackage.url}`];
 			if (selectedPackage.ref) {
 				args.push(`--git-ref=${selectedPackage.ref}`);
 			}
 			if (selectedPackage.path) {
 				args.push(`--git-path=${selectedPackage.path}`);
 			}
+			commandsArgs.push(args);
 		} else if (selectedPackage.marker === "PATH") {
-			packageName = selectedPackage.packageName;
-			args.push(packageName);
-			args.push(`--path=${selectedPackage.path}`);
+			commandsArgs.push(["add", selectedPackage.packageName, `--path=${selectedPackage.path}`]);
 		} else {
 			const packageNames = selectedPackage.packageNames.split(/[\s,]+/).map((p) => p.trim()).filter((p) => p);
-			for (const packageName of packageNames) {
-				args.push(packageName);
+			const flutterSdkPackages = packageNames.filter((packageName) => this.isFlutterSdkPackage(packageName));
+			const nonFlutterSdkPackages = packageNames.filter((packageName) => !this.isFlutterSdkPackage(packageName));
+
+			if (nonFlutterSdkPackages.length) {
+				commandsArgs.push(["add", ...nonFlutterSdkPackages]);
 			}
-			// We assume when multiple are given, they're all of the same type.
-			// The completion list should filter when this is the case.
-			packageName = packageNames[0];
+
+			if (flutterSdkPackages.length) {
+				forceFlutter = true;
+				// We can't do multiple SDK packages in one command:
+				// `--sdk cannot be used with multiple packages`
+				for (const flutterSdkPackage of flutterSdkPackages)
+					commandsArgs.push(["add", flutterSdkPackage, "--sdk", "flutter"]);
+			}
 		}
 
-		if (isDevDependency)
-			args.push("--dev");
-
-		// Handle some known Flutter dependencies.
-		const isFlutterSdkPackage = knownFlutterSdkPackages.some((flutterPackageName) => packageName === flutterPackageName || packageName === `${devPrefix}${flutterPackageName}`);
-		if (isFlutterSdkPackage) {
-			args.push("--sdk");
-			args.push("flutter");
+		if (isDevDependency) {
+			for (const commandArgs of commandsArgs)
+				commandArgs.push("--dev");
 		}
 
 		for (const uri of uris) {
-			if (this.sdks.flutter && (isFlutterSdkPackage || util.isInsideFlutterProject(uri))) {
-				await this.runFlutter(["pub", ...args], uri);
-			} else {
-				await this.runPub(args, uri);
+			const useFlutter = this.sdks.flutter && (forceFlutter || util.isInsideFlutterProject(uri));
+			for (const commandArgs of commandsArgs) {
+				if (useFlutter) {
+					await this.runFlutter(["pub", ...commandArgs], uri);
+				} else {
+					await this.runPub(commandArgs, uri);
+				}
 			}
 		}
+	}
+
+	private isFlutterSdkPackage(packageName: string): boolean {
+		const normalizedPackageName = packageName.startsWith(devPrefix)
+			? packageName.substring(devPrefix.length)
+			: packageName;
+		return knownFlutterSdkPackages.includes(normalizedPackageName);
 	}
 
 	private async removeDependency(uri: string | vs.Uri, packageName: string) {

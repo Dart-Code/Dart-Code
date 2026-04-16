@@ -54,4 +54,43 @@ describe("pub add", () => {
 			`Did not find string "${expectedString}" in file contents:\n${fileContents}`,
 		);
 	});
+
+	it("runs without --sdk for a Pub package", async () => {
+		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+
+		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "collection" }, false);
+
+		assert.equal(runFlutter.callCount, 1);
+		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "collection"], flutterHelloWorldFolder]);
+	});
+
+	it("runs with --sdk for a Flutter SDK package", async () => {
+		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+
+		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "flutter_test" }, false);
+
+		assert.equal(runFlutter.callCount, 1);
+		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "flutter_test", "--sdk", "flutter"], flutterHelloWorldFolder]);
+	});
+
+	it("runs separate commands for multiple Flutter SDK packages", async () => {
+		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+
+		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "flutter_test flutter_localizations" }, false);
+
+		assert.equal(runFlutter.callCount, 2);
+		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "flutter_test", "--sdk", "flutter"], flutterHelloWorldFolder]);
+		assert.deepStrictEqual(runFlutter.secondCall.args, [["pub", "add", "flutter_localizations", "--sdk", "flutter"], flutterHelloWorldFolder]);
+	});
+
+	it("runs multiple commands for a mix of Flutter SDK/Pub packages", async () => {
+		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+
+		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "foo flutter_test bar flutter_driver" }, false);
+
+		assert.equal(runFlutter.callCount, 3);
+		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "foo", "bar"], flutterHelloWorldFolder]);
+		assert.deepStrictEqual(runFlutter.secondCall.args, [["pub", "add", "flutter_test", "--sdk", "flutter"], flutterHelloWorldFolder]);
+		assert.deepStrictEqual(runFlutter.thirdCall.args, [["pub", "add", "flutter_driver", "--sdk", "flutter"], flutterHelloWorldFolder]);
+	});
 });
