@@ -655,12 +655,12 @@ export class FlutterDeviceManager implements vs.Disposable {
 		void waitingForRealDeviceSubscription.dispose();
 		cancellationTokenSource.dispose();
 
-		if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator-creator") {
+		if (selectedEmulator?.device?.type === "emulator-creator") {
 			return this.createEmulator();
-		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "emulator") {
+		} else if (selectedEmulator?.device?.type === "emulator") {
 			const coldBoot = selectedEmulator.coldBoot ?? false;
 			return this.launchEmulator(selectedEmulator.device, coldBoot);
-		} else if (selectedEmulator && selectedEmulator.device && selectedEmulator.device.type === "custom-emulator") {
+		} else if (selectedEmulator?.device?.type === "custom-emulator") {
 			return this.launchCustomEmulator(selectedEmulator.device);
 		} else {
 			return !!(this.currentDevice);

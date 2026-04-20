@@ -78,7 +78,7 @@ async function showFolderPicker(folders: string[], placeHolder: string): Promise
 	}).filter(notUndefined);
 
 	const selectedFolder = await vs.window.showQuickPick(items, { placeHolder });
-	return selectedFolder && selectedFolder.path;
+	return selectedFolder?.path;
 }
 
 async function showFolderMultiPicker(selectableFolderPaths: string[], prePickedFolders: Set<string> | undefined, placeHolder: string): Promise<string[] | undefined> {
