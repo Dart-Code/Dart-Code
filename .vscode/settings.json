@@ -25,4 +25,5 @@
 		"src/test/test_projects/flutter_create_sample"
 	],
 	"eslint.lintTask.enable": true,
+	"eslint.lintTask.command": "./node_modules/.bin/eslint"
 }
