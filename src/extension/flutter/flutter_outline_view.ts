@@ -290,10 +290,10 @@ export class FlutterWidgetItem extends vs.TreeItem {
 			);
 
 		const selectionPos = "range" in outline
-			? outline.dartElement && outline.dartElement.range
+			? outline.dartElement?.range
 				? lspToPosition(outline.dartElement.range.start)
 				: lspToPosition(outline.range.start)
-			: outline.dartElement && outline.dartElement.location?.offset
+			: outline.dartElement?.location?.offset
 				? editor.document.positionAt(outline.dartElement.location.offset)
 				: editor.document.positionAt(outline.offset);
 
