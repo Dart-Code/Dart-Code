@@ -865,7 +865,7 @@ function handleConfigurationChange() {
 		// file issues so we can try to track down what's causing it.
 		if (changedSettingsNames.includes("sdkPath") || changedSettingsNames.includes("flutterSdkPath")) {
 			const sessionDurationMs = Date.now() - extensionThisSessionStart;
-			if (sessionDurationMs <= 1000) {
+			if (sessionDurationMs <= 1500) {
 				const ringLogContents = ringLog.toString();
 				const tempLogPath = path.join(os.tmpdir(), `log-${getRandomInt(0x1000, 0x10000).toString(16)}.txt`);
 
