@@ -3,10 +3,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
+import { getFolderToRunCommandIn } from "../../../extension/utils/vscode/projects";
 import { isWin } from "../../../shared/constants";
 import { fsPath, isWithinPathOrEqual } from "../../../shared/utils/fs";
-import { getPubWorkspaceStatus } from "../../../shared/vscode/pub";
-import { activate, defer, privateApi, sb, tryDelete } from "../../helpers";
+import { getPubWorkspaceOrPackageFolderInfo, getPubWorkspaceStatus } from "../../../shared/vscode/pub";
+import * as sharedVscodeUtils from "../../../shared/vscode/utils";
+import { activate, activateWithoutAnalysis, defer, privateApi, sb, tryDelete } from "../../helpers";
 
 describe("pub package status", () => {
 	before("activate", () => activate());
@@ -358,8 +360,6 @@ describe("pub package status", () => {
 	}
 
 	function expectStatus(workspace: WorkspaceInfo, expectedStatuses: Array<{ folder: string, pubRequired: false | "GET" | "UPGRADE", reason?: string }>) {
-		// Rewrite paths for Windows because we convert to/from URIs and VS Code's URI class always assumes the current platform.
-		const fixPath = isWin ? (p: string) => `Z:${p.replaceAll("/", "\\")}` : (p: string) => p;
 		workspace.openFolders = workspace.openFolders.map(fixPath);
 		const fixedFiles: typeof workspace.files = {};
 		for (const p of Object.keys(workspace.files))
@@ -527,6 +527,88 @@ describe("pub package commands", () => {
 			}
 		});
 	}
+
+	describe("package picker", () => {
+		beforeEach("activate without an open file", () => activateWithoutAnalysis(null));
+
+		it("collapses pub workspace projects into a single picker entry with a package count", async () => {
+			const openFolders = ["/projects/root/proj1", "/projects/root/proj2", "/projects/standalone"].map(fixPath);
+			const files: FilesInfo = {};
+
+			files[fixPath("/projects/root/pubspec.yaml")] = { mtime: 1, content: "workspace:\n- proj1\n- proj2" };
+			files[fixPath("/projects/root/proj1/pubspec.yaml")] = { mtime: 1, content: "resolution: workspace\ndependencies:" };
+			files[fixPath("/projects/root/proj2/pubspec.yaml")] = { mtime: 1, content: "resolution: workspace\ndependencies:" };
+			files[fixPath("/projects/standalone/pubspec.yaml")] = { mtime: 1, content: "dependencies:" };
+
+			const results = getPubWorkspaceOrPackageFolderInfo(
+				openFolders,
+				(filePath) => !!files[filePath],
+				(filePath) => {
+					const file = files[filePath];
+					if (!file)
+						throw new Error("No file/content");
+					return file.content;
+				},
+			);
+
+			assert.deepStrictEqual(results, [
+				{ path: fixPath("/projects/root"), workspacePackageCount: 2 },
+				{ path: fixPath("/projects/standalone") },
+			]);
+		});
+
+		it("shows each pub workspace only once with a package count suffix", async () => {
+			sb.stub(sharedVscodeUtils, "getAllProjectFolders").resolves([workspaceProject1, workspaceProject2, standalone1]);
+			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot } as vs.QuickPickItem & { path: string });
+
+			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
+
+			assert.ok(showQuickPick.calledOnce);
+			const workspaceFolder = vs.workspace.getWorkspaceFolder(vs.Uri.file(workspaceRoot));
+			assert.ok(workspaceFolder);
+			const workspacePathParent = path.dirname(fsPath(workspaceFolder.uri));
+			const items = showQuickPick.firstCall.args[0] as Array<vs.QuickPickItem & { path: string }>;
+			assert.deepStrictEqual(items.map((item) => ({ label: item.label, detail: item.detail, path: item.path })), [
+				{ label: path.relative(workspacePathParent, standalone1), detail: undefined, path: standalone1 },
+				{ label: path.relative(workspacePathParent, workspaceRoot), detail: "Pub Workspace, 2 packages", path: workspaceRoot },
+			]);
+			assert.equal(folder, workspaceRoot);
+		});
+
+		it("includes a pub workspace root that is outside opened workspace folders", async () => {
+			sb.stub(sharedVscodeUtils, "getAllProjectFolders").resolves([workspaceProject1, workspaceProject2, standalone1]);
+			const getWorkspaceFolder = sb.stub(vs.workspace, "getWorkspaceFolder").callsFake((uri: vs.Uri) => {
+				const folderPath = fsPath(uri);
+				if (folderPath === workspaceRoot)
+					return undefined;
+				if (folderPath === standalone1)
+					return { index: 0, name: path.basename(standalone1), uri: vs.Uri.file(standalone1) };
+				return undefined;
+			});
+			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot } as vs.QuickPickItem & { path: string });
+
+			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
+
+			assert.ok(getWorkspaceFolder.called);
+			assert.ok(showQuickPick.calledOnce);
+			const items = showQuickPick.firstCall.args[0] as Array<vs.QuickPickItem & { path: string }>;
+			assert.deepStrictEqual(items.map((item) => ({ label: item.label, detail: item.detail, path: item.path })), [
+				{ label: path.basename(standalone1), detail: undefined, path: standalone1 },
+				{ label: path.basename(workspaceRoot), detail: "Pub Workspace, 2 packages", path: workspaceRoot },
+			]);
+			assert.equal(folder, workspaceRoot);
+		});
+
+		it("does not prompt if all discovered projects collapse to a single pub workspace", async () => {
+			sb.stub(sharedVscodeUtils, "getAllProjectFolders").resolves([workspaceProject1, workspaceProject2]);
+			const showQuickPick = sb.stub(vs.window, "showQuickPick");
+
+			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
+
+			assert.equal(showQuickPick.called, false);
+			assert.equal(folder, workspaceRoot);
+		});
+	});
 });
 
 interface WorkspaceInfo {
@@ -540,4 +622,11 @@ type FilesInfo = Record<string, FileInfo>;
 interface FileInfo {
 	mtime: number,
 	content: string,
+}
+
+/**
+ * Rewrite paths for Windows because we convert to/from URIs and VS Code's URI class always assumes the current platform.
+ */
+function fixPath(p: string) {
+	return isWin ? `Z:${p.replaceAll("/", "\\")}` : p;
 }

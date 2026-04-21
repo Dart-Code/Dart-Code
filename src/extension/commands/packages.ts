@@ -70,7 +70,7 @@ export class PackageCommands extends BaseSdkCommands {
 			placeHolder: "Select which folder to get packages for",
 			progressTitle: "pub get",
 			runForUri: this.getPackagesForUri.bind(this),
-		});
+		}, { onlyShowWorkspaceRoots: true });
 	}
 
 	public async getPackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
@@ -103,7 +103,7 @@ export class PackageCommands extends BaseSdkCommands {
 			return;
 
 		if (!uri || !(uri instanceof vs.Uri)) {
-			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to check for outdated packages");
+			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to check for outdated packages", { onlyShowWorkspaceRoots: true });
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -125,7 +125,7 @@ export class PackageCommands extends BaseSdkCommands {
 			placeHolder: "Select which folder to upgrade packages in",
 			progressTitle: "pub upgrade",
 			runForUri: this.upgradePackagesForUri.bind(this),
-		});
+		}, { onlyShowWorkspaceRoots: true });
 	}
 
 	public async upgradePackagesForUri(uri: vs.Uri, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
@@ -140,6 +140,7 @@ export class PackageCommands extends BaseSdkCommands {
 			progressTitle: string,
 			runForUri: (uri: vs.Uri, operationProgress?: OperationProgress) => Promise<RunProcessResult | undefined>,
 		},
+		{ onlyShowWorkspaceRoots = false }: { onlyShowWorkspaceRoots?: boolean; } = {}
 	): Promise<RunProcessResult | undefined> {
 		if (!config.enablePub)
 			return;
@@ -149,7 +150,7 @@ export class PackageCommands extends BaseSdkCommands {
 				cancellable: true,
 				location: vs.ProgressLocation.Notification,
 				title: options.progressTitle,
-			}, (progress, token) => this.runPackageCommand(uri, { progressReporter: progress, cancellationToken: token }, options));
+			}, (progress, token) => this.runPackageCommand(uri, { progressReporter: progress, cancellationToken: token }, options, { onlyShowWorkspaceRoots }));
 		}
 
 		if (Array.isArray(uri)) {
@@ -168,7 +169,7 @@ export class PackageCommands extends BaseSdkCommands {
 			return;
 		}
 
-		const resolvedUri = await this.resolvePackageTargetUri(uri, options.placeHolder);
+		const resolvedUri = await this.resolvePackageTargetUri(uri, options.placeHolder, { onlyShowWorkspaceRoots });
 		if (!resolvedUri)
 			return;
 
@@ -186,13 +187,13 @@ export class PackageCommands extends BaseSdkCommands {
 			return this.runPub(args, uri, false, operationProgress);
 	}
 
-	private async resolvePackageTargetUri(uri: string | vs.Uri | undefined, placeHolder: string): Promise<vs.Uri | undefined> {
+	private async resolvePackageTargetUri(uri: string | vs.Uri | undefined, placeHolder: string, { onlyShowWorkspaceRoots = false }: { onlyShowWorkspaceRoots?: boolean; } = {}): Promise<vs.Uri | undefined> {
 		if (uri)
 			return typeof uri === "string"
 				? vs.Uri.file(uri)
 				: uri;
 
-		const folder = await getFolderToRunCommandIn(this.logger, placeHolder);
+		const folder = await getFolderToRunCommandIn(this.logger, placeHolder, { onlyShowWorkspaceRoots });
 		return folder ? vs.Uri.file(folder) : undefined;
 
 	}
@@ -210,7 +211,7 @@ export class PackageCommands extends BaseSdkCommands {
 		}
 
 		if (!uri || !(uri instanceof vs.Uri)) {
-			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages --major-versions in");
+			uri = await getFolderToRunCommandIn(this.logger, "Select which folder to upgrade packages --major-versions in", { onlyShowWorkspaceRoots: true });
 			// If the user cancelled, bail out (otherwise we'll prompt them again below).
 			if (!uri)
 				return;
@@ -218,9 +219,9 @@ export class PackageCommands extends BaseSdkCommands {
 		if (typeof uri === "string")
 			uri = vs.Uri.file(uri);
 		if (util.isInsideFlutterProject(uri))
-			return this.runFlutter(["pub", "upgrade", "--major-versions"], uri);
+			return this.runFlutter(["pub", "upgrade", "--major-versions"], uri, undefined, undefined, { onlyShowWorkspaceRoots: true });
 		else
-			return this.runPub(["upgrade", "--major-versions"], uri);
+			return this.runPub(["upgrade", "--major-versions"], uri, undefined, undefined, { onlyShowWorkspaceRoots: true });
 	}
 
 	private setupPubspecWatcher() {

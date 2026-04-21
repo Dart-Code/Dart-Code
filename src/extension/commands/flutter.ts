@@ -69,7 +69,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 
 		if (!uri) {
-			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, uri, true);
+			const path = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter clean" in`, { selection: uri, flutterOnly: true });
 			if (!path)
 				return;
 			uri = vs.Uri.file(path);
@@ -175,7 +175,7 @@ export class FlutterCommands extends BaseSdkCommands {
 
 	private async flutterCreate({ packageName, packagePath, triggerData, platform }: FlutterCreateCommandArgs) {
 		if (!packagePath) {
-			packagePath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, undefined, true);
+			packagePath = await getFolderToRunCommandIn(this.logger, `Select the folder to run "flutter create" in`, { flutterOnly: true });
 			if (!packagePath)
 				return;
 		}

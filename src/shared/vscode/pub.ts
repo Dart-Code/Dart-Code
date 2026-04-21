@@ -10,6 +10,15 @@ import { uniq } from "../utils";
 
 interface PubPackageStatus { folderUri: Uri, pubRequired: false | "GET" | "UPGRADE", reason?: string, workspace: "NONE" | "ROOT" | "PROJECT" }
 
+/**
+ * Information about a package folder, that is either a single package
+ * folder, or a Pub Workspace that has a count of packages within.
+ */
+export interface PubWorkspaceOrPackageFolderInfo {
+	path: string;
+	workspacePackageCount?: number;
+}
+
 const pubspecHasDependenciesRegex = new RegExp("^(dev_)?dependencies\\s*:", "im");
 const pubspecIsWorkspaceProjectRegex = new RegExp("^resolution\\s*:\\s*workspace", "im");
 const pubspecIsWorkspaceRootRegex = new RegExp("^workspace\\s*:", "im");
@@ -232,7 +241,38 @@ function runPubUpgrade(folders: Uri[]) {
  * If multiple packages belong to the same Pub Workspace, it will only be returned once.
  */
 function getPubWorkspaceOrPackageFolderPaths(packageFolderOrPubspecPaths: string[]): string[] {
-	return uniq(packageFolderOrPubspecPaths.map(getPubWorkspaceFolderOrPackageFolderPath)).sort();
+	return uniq(packageFolderOrPubspecPaths.map((p) => getPubWorkspaceFolderOrPackageFolderPath(p))).sort();
+}
+
+/**
+ * Gets the set of packages in `packageFolderOrPubspecPaths`, folding any workspace packages into
+ * the workspace root. This is used for commands like `pub get` which are always run in the context
+ * of a Pub Workspace root and not the child packages.
+ */
+export function getPubWorkspaceOrPackageFolderInfo(
+	packageFolderOrPubspecPaths: string[],
+	existsSync: (itemPath: string) => boolean = fs.existsSync,
+	readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p, "utf8").toString(),
+): PubWorkspaceOrPackageFolderInfo[] {
+	const pubWorkspacePackageCounts = new Map<string, number>();
+
+	for (const packageFolderOrPubspecPath of packageFolderOrPubspecPaths) {
+		const packageFolderPath = path.basename(packageFolderOrPubspecPath) === "pubspec.yaml"
+			? path.dirname(packageFolderOrPubspecPath)
+			: packageFolderOrPubspecPath;
+		const workspaceRootPath = getPubWorkspaceFolderOrPackageFolderPath(packageFolderOrPubspecPath, existsSync, readFileSync);
+
+		let count = pubWorkspacePackageCounts.get(workspaceRootPath) ?? 0;
+		const isRoot = workspaceRootPath === packageFolderPath;
+		if (!isRoot)
+			count++;
+
+		pubWorkspacePackageCounts.set(workspaceRootPath, count);
+	}
+
+	return [...pubWorkspacePackageCounts.entries()]
+		.map((p) => p[1] ? { path: p[0], workspacePackageCount: p[1] } : { path: p[0] })
+		.sort((a, b) => a.path.localeCompare(b.path));
 }
 
 /**
@@ -268,7 +308,11 @@ export function getPubWorkspaceFolderOrPackageFolderUri(packageFolderOrPubspecUr
  * Otherwise (or if there is no workspace root), returns `packageFolderOrPubspecPath` (or if it's a pubspec path, the
  * containing folder).
  */
-export function getPubWorkspaceFolderOrPackageFolderPath(packageFolderOrPubspecPath: string): string {
+export function getPubWorkspaceFolderOrPackageFolderPath(
+	packageFolderOrPubspecPath: string,
+	existsSync: (itemPath: string) => boolean = fs.existsSync,
+	readFileSync: (itemPath: string) => string = (p) => fs.readFileSync(p, "utf8").toString(),
+): string {
 	const pubspecPath = path.basename(packageFolderOrPubspecPath) === "pubspec.yaml"
 		? packageFolderOrPubspecPath
 		: path.join(packageFolderOrPubspecPath, "pubspec.yaml");
@@ -276,12 +320,12 @@ export function getPubWorkspaceFolderOrPackageFolderPath(packageFolderOrPubspecP
 
 	// We shouldn't really have gotten here without a pubspec because that means this isn't
 	// a package, but in that case just return the containing folder.
-	if (!fs.existsSync(pubspecPath))
+	if (!existsSync(pubspecPath))
 		return packageFolderPath;
 
 	let pubspecContent: string;
 	try {
-		pubspecContent = fs.readFileSync(pubspecPath, "utf8").toString();
+		pubspecContent = readFileSync(pubspecPath);
 	} catch {
 		return packageFolderPath;
 	}
@@ -296,7 +340,7 @@ export function getPubWorkspaceFolderOrPackageFolderPath(packageFolderOrPubspecP
 		// Check if the current folder is the workspace root
 		try {
 			const currentPubspecPath = path.join(currentFolder, "pubspec.yaml");
-			const currentPubspecContent = fs.readFileSync(currentPubspecPath, "utf8").toString();
+			const currentPubspecContent = readFileSync(currentPubspecPath);
 
 			// We've found the root.
 			if (pubspecIsWorkspaceRootRegex.test(currentPubspecContent))
