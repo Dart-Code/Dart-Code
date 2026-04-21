@@ -44,8 +44,9 @@ export class BaseSdkCommands implements IAmDisposable {
 		selection: vs.Uri | undefined,
 		alwaysShowOutput = false,
 		operationProgress?: OperationProgress,
+		{ onlyShowWorkspaceRoots = false }: { onlyShowWorkspaceRoots?: boolean; } = {}
 	): Promise<RunProcessResult | undefined> {
-		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, selection);
+		const folderToRunCommandIn = await getFolderToRunCommandIn(this.logger, placeHolder, { selection, onlyShowWorkspaceRoots });
 		if (!folderToRunCommandIn)
 			return;
 
@@ -54,8 +55,8 @@ export class BaseSdkCommands implements IAmDisposable {
 		return handler(folderToRunCommandIn, args, packageOrFolderDisplayName, alwaysShowOutput, operationProgress);
 	}
 
-	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
-		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress);
+	protected runFlutter(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress, { onlyShowWorkspaceRoots = false }: { onlyShowWorkspaceRoots?: boolean; } = {}): Promise<RunProcessResult | undefined> {
+		return this.runCommandForWorkspace(this.runFlutterInFolder.bind(this), `Select the folder to run "flutter ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress, { onlyShowWorkspaceRoots });
 	}
 
 	public runFlutterInFolder(folder: string, args: string[], packageOrFolderDisplayName: string | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress, customScript?: CustomScript): Promise<RunProcessResult | undefined> {
@@ -75,8 +76,8 @@ export class BaseSdkCommands implements IAmDisposable {
 		return this.runCommandInFolder(packageOrFolderDisplayName, folder, execution.executable, allArgs, alwaysShowOutput, operationProgress);
 	}
 
-	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {
-		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress);
+	protected runPub(args: string[], selection: vs.Uri | undefined, alwaysShowOutput = false, operationProgress?: OperationProgress, { onlyShowWorkspaceRoots = false }: { onlyShowWorkspaceRoots?: boolean; } = {}): Promise<RunProcessResult | undefined> {
+		return this.runCommandForWorkspace(this.runPubInFolder.bind(this), `Select the folder to run "pub ${args.join(" ")}" in`, args, selection, alwaysShowOutput, operationProgress, { onlyShowWorkspaceRoots });
 	}
 
 	protected runPubInFolder(folder: string, args: string[], packageOrFolderDisplayName: string, alwaysShowOutput = false, operationProgress?: OperationProgress): Promise<RunProcessResult | undefined> {

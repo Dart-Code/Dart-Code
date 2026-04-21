@@ -6,11 +6,25 @@ import { notUndefined } from "../../../shared/utils";
 import { fsPath, homeRelativePath, isFlutterProjectFolder } from "../../../shared/utils/fs";
 import { getActiveRealFileEditor } from "../../../shared/vscode/editors";
 import { locateBestProjectRoot } from "../../../shared/vscode/project";
+import type { PubWorkspaceOrPackageFolderInfo } from "../../../shared/vscode/pub";
+import { getPubWorkspaceOrPackageFolderInfo } from "../../../shared/vscode/pub";
 import { getAllProjectFolders } from "../../../shared/vscode/utils";
 import { config } from "../../config";
 import { getExcludedFolders } from "../../utils";
 
-export async function getFolderToRunCommandIn(logger: Logger, placeHolder: string, selection?: vs.Uri, flutterOnly = false): Promise<string | undefined> {
+export async function getFolderToRunCommandIn(
+	logger: Logger,
+	placeHolder: string,
+	{
+		selection,
+		flutterOnly = false,
+		// TODO(dantup): Consider making this required.
+		onlyShowWorkspaceRoots = false
+	}: {
+		selection?: vs.Uri;
+		flutterOnly?: boolean;
+		onlyShowWorkspaceRoots?: boolean;
+	} = {}): Promise<string | undefined> {
 	// Attempt to find a project based on the supplied folder of active file.
 	let file = selection && fsPath(selection);
 	if (!file) {
@@ -33,7 +47,11 @@ export async function getFolderToRunCommandIn(logger: Logger, placeHolder: strin
 		return undefined;
 	}
 
-	return showFolderPicker(selectableFolders, placeHolder); // TODO: What if the user didn't pick anything?
+	const selectableFolderInfo: PubWorkspaceOrPackageFolderInfo[] = onlyShowWorkspaceRoots
+		? getPubWorkspaceOrPackageFolderInfo(selectableFolders)
+		: selectableFolders.map((folder) => ({ path: folder }));
+
+	return showPackagePicker(selectableFolderInfo, placeHolder); // TODO: What if the user didn't pick anything?
 }
 
 export async function getProjectSelection(logger: Logger, placeHolder: string): Promise<string[] | undefined> {
@@ -58,22 +76,26 @@ export async function getProjectSelection(logger: Logger, placeHolder: string): 
 	return showFolderMultiPicker(selectableProjectFolders, prePickedFolders, placeHolder);
 }
 
-async function showFolderPicker(folders: string[], placeHolder: string): Promise<string | undefined> {
+async function showPackagePicker(folders: PubWorkspaceOrPackageFolderInfo[], placeHolder: string): Promise<string | undefined> {
 	// No point asking the user if there's only one.
 	if (folders.length === 1) {
-		return folders[0];
+		return folders[0]?.path;
 	}
 
-	const items = folders.map((f) => {
-		const workspaceFolder = vs.workspace.getWorkspaceFolder(Uri.file(f));
-		if (!workspaceFolder)
-			return undefined;
-
-		const workspacePathParent = path.dirname(fsPath(workspaceFolder.uri));
+	const items = folders.map((folderInfo) => {
+		const folderPath = folderInfo.path;
+		const workspaceFolder = vs.workspace.getWorkspaceFolder(Uri.file(folderPath));
+		const workspacePathParent = workspaceFolder
+			? path.dirname(fsPath(workspaceFolder.uri))
+			: path.dirname(folderPath);
+		const detail = folderInfo.workspacePackageCount
+			? `Pub Workspace, ${folderInfo.workspacePackageCount} package${folderInfo.workspacePackageCount === 1 ? "" : "s"}`
+			: undefined;
 		return {
 			description: homeRelativePath(workspacePathParent),
-			label: path.relative(workspacePathParent, f),
-			path: f,
+			label: path.relative(workspacePathParent, folderPath),
+			detail,
+			path: folderPath,
 		} as vs.QuickPickItem & { path: string };
 	}).filter(notUndefined);
 
