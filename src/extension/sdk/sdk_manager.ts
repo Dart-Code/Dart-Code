@@ -21,12 +21,12 @@ abstract class SdkManager {
 
 	public changeSdk() {
 		if (this.sdkPaths)
-			this.searchForSdks(this.sdkPaths).catch((e) => this.logger.error(e));
+			void this.promptForSdk(this.sdkPaths).catch((e) => this.logger.error(e));
 		else
 			void vs.window.showWarningMessage("Set `${configName}` to enable fast SDK switching.");
 	}
 
-	public async searchForSdks(sdkPaths: string[]) {
+	public async promptForSdk(sdkPaths: string[]): Promise<void> {
 		let allPaths: string[] = [];
 		for (const sdkPath of sdkPaths.filter(fs.existsSync)) {
 			allPaths.push(sdkPath);
@@ -69,7 +69,7 @@ abstract class SdkManager {
 			version: undefined,
 		} as SdkPickItem].concat(sdkItems);
 
-		void vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
+		await vs.window.showQuickPick(items, { placeHolder: "Select an SDK to use" })
 			.then((sdk) => {
 				if (!sdk)
 					return;
