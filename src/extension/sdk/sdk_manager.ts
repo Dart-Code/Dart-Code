@@ -20,10 +20,10 @@ abstract class SdkManager {
 	protected abstract setSdk(folder: string | undefined, target: vs.ConfigurationTarget): void;
 
 	public changeSdk() {
-		if (this.sdkPaths)
+		if (this.sdkPaths?.length)
 			void this.promptForSdk(this.sdkPaths).catch((e) => this.logger.error(e));
 		else
-			void vs.window.showWarningMessage("Set `${configName}` to enable fast SDK switching.");
+			void vs.window.showWarningMessage(`Set the "${this.configName}" setting to enable fast SDK switching.`);
 	}
 
 	public async promptForSdk(sdkPaths: string[]): Promise<void> {
