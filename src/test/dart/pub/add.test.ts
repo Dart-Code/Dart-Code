@@ -4,7 +4,7 @@ import * as vs from "vscode";
 import { PackageCacheData } from "../../../shared/pub/pub_add";
 import { fsPath } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
-import { activate, currentDoc, defer, helloWorldExampleSubFolder, helloWorldExampleSubFolderPubspecFile, helloWorldFolder, helloWorldPubspec, privateApi, rangeOf, sb, setTestContent, waitForNextAnalysis } from "../../helpers";
+import { activate, createTempPubPackage, currentDoc, defer, helloWorldExampleSubFolder, helloWorldExampleSubFolderPubspecFile, helloWorldFolder, helloWorldPubspec, privateApi, rangeOf, sb, setTestContent, waitForNextAnalysis } from "../../helpers";
 
 describe("pub add", () => {
 	const pubspecPath = fsPath(helloWorldPubspec);
@@ -30,6 +30,43 @@ describe("pub add", () => {
 	function pubspecContainsText(text: string) {
 		const contents = fs.readFileSync(pubspecPath);
 		return contents.includes(text);
+	}
+
+	function stubQuickPick(result: string | { label: string; marker?: "PATH" | "GIT"; packageNames?: string } | undefined, userInput = "") {
+		const handlers: {
+			onDidAccept?: () => void;
+			onDidChangeValue?: (value: string) => void;
+			onDidHide?: () => void;
+		} = {};
+		const quickPick = {
+			dispose: sb.stub(),
+			items: [] as any[],
+			onDidAccept: sb.stub().callsFake((handler: () => void) => {
+				handlers.onDidAccept = handler;
+				return { dispose: () => undefined };
+			}),
+			onDidChangeValue: sb.stub().callsFake((handler: (value: string) => void) => {
+				handlers.onDidChangeValue = handler;
+				return { dispose: () => undefined };
+			}),
+			onDidHide: sb.stub().callsFake((handler: () => void) => {
+				handlers.onDidHide = handler;
+				return { dispose: () => undefined };
+			}),
+			placeholder: undefined as string | undefined,
+			selectedItems: typeof result === "string" || !result ? [] : [result],
+			show: sb.stub().callsFake(() => {
+				quickPick.value = userInput;
+				handlers.onDidChangeValue?.(userInput);
+				handlers.onDidAccept?.();
+			}),
+			title: undefined as string | undefined,
+			value: "",
+		};
+
+		sb.stub(vs.window, "createQuickPick").returns(quickPick as any);
+
+		return quickPick;
 	}
 
 	it("can add a dependency using command", async () => {
@@ -96,6 +133,15 @@ describe("pub add", () => {
 		await vs.commands.executeCommand("dart.addDevDependency");
 		await waitFor(() => pubspecContainsPackage("collection"));
 		assert.equal(pubspecContainsPackage("collection"), true);
+	});
+
+	it("can remove a dependency using the tree view command", async () => {
+		const runPub = sb.stub(privateApi.addDependencyCommand, "runPub").resolves(undefined);
+
+		await vs.commands.executeCommand("_dart.removeDependency", helloWorldFolder, "convert");
+
+		assert.equal(runPub.callCount, 1);
+		assert.deepStrictEqual(runPub.firstCall.args, [["remove", "convert"], helloWorldFolder]);
 	});
 
 	it("can add a dependency by URL by pasting", async () => {
@@ -345,6 +391,134 @@ describe("pub add", () => {
 					"path, dev:convert",
 				]);
 			});
+		});
+	});
+
+	describe("prompt helpers", () => {
+		beforeEach(() => {
+			privateApi.addDependencyCommand.cache = PackageCacheData.fromPackageNames([
+				"collection",
+				"convert",
+				"crypto",
+			]);
+		});
+
+		it("promptForPackageInfo - git", async () => {
+			const quickPick = stubQuickPick({ label: "Git Repository URL", marker: "GIT" });
+
+			const result = await privateApi.addDependencyCommand.promptForPackageInfo();
+
+			assert.deepStrictEqual(result, { label: "Git Repository URL", marker: "GIT" });
+			assert.equal(quickPick.placeholder, "package name(s), URL or path (use commas or spaces to separate multiple package names)");
+			assert.equal(quickPick.title, "Enter package name(s), URL or local path");
+			assert.ok(quickPick.dispose.calledOnce);
+		});
+
+		it("promptForPackageInfo - package name", async () => {
+			const quickPick = stubQuickPick("col", "col");
+
+			const result = await privateApi.addDependencyCommand.promptForPackageInfo();
+
+			assert.equal(result, "col");
+			assert.deepStrictEqual(quickPick.items.map((item: { label: string }) => item.label), ["collection"]);
+			assert.ok(quickPick.dispose.calledOnce);
+		});
+
+		it("promptForPathPackageInfo uses supplied path and reads package name", async () => {
+			const tempFolder = createTempPubPackage("sample_package");
+
+			const result = await privateApi.addDependencyCommand.promptForPathPackageInfo(tempFolder);
+
+			assert.deepStrictEqual(result, {
+				marker: "PATH",
+				packageName: "sample_package",
+				path: tempFolder,
+			});
+		});
+
+		it("promptForPathPackageInfo prompts for a folder when no path is supplied", async () => {
+			const tempFolder = createTempPubPackage("selected_package");
+			const showOpenDialog = sb.stub(vs.window, "showOpenDialog").resolves([vs.Uri.file(tempFolder)]);
+
+			const result = await privateApi.addDependencyCommand.promptForPathPackageInfo();
+
+			assert.ok(showOpenDialog.calledOnce);
+			assert.deepStrictEqual(showOpenDialog.firstCall.args[0], {
+				canSelectFiles: false,
+				canSelectFolders: true,
+				canSelectMany: false,
+				openLabel: "Select package folder",
+			});
+			assert.deepStrictEqual(result, {
+				marker: "PATH",
+				packageName: "selected_package",
+				path: tempFolder,
+			});
+		});
+
+		it("promptForGitUrl uses the expected input box options", async () => {
+			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
+				assert.deepStrictEqual(options, {
+					ignoreFocusOut: true,
+					placeHolder: "git repo url",
+					title: "Enter a Git repository url",
+				});
+				return "https://github.com/dart-lang/timing";
+			});
+
+			const result = await privateApi.addDependencyCommand.promptForGitUrl();
+
+			assert.equal(result, "https://github.com/dart-lang/timing");
+			assert.equal(showInputBox.callCount, 1);
+		});
+
+		it("promptForGitPath uses the expected input box options", async () => {
+			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
+				assert.deepStrictEqual(options, {
+					ignoreFocusOut: true,
+					placeHolder: "path to package",
+					title: "Enter the path to the package in the repository (press <enter> for default)",
+				});
+				return "packages/timing";
+			});
+
+			const result = await privateApi.addDependencyCommand.promptForGitPath();
+
+			assert.equal(result, "packages/timing");
+			assert.equal(showInputBox.callCount, 1);
+		});
+
+		it("promptForGitRef uses the expected input box options", async () => {
+			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
+				assert.deepStrictEqual(options, {
+					ignoreFocusOut: true,
+					placeHolder: "commit/branch",
+					title: "Enter the commit/branch to use (press <enter> for default)",
+				});
+				return "main";
+			});
+
+			const result = await privateApi.addDependencyCommand.promptForGitRef();
+
+			assert.equal(result, "main");
+			assert.equal(showInputBox.callCount, 1);
+		});
+
+		it("promptForPackageName uses the expected input box options", async () => {
+			const showInputBox = sb.stub(vs.window, "showInputBox").callsFake(async (options) => {
+				assert.deepStrictEqual(options, {
+					ignoreFocusOut: true,
+					placeHolder: "package name",
+					title: "Enter the packages name",
+					value: "timing",
+				});
+				return "custom_timing";
+			});
+
+			const result = await privateApi.addDependencyCommand.promptForPackageName("timing");
+
+			assert.equal(result, "custom_timing");
+			assert.equal(showInputBox.callCount, 1);
 		});
 	});
 

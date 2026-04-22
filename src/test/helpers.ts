@@ -1046,6 +1046,17 @@ export function getRandomTempFolder(): string {
 	return tmpPath;
 }
 
+export function createTempPubPackage(packageName: string, folderName = "temp_package"): string {
+	const tempFolder = getRandomTempFolder();
+	const packageFolder = path.join(tempFolder, folderName);
+	defer(`delete temp package in ${tempFolder}`, () => tryDelete(tempFolder));
+
+	fs.mkdirSync(packageFolder, { recursive: true });
+	fs.writeFileSync(path.join(packageFolder, "pubspec.yaml"), `name: ${packageName}\n`);
+
+	return packageFolder;
+}
+
 export async function waitForResult(action: () => boolean | Promise<boolean>, message?: string, milliseconds = 6000, throwOnFailure = true): Promise<void> {
 	const res = await waitFor(action, undefined, milliseconds);
 	if (throwOnFailure && !res)

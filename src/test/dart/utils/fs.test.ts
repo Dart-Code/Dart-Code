@@ -4,7 +4,7 @@ import * as path from "path";
 import { Uri } from "vscode";
 import { isWin } from "../../../shared/constants";
 import { existsAndIsDirectoryAsync, existsAndIsDirectorySync, existsAndIsFileAsync, existsAndIsFileSync, extractFlutterSdkPathFromPackagesFile, findCommonAncestorFolder, fsPath, getPackageName, hasPackageMapFile, hasPubspec, mkDirRecursive, uriComparisonString } from "../../../shared/utils/fs";
-import { defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, testProjectsFolder, tryDelete } from "../../helpers";
+import { createTempPubPackage, defer, flutterHelloWorldFolder, getRandomTempFolder, helloWorldFolder, helloWorldMainFile, helloWorldTestFolder, testProjectsFolder, tryDelete } from "../../helpers";
 
 describe("findCommonAncestorFolder", () => {
 	it("handles empty array", () => {
@@ -74,12 +74,7 @@ describe("uriComparisonString", () => {
 
 describe("getPackageName", () => {
 	it("uses the package name from pubspec.yaml when available", () => {
-		const tempFolder = getRandomTempFolder();
-		const projectFolder = path.join(tempFolder, "workspace_project");
-		defer("delete temp folder", () => tryDelete(projectFolder));
-
-		fs.mkdirSync(projectFolder, { recursive: true });
-		fs.writeFileSync(path.join(projectFolder, "pubspec.yaml"), "name: my_custom_package\n");
+		const projectFolder = createTempPubPackage("my_custom_package", "workspace_project");
 		assert.equal(getPackageName(projectFolder), "my_custom_package");
 	});
 

@@ -246,7 +246,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		return selectedOption;
 	}
 
-	private async promptForPathPackageInfo(packagePath?: string): Promise<PathPubPackage | undefined> {
+	public async promptForPathPackageInfo(packagePath?: string): Promise<PathPubPackage | undefined> {
 		if (!packagePath) {
 			const packagePaths = await vs.window.showOpenDialog({
 				canSelectFiles: false,
@@ -327,7 +327,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 		return await vs.window.showInputBox({
 			ignoreFocusOut: true,
 			placeHolder: "package name",
-			title: "Enter the Packages name",
+			title: "Enter the packages name",
 			value: name,
 		});
 	}
