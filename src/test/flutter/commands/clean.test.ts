@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, captureOutput, getPackages } from "../../helpers";
+import { activate, captureOutput, defer, getPackages } from "../../helpers";
 
 describe("flutter clean", () => {
 	before("activate", () => activate());
@@ -9,6 +9,10 @@ describe("flutter clean", () => {
 
 	describe("all", () => {
 		it("cleans all packages", async () => {
+			// Since this wipes out the packages, attempt to restore them so that every future test doesn't need to explicitly
+			// call getPackages().
+			defer("restore packages", () => getPackages());
+
 			const rootBuffer = captureOutput("flutter (package:flutter_hello_world)");
 			const exampleBuffer = captureOutput("flutter (package:flutter_hello_world_example (example))");
 
