@@ -27,7 +27,7 @@ export const fakePreWorkspacePubDepsJsonSinglePackage: PubDepsJson = {
 
 export const fakePostWorkspacePubDepsJsonSinglePackage: PubDepsJson = {
 	packages: [
-		// devDependencies is undefined here, to similate pre-workspace format.
+		// devDependencies is undefined here, to simulate pre-workspace format.
 		// Out of order to verify sorting.
 		{ name: "my_package_1", version: "1.2.3", kind: "root", dependencies: ["direct2", "direct1", "direct3", "dev1"], directDependencies: ["direct2", "direct1", "direct3"], devDependencies: ["dev1"] },
 		{ name: "direct2", version: "1.2.3", kind: "direct", dependencies: ["transitive1"], directDependencies: ["transitive1"] },
