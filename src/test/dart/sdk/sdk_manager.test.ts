@@ -79,7 +79,7 @@ describe("SdkManager", () => {
 		sb.stub(config, "workspaceFlutterSdkPath").get(() => workspaceFlutterSdkPath);
 	}
 
-	it("searchForSdks does not prompt when no SDKs are found", async () => {
+	it("promptForSdk does not prompt when no SDKs are found", async () => {
 		const sdkRoot = createSdkRoot("sdks");
 		stubDartConfig({ sdkPath: undefined });
 		sb.stub(fsUtils, "existsAndIsFileSync").returns(false);
@@ -92,7 +92,7 @@ describe("SdkManager", () => {
 		assert.equal(showQuickPick.called, false);
 	});
 
-	it("searchForSdks prompts with auto-detect, current SDK and sorted versions", async () => {
+	it("promptForSdk prompts with auto-detect, current SDK and sorted versions", async () => {
 		const sdkRoot = createSdkRoot("sdks");
 		const dart300 = path.join(sdkRoot, "dart-3.0.0");
 		const dart219 = path.join(sdkRoot, "dart-2.19.0");
@@ -135,7 +135,7 @@ describe("SdkManager", () => {
 		assert.equal(items[3].detail, currentDart);
 	});
 
-	it("searchForSdks marks auto-detect as current when no SDK is configured", async () => {
+	it("promptForSdk marks auto-detect as current when no SDK is configured", async () => {
 		const sdkRoot = createSdkRoot("sdks");
 		const dart300 = path.join(sdkRoot, "dart-3.0.0");
 		const currentDart = path.join(sdkRoot, "dart-current");
