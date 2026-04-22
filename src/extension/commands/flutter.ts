@@ -374,7 +374,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		return projectFolderUri;
 	}
 
-	private async promptForNameWithSettings(defaultName: string, folderPath: string): Promise<string | undefined> {
+	public async promptForNameWithSettings(defaultName: string, folderPath: string): Promise<string | undefined> {
 		while (true) {
 			const response = await showInputBoxWithSettings(
 				this.context,

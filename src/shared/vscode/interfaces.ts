@@ -99,6 +99,7 @@ export interface FlutterCommandHandler {
 	writeDefaultLaunchJson(projectPath: string): void;
 	getFlutterTemplates(): Array<QuickPickItem & { template?: FlutterProjectTemplate }>;
 	getCurrentFlutterCreateSettings(): PickableSetting[];
+	promptForNameWithSettings(defaultName: string, folderPath: string): Promise<string | undefined>;
 }
 
 export interface InternalExtensionApi {

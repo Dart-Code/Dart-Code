@@ -194,7 +194,7 @@ describe("dart cli debugger", () => {
 	});
 
 	it("resolves program as bin/(project_name).dart if no file is open/provided", async () => {
-		// Rename bin/main to bin/hello_world to similate what 'dart create' does.
+		// Rename bin/main to bin/hello_world to simulate what 'dart create' does.
 		const helloWorldHelloWorldFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "bin/hello_world.dart"));
 		renameSync(fsPath(helloWorldMainFile), fsPath(helloWorldHelloWorldFile));
 		defer("Restore main file", () => renameSync(fsPath(helloWorldHelloWorldFile), fsPath(helloWorldMainFile)));
