@@ -402,7 +402,7 @@ export class DevToolsManager implements vs.Disposable {
 	private getDefaultQueryParams(): Record<string, string | undefined> {
 		return {
 			cacheBust: this.getCacheBust(),
-			ide: "VSCode",
+			ide: vs.env.appName,
 		};
 	}
 

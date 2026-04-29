@@ -181,6 +181,23 @@ describe("Survey notification", async () => {
 		assert.equal(lastShown && lastShown > Date.now() - 10000 && lastShown <= Date.now(), true);
 	});
 
+	it("URL-encodes query parameters", async () => {
+		const showInformationMessage = sb.stub(vs.window, "showInformationMessage");
+		showInformationMessage.withArgs(matchPrompt, sinon.match.any).resolves(takeSurveyAction);
+
+		sb.stub(vs.env, "appName").value("Danny's Super Editor?/Beta");
+		sb.stub(privateApi.workspaceContext.sdks, "dartVersion").get(() => "3.4.0 dev+1");
+		sb.stub(privateApi.workspaceContext.sdks, "flutterVersion").get(() => "3.22.0 (custom)");
+
+		const openBrowserCommand = sb.stub(privateApi.envUtils, "openInBrowser").resolves();
+
+		const res = await showFlutterSurveyNotificationIfAppropriate(privateApi.context, privateApi.webClient, mockAnalytics, privateApi.workspaceContext, (url) => privateApi.envUtils.openInBrowser(url), surveyIsOpenDate, logger);
+
+		assert.equal(res, true);
+		await waitFor(() => openBrowserCommand.calledOnce);
+		assert.equal(openBrowserCommand.firstCall.args[0], "https://example.org/?Source=Danny's%20Super%20Editor%3F%2FBeta&DartVersion=3.4.0%20dev%2B1&FlutterVersion=3.22.0%20(custom)");
+	});
+
 	it("shows and updates context values when already seen", async () => {
 		const context = privateApi.context;
 		context.setFlutterSurveyNotificationLastShown(flutterTestSurveyID, surveyIsOpenDate - (longRepeatPromptThreshold + twoHoursInMs));
