@@ -43,14 +43,16 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	if (lastShown && now - lastShown < longRepeatPromptThreshold)
 		return false;
 
-	const queryData = ["Source=VSCode"];
+	const queryData = [{ key: "Source", value: vs.env.appName }];
 	if (workspaceContext.sdks.dartVersion)
-		queryData.push(`DartVersion=${workspaceContext.sdks.dartVersion}`);
+		queryData.push({ key: "DartVersion", value: workspaceContext.sdks.dartVersion });
 	if (workspaceContext.sdks.flutterVersion)
-		queryData.push(`FlutterVersion=${workspaceContext.sdks.flutterVersion}`);
+		queryData.push({ key: "FlutterVersion", value: workspaceContext.sdks.flutterVersion });
 
 	const firstQsSep = surveyData.url.includes("?") ? "&" : "?";
-	const surveyUrl = `${surveyData.url}${firstQsSep}${queryData.join("&")}`;
+	const surveyUrl = `${surveyData.url}${firstQsSep}${queryData
+		.map(({ key, value }) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+		.join("&")}`;
 
 	// Mark the last time we've shown it (now) so we can avoid showing again for
 	// 40 hours.
