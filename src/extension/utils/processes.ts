@@ -37,9 +37,7 @@ export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnal
 		toolEnv = Object.assign(toolEnv, envOverrides);
 
 	toolEnv.FLUTTER_HOST = "VSCode";
-	toolEnv.PUB_ENVIRONMENT = (toolEnv.PUB_ENVIRONMENT ? `${toolEnv.PUB_ENVIRONMENT}:` : "") + "vscode.dart-code";
 	if (isDartCodeTestRun) {
-		toolEnv.PUB_ENVIRONMENT += ".test.bot";
 		globalFlutterArgs.push("--suppress-analytics");
 	}
 
