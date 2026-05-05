@@ -48,13 +48,13 @@ export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnal
 		toolEnv.FLUTTER_ROOT = flutterRoot;
 
 	// Add the names/versions of each part of the tool.
-	toolEnv.DASH__IDE_NAME = dashIdeName;
-	toolEnv.DASH__IDE_VERSION = dashIdeVersion;
-	toolEnv.DASH__PLUGIN_NAME = dashPluginName;
-	toolEnv.DASH__PLUGIN_VERSION = dashPluginVersion;
-	toolEnv.DASH__IDE_ENVIRONMENT = dashIdeEnvironment;
+	toolEnv.DASH__IDE_NAME = dashIdeName();
+	toolEnv.DASH__IDE_VERSION = dashIdeVersion();
+	toolEnv.DASH__PLUGIN_NAME = dashPluginName();
+	toolEnv.DASH__PLUGIN_VERSION = dashPluginVersion();
+	toolEnv.DASH__IDE_ENVIRONMENT = dashIdeEnvironment();
 	// And those for unified analytics.
-	toolEnv.DASH__TOOL = dashTool; // This matches the "label" of the enum constant DashTool defined in unified analytics.
+	toolEnv.DASH__TOOL = dashTool(); // This matches the "label" of the enum constant DashTool defined in unified analytics.
 	toolEnv.DASH__SUPPRESS_ANALYTICS = `${suppressAnalytics}`; // This should be a string bool parsed with bool.parse() in Dart.
 }
 
