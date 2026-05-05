@@ -14,9 +14,26 @@ export const ANALYSIS_FILTERS: DocumentSelector = [
 	ANALYSIS_OPTIONS_FILTER,
 ];
 
-export const dashIdeName = env.appName;
-export const dashIdeVersion = vsVersion;
-export const dashIdeEnvironment = hostKind ?? "desktop";
-export const dashPluginName = "Dart-Code";
-export const dashPluginVersion = extensionVersion;
-export const dashTool = "vscode-plugins";
+export function dashIdeName() {
+	return env.appName;
+}
+
+export function dashIdeVersion() {
+	return vsVersion;
+}
+
+export function dashIdeEnvironment() {
+	return hostKind ?? "desktop";
+}
+
+export function dashPluginName() {
+	return "Dart-Code";
+}
+
+export function dashPluginVersion() {
+	return extensionVersion;
+}
+
+export function dashTool() {
+	return "vscode-plugins";
+}

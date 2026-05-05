@@ -44,7 +44,7 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	if (lastShown && now - lastShown < longRepeatPromptThreshold)
 		return false;
 
-	const queryData = [{ key: "Source", value: dashIdeName }];
+	const queryData = [{ key: "Source", value: dashIdeName() }];
 	if (workspaceContext.sdks.dartVersion)
 		queryData.push({ key: "DartVersion", value: workspaceContext.sdks.dartVersion });
 	if (workspaceContext.sdks.flutterVersion)

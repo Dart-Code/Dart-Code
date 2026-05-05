@@ -406,8 +406,8 @@ export class DevToolsManager implements vs.Disposable {
 			// related DevTools change ships.
 			// https://github.com/flutter/devtools/issues/9811
 			ide: "VSCode",
-			dashTool,
-			dashIdeName,
+			dashTool: dashTool(),
+			dashIdeName: dashIdeName(),
 		};
 	}
 
