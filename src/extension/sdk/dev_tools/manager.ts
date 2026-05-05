@@ -16,7 +16,7 @@ import { DartToolingDaemon } from "../../../shared/services/tooling_daemon";
 import { disposeAll, notUndefined, usingCustomScript, versionIsAtLeast } from "../../../shared/utils";
 import { getRandomInt } from "../../../shared/utils/fs";
 import { waitFor } from "../../../shared/utils/promises";
-import { ANALYSIS_FILTERS } from "../../../shared/vscode/constants";
+import { ANALYSIS_FILTERS, dashIdeName, dashTool } from "../../../shared/vscode/constants";
 import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
 import { getLanguageStatusItem } from "../../../shared/vscode/status_bar";
 import { envUtils, getAllProjectFolders, isRunningLocally } from "../../../shared/vscode/utils";
@@ -402,7 +402,12 @@ export class DevToolsManager implements vs.Disposable {
 	private getDefaultQueryParams(): Record<string, string | undefined> {
 		return {
 			cacheBust: this.getCacheBust(),
-			ide: vs.env.appName,
+			// The legacy IDE param should be kept for at least two years after the
+			// related DevTools change ships.
+			// https://github.com/flutter/devtools/issues/9811
+			ide: "VSCode",
+			dashTool,
+			dashIdeName,
 		};
 	}
 
