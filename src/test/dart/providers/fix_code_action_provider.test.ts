@@ -78,7 +78,9 @@ main() {
 			this.skip();
 		}
 
-		const functionBody = versionIsAtLeast(privateApi.dartCapabilities.version, "3.12.0-0") ? "" : "\n";
+		// TODO(dantup): This was failing in 3.12.0-327.4.beta even though it seems like the change was included, so
+		//  use a version above that and we'll see how it goes.
+		const functionBody = versionIsAtLeast(privateApi.dartCapabilities.version, "3.12.328-0") ? "" : "\n";
 		await ensureTestContent(`
 main() {
 	missing();
