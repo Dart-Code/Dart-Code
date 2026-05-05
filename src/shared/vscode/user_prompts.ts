@@ -5,6 +5,7 @@ import { CommandSource, alwaysOpenAction, doNotAskAgainAction, flutterSurveyData
 import { WebClient } from "../fetch";
 import { Analytics, FlutterRawSurveyData, FlutterSurveyData, Logger } from "../interfaces";
 import { WorkspaceContext } from "../workspace";
+import { dashIdeName } from "./constants";
 import { envUtils, isRunningLocally } from "./utils";
 import { Context } from "./workspace";
 
@@ -43,7 +44,7 @@ export async function showFlutterSurveyNotificationIfAppropriate(context: Contex
 	if (lastShown && now - lastShown < longRepeatPromptThreshold)
 		return false;
 
-	const queryData = [{ key: "Source", value: vs.env.appName }];
+	const queryData = [{ key: "Source", value: dashIdeName }];
 	if (workspaceContext.sdks.dartVersion)
 		queryData.push({ key: "DartVersion", value: workspaceContext.sdks.dartVersion });
 	if (workspaceContext.sdks.flutterVersion)

@@ -2,8 +2,7 @@ import * as vs from "vscode";
 import { isDartCodeTestRun } from "../../shared/constants";
 import { Logger, SpawnedProcess } from "../../shared/interfaces";
 import { RunProcessResult, runProcess, safeSpawn } from "../../shared/processes";
-import { extensionVersion } from "../../shared/vscode/extension_utils";
-import { hostKind } from "../../shared/vscode/utils";
+import { dashIdeEnvironment, dashIdeName, dashIdeVersion, dashPluginName, dashPluginVersion, dashTool } from "../../shared/vscode/constants";
 
 // Environment used when spawning Dart and Flutter processes.
 let flutterRoot: string | undefined;
@@ -49,13 +48,13 @@ export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnal
 		toolEnv.FLUTTER_ROOT = flutterRoot;
 
 	// Add the names/versions of each part of the tool.
-	toolEnv.DASH__IDE_NAME = vs.env.appName;
-	toolEnv.DASH__IDE_VERSION = vs.version;
-	toolEnv.DASH__PLUGIN_NAME = "Dart-Code";
-	toolEnv.DASH__PLUGIN_VERSION = extensionVersion;
-	toolEnv.DASH__IDE_ENVIRONMENT = hostKind ?? "desktop";
+	toolEnv.DASH__IDE_NAME = dashIdeName;
+	toolEnv.DASH__IDE_VERSION = dashIdeVersion;
+	toolEnv.DASH__PLUGIN_NAME = dashPluginName;
+	toolEnv.DASH__PLUGIN_VERSION = dashPluginVersion;
+	toolEnv.DASH__IDE_ENVIRONMENT = dashIdeEnvironment;
 	// And those for unified analytics.
-	toolEnv.DASH__TOOL = "vscode-plugins"; // This matches the "label" of the enum constant DashTool defined in unified analytics.
+	toolEnv.DASH__TOOL = dashTool; // This matches the "label" of the enum constant DashTool defined in unified analytics.
 	toolEnv.DASH__SUPPRESS_ANALYTICS = `${suppressAnalytics}`; // This should be a string bool parsed with bool.parse() in Dart.
 }
 

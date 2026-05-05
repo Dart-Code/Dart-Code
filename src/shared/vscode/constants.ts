@@ -1,5 +1,6 @@
-import { DocumentFilter, DocumentSelector } from "vscode";
-
+import { DocumentFilter, DocumentSelector, env, version as vsVersion } from "vscode";
+import { extensionVersion } from "./extension_utils";
+import { hostKind } from "./utils";
 
 export const DART_LANGUAGE = "dart";
 export const DART_MODE: DocumentFilter[] = [
@@ -12,3 +13,10 @@ export const ANALYSIS_FILTERS: DocumentSelector = [
 	PUBSPEC_FILTER,
 	ANALYSIS_OPTIONS_FILTER,
 ];
+
+export const dashIdeName = env.appName;
+export const dashIdeVersion = vsVersion;
+export const dashIdeEnvironment = hostKind ?? "desktop";
+export const dashPluginName = "Dart-Code";
+export const dashPluginVersion = extensionVersion;
+export const dashTool = "vscode-plugins";
