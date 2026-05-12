@@ -102,7 +102,7 @@ export class DevToolsManager implements vs.Disposable {
 					views = devToolsEmbeddedViews[page.id] = [];
 
 				if (!views.length) {
-					views.push(new SidebarDevTools(page, this, this.dartCapabilities));
+					views.push(new SidebarDevTools(page, this, this.dartCapabilities, logger));
 				}
 			}
 		}
@@ -377,14 +377,17 @@ export class DevToolsManager implements vs.Disposable {
 				queryParams.embed = "true";
 			queryParams.embedMode = "one";
 			const fullUrls = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
-			const exposedUrls = await exposeWebViewUrls(fullUrls);
+			const exposedUrls = await exposeWebViewUrls(fullUrls, this.logger);
 
 			const pageInfo = page ?? { id: pageId, title: pageId.replace(/_ext$/, "") };
 			await this.launchInEmbeddedWebView(exposedUrls, session, pageInfo, options.location, options.triggeredAutomatically, forceShow);
 		} else {
 			const fullUrls = await this.buildDevToolsUrl(url, queryParams, vmServiceUri, session?.clientVmServiceUri);
-			// For the browser, we don't care about auth URLs.
-			await envUtils.openInBrowser(fullUrls.viewUrl, this.logger);
+			// For the browser, we don't care about auth URLs, but call exposeUrl so we get better logging because
+			// "Open DevTools in Browser" is a convenient way to help troubleshoot URL mapping issues like
+			// https://github.com/flutter/devtools/issues/9827
+			const exposedUrl = await envUtils.exposeUrl(fullUrls.viewUrl, this.logger);
+			await envUtils.openInBrowser(exposedUrl, this.logger);
 		}
 	}
 
@@ -484,7 +487,7 @@ export class DevToolsManager implements vs.Disposable {
 		if (!frame) {
 			if (location === "sidebar")
 				location = "beside"; // Unsupported sidebar config or view was somehow not pre-populated in frames.
-			frame = new DevToolsEmbeddedView(session, urls.viewUrl, pageTitle, location);
+			frame = new DevToolsEmbeddedView(this.logger, session, urls.viewUrl, pageTitle, location);
 			frame.onDispose(() => {
 				if (!frame) return;
 				const index = views.indexOf(frame);

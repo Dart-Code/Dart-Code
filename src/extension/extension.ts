@@ -623,9 +623,9 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	}
 
 	if (dartToolingDaemon && dartCapabilities.supportsDevToolsDtdSidebar)
-		context.subscriptions.push(new FlutterDtdSidebar(devTools, dartCapabilities));
+		context.subscriptions.push(new FlutterDtdSidebar(devTools, dartCapabilities, logger));
 	else
-		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities));
+		context.subscriptions.push(new FlutterPostMessageSidebar(devTools, deviceManager, dartCapabilities, logger));
 
 	let mcpServerProvider: DartMcpServerDefinitionProvider | undefined;
 	if (vs.lm.registerMcpServerDefinitionProvider) {
@@ -654,7 +654,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 	if (dartToolingDaemon && (dartCapabilities.supportsDevToolsPropertyEditor || config.experimentalPropertyEditor)) {
 		void vs.commands.executeCommand("setContext", FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, true);
-		context.subscriptions.push(new PropertyEditor(devTools, dartCapabilities));
+		context.subscriptions.push(new PropertyEditor(devTools, dartCapabilities, logger));
 	} else {
 		void vs.commands.executeCommand("setContext", FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, false);
 	}

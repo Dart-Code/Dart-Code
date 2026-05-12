@@ -1,3 +1,4 @@
+import { Logger } from "../../shared/interfaces";
 import { envUtils } from "../../shared/vscode/utils";
 import { requiresAuthIframes } from "../../shared/vscode/utils_cloud";
 
@@ -51,11 +52,11 @@ export interface WebViewUrls {
 /// HTTP(S) urls for using in the auth iframe.
 ///
 /// If the current platform doesn't require auth URLs, authUrls will be dropped.
-export async function exposeWebViewUrls(urls: WebViewUrls): Promise<WebViewUrls> {
+export async function exposeWebViewUrls(urls: WebViewUrls, logger: Logger): Promise<WebViewUrls> {
 	return {
-		viewUrl: await envUtils.exposeUrl(urls.viewUrl),
+		viewUrl: await envUtils.exposeUrl(urls.viewUrl, logger),
 		authUrls: urls.authUrls?.length && requiresAuthIframes()
-			? await Promise.all(urls.authUrls.map(computeAuthFrameUri).map((url) => envUtils.exposeUrl(url)))
+			? await Promise.all(urls.authUrls.map(computeAuthFrameUri).map((url) => envUtils.exposeUrl(url, logger)))
 			: undefined,
 	};
 }

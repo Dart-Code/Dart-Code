@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { CommandSource } from "../../../shared/constants";
 import { SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX } from "../../../shared/constants.contexts";
-import { DevToolsPage } from "../../../shared/interfaces";
+import { DevToolsPage, Logger } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { DevToolsEmbeddedViewOrSidebarView } from "../../sdk/dev_tools/embedded_view";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
@@ -32,12 +32,13 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 	constructor(
 		readonly page: DevToolsPage,
 		readonly devTools: DevToolsManager,
-		readonly dartCapabilities: DartCapabilities,
+		dartCapabilities: DartCapabilities,
+		logger: Logger,
 	) {
 		super(undefined);
 
 		void vs.commands.executeCommand("setContext", `${SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX}${this.page.id}`, true);
-		this.webViewProvider = new MyWebViewProvider(this, this.page.title, devTools, dartCapabilities);
+		this.webViewProvider = new MyWebViewProvider(this, this.page.title, devTools, dartCapabilities, logger);
 		this.disposables.push(this.webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider(`sidebarDevTools${this.page.commandSuffix}`, this.webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 
@@ -100,8 +101,9 @@ class MyWebViewProvider extends MyBaseWebViewProvider {
 		private readonly name: string,
 		readonly devTools: DevToolsManager,
 		readonly dartCapabilities: DartCapabilities,
+		readonly logger: Logger,
 	) {
-		super(devTools, dartCapabilities);
+		super(devTools, dartCapabilities, logger);
 	}
 
 	public async resolveWebviewView(webviewView: vs.WebviewView, context: vs.WebviewViewResolveContext<unknown>, token: vs.CancellationToken): Promise<void> {

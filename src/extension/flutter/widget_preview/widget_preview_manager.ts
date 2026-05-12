@@ -86,7 +86,7 @@ export class FlutterWidgetPreviewManager implements IAmDisposable {
 				viewUrl: await server.previewUrl,
 				authUrls: dtdUri ? [dtdUri] : undefined,
 			};
-			completer.resolve(await exposeWebViewUrls(previewUrls));
+			completer.resolve(await exposeWebViewUrls(previewUrls, this.logger));
 		} catch (e) {
 			const message = `Flutter Widget Preview: ${e}`;
 			this.logger.error(message);

@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { DartCapabilities } from "../../../../shared/capabilities/dart";
 import { CommandSource } from "../../../../shared/constants";
-import { IAmDisposable } from "../../../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../../../shared/interfaces";
 import { disposeAll } from "../../../../shared/utils";
 import { FlutterDeviceManager } from "../../../../shared/vscode/device_manager";
 import { envUtils } from "../../../../shared/vscode/utils";
@@ -13,11 +13,12 @@ export class FlutterPostMessageSidebar implements IAmDisposable {
 	protected readonly disposables: vs.Disposable[] = [];
 
 	constructor(
-		readonly devTools: DevToolsManager,
-		readonly deviceManager: FlutterDeviceManager | undefined,
+		devTools: DevToolsManager,
+		deviceManager: FlutterDeviceManager | undefined,
 		dartCapabilities: DartCapabilities,
+		logger: Logger,
 	) {
-		const webViewProvider = new MyWebViewProvider(devTools, deviceManager, dartCapabilities);
+		const webViewProvider = new MyWebViewProvider(devTools, deviceManager, dartCapabilities, logger);
 		this.disposables.push(webViewProvider);
 		this.disposables.push(vs.window.registerWebviewViewProvider("dartFlutterSidebar", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
@@ -36,6 +37,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		private readonly devTools: DevToolsManager,
 		private readonly deviceManager: FlutterDeviceManager | undefined,
 		private readonly dartCapabilities: DartCapabilities,
+		private readonly logger: Logger,
 	) { }
 
 	public dispose(): any {
@@ -58,7 +60,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 			return;
 		}
 
-		sidebarUrl = await envUtils.exposeUrl(sidebarUrl);
+		sidebarUrl = await envUtils.exposeUrl(sidebarUrl, this.logger);
 		const sidebarUri = URI.parse(sidebarUrl);
 		const frameOrigin = `${sidebarUri.scheme}://${sidebarUri.authority}`;
 		const embedFlags = this.dartCapabilities.requiresDevToolsEmbedFlag ? "embed=true&embedMode=one" : "embedMode=one";
