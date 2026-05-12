@@ -269,7 +269,7 @@ class EnvUtils {
 		return vsEnv.openExternal(Uri.parse(url));
 	}
 
-	public async exposeUrl(urlString: string, logger: Logger = nullLogger): Promise<string> {
+	public async exposeUrl(urlString: string, logger: Logger): Promise<string> {
 		const uri = vs.Uri.parse(urlString, true);
 		logger.info(`Exposing URL: ${uri.toString()}`);
 		const isWebSocket = uri.scheme === "ws" || uri.scheme === "wss";

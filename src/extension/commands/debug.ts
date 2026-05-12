@@ -166,7 +166,7 @@ export class DebugCommands implements IAmDisposable {
 
 			for (const debugSession of debugSessions) {
 				const vmServiceUri = debugSession.vmServiceUri;
-				let exposedVmServiceUri = debugSession.clientVmServiceUri ?? (vmServiceUri ? await envUtils.exposeUrl(vmServiceUri) : undefined);
+				let exposedVmServiceUri = debugSession.clientVmServiceUri ?? (vmServiceUri ? await envUtils.exposeUrl(vmServiceUri, this.logger) : undefined);
 				if (exposedVmServiceUri === vmServiceUri)
 					exposedVmServiceUri = undefined;
 

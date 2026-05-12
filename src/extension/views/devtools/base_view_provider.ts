@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
+import { Logger } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { envUtils } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
@@ -13,6 +14,7 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 	constructor(
 		protected readonly devTools: DevToolsManager,
 		protected readonly dartCapabilities: DartCapabilities,
+		protected readonly logger: Logger,
 	) { }
 
 	abstract get pageName(): string;
@@ -65,7 +67,7 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 		if (!urls)
 			return;
 
-		urls = await exposeWebViewUrls(urls);
+		urls = await exposeWebViewUrls(urls, this.logger);
 		void this.webviewView?.webview.postMessage({ command: "_dart-code.setUrls", urls });
 	}
 

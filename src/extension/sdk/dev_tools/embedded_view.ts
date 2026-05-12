@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { Event, EventEmitter } from "../../../shared/events";
-import { IAmDisposable } from "../../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../../shared/interfaces";
 import { DartDebugSessionInformation } from "../../../shared/vscode/interfaces";
 import { envUtils, firstNonEditorColumn } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
@@ -141,7 +141,13 @@ export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
 	private readonly panel: vs.WebviewPanel;
 	private messageDisposable: vs.Disposable;
 
-	constructor(session: DartDebugSessionInformation | undefined, readonly devToolsUri: string, readonly pageTitle: string, location: "beside" | "active" | undefined) {
+	constructor(
+		readonly logger: Logger,
+		session: DartDebugSessionInformation | undefined,
+		readonly devToolsUri: string,
+		readonly pageTitle: string,
+		location: "beside" | "active" | undefined,
+	) {
 		super(session);
 
 		const column = location === "active"
@@ -175,7 +181,7 @@ export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
 	}
 
 	public async setUrls(urls: WebViewUrls): Promise<void> {
-		urls = await exposeWebViewUrls(urls);
+		urls = await exposeWebViewUrls(urls, this.logger);
 		void this.panel.webview.postMessage({ command: "setUrls", urls });
 		this.panel.reveal();
 	}

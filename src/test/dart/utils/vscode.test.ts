@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
+import { nullLogger } from "../../../shared/logging";
 import { buildHostKind, envUtils } from "../../../shared/vscode/utils";
 import { sb } from "../../helpers";
 
@@ -147,6 +148,6 @@ describe("exposeUrl", () => {
 });
 
 async function testMap(url: string, expected: string): Promise<void> {
-	const mappedUri = await envUtils.exposeUrl(url);
+	const mappedUri = await envUtils.exposeUrl(url, nullLogger);
 	assert.equal(mappedUri, expected);
 }
