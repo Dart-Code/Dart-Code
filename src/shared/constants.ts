@@ -142,6 +142,7 @@ export const tenSecondsInMs = 1000 * 10;
 export const twentySecondsInMs = 1000 * 20;
 export const thirtySecondsInMs = 1000 * 30;
 
+export const twoMinutesInMs = 1000 * 60 * 2;
 export const fiveMinutesInMs = 1000 * 60 * 5;
 export const tenMinutesInMs = 1000 * 60 * 10;
 
