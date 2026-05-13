@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vs from "vscode";
 import { ProgressLocation } from "vscode";
 import { DaemonCapabilities, FlutterCapabilities } from "../../shared/capabilities/flutter";
-import { ExtensionRestartReason, flutterPath, isChromeOS, isDartCodeTestRun, isMac, tenMinutesInMs, twentySecondsInMs } from "../../shared/constants";
+import { ExtensionRestartReason, flutterPath, isChromeOS, isDartCodeTestRun, isMac, tenMinutesInMs, twentySecondsInMs, twoMinutesInMs } from "../../shared/constants";
 import { FLUTTER_SUPPORTS_ATTACH } from "../../shared/constants.contexts";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
@@ -304,7 +304,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async getEmulators(): Promise<f.FlutterEmulator[]> {
 		await this.daemonInitialized;
-		return this.withRecordedTimeout("emulator.getEmulators", this.sendRequest("emulator.getEmulators"));
+		return this.withRecordedTimeout("emulator.getEmulators", this.sendRequest("emulator.getEmulators"), []);
 	}
 
 	public launchEmulator(emulatorId: string, coldBoot: boolean): Thenable<void> {
@@ -317,7 +317,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	public async getSupportedPlatforms(projectRoot: string): Promise<f.SupportedPlatformsResponse> {
 		await this.daemonInitialized;
-		return this.withRecordedTimeout("daemon.getSupportedPlatforms", this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }));
+		return this.withRecordedTimeout("daemon.getSupportedPlatforms", this.sendRequest("daemon.getSupportedPlatforms", { projectRoot }), { platforms: [], platformTypes: {} });
 	}
 
 	public serveDevTools(): Thenable<f.ServeDevToolsResponse> {
@@ -337,32 +337,29 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		]);
 	}
 
-	private async withRecordedTimeout<T>(requestMethod: string, promise: Thenable<T>): Promise<T> {
-		// Don't use timeout unless we haven't shown the message before and we know
-		// we have fully started up (so we don't false trigger during slow startups
-		// caused by SDK upgrades, etc.).
-		const recordTimeouts = this.hasStarted && !this.hasLoggedDaemonTimeout && !this.isShuttingDown && !this.processExited;
-		if (!recordTimeouts)
-			return promise; // Short-cut creating the timer.
+	private async withRecordedTimeout<T>(requestMethod: string, promise: Thenable<T>, defaultValue: T): Promise<T> {
+		const callerTimeoutMs = twentySecondsInMs;
+		const hangTimeoutMs = twoMinutesInMs;
+		let hangTimeoutTimer: NodeJS.Timeout | undefined;
 
-		return new Promise<T>((resolve, reject) => {
-			const timeoutMs = twentySecondsInMs;
-
-			// Set a timer to record if the request doesn't respond fast enough.
-			const timeoutTimer = setTimeout(() => {
+		// Only treat a slow response as a daemon hang if we've fully started up and
+		// have not already recorded a timeout for this session.
+		const shouldRecordTimeouts = this.hasStarted && !this.hasLoggedDaemonTimeout && !this.isShuttingDown && !this.processExited;
+		if (shouldRecordTimeouts) {
+			hangTimeoutTimer = setTimeout(() => {
 				const uptimeSeconds = this.startTime ? (Date.now() - this.startTime.getTime()) / 1000 : -1;
 
 				// Always write to the log.
-				this.logger.error(`Request "${requestMethod}" to daemon was not responded to within ${timeoutMs}ms. Daemon has been up for ${uptimeSeconds}s when this timeout fired."`);
+				this.logger.error(`Request "${requestMethod}" to daemon was not responded to within ${(hangTimeoutMs / 1000).toFixed(0)}s. Daemon has been up for ${uptimeSeconds}s when this timeout fired.`);
 
-				const recordTimeouts = this.hasStarted && !this.hasLoggedDaemonTimeout && !this.isShuttingDown && !this.processExited;
-				if (recordTimeouts) {
-					this.analytics.logErrorFlutterDaemonTimeout(requestMethod);
+				const stillShouldRecordTimeouts = this.hasStarted && !this.hasLoggedDaemonTimeout && !this.isShuttingDown && !this.processExited;
+				if (stillShouldRecordTimeouts) {
 					this.hasLoggedDaemonTimeout = true;
+					this.analytics.logErrorFlutterDaemonTimeout(requestMethod);
 
 					if (isMac) {
 						void promptToReloadExtension(this.logger, {
-							prompt: `The Flutter daemon did not respond to a request within ${(timeoutMs / 1000).toFixed(0)}s. Please post any "FlutterDaemon" errors from the log to [this GitHub issue](https://github.com/Dart-Code/Dart-Code/issues/5793#issuecomment-3527504661).`,
+							prompt: `The Flutter daemon did not respond to a request within ${(hangTimeoutMs / 1000).toFixed(0)}s. Please post any "FlutterDaemon" errors from the log to [this GitHub issue](https://github.com/Dart-Code/Dart-Code/issues/5793#issuecomment-3527504661).`,
 							offerLog: true,
 							severity: "WARNING",
 							specificLog: config.flutterDaemonLogFile,
@@ -370,15 +367,22 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 						});
 					}
 				}
-			}, timeoutMs);
+			}, hangTimeoutMs).unref();
+		}
+
+		return new Promise<T>((resolve, reject) => {
+			// If we hit the timeout, return the default value.
+			const defaultTimer = setTimeout(() => resolve(defaultValue), callerTimeoutMs).unref();
 
 			promise.then(
 				(result) => {
-					clearTimeout(timeoutTimer);
+					clearTimeout(defaultTimer);
+					clearTimeout(hangTimeoutTimer);
 					resolve(result);
 				},
 				(e) => {
-					clearTimeout(timeoutTimer);
+					clearTimeout(defaultTimer);
+					clearTimeout(hangTimeoutTimer);
 					reject(e);
 				},
 			);
