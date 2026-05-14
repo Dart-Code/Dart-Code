@@ -159,7 +159,7 @@ export class AutoLaunch implements IAmDisposable {
 
 				// Otherwise, retry.
 				this.logger.info(`[AutoLaunch] Failed to connect to VM Service, will retry: ${error}`);
-				await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+				await new Promise((resolve) => setTimeout(resolve, retryDelayMs).unref());
 			}
 		}
 

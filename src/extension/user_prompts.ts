@@ -40,7 +40,7 @@ export async function showUserPrompts(logger: Logger, context: Context, webClien
 		// It's possible that we got here when the user installed the Flutter extension, because it causes Dart to install
 		// first and activate. So, before showing this prompt we'll wait 30 seconds and then check if we still don't
 		// have the Flutter extension, and then show the prompt.
-		await new Promise((resolve) => setTimeout(resolve, 20000));
+		await new Promise((resolve) => setTimeout(resolve, 20000).unref());
 		if (!checkHasFlutterExtension())
 			return showPrompt(installFlutterExtensionPromptKey, () => extensionRecommendations.promptToInstallFlutterExtension());
 	}

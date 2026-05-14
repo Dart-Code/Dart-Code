@@ -305,7 +305,7 @@ export class PackageCommands extends BaseSdkCommands {
 		isFetchingPackages = true;
 		// VS Code will hide any prompt after 10seconds, so if the user didn't respond within 10s we assume this prompt is not
 		// going to be responded to and should clear the flag to avoid run-pub-get-on-save not working.
-		setTimeout(() => isFetchingPackages = false, tenSecondsInMs);
+		setTimeout(() => isFetchingPackages = false, tenSecondsInMs).unref();
 
 		// TODO: Extract this into a Pub class with the things in pub.ts.
 
