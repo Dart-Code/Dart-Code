@@ -212,14 +212,23 @@ export class Analytics implements IAmDisposable {
 
 		// If the API isn't supported (Theia) then we'll just not set anything up.
 		if (!env.createTelemetryLogger) {
-			this.logger.info(`createTelemetryLogger is unsupported`);
+			this.logger.info("createTelemetryLogger is unsupported");
+			return;
+		}
+
+		// Check if the user has set the DO_NOT_TRACK env var.
+		// https://donottrack.sh/
+		if (process.env.DO_NOT_TRACK === "1") {
+			this.logger.info("User is opted out via DO_NOT_TRACK env var");
 			return;
 		}
 
 		// Similarly, if the user has opted out of Dart/Flutter's telemetry, we should assume they might
 		// (reasonably) expect that covers this extension, so don't set anything up in that case either.
-		if (this.isOptedOutOfDartToolingTelemetry())
+		if (this.isOptedOutOfDartToolingTelemetry()) {
+			this.logger.info("User is opted out of Dart tooling analytics");
 			return;
+		}
 
 		if (!env.isTelemetryEnabled) {
 			this.logger.info(`VS Code telemetry is disabled, analytics events will not be sent unless re-enabled`);
