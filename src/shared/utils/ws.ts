@@ -20,7 +20,7 @@ export function attachPing(socket: ws.WebSocket, pingInterval = 15000) {
 			} else {
 				clear();
 			}
-		}, pingInterval);
+		}, pingInterval).unref();
 
 		const clear = () => {
 			clearInterval(timer);

@@ -99,7 +99,7 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 				this.hasShownTerminatedError = true;
 				void promptToReloadExtension(this.logger, { prompt, restartReason: ExtensionRestartReason.FlutterDaemonTerminatedPing });
 			}
-		}, 60 * 1000);
+		}, 60 * 1000).unref();
 	}
 
 	// This is for the case where a user has started a flutter daemon process on their local machine where devices are available, and
@@ -139,6 +139,9 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 	private lastShownTerminatedError: number | undefined;
 	private readonly noRepeatTerminatedErrorThresholdMs = tenMinutesInMs;
 	private showTerminatedError(message: string) {
+		if (this.isShuttingDown)
+			return;
+
 		// Don't show this notification if we've shown it recently.
 		if (this.lastShownTerminatedError && Date.now() - this.lastShownTerminatedError < this.noRepeatTerminatedErrorThresholdMs)
 			return;
