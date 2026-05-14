@@ -379,16 +379,16 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		// Analysis started for the first time.
 		if (status.isAnalyzing && !analysisStartTime) {
 			analysisStartTime = new Date();
-
-			// VS Code sorts most recently registered code actions at the top when all else is equal, so don't
-			// register this one until we know the LSP server has started up, so this appears above ignores etc.
-			const addDependencyCodeActionProvider = new AddDependencyCodeActionProvider(DART_MODE);
-			context.subscriptions.push(vs.languages.registerCodeActionsProvider([...DART_MODE], addDependencyCodeActionProvider, addDependencyCodeActionProvider.metadata));
 		}
 
 		// Analysis ends for the first time.
 		if (!status.isAnalyzing && analysisStartTime) {
 			void analysisCompleteEvents.dispose();
+
+			// VS Code sorts most recently registered code actions at the top when all else is equal, so don't
+			// register this one until we know the LSP server has started up, so this appears above ignores etc.
+			const addDependencyCodeActionProvider = new AddDependencyCodeActionProvider(DART_MODE);
+			context.subscriptions.push(vs.languages.registerCodeActionsProvider([...DART_MODE], addDependencyCodeActionProvider, addDependencyCodeActionProvider.metadata));
 		}
 	});
 
