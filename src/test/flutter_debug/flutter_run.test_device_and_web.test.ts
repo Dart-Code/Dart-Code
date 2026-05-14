@@ -46,10 +46,13 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 	/// If we restart too fast, things fail :-/
 	const delayBeforeRestart = () => delay(500);
 
-	it("runs and remains active until told to quit", async () => {
+	it("runs, collects expected output, and remains active until told to quit", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on ${deviceName} in debug mode...\n`),
+			dc.assertOutputContains("stdout", "Hello, world!"),
+			dc.assertOutputContains("console", "Logging from dart:developer!"),
+			dc.assertOutputContains("console", "<<end_of_long_line>>"),
 			dc.flutterAppStarted(),
 			dc.configurationSequence(),
 			dc.launch(config),
@@ -63,28 +66,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
-	});
-
-	it("expected debugger services/extensions are available in debug mode", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === true, "Hot reload registered");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === true, "Debug paint loaded");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === true, "Debug banner loaded");
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
 
 	it("expected debugger services/extensions are available in noDebug mode", async () => {
@@ -114,7 +95,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === false, "Debug banner unloaded");
 	});
 
-	it("expected debugger services/extensions are available after a hot restart", async () => {
+	it("expected debugger services/extensions are available in debug mode and after a hot restart", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
@@ -164,22 +145,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			]),
 			new Promise((resolve, reject) => setTimeout(() => reject(new Error("Did not complete terminateRequest within 5s")), 5000)),
 		]);
-	});
-
-	it("receives the expected output", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.assertOutputContains("stdout", "Hello, world!"),
-			dc.assertOutputContains("console", "Logging from dart:developer!"),
-			dc.assertOutputContains("console", "<<end_of_long_line>>"),
-			dc.launch(config),
-		);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
 	});
 
 	const numReloads = 1;
@@ -897,24 +862,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("writes exception to output", async () => {
-		await openFile(flutterHelloWorldBrokenFile);
-		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-		config.noDebug = true;
-
-		await waitAllThrowIfTerminates(dc,
-			watchPromise("writes_failure_output->configurationSequence", dc.configurationSequence()),
-			watchPromise("writes_failure_output->assertOutputContains", dc.assertOutputContains(undefined, "Exception: Oops\n")),
-			watchPromise("writes_failure_output->launch", dc.launch(config)),
-		);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("adds metadata for known files in call stacks", async function () {
+	it("writes exception to output and adds metadata for known files in call stacks", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip(); // https://github.com/dart-lang/webdev/issues/949
 
@@ -926,6 +874,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("initialized")
 				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
 				.then(() => dc.configurationDoneRequest()),
+			watchPromise("writes_failure_output->assertOutputContainsException", dc.assertOutputContains(undefined, "Exception: Oops\n")),
 			watchPromise(
 				"writes_failure_output->assertOutputContains",
 				dc.assertOutputContains(undefined, "_throwAnException")
