@@ -132,7 +132,7 @@ export class BaseSdkCommands implements IAmDisposable {
 				// If we complete with a non-zero code, or don't complete within 30s, we should show
 				// the output pane.
 				const completedWithErrorPromise = new Promise((resolve) => proc.on("close", resolve));
-				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), thirtySecondsInMs));
+				const timedOutPromise = new Promise((resolve) => setTimeout(() => resolve(true), thirtySecondsInMs).unref());
 				void Promise.race([completedWithErrorPromise, timedOutPromise]).then((showOutput) => {
 					if (showOutput)
 						channel.show(true);
@@ -220,7 +220,7 @@ export class SdkCommands extends BaseSdkCommands {
 			// Ensure we don't fire too often as some OSes may generate multiple events.
 			commandState.promptToReloadOnVersionChanges = false;
 			// Allow it again in 60 seconds.
-			setTimeout(() => commandState.promptToReloadOnVersionChanges = true, 60000);
+			setTimeout(() => commandState.promptToReloadOnVersionChanges = true, 60000).unref();
 
 			// Wait a short period before prompting.
 			setTimeout(() => util.promptToReloadExtension(this.logger, {

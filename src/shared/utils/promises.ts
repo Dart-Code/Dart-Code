@@ -10,7 +10,7 @@ export async function waitFor<T>(action: () => T | Promise<T>, checkEveryMillise
 		} catch {
 			// Just try again if it throws.
 		}
-		await new Promise((resolve) => setTimeout(resolve, checkEveryMilliseconds));
+		await new Promise((resolve) => setTimeout(resolve, checkEveryMilliseconds).unref());
 		timeRemaining -= checkEveryMilliseconds;
 	}
 }

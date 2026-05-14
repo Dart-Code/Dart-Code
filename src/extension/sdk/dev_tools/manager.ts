@@ -585,7 +585,7 @@ export class DevToolsManager implements vs.Disposable {
 						console.error(message);
 						this.logger.error(message);
 					}
-				}, twentySecondsInMs);
+				}, twentySecondsInMs).unref();
 
 				portToBind = n.port;
 				resolve(`http://${n.host}:${n.port}/`);

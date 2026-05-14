@@ -80,7 +80,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 	private queueNextPackageNameFetch(ms: number) {
 		if (this.nextPackageNameFetchTimeout)
 			clearTimeout(this.nextPackageNameFetchTimeout);
-		this.nextPackageNameFetchTimeout = setTimeout(() => this.fetchPackageNames(), ms);
+		this.nextPackageNameFetchTimeout = setTimeout(() => this.fetchPackageNames(), ms).unref();
 	}
 
 	private async fetchPackageNames(): Promise<void> {

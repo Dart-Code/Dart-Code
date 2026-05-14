@@ -62,7 +62,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				if (this.devices.length === 0) {
 					runIfNoDevices();
 				}
-			}, 10000);
+			}, 10000).unref();
 		}
 	}
 
@@ -343,7 +343,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 				device = this.findBestDevice(id);
 				if (device)
 					return device;
-				await new Promise((resolve) => setTimeout(resolve, 100));
+				await new Promise((resolve) => setTimeout(resolve, 100).unref());
 			}
 		});
 	}
@@ -511,7 +511,7 @@ export class FlutterDeviceManager implements vs.Disposable {
 			this.logger.info(`Supported platforms for the workspace are ${supportedTypes.map((t) => `"${t}"`).join(", ")}.`);
 
 			resolve(supportedTypes);
-			setTimeout(() => this.shortCacheForSupportedPlatforms = undefined, 10000);
+			setTimeout(() => this.shortCacheForSupportedPlatforms = undefined, 10000).unref();
 		});
 
 		return this.shortCacheForSupportedPlatforms;
