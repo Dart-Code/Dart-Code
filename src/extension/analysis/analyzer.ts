@@ -32,6 +32,15 @@ import { safeToolSpawn } from "../utils/processes";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
 import { FileTracker } from "./file_tracker";
+import {
+	InteractiveExecuteCommandParams,
+	InteractiveExecuteCommandSignature,
+	InteractiveLanguageClient,
+	InteractiveListEnumParams,
+	InteractiveListEnumSignature,
+	InteractiveMiddleware,
+	InteractiveResolveCommandSignature
+} from "./form";
 
 // Globals so we only show these errors once per session.
 let hasShownAnalysisServerVersionMismatchError = false;
@@ -119,7 +128,7 @@ export class LspAnalyzer extends Analyzer {
 		};
 	}
 
-	private buildMiddleware(): ls.Middleware {
+	private buildMiddleware(): InteractiveMiddleware {
 		// Why need this 🤷‍♂️?
 		function isLanguageValuePair(input: any): input is { language: string; value: string } {
 			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
@@ -195,6 +204,21 @@ export class LspAnalyzer extends Analyzer {
 
 		let isFirstAnalysisCompletion = true;
 		return {
+			resolveCommand: async (
+				param: InteractiveExecuteCommandParams,
+				next: InteractiveResolveCommandSignature
+			) => await next(param),
+
+			interactiveExecuteCommand: async (
+				command: string,
+				args: any[],
+				formAnswers: any[],
+				next: InteractiveExecuteCommandSignature
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+			) => await next(command, args, formAnswers),
+
+			interactiveListEnum: async (param: InteractiveListEnumParams, next: InteractiveListEnumSignature) => await next(param),
+
 			handleWorkDoneProgress: (token: ls.ProgressToken, params: ls.WorkDoneProgressBegin | ls.WorkDoneProgressReport | ls.WorkDoneProgressEnd, next: ls.HandleWorkDoneProgressSignature) => {
 				// TODO: Handle nested/overlapped progresses.
 				if (token === "ANALYZING") {
@@ -480,7 +504,7 @@ export class LspAnalyzer extends Analyzer {
 		);
 	}
 
-	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
+	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: InteractiveMiddleware): InteractiveLanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
 			errorHandler: new DartErrorHandler(logger),
@@ -524,7 +548,7 @@ export class LspAnalyzer extends Analyzer {
 			},
 		};
 
-		const client = new LanguageClient(
+		const client = new InteractiveLanguageClient(
 			"dartAnalysisLSP",
 			"Dart Analysis Server",
 			async () => {
