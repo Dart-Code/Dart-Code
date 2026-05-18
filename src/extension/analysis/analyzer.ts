@@ -25,7 +25,6 @@ import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils"
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
-import { AddDependencyCodeActionProvider } from "../providers/add_dependency_code_action_provider";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { promptToReloadExtension } from "../utils";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
@@ -34,6 +33,10 @@ import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
 import { LegacyRefactors } from "./features/legacy_refactors";
 import { FileTracker } from "./file_tracker";
+import {
+	InteractiveLanguageClient,
+	InteractiveMiddleware
+} from "./form";
 
 // Globals so we only show these errors once per session.
 let hasShownAnalysisServerVersionMismatchError = false;
@@ -63,7 +66,6 @@ export class LspAnalyzer extends Analyzer {
 
 		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
-		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
 		this.client.registerFeature(new LegacyRefactors(this.logger, this.client).feature);
 		this.client.registerFeature(this.refactors.feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);
@@ -121,7 +123,7 @@ export class LspAnalyzer extends Analyzer {
 		};
 	}
 
-	private buildMiddleware(): ls.Middleware {
+	private buildMiddleware(): InteractiveMiddleware {
 		// Why need this 🤷‍♂️?
 		function isLanguageValuePair(input: any): input is { language: string; value: string } {
 			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
@@ -332,7 +334,7 @@ export class LspAnalyzer extends Analyzer {
 					return results;
 				},
 			},
-		};
+		} as InteractiveMiddleware;
 	}
 
 	public async getDiagnosticServerPort(): Promise<{ port: number } | undefined> {
@@ -389,7 +391,7 @@ export class LspAnalyzer extends Analyzer {
 		);
 	}
 
-	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: ls.Middleware): LanguageClient {
+	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: InteractiveMiddleware): InteractiveLanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
 			errorHandler: new DartErrorHandler(logger),
@@ -435,7 +437,7 @@ export class LspAnalyzer extends Analyzer {
 			},
 		};
 
-		const client = new LanguageClient(
+		const client = new InteractiveLanguageClient(
 			"dartAnalysisLSP",
 			"Dart Analysis Server",
 			async () => {
