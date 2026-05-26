@@ -71,7 +71,6 @@ import { FlutterWidgetPreviewManager } from "./flutter/widget_preview/widget_pre
 import { LspClosingLabelsDecorations } from "./lsp/closing_labels_decorations";
 import { LspGoToAugmentationCommand, LspGoToAugmentedCommand, LspGoToImportsCommand, LspGoToLocationCommand, LspGoToSuperCommand } from "./lsp/go_to";
 import { TestDiscoverer } from "./lsp/test_discoverer";
-import { AddDependencyCodeActionProvider } from "./providers/add_dependency_code_action_provider";
 import { DartLanguageConfiguration } from "./providers/dart_language_configuration";
 import { DartDebugAdapterDescriptorFactory } from "./providers/debug_adapter_descriptor_factory";
 import { DartDebugForcedAnsiColorSupportFactory } from "./providers/debug_adapter_forced_ansi_color_support";
@@ -384,11 +383,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		// Analysis ends for the first time.
 		if (!status.isAnalyzing && analysisStartTime) {
 			void analysisCompleteEvents.dispose();
-
-			// VS Code sorts most recently registered code actions at the top when all else is equal, so don't
-			// register this one until we know the LSP server has started up, so this appears above ignores etc.
-			const addDependencyCodeActionProvider = new AddDependencyCodeActionProvider(DART_MODE);
-			context.subscriptions.push(vs.languages.registerCodeActionsProvider([...DART_MODE], addDependencyCodeActionProvider, addDependencyCodeActionProvider.metadata));
 		}
 	});
 

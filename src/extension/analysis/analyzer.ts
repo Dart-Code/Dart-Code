@@ -25,6 +25,7 @@ import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils"
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
+import { AddDependencyCodeActionProvider } from "../providers/add_dependency_code_action_provider";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { promptToReloadExtension } from "../utils";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
@@ -120,6 +121,8 @@ export class LspAnalyzer extends Analyzer {
 	}
 
 	private buildMiddleware(): ls.Middleware {
+		const addDependencyCodeActionProvider = new AddDependencyCodeActionProvider();
+
 		// Why need this 🤷‍♂️?
 		function isLanguageValuePair(input: any): input is { language: string; value: string } {
 			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
@@ -304,10 +307,17 @@ export class LspAnalyzer extends Analyzer {
 
 			async provideCodeActions(document: vs.TextDocument, range: vs.Range, context: vs.CodeActionContext, token: vs.CancellationToken, next: ls.ProvideCodeActionsSignature) {
 				const documentVersion = document.version;
-				const res = await next(document, range, context, token) || [];
+				let res = await next(document, range, context, token) || [];
 
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
 				refactors.rewriteCommands(res);
+
+				// Stitch in these custom fixes at the top.
+				const additionalFixes = addDependencyCodeActionProvider.provideCodeActions(document, range, context, token);
+				if (additionalFixes?.length) {
+					additionalFixes.push(...res);
+					res = additionalFixes;
+				}
 
 				return res;
 			},
