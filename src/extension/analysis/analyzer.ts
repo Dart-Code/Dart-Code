@@ -312,12 +312,13 @@ export class LspAnalyzer extends Analyzer {
 				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
 				refactors.rewriteCommands(res);
 
+				if (token.isCancellationRequested)
+					return res;
+
 				// Stitch in these custom fixes at the top.
 				const additionalFixes = addDependencyCodeActionProvider.provideCodeActions(document, range, context, token);
-				if (additionalFixes?.length) {
-					additionalFixes.push(...res);
-					res = additionalFixes;
-				}
+				if (additionalFixes?.length)
+					res = additionalFixes.concat(res);
 
 				return res;
 			},
