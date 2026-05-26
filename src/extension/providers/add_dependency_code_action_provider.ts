@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Diagnostic, DocumentSelector, Range, Selection, TextDocument } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Command, Diagnostic, Range, Selection, TextDocument } from "vscode";
 import * as YAML from "yaml";
 import { PubPackage } from "../../shared/pub/pub_add";
 import { flatMap } from "../../shared/utils";
@@ -13,13 +13,11 @@ const applicableErrorCodes = ["uri_does_not_exist", "conditional_uri_does_not_ex
 const packageUriSourceCodePattern = new RegExp(`r?['"]+package:([\\w\\-]+)\\/`);
 
 export class AddDependencyCodeActionProvider implements CodeActionProvider {
-	constructor(public readonly selector: DocumentSelector) { }
-
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
 
-	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, _token: CancellationToken): CodeAction[] | undefined {
+	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, _token: CancellationToken): Array<Command | CodeAction> | undefined {
 		if (!isAnalyzableAndInWorkspace(document))
 			return;
 
