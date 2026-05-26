@@ -289,7 +289,7 @@ void printSomething() {
 		assert.ok(devTools.url);
 
 		const serverResponse = await privateApi.webClient.fetch(devTools.url);
-		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1);
+		assert.notEqual(serverResponse.indexOf("Dart DevTools"), -1, `Expected response to contain "Dart DevTools" but was ${serverResponse}`);
 
 		await dc.terminateRequest();
 	});
