@@ -18,15 +18,15 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 	};
 
 	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, _token: CancellationToken): Array<Command | CodeAction> | undefined {
-		if (!isAnalyzableAndInWorkspace(document))
-			return;
-
 		// If we were only asked for specific action types and that doesn't include
 		// quickfix (which is all we supply), bail out.
 		if (context?.only && !CodeActionKind.QuickFix.contains(context.only))
 			return;
 
 		if (!context?.diagnostics?.length)
+			return;
+
+		if (!isAnalyzableAndInWorkspace(document))
 			return;
 
 		let diagnosticsWithPackageNames = context.diagnostics
@@ -58,8 +58,8 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 			const range = diagnosticsWithPackageNames[i].diagnostic.range;
 
 			for (let j = i + 1; j < diagnosticsWithPackageNames.length; j++) {
-				const packageName2 = diagnosticsWithPackageNames[i].packageName;
-				const range2 = diagnosticsWithPackageNames[i].diagnostic.range;
+				const packageName2 = diagnosticsWithPackageNames[j].packageName;
+				const range2 = diagnosticsWithPackageNames[j].diagnostic.range;
 
 				if (packageName === packageName2 && !range.intersection(range2)?.isEmpty) {
 					diagnosticsWithPackageNames.splice(j, 1);
