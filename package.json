@@ -2538,6 +2538,12 @@
 						"description": "The platforms to enable for new projects created using the 'Flutter: New Project' command. If unset, all platforms will be enabled.",
 						"scope": "window"
 					},
+					"dart.flutterCreatePromptForPlatforms": {
+						"type": "boolean",
+						"default": true,
+						"description": "Whether to prompt for platforms when running 'Flutter: New Project'.",
+						"scope": "window"
+					},
 					"dart.offline": {
 						"type": "boolean",
 						"default": false,

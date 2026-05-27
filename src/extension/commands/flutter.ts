@@ -24,7 +24,7 @@ import { config } from "../config";
 import { getFlutterSnippets } from "../sdk/flutter_docs_snippets";
 import { SdkUtils } from "../sdk/utils";
 import * as util from "../utils";
-import { showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
+import { editSetting, showInputBoxWithSettings, showSimpleSettingsEditor } from "../utils/vscode/input";
 import { getFolderToRunCommandIn } from "../utils/vscode/projects";
 import { runBatchFolderOperation } from "./batch_progress";
 import { BaseSdkCommands, commandState, packageNameRegex } from "./sdk";
@@ -348,6 +348,13 @@ export class FlutterCommands extends BaseSdkCommands {
 		const name = await this.promptForNameWithSettings(defaultName, folderPath);
 		if (!name)
 			return;
+
+		// If enabled, show the platform selector, which persists the selection options to config automatically.
+		if (config.flutterCreatePromptForPlatforms) {
+			if (!await editSetting(this.getCurrentFlutterPlatformSettingEditMetadata())) {
+				return;
+			}
+		}
 
 		const projectFolderUri = vs.Uri.file(path.join(folderPath, name));
 		const projectFolderPath = fsPath(projectFolderUri);
