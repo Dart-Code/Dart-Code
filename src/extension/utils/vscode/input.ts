@@ -111,10 +111,11 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 				quickPick.show();
 			});
 			const enumResult = accepted && quickPick.activeItems.length ? quickPick.activeItems[0].label : undefined;
-			quickPick.dispose();
 
 			if (enumResult !== undefined)
 				await setting.setValue(enumResult);
+
+			quickPick.dispose();
 			return accepted;
 		}
 		case "MULTI_ENUM": {
@@ -126,34 +127,32 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 			quickPick.placeholder = placeholder;
 			quickPick.title = title;
 			const items: Array<vs.QuickPickItem & { isDoNotAskNextTime?: boolean }> = [];
-			for (const group of setting.enumValues) {
-				items.push({ label: group.group, kind: vs.QuickPickItemKind.Separator } as vs.QuickPickItem);
-				for (const value of group.values) {
-					items.push({ label: value } as vs.QuickPickItem);
-				}
+			for (const value of setting.enumValues) {
+				items.push({ label: value } as vs.QuickPickItem);
 			}
 			if (doNotAskOption) {
 				items.push({ kind: vs.QuickPickItemKind.Separator } as vs.QuickPickItem);
 				items.push({ label: "Don't ask next time", isDoNotAskNextTime: true } as vs.QuickPickItem);
 			}
 			quickPick.items = items;
-			quickPick.selectedItems = items.filter((item) => setting.currentValue.find((current) => current === item.label) || (doNotAskOptionChecked && item.isDoNotAskNextTime));
+			quickPick.selectedItems = items.filter((item) => setting.currentValue.includes(item.label) || (doNotAskOptionChecked && item.isDoNotAskNextTime));
 
 			const accepted = await new Promise<boolean>((resolve) => {
 				quickPick.onDidAccept(() => resolve(true));
 				quickPick.onDidHide(() => resolve(false));
 				quickPick.show();
 			});
-			quickPick.dispose();
 
 			if (accepted) {
 				if (doNotAskOption) {
-					const doNotAskOptionSelected = !!quickPick.selectedItems.find((item) => item.isDoNotAskNextTime);
+					const doNotAskOptionSelected = quickPick.selectedItems.some((item) => item.isDoNotAskNextTime);
 					const doNotAskConfigValue = doNotAskOption.inverted ? !doNotAskOptionSelected : doNotAskOptionSelected;
 					await doNotAskOption.setValue(doNotAskConfigValue);
 				}
 				await setting.setValue(quickPick.selectedItems.filter((item) => !item.isDoNotAskNextTime).map((item) => item.label));
 			}
+
+			quickPick.dispose();
 			return accepted;
 		}
 		case "BOOL": {

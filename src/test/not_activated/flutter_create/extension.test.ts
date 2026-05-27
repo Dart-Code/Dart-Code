@@ -56,7 +56,7 @@ describe("command", () => {
 	});
 
 	it("Flutter: New Project can be invoked and creates empty application trigger file", async () => {
-		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "application", "application", true);
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "app", "application", true);
 	});
 
 	it("Flutter: New Project allows modifying platforms during flow", async () => {

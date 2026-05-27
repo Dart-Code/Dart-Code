@@ -19,5 +19,5 @@ export type PickableSetting = vs.QuickPickItem & DoNotAskOption & ({
 	settingKind: "MULTI_ENUM",
 	currentValue: any[],
 	setValue: (newValue: any[]) => Promise<void>,
-	enumValues: Array<{ group?: string, values: string[] }>,
+	enumValues: string[],
 });
