@@ -351,7 +351,7 @@ export class FlutterCommands extends BaseSdkCommands {
 
 		// If enabled, show the platform selector, which persists the selection options to config automatically.
 		if (config.flutterCreatePromptForPlatforms) {
-			if (!await editSetting(this.getCurrentFlutterPlatformSettingEditMetadata())) {
+			if (!await editSetting(this.getCurrentFlutterPlatformSettingEditMetadata(), true)) {
 				return;
 			}
 		}
@@ -472,6 +472,11 @@ export class FlutterCommands extends BaseSdkCommands {
 	private getCurrentFlutterPlatformSettingEditMetadata(): PickableSetting {
 		return {
 			currentValue: config.flutterCreatePlatforms ?? flutterCreateAvailablePlatforms,
+			doNotAskNextTimeOption: {
+				currentValue: config.flutterCreatePromptForPlatforms,
+				inverted: true,
+				setValue: (newValue: boolean | undefined) => config.setFlutterCreatePromptForPlatforms(newValue ? undefined : false),
+			},
 			description: config.flutterCreatePlatforms ? config.flutterCreatePlatforms.join(", ") : "all",
 			detail: "The platforms that should be enabled for new Flutter applications.",
 			enumValues: [{
@@ -480,7 +485,8 @@ export class FlutterCommands extends BaseSdkCommands {
 				/* {
 					group: "Defaults",
 					values: ["Set as default..."],
-				} */ ],
+				} */
+			],
 			label: "Platforms",
 			setValue: async (newValues: any[]) => {
 				const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
