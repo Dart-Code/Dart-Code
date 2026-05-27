@@ -40,6 +40,10 @@ export class FileTracker implements IAmDisposable {
 		this.watchPubspec();
 	}
 
+	public clearOutlines(): void {
+		this.outlines.clear();
+	}
+
 	public getOutlineFor(uri: URI): Outline | undefined {
 		return this.outlines.get(uri);
 	}

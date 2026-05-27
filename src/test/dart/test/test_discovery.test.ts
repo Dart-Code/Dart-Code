@@ -45,6 +45,7 @@ hello_world
         test 1 Unknown
 		`);
 
+		privateApi.fileTracker.clearOutlines();
 		await setTestContent(`
 import "package:test/test.dart";
 
