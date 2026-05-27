@@ -84,7 +84,7 @@ export async function showSimpleSettingsEditor(title: string, placeholder: strin
 	}
 }
 
-async function editSetting(setting: PickableSetting) {
+export async function editSetting(setting: PickableSetting): Promise<boolean> {
 	const title = setting.label;
 	let placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;
@@ -93,9 +93,10 @@ async function editSetting(setting: PickableSetting) {
 	switch (setting.settingKind) {
 		case "STRING": {
 			const stringResult = await vs.window.showInputBox({ prompt, title, value: value as string | undefined });
-			if (stringResult !== undefined)
+			const accepted = stringResult !== undefined;
+			if (accepted)
 				await setting.setValue(stringResult);
-			break;
+			return accepted;
 		}
 		case "ENUM": {
 			const quickPick = vs.window.createQuickPick();
@@ -114,7 +115,7 @@ async function editSetting(setting: PickableSetting) {
 
 			if (enumResult !== undefined)
 				await setting.setValue(enumResult);
-			break;
+			return accepted;
 		}
 		case "MULTI_ENUM": {
 			placeholder = `Select options for ${setting.label} (or 'Escape' to cancel)`;
@@ -141,7 +142,7 @@ async function editSetting(setting: PickableSetting) {
 
 			if (accepted)
 				await setting.setValue(quickPick.selectedItems.map((item) => item.label));
-			break;
+			return accepted;
 		}
 		case "BOOL": {
 			const boolResult = await vs.window.showQuickPick(
@@ -151,9 +152,10 @@ async function editSetting(setting: PickableSetting) {
 				],
 				{ placeHolder: placeholder, title },
 			);
-			if (boolResult !== undefined)
+			const accepted = boolResult !== undefined;
+			if (accepted)
 				await setting.setValue(boolResult.label === "enable");
-			break;
+			return accepted;
 		}
 	}
 }

@@ -379,13 +379,14 @@ type QuickPickAction =
 	// Select a single value.
 	| { kind: "enum"; label: string }
 	// Selecting multiple values.
-	| { kind: "multi"; labels: string[] };
+	| { kind: "multi"; labels: string[] }
+	// Accept the selection with whatever was already selected.
+	| { kind: "accept-selected" };
 
 /**
  * Replaces createQuickPick() with a scripted quick pick sequence.
  *
- * showSimpleSettingsEditor() reopens the top-level picker after each edit, so tests
- * provide a full sequence of actions (usually ending with a final "cancel").
+ * The next action will be chosen for each call to createQuickPick().
  */
 export function stubCreateQuickPickActions(actions: QuickPickAction[]) {
 	const createQuickPick = sb.stub(vs.window, "createQuickPick");
@@ -429,6 +430,9 @@ export function stubCreateQuickPickActions(actions: QuickPickAction[]) {
 							break;
 						case "multi":
 							quickPick.selectedItems = quickPick.items.filter((item) => action.labels.includes(item.label));
+							acceptHandler?.();
+							break;
+						case "accept-selected":
 							acceptHandler?.();
 							break;
 					}

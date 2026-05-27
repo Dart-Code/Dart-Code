@@ -7,7 +7,7 @@ import { FLUTTER_CREATE_PROJECT_TRIGGER_FILE } from "../../../shared/constants";
 import { FlutterCreateTriggerData } from "../../../shared/interfaces";
 import { fsPath } from "../../../shared/utils/fs";
 import { FlutterSampleSnippet } from "../../../shared/vscode/interfaces";
-import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, privateApi, sb, stubCreateInputBox } from "../../helpers";
+import { attachLoggingWhenExtensionAvailable, ext, getRandomTempFolder, privateApi, sb, setConfigForTest, stubCreateInputBox, stubCreateQuickPickActions } from "../../helpers";
 
 describe("test environment", () => {
 	it("has opened the correct folder", () => {
@@ -59,6 +59,18 @@ describe("command", () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "application", "application", true);
 	});
 
+	it("Flutter: New Project allows modifying platforms during flow", async () => {
+		const selectedPlatforms = ["android", "web"];
+		// Clear the current setting.
+		await setConfigForTest("dart", "flutterCreatePlatforms", undefined);
+
+		// Run the create flow, selecting some specific platforms.
+		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "app", "application", undefined, selectedPlatforms);
+
+		// Ensure it was persisted.
+		assert.deepEqual(vs.workspace.getConfiguration("dart").get("flutterCreatePlatforms"), selectedPlatforms);
+	});
+
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
 		type SnippetOption = vs.QuickPickItem & { snippet: FlutterSampleSnippet };
@@ -85,12 +97,13 @@ describe("command", () => {
 	});
 });
 
-async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string, expectedName: string, empty?: boolean): Promise<void> {
+async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string, expectedName: string, empty?: boolean, selectedPlatforms?: string[]): Promise<void> {
 	attachLoggingWhenExtensionAvailable();
 
 	// Return the expected project type from the prompt.
 	const showQuickPick = sb.stub(vs.window, "showQuickPick");
 	showQuickPick.resolves({ template: { id: expectedTemplate, empty } });
+	stubCreateQuickPickActions([selectedPlatforms ? { kind: "multi", labels: selectedPlatforms } : { kind: "accept-selected" }]);
 
 	// Choose a random temp folder for the project output.
 	const showOpenDialog = sb.stub(vs.window, "showOpenDialog");
