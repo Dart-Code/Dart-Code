@@ -392,7 +392,7 @@ export class FlutterCommands extends BaseSdkCommands {
 				await showSimpleSettingsEditor(
 					"Settings for new Flutter projects",
 					"Select a setting to change (or 'Escape' to cancel)",
-					() => this.getCurrentFlutterCreateSettings(),
+					() => this.getCurrentFlutterCreateSettingsEditMetadata(),
 				);
 				continue;
 			} else if (response) {
@@ -462,7 +462,30 @@ export class FlutterCommands extends BaseSdkCommands {
 		return "application";
 	}
 
-	public getCurrentFlutterCreateSettings(): PickableSetting[] {
+	private getCurrentFlutterPlatformSettingEditMetadata(): PickableSetting {
+		return {
+			currentValue: config.flutterCreatePlatforms ?? flutterCreateAvailablePlatforms,
+			description: config.flutterCreatePlatforms ? config.flutterCreatePlatforms.join(", ") : "all",
+			detail: "The platforms that should be enabled for new Flutter applications.",
+			enumValues: [{
+				values: flutterCreateAvailablePlatforms,
+			},
+				/* {
+					group: "Defaults",
+					values: ["Set as default..."],
+				} */ ],
+			label: "Platforms",
+			setValue: async (newValues: any[]) => {
+				const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
+					? undefined // all
+					: newValues;
+				await config.setFlutterCreatePlatforms(valueToSave);
+			},
+			settingKind: "MULTI_ENUM",
+		};
+	}
+
+	public getCurrentFlutterCreateSettingsEditMetadata(): PickableSetting[] {
 		return [
 			{
 				currentValue: config.flutterCreateOrganization || "com.example",
@@ -498,26 +521,7 @@ export class FlutterCommands extends BaseSdkCommands {
 				setValue: (newValue: boolean | undefined) => config.setOffline(newValue),
 				settingKind: "BOOL",
 			},
-			{
-				currentValue: config.flutterCreatePlatforms ?? flutterCreateAvailablePlatforms,
-				description: config.flutterCreatePlatforms ? config.flutterCreatePlatforms.join(", ") : "all",
-				detail: "The platforms that should be enabled for new Flutter applications.",
-				enumValues: [{
-					values: flutterCreateAvailablePlatforms,
-				},
-				/* {
-					group: "Defaults",
-					values: ["Set as default..."],
-				} */ ],
-				label: "Platforms",
-				setValue: async (newValues: any[]) => {
-					const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
-						? undefined // all
-						: newValues;
-					await config.setFlutterCreatePlatforms(valueToSave);
-				},
-				settingKind: "MULTI_ENUM",
-			},
+			this.getCurrentFlutterPlatformSettingEditMetadata(),
 		];
 	}
 }

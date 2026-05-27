@@ -7,7 +7,7 @@ import { defaultLaunchJson, ExtensionRestartReason, flutterCreateAvailablePlatfo
 import { DebuggerType } from "../../../shared/enums";
 import { fsPath } from "../../../shared/utils/fs";
 import { startFakeDebugSession } from "../../debug_helpers";
-import { activate, flutterHelloWorldFolder, getRandomTempFolder, privateApi, sb, setConfigForTest } from "../../helpers";
+import { activate, flutterHelloWorldFolder, getRandomTempFolder, privateApi, sb, setConfigForTest, stubCreateQuickPickActions } from "../../helpers";
 
 describe("flutter commands", () => {
 	before("activate", () => activate());
@@ -154,7 +154,7 @@ describe("flutter commands", () => {
 		await setConfigForTest("dart", "offline", false);
 		await setConfigForTest("dart", "flutterCreatePlatforms", undefined);
 
-		const settings = privateApi.flutterCommands.getCurrentFlutterCreateSettings();
+		const settings = privateApi.flutterCommands.getCurrentFlutterCreateSettingsEditMetadata();
 		const organizationSetting = settings[0];
 		const platformsSetting = settings[4];
 
@@ -284,18 +284,6 @@ type InputBoxAction =
 	| { kind: "accept"; value: string };
 
 /**
- * Scripted actions for the quick picks shown by the Flutter settings "dialog".
- */
-type QuickPickAction =
-	| { kind: "cancel" }
-	// Select a top-level setting.
-	| { kind: "top-level-setting"; label: string }
-	// Select a single value.
-	| { kind: "enum"; label: string }
-	// Selecting multiple values.
-	| { kind: "multi"; labels: string[] };
-
-/**
  * Replaces createInputBox() with a deterministic scripted input box.
  *
  * This lets each test navigate through the real prompt/settings loop without needing
@@ -354,65 +342,5 @@ function stubCreateInputBoxActions(actions: InputBoxAction[]) {
 		};
 
 		return input as unknown as vs.InputBox;
-	});
-}
-
-/**
- * Replaces createQuickPick() with a scripted quick pick sequence.
- *
- * showSimpleSettingsEditor() reopens the top-level picker after each edit, so tests
- * provide a full sequence of actions (usually ending with a final "cancel").
- */
-function stubCreateQuickPickActions(actions: QuickPickAction[]) {
-	const createQuickPick = sb.stub(vs.window, "createQuickPick");
-	createQuickPick.callsFake(() => {
-		let acceptHandler: () => void;
-		let hideHandler: () => void;
-		const quickPick = {
-			activeItems: [] as vs.QuickPickItem[],
-			canSelectMany: false,
-			dispose: sb.stub(),
-			items: [] as vs.QuickPickItem[],
-			onDidAccept: (handler: () => void) => {
-				acceptHandler = handler;
-				return { dispose: () => undefined };
-			},
-			onDidHide: (handler: () => void) => {
-				hideHandler = handler;
-				return { dispose: () => undefined };
-			},
-			placeholder: undefined as string | undefined,
-			selectedItems: [] as vs.QuickPickItem[],
-			show: () => {
-				const action = actions.shift();
-				if (!action)
-					throw new Error("No more quick pick actions were available");
-
-				// Defer callbacks until after the implementation code has finished wiring up
-				// all event handlers.
-				setImmediate(() => {
-					switch (action.kind) {
-						case "cancel":
-							hideHandler?.();
-							break;
-						case "top-level-setting":
-							quickPick.selectedItems = quickPick.items.filter((item) => item.label === action.label);
-							acceptHandler?.();
-							break;
-						case "enum":
-							quickPick.activeItems = quickPick.items.filter((item) => item.label === action.label);
-							acceptHandler?.();
-							break;
-						case "multi":
-							quickPick.selectedItems = quickPick.items.filter((item) => action.labels.includes(item.label));
-							acceptHandler?.();
-							break;
-					}
-				});
-			},
-			title: undefined as string | undefined,
-		};
-
-		return quickPick as unknown as vs.QuickPick<vs.QuickPickItem>;
 	});
 }

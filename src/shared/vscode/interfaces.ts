@@ -98,7 +98,7 @@ export interface FlutterCommandHandler {
 	runFlutterInFolder(folder: string, args: string[], packageOrFolderDisplayName: string | undefined, alwaysShowOutput: boolean, operationProgress?: OperationProgress, customScript?: CustomScript): Promise<RunProcessResult | undefined>;
 	writeDefaultLaunchJson(projectPath: string): void;
 	getFlutterTemplates(): Array<QuickPickItem & { template?: FlutterProjectTemplate }>;
-	getCurrentFlutterCreateSettings(): PickableSetting[];
+	getCurrentFlutterCreateSettingsEditMetadata(): PickableSetting[];
 	promptForNameWithSettings(defaultName: string, folderPath: string): Promise<string | undefined>;
 }
 
