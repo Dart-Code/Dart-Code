@@ -181,7 +181,7 @@ export class FlutterCommands extends BaseSdkCommands {
 		}
 
 		const template = triggerData?.template;
-		const templateAllowsPlatform = template === undefined || !!flutterCreateTemplatesSupportingPlatforms.find((t) => t === (template ?? "app"));
+		const templateAllowsPlatform = template === undefined || flutterCreateTemplatesSupportingPlatforms.includes(template);
 		const defaultPlatforms = config.flutterCreatePlatforms;
 		// Use "--empty" if either the user selected the empty option, or are we enabling a platform.
 		const useEmpty = (template && triggerData?.empty) || (templateAllowsPlatform && platform);
@@ -350,7 +350,8 @@ export class FlutterCommands extends BaseSdkCommands {
 			return;
 
 		// If enabled, show the platform selector, which persists the selection options to config automatically.
-		if (config.flutterCreatePromptForPlatforms) {
+		const templateAllowsPlatform = flutterCreateTemplatesSupportingPlatforms.includes(template.id);
+		if (config.flutterCreatePromptForPlatforms && templateAllowsPlatform) {
 			if (!await editSetting(this.getCurrentFlutterPlatformSettingEditMetadata(), true)) {
 				return;
 			}
@@ -479,14 +480,7 @@ export class FlutterCommands extends BaseSdkCommands {
 			},
 			description: config.flutterCreatePlatforms ? config.flutterCreatePlatforms.join(", ") : "all",
 			detail: "The platforms that should be enabled for new Flutter applications.",
-			enumValues: [{
-				values: flutterCreateAvailablePlatforms,
-			},
-				/* {
-					group: "Defaults",
-					values: ["Set as default..."],
-				} */
-			],
+			enumValues: flutterCreateAvailablePlatforms,
 			label: "Platforms",
 			setValue: async (newValues: any[]) => {
 				const valueToSave = newValues.length === flutterCreateAvailablePlatforms.length
