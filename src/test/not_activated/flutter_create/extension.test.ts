@@ -71,6 +71,42 @@ describe("command", () => {
 		assert.deepEqual(vs.workspace.getConfiguration("dart").get("flutterCreatePlatforms"), selectedPlatforms);
 	});
 
+	it("Flutter: New Project doesn't use selected platforms automatically next time by default", async () => {
+		const selectedPlatforms = ["android", "web"];
+		await setConfigForTest("dart", "flutterCreatePlatforms", undefined);
+		await setConfigForTest("dart", "flutterCreatePromptForPlatforms", true);
+
+		await projectContainsTriggerFileForExpectedTemplate(
+			"flutter.createProject",
+			"app",
+			"application",
+			undefined,
+			selectedPlatforms,
+			false, // useOptionsAutomaticallyNextTime
+		);
+
+		assert.deepEqual(vs.workspace.getConfiguration("dart").get("flutterCreatePlatforms"), selectedPlatforms);
+		assert.equal(vs.workspace.getConfiguration("dart").get("flutterCreatePromptForPlatforms"), true);
+	});
+
+	it("Flutter: New Project uses selected platforms automatically next time if checked", async () => {
+		const selectedPlatforms = ["android", "web"];
+		await setConfigForTest("dart", "flutterCreatePlatforms", undefined);
+		await setConfigForTest("dart", "flutterCreatePromptForPlatforms", true);
+
+		await projectContainsTriggerFileForExpectedTemplate(
+			"flutter.createProject",
+			"app",
+			"application",
+			undefined,
+			selectedPlatforms,
+			true, // useOptionsAutomaticallyNextTime
+		);
+
+		assert.deepEqual(vs.workspace.getConfiguration("dart").get("flutterCreatePlatforms"), selectedPlatforms);
+		assert.equal(vs.workspace.getConfiguration("dart").get("flutterCreatePromptForPlatforms"), false);
+	});
+
 	it("Flutter: Create Sample Project can be invoked and creates trigger file", async () => {
 		const showQuickPick = sb.stub(vs.window, "showQuickPick");
 		type SnippetOption = vs.QuickPickItem & { snippet: FlutterSampleSnippet };
@@ -97,13 +133,16 @@ describe("command", () => {
 	});
 });
 
-async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string, expectedName: string, empty?: boolean, selectedPlatforms?: string[]): Promise<void> {
+async function projectContainsTriggerFileForExpectedTemplate(commandToExecute: string, expectedTemplate: string, expectedName: string, empty?: boolean, selectedPlatforms?: string[], useOptionsAutomaticallyNextTime?: boolean): Promise<void> {
 	attachLoggingWhenExtensionAvailable();
 
 	// Return the expected project type from the prompt.
 	const showQuickPick = sb.stub(vs.window, "showQuickPick");
 	showQuickPick.resolves({ template: { id: expectedTemplate, empty } });
-	stubCreateQuickPickActions([selectedPlatforms ? { kind: "multi", labels: selectedPlatforms } : { kind: "accept-selected" }]);
+	const selectedQuickPickLabels = selectedPlatforms ? [...selectedPlatforms] : undefined;
+	if (selectedQuickPickLabels && useOptionsAutomaticallyNextTime)
+		selectedQuickPickLabels.push("Don't ask next time");
+	stubCreateQuickPickActions([selectedQuickPickLabels ? { kind: "multi", labels: selectedQuickPickLabels } : { kind: "accept-selected" }]);
 
 	// Choose a random temp folder for the project output.
 	const showOpenDialog = sb.stub(vs.window, "showOpenDialog");

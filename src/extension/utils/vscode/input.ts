@@ -84,7 +84,7 @@ export async function showSimpleSettingsEditor(title: string, placeholder: strin
 	}
 }
 
-export async function editSetting(setting: PickableSetting): Promise<boolean> {
+export async function editSetting(setting: PickableSetting, showDoNotAskNextTime = false): Promise<boolean> {
 	const title = setting.label;
 	let placeholder = `Select an option for ${setting.label} (or 'Escape' to cancel)`;
 	const prompt = setting.detail;
@@ -118,20 +118,26 @@ export async function editSetting(setting: PickableSetting): Promise<boolean> {
 			return accepted;
 		}
 		case "MULTI_ENUM": {
-			placeholder = `Select options for ${setting.label} (or 'Escape' to cancel)`;
-			const quickPick = vs.window.createQuickPick();
+			placeholder = `Select ${setting.label} (or 'Escape' to cancel)`;
+			const quickPick = vs.window.createQuickPick<vs.QuickPickItem & { isDoNotAskNextTime?: boolean }>();
+			const doNotAskOption = showDoNotAskNextTime ? setting.doNotAskNextTimeOption : undefined;
+			const doNotAskOptionChecked = doNotAskOption && (doNotAskOption.inverted ? !doNotAskOption.currentValue : doNotAskOption.currentValue);
 			quickPick.canSelectMany = true;
 			quickPick.placeholder = placeholder;
 			quickPick.title = title;
-			const items: vs.QuickPickItem[] = [];
+			const items: Array<vs.QuickPickItem & { isDoNotAskNextTime?: boolean }> = [];
 			for (const group of setting.enumValues) {
 				items.push({ label: group.group, kind: vs.QuickPickItemKind.Separator } as vs.QuickPickItem);
 				for (const value of group.values) {
 					items.push({ label: value } as vs.QuickPickItem);
 				}
 			}
+			if (doNotAskOption) {
+				items.push({ kind: vs.QuickPickItemKind.Separator } as vs.QuickPickItem);
+				items.push({ label: "Don't ask next time", isDoNotAskNextTime: true } as vs.QuickPickItem);
+			}
 			quickPick.items = items;
-			quickPick.selectedItems = quickPick.items.filter((item) => setting.currentValue.find((current) => current === item.label));
+			quickPick.selectedItems = items.filter((item) => setting.currentValue.find((current) => current === item.label) || (doNotAskOptionChecked && item.isDoNotAskNextTime));
 
 			const accepted = await new Promise<boolean>((resolve) => {
 				quickPick.onDidAccept(() => resolve(true));
@@ -140,8 +146,14 @@ export async function editSetting(setting: PickableSetting): Promise<boolean> {
 			});
 			quickPick.dispose();
 
-			if (accepted)
-				await setting.setValue(quickPick.selectedItems.map((item) => item.label));
+			if (accepted) {
+				if (doNotAskOption) {
+					const doNotAskOptionSelected = !!quickPick.selectedItems.find((item) => item.isDoNotAskNextTime);
+					const doNotAskConfigValue = doNotAskOption.inverted ? !doNotAskOptionSelected : doNotAskOptionSelected;
+					await doNotAskOption.setValue(doNotAskConfigValue);
+				}
+				await setting.setValue(quickPick.selectedItems.filter((item) => !item.isDoNotAskNextTime).map((item) => item.label));
+			}
 			return accepted;
 		}
 		case "BOOL": {
