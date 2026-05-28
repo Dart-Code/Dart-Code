@@ -137,7 +137,6 @@ export interface InternalExtensionApi {
 		openInBrowser(url: string): Promise<boolean>;
 	};
 	fileTracker: {
-		clearOutlines(): void;
 		getOutlineFor(uri: Uri): lsp.Outline | undefined;
 		getFlutterOutlineFor?: (uri: Uri) => lsp.FlutterOutline | undefined;
 	};

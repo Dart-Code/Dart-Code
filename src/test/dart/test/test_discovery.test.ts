@@ -3,7 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, checkTreeNodeResults, clearTestTree, defer, delay, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
+import { waitFor } from "../../../shared/utils/promises";
+import { activate, checkTreeNodeResults, clearTestTree, defer, fakeCancellationToken, findProjectNode, getExpectedResults, helloWorldExampleSubFolder, helloWorldRenameTestFile, helloWorldTestDiscoveryFile, helloWorldTestDiscoveryLargeFile, helloWorldTestFolder, makeTestTextTree, openFile, privateApi, sb, setTestContent, tryDelete, waitForResult } from "../../helpers";
 
 describe("dart tests", () => {
 	beforeEach("activate", () => activate());
@@ -14,11 +15,10 @@ describe("dart tests", () => {
 		const initialResults = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryFile }).join("\n");
 		assert.equal(initialResults, "");
 
-		// Open the file and allow time for the outline.
 		await openFile(helloWorldTestDiscoveryFile);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryFile));
 
-		await delay(800); // Account for debounce.
+		// Try to wait for the tree to update and include the test.
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldTestDiscoveryFile }).join("\n").includes("test 1"));
 
 		const expectedResults = getExpectedResults();
 		const actualResults = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryFile }).join("\n");
@@ -35,8 +35,9 @@ import "package:test/test.dart";
 
 void main() => test("test 1", () {});
 		`);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
-		await delay(1500); // Account for debounce.
+
+		// Try to wait for the tree to update and include the test.
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("test 1"));
 
 		let actualResults = makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n");
 		checkTreeNodeResults(actualResults, `
@@ -45,14 +46,14 @@ hello_world
         test 1 Unknown
 		`);
 
-		privateApi.fileTracker.clearOutlines();
 		await setTestContent(`
 import "package:test/test.dart";
 
 void main() => test("test 2", () {});
 		`);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldRenameTestFile));
-		await delay(1500); // Account for debounce.
+
+		// Try to wait for the tree to update and include the new test.
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n").includes("test 2"));
 
 		actualResults = makeTestTextTree({ uriFilter: helloWorldRenameTestFile }).join("\n");
 		checkTreeNodeResults(actualResults, `
@@ -63,6 +64,7 @@ hello_world
 	});
 
 	it("discovers a large number of tests in a reasonable time", async () => {
+		const expectedTestCount = 1250 /* tests */ + 5 /* groups */ + 1 /* file */ + 1 /* project */;
 		// Ensure no results before we start.
 		const initialResults = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryLargeFile }).join("\n");
 		assert.equal(initialResults, "");
@@ -70,12 +72,12 @@ hello_world
 		// Open the file and allow time for the outline.
 		const startTime = process.hrtime();
 		await openFile(helloWorldTestDiscoveryLargeFile);
-		await waitForResult(() => !!privateApi.fileTracker.getOutlineFor(helloWorldTestDiscoveryLargeFile));
 
-		await delay(800); // Account for debounce.
+		// Try to wait for the tree to update and include all of the expected tests.
+		await waitFor(() => makeTestTextTree({ uriFilter: helloWorldTestDiscoveryLargeFile }).length, expectedTestCount);
 
 		const testTree = makeTestTextTree({ uriFilter: helloWorldTestDiscoveryLargeFile });
-		assert.equal(testTree.length, 1250 /* tests */ + 5 /* groups */ + 1 /* file */ + 1 /* project */);
+		assert.equal(testTree.length, expectedTestCount);
 		const timeTaken = process.hrtime(startTime);
 		const timeTakenMs = Math.round(timeTaken[0] * 1000 + timeTaken[1] / 1000000);
 
