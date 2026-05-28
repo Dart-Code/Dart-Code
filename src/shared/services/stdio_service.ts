@@ -21,7 +21,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 	private description: string | undefined;
 
 	constructor(
-		protected readonly logger: Logger,
+		public readonly logger: Logger,
 		public readonly maxLogLineLength: number | undefined,
 		public messagesWrappedInBrackets = false,
 		public readonly treatHandlingErrorsAsUnhandledMessages = false,
