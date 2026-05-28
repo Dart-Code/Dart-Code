@@ -1548,9 +1548,9 @@ export async function makeTextTreeUsingCustomTree(parent: vs.TreeItem | vs.Uri |
 	return buffer;
 }
 
-export function createTempTestFile(absolutePath: string) {
+export function createTempTestFile(absolutePath: string, content?: string) {
 	createFolderForFile(absolutePath);
-	fs.writeFileSync(absolutePath, "");
+	fs.writeFileSync(absolutePath, content ?? "");
 	defer("delete temp file", () => tryDelete(absolutePath));
 }
 
