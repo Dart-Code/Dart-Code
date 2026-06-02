@@ -1,14 +1,14 @@
 import * as vs from "vscode";
-import { disposeAll, flatMap, notNullOrUndefined, uniq, withTimeout } from "../../shared/utils";
-import { getAllProjectFolders } from "../../shared/vscode/utils";
 import { ExtensionRestartReason, skipAction } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
 import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, FlutterCreateCommandArgs, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
 import { logProcess } from "../logging";
 import { safeSpawn } from "../processes";
+import { disposeAll, flatMap, notNullOrUndefined, uniq, withTimeout } from "../utils";
 import { unique } from "../utils/array";
 import { resolveTildePaths } from "../utils/fs";
+import { getAllProjectFolders } from "../vscode/utils";
 import { WorkspaceContext } from "../workspace";
 import { isRunningLocally } from "./utils";
 import { Context } from "./workspace";

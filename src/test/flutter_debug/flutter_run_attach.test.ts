@@ -3,7 +3,7 @@ import { strict as assert } from "assert";
 import * as os from "os";
 import * as path from "path";
 import * as vs from "vscode";
-import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
+import { DartVsCodeLaunchArgs } from "../../shared/debugging/interfaces";
 import { DebuggerType } from "../../shared/enums";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, spawnFlutterProcess, waitAllThrowIfTerminates } from "../debug_helpers";

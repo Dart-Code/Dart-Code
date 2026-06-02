@@ -4,7 +4,7 @@ import { Writable } from "stream";
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, DebugSessionCustomEvent, window } from "vscode";
 import { DartCapabilities } from "../shared/capabilities/dart";
 import { tenMinutesInMs } from "../shared/constants";
-import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
+import { DartVsCodeLaunchArgs } from "../shared/debugging/interfaces";
 import { DebuggerType } from "../shared/enums";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { Notification, Test, TestDoneNotification, TestStartNotification } from "../shared/test_protocol";

@@ -1,4 +1,4 @@
-import { versionIsAtLeast } from "../../shared/utils";
+import { versionIsAtLeast } from "../utils";
 
 export class DevToolsServerCapabilities {
 	public static get empty() { return new DevToolsServerCapabilities("0.0.0"); }

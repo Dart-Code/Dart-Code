@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { DartLaunchArgs } from "../../shared/debug/interfaces";
+import { DartLaunchArgs } from "../../shared/debugging/interfaces";
 
 /**
  * Forces debug mode in the launchRequest if the 'forceEnableDebugging' flag was set by the debug config provider.

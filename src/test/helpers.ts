@@ -7,7 +7,7 @@ import * as sinon from "sinon";
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
 import { dartCodeExtensionIdentifier, isDartCodeTestRun, isWin } from "../shared/constants";
-import { DartLaunchArgs } from "../shared/debug/interfaces";
+import { DartLaunchArgs } from "../shared/debugging/interfaces";
 import { LogCategory, TestStatus } from "../shared/enums";
 import { IAmDisposable, Logger } from "../shared/interfaces";
 import { captureLogs } from "../shared/logging";

@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
-import { DartTestCapabilities } from "../../shared/capabilities/dart_test";
-import { packageTestCapabilitiesCacheTimeInMs } from "../../shared/constants";
-import { Logger } from "../../shared/interfaces";
+import { DartTestCapabilities } from "../capabilities/dart_test";
+import { packageTestCapabilitiesCacheTimeInMs } from "../constants";
+import { Logger } from "../interfaces";
 import { PackageMap } from "../pub/package_map";
 import { SimpleTimeBasedCache } from "../utils/cache";
 import { WorkspaceContext } from "../workspace";

@@ -3,10 +3,10 @@ import * as path from "path";
 import * as semver from "semver";
 import { commands, Uri, window } from "vscode";
 import * as YAML from "yaml";
-import { Logger, Sdks } from "../../shared/interfaces";
-import { PackageMap } from "../../shared/pub/package_map";
-import { fsPath, getPubGeneratorVersion, isWithinPath } from "../../shared/utils/fs";
+import { Logger, Sdks } from "../interfaces";
+import { PackageMap } from "../pub/package_map";
 import { uniq } from "../utils";
+import { fsPath, getPubGeneratorVersion, isWithinPath } from "../utils/fs";
 
 interface PubPackageStatus { folderUri: Uri, pubRequired: false | "GET" | "UPGRADE", reason?: string, workspace: "NONE" | "ROOT" | "PROJECT" }
 

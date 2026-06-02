@@ -1,11 +1,11 @@
 import * as os from "os";
 import * as path from "path";
 import { URI } from "vscode-uri";
-import { BasicDebugConfiguration } from "../../shared/debug/interfaces";
-import { escapeRegExp } from "../../shared/utils";
 import { DartTestCapabilities } from "../capabilities/dart_test";
+import { BasicDebugConfiguration } from "../debugging/interfaces";
 import { OpenedFileInformation, Position } from "../interfaces";
 import { GroupNode, SuiteNode, TestNode, TreeNode } from "../test/test_model";
+import { escapeRegExp } from "../utils";
 import { fsPath, getRandomInt } from "./fs";
 import { TestOutlineInfo } from "./outline";
 

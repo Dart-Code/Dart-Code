@@ -1,4 +1,4 @@
-import { versionIsAtLeast } from "../../shared/utils";
+import { versionIsAtLeast } from "../utils";
 
 export class DartTestCapabilities {
 	public static get empty() { return new DartTestCapabilities("0.0.0"); }

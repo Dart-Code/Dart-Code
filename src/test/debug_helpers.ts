@@ -4,7 +4,7 @@ import * as path from "path";
 import { DebugAdapterExecutable, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, Uri } from "vscode";
 import { vmServiceListeningBannerPattern } from "../debug/constants";
 import { dartVMPath, flutterPath, isWin } from "../shared/constants";
-import { DartVsCodeLaunchArgs } from "../shared/debug/interfaces";
+import { DartVsCodeLaunchArgs } from "../shared/debugging/interfaces";
 import { DebuggerType, LogCategory, VmServiceExtension } from "../shared/enums";
 import { SpawnedProcess } from "../shared/interfaces";
 import { logProcess } from "../shared/logging";

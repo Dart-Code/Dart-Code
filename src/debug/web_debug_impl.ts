@@ -1,7 +1,7 @@
 import { ContinuedEvent, Event, OutputEvent, TerminatedEvent } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import { debugLaunchProgressId, restartReasonManual } from "../shared/constants";
-import { DartLaunchArgs } from "../shared/debug/interfaces";
+import { DartLaunchArgs } from "../shared/debugging/interfaces";
 import { LogCategory } from "../shared/enums";
 import { Logger, SpawnedProcess } from "../shared/interfaces";
 import { getPubExecutionInfo } from "../shared/processes";

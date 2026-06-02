@@ -5,7 +5,7 @@ import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Prov
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { fiveSecondsInMs, isDartCodeTestRun, runAnywayAction, showErrorsAction } from "../../shared/constants";
 import { HAS_LAST_DEBUG_CONFIG, HAS_LAST_TEST_DEBUG_CONFIG } from "../../shared/constants.contexts";
-import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
+import { DartLaunchArgs, DartVsCodeLaunchArgs } from "../../shared/debugging/interfaces";
 import { DebuggerType, debuggerTypeFromString, VmServiceExtension } from "../../shared/enums";
 import { Device } from "../../shared/flutter/daemon_interfaces";
 import { getFutterWebRenderer } from "../../shared/flutter/utils";

@@ -1,8 +1,8 @@
 import * as vs from "vscode";
 import * as lsc from "vscode-languageclient";
-import { Logger } from "../../shared/interfaces";
-import { FlutterOutlineVisitorLsp } from "../../shared/utils/flutter_outline";
 import * as lsp from "../analysis/lsp/custom_protocol";
+import { Logger } from "../interfaces";
+import { FlutterOutlineVisitorLsp } from "../utils/flutter_outline";
 import { lspToRange } from "./utils";
 
 export class IconRangeComputerLsp {

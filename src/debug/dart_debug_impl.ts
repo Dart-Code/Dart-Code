@@ -4,7 +4,7 @@ import { DebugProtocol } from "@vscode/debugprotocol";
 import * as fs from "fs";
 import * as path from "path";
 import { debugLaunchProgressId, debugTerminatingProgressId, pleaseReportBug } from "../shared/constants";
-import { DartLaunchArgs } from "../shared/debug/interfaces";
+import { DartLaunchArgs } from "../shared/debugging/interfaces";
 import { LogCategory, LogSeverity } from "../shared/enums";
 import { LogMessage, SpawnedProcess } from "../shared/interfaces";
 import { PackageMap } from "../shared/pub/package_map";

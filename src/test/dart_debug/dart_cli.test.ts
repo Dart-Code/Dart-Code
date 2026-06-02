@@ -6,7 +6,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as vs from "vscode";
 import { runAnywayAction, showErrorsAction } from "../../shared/constants";
-import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
+import { DartVsCodeLaunchArgs } from "../../shared/debugging/interfaces";
 import { DebuggerType } from "../../shared/enums";
 import { versionIsAtLeast } from "../../shared/utils";
 import { sortBy } from "../../shared/utils/array";

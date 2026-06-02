@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { fsPath } from "../../shared/utils/fs";
+import { fsPath } from "../utils/fs";
 
 export class LspUriConverters implements LspConverters {
 	constructor(private readonly normalizeFileCasing: boolean) { }

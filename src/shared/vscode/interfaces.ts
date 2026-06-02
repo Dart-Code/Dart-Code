@@ -1,9 +1,9 @@
 import { BreakpointsChangeEvent, CancellationToken, DebugAdapterDescriptor, DebugConfiguration, DebugConfigurationProvider, DebugSession, DebugSessionCustomEvent, McpServerDefinitionProvider, OutputChannel, Progress, QuickPickItem, TestController, TestItem, TestRunRequest, TreeDataProvider, TreeItem, Uri } from "vscode";
-import { DartVsCodeLaunchArgs } from "../../shared/debug/interfaces";
 import * as lsp from "../analysis/lsp/custom_protocol";
 import { Analyzer } from "../analyzer";
 import { DartCapabilities } from "../capabilities/dart";
 import { FlutterCapabilities } from "../capabilities/flutter";
+import { DartVsCodeLaunchArgs } from "../debugging/interfaces";
 import { DebuggerType, DebugOption, VersionStatus, VmService, VmServiceExtension } from "../enums";
 import { WebClient } from "../fetch";
 import { CustomScript, DartWorkspaceContext, FlutterProjectTemplate, GetSDKCommandConfig, GetSDKCommandResult, SpawnedProcess } from "../interfaces";

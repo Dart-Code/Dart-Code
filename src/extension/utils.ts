@@ -5,7 +5,7 @@ import * as os from "os";
 import * as path from "path";
 import { commands, Uri, window, workspace, WorkspaceFolder } from "vscode";
 import { ExtensionRestartReason, showLogAction } from "../shared/constants";
-import { BasicDebugConfiguration } from "../shared/debug/interfaces";
+import { BasicDebugConfiguration } from "../shared/debugging/interfaces";
 import { Logger, WorkspaceConfig } from "../shared/interfaces";
 import { filenameSafe } from "../shared/utils";
 import { existsAndIsDirectorySync, existsAndIsFileSync, fsPath, getRandomInt, hasPubspec, isFlutterProjectFolder } from "../shared/utils/fs";
