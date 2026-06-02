@@ -176,6 +176,14 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	const setEnvHelper = () => setupToolEnv({ suppressAnalytics: analytics.isSuppressed, envOverrides: config.env });
 	setEnvHelper(); // Set initial values.
 
+	// Rebuild toolEnv when related config changes. This needs to be set up before the SDK search, since it
+	// is what causes the config reload when the SDK paths are selected during "Locate SDK".
+	context.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
+		config.reload();
+		if (e.affectsConfiguration("dart.env") || e.affectsConfiguration("dart.allowAnalytics") || e.affectsConfiguration("telemetry.telemetryLevel"))
+			setEnvHelper();
+	}));
+
 	const sdkUtils = new SdkUtils(logger, context, analytics);
 	const workspaceContextUnverified = await sdkUtils.scanWorkspace();
 	extensionApiModel.setSdks(workspaceContextUnverified.sdks);
@@ -210,14 +218,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		setFlutterRoot(workspaceContext.sdks.flutter);
 		setEnvHelper(); // Update
 	}
-
-	// Rebuild toolEnv when related config changes.
-	context.subscriptions.push(vs.workspace.onDidChangeConfiguration((e) => {
-		config.reload();
-		if (e.affectsConfiguration("dart.env") || e.affectsConfiguration("dart.allowAnalytics") || e.affectsConfiguration("telemetry.telemetryLevel"))
-			setEnvHelper();
-	}));
-
 
 	const rebuildLogHeaders = () => buildLogHeaders(logger, workspaceContext);
 
