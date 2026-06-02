@@ -522,12 +522,14 @@ export class LspAnalyzer extends Analyzer {
 			middleware,
 			outputChannelName: "LSP",
 			revealOutputChannelOn: ls.RevealOutputChannelOn.Never,
-			// Do not enable delayed open notifications until this issue is resolved
-			// AND we have updated to an LSP client that includes the fix.
-			// https://github.com/microsoft/vscode-languageserver-node/issues/1695
-			// textSynchronization: {
-			// 	delayOpenNotifications: true,
-			// },
+			textSynchronization: {
+				// Prevent sending didOpen/didClose events for "fake" opens, like
+				// when holding Ctrl and hovering a symbol that shows a preview.
+				// VS Code fires open/close events whenever it opens the model for
+				// reading, not only when the user opens the file. The server only
+				// cares about the latter.
+				delayOpenNotifications: true,
+			},
 			uriConverters: {
 				// Don't just use "converters" here because LSP doesn't bind "this".
 				code2Protocol: (uri) => converters.code2Protocol(uri),
