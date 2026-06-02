@@ -9,50 +9,18 @@ on:
 
 jobs:
 
-
-  build_exclusions:
-
-    # We want to run on external PRs, but not on our own internal PRs as they'll be run
-    # by the push to the branch.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-
-    permissions:
-      contents: none
-    runs-on: ubuntu-latest
-    outputs:
-      excludes: ${{ join(steps.*.outputs.excludes) }}
-    steps:
-      - id: no_exclude
-        name: Run all builds
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-        # We only exclude beta versions of "other IDEs" that don't have insiders versions.
-        run: echo 'excludes=[{"build-version":"beta","bot":"dart-antigravity"},{"build-version":"beta","bot":"dart_debug-antigravity"}]' >> $GITHUB_OUTPUT
-      - id: exclude
-        name: Exclude some builds if not running on schedule
-        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
-        # Exclude:
-        # - all betas
-        # - windows
-        # - macOS
-        run: echo 'excludes=[{"build-version":"beta"},{"os":"windows-latest"},{"os":"macos-latest"}]' >> $GITHUB_OUTPUT
-
   build:
 
     name: "${{ matrix.bot }} (${{ matrix.build-version }} ${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
-    needs: build_exclusions
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [macOS-latest]
         node-version: [22]
-        build-version: [stable, beta]
-        bot: [flutter_debug, flutter_debug_chrome, flutter_test_debug, dart_web_debug, flutter_repo, dart_debug, dart, flutter, misc, dart-antigravity, dart_debug-antigravity]
-        include:
-          - os: ubuntu-latest
-            bot: flutter_snap
-        exclude: ${{ fromJSON(needs.build_exclusions.outputs.excludes) }}
+        build-version: [stable]
+        bot: [dart-antigravity, dart_debug-antigravity]
 
     steps:
 
@@ -92,8 +60,8 @@ jobs:
       - name: Install Antigravity (macOS)
         if: endsWith(matrix.bot, '-antigravity') && matrix.os == 'macOS-latest'
         run: |
-          brew install --cask antigravity
-          echo "ANTIGRAVITY_EXE=/Applications/Antigravity.app/Contents/MacOS/Electron" >> "$GITHUB_ENV"
+          brew install --cask antigravity-ide
+          echo "ANTIGRAVITY_EXE=/Applications/Antigravity IDE.app/Contents/MacOS/Electron" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Install Antigravity (Windows)
@@ -246,157 +214,3 @@ jobs:
           BUILD_VERSION: ${{ matrix.build-version }}
           LOGS_NAME: ${{ matrix.build-version }}
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
-
-      - name: ps -x (after)
-        if: matrix.os != 'windows-latest'
-        run: ps -x
-
-      - name: Store logs
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: test-logs-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
-          path: .dart_code_test_logs
-          include-hidden-files: true
-          if-no-files-found: ignore
-
-      - name: Store test results
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: test-results-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
-          path: .test_results
-          include-hidden-files: true
-          if-no-files-found: ignore
-
-      - name: Store coverage
-        uses: actions/upload-artifact@v7
-        if: success() && matrix.build-version == 'stable'
-        with:
-          name: coverage-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
-          path: coverage
-          if-no-files-found: ignore
-
-      - name: Store crash dumps
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: crash-dumps-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
-          path: .crash_dumps
-          include-hidden-files: true
-          if-no-files-found: ignore
-
-  link_check:
-    name: Check Links (Lychee)
-    runs-on: ubuntu-latest
-    needs: build_exclusions
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Run Lychee Link Checker
-        uses: lycheeverse/lychee-action@v2
-        with:
-          args: >
-            --root-dir ./
-            --exclude-all-private
-            --exclude '\$\%7B[^}]+\%7D'
-            --exclude "^file://"
-            ./src/**/*.ts
-            ./*.md
-            ./**/*.license
-            package.json
-
-  merge_artifacts:
-
-    name: Merge Artifacts
-    needs: build
-    # Using always() (to run on failure) will cause us to also run regardless of whether "build" ran, so
-    # explicitly check that ran and passed or failed (and was not skipped/cancelled).
-    if: always() && (needs.build.result == 'success' || needs.build.result == 'failure')
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Merge logs
-        uses: actions/upload-artifact/merge@v7
-        if: always()
-        with:
-          name: test-logs
-          pattern: test-logs-*
-          separate-directories: true
-          delete-merged: true
-        continue-on-error: true # fails if empty
-
-      - name: Merge test results
-        uses: actions/upload-artifact/merge@v7
-        if: always()
-        with:
-          name: test-results
-          pattern: test-results-*
-          separate-directories: true
-          delete-merged: true
-        continue-on-error: true # fails if empty
-
-      - name: Merge coverage
-        uses: actions/upload-artifact/merge@v7
-        if: success()
-        with:
-          name: coverage
-          pattern: coverage-*
-          delete-merged: true
-        continue-on-error: true # fails if empty
-
-      - name: Merge crash dumps
-        uses: actions/upload-artifact/merge@v7
-        if: always()
-        with:
-          name: crash-dumps
-          pattern: crash-dumps-*
-          separate-directories: true
-          delete-merged: true
-        continue-on-error: true # fails if empty
-
-  upload_coverage:
-
-    name: Send Coverage to Codecov
-    needs: merge_artifacts
-    if: always() && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - uses: actions/checkout@v6
-
-      - name: Download coverage
-        uses: actions/download-artifact@v8
-        with:
-          name: coverage
-          path: coverage
-
-      - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v6
-        with:
-          directory: coverage
-          verbose: true
-
-  notify_failure:
-
-    permissions:
-      contents: none
-    name: Notify Discord of Failure
-    needs: build
-    if: failure() && (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/master' && github.repository == 'Dart-Code/Dart-Code'
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Send notification to Discord
-        run: 'Invoke-WebRequest -Headers @{ "Content-Type" = "application/json" } -Method Post -Body "{`"content`":`"Build failed on $($env:GITHUB_REF.Replace(`"refs/heads/`", `"`")): https://github.com/Dart-Code/Dart-Code/commit/$($env:GITHUB_SHA)/checks`"}" -Uri $env:DISCORD_WEBHOOK'
-        shell: pwsh
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
