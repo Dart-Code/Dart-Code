@@ -92,8 +92,8 @@ jobs:
       - name: Install Antigravity (macOS)
         if: endsWith(matrix.bot, '-antigravity') && matrix.os == 'macOS-latest'
         run: |
-          brew install --cask antigravity
-          echo "ANTIGRAVITY_EXE=/Applications/Antigravity.app/Contents/MacOS/Electron" >> "$GITHUB_ENV"
+          brew install --cask antigravity-ide
+          echo "ANTIGRAVITY_EXE=/Applications/Antigravity IDE.app/Contents/MacOS/Electron" >> "$GITHUB_ENV"
         shell: bash
 
       - name: Install Antigravity (Windows)
