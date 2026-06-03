@@ -6,7 +6,10 @@ import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
 import { forceWindowsDriveLetterToUppercaseInUriString } from "../utils/fs";
 
-
+/**
+ * Support for the original Dart-specified interactive refactors, more recently replaced by
+ * the newer "Interactive Forms" controlled by interactiveResolve capabilities.
+ */
 export class InteractiveRefactors implements IAmDisposable {
 	static readonly commandName = "_dart.interactiveRefactor";
 
@@ -63,9 +66,9 @@ export class InteractiveRefactors implements IAmDisposable {
 	}
 
 	private addMiddleware(client: LanguageClient) {
-		const previousProvideCodeActions = client.middleware.provideCodeActions;
-		client.clientOptions.middleware ??= {};
-		client.clientOptions.middleware.provideCodeActions = async (document, range, context, token, next) => {
+		const middleware = client.clientOptions.middleware ??= {};
+		const previousProvideCodeActions = middleware.provideCodeActions;
+		middleware.provideCodeActions = async (document, range, context, token, next) => {
 			const res = await (previousProvideCodeActions
 				? previousProvideCodeActions(document, range, context, token, next)
 				: next(document, range, context, token)) || [];

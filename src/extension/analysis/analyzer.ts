@@ -56,7 +56,7 @@ export class LspAnalyzer extends Analyzer {
 
 		// Set up features that register capabilities and may also wrap client middleware.
 		this.disposables.push(this.refactors = new InteractiveRefactors(logger, this.client));
-		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(this.client, dartCapabilities));
+		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(this.client));
 		this.disposables.push(this.fileTracker = new FileTracker(logger, this.client, wsContext));
 		this.disposables.push(this.updateDiagnosticInformation = new AnalyzerUpdateDiagnosticInformationFeature(logger, this.client));
 

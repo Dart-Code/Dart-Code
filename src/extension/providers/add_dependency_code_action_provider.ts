@@ -35,9 +35,9 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 	}
 
 	private addMiddleware(client: LanguageClient) {
-		const previousProvideCodeActions = client.middleware.provideCodeActions;
-		client.clientOptions.middleware ??= {};
-		client.clientOptions.middleware.provideCodeActions = async (document, range, context, token, next) => {
+		const middleware = client.clientOptions.middleware ??= {};
+		const previousProvideCodeActions = middleware.provideCodeActions;
+		middleware.provideCodeActions = async (document, range, context, token, next) => {
 			let res = await (previousProvideCodeActions
 				? previousProvideCodeActions(document, range, context, token, next)
 				: next(document, range, context, token)) || [];
