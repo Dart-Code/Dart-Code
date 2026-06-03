@@ -36,13 +36,10 @@ export class LegacyRefactors {
 		const previousExecuteCommand = middleware.executeCommand;
 		middleware.executeCommand = async (command, args, next) => {
 			const executeCommand: ExecuteCommandSignature = async (nextCommand, nextArgs) => {
-				if (previousExecuteCommand) {
-					const result: unknown = await Promise.resolve(previousExecuteCommand(nextCommand, nextArgs, next));
-					return result;
-				}
+				if (previousExecuteCommand)
+					return await previousExecuteCommand(nextCommand, nextArgs, next) as unknown;
 
-				const result: unknown = await Promise.resolve(next(nextCommand, nextArgs));
-				return result;
+				return await next(nextCommand, nextArgs) as unknown;
 			};
 
 			return this.executeCommand(command, args, executeCommand);
@@ -55,18 +52,16 @@ export class LegacyRefactors {
 			: command === "dart.refactor.perform"
 				? "dart.refactor.validate"
 				: undefined;
+
 		if (validateCommand) {
 			const mapArgs = args[0] as LegacyRefactorCommandArgs | undefined;
 			const listArgsKindIndex = 0;
 			const listArgsOptionsIndex = 5;
 			const isValidListArgs = args.length === 6;
 			const isValidMapsArgs = args.length === 1 && mapArgs?.path !== undefined;
-			if (args && (isValidListArgs || isValidMapsArgs)) {
+			if (isValidListArgs || isValidMapsArgs) {
 				const refactorFailedErrorCode = -32011;
 				const refactorKind = isValidListArgs ? args[listArgsKindIndex] : mapArgs?.kind;
-				if (typeof refactorKind !== "string")
-					return next(command, args);
-
 				const shouldPromptForName = refactorKind === "EXTRACT_METHOD" || refactorKind === "EXTRACT_WIDGET";
 				if (shouldPromptForName) {
 					// Validate first, because if there is a reason the refactor will fail, we don't want to prompt
