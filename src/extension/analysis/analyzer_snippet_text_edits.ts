@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient/node";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
@@ -8,8 +9,9 @@ import { config } from "../config";
 export class SnippetTextEditFeature implements IAmDisposable {
 	private disposables: IAmDisposable[] = [];
 
-	constructor(private readonly dartCapabilities: DartCapabilities) {
+	constructor(client: LanguageClient, private readonly dartCapabilities: DartCapabilities) {
 		this.disposables.push(vs.commands.registerCommand("_dart.applySnippetTextEdit", this.applySnippetTextEdit.bind(this)));
+		this.addMiddleware(client);
 	}
 
 	public get feature(): StaticFeature {
@@ -71,6 +73,20 @@ export class SnippetTextEditFeature implements IAmDisposable {
 				}
 			}
 		}
+	}
+
+	private addMiddleware(client: LanguageClient) {
+		const previousProvideCodeActions = client.middleware.provideCodeActions;
+		client.clientOptions.middleware ??= {};
+		client.clientOptions.middleware.provideCodeActions = async (document, range, context, token, next) => {
+			const documentVersion = document.version;
+			const res = await (previousProvideCodeActions
+				? previousProvideCodeActions(document, range, context, token, next)
+				: next(document, range, context, token)) || [];
+
+			this.rewriteSnippetTextEditsToCommands(documentVersion, res);
+			return res;
+		};
 	}
 
 	private async applySnippetTextEdit(documentVersion: number, uri: vs.Uri, edit: vs.TextEdit) {

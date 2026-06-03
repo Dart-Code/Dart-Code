@@ -50,20 +50,19 @@ export class LspAnalyzer extends Analyzer {
 
 		this.setupStatusItem();
 
-		// First set up the features that buildMiddleware() requires.
-		this.disposables.push(this.refactors = new InteractiveRefactors(logger));
-		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(dartCapabilities));
-
 		this.client = this.createClient(this.logger, sdks, dartCapabilities, wsContext, this.buildMiddleware());
 		this.disposables.push({ dispose: () => this.client.stop() });
 
 
-		// Set up other features that require the client.
+		// Set up features that register capabilities and may also wrap client middleware.
+		this.disposables.push(this.refactors = new InteractiveRefactors(logger, this.client));
+		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(this.client, dartCapabilities));
 		this.disposables.push(this.fileTracker = new FileTracker(logger, this.client, wsContext));
 		this.disposables.push(this.updateDiagnosticInformation = new AnalyzerUpdateDiagnosticInformationFeature(logger, this.client));
 
-		// Register all features from both sections above.
+		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
+		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
 		this.client.registerFeature(this.refactors.feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.client.registerFeature(this.updateDiagnosticInformation.feature);
@@ -121,8 +120,6 @@ export class LspAnalyzer extends Analyzer {
 	}
 
 	private buildMiddleware(): ls.Middleware {
-		const addDependencyCodeActionProvider = new AddDependencyCodeActionProvider();
-
 		// Why need this 🤷‍♂️?
 		function isLanguageValuePair(input: any): input is { language: string; value: string } {
 			return "language" in input && typeof input.language === "string" && "value" in input && typeof input.value === "string";
@@ -181,9 +178,6 @@ export class LspAnalyzer extends Analyzer {
 
 			return false;
 		}
-
-		const refactors = this.refactors;
-		const snippetTextEdits = this.snippetTextEdits;
 
 		const startTimer = (message: string): ({ end: (message: string | undefined) => void }) => {
 			const startTime = process.hrtime();
@@ -303,24 +297,6 @@ export class LspAnalyzer extends Analyzer {
 				if (item?.contents)
 					item.contents = item.contents.map((s) => cleanDocString(s));
 				return item;
-			},
-
-			async provideCodeActions(document: vs.TextDocument, range: vs.Range, context: vs.CodeActionContext, token: vs.CancellationToken, next: ls.ProvideCodeActionsSignature) {
-				const documentVersion = document.version;
-				let res = await next(document, range, context, token) || [];
-
-				snippetTextEdits.rewriteSnippetTextEditsToCommands(documentVersion, res);
-				refactors.rewriteCommands(res);
-
-				if (token.isCancellationRequested)
-					return res;
-
-				// Stitch in these custom fixes at the top.
-				const additionalFixes = addDependencyCodeActionProvider.provideCodeActions(document, range, context, token);
-				if (additionalFixes?.length)
-					res = additionalFixes.concat(res);
-
-				return res;
 			},
 
 			executeCommand: async (command: string, args: any[], next: ls.ExecuteCommandSignature): Promise<any> => {
