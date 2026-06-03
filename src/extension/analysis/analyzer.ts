@@ -7,7 +7,7 @@ import { LanguageClient, StreamInfo, StreamMessageReader, StreamMessageWriter } 
 import { AugmentationRequest, AugmentedRequest, ConnectToDtdRequest, DiagnosticServerRequest, ImportsRequest, OpenUriNotification, ReanalyzeRequest, SuperRequest } from "../../shared/analysis/lsp/custom_protocol";
 import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
-import { dartVMPath, ExtensionRestartReason, validClassNameRegex, validMethodNameRegex } from "../../shared/constants";
+import { dartVMPath, ExtensionRestartReason } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
 import { DartSdks, Logger } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
@@ -32,6 +32,7 @@ import { reportAnalyzerTerminatedWithError } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 import { getDiagnosticErrorCode } from "../utils/vscode/diagnostics";
 import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
+import { LegacyRefactors } from "./features/legacy_refactors";
 import { FileTracker } from "./file_tracker";
 
 // Globals so we only show these errors once per session.
@@ -63,6 +64,7 @@ export class LspAnalyzer extends Analyzer {
 		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
 		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
+		this.client.registerFeature(new LegacyRefactors(this.logger, this.client).feature);
 		this.client.registerFeature(this.refactors.feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);
 		this.client.registerFeature(this.updateDiagnosticInformation.feature);
@@ -297,86 +299,6 @@ export class LspAnalyzer extends Analyzer {
 				if (item?.contents)
 					item.contents = item.contents.map((s) => cleanDocString(s));
 				return item;
-			},
-
-			executeCommand: async (command: string, args: any[], next: ls.ExecuteCommandSignature): Promise<any> => {
-				const validateCommand = command === "refactor.perform"
-					? "refactor.validate"
-					: command === "dart.refactor.perform"
-						? "dart.refactor.validate"
-						: undefined;
-				if (validateCommand) {
-					// Handle both the old way (6 args as a list) and the new way (a single arg that's a map).
-					const mapArgsIndex = 0;
-					const listArgsKindIndex = 0;
-					const listArgsOptionsIndex = 5;
-					const isValidListArgs = args.length === 6;
-					const isValidMapsArgs = args.length === 1 && args[mapArgsIndex]?.path !== undefined;
-					if (args && (isValidListArgs || isValidMapsArgs)) {
-						const refactorFailedErrorCode = -32011;
-						const mapArgs = args[mapArgsIndex];
-						const refactorKind = isValidListArgs ? args[listArgsKindIndex] : mapArgs.kind;
-						// Intercept EXTRACT_METHOD and EXTRACT_WIDGET to prompt the user for a name, but first call the validation
-						// so we don't ask for a name if it will fail for a reason like a closure with an argument.
-						const willPrompt = refactorKind === "EXTRACT_METHOD" || refactorKind === "EXTRACT_WIDGET";
-						if (willPrompt) {
-							try {
-								const validateResult = await next(validateCommand, args);
-								if (validateResult.valid === false) {
-									void vs.window.showErrorMessage(validateResult.message as string);
-									return;
-								}
-							} catch (e) {
-								// If an error occurs, we'll just continue as if validation passed.
-								this.logger.error(e);
-							}
-
-							let name: string | undefined;
-							switch (refactorKind) {
-								case "EXTRACT_METHOD":
-									name = await vs.window.showInputBox({
-										prompt: "Enter a name for the method",
-										validateInput: (s) => validMethodNameRegex.test(s) ? undefined : "Enter a valid method name",
-										value: "newMethod",
-									});
-									if (!name)
-										return;
-									break;
-								case "EXTRACT_WIDGET":
-									name = await vs.window.showInputBox({
-										prompt: "Enter a name for the widget",
-										validateInput: (s) => validClassNameRegex.test(s) ? undefined : "Enter a valid widget name",
-										value: "NewWidget",
-									});
-									if (!name)
-										return;
-									break;
-							}
-
-							if (name) {
-								if (isValidListArgs)
-									args[listArgsOptionsIndex] = Object.assign({}, args[listArgsOptionsIndex], { name });
-								else
-									args[0].options = Object.assign({}, args[0].options, { name });
-							}
-						}
-
-						// The server may return errors for things like invalid names, so
-						// capture the errors and present the error better if it's a refactor
-						// error.
-						try {
-							return await next(command, args);
-						} catch (e: any) {
-							if (e?.code === refactorFailedErrorCode) {
-								void vs.window.showErrorMessage(e.message as string);
-								return;
-							} else {
-								throw e;
-							}
-						}
-					}
-				}
-				return next(command, args);
 			},
 
 			workspace: {
