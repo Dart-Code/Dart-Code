@@ -1,5 +1,6 @@
 import { CodeAction, CodeActionKind, Command, commands, Uri, window } from "vscode";
 import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient/node";
 import { isWin } from "../constants";
 import { IAmDisposable, Logger } from "../interfaces";
 import { disposeAll } from "../utils";
@@ -11,8 +12,9 @@ export class InteractiveRefactors implements IAmDisposable {
 
 	private disposables: IAmDisposable[] = [];
 
-	constructor(private readonly logger: Logger) {
+	constructor(private readonly logger: Logger, client: LanguageClient) {
 		this.disposables.push(commands.registerCommand(InteractiveRefactors.commandName, this.handleRefactor.bind(this)));
+		this.addMiddleware(client);
 	}
 
 	public get feature(): StaticFeature {
@@ -58,6 +60,19 @@ export class InteractiveRefactors implements IAmDisposable {
 			command.command = InteractiveRefactors.commandName;
 			command.arguments = [originalCommandName, parameters, argObject];
 		}
+	}
+
+	private addMiddleware(client: LanguageClient) {
+		const previousProvideCodeActions = client.middleware.provideCodeActions;
+		client.clientOptions.middleware ??= {};
+		client.clientOptions.middleware.provideCodeActions = async (document, range, context, token, next) => {
+			const res = await (previousProvideCodeActions
+				? previousProvideCodeActions(document, range, context, token, next)
+				: next(document, range, context, token)) || [];
+
+			this.rewriteCommands(res);
+			return res;
+		};
 	}
 
 	/// Gets the parameters from the 'data' field of the CodeAction.

@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, Command, Diagnostic, Range, Selection, TextDocument } from "vscode";
+import { ClientCapabilities, FeatureState, StaticFeature } from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient/node";
 import * as YAML from "yaml";
 import { PubPackage } from "../../shared/pub/pub_add";
 import { flatMap } from "../../shared/utils";
@@ -16,6 +18,40 @@ export class AddDependencyCodeActionProvider implements CodeActionProvider {
 	public readonly metadata: CodeActionProviderMetadata = {
 		providedCodeActionKinds: [CodeActionKind.QuickFix],
 	};
+
+	constructor(client: LanguageClient) {
+		this.addMiddleware(client);
+	}
+
+	public get feature(): StaticFeature {
+		return {
+			clear() { },
+			fillClientCapabilities(_capabilities: ClientCapabilities) { },
+			getState(): FeatureState {
+				return { kind: "static" };
+			},
+			initialize() { },
+		};
+	}
+
+	private addMiddleware(client: LanguageClient) {
+		const previousProvideCodeActions = client.middleware.provideCodeActions;
+		client.clientOptions.middleware ??= {};
+		client.clientOptions.middleware.provideCodeActions = async (document, range, context, token, next) => {
+			let res = await (previousProvideCodeActions
+				? previousProvideCodeActions(document, range, context, token, next)
+				: next(document, range, context, token)) || [];
+
+			if (token.isCancellationRequested)
+				return res;
+
+			const additionalFixes = this.provideCodeActions(document, range, context, token);
+			if (additionalFixes?.length)
+				res = additionalFixes.concat(res);
+
+			return res;
+		};
+	}
 
 	public provideCodeActions(document: TextDocument, range: Range | Selection, context: CodeActionContext, _token: CancellationToken): Array<Command | CodeAction> | undefined {
 		// If we were only asked for specific action types and that doesn't include
