@@ -35,7 +35,7 @@ import { SnippetTextEditFeature } from "./analyzer_snippet_text_edits";
 import { LegacyRefactors } from "./features/legacy_refactors";
 import { FileTracker } from "./file_tracker";
 import {
-	InteractiveLanguageClient,
+	InteractiveFormsFeature,
 	InteractiveMiddleware
 } from "./form";
 
@@ -45,6 +45,7 @@ let hasShownAnalysisServerVersionMismatchError = false;
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
 	public readonly fileTracker: FileTracker;
+	private readonly interactiveClient: InteractiveFormsFeature;
 	private readonly snippetTextEdits: SnippetTextEditFeature;
 	public readonly refactors: InteractiveRefactors;
 	public readonly updateDiagnosticInformation: AnalyzerUpdateDiagnosticInformationFeature | undefined;
@@ -60,6 +61,7 @@ export class LspAnalyzer extends Analyzer {
 
 
 		// Set up features that register capabilities and may also wrap client middleware.
+		this.interactiveClient = new InteractiveFormsFeature(this.client);
 		this.disposables.push(this.refactors = new InteractiveRefactors(logger, this.client));
 		this.disposables.push(this.snippetTextEdits = new SnippetTextEditFeature(this.client));
 		this.disposables.push(this.fileTracker = new FileTracker(logger, this.client, wsContext));
@@ -67,6 +69,7 @@ export class LspAnalyzer extends Analyzer {
 
 		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
+		this.client.registerFeature(this.interactiveClient.feature);
 		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
 		this.client.registerFeature(new LegacyRefactors(this.logger, this.client).feature);
 		this.client.registerFeature(this.refactors.feature);
@@ -393,7 +396,7 @@ export class LspAnalyzer extends Analyzer {
 		);
 	}
 
-	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: InteractiveMiddleware): InteractiveLanguageClient {
+	private createClient(logger: Logger, sdks: DartSdks, dartCapabilities: DartCapabilities, wsContext: WorkspaceContext, middleware: InteractiveMiddleware): LanguageClient {
 		const converters = new LspUriConverters(!!config.normalizeFileCasing);
 		const clientOptions: ls.LanguageClientOptions = {
 			errorHandler: new DartErrorHandler(logger),
@@ -439,7 +442,7 @@ export class LspAnalyzer extends Analyzer {
 			},
 		};
 
-		const client = new InteractiveLanguageClient(
+		const client = new LanguageClient(
 			"dartAnalysisLSP",
 			"Dart Analysis Server",
 			async () => {
