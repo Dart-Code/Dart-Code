@@ -16,14 +16,15 @@
 
 import * as vscode from 'vscode';
 import {
+	ClientCapabilities,
 	ExecuteCommandSignature,
+	FeatureState,
 	LanguageClient,
 	LanguageClientOptions,
 	Middleware,
 	RequestType,
-	ServerOptions
+	StaticFeature
 } from 'vscode-languageclient/node';
-import { InitializeParams } from 'vscode-languageserver-protocol';
 
 // ----------------------------------------------------------------------------
 // Form Field Type Definitions
@@ -429,20 +430,25 @@ export interface InteractiveListEnumMiddleware {
 	) => vscode.ProviderResult<FormEnumEntry[]>;
 }
 
-export class InteractiveLanguageClient extends LanguageClient {
-	constructor(
-		id: string,
-		name: string,
-		serverOptions: ServerOptions,
-		clientOptions: InteractiveLanguageClientOptions,
-		forceDebug?: boolean
-	) {
-		super(id, name, serverOptions, clientOptions, forceDebug);
+export class InteractiveFormsFeature {
+	constructor(private readonly client: LanguageClient) {
+		this.addMiddleware();
+	}
 
-		const interactiveOptions = this.clientOptions as InteractiveLanguageClientOptions;
+	public get feature(): StaticFeature {
+		return {
+			clear() { },
+			fillClientCapabilities: (capabilities: ClientCapabilities) => this.fillClientCapabilities(capabilities),
+			getState(): FeatureState {
+				return { kind: 'static' };
+			},
+			initialize() { },
+		};
+	}
+
+	private addMiddleware() {
+		const interactiveOptions = this.client.clientOptions as InteractiveLanguageClientOptions;
 		const middleware = interactiveOptions.middleware;
-
-		// Memorize the language client author defined "executeCommand" middleware.
 		const original = middleware?.executeCommand;
 
 		// Intercept standard command execution to resolve required inputs interactively.
@@ -452,7 +458,7 @@ export class InteractiveLanguageClient extends LanguageClient {
 		// - If no user answers were collected, execute it using the standard
 		//   "executeCommand" middleware.
 		const overwrite = async (cmd: string, args: any[], next: ExecuteCommandSignature) => {
-			const option = this.initializeResult?.capabilities?.experimental?.interactiveResolveProvider as
+			const option = this.client.initializeResult?.capabilities?.experimental?.interactiveResolveProvider as
 				| interactiveResolveOptions
 				| undefined;
 
@@ -491,8 +497,7 @@ export class InteractiveLanguageClient extends LanguageClient {
 	}
 
 	/**
-	 * Fills in the LSP initialize parameters during the handshake, and registers
-	 * client capabilities to support interactive refactoring prompts.
+	 * Fills in the LSP client capabilities to support interactive refactoring prompts.
 	 *
 	 * @important Subclasses overriding this method must:
 	 * 1. Call `super.fillInitializeParams(params)` first to preserve base client
@@ -501,14 +506,11 @@ export class InteractiveLanguageClient extends LanguageClient {
 	 *    rather than overwriting the entire field, to prevent erasing the
 	 * 		interactive capabilities.
 	 */
-	protected fillInitializeParams(params: InitializeParams): void {
-		super.fillInitializeParams(params);
-
-		const experimental = params.capabilities.experimental || {};
-		experimental.interactiveResolve = {
+	private fillClientCapabilities(capabilities: ClientCapabilities): void {
+		capabilities.experimental ??= {};
+		capabilities.experimental.interactiveResolve = {
 			inputTypes: ['bool', 'file', 'enum', 'lazyEnum', 'number', 'string']
 		} as InteractiveResolveClientCapabilities;
-		params.capabilities.experimental = experimental;
 	}
 
 	/**
@@ -522,7 +524,7 @@ export class InteractiveLanguageClient extends LanguageClient {
 	): Promise<InteractiveExecuteCommandParams | undefined> {
 		// Invoke "command/resolve" at least once to ensure the command
 		// is fully specified, as the initial input may lack necessary parameters.
-		for (let i = 0; i < InteractiveLanguageClient.MAX_RETRY; i++) {
+		for (let i = 0; i < InteractiveFormsFeature.MAX_RETRY; i++) {
 			const result = await this.interactiveResolveCommand(param);
 			if (!result) {
 				return undefined;
@@ -536,9 +538,9 @@ export class InteractiveLanguageClient extends LanguageClient {
 			}
 
 			// Exhaust all retries.
-			if (i === InteractiveLanguageClient.MAX_RETRY - 1) {
+			if (i === InteractiveFormsFeature.MAX_RETRY - 1) {
 				vscode.window.showWarningMessage(
-					`Retried ${InteractiveLanguageClient.MAX_RETRY} exceeds the maximum allowed attempts`
+					`Retried ${InteractiveFormsFeature.MAX_RETRY} exceeds the maximum allowed attempts`
 				);
 				return undefined;
 			}
@@ -579,16 +581,16 @@ export class InteractiveLanguageClient extends LanguageClient {
 	): vscode.ProviderResult<any> => {
 		const _interactiveExecuteCommand: InteractiveExecuteCommandSignature = (command, args, formAnswers) => {
 			const requestType = new RequestType<InteractiveExecuteCommandParams, any, void>('workspace/executeCommand');
-			return this.sendRequest<any>('workspace/executeCommand', {
+			return this.client.sendRequest<any>('workspace/executeCommand', {
 				command: command,
 				arguments: args,
 				formAnswers: formAnswers
 			} as InteractiveExecuteCommandParams).then(undefined, (error) => {
-				return this.handleFailedRequest(requestType, undefined, error, undefined);
+				return this.client.handleFailedRequest(requestType, undefined, error, undefined);
 			});
 		};
 
-		const middleware = this.clientOptions.middleware as InteractiveMiddleware | undefined;
+		const middleware = this.client.clientOptions.middleware as InteractiveMiddleware | undefined;
 		return middleware?.interactiveExecuteCommand
 			? middleware.interactiveExecuteCommand(command, args, formAnswers, _interactiveExecuteCommand)
 			: _interactiveExecuteCommand(command, args, formAnswers);
@@ -623,15 +625,15 @@ export class InteractiveLanguageClient extends LanguageClient {
 	): vscode.ProviderResult<InteractiveExecuteCommandParams> => {
 		const _interactiveResolveCommand: InteractiveResolveCommandSignature = (param) => {
 			const requestType = new RequestType<InteractiveExecuteCommandParams, any, void>('command/resolve');
-			return this.sendRequest<InteractiveExecuteCommandParams>('command/resolve', param).then(
+			return this.client.sendRequest<InteractiveExecuteCommandParams>('command/resolve', param).then(
 				undefined,
 				(error) => {
-					return this.handleFailedRequest(requestType, undefined, error, undefined);
+					return this.client.handleFailedRequest(requestType, undefined, error, undefined);
 				}
 			);
 		};
 
-		const middleware = this.clientOptions.middleware as InteractiveMiddleware | undefined;
+		const middleware = this.client.clientOptions.middleware as InteractiveMiddleware | undefined;
 		return middleware?.interactiveResolveCommand
 			? middleware.interactiveResolveCommand(param, _interactiveResolveCommand)
 			: _interactiveResolveCommand(param);
@@ -654,12 +656,12 @@ export class InteractiveLanguageClient extends LanguageClient {
 			const requestType = new RequestType<InteractiveListEnumParams, FormEnumEntry[], void>(
 				'interactive/listEnum'
 			);
-			return this.sendRequest<FormEnumEntry[]>('interactive/listEnum', param).then(undefined, (error) => {
-				return this.handleFailedRequest(requestType, undefined, error, undefined);
+			return this.client.sendRequest<FormEnumEntry[]>('interactive/listEnum', param).then(undefined, (error) => {
+				return this.client.handleFailedRequest(requestType, undefined, error, undefined);
 			});
 		};
 
-		const middleware = this.clientOptions.middleware as InteractiveMiddleware | undefined;
+		const middleware = this.client.clientOptions.middleware as InteractiveMiddleware | undefined;
 		return middleware?.interactiveListEnum
 			? middleware.interactiveListEnum(param, _interactiveListEnum)
 			: _interactiveListEnum(param);
