@@ -922,7 +922,7 @@ export class InteractiveLanguageClient extends LanguageClient {
 			case 'string':
 				return await vscode.window.showInputBox({
 					prompt: field.description,
-					value: prevAnswer ? prevAnswer : field.default,
+					value: prevAnswer !== undefined ? prevAnswer : field.default,
 					placeHolder: field.description,
 					// Keep the input box open when focus is lost. This allows the
 					// user to  browse the workspace or inspect code (e.g., checking
@@ -969,9 +969,9 @@ export class InteractiveLanguageClient extends LanguageClient {
 
 			case 'number': {
 				let value: string | undefined;
-				if (prevAnswer) {
+				if (prevAnswer !== undefined && prevAnswer !== null) {
 					value = String(prevAnswer);
-				} else if (field.default) {
+				} else if (field.default !== undefined && field.default !== null) {
 					value = String(field.default);
 				}
 				const numResult = await vscode.window.showInputBox({
@@ -980,11 +980,20 @@ export class InteractiveLanguageClient extends LanguageClient {
 					placeHolder: '0',
 					ignoreFocusOut: true,
 					validateInput: (text) => {
+						if (text.trim() === '') {
+							return field.required ? 'Please enter a number' : null;
+						}
 						return isNaN(Number(text)) ? 'Please enter a valid number' : null;
 					}
 				});
 
-				return numResult !== undefined ? Number(numResult) : undefined;
+				if (numResult === undefined) {
+					return undefined; // undefined = canceled
+				}
+				if (numResult.trim() === '') {
+					return null; // null = empty (eg. not answering optional question)
+				}
+				return Number(numResult);
 			}
 
 			case 'list': {
