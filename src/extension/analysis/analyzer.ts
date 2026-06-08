@@ -25,6 +25,7 @@ import { envUtils, hostKind, isRunningLocally } from "../../shared/vscode/utils"
 import { WorkspaceContext } from "../../shared/workspace";
 import { Analytics } from "../analytics";
 import { config } from "../config";
+import { AddDependencyCodeActionProvider } from "../providers/add_dependency_code_action_provider";
 import { checkForLargeNumberOfTodos } from "../user_prompts";
 import { promptToReloadExtension } from "../utils";
 import { reportAnalyzerTerminatedWithError } from "../utils/misc";
@@ -66,6 +67,7 @@ export class LspAnalyzer extends Analyzer {
 
 		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
+		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
 		this.client.registerFeature(new LegacyRefactors(this.logger, this.client).feature);
 		this.client.registerFeature(this.refactors.feature);
 		this.client.registerFeature(this.snippetTextEdits.feature);
