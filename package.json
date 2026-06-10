@@ -3414,6 +3414,12 @@
 						"markdownDescription": "Whether to enable experimental (possibly unfinished or unstable) refactors on the lightbulb menu. This setting is intended for use by Dart Analysis Server developers or users that want to try out and provide feedback on in-progress refactors.",
 						"scope": "window"
 					},
+					"dart.experimentalInteractiveForms": {
+						"type": "boolean",
+						"default": false,
+						"markdownDescription": "Whether to enable the experimental (possibly unfinished or unstable) Interactive Forms feature used for accepting user input during refactors. This setting is intended for use by Dart Analysis Server developers or users that want to try out and provide feedback on in-progress refactors.",
+						"scope": "window"
+					},
 					"dart.dynamicTestTracking": {
 						"type": "boolean",
 						"default": true,
