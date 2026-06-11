@@ -257,3 +257,47 @@ export async function withTimeout<T>(promise: Thenable<T>, message: string | (()
 		);
 	});
 }
+
+/**
+ * Returns a "fixed" toolEnv to work around a Copilot env var mutation issue.
+ *
+ * Always returns a new copy. This must be done in all tool invocations and not cached, because
+ * we don't know at what point in time the Copilot SDK will mutate the process env. If we only
+ * check at startup, we might be too early and assume we don't need the fix.
+ *
+ * Only overrides values if the last override value is explicitly what we expect. Do not
+ * alter any other settings that might have been set. If the user has a complex setup then
+ * they can apply the workaround manually by setting `dart.env`.
+ *
+ * https://github.com/Dart-Code/Dart-Code/issues/6074
+ * https://github.com/Dart-Code/Dart-Code/issues/6083
+ * https://github.com/microsoft/vscode/issues/320880
+ * https://github.com/github/copilot-cli/issues/3602
+ *
+ * @param env The process environment to check for Copilot-mutated values.
+ * @returns  The default toolEnv to use.
+ */
+export function getFixedToolEnvForCopilotMutation({ processEnv, toolEnv }: { processEnv: Record<string, string | undefined>; toolEnv: Record<string, string>; }): Record<string, string> {
+	// Workaround GitHub Copilot mutating the extension host processes env variables
+	// to include safe.bareRepository=explicit which breaks Swift PM.
+	//
+	// If the last config added was safe.bareRepository=explicit, then reduce the count to remove it.
+
+	const newToolEnv = Object.assign({}, toolEnv);
+	const configCountEnvVarValue = processEnv.GIT_CONFIG_COUNT;
+	// Has a value?
+	if (typeof configCountEnvVarValue === "string") {
+		const configCount = parseInt(configCountEnvVarValue, 10);
+		// Is numeric?
+		if (Number.isInteger(configCount)) {
+			const lastConfigIndex = configCount - 1;
+			// Last setting is the one we're trying to eliminate?
+			if (processEnv[`GIT_CONFIG_KEY_${lastConfigIndex}`] === "safe.bareRepository"
+				&& processEnv[`GIT_CONFIG_VALUE_${lastConfigIndex}`] === "explicit")
+				// Wind back the count to exclude it.
+				newToolEnv.GIT_CONFIG_COUNT = (configCount - 1).toString();
+		}
+	}
+
+	return newToolEnv;
+}
