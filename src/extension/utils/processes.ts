@@ -60,7 +60,7 @@ export function setupToolEnv({ suppressAnalytics, envOverrides }: { suppressAnal
 }
 
 export function safeToolSpawn(workingDirectory: string | undefined, binPath: string, args: string[], envOverrides?: Record<string, string | undefined>): SpawnedProcess {
-	const env = Object.assign({}, toolEnv, envOverrides) as Record<string, string | undefined> | undefined;
+	const env = Object.assign({}, getToolEnv(), envOverrides) as Record<string, string | undefined> | undefined;
 	return safeSpawn(workingDirectory, binPath, args, env);
 }
 
