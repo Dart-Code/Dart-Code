@@ -431,31 +431,26 @@ export interface InteractiveListEnumMiddleware {
 	) => vscode.ProviderResult<FormEnumEntry[]>;
 }
 
-export class InteractiveFormsFeature {
+export class InteractiveFormsFeature implements StaticFeature {
 	constructor(private readonly client: LanguageClient) { }
 
-	public get feature(): StaticFeature {
-		return {
-			clear() { },
-			fillClientCapabilities: (capabilities: ClientCapabilities) => this.fillClientCapabilities(capabilities),
-			getState(): FeatureState {
-				return { kind: 'static' };
-			},
-			preInitialize: (serverCapabilities: ServerCapabilities) => {
-				// Only add middleware if the server indicates some kind of support.
-				// Support for specific kinds are handled inside the middleware to avoid
-				// duplicating logic about supported kinds here.
-				//
-				// This must be done in preInitialize, because built-in LSP handlers capture
-				// middleware during initialize()->register() which fires for built-ins before
-				// our registered features.
-				if (serverCapabilities?.experimental?.interactiveResolveProvider) {
-					this.addMiddleware();
-				}
-			},
-			initialize() { }
-		};
+	public clear() { }
+	public getState(): FeatureState {
+		return { kind: 'static' };
 	}
+	public preInitialize(serverCapabilities: ServerCapabilities) {
+		// Only add middleware if the server indicates some kind of support.
+		// Support for specific kinds are handled inside the middleware to avoid
+		// duplicating logic about supported kinds here.
+		//
+		// This must be done in preInitialize, because built-in LSP handlers capture
+		// middleware during initialize()->register() which fires for built-ins before
+		// our registered features.
+		if (serverCapabilities?.experimental?.interactiveResolveProvider) {
+			this.addMiddleware();
+		}
+	}
+	public initialize() { }
 
 	private addMiddleware() {
 		const interactiveOptions = this.client.clientOptions as InteractiveLanguageClientOptions;
@@ -510,7 +505,7 @@ export class InteractiveFormsFeature {
 	/**
 	 * Fills in the LSP client capabilities to support interactive refactoring prompts.
 	 */
-	private fillClientCapabilities(capabilities: ClientCapabilities): void {
+	public fillClientCapabilities(capabilities: ClientCapabilities): void {
 		capabilities.experimental ??= {};
 		capabilities.experimental.interactiveResolve = {
 			inputTypes: ['bool', 'file', 'enum', 'lazyEnum', 'number', 'string']
