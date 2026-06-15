@@ -9,7 +9,7 @@ import { Analyzer } from "../../shared/analyzer";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { dartVMPath, ExtensionRestartReason } from "../../shared/constants";
 import { LogCategory } from "../../shared/enums";
-import { DartSdks, Logger } from "../../shared/interfaces";
+import { DartSdks, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { CategoryLogger } from "../../shared/logging";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { fsPath } from "../../shared/utils/fs";
@@ -554,9 +554,11 @@ export class LspAnalyzer extends Analyzer {
 		logger.info(`Spawning ${vmPath} with args ${JSON.stringify(args)}`);
 		const analysisServerStartTime = Date.now();
 		const process = safeToolSpawn(undefined, vmPath, args);
-		// Ensure we terminate the process when shutting down even if the graceful shutdown
-		// doesn't work. Wait a short period to give the graceful shutdown change.
-		this.disposables.push({ dispose: () => { setTimeout(() => process.kill(), 100); } });
+		// Ensure during dispose we terminate the process if it doesn't
+		// naturally exit in time.
+		this.disposables.push({
+			dispose: () => this.handleDisposeCleanup(process)
+		});
 		logger.info(`    PID: ${process.pid}`);
 
 		const reader = process.stdout.pipe(new LoggingTransform(logger, "<=="));
@@ -597,6 +599,29 @@ export class LspAnalyzer extends Analyzer {
 		});
 
 		return Promise.resolve({ reader, writer });
+	}
+
+	/**
+	 * Handle a call to dispose by waiting for the process to exit, or
+	 * if that hasn't happened within 3s, terminates the process.
+	 *
+	 * Returns a promise that resolves when either the process exits or the
+	 * 3s kill occurs. Shutdown should await this.
+	 */
+	private handleDisposeCleanup(process: SpawnedProcess): Promise<void> {
+		return new Promise((resolve) => {
+			// 1. Normal exit with no error.
+			process.once("exit", () => {
+				clearTimeout(timer);
+				resolve();
+			});
+
+			// 2. A 3s timer to kill the server if it did not shutdown in time.
+			const timer = setTimeout(() => {
+				process.kill();
+				resolve();
+			}, 3000);
+		});
 	}
 }
 

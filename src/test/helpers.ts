@@ -1233,8 +1233,8 @@ export async function captureDebugSessionCustomEvents(startDebug: () => void, ex
 
 	startDebug();
 	await Promise.all([startPromise, endPromise]);
-	await startSub?.dispose();
-	await endSub?.dispose();
+	startSub?.dispose();
+	endSub?.dispose();
 	eventSub.dispose();
 
 	return events;

@@ -1,10 +1,11 @@
-import { Disposable, IndentAction, LanguageConfiguration, languages, OnEnterRule, workspace } from "vscode";
+import { IndentAction, LanguageConfiguration, languages, OnEnterRule, workspace } from "vscode";
+import { IAmDisposable } from "../../shared/interfaces";
 import { config } from "../config";
 
 export class DartLanguageConfiguration implements LanguageConfiguration {
-	public static register(language: string): Disposable {
+	public static register(language: string): IAmDisposable {
 		// Track the current active subscription for the language config.
-		let subscription: Disposable | undefined;
+		let subscription: IAmDisposable | undefined;
 
 		// Helper to register the current language config, unregistering
 		// any existing config first.

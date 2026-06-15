@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { IAmDisposable, Logger, SpawnedProcess } from "../interfaces";
+import { IAmDisposable, IAmDisposableAsync, Logger, SpawnedProcess } from "../interfaces";
 import { safeSpawn } from "../processes";
 import { Request, UnknownResponse } from "../services/interfaces";
 import { PromiseCompleter } from "../utils";
@@ -7,7 +7,7 @@ import { PromiseCompleter } from "../utils";
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
 export abstract class StdIOService<T> implements IAmDisposable {
-	private readonly disposables: IAmDisposable[] = [];
+	private readonly disposables: IAmDisposableAsync[] = [];
 	public process?: SpawnedProcess;
 	protected readonly additionalPidsToTerminate: number[] = [];
 	private nextRequestID = 1;
@@ -336,7 +336,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 
 		this.disposables.forEach(async (d) => {
 			try {
-				return await d.dispose();
+				await d.dispose();
 			} catch (e: any) {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				this.logger.error({ message: e.toString() });

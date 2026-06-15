@@ -3,7 +3,7 @@ import * as path from "path";
 import * as semver from "semver";
 import { executableNames, isWin } from "./constants";
 import { LogCategory } from "./enums";
-import { CustomScript, IAmDisposable, Logger } from "./interfaces";
+import { CustomScript, IAmDisposable, IAmDisposableAsync, Logger } from "./interfaces";
 import { ExecutionInfo } from "./processes";
 
 export type PromiseOr<T> = Promise<T> | T;
@@ -224,6 +224,9 @@ export function isWebDevice(deviceId: string | undefined): boolean {
 	return !!(deviceId?.startsWith("web") || deviceId === "chrome" || deviceId === "edge");
 }
 
+/**
+ * Calls dispose() on all of `disposables` which must all be synchronous disposables.
+ */
 export function disposeAll(disposables: IAmDisposable[]): void {
 	const toDispose = disposables.slice();
 	disposables.length = 0;
@@ -234,6 +237,28 @@ export function disposeAll(disposables: IAmDisposable[]): void {
 			console.warn(e);
 		}
 	}
+}
+
+/**
+ * Calls dispose() on all of `disposables`, which can include async disposables.
+ *
+ * Will `await` all calls to `dispose()` but time out with printing a warning if they do not complete
+ * within 3s.
+ */
+export async function disposeAllAsync(disposables: IAmDisposableAsync[]): Promise<void> {
+	const toDispose = disposables.slice();
+	disposables.length = 0;
+	await withTimeout(
+		Promise.allSettled(toDispose.map(async (d) => {
+			try {
+				await d.dispose();
+			} catch (e) {
+				console.warn(e);
+			}
+		})),
+		"disposeAllAsync did not complete",
+		3,
+	);
 }
 
 export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds = 360): Promise<T> {

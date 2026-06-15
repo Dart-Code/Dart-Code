@@ -286,15 +286,15 @@ export class DocumentRangeTracker implements IAmDisposable {
 
 			// If we don't have a range because one position went away, be sure to dispose the other tracker.
 			if (!newRange) {
-				void startDisposable.dispose();
-				void endDisposable.dispose();
+				startDisposable.dispose();
+				endDisposable.dispose();
 			}
 		};
 
 		const entry: RangeTrackerEntry = {
 			dispose: () => {
-				void startDisposable.dispose();
-				void endDisposable.dispose();
+				startDisposable.dispose();
+				endDisposable.dispose();
 				const index = this.rangeTrackers.indexOf(entry);
 				if (index !== -1) {
 					this.rangeTrackers.splice(index, 1);

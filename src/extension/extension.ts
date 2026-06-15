@@ -14,7 +14,7 @@ import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
 import { TestSessionCoordinator } from "../shared/test/coordinator";
 import { TestModel } from "../shared/test/test_model";
-import { disposeAll, withTimeout } from "../shared/utils";
+import { disposeAllAsync, withTimeout } from "../shared/utils";
 import { fsPath, getRandomInt } from "../shared/utils/fs";
 import { AutoLaunch } from "../shared/vscode/autolaunch";
 import { DART_LANGUAGE, DART_MODE } from "../shared/vscode/constants";
@@ -159,7 +159,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		logger.warn(`Performing extension reload (${reason}, ${data})...`);
 		analytics.logExtensionRestart(reason, data);
 		await deactivate(true, reason);
-		disposeAll(context.subscriptions);
+		await disposeAllAsync(context.subscriptions);
 		await activate(context, true);
 		logger.info("Done reloading extension!");
 	}));
