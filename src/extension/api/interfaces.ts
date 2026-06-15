@@ -1,5 +1,5 @@
 import * as vs from "vscode";
-import { IAmDisposable, SpawnedProcess } from "../../shared/interfaces";
+import { SpawnedProcess } from "../../shared/interfaces";
 
 export interface PublicDartExtensionApi {
 	/**
@@ -235,7 +235,7 @@ export interface PublicCodeLens {
 	 * disposables.forEach((d) => d.dispose());
 	 * ```
 	 */
-	suppress(projectFolders: vs.Uri[], options: PublicCodeLensSuppressOptions): IAmDisposable;
+	suppress(projectFolders: vs.Uri[], options: PublicCodeLensSuppressOptions): vs.Disposable;
 }
 
 export interface PublicCodeLensSuppressOptions {

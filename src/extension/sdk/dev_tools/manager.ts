@@ -541,7 +541,7 @@ export class DevToolsManager implements IAmDisposable {
 		return new Promise<string>(async (resolve, reject) => {
 			if (this.service) {
 				try {
-					this.service.dispose();
+					await this.service.dispose();
 					this.service = undefined;
 					this.devtoolsUrl = undefined;
 				} catch (e) {
