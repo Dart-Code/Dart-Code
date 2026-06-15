@@ -23,6 +23,7 @@ import {
 	LanguageClientOptions,
 	Middleware,
 	RequestType,
+	ServerCapabilities,
 	StaticFeature
 } from 'vscode-languageclient/node';
 
@@ -431,9 +432,7 @@ export interface InteractiveListEnumMiddleware {
 }
 
 export class InteractiveFormsFeature {
-	constructor(private readonly client: LanguageClient) {
-		this.addMiddleware();
-	}
+	constructor(private readonly client: LanguageClient) { }
 
 	public get feature(): StaticFeature {
 		return {
@@ -442,7 +441,19 @@ export class InteractiveFormsFeature {
 			getState(): FeatureState {
 				return { kind: 'static' };
 			},
-			initialize() { },
+			preInitialize: (serverCapabilities: ServerCapabilities) => {
+				// Only add middleware if the server indicates some kind of support.
+				// Support for specific kinds are handled inside the middleware to avoid
+				// duplicating logic about supported kinds here.
+				//
+				// This must be done in preInitialize, because built-in LSP handlers capture
+				// middleware during initialize()->register() which fires for built-ins before
+				// our registered features.
+				if (serverCapabilities?.experimental?.interactiveResolveProvider) {
+					this.addMiddleware();
+				}
+			},
+			initialize() { }
 		};
 	}
 
@@ -498,13 +509,6 @@ export class InteractiveFormsFeature {
 
 	/**
 	 * Fills in the LSP client capabilities to support interactive refactoring prompts.
-	 *
-	 * @important Subclasses overriding this method must:
-	 * 1. Call `super.fillInitializeParams(params)` first to preserve base client
-	 *    configurations.
-	 * 2. Amend or merge properties into `params.capabilities.experimental`
-	 *    rather than overwriting the entire field, to prevent erasing the
-	 * 		interactive capabilities.
 	 */
 	private fillClientCapabilities(capabilities: ClientCapabilities): void {
 		capabilities.experimental ??= {};
@@ -514,12 +518,12 @@ export class InteractiveFormsFeature {
 	}
 
 	/**
-	 * MAX_RETRY defined the maximum number of user collection allowed for when
+	 * MAX_RETRY defines the maximum number of user collection allowed for when
 	 * resolving a command.
 	 */
 	static MAX_RETRY = 5;
 
-	async resolveCommandInteractively(
+	private async resolveCommandInteractively(
 		param: InteractiveExecuteCommandParams
 	): Promise<InteractiveExecuteCommandParams | undefined> {
 		// Invoke "command/resolve" at least once to ensure the command
