@@ -232,7 +232,7 @@ export function disposeAll(disposables: IAmDisposable[]): void {
 	disposables.length = 0;
 	for (const d of toDispose) {
 		try {
-			void d.dispose();
+			d.dispose();
 		} catch (e) {
 			console.warn(e);
 		}
@@ -248,17 +248,21 @@ export function disposeAll(disposables: IAmDisposable[]): void {
 export async function disposeAllAsync(disposables: IAmDisposableAsync[]): Promise<void> {
 	const toDispose = disposables.slice();
 	disposables.length = 0;
-	await withTimeout(
-		Promise.allSettled(toDispose.map(async (d) => {
-			try {
-				await d.dispose();
-			} catch (e) {
-				console.warn(e);
-			}
-		})),
-		"disposeAllAsync did not complete",
-		3,
-	);
+	try {
+		await withTimeout(
+			Promise.allSettled(toDispose.map(async (d) => {
+				try {
+					await d.dispose();
+				} catch (e) {
+					console.warn(e);
+				}
+			})),
+			"disposeAllAsync did not complete",
+			3,
+		);
+	} catch (e) {
+		console.warn(e);
+	}
 }
 
 export async function withTimeout<T>(promise: Thenable<T>, message: string | (() => string), seconds = 360): Promise<T> {

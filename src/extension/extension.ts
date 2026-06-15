@@ -8,7 +8,7 @@ import { ExtensionRestartReason, dartCodeConfigurationPathEnvironmentVariableNam
 import { DART_PLATFORM_NAME, DART_PROJECT_LOADED, FLUTTER_PROJECT_LOADED, FLUTTER_PROPERTY_EDITOR_SUPPORTED_CONTEXT, FLUTTER_SUPPORTS_ATTACH, GO_TO_IMPORTS_SUPPORTED_CONTEXT, IS_RUNNING_LOCALLY_CONTEXT, OBSERVATORY_SUPPORTED_CONTEXT, PROJECT_LOADED, SDK_IS_PRE_RELEASE, WEB_PROJECT_LOADED } from "../shared/constants.contexts";
 import { LogCategory } from "../shared/enums";
 import { WebClient } from "../shared/fetch";
-import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, WritableWorkspaceConfig } from "../shared/interfaces";
+import { DartWorkspaceContext, FlutterSdks, FlutterWorkspaceContext, IAmDisposable, IAmDisposableAsync, IFlutterDaemon, Logger, WritableWorkspaceConfig } from "../shared/interfaces";
 import { EmittingLogger, RingLog, captureLogs, logToConsole } from "../shared/logging";
 import { PubApi } from "../shared/pub/api";
 import { internalApiSymbol } from "../shared/symbols";
@@ -114,7 +114,7 @@ let extensionThisSessionStart = extensionTotalSessionStart; // Reset during ever
 let previousSettingsObject: Record<string, string | number | boolean | undefined> | undefined;
 let experiments: KnownExperiments;
 
-const loggers: IAmDisposable[] = [];
+const loggers: IAmDisposableAsync[] = [];
 let ringLogger: IAmDisposable | undefined;
 const logger = new EmittingLogger();
 let extensionLog: IAmDisposable | undefined;
@@ -382,7 +382,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 
 		// Analysis ends for the first time.
 		if (!status.isAnalyzing && analysisStartTime) {
-			void analysisCompleteEvents.dispose();
+			analysisCompleteEvents.dispose();
 		}
 	});
 

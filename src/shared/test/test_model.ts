@@ -85,7 +85,7 @@ export abstract class TreeNode {
 	}
 
 	public dispose(): void {
-		void this.rangeTracker?.dispose();
+		this.rangeTracker?.dispose();
 	}
 }
 

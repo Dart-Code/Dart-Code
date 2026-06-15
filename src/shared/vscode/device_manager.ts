@@ -642,7 +642,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 		const cancellationTokenSource = new vs.CancellationTokenSource();
 		const waitingForRealDeviceSubscription = this.daemon.registerForDeviceAdded(() => {
 			cancellationTokenSource.cancel();
-			void waitingForRealDeviceSubscription.dispose();
+			waitingForRealDeviceSubscription.dispose();
 		});
 		const selectedEmulator =
 			await vs.window.showQuickPick(
@@ -652,7 +652,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 					placeHolder: "Connect a device or select an emulator to launch",
 				},
 				cancellationTokenSource.token);
-		void waitingForRealDeviceSubscription.dispose();
+		waitingForRealDeviceSubscription.dispose();
 		cancellationTokenSource.dispose();
 
 		if (selectedEmulator?.device?.type === "emulator-creator") {

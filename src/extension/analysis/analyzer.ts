@@ -609,6 +609,10 @@ export class LspAnalyzer extends Analyzer {
 	 * 3s kill occurs. Shutdown should await this.
 	 */
 	private handleDisposeCleanup(process: SpawnedProcess): Promise<void> {
+		if (process.exitCode !== null || process.signalCode !== null) {
+			return Promise.resolve(); // Already exited, so exit won't fire.
+		}
+
 		return new Promise((resolve) => {
 			// 1. Normal exit with no error.
 			process.once("exit", () => {
