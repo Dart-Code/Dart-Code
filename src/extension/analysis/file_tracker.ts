@@ -95,7 +95,7 @@ export class FileTracker implements IAmDisposable {
 		watcher.onDidCreate(clearCachedPubRunTestData, this);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

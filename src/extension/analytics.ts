@@ -444,7 +444,7 @@ export class Analytics implements IAmDisposable {
 	}
 	public log(category: AnalyticsEvent) { this.event(category); }
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

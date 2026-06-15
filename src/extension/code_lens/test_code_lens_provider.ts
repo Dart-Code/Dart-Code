@@ -77,7 +77,7 @@ export class TestCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

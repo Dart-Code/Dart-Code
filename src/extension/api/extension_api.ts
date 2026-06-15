@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import { Range } from "vscode-languageclient";
 import { Element, Outline } from "../../shared/analysis/lsp/custom_protocol";
 import { dartVMPath } from "../../shared/constants";
-import { Sdks } from "../../shared/interfaces";
+import { IAmDisposable, Sdks } from "../../shared/interfaces";
 import { ProjectFinder } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { SdkCommands } from "../commands/sdk";
@@ -205,7 +205,7 @@ class PublicFeaturesImpl implements PublicFeatures {
 }
 
 class PublicCodeLensImpl implements PublicCodeLens {
-	public suppress(projectFolders: vs.Uri[], options: PublicCodeLensSuppressOptions): vs.Disposable {
+	public suppress(projectFolders: vs.Uri[], options: PublicCodeLensSuppressOptions): IAmDisposable {
 		return data.codeLensSuppressions.addOverride(projectFolders, options);
 	}
 }

@@ -2,13 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vs from "vscode";
 import { androidStudioPaths, isMac } from "../../shared/constants";
-import { Logger, Sdks } from "../../shared/interfaces";
+import { IAmDisposable, Logger, Sdks } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { getFlutterConfigValue } from "../utils/misc";
 import { safeToolSpawn } from "../utils/processes";
 
-export class OpenInOtherEditorCommands implements vs.Disposable {
-	private disposables: vs.Disposable[] = [];
+export class OpenInOtherEditorCommands implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
 
 	constructor(private readonly logger: Logger, private readonly sdks: Sdks) {
 
@@ -66,8 +67,7 @@ export class OpenInOtherEditorCommands implements vs.Disposable {
 		return getFlutterConfigValue(this.logger, this.sdks.flutter, folder, "android-studio-dir");
 	}
 
-	public dispose(): any {
-		for (const command of this.disposables)
-			command.dispose();
+	public dispose(): void {
+		disposeAll(this.disposables);
 	}
 }

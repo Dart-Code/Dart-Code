@@ -39,7 +39,7 @@ export class DartDebugAdapterHexViewFactory implements vs.DebugAdapterTrackerFac
 		await Promise.all([...this.hexFormatters].map((formatter) => formatter.invalidate()));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		this.hexFormatters.clear();
 		disposeAll(this.disposables);
 	}

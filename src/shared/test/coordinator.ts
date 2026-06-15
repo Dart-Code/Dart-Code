@@ -330,7 +330,7 @@ The test description was: .*
 		};
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

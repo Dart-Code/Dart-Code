@@ -1,5 +1,6 @@
 import * as vs from "vscode";
 import * as lsp from "../../shared/analysis/lsp/custom_protocol";
+import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll, flatMap } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { SingleDocumentPositionTracker } from "../../shared/vscode/trackers";
@@ -13,8 +14,8 @@ const horizontalLine = "─";
 const bottomCorner = "╰";
 const middleCorner = "├";
 
-export class FlutterUiGuideDecorations implements vs.Disposable {
-	protected disposables: vs.Disposable[] = [];
+export class FlutterUiGuideDecorations implements IAmDisposable {
+	protected disposables: IAmDisposable[] = [];
 	protected tracker: WidgetGuideTracker | undefined;
 
 	private readonly borderDecoration = vs.window.createTextEditorDecorationType({
@@ -198,8 +199,8 @@ class WidgetGuide {
 	constructor(public readonly start: vs.Position, public readonly end: vs.Position) { }
 }
 
-class WidgetGuideTracker implements vs.Disposable {
-	private readonly disposables: vs.Disposable[] = [];
+class WidgetGuideTracker implements IAmDisposable {
+	private readonly disposables: IAmDisposable[] = [];
 	private readonly tracker: SingleDocumentPositionTracker = new SingleDocumentPositionTracker();
 	private readonly guideMap: Map<WidgetGuide, [vs.Position, vs.Position]> = new Map<WidgetGuide, [vs.Position, vs.Position]>();
 

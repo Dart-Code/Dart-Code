@@ -7,7 +7,7 @@ import { ExtensionRestartReason, flutterPath, isChromeOS, isDartCodeTestRun, isM
 import { FLUTTER_SUPPORTS_ATTACH } from "../../shared/constants.contexts";
 import { LogCategory } from "../../shared/enums";
 import * as f from "../../shared/flutter/daemon_interfaces";
-import { FlutterWorkspaceContext, IFlutterDaemon, Logger, SpawnedProcess } from "../../shared/interfaces";
+import { FlutterWorkspaceContext, IAmDisposable, IFlutterDaemon, Logger, SpawnedProcess } from "../../shared/interfaces";
 import { CategoryLogger, logProcess } from "../../shared/logging";
 import { UnknownNotification, UnknownResponse } from "../../shared/services/interfaces";
 import { StdIOService } from "../../shared/services/stdio_service";
@@ -394,27 +394,27 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 
 	// Subscription methods.
 
-	public registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): vs.Disposable {
+	public registerForDaemonConnected(subscriber: (notification: f.DaemonConnected) => void): IAmDisposable {
 		return this.subscribe(this.daemonConnectedSubscriptions, subscriber);
 	}
 
-	public registerForDeviceAdded(subscriber: (notification: f.Device) => void): vs.Disposable {
+	public registerForDeviceAdded(subscriber: (notification: f.Device) => void): IAmDisposable {
 		return this.subscribe(this.deviceAddedSubscriptions, subscriber);
 	}
 
-	public registerForDeviceRemoved(subscriber: (notification: f.Device) => void): vs.Disposable {
+	public registerForDeviceRemoved(subscriber: (notification: f.Device) => void): IAmDisposable {
 		return this.subscribe(this.deviceRemovedSubscriptions, subscriber);
 	}
 
-	public registerForDaemonLogMessage(subscriber: (notification: f.DaemonLogMessage) => void): vs.Disposable {
+	public registerForDaemonLogMessage(subscriber: (notification: f.DaemonLogMessage) => void): IAmDisposable {
 		return this.subscribe(this.daemonLogMessageSubscriptions, subscriber);
 	}
 
-	public registerForDaemonLog(subscriber: (notification: f.DaemonLog) => void): vs.Disposable {
+	public registerForDaemonLog(subscriber: (notification: f.DaemonLog) => void): IAmDisposable {
 		return this.subscribe(this.daemonLogSubscriptions, subscriber);
 	}
 
-	public registerForDaemonShowMessage(subscriber: (notification: f.ShowMessage) => void): vs.Disposable {
+	public registerForDaemonShowMessage(subscriber: (notification: f.ShowMessage) => void): IAmDisposable {
 		return this.subscribe(this.daemonShowMessageSubscriptions, subscriber);
 	}
 }

@@ -9,7 +9,7 @@ import { getLogHeader } from "./utils/log";
 import { runToolProcess } from "./utils/processes";
 
 export class DiagnosticReport implements IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 
 	private readonly output: string[] = [];
 
@@ -113,7 +113,7 @@ ${results.stderr.trim()}
 		this.report(undefined);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

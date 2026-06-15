@@ -6,7 +6,7 @@ import { DartToolingDaemon } from "../services/tooling_daemon";
 import { disposeAll } from "../utils";
 
 export class McpTools implements IAmDisposable {
-	private readonly disposables: vs.Disposable[] = [];
+	private readonly disposables: IAmDisposable[] = [];
 
 	constructor(
 		private readonly dartCapabilities: DartCapabilities,
@@ -93,7 +93,7 @@ export class McpTools implements IAmDisposable {
 		}));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

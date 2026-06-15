@@ -8,7 +8,7 @@ import { DevToolsServerCapabilities } from "../../../shared/capabilities/devtool
 import { FlutterCapabilities } from "../../../shared/capabilities/flutter";
 import { CommandSource, cpuProfilerPage, dartVMPath, devToolsHomePage, devToolsPages, devToolsToolLegacyPath, devToolsToolPath, isDartCodeTestRun, performancePage, twentySecondsInMs, widgetInspectorPage } from "../../../shared/constants";
 import { LogCategory, VmService } from "../../../shared/enums";
-import { DartWorkspaceContext, DevToolsPage, Logger } from "../../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsPage, IAmDisposable, Logger } from "../../../shared/interfaces";
 import { CategoryLogger } from "../../../shared/logging";
 import { UnknownNotification } from "../../../shared/services/interfaces";
 import { StdIOService } from "../../../shared/services/stdio_service";
@@ -43,8 +43,8 @@ let portToBind: number | undefined;
 const devToolsEmbeddedViews: Record<string, DevToolsEmbeddedViewOrSidebarView[] | undefined> = {};
 
 /// Handles launching DevTools in the browser and managing the underlying service.
-export class DevToolsManager implements vs.Disposable {
-	private readonly disposables: vs.Disposable[] = [];
+export class DevToolsManager implements IAmDisposable {
+	private readonly disposables: IAmDisposable[] = [];
 	private readonly statusBarItem = getLanguageStatusItem("dart.devTools", ANALYSIS_FILTERS);
 	private service?: DevToolsService;
 	public debugCommands: DebugCommands | undefined;
@@ -751,7 +751,7 @@ class DevToolsService extends StdIOService<UnknownNotification> {
 
 	private serverStartedSubscriptions: Array<(notification: ServerStartedNotification) => void> = [];
 
-	public registerForServerStarted(subscriber: (notification: ServerStartedNotification) => void): vs.Disposable {
+	public registerForServerStarted(subscriber: (notification: ServerStartedNotification) => void): IAmDisposable {
 		return this.subscribe(this.serverStartedSubscriptions, subscriber);
 	}
 

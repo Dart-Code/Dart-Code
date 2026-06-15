@@ -164,7 +164,7 @@ export class WidgetPreviewEmbeddedView extends WidgetPreviewView {
 }
 
 export class WidgetPreviewSidebarView extends WidgetPreviewView {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	protected readonly webViewProvider: WidgetPreviewSidebarViewProvider;
 
 	constructor(
@@ -192,7 +192,7 @@ export class WidgetPreviewSidebarView extends WidgetPreviewView {
 }
 
 class WidgetPreviewSidebarViewProvider implements vs.WebviewViewProvider {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	public webviewView: vs.WebviewView | undefined;
 	private onDidResolveEmitter = new vs.EventEmitter<void>();
 	public readonly onDidResolve = this.onDidResolveEmitter.event;

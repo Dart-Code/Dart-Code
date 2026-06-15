@@ -12,7 +12,7 @@ import { envUtils, ProjectFinder } from "../../shared/vscode/utils";
 import { config } from "../config";
 
 export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	private onDidChangeTreeDataEmitter: vs.EventEmitter<PackageDep | undefined> = new vs.EventEmitter<PackageDep | undefined>();
 	public readonly onDidChangeTreeData: vs.Event<PackageDep | undefined> = this.onDidChangeTreeDataEmitter.event;
 	public readonly deps: PubDeps;
@@ -155,7 +155,7 @@ export class DartPackagesProvider implements vs.TreeDataProvider<PackageDep>, IA
 		}
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

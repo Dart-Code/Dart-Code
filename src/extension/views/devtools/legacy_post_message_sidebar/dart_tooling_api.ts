@@ -14,7 +14,7 @@ import { VsCodeApi, VsCodeCapabilities, VsCodeDebugSession, VsCodeDebugSessionsE
 const apiDebugMode = false;
 
 export class DartApi implements IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	private apis: Record<string, ToolApi> = {};
 
 	constructor(readonly commandSource: string, onReceiveMessage: vs.Event<any>, private readonly post: (message: any) => void, private readonly deviceManager: FlutterDeviceManager | undefined) {
@@ -57,14 +57,14 @@ export class DartApi implements IAmDisposable {
 		}
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 		disposeAll(Object.values(this.apis));
 	}
 }
 
 abstract class ToolApi {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	abstract apiName: string;
 
 	constructor(private readonly dartApi: DartApi) { }
@@ -75,7 +75,7 @@ abstract class ToolApi {
 		this.dartApi.postMessage({ method: `${this.apiName}.${method}`, params });
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }
@@ -131,7 +131,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 	public readonly devicesChanged = this.devicesChangedEmitter.event;
 	protected readonly debugSessionsChangedEmitter = new vs.EventEmitter<VsCodeDebugSessionsEvent>();
 	public readonly debugSessionsChanged = this.debugSessionsChangedEmitter.event;
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 
 	constructor(private readonly commandSource: string, private readonly deviceManager: FlutterDeviceManager | undefined) {
 		if (deviceManager) {
@@ -254,7 +254,7 @@ class VsCodeApiImpl implements VsCodeApi, IAmDisposable {
 		};
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

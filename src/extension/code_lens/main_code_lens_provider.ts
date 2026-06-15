@@ -75,7 +75,7 @@ export class MainCodeLensProvider implements CodeLensProvider, IAmDisposable {
 		);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

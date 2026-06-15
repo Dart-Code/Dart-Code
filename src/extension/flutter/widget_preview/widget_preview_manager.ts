@@ -10,7 +10,7 @@ import { WidgetPreviewEmbeddedView, WidgetPreviewSidebarView, WidgetPreviewView 
  * Manages Flutter Widget Preview functionality.
  */
 export class FlutterWidgetPreviewManager implements IAmDisposable {
-	private readonly disposables: vs.Disposable[] = [];
+	private readonly disposables: IAmDisposable[] = [];
 	private server: FlutterWidgetPreviewServer | undefined;
 	private serverCompleter = new PromiseCompleter<FlutterWidgetPreviewServer>();
 	private view?: WidgetPreviewView;

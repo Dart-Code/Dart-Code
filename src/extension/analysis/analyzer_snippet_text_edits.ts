@@ -107,7 +107,7 @@ export class SnippetTextEditFeature implements IAmDisposable {
 		return newText.replace(indentPattern, "\n");
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

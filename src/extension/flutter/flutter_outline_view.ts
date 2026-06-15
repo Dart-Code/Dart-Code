@@ -3,7 +3,7 @@ import * as vs from "vscode";
 import * as lsp from "vscode-languageclient";
 import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
 import { LogCategory } from "../../shared/enums";
-import { Logger } from "../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { nullLogger } from "../../shared/logging";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
@@ -18,8 +18,8 @@ const DART_SHOW_FLUTTER_OUTLINE = "dart-code:showFlutterOutline";
 const WIDGET_SELECTED_CONTEXT = "dart-code:isSelectedWidget";
 const WIDGET_SUPPORTS_CONTEXT_PREFIX = "dart-code:widgetSupports:";
 
-export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, vs.Disposable {
-	protected subscriptions: vs.Disposable[] = [];
+export class FlutterOutlineProvider implements vs.TreeDataProvider<FlutterWidgetItem>, IAmDisposable {
+	protected subscriptions: IAmDisposable[] = [];
 	protected activeEditor: vs.TextEditor | undefined;
 	protected flutterOutline: FlutterOutline | undefined;
 	protected rootNode: FlutterWidgetItem | undefined;

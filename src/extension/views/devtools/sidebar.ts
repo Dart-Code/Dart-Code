@@ -6,7 +6,7 @@ import { DevToolsManager } from "../../sdk/dev_tools/manager";
 import { MySimpleBaseWebViewProvider } from "./base_view_provider";
 
 export class FlutterDtdSidebar implements IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 
 	constructor(
 		devTools: DevToolsManager,
@@ -18,7 +18,7 @@ export class FlutterDtdSidebar implements IAmDisposable {
 		this.disposables.push(vs.window.registerWebviewViewProvider("dartFlutterSidebar", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

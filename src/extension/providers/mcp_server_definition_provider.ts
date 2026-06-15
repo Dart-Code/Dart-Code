@@ -55,7 +55,7 @@ export class DartMcpServerDefinitionProvider implements vs.McpServerDefinitionPr
 		];
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

@@ -6,7 +6,7 @@ import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DartTestCapabilities } from "../../shared/capabilities/dart_test";
 import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { noAction } from "../../shared/constants";
-import { Logger } from "../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { RunnableTreeNode, SuiteData, SuiteNode, TestNode, TreeNode } from "../../shared/test/test_model";
 import { getPackageTestCapabilitiesForDartProject } from "../../shared/test/version";
 import { disposeAll, escapeDartString, generateTestNameFromFileName, uniq } from "../../shared/utils";
@@ -29,8 +29,8 @@ export let isInTestFileThatHasImplementation = false;
 export let isInImplementationFileThatCanHaveTest = false;
 
 
-export class TestCommands implements vs.Disposable {
-	private disposables: vs.Disposable[] = [];
+export class TestCommands implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
 
 	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext, private readonly vsCodeTestController: VsCodeTestController | undefined, protected readonly dartCapabilities: DartCapabilities, protected readonly flutterCapabilities: FlutterCapabilities) {
 		this.disposables.push(
@@ -193,7 +193,7 @@ export class TestCommands implements vs.Disposable {
 			}
 		}
 
-		const subs: vs.Disposable[] = [];
+		const subs: IAmDisposable[] = [];
 		return new Promise<boolean>(async (resolve) => {
 			const launchConfiguration = {
 				suppressPrompts,
@@ -408,7 +408,7 @@ export class TestCommands implements vs.Disposable {
 		return candidates;
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

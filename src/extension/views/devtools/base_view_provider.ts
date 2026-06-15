@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
-import { Logger } from "../../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { envUtils } from "../../../shared/vscode/utils";
 import { perSessionWebviewStateKey } from "../../extension";
@@ -8,7 +8,7 @@ import { DevToolsManager } from "../../sdk/dev_tools/manager";
 import { exposeWebViewUrls, handleUrlAuthFunction, WebViewUrls } from "../shared";
 
 export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	public webviewView: vs.WebviewView | undefined;
 
 	constructor(
@@ -210,7 +210,7 @@ export abstract class MyBaseWebViewProvider implements vs.WebviewViewProvider {
 			`;
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }
