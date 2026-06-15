@@ -196,8 +196,8 @@ export class FlutterDeviceManager implements IAmDisposable {
 		});
 		quickPickIsValid = false;
 		quickPick.dispose();
-		await deviceAddedSubscription.dispose();
-		await deviceRemovedSubscription.dispose();
+		deviceAddedSubscription.dispose();
+		deviceRemovedSubscription.dispose();
 
 		if (selection && await this.selectDevice(selection))
 			return this.currentDevice;

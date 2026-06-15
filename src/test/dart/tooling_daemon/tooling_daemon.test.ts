@@ -187,7 +187,7 @@ describe("dart tooling daemon", () => {
 				],
 			);
 		} finally {
-			await listener.dispose();
+			listener.dispose();
 			await daemon.streamCancel(Stream.Editor);
 		}
 	});

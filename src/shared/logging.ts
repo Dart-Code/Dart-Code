@@ -4,7 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import { platformEol } from "./constants";
 import { LogCategory, LogSeverity } from "./enums";
-import { IAmDisposable, LogMessage, Logger, SpawnedProcess } from "./interfaces";
+import { IAmDisposable, IAmDisposableAsync, LogMessage, Logger, SpawnedProcess } from "./interfaces";
 import { errorString } from "./utils";
 import { createFolderForFile } from "./utils/fs";
 
@@ -104,7 +104,7 @@ export function logToConsole(logger: EmittingLogger): IAmDisposable {
 	});
 }
 
-export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories: LogCategory[], excludeLogCategories = false): ({ dispose: () => Promise<void> | void }) {
+export function captureLogs(logger: EmittingLogger, file: string, header: string, maxLogLineLength: number, logCategories: LogCategory[], excludeLogCategories = false): IAmDisposableAsync {
 	if (!file || !path.isAbsolute(file))
 		throw new Error("Path passed to logTo must be an absolute path");
 	const time = (detailed = false) => detailed ? `[${(new Date()).toTimeString()}] ` : `[${(new Date()).toLocaleTimeString()}] `;
@@ -117,7 +117,7 @@ export function captureLogs(logger: EmittingLogger, file: string, header: string
 	logStream.write(`${excludeLogCategories ? "Not " : ""}Logging Categories:${platformEol}    ${categoryNames.join(", ")}${platformEol}${platformEol}`);
 
 	logStream.write(`${(new Date()).toDateString()} ${time(true)}Log file started${platformEol}`);
-	let fileLogger: IAmDisposable | undefined = logger.onLog((e) => {
+	let fileLogger: IAmDisposableAsync | undefined = logger.onLog((e) => {
 		if (!logStream)
 			return;
 

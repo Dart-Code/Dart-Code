@@ -130,7 +130,17 @@ export interface LogMessage {
 	toLine(maxLength: number): string;
 }
 
+/**
+ * A disposable that is synchronous (or at least, can be treated as such).
+ */
 export interface IAmDisposable {
+	dispose(): void;
+}
+
+/**
+ * A disposable that may be async.
+ */
+export interface IAmDisposableAsync {
 	dispose(): void | Promise<void>;
 }
 

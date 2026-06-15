@@ -43,7 +43,7 @@ describe("interactive refactors", () => {
 		const commandSub = vs.commands.registerCommand(testRefactorCommandName, (args: any) => { capturedArgs = args; });
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		await vs.commands.executeCommand(codeAction.command!.command, ...codeAction.command!.arguments!);
-		await commandSub.dispose();
+		commandSub.dispose();
 		return capturedArgs;
 	}
 

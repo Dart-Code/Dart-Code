@@ -315,7 +315,7 @@ describe("multi-document position tracker", () => {
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
 		assert.ok(positionsEqual(position, positionOf("^333", doc)));
 
-		await posTrack.dispose();
+		posTrack.dispose();
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
 		assert.ok(positionsEqual(position, positionOf("^22 3", doc))); // Was not tracked, so is out of sync.
 	});
@@ -540,7 +540,7 @@ describe("multi-document range tracker", () => {
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "inserted at start"));
 		assert.ok(rangesEqual(range, rangeOf("|333|", doc)));
 
-		await rangeTrack.dispose();
+		rangeTrack.dispose();
 		await editor.edit((eb) => eb.insert(positionOf("^1", doc), "000"));
 		assert.ok(rangesEqual(range, rangeOf("|22 |", doc))); // Was not tracked, so is out of sync.
 	});

@@ -1,10 +1,10 @@
 import { EventEmitter } from "./events";
-import { IAmDisposable, Logger } from "./interfaces";
-import { PromiseCompleter, disposeAll } from "./utils";
+import { IAmDisposableAsync, Logger } from "./interfaces";
+import { PromiseCompleter, disposeAllAsync } from "./utils";
 import { resolvedPromise } from "./utils/promises";
 
-export abstract class Analyzer implements IAmDisposable {
-	protected disposables: IAmDisposable[] = [];
+export abstract class Analyzer implements IAmDisposableAsync {
+	protected disposables: IAmDisposableAsync[] = [];
 
 	protected readonly onReadyCompleter = new PromiseCompleter<void>();
 	public readonly onReady = this.onReadyCompleter.promise;
@@ -40,8 +40,8 @@ export abstract class Analyzer implements IAmDisposable {
 		});
 	}
 
-	public dispose(): void | Promise<void> {
-		disposeAll(this.disposables);
+	public dispose(): Promise<void> {
+		return disposeAllAsync(this.disposables);
 	}
 }
 
