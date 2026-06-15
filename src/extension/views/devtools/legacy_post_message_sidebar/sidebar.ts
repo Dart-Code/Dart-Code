@@ -10,7 +10,7 @@ import { DevToolsManager } from "../../../sdk/dev_tools/manager";
 import { DartApi } from "./dart_tooling_api";
 
 export class FlutterPostMessageSidebar implements IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 
 	constructor(
 		devTools: DevToolsManager,
@@ -23,13 +23,13 @@ export class FlutterPostMessageSidebar implements IAmDisposable {
 		this.disposables.push(vs.window.registerWebviewViewProvider("dartFlutterSidebar", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }
 
 class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 
 	public webviewView: vs.WebviewView | undefined;
 	private api: DartApi | undefined;
@@ -40,7 +40,7 @@ class MyWebViewProvider implements vs.WebviewViewProvider, IAmDisposable {
 		private readonly logger: Logger,
 	) { }
 
-	public dispose(): any {
+	public dispose(): void {
 		this.api?.dispose();
 		disposeAll(this.disposables);
 	}

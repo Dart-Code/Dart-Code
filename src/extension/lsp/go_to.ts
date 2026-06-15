@@ -1,13 +1,14 @@
 import * as vs from "vscode";
 import * as ls from "vscode-languageclient";
+import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { uriComparisonString } from "../../shared/utils/fs";
 import * as editors from "../../shared/vscode/editors";
 import { showCode } from "../../shared/vscode/utils";
 import { LspAnalyzer } from "../analysis/analyzer";
 
-abstract class LspGoToCommand implements vs.Disposable {
-	protected disposables: vs.Disposable[] = [];
+abstract class LspGoToCommand implements IAmDisposable {
+	protected disposables: IAmDisposable[] = [];
 
 	abstract get failureMessage(): string;
 
@@ -21,7 +22,7 @@ abstract class LspGoToCommand implements vs.Disposable {
 		void vs.commands.executeCommand("editor.action.goToLocations", sourceUri, sourcePosition, codeLocations, "gotoAndPeek", this.failureMessage);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }
@@ -53,7 +54,7 @@ abstract class LspGoToRequestCommand extends LspGoToCommand {
 
 	abstract getLocations(params: ls.TextDocumentPositionParams): Promise<ls.Location | ls.Location[] | null>;
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }
@@ -113,8 +114,8 @@ export class LspGoToAugmentationCommand extends LspGoToRequestCommand {
 /**
  * Supports the dart.goToLocation command that the LSP server may use.
  */
-export class LspGoToLocationCommand implements vs.Disposable {
-	protected disposables: vs.Disposable[] = [];
+export class LspGoToLocationCommand implements IAmDisposable {
+	protected disposables: IAmDisposable[] = [];
 
 	constructor(protected readonly analyzer: LspAnalyzer) {
 		this.disposables.push(vs.commands.registerCommand("dart.goToLocation", this.goToLocation.bind(this)));
@@ -138,7 +139,7 @@ export class LspGoToLocationCommand implements vs.Disposable {
 		showCode(editor, codeLocation.range, codeLocation.range, codeLocation.range);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

@@ -1,14 +1,16 @@
 import * as vs from "vscode";
 import { dartRecommendedConfig, openSettingsAction } from "../../shared/constants";
+import { IAmDisposable } from "../../shared/interfaces";
+import { disposeAll } from "../../shared/utils";
 import { getActiveRealFileEditor } from "../../shared/vscode/editors";
 import { firstEditorColumn, showCode } from "../../shared/vscode/utils";
 import { writeToPseudoTerminal } from "../utils/vscode/terminals";
 
-export class EditCommands implements vs.Disposable {
-	private commands: vs.Disposable[] = [];
+export class EditCommands implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
 
 	constructor() {
-		this.commands.push(
+		this.disposables.push(
 			vs.commands.registerCommand("_dart.jumpToLineColInUri", this.jumpToLineColInUri.bind(this)),
 			vs.commands.registerCommand("_dart.showCode", showCode),
 			vs.commands.registerCommand("dart.writeRecommendedSettings", this.writeRecommendedSettings.bind(this)),
@@ -214,8 +216,7 @@ export class EditCommands implements vs.Disposable {
 		});
 	}
 
-	public dispose(): any {
-		for (const command of this.commands)
-			command.dispose();
+	public dispose(): void {
+		disposeAll(this.disposables);
 	}
 }

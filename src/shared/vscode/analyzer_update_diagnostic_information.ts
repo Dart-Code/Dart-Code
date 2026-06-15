@@ -116,7 +116,7 @@ export class AnalyzerUpdateDiagnosticInformationFeature implements IAmDisposable
 		return results;
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

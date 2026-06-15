@@ -3,15 +3,16 @@ import * as vs from "vscode";
 import { captureLogsMaxLineLength } from "../../shared/constants";
 import { DART_IS_CAPTURING_LOGS_CONTEXT } from "../../shared/constants.contexts";
 import { LogCategory } from "../../shared/enums";
+import { IAmDisposable } from "../../shared/interfaces";
 import { captureLogs, EmittingLogger } from "../../shared/logging";
-import { PromiseCompleter } from "../../shared/utils";
+import { disposeAll, PromiseCompleter } from "../../shared/utils";
 import { createFolderForFile, forceWindowsDriveLetterToUppercase, fsPath } from "../../shared/utils/fs";
 import { analysisServerLogCategories, debuggingLogCategories, extensionsLogCategories, getExtensionLogPath, getLogHeader, userSelectableLogCategories } from "../utils/log";
 
 export let isLogging = false;
 
-export class LoggingCommands implements vs.Disposable {
-	private disposables: vs.Disposable[] = [];
+export class LoggingCommands implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
 	private currentLogCompleter: PromiseCompleter<void> | undefined;
 	private onCaptureLogsEmitter = new vs.EventEmitter<boolean>();
 	public readonly onCaptureLogs = this.onCaptureLogsEmitter.event;
@@ -116,8 +117,7 @@ export class LoggingCommands implements vs.Disposable {
 		return `Dart-Code-Log-${formattedDate}.txt`;
 	}
 
-	public dispose(): any {
-		for (const command of this.disposables)
-			command.dispose();
+	public dispose(): void {
+		disposeAll(this.disposables);
 	}
 }

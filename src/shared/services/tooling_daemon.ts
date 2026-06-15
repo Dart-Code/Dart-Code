@@ -314,7 +314,7 @@ export class DartToolingDaemon implements IAmDisposable {
 		});
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		this.isShuttingDown = true;
 		try {
 			this.connection?.socket?.close();

@@ -170,7 +170,7 @@ export class AddSdkToPathCommands extends AddSdkToPath implements IAmDisposable 
 		}));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

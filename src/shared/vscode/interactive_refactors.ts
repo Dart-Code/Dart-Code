@@ -151,7 +151,7 @@ export class InteractiveRefactors implements IAmDisposable {
 		return uri;
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

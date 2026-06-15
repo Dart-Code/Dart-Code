@@ -28,7 +28,7 @@ export const commandState = {
 
 export class BaseSdkCommands implements IAmDisposable {
 	protected readonly sdks: DartSdks;
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 
 	// A map of any in-progress commands so we can terminate them if we want to run another.
 	private runningCommands: Record<string, ChainedProcess | undefined> = {};
@@ -156,7 +156,7 @@ export class BaseSdkCommands implements IAmDisposable {
 		}, (progress, token) => runWithProgress(progress, token));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

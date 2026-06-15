@@ -172,7 +172,7 @@ export class TestDiscoverer implements IAmDisposable {
 		}
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

@@ -6,7 +6,7 @@ import { DevToolsManager } from "../../sdk/dev_tools/manager";
 import { MySimpleBaseWebViewProvider } from "./base_view_provider";
 
 export class PropertyEditor implements IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 
 	constructor(
 		devTools: DevToolsManager,
@@ -18,7 +18,7 @@ export class PropertyEditor implements IAmDisposable {
 		this.disposables.push(vs.window.registerWebviewViewProvider("flutterPropertyEditor", webViewProvider, { webviewOptions: { retainContextWhenHidden: true } }));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

@@ -1,11 +1,11 @@
 import * as vs from "vscode";
 import { URI } from "vscode-uri";
-import { Position, Range } from "../interfaces";
+import { IAmDisposable, Position, Range } from "../interfaces";
 import { disposeAll } from "../utils";
 
-export class SingleDocumentPositionTracker implements vs.Disposable {
+export class SingleDocumentPositionTracker implements IAmDisposable {
 	// TODO(dantup): Deprecate and remove this in favour of DocumentPositionTracker
-	private readonly disposables: vs.Disposable[] = [];
+	private readonly disposables: IAmDisposable[] = [];
 	private readonly tracker: SingleDocumentOffsetTracker = new SingleDocumentOffsetTracker();
 	private readonly positionMap: Map<vs.Position, number> = new Map<vs.Position, number>();
 
@@ -52,9 +52,9 @@ export class SingleDocumentPositionTracker implements vs.Disposable {
 	}
 }
 
-export class SingleDocumentOffsetTracker implements vs.Disposable {
+export class SingleDocumentOffsetTracker implements IAmDisposable {
 	// TODO(dantup): Deprecate and remove this in favour of DocumentPositionTracker
-	private readonly disposables: vs.Disposable[] = [];
+	private readonly disposables: IAmDisposable[] = [];
 	private document: vs.TextDocument | undefined;
 	private readonly offsetMap: Map<number, number> = new Map<number, number>();
 
@@ -127,8 +127,8 @@ interface PositionTrackerEntry {
 	dispose(): void;
 }
 
-export class DocumentPositionTracker implements vs.Disposable {
-	private readonly disposables: vs.Disposable[] = [];
+export class DocumentPositionTracker implements IAmDisposable {
+	private readonly disposables: IAmDisposable[] = [];
 	private readonly trackers: Map<string, PositionTrackerEntry[]> = new Map<string, PositionTrackerEntry[]>();
 
 	constructor() {
@@ -136,7 +136,7 @@ export class DocumentPositionTracker implements vs.Disposable {
 		this.disposables.push(vs.workspace.onDidOpenTextDocument((doc) => this.handleDocumentOpen(doc)));
 	}
 
-	public trackPosition(document: vs.TextDocument, position: Position, callback: (newPosition: vs.Position | undefined) => void): vs.Disposable {
+	public trackPosition(document: vs.TextDocument, position: Position, callback: (newPosition: vs.Position | undefined) => void): IAmDisposable {
 		const vsPosition = new vs.Position(position.line, position.character);
 		const offset = document.offsetAt(vsPosition);
 		const key = document.uri.toString();
@@ -248,11 +248,11 @@ interface RangeTrackerEntry {
 	dispose: () => void;
 }
 
-export class DocumentRangeTracker implements vs.Disposable {
+export class DocumentRangeTracker implements IAmDisposable {
 	private readonly positionTracker = new DocumentPositionTracker();
 	private readonly rangeTrackers: RangeTrackerEntry[] = [];
 
-	public async trackRangeForUri(documentUri: URI, range: Range, callback: (newRange: Range | undefined) => void): Promise<vs.Disposable> {
+	public async trackRangeForUri(documentUri: URI, range: Range, callback: (newRange: Range | undefined) => void): Promise<IAmDisposable> {
 		// TODO(dantup): This being async doesn't feel good.
 		const document = vs.workspace.textDocuments.find((d) => d.uri.toString() === documentUri.toString())
 			?? await vs.workspace.openTextDocument(documentUri);
@@ -260,7 +260,7 @@ export class DocumentRangeTracker implements vs.Disposable {
 		return this.trackRange(document, range, callback);
 	}
 
-	public trackRange(document: vs.TextDocument, range: Range, callback: (newRange: Range | undefined) => void): vs.Disposable {
+	public trackRange(document: vs.TextDocument, range: Range, callback: (newRange: Range | undefined) => void): IAmDisposable {
 		let start: Position | undefined = range.start;
 		let end: Position | undefined = range.end;
 
@@ -286,15 +286,15 @@ export class DocumentRangeTracker implements vs.Disposable {
 
 			// If we don't have a range because one position went away, be sure to dispose the other tracker.
 			if (!newRange) {
-				startDisposable.dispose();
-				endDisposable.dispose();
+				void startDisposable.dispose();
+				void endDisposable.dispose();
 			}
 		};
 
 		const entry: RangeTrackerEntry = {
 			dispose: () => {
-				startDisposable.dispose();
-				endDisposable.dispose();
+				void startDisposable.dispose();
+				void endDisposable.dispose();
 				const index = this.rangeTrackers.indexOf(entry);
 				if (index !== -1) {
 					this.rangeTrackers.splice(index, 1);

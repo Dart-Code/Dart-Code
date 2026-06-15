@@ -1,4 +1,5 @@
 import * as vs from "vscode";
+import { IAmDisposable } from "../../shared/interfaces";
 import { fsPath, isWithinPathOrEqual } from "../../shared/utils/fs";
 
 interface FeatureOverrideRule<TOptions> {
@@ -16,7 +17,7 @@ export class FeatureOverrideManager<TOptions> {
 	private onDidChangeEmitter = new vs.EventEmitter<void>();
 	public readonly onDidChange = this.onDidChangeEmitter.event;
 
-	public addOverride(folders: vs.Uri[], options: TOptions): vs.Disposable {
+	public addOverride(folders: vs.Uri[], options: TOptions): IAmDisposable {
 		const rule: FeatureOverrideRule<TOptions> = { folders, options };
 		this.rules.push(rule);
 		this.onDidChangeEmitter.fire();

@@ -596,7 +596,7 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		].join("\n").trim();
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

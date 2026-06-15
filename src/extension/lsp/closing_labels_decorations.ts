@@ -1,6 +1,7 @@
 import * as vs from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import { ClosingLabelsParams, PublishClosingLabelsNotification } from "../../shared/analysis/lsp/custom_protocol";
+import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { DocumentCache } from "../../shared/utils/document_cache";
 import { findVisibleEditor } from "../../shared/vscode/editors";
@@ -8,8 +9,8 @@ import { config } from "../config";
 
 const validLastCharacters = [")", "]"];
 
-export class LspClosingLabelsDecorations implements vs.Disposable {
-	private subscriptions: vs.Disposable[] = [];
+export class LspClosingLabelsDecorations implements IAmDisposable {
+	private subscriptions: IAmDisposable[] = [];
 	private closingLabels = new DocumentCache<ClosingLabelsParams>();
 	private editors = new DocumentCache<vs.TextEditor>();
 	private updateTimeouts = new DocumentCache<NodeJS.Timeout>();

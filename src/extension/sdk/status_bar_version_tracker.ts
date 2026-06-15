@@ -1,13 +1,13 @@
-import * as vs from "vscode";
 import { MAX_VERSION, MISSING_VERSION_FILE_VERSION } from "../../shared/constants";
+import { IAmDisposable } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { getLanguageStatusItem } from "../../shared/vscode/status_bar";
 import { WorkspaceContext } from "../../shared/workspace";
 import { config } from "../config";
 
-export class StatusBarVersionTracker implements vs.Disposable {
-	private disposables: vs.Disposable[] = [];
+export class StatusBarVersionTracker implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
 
 	constructor(workspaceContext: WorkspaceContext) {
 		const isFlutter = workspaceContext.hasAnyFlutterProjects;

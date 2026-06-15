@@ -57,7 +57,7 @@ export class LastTestDebugSession {
 }
 
 export class DebugCommands implements IAmDisposable {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	private debugOptions = vs.window.createStatusBarItem("dartStatusDebugOptions", vs.StatusBarAlignment.Left, 0);
 	public currentDebugOption = DebugOption.MyCode;
 	private debugMetrics = vs.window.createStatusBarItem("dartStatusDebugMetrics", vs.StatusBarAlignment.Right, 0);
@@ -1064,7 +1064,7 @@ export class DebugCommands implements IAmDisposable {
 		void vs.commands.executeCommand("setContext", CURRENT_FILE_RUNNABLE, isRunnable);
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

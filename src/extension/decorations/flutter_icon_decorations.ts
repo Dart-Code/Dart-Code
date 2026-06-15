@@ -1,6 +1,6 @@
 import * as vs from "vscode";
 import { FlutterOutline } from "../../shared/analysis/lsp/custom_protocol";
-import { Logger } from "../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { docsIconPathFormat } from "../../shared/vscode/extension_utils";
@@ -8,8 +8,8 @@ import { IconRangeComputerLsp } from "../../shared/vscode/icon_range_computer";
 import { LspAnalyzer } from "../analysis/analyzer";
 import { isAnalyzable } from "../utils";
 
-export class FlutterIconDecorations implements vs.Disposable {
-	protected readonly subscriptions: vs.Disposable[] = [];
+export class FlutterIconDecorations implements IAmDisposable {
+	protected readonly subscriptions: IAmDisposable[] = [];
 	protected activeEditor?: vs.TextEditor;
 	private readonly decorationTypes: Record<string, vs.TextEditorDecorationType> = {};
 	private readonly computer: IconRangeComputerLsp;

@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { ExtensionRestartReason, skipAction } from "../constants";
 import { LogCategory } from "../enums";
 import * as f from "../flutter/daemon_interfaces";
-import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, FlutterCreateCommandArgs, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
+import { CustomEmulator, CustomEmulatorDefinition, Emulator, EmulatorCreator, FlutterCreateCommandArgs, IAmDisposable, IFlutterDaemon, Logger, PlatformEnabler } from "../interfaces";
 import { logProcess } from "../logging";
 import { safeSpawn } from "../processes";
 import { disposeAll, flatMap, notNullOrUndefined, uniq, withTimeout } from "../utils";
@@ -13,9 +13,9 @@ import { WorkspaceContext } from "../workspace";
 import { isRunningLocally } from "./utils";
 import { Context } from "./workspace";
 
-export class FlutterDeviceManager implements vs.Disposable {
+export class FlutterDeviceManager implements IAmDisposable {
 	private readonly unresponsiveTimeoutPeriodSeconds = 5;
-	private subscriptions: vs.Disposable[] = [];
+	private subscriptions: IAmDisposable[] = [];
 	private statusBarItem: vs.StatusBarItem;
 	public currentDevice?: f.Device;
 	private devices: f.Device[] = [];

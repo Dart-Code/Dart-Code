@@ -139,7 +139,7 @@ export abstract class DevToolsEmbeddedViewOrSidebarView implements IAmDisposable
 
 export class DevToolsEmbeddedView extends DevToolsEmbeddedViewOrSidebarView {
 	private readonly panel: vs.WebviewPanel;
-	private messageDisposable: vs.Disposable;
+	private messageDisposable: IAmDisposable;
 
 	constructor(
 		readonly logger: Logger,

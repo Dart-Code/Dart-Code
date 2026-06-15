@@ -72,7 +72,7 @@ export class FlutterDartPadSamplesCodeLensProvider implements CodeLensProvider, 
 			));
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

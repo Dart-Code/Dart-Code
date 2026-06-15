@@ -45,7 +45,7 @@ export class WorkspaceContext implements IAmDisposable {
 		return types.join(", ");
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		this.events.dispose();
 	}
 
@@ -56,7 +56,7 @@ export class WorkspaceContext implements IAmDisposable {
 class WorkspaceEvents implements IAmDisposable {
 	public readonly onPackageMapChange = new EventEmitter<void>();
 
-	public dispose(): any {
+	public dispose(): void {
 		this.onPackageMapChange.dispose();
 	}
 }

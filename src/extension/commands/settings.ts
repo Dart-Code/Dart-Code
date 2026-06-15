@@ -1,10 +1,10 @@
 import * as vs from "vscode";
-import { Logger } from "../../shared/interfaces";
+import { IAmDisposable, Logger } from "../../shared/interfaces";
 import { disposeAll } from "../../shared/utils";
 import { WorkspaceContext } from "../../shared/workspace";
 
-export class SettingsCommands implements vs.Disposable {
-	private disposables: vs.Disposable[] = [];
+export class SettingsCommands implements IAmDisposable {
+	private disposables: IAmDisposable[] = [];
 
 	constructor(protected readonly logger: Logger, protected readonly wsContext: WorkspaceContext) {
 		this.disposables.push(vs.commands.registerCommand("_dart.settings.openDevToolsLocationSetting", () => this.openSettings("dart.devToolsLocation", true)));
@@ -24,7 +24,7 @@ export class SettingsCommands implements vs.Disposable {
 		}
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }

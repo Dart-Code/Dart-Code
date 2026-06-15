@@ -2,7 +2,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../../shared/capabilities/dart";
 import { CommandSource } from "../../../shared/constants";
 import { SIDEBAR_DEVTOOLS_AVAILABLE_PREFIX } from "../../../shared/constants.contexts";
-import { DevToolsPage, Logger } from "../../../shared/interfaces";
+import { DevToolsPage, IAmDisposable, Logger } from "../../../shared/interfaces";
 import { disposeAll } from "../../../shared/utils";
 import { DevToolsEmbeddedViewOrSidebarView } from "../../sdk/dev_tools/embedded_view";
 import { DevToolsManager } from "../../sdk/dev_tools/manager";
@@ -10,7 +10,7 @@ import { WebViewUrls } from "../shared";
 import { MyBaseWebViewProvider } from "./base_view_provider";
 
 export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
-	protected readonly disposables: vs.Disposable[] = [];
+	protected readonly disposables: IAmDisposable[] = [];
 	protected readonly webViewProvider: MyWebViewProvider;
 
 	/// Whether the frame has ever been loaded.
@@ -90,7 +90,7 @@ export class SidebarDevTools extends DevToolsEmbeddedViewOrSidebarView {
 		await this.webViewProvider.reload();
 	}
 
-	public dispose(): any {
+	public dispose(): void {
 		disposeAll(this.disposables);
 	}
 }
