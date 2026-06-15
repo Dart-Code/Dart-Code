@@ -1,6 +1,6 @@
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession } from "vscode";
 import { DebuggerType, LogCategory } from "../../shared/enums";
-import { IAmDisposable, Logger } from "../../shared/interfaces";
+import { IAmDisposableAsync, Logger } from "../../shared/interfaces";
 import { captureLogs, CategoryLogger, EmittingLogger } from "../../shared/logging";
 import { config } from "../config";
 import { insertSessionName } from "../utils";
@@ -16,7 +16,7 @@ export class DartDebugAdapterLoggerFactory implements DebugAdapterTrackerFactory
 
 class DartDebugAdapterLogger implements DebugAdapterTracker {
 	private logger: Logger;
-	private logFileDisposable: IAmDisposable | undefined;
+	private logFileDisposable: IAmDisposableAsync | undefined;
 
 	constructor(private readonly emittingLogger: EmittingLogger, private readonly session: DebugSession) {
 		this.logger = new CategoryLogger(emittingLogger, LogCategory.DAP);
