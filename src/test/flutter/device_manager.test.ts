@@ -32,9 +32,9 @@ describe("device_manager", () => {
 		);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		dm.dispose();
-		daemon.dispose();
+		await daemon.dispose();
 	});
 
 	it("auto-selects valid devices", async () => {

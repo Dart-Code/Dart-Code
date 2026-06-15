@@ -162,13 +162,13 @@ export class FlutterDaemon extends StdIOService<UnknownNotification> implements 
 		});
 	}
 
-	public dispose() {
+	public async dispose(): Promise<void> {
 		this.isShuttingDown = true;
 
 		if (this.pingIntervalId)
 			clearInterval(this.pingIntervalId);
 
-		super.dispose();
+		await super.dispose();
 	}
 
 	protected sendMessage(json: string) {

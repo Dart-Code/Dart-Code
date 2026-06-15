@@ -227,13 +227,15 @@ export function isWebDevice(deviceId: string | undefined): boolean {
 /**
  * Calls dispose() on all of `disposables` which must all be synchronous disposables.
  */
-export function disposeAll(disposables: IAmDisposable[]): void {
+export function disposeAll(disposables: IAmDisposable[], logger?: Logger): void {
 	const toDispose = disposables.slice();
 	disposables.length = 0;
 	for (const d of toDispose) {
 		try {
 			d.dispose();
-		} catch (e) {
+		} catch (e: any) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			logger?.error({ message: e.toString() });
 			console.warn(e);
 		}
 	}
@@ -245,7 +247,7 @@ export function disposeAll(disposables: IAmDisposable[]): void {
  * Will `await` all calls to `dispose()` but time out with printing a warning if they do not complete
  * within 3s.
  */
-export async function disposeAllAsync(disposables: IAmDisposableAsync[]): Promise<void> {
+export async function disposeAllAsync(disposables: IAmDisposableAsync[], logger?: Logger): Promise<void> {
 	const toDispose = disposables.slice();
 	disposables.length = 0;
 	try {
@@ -253,7 +255,9 @@ export async function disposeAllAsync(disposables: IAmDisposableAsync[]): Promis
 			Promise.allSettled(toDispose.map(async (d) => {
 				try {
 					await d.dispose();
-				} catch (e) {
+				} catch (e: any) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+					logger?.error({ message: e.toString() });
 					console.warn(e);
 				}
 			})),

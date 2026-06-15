@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { IAmDisposable, IAmDisposableAsync, Logger, SpawnedProcess } from "../interfaces";
 import { safeSpawn } from "../processes";
 import { Request, UnknownResponse } from "../services/interfaces";
-import { PromiseCompleter } from "../utils";
+import { disposeAllAsync, PromiseCompleter } from "../utils";
 
 // Reminder: This class is used in the debug adapter as well as the main Code process!
 
@@ -300,7 +300,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 			this.logStream.write(message.trim() + "\r\n");
 	}
 
-	public dispose() {
+	public async dispose(): Promise<void> {
 		this.logTraffic(`Process ${this.description} is being disposed`);
 		for (const pid of this.additionalPidsToTerminate) {
 			try {
@@ -334,15 +334,7 @@ export abstract class StdIOService<T> implements IAmDisposable {
 		}
 		this.process = undefined;
 
-		this.disposables.forEach(async (d) => {
-			try {
-				await d.dispose();
-			} catch (e: any) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				this.logger.error({ message: e.toString() });
-			}
-		});
-		this.disposables.length = 0;
+		await disposeAllAsync(this.disposables, this.logger);
 
 		// Clear log file so if any more log events come through later, we don't
 		// create a new log file and overwrite what we had.
