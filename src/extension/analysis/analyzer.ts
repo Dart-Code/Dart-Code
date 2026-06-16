@@ -338,7 +338,7 @@ export class LspAnalyzer extends Analyzer {
 					return results;
 				},
 			},
-		} as InteractiveMiddleware;
+		} satisfies InteractiveMiddleware;
 	}
 
 	public async getDiagnosticServerPort(): Promise<{ port: number } | undefined> {
