@@ -559,7 +559,7 @@ describe("pub package commands", () => {
 
 		it("shows each pub workspace only once with a package count suffix", async () => {
 			sb.stub(sharedVscodeUtils, "getAllProjectFolders").resolves([workspaceProject1, workspaceProject2, standalone1]);
-			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot } as vs.QuickPickItem & { path: string });
+			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot });
 
 			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
 
@@ -585,7 +585,7 @@ describe("pub package commands", () => {
 					return { index: 0, name: path.basename(standalone1), uri: vs.Uri.file(standalone1) };
 				return undefined;
 			});
-			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot } as vs.QuickPickItem & { path: string });
+			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ path: workspaceRoot });
 
 			const folder = await getFolderToRunCommandIn(privateApi.logger, "Select which folder to get packages for", { onlyShowWorkspaceRoots: true });
 

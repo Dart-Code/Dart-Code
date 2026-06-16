@@ -28,7 +28,7 @@ export async function startDebugger(dc: DartDebugClient, script?: Uri | string, 
 		throw new Error(`Could not get launch configuration (got ${config})`);
 
 	await watchPromise("startDebugger->start", dc.start());
-	return config as DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments;
+	return config satisfies DebugConfiguration & DartVsCodeLaunchArgs & DebugProtocol.LaunchRequestArguments;
 }
 
 export function createDebugClient(debuggerType: DebuggerType) {

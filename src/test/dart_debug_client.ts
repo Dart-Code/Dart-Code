@@ -119,7 +119,7 @@ export class DartDebugClient extends DebugClient {
 	}
 
 	private sendResponse(request: DebugProtocol.Request, body: any): void {
-		// Hack: Underlyung class doesn't have response support.
+		// Hack: Underlying class doesn't have response support.
 		const me = (this as unknown as { outputStream: Writable, sequence: number });
 
 		const response: DebugProtocol.Response = {

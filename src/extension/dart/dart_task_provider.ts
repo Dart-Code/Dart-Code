@@ -119,7 +119,7 @@ export abstract class BaseTaskProvider implements vs.TaskProvider {
 		const projectPath = fsPath(projectFolder);
 		const relativePath = path.relative(workspaceFolderPath, projectPath);
 		const task = new vs.Task(
-			{ type: this.type, cwd: relativePath, command, args } as DartTaskDefinition,
+			{ type: this.type, cwd: relativePath, command, args } satisfies DartTaskDefinition,
 			workspaceFolder,
 			[command, ...args].join(" "),
 			this.type,

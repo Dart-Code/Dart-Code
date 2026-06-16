@@ -231,7 +231,7 @@ describe("flutter commands", () => {
 				{ kind: "top-level-setting", label: "Offline Mode" },
 				{ kind: "cancel" },
 			]);
-			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ label: "enable" } as vs.QuickPickItem);
+			const showQuickPick = sb.stub(vs.window, "showQuickPick").resolves({ label: "enable" } satisfies vs.QuickPickItem);
 
 			const result = await privateApi.flutterCommands.promptForNameWithSettings("offline_project", projectFolder);
 
@@ -290,7 +290,7 @@ type InputBoxAction =
  * This lets each test navigate through the real prompt/settings loop without needing
  * UI interaction (but still exercising the event handlers).
  */
-function stubCreateInputBoxActions(actions: InputBoxAction[]) {
+function stubCreateInputBoxActions(actions: InputBoxAction[]): void {
 	const createInputBox = sb.stub(vs.window, "createInputBox");
 	createInputBox.callsFake(() => {
 		let acceptHandler: () => void;
@@ -342,6 +342,6 @@ function stubCreateInputBoxActions(actions: InputBoxAction[]) {
 			value: "",
 		};
 
-		return input as unknown as vs.InputBox;
+		return input;
 	});
 }

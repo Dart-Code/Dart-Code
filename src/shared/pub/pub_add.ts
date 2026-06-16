@@ -50,7 +50,7 @@ export class PackageCacheData {
 				lastUpdated: this.lastUpdated,
 				packages: this.packages,
 				version: PackageCacheData.cacheVersion,
-			} as PackageCache,
+			} satisfies PackageCache,
 			(key, value) => PackageCacheData.mapReplacer(key, value),
 			2,
 		);

@@ -297,7 +297,7 @@ function installOutputFilter(stream: NodeJS.WriteStream, shouldDropLine: (line: 
 		writeResult = originalWrite(linesToWrite[linesToWrite.length - 1], writeEncoding, writeCallback) && writeResult;
 
 		return writeResult;
-	}) as typeof stream.write;
+	}) satisfies typeof stream.write;
 }
 
 void runAllTests().then(() => process.exit(exitCode));

@@ -336,7 +336,7 @@ export function treeLabel(item: vs.TreeItem): string | undefined {
 export const envUtils = new EnvUtils();
 
 function usedEditorColumns(): Set<number> {
-	return new Set(vs.window.visibleTextEditors.map((e) => e.viewColumn as number | undefined).filter(notUndefined));
+	return new Set(vs.window.visibleTextEditors.map((e) => e.viewColumn).filter(notUndefined));
 }
 
 export function firstNonEditorColumn(): vs.ViewColumn | undefined {

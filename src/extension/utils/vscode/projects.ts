@@ -96,7 +96,7 @@ async function showPackagePicker(folders: PubWorkspaceOrPackageFolderInfo[], pla
 			label: path.relative(workspacePathParent, folderPath),
 			detail,
 			path: folderPath,
-		} as vs.QuickPickItem & { path: string };
+		} satisfies vs.QuickPickItem & { path: string };
 	}).filter(notUndefined);
 
 	const selectedFolder = await vs.window.showQuickPick(items, { placeHolder });
@@ -120,7 +120,7 @@ async function showFolderMultiPicker(selectableFolderPaths: string[], prePickedF
 			label: path.relative(workspacePathParent, selectableFolderPath),
 			path: selectableFolderPath,
 			picked: prePickedFolders?.has(selectableFolderPath),
-		} as vs.QuickPickItem & { path: string };
+		} satisfies vs.QuickPickItem & { path: string };
 	}).filter(notUndefined);
 
 	const selectedFolders = await vs.window.showQuickPick(items, { placeHolder, canPickMany: true });
