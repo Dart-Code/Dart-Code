@@ -1,6 +1,8 @@
 import * as vstest from "@vscode/test-electron";
 import * as fs from "fs";
 import * as path from "path";
+import readline from "readline";
+import { PassThrough, Writable } from "stream";
 import { getTestSuites } from "./test_runner";
 
 let exitCode = 0;
@@ -14,14 +16,6 @@ if (testFilterArgs.length > 0) {
 	testEnv.DART_CODE_TEST_FILTER = JSON.stringify(testFilterArgs);
 	console.log(`Running tests with filter(s): ${testFilterArgs.join(", ")}`);
 }
-
-// Replace process.stdout and process.stderr so we can filter the output if running
-// without DART_CODE_NO_FILTER_TEST_OUTPUT.
-//
-// TODO(dantup): Tidy this up once this ships:
-//  https://github.com/microsoft/vscode-test/pull/324
-if (!process.env.DART_CODE_NO_FILTER_TEST_OUTPUT)
-	installOutputFiltering();
 
 async function runTests(testFolderName: string, workspaceFolder: string, logSuffix?: string, env?: NodeJS.Dict<string>): Promise<void> {
 	const testFolder = path.join(cwd, "out", "src", "test", testFolderName);
@@ -114,6 +108,8 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 			],
 			version: codeVersion,
 			reporter,
+			stdout: process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stdout),
+			stderr: process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stderr),
 		});
 		exitCode = exitCode || res;
 	} catch (e) {
@@ -200,104 +196,68 @@ async function runAllTests(): Promise<void> {
 	}
 }
 
-function installOutputFiltering(): void {
-	// There's a lot of noisy output during test runs even when all test pass, much
-	// of which is from VS Code and we can't suppress. Filter it out as it's written
-	// to stdout or stderr to make the logs easier to review.
-	const suppressOutputPatterns = [
-		/Found --crash-reporter-directory argument/i,
-		/ERROR:dbus/i,
-		/Exiting GPU process/i,
-		/update#setState disabled/i,
-		/update#ctor - updates are disabled by the environment/i,
-		/Started local extension host with pid/i,
-		/MCP Registry configured/i,
-		/Loading development extension/i,
-		/Authentication provider is not declared/i,
-		/Settings Sync:/i,
-		/This is a flutter daemon ERROR event/i,
-		/fallback to software WebGL has been deprecated/i,
-		/GPU stall due to/i,
-		/Closing VS Code gracefully/i,
-		/FATAL:electron/i,
-		/ERROR:(ui|gpu|third_party)/i,
-		/Failed to check for extension recommendations/i,
-		/Extension host with pid \d+ exited with code: 0/i,
-		/\[DEP0040\] DeprecationWarning:/i,
-		/Failed to autolaunch/i,
-		/Failed to register VM Service ws:\/\/fake-host:123\/ws/i,
-		/Performing extension reload/i,
-		/Exit code:\s+0/i,
-		/filterEnabledExtensions/i,
-		/ExtensionHostDataProvider\.scannedExtensions:/i,
-		/ProcessExtensionHostDataProvider\.localExtensions:/i,
-		/Asking native host service to exit with code 0/i,
-		/product\.json#extensionEnabledApiProposals/i,
-		/AbstractExtensionService\./i,
-		/IExtensionHostStarter\./i,
-		/NativeExtensionHostFactory\./i,
-		/MODULE_TYPELESS_PACKAGE_JSON/i,
-		/Reparsing as ES module because module syntax was detected/i,
-		/To eliminate this warning, add "type": "module"/i,
-		/depends on UNKNOWN service agentSessions/i,
-		/command 'antigravity\.isFileGitIgnored' not found/i,
-		/An unknown error occurred. Please consult the log for more details./i,
-		// Verbose stack traces from VS Code errors
-		/resources\/app\/out\/vs/i,
-	];
-	const shouldDropLine = (line: string) => suppressOutputPatterns.some((pattern) => pattern.test(line));
+/**
+ * Create a wrapper over `targetStream` that filters out noise.
+ */
+function filterOutputStreamLines(targetStream: Writable): Writable {
+	const inputStream = new PassThrough();
 
-	installOutputFilter(process.stdout, shouldDropLine);
-	installOutputFilter(process.stderr, shouldDropLine);
+	const rl = readline.createInterface({
+		input: inputStream,
+		crlfDelay: Infinity
+	});
+
+	rl.on("line", (line) => {
+		if (shouldIncludeOutputLine(line))
+			targetStream.write(`${line}\n`);
+	});
+
+	inputStream.on("end", () => rl.close());
+
+	return inputStream;
 }
 
-type WriteCallback = (error?: Error | null) => void;
-
-function installOutputFilter(stream: NodeJS.WriteStream, shouldDropLine: (line: string) => boolean): void {
-	const originalWrite = stream.write.bind(stream);
-	let pendingLine = "";
-
-	const flushPending = () => {
-		if (pendingLine && !shouldDropLine(pendingLine))
-			originalWrite(pendingLine);
-		pendingLine = "";
-	};
-
-	process.once("beforeExit", flushPending);
-	process.once("exit", flushPending);
-
-	stream.write = ((
-		chunk: string | Uint8Array,
-		encoding?: BufferEncoding | WriteCallback,
-		callback?: WriteCallback,
-	): boolean => {
-		const writeCallback = typeof encoding === "function" ? encoding : callback;
-		const writeEncoding = typeof encoding === "function" ? undefined : encoding;
-
-		pendingLine += Buffer.isBuffer(chunk)
-			? chunk.toString(writeEncoding)
-			: String(chunk);
-
-		const lines = pendingLine.split("\n");
-		pendingLine = lines.pop() ?? "";
-
-		const linesToWrite = lines
-			.map((line) => `${line}\n`)
-			.filter((line) => !shouldDropLine(line));
-
-		if (!linesToWrite.length) {
-			writeCallback?.();
-			return true;
-		}
-
-		let writeResult = true;
-		for (let i = 0; i < linesToWrite.length - 1; i++) {
-			writeResult = originalWrite(linesToWrite[i], writeEncoding) && writeResult;
-		}
-		writeResult = originalWrite(linesToWrite[linesToWrite.length - 1], writeEncoding, writeCallback) && writeResult;
-
-		return writeResult;
-	}) satisfies typeof stream.write;
-}
+const suppressOutputPatterns = [
+	/Found --crash-reporter-directory argument/i,
+	/ERROR:dbus/i,
+	/Exiting GPU process/i,
+	/update#setState disabled/i,
+	/update#ctor - updates are disabled by the environment/i,
+	/Started local extension host with pid/i,
+	/MCP Registry configured/i,
+	/Loading development extension/i,
+	/Authentication provider is not declared/i,
+	/Settings Sync:/i,
+	/This is a flutter daemon ERROR event/i,
+	/fallback to software WebGL has been deprecated/i,
+	/GPU stall due to/i,
+	/Closing VS Code gracefully/i,
+	/FATAL:electron/i,
+	/ERROR:(ui|gpu|third_party)/i,
+	/Failed to check for extension recommendations/i,
+	/Extension host with pid \d+ exited with code: 0/i,
+	/\[DEP0040\] DeprecationWarning:/i,
+	/Failed to autolaunch/i,
+	/Failed to register VM Service ws:\/\/fake-host:123\/ws/i,
+	/Performing extension reload/i,
+	/Exit code:\s+0/i,
+	/filterEnabledExtensions/i,
+	/ExtensionHostDataProvider\.scannedExtensions:/i,
+	/ProcessExtensionHostDataProvider\.localExtensions:/i,
+	/Asking native host service to exit with code 0/i,
+	/product\.json#extensionEnabledApiProposals/i,
+	/AbstractExtensionService\./i,
+	/IExtensionHostStarter\./i,
+	/NativeExtensionHostFactory\./i,
+	/MODULE_TYPELESS_PACKAGE_JSON/i,
+	/Reparsing as ES module because module syntax was detected/i,
+	/To eliminate this warning, add "type": "module"/i,
+	/depends on UNKNOWN service agentSessions/i,
+	/command 'antigravity\.isFileGitIgnored' not found/i,
+	/An unknown error occurred. Please consult the log for more details./i,
+	// Verbose stack traces from VS Code errors
+	/resources\/app\/out\/vs/i,
+];
+const shouldIncludeOutputLine = (line: string) => !suppressOutputPatterns.some((pattern) => pattern.test(line));
 
 void runAllTests().then(() => process.exit(exitCode));
