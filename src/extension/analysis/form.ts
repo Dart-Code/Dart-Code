@@ -499,7 +499,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 		capabilities.experimental ??= {};
 		capabilities.experimental.interactiveResolve = {
 			inputTypes: ['bool', 'file', 'enum', 'lazyEnum', 'number', 'string']
-		} as InteractiveResolveClientCapabilities;
+		} satisfies InteractiveResolveClientCapabilities;
 	}
 
 	/**
@@ -574,7 +574,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 				command: command,
 				arguments: args,
 				formAnswers: formAnswers
-			} as InteractiveExecuteCommandParams).then(undefined, (error) => {
+			} satisfies InteractiveExecuteCommandParams).then(undefined, (error) => {
 				return this.client.handleFailedRequest(requestType, undefined, error, undefined);
 			});
 		};
