@@ -225,8 +225,13 @@ const suppressOutputPatterns = [
 	/update#ctor - updates are disabled by the environment/i,
 	/Started local extension host with pid/i,
 	/MCP Registry configured/i,
+	/is not in the list of known options/i,
+	/creating (application )?shared storage/i,
+	/\[shared storage\]/i,
+	/\[AccountPolicyGate\]/i,
+	/mutex already exists/i,
 	/Loading development extension/i,
-	/Authentication provider is not declared/i,
+	/Authentication provider is not/i,
 	/Settings Sync:/i,
 	/This is a flutter daemon ERROR event/i,
 	/fallback to software WebGL has been deprecated/i,
@@ -256,7 +261,8 @@ const suppressOutputPatterns = [
 	/command 'antigravity\.isFileGitIgnored' not found/i,
 	/An unknown error occurred. Please consult the log for more details./i,
 	// Verbose stack traces from VS Code errors
-	/resources\/app\/out\/vs/i,
+	/resources\/app\/out/i,
+	/extensions\/github\.copilot-chat/i,
 ];
 const shouldIncludeOutputLine = (line: string) => !suppressOutputPatterns.some((pattern) => pattern.test(line));
 
