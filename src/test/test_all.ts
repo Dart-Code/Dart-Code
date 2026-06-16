@@ -1,7 +1,7 @@
 import * as vstest from "@vscode/test-electron";
 import * as fs from "fs";
 import * as path from "path";
-import readline from "readline";
+import * as readline from "readline";
 import { PassThrough, Writable } from "stream";
 import { getTestSuites } from "./test_runner";
 
@@ -76,6 +76,8 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 		console.log(`Running tests with ideOverride: ${ideOverride}`);
 	}
 
+	const stdout = process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stdout);
+	const stderr = process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stderr);
 	try {
 		const res = await vstest.runTests({
 			vscodeExecutablePath: ideOverride,
@@ -108,13 +110,16 @@ async function runTests(testFolderName: string, workspaceFolder: string, logSuff
 			],
 			version: codeVersion,
 			reporter,
-			stdout: process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stdout),
-			stderr: process.env.DART_CODE_NO_FILTER_TEST_OUTPUT ? undefined : filterOutputStreamLines(process.stderr),
+			stdout: stdout?.stream,
+			stderr: stderr?.stream,
 		});
 		exitCode = exitCode || res;
 	} catch (e) {
 		console.error(e);
 		exitCode = exitCode || 999;
+	} finally {
+		await stdout?.endAndWait();
+		await stderr?.endAndWait();
 	}
 }
 
@@ -199,7 +204,7 @@ async function runAllTests(): Promise<void> {
 /**
  * Create a wrapper over `targetStream` that filters out noise.
  */
-function filterOutputStreamLines(targetStream: Writable): Writable {
+function filterOutputStreamLines(targetStream: Writable): { stream: Writable, endAndWait: () => Promise<void> } {
 	const inputStream = new PassThrough();
 
 	const rl = readline.createInterface({
@@ -212,9 +217,14 @@ function filterOutputStreamLines(targetStream: Writable): Writable {
 			targetStream.write(`${line}\n`);
 	});
 
-	inputStream.on("end", () => rl.close());
-
-	return inputStream;
+	const done = new Promise<void>((resolve) => rl.once("close", resolve));
+	return {
+		stream: inputStream,
+		endAndWait(): Promise<void> {
+			inputStream.end();
+			return done;
+		}
+	};
 }
 
 const suppressOutputPatterns = [
