@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/consistent-indexed-object-style */
 /* eslint-disable arrow-body-style */
