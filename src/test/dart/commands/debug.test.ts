@@ -78,8 +78,8 @@ describe("debug commands", () => {
 			workspaceFolderValue: [{ name: "Existing", request: "launch", type: "dart" }],
 			workspaceValue: undefined,
 		});
-		const openTextDocument = sb.stub(vs.workspace, "openTextDocument").resolves({} as vs.TextDocument);
-		const showTextDocument = sb.stub(vs.window, "showTextDocument").resolves(undefined as any);
+		const openTextDocument = sb.stub(vs.workspace, "openTextDocument").resolves({});
+		const showTextDocument = sb.stub(vs.window, "showTextDocument").resolves(undefined);
 		sb.stub(vs.workspace, "getConfiguration").withArgs("launch", sinon.match.any).returns({
 			inspect,
 			update,

@@ -5,7 +5,7 @@ import * as vs from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { DartWorkspaceContext, Logger } from "../../shared/interfaces";
 import { PackageNameCompletionData, PubApi } from "../../shared/pub/api";
-import { GitPubPackage, PackageCacheData, PackageInfo, PathPubPackage, PickablePackage, PubPackage } from "../../shared/pub/pub_add";
+import { GitPubPackage, PackageCacheData, PackageInfo, PathPubPackage, PickablePackage } from "../../shared/pub/pub_add";
 import { fsPath } from "../../shared/utils/fs";
 import { Context } from "../../shared/vscode/workspace";
 import { Analytics, AnalyticsEvent } from "../analytics";
@@ -130,7 +130,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 					packageInfo = await this.promptForGitPackageInfo();
 					break;
 				default:
-					packageInfo = selectedOption as PubPackage;
+					packageInfo = selectedOption;
 					break;
 			}
 		}
@@ -385,7 +385,7 @@ export class AddDependencyCommand extends BaseSdkCommands {
 				label: fullString,
 				marker: undefined,
 				packageNames: fullString,
-			} as PickablePackage;
+			} satisfies PickablePackage;
 		});
 
 		if (userInput) {

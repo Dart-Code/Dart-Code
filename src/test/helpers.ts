@@ -388,7 +388,7 @@ type QuickPickAction =
  *
  * The next action will be chosen for each call to createQuickPick().
  */
-export function stubCreateQuickPickActions(actions: QuickPickAction[]) {
+export function stubCreateQuickPickActions(actions: QuickPickAction[]): void {
 	const createQuickPick = sb.stub(vs.window, "createQuickPick");
 	createQuickPick.callsFake(() => {
 		let acceptHandler: () => void;
@@ -441,7 +441,7 @@ export function stubCreateQuickPickActions(actions: QuickPickAction[]) {
 			title: undefined as string | undefined,
 		};
 
-		return quickPick as unknown as vs.QuickPick<vs.QuickPickItem>;
+		return quickPick;
 	});
 }
 
@@ -1294,15 +1294,11 @@ export function makeTrivialChangeToFileDirectly(uri: vs.Uri): Promise<void> {
 // Watches a promise and reports every 10s while it's unresolved. This is to aid tracking
 // down hangs in test runs where multiple promises can be spawned together and generate
 // lots of log output, making it hard to keep track of which did not complete.
-export function watchPromise<T>(name: string, promise: Promise<T> | T): Promise<T> {
-	const activeTestName = currentTestName;
+export function watchPromise<T>(name: string, maybePromise: Promise<T> | T): Promise<T> {
 	// For convenience, this method might get wrapped around things that are not
 	// promises.
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-	const promiseAny = promise as any;
-	if (!promise || !promiseAny.then || !promiseAny.catch)
-		return Promise.resolve(promise);
-	promise = promise as Promise<T>;
+	const promise: Promise<T> = Promise.resolve(maybePromise);
+	const activeTestName = currentTestName;
 	let didComplete = false;
 	// We'll log completion of the promise only if we'd logged that it was still in
 	// progress at some point.

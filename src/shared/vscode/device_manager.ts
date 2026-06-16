@@ -432,7 +432,7 @@ export class FlutterDeviceManager implements IAmDisposable {
 					detail: d === this.currentDevice ? "Current Device" : undefined,
 					device: d,
 					label: this.labelForDevice(d, { withIcon: true }),
-				} as PickableDevice)),
+				} satisfies PickableDevice)),
 			]);
 		}
 

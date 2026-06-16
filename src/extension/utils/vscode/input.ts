@@ -102,7 +102,7 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 			const quickPick = vs.window.createQuickPick();
 			quickPick.placeholder = placeholder;
 			quickPick.title = title;
-			quickPick.items = setting.enumValues!.map((v) => ({ label: v } as vs.QuickPickItem));
+			quickPick.items = setting.enumValues!.map((v) => ({ label: v } satisfies vs.QuickPickItem));
 			quickPick.activeItems = quickPick.items.filter((item) => item.label === setting.currentValue);
 
 			const accepted = await new Promise<boolean>((resolve) => {
@@ -128,11 +128,11 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 			quickPick.title = title;
 			const items: Array<vs.QuickPickItem & { isDoNotAskNextTime?: boolean }> = [];
 			for (const value of setting.enumValues) {
-				items.push({ label: value } as vs.QuickPickItem);
+				items.push({ label: value } satisfies vs.QuickPickItem);
 			}
 			if (doNotAskOption) {
-				items.push({ kind: vs.QuickPickItemKind.Separator } as vs.QuickPickItem);
-				items.push({ label: "Don't ask next time", isDoNotAskNextTime: true } as vs.QuickPickItem);
+				items.push({ kind: vs.QuickPickItemKind.Separator, label: "" });
+				items.push({ label: "Don't ask next time", isDoNotAskNextTime: true, });
 			}
 			quickPick.items = items;
 			quickPick.selectedItems = items.filter((item) => setting.currentValue.includes(item.label) || (doNotAskOptionChecked && item.isDoNotAskNextTime));
@@ -158,8 +158,8 @@ export async function editSetting(setting: PickableSetting, showDoNotAskNextTime
 		case "BOOL": {
 			const boolResult = await vs.window.showQuickPick(
 				[
-					{ label: "enable" } as vs.QuickPickItem,
-					{ label: "disable" } as vs.QuickPickItem,
+					{ label: "enable" } satisfies vs.QuickPickItem,
+					{ label: "disable" } satisfies vs.QuickPickItem,
 				],
 				{ placeHolder: placeholder, title },
 			);

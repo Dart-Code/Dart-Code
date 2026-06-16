@@ -16,12 +16,14 @@ describe("MCP server", () => {
 	});
 
 	function getExcludedTools(server: vs.McpServerDefinition): string[] {
-		server = server as vs.McpStdioServerDefinition;
-		const args = server.args;
+		const stdIoServer = server as vs.McpStdioServerDefinition;
+		const args = stdIoServer.args;
 		const excludedTools: string[] = [];
 		for (let i = 0; i < args.length - 1; i++) {
-			if (args[i] === "--exclude-tool")
-				excludedTools.push(args[i + 1]);
+			if (args[i] === "--exclude-tool") {
+				const nextArg = args[i + 1];
+				excludedTools.push(nextArg);
+			}
 		}
 		return excludedTools;
 	}
