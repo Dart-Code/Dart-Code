@@ -223,6 +223,9 @@ export class TestModel {
 	}
 
 	public flagSuiteStart(suite: SuiteData, isRunningWholeSuite: boolean): void {
+		// Used for enqueue().
+		suite.isRunningWholeSuite = isRunningWholeSuite;
+
 		// Mark all test for this suite as "stale" which will make them faded, so that results from
 		// the "new" run are more obvious in the tree.
 		suite.getAllGroups().forEach((g) => g.isStale = true);
@@ -707,6 +710,19 @@ export class SuiteData {
 	private readonly groupsByName = new Map<string, GroupNode>();
 	private readonly testsById = new Map<string, TestNode>();
 	private readonly testsByName = new Map<string, TestNode>();
+
+	/**
+	 * A flag set when a suite starts running that indicates whether the entire suite was being run or not.
+	 *
+	 * Only in the case that we know the entire suite is being run should we enqueue the entire suite
+	 * if we were not run from the VS Code test explorer.
+	 *
+	 * Eg., when a user hits F5 to run a whole file, we want to show all tests as queued. But if they are
+	 * only running a subset, without knowing which subset, we cannot.
+	 * https://github.com/Dart-Code/Dart-Code/issues/6091
+	 * https://github.com/Dart-Code/Dart-Code/issues/5928
+	 */
+	public isRunningWholeSuite = false;
 
 	constructor(public readonly path: string, public readonly projectPath: string | undefined, parent: ProjectNode | WorkspaceFolderNode | undefined) {
 		this.node = new SuiteNode(this, parent);
