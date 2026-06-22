@@ -782,7 +782,28 @@ export class InteractiveFormsFeature implements StaticFeature {
 	}
 
 	/**
+	 * Validates a string, returning a user-facing error message if it's not valid.
+	 */
+	private validateString(text: string, required: boolean): string | null {
+		if (required && text.trim() === "")
+			return "Please enter a value";
+		return null;
+	}
+
+	/**
+	 * Validates a number, returning a user-facing error message if it's not valid.
+	 */
+	private validateNumber(text: string, required: boolean): string | null {
+		if (text.trim() === "")
+			return required ? "Please enter a number" : null;
+		return !Number.isFinite(Number(text)) ? "Please enter a valid number" : null;
+	}
+
+	/**
 	 * Helper to prompt for a single field based on its type.
+	 *
+	 * Returns `undefined` if an input is cancelled.
+	 * Returns `null` if an answer was skipped/no answer (for example an empty input).
 	 */
 	private async promptForField(field: FormField, prevAnswer: any | undefined): Promise<any | undefined> {
 		const fieldType = field.type;
@@ -910,16 +931,28 @@ export class InteractiveFormsFeature implements StaticFeature {
 					return uri ? uri.toString() : undefined;
 				}
 			}
-			case 'string':
-				return await vscode.window.showInputBox({
+			case 'string': {
+				const value = await vscode.window.showInputBox({
 					prompt: field.description,
-					value: prevAnswer !== undefined ? prevAnswer : field.default,
+					value: prevAnswer !== undefined && prevAnswer !== null
+						? prevAnswer
+						: field.default,
 					placeHolder: field.description,
 					// Keep the input box open when focus is lost. This allows the
 					// user to  browse the workspace or inspect code (e.g., checking
 					// destination files or existing struct tags) before answering.
-					ignoreFocusOut: true
+					ignoreFocusOut: true,
+					validateInput: (text) => this.validateString(text, field.required)
 				} as vscode.InputBoxOptions);
+
+				if (value === undefined) {
+					return undefined; // Cancelled.
+				}
+				if (value.trim() === '') {
+					return null; // Treat empty as no answer.
+				}
+				return value;
+			}
 
 			case 'enum': {
 				const pickItems = fieldType.entries.map((entry, _) => {
@@ -970,19 +1003,14 @@ export class InteractiveFormsFeature implements StaticFeature {
 					value: value,
 					placeHolder: '0',
 					ignoreFocusOut: true,
-					validateInput: (text) => {
-						if (text.trim() === '') {
-							return field.required ? 'Please enter a number' : null;
-						}
-						return isNaN(Number(text)) ? 'Please enter a valid number' : null;
-					}
+					validateInput: (text) => this.validateNumber(text, field.required)
 				});
 
 				if (numResult === undefined) {
-					return undefined; // undefined = canceled
+					return undefined; // Cancelled.
 				}
 				if (numResult.trim() === '') {
-					return null; // null = empty (eg. not answering optional question)
+					return null; // Treat empty as no answer.
 				}
 				return Number(numResult);
 			}
@@ -992,22 +1020,43 @@ export class InteractiveFormsFeature implements StaticFeature {
 				if (fieldType.elementType.kind === 'string' || fieldType.elementType.kind === 'number') {
 					const rawList = await vscode.window.showInputBox({
 						prompt: `${field.description} (comma separated)`,
-						ignoreFocusOut: true
+						ignoreFocusOut: true,
+						validateInput: (text) => {
+							if (text.trim() === '') {
+								return field.required ? 'Please enter at least one item' : null;
+							}
+							const parts = text.split(',').map((s) => s.trim());
+							if (fieldType.elementType.kind === 'string') {
+								for (const part of parts) {
+									if (this.validateString(part, true)) {
+										return 'Please enter valid values';
+									}
+								}
+							} else if (fieldType.elementType.kind === 'number') {
+								for (const part of parts) {
+									if (this.validateNumber(part, true)) {
+										return 'Please enter valid numbers';
+									}
+								}
+							}
+							return null;
+						}
 					});
 
 					if (rawList === undefined) {
-						return undefined;
+						return undefined; // Cancelled.
 					}
 
-					// If empty input, return empty list
 					if (rawList.trim() === '') {
-						return [];
+						// Treat empty as no answer. We shouldn't get here if required because
+						// of validation.
+						return null;
 					}
 
 					const parts = rawList.split(',').map((s) => s.trim());
-
 					if (fieldType.elementType.kind === 'number') {
-						return parts.map(Number).filter((n) => !isNaN(n));
+						// Validation should prevent us having NaNs here.
+						return parts.map(Number);
 					}
 					return parts;
 				}
