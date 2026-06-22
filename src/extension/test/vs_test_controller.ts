@@ -490,8 +490,8 @@ export class VsCodeTestController implements TestEventListener, IAmDisposable {
 		const run = this.testRuns[sessionID]!;
 
 		// If the tests were not started by the test runner, they won't have been marked
-		// as queued, so we do this for each suite as it starts.
-		if (!run.wasStartedByTestRunner) {
+		// as queued. If we know the entire suite is being run, enqueue them.
+		if (!run.wasStartedByTestRunner && node.suiteData.isRunningWholeSuite) {
 			const item = this.itemForNode.get(node);
 			if (item)
 				this.markEnqueued(run.run, new Set([item]));
