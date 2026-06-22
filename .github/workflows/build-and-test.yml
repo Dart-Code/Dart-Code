@@ -56,7 +56,7 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # upload-artifact fails if the path does not exist (it only supports
       # silent failure for no-files-found, but the path must exist), so
@@ -296,7 +296,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run Lychee Link Checker
         uses: lycheeverse/lychee-action@v2
@@ -370,7 +370,7 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download coverage
         uses: actions/download-artifact@v8

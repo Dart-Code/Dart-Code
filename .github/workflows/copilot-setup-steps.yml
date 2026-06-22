@@ -17,7 +17,7 @@ jobs:
     
     steps:
     
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
     
       - name: Setup Node v22
         uses: actions/setup-node@v6
