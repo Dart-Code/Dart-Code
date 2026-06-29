@@ -429,7 +429,9 @@ export class LspAnalyzer extends Analyzer {
 				// VS Code fires open/close events whenever it opens the model for
 				// reading, not only when the user opens the file. The server only
 				// cares about the latter.
-				delayOpenNotifications: true,
+				// TODO(dantup): Consider putting this back once we've diagnosed
+				// https://github.com/Dart-Code/Dart-Code/issues/6088
+				// delayOpenNotifications: true,
 			},
 			uriConverters: {
 				// Don't just use "converters" here because LSP doesn't bind "this".
