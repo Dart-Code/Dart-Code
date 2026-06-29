@@ -142,7 +142,6 @@ export interface InternalExtensionApi {
 	};
 	flutterCapabilities: FlutterCapabilities;
 	flutterCommands: FlutterCommandHandler;
-	flutterOutlineTreeProvider: TreeDataProvider<TreeItem> | undefined;
 	getLogHeader: () => string;
 	getOutputChannel: (name: string) => OutputChannel;
 	getOutputChannelNames: () => string[];

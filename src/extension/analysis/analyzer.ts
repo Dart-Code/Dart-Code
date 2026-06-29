@@ -402,6 +402,9 @@ export class LspAnalyzer extends Analyzer {
 				appHost: vs.env.appHost,
 				closingLabels: config.closingLabels,
 				completionBudgetMilliseconds: config.completionBudgetMilliseconds,
+				// Flutter Outline notifications/data are used for Flutter UI Guides and
+				// icon previews, so we still need this even though the outline itself
+				// has been removed.
 				flutterOutline: wsContext.hasAnyFlutterProjects,
 				hostKind,
 				onlyAnalyzeProjectsWithOpenFiles: config.onlyAnalyzeProjectsWithOpenFiles,
