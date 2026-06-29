@@ -1,4 +1,4 @@
-import { commands, env, ExtensionContext, TextEditor, Uri, window, workspace } from "vscode";
+import { commands, env, ExtensionContext, TabInputText, TextEditor, Uri, window, workspace } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { CommandSource, ExtensionRestartReason, restartReasonManual } from "../../shared/constants";
 import { DTD_AVAILABLE } from "../../shared/constants.contexts";
@@ -208,6 +208,20 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	private queueActiveLocationChange(editor: TextEditor | undefined) {
 		// We currently assume we only want this when we're on an SDK with LSP over DTD support.
 		if (!this.dartCapabilities.supportsLspOverDtd) return;
+
+		// Never send anything that isn't a real tab (for ex. output pane, or test result diff)
+		if (editor) {
+			const lowerUri = editor.document.uri.toString().toLowerCase();
+			const matchingTabInput = window.tabGroups.all
+				.flatMap((group) => group.tabs)
+				.map((tab) => tab.input)
+				.filter((input) => input instanceof TabInputText)
+				.find((input) => input.uri.toString().toLowerCase() === lowerUri);
+			if (!matchingTabInput) {
+				// No matching tab, must be a non-editor editor.
+				return;
+			}
+		}
 
 		if (this.sendActiveLocationDebounceTimer)
 			clearTimeout(this.sendActiveLocationDebounceTimer);
