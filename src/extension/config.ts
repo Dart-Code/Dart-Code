@@ -139,7 +139,6 @@ class Config {
 		else
 			return value;
 	}
-	get flutterOutline(): boolean { return this.getConfig<boolean>("flutterOutline", true); }
 	get flutterRememberSelectedDevice(): boolean { return this.getConfig<boolean>("flutterRememberSelectedDevice", true); }
 	get flutterScreenshotPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterScreenshotPath", null)); }
 	get flutterSdkPath(): undefined | string { return resolvePaths(this.getConfig<null | string>("flutterSdkPath", null)); }
