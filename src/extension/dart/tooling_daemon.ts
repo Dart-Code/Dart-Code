@@ -209,23 +209,24 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		// We currently assume we only want this when we're on an SDK with LSP over DTD support.
 		if (!this.dartCapabilities.supportsLspOverDtd) return;
 
-		// Never send anything that isn't a real tab (for ex. output pane, or test result diff)
-		if (editor) {
-			const lowerUri = editor.document.uri.toString().toLowerCase();
-			const matchingTabInput = window.tabGroups.all
-				.flatMap((group) => group.tabs)
-				.map((tab) => tab.input)
-				.filter((input) => input instanceof TabInputText)
-				.find((input) => input.uri.toString().toLowerCase() === lowerUri);
-			if (!matchingTabInput) {
-				// No matching tab, must be a non-editor editor.
-				return;
-			}
-		}
-
 		if (this.sendActiveLocationDebounceTimer)
 			clearTimeout(this.sendActiveLocationDebounceTimer);
 		this.sendActiveLocationDebounceTimer = setTimeout(() => this.updateActiveLocation(editor), config.dtdEditorActiveLocationDelay);
+	}
+
+	/**
+	 * Checks whether an editor is a "real" text editor that appears in the main tabbed area.
+	 *
+	 * Editors like output panes or test diff results will return `false`.
+	 */
+	private isRealEditor(editor: TextEditor) {
+		const lowerUri = editor.document.uri.toString().toLowerCase();
+		const matchingTabInput = window.tabGroups.all
+			.flatMap((group) => group.tabs)
+			.map((tab) => tab.input)
+			.filter((input) => input instanceof TabInputText)
+			.find((input) => input.uri.toString().toLowerCase() === lowerUri);
+		return !!matchingTabInput;
 	}
 
 	private updateActiveLocation(editor: TextEditor | undefined) {
@@ -234,6 +235,11 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		// or embedded Widget Inspector), we will still allow this, to support selection changes triggered
 		// by the inspector when the inspector retains focus.
 		if (window.activeTextEditor && editor !== window.activeTextEditor) {
+			return;
+		}
+
+		// Exclude any editors that are not real editors (output panes, test result diffs etc.).
+		if (editor && !this.isRealEditor(editor)) {
 			return;
 		}
 
