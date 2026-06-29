@@ -9,7 +9,7 @@ import { ProcessExitCodes } from "../../shared/processes";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { ActiveLocation, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream, SuccessResult } from "../../shared/services/tooling_daemon_services";
 import { disposeAll, nullToUndefined, PromiseCompleter } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
+import { forceWindowsDriveLetterToUppercaseInUriString, uriComparisonString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { DartDebugSessionInformation } from "../../shared/vscode/interfaces";
@@ -220,12 +220,12 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 	 * Editors like output panes or test diff results will return `false`.
 	 */
 	private isRealEditor(editor: TextEditor) {
-		const lowerUri = editor.document.uri.toString().toLowerCase();
+		const uriToCompare = uriComparisonString(editor.document.uri);
 		const matchingTabInput = window.tabGroups.all
 			.flatMap((group) => group.tabs)
 			.map((tab) => tab.input)
 			.filter((input) => input instanceof TabInputText)
-			.find((input) => input.uri.toString().toLowerCase() === lowerUri);
+			.find((input) => uriComparisonString(input.uri) === uriToCompare);
 		return !!matchingTabInput;
 	}
 
