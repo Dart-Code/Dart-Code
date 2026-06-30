@@ -9,7 +9,7 @@ describe("move top level to file refactor", () => {
 
 	describe("without interactive forms", () => {
 		it("can move a simple class", async () => {
-			await setConfigForTest("dart", "experimentalInteractiveForms", false);
+			await setConfigForTest("dart", "interactiveForms", false);
 
 			const newFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/my_new_class.dart"));
 			const showSaveDialog = sb.stub(vs.window, "showSaveDialog");
@@ -42,7 +42,7 @@ class B {}
 			if (!privateApi.dartCapabilities.supportsInteractiveForms)
 				this.skip();
 
-			await setConfigForTest("dart", "experimentalInteractiveForms", true);
+			await setConfigForTest("dart", "interactiveForms", true);
 
 			// Stub the quick-pick to select the "Create New File" option.
 			sb.stub(vs.window, "showQuickPick").callsFake(async (items: vs.QuickPickItem[]) => {
