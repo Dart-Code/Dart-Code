@@ -277,6 +277,19 @@ jobs:
           path: coverage
           if-no-files-found: ignore
 
+      - name: Store CPU profiles
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: cpu-profiles-${{ matrix.build-version }}-${{ matrix.os }}-${{ matrix.bot }}
+          path: |
+            /tmp/*.cpuprofile
+            ${{ runner.temp }}/*.cpuprofile
+            ${{ env.TMPDIR }}/*.cpuprofile
+            ${{ env.TMP }}/*.cpuprofile
+            ${{ env.TEMP }}/*.cpuprofile
+          if-no-files-found: ignore
+
       - name: Store crash dumps
         uses: actions/upload-artifact@v7
         if: always()
@@ -357,6 +370,16 @@ jobs:
         with:
           name: crash-dumps
           pattern: crash-dumps-*
+          separate-directories: true
+          delete-merged: true
+        continue-on-error: true # fails if empty
+
+      - name: Merge CPU profiles
+        uses: actions/upload-artifact/merge@v7
+        if: always()
+        with:
+          name: cpu-profiles
+          pattern: cpu-profiles-*
           separate-directories: true
           delete-merged: true
         continue-on-error: true # fails if empty

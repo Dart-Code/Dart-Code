@@ -46,7 +46,6 @@ import { DartCommands } from "./commands/dart";
 import { DebugCommands, debugSessions } from "./commands/debug";
 import { EditCommands } from "./commands/edit";
 import { FlutterCommands } from "./commands/flutter";
-import { FlutterOutlineCommands } from "./commands/flutter_outline";
 import { LoggingCommands } from "./commands/logging";
 import { OpenInOtherEditorCommands } from "./commands/open_in_other_editors";
 import { PackageCommands } from "./commands/packages";
@@ -63,7 +62,6 @@ import { DiagnosticReport } from "./diagnostic_report";
 import { KnownExperiments, getExperiments } from "./experiments";
 import { setUpDaemonMessageHandler } from "./flutter/daemon_message_handler";
 import { FlutterDaemon } from "./flutter/flutter_daemon";
-import { FlutterOutlineProvider, FlutterWidgetItem } from "./flutter/flutter_outline_view";
 import { FlutterProjectWatcher } from "./flutter/flutter_project_watcher";
 import { FlutterTaskProvider } from "./flutter/flutter_task_provider";
 import { GenerateLocalizationsOnSaveHandler } from "./flutter/generate_localizations_on_save_handler";
@@ -580,41 +578,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 	context.subscriptions.push(dartPackagesProvider);
 	const packagesTreeView = vs.window.createTreeView("dartDependencyTree", { treeDataProvider: dartPackagesProvider });
 	context.subscriptions.push(packagesTreeView);
-	let flutterOutlineTreeProvider: FlutterOutlineProvider | undefined;
-	if (config.flutterOutline) {
-		// TODO: Extract this out - it's become messy since TreeView was added in.
-
-		let numFlutterOutlineUserInteractions = 0;
-		flutterOutlineTreeProvider = new FlutterOutlineProvider(analyzer);
-		const tree = vs.window.createTreeView<FlutterWidgetItem>("dartFlutterOutline", { treeDataProvider: flutterOutlineTreeProvider, showCollapseAll: true });
-		tree.onDidChangeSelection(async (e) => {
-			numFlutterOutlineUserInteractions++;
-
-			if (numFlutterOutlineUserInteractions >= 3) // Log after 3 interactions to avoid noise from curious clicks and capture real usage.
-				analytics.logFlutterOutlineFirstInteracted();
-			// TODO: This should be in a tree, not the data provider.
-			await flutterOutlineTreeProvider!.handleSelection(e.selection);
-		});
-
-		context.subscriptions.push(vs.window.onDidChangeTextEditorSelection(async (e) => {
-			if (e.selections?.length) {
-				const node = flutterOutlineTreeProvider!.getNodeAt(e.textEditor.document.uri, e.selections[0].start);
-				if (node && tree.visible) {
-					// Calling reveal() will trigger onDidChangeSelection above, so to offset this
-					// automatic selection being counted as a user-selection, decrement the count
-					// ahead of time.
-					numFlutterOutlineUserInteractions--;
-					await tree.reveal(node, { select: true, focus: false, expand: true });
-				}
-			}
-		}));
-		context.subscriptions.push(tree);
-		context.subscriptions.push(flutterOutlineTreeProvider);
-
-
-		// TODO: This doesn't work for LSP!
-		new FlutterOutlineCommands(tree, context);
-	}
 
 	if (dartToolingDaemon && dartCapabilities.supportsDevToolsDtdSidebar)
 		context.subscriptions.push(new FlutterDtdSidebar(devTools, dartCapabilities, logger));
@@ -753,7 +716,6 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 			fileTracker: analyzer.fileTracker,
 			flutterCapabilities,
 			flutterCommands,
-			flutterOutlineTreeProvider,
 			get isInImplementationFileThatCanHaveTest() { return isInImplementationFileThatCanHaveTest; },
 			get isInTestFileThatHasImplementation() { return isInTestFileThatHasImplementation; },
 			getLogHeader,
@@ -899,7 +861,6 @@ function getSettingsThatRequireRestart(): Record<string, string | number | boole
 		closingLabels: config.closingLabels,
 		showMainCodeLens: config.showMainCodeLens,
 		showTestCodeLens: config.showTestCodeLens,
-		flutterOutline: config.flutterOutline,
 		flutterAdbConnectOnChromeOs: config.flutterAdbConnectOnChromeOs,
 	};
 }

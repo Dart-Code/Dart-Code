@@ -1,4 +1,4 @@
-import { commands, env, ExtensionContext, TextEditor, Uri, window, workspace } from "vscode";
+import { commands, env, ExtensionContext, TabInputText, TextEditor, Uri, window, workspace } from "vscode";
 import { DartCapabilities } from "../../shared/capabilities/dart";
 import { CommandSource, ExtensionRestartReason, restartReasonManual } from "../../shared/constants";
 import { DTD_AVAILABLE } from "../../shared/constants.contexts";
@@ -9,7 +9,7 @@ import { ProcessExitCodes } from "../../shared/processes";
 import { DartToolingDaemon } from "../../shared/services/tooling_daemon";
 import { ActiveLocation, EditorDebugSession, EditorDevice, EnablePlatformTypeParams, EventKind, HotReloadParams, HotRestartParams, NavigateToCodeParams, OpenDevToolsPageParams, SelectDeviceParams, Service, ServiceMethod, Stream, SuccessResult } from "../../shared/services/tooling_daemon_services";
 import { disposeAll, nullToUndefined, PromiseCompleter } from "../../shared/utils";
-import { forceWindowsDriveLetterToUppercaseInUriString } from "../../shared/utils/fs";
+import { forceWindowsDriveLetterToUppercaseInUriString, uriComparisonString } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
 import { FlutterDeviceManager } from "../../shared/vscode/device_manager";
 import { DartDebugSessionInformation } from "../../shared/vscode/interfaces";
@@ -214,12 +214,32 @@ export class VsCodeDartToolingDaemon extends DartToolingDaemon {
 		this.sendActiveLocationDebounceTimer = setTimeout(() => this.updateActiveLocation(editor), config.dtdEditorActiveLocationDelay);
 	}
 
+	/**
+	 * Checks whether an editor is a "real" text editor that appears in the main tabbed area.
+	 *
+	 * Editors like output panes or test diff results will return `false`.
+	 */
+	private isRealEditor(editor: TextEditor) {
+		const uriToCompare = uriComparisonString(editor.document.uri);
+		const matchingTabInput = window.tabGroups.all
+			.flatMap((group) => group.tabs)
+			.map((tab) => tab.input)
+			.filter((input) => input instanceof TabInputText)
+			.find((input) => uriComparisonString(input.uri) === uriToCompare);
+		return !!matchingTabInput;
+	}
+
 	private updateActiveLocation(editor: TextEditor | undefined) {
 		// Usually we only send the change if the editor whose selection changed is still
 		// the active editor. However, if the active editor is a "non-editor" (for example an Output pane
 		// or embedded Widget Inspector), we will still allow this, to support selection changes triggered
 		// by the inspector when the inspector retains focus.
 		if (window.activeTextEditor && editor !== window.activeTextEditor) {
+			return;
+		}
+
+		// Exclude any editors that are not real editors (output panes, test result diffs etc.).
+		if (editor && !this.isRealEditor(editor)) {
 			return;
 		}
 
