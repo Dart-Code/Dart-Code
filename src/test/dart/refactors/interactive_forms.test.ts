@@ -2,7 +2,7 @@ import { strict as assert } from "assert";
 import { mock } from "node:test";
 import * as vscode from "vscode";
 import { ClientCapabilities, LanguageClient } from "vscode-languageclient/node";
-import { FileExistence, FileType, InteractiveFormsFeature } from "../../../extension/analysis/form";
+import { FileExistence, FileType, FormField, InteractiveFormsFeature, ValidationSeverity } from "../../../extension/analysis/form";
 
 describe("interactive forms", () => {
 	afterEach("reset mocks", () => mock.reset());
@@ -18,7 +18,11 @@ describe("interactive forms", () => {
 		feature.fillClientCapabilities(capabilities);
 
 		assert.deepEqual(capabilities.experimental?.interactiveResolve, {
-			inputTypes: ["bool", "file", "enum", "lazyEnum", "number", "string"]
+			inputTypes: ["bool", "file", "enum", "lazyEnum", "number", "string"],
+			validators: {
+				// eslint-disable-next-line id-blacklist
+				string: ["regex"]
+			}
 		});
 	});
 
@@ -37,15 +41,19 @@ describe("interactive forms", () => {
 	describe("field types", () => {
 		describe("string", () => {
 			it("handles and validates required", async () => {
-				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: any) => {
+				const showInputBoxMock = mock.method(vscode.window, "showInputBox", async (options: vscode.InputBoxOptions) => {
 					assert.equal(options.prompt, "What is your name?");
 					assert.equal(options.value, "Alice");
 
 					// Check validation.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput(""), "Please enter a value");
-					assert.equal(options.validateInput(" "), "Please enter a value");
-					assert.equal(options.validateInput("Bob"), null);
+					assert.deepStrictEqual(options.validateInput(""), error("Please enter a value"));
+					assert.deepStrictEqual(options.validateInput(" "), error("Please enter a value"));
+					assert.deepStrictEqual(options.validateInput("Bob"), null);
+					assert.deepStrictEqual(options.validateInput("foo"), error('Cannot be "foo"'));
+					assert.deepStrictEqual(options.validateInput("bar"), warning('Should not be "bar"'));
+					assert.deepStrictEqual(options.validateInput("baz"), warning("Should begin with a capital B"));
 
 					return "Bob";
 				});
@@ -55,7 +63,34 @@ describe("interactive forms", () => {
 						{
 							id: "name",
 							description: "What is your name?",
-							type: { kind: "string" },
+							type: {
+								kind: "string",
+								validators: [
+									{
+										kind: "regex",
+										pattern: "^bar$", matchIsValid: false, severity: ValidationSeverity.Warning,
+										message: 'Should not be "bar"'
+									},
+									{
+										kind: "regex",
+										pattern: "^B", matchIsValid: true, severity: ValidationSeverity.Warning,
+										message: "Should begin with a capital B"
+									},
+									{
+										kind: "regex",
+										pattern: "^foo$", matchIsValid: false, severity: ValidationSeverity.Error,
+										message: 'Cannot be "foo"'
+									},
+									{
+										kind: "regex",
+										pattern: "[[[[[[[[[[[[[[[[[[[", matchIsValid: true, severity: ValidationSeverity.Warning,
+										message: "Invalid regex to ensure we don't crash"
+									},
+									{
+										kind: "unknown_future_validator",
+									} as any,
+								]
+							},
 							required: true,
 							default: "Alice"
 						}
@@ -75,9 +110,10 @@ describe("interactive forms", () => {
 
 					// All inputs are allowed for optional fields.
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput(""), null);
-					assert.equal(options.validateInput(" "), null);
-					assert.equal(options.validateInput("Bob"), null);
+					assert.deepStrictEqual(options.validateInput(""), null);
+					assert.deepStrictEqual(options.validateInput(" "), null);
+					assert.deepStrictEqual(options.validateInput("Bob"), null);
+					assert.deepStrictEqual(options.validateInput("foo"), error('Cannot be "foo"'));
 
 					return "   ";
 				});
@@ -87,7 +123,16 @@ describe("interactive forms", () => {
 						{
 							id: "nickname",
 							description: "What is your nickname?",
-							type: { kind: "string" },
+							type: {
+								kind: "string",
+								validators: [
+									{
+										kind: "regex",
+										pattern: "^foo$", matchIsValid: false, severity: ValidationSeverity.Error,
+										message: 'Cannot be "foo"'
+									}
+								]
+							},
 							required: false
 						}
 					],
@@ -108,10 +153,11 @@ describe("interactive forms", () => {
 
 					// Check validation.
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput("not-a-number"), "Please enter a valid number");
-					assert.equal(options.validateInput(""), "Please enter a number");
-					assert.equal(options.validateInput("  "), "Please enter a number");
-					assert.equal(options.validateInput("42"), null);
+					assert.deepStrictEqual(options.validateInput("not-a-number"), error("Please enter a valid number"));
+					assert.deepStrictEqual(options.validateInput(""), error("Please enter a number"));
+					assert.deepStrictEqual(options.validateInput("  "), error("Please enter a number"));
+					assert.deepStrictEqual(options.validateInput("42"), null);
+					assert.deepStrictEqual(options.validateInput("42.12"), null); // Currently we don't validate whole numbers.
 
 					return "30";
 				});
@@ -141,10 +187,10 @@ describe("interactive forms", () => {
 					// All inputs are allowed for optional fields, but they
 					// must still be numbers.
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput(""), null);
-					assert.equal(options.validateInput(" "), null);
-					assert.equal(options.validateInput("not-a-number"), "Please enter a valid number");
-					assert.equal(options.validateInput("7"), null);
+					assert.deepStrictEqual(options.validateInput(""), null);
+					assert.deepStrictEqual(options.validateInput(" "), null);
+					assert.deepStrictEqual(options.validateInput("not-a-number"), error("Please enter a valid number"));
+					assert.deepStrictEqual(options.validateInput("7"), null);
 
 					return "";
 				});
@@ -396,9 +442,12 @@ describe("interactive forms", () => {
 
 					// Check validation.
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput(""), "Please enter at least one item");
-					assert.equal(options.validateInput(" "), "Please enter at least one item");
-					assert.equal(options.validateInput("apple, banana"), null);
+					assert.deepStrictEqual(options.validateInput(""), error("Please enter at least one item"));
+					assert.deepStrictEqual(options.validateInput(" "), error("Please enter at least one item"));
+					assert.deepStrictEqual(options.validateInput("apple, banana"), null);
+					assert.deepStrictEqual(options.validateInput("apple, foo"), warning('Should not be "foo"'));
+					// Error validation should come first, even across multiple items.
+					assert.deepStrictEqual(options.validateInput("apple, foo, bar"), error('Cannot be "bar"'));
 
 					return "apple, banana, cherry";
 				});
@@ -410,7 +459,21 @@ describe("interactive forms", () => {
 							description: "Tags",
 							type: {
 								kind: "list",
-								elementType: { kind: "string" }
+								elementType: {
+									kind: "string",
+									validators: [
+										{
+											kind: "regex",
+											pattern: "^foo$", matchIsValid: false, severity: ValidationSeverity.Warning,
+											message: 'Should not be "foo"'
+										},
+										{
+											kind: "regex",
+											pattern: "^bar$", matchIsValid: false, severity: ValidationSeverity.Error,
+											message: 'Cannot be "bar"'
+										}
+									]
+								}
 							},
 							required: true
 						}
@@ -429,8 +492,8 @@ describe("interactive forms", () => {
 
 					// All inputs are allowed for optional fields.
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput(""), null);
-					assert.equal(options.validateInput("   "), null);
+					assert.deepStrictEqual(options.validateInput(""), null);
+					assert.deepStrictEqual(options.validateInput("   "), null);
 
 					return "   ";
 				});
@@ -461,10 +524,10 @@ describe("interactive forms", () => {
 
 					// Check validation.
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput(""), "Please enter at least one item");
-					assert.equal(options.validateInput(" "), "Please enter at least one item");
-					assert.equal(options.validateInput("10, not a number, 20"), "Please enter valid numbers");
-					assert.equal(options.validateInput("10, 20"), null);
+					assert.deepStrictEqual(options.validateInput(""), error("Please enter at least one item"));
+					assert.deepStrictEqual(options.validateInput(" "), error("Please enter at least one item"));
+					assert.deepStrictEqual(options.validateInput("10, not a number, 20"), error("Please enter only valid numbers"));
+					assert.deepStrictEqual(options.validateInput("10, 20"), null);
 
 					return "10, 20";
 				});
@@ -496,9 +559,9 @@ describe("interactive forms", () => {
 					// All inputs are allowed for optional fields, but they
 					// must still be numbers.
 					assert.ok(options.validateInput);
-					assert.equal(options.validateInput(""), null);
-					assert.equal(options.validateInput("   "), null);
-					assert.equal(options.validateInput("10, not a number, 20"), "Please enter valid numbers");
+					assert.deepStrictEqual(options.validateInput(""), null);
+					assert.deepStrictEqual(options.validateInput("   "), null);
+					assert.deepStrictEqual(options.validateInput("10, not a number, 20"), error("Please enter only valid numbers"));
 
 					return "";
 				});
@@ -626,7 +689,7 @@ describe("interactive forms", () => {
  */
 async function runInteractiveFormTest(params: {
 	// Fields to return from `/resolve`.
-	formFields?: any[];
+	formFields?: FormField[];
 	// Function to call to allow the test to simulate user interaction.
 	mockUserInteraction?: () => void;
 	// If testing lazy enum, the mock response to return from `interactive/listEnum`.
@@ -719,3 +782,12 @@ async function runInteractiveFormTest(params: {
 		resolveCallCount, // The number of times `/resolve` was called.
 	};
 }
+
+function error(message: string) {
+	return { message, severity: vscode.InputBoxValidationSeverity.Error };
+}
+
+function warning(message: string) {
+	return { message, severity: vscode.InputBoxValidationSeverity.Warning };
+}
+
