@@ -822,13 +822,13 @@ export class InteractiveFormsFeature implements StaticFeature {
 	private validateString(text: string, fieldType: FormFieldTypeString, { required }: { required: boolean }): vscode.InputBoxValidationMessage | null {
 		if (text.trim() === '') {
 			return required
-				? { message: 'Please enter a value', severity: vscode.InputBoxValidationSeverity.Error }
+				? this.error('Please enter a value')
 				: null;
 		}
 
 		if (fieldType.validators) {
 			for (const validator of this.sortedValidators(fieldType.validators)) {
-				if (validator.kind === "regex") {
+				if (validator.kind === 'regex') {
 					let isMatch: boolean;
 					try {
 						isMatch = new RegExp(validator.pattern).test(text);
@@ -852,6 +852,9 @@ export class InteractiveFormsFeature implements StaticFeature {
 	/**
 	 * Sorts validators so that highest severity validators are first, but
 	 * within each severity they preserve the original order.
+	 *
+	 * Validating a single value in this order means we can stop validating on
+	 * the first validation message.
 	 */
 	sortedValidators<T extends Validator>(validators: T[]): T[] {
 		return validators.slice().sort((a, b) => b.severity - a.severity);
@@ -860,12 +863,16 @@ export class InteractiveFormsFeature implements StaticFeature {
 	/**
 	 * Validates a number, returning a user-facing error message if it's not valid.
 	 */
-	private validateNumber(text: string, { required, isList }: { required: boolean; isList: boolean; }): string | null {
-		if (text.trim() === "")
-			return required ? "Please enter a number" : null;
+	private validateNumber(text: string, { required, isList }: { required: boolean; isList: boolean; }): vscode.InputBoxValidationMessage | null {
+		if (text.trim() === '')
+			return required ? this.error('Please enter a number') : null;
 		return !Number.isFinite(Number(text))
-			? (isList ? "Please enter only valid numbers" : "Please enter a valid number")
+			? this.error(isList ? 'Please enter only valid numbers' : 'Please enter a valid number')
 			: null;
+	}
+
+	private error(message: string): vscode.InputBoxValidationMessage {
+		return { message, severity: vscode.InputBoxValidationSeverity.Error };
 	}
 
 	/**
@@ -1092,7 +1099,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 						ignoreFocusOut: true,
 						validateInput: (text) => {
 							if (text.trim() === '') {
-								return field.required ? 'Please enter at least one item' : null;
+								return field.required ? this.error('Please enter at least one item') : null;
 							}
 							const parts = text.split(',').map((s) => s.trim());
 							if (fieldType.elementType.kind === 'string') {

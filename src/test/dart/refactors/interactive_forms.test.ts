@@ -153,9 +153,9 @@ describe("interactive forms", () => {
 
 					// Check validation.
 					assert.ok(options.validateInput);
-					assert.deepStrictEqual(options.validateInput("not-a-number"), "Please enter a valid number");
-					assert.deepStrictEqual(options.validateInput(""), "Please enter a number");
-					assert.deepStrictEqual(options.validateInput("  "), "Please enter a number");
+					assert.deepStrictEqual(options.validateInput("not-a-number"), error("Please enter a valid number"));
+					assert.deepStrictEqual(options.validateInput(""), error("Please enter a number"));
+					assert.deepStrictEqual(options.validateInput("  "), error("Please enter a number"));
 					assert.deepStrictEqual(options.validateInput("42"), null);
 
 					return "30";
@@ -188,7 +188,7 @@ describe("interactive forms", () => {
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), null);
 					assert.deepStrictEqual(options.validateInput(" "), null);
-					assert.deepStrictEqual(options.validateInput("not-a-number"), "Please enter a valid number");
+					assert.deepStrictEqual(options.validateInput("not-a-number"), error("Please enter a valid number"));
 					assert.deepStrictEqual(options.validateInput("7"), null);
 
 					return "";
@@ -441,8 +441,8 @@ describe("interactive forms", () => {
 
 					// Check validation.
 					assert.ok(options.validateInput);
-					assert.deepStrictEqual(options.validateInput(""), "Please enter at least one item");
-					assert.deepStrictEqual(options.validateInput(" "), "Please enter at least one item");
+					assert.deepStrictEqual(options.validateInput(""), error("Please enter at least one item"));
+					assert.deepStrictEqual(options.validateInput(" "), error("Please enter at least one item"));
 					assert.deepStrictEqual(options.validateInput("apple, banana"), null);
 					assert.deepStrictEqual(options.validateInput("apple, foo"), warning('Should not be "foo"'));
 					// Error validation should come first, even across multiple items.
@@ -523,9 +523,9 @@ describe("interactive forms", () => {
 
 					// Check validation.
 					assert.ok(options.validateInput);
-					assert.deepStrictEqual(options.validateInput(""), "Please enter at least one item");
-					assert.deepStrictEqual(options.validateInput(" "), "Please enter at least one item");
-					assert.deepStrictEqual(options.validateInput("10, not a number, 20"), "Please enter only valid numbers");
+					assert.deepStrictEqual(options.validateInput(""), error("Please enter at least one item"));
+					assert.deepStrictEqual(options.validateInput(" "), error("Please enter at least one item"));
+					assert.deepStrictEqual(options.validateInput("10, not a number, 20"), error("Please enter only valid numbers"));
 					assert.deepStrictEqual(options.validateInput("10, 20"), null);
 
 					return "10, 20";
@@ -560,7 +560,7 @@ describe("interactive forms", () => {
 					assert.ok(options.validateInput);
 					assert.deepStrictEqual(options.validateInput(""), null);
 					assert.deepStrictEqual(options.validateInput("   "), null);
-					assert.deepStrictEqual(options.validateInput("10, not a number, 20"), "Please enter only valid numbers");
+					assert.deepStrictEqual(options.validateInput("10, not a number, 20"), error("Please enter only valid numbers"));
 
 					return "";
 				});
