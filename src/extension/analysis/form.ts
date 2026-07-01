@@ -856,7 +856,7 @@ export class InteractiveFormsFeature implements StaticFeature {
 	 * Validating a single value in this order means we can stop validating on
 	 * the first validation message.
 	 */
-	sortedValidators<T extends Validator>(validators: T[]): T[] {
+	private sortedValidators<T extends Validator>(validators: T[]): T[] {
 		return validators.slice().sort((a, b) => b.severity - a.severity);
 	}
 
