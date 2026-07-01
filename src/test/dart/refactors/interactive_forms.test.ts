@@ -157,6 +157,7 @@ describe("interactive forms", () => {
 					assert.deepStrictEqual(options.validateInput(""), error("Please enter a number"));
 					assert.deepStrictEqual(options.validateInput("  "), error("Please enter a number"));
 					assert.deepStrictEqual(options.validateInput("42"), null);
+					assert.deepStrictEqual(options.validateInput("42.12"), null); // Currently we don't validate whole numbers.
 
 					return "30";
 				});
