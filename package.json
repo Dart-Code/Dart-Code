@@ -1558,6 +1558,9 @@
 					],
 					"source": [
 						"meta.embedded"
+					],
+					"comment.source": [
+						"variable.other.source.dart"
 					]
 				}
 			}
