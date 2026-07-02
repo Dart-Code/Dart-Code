@@ -413,10 +413,13 @@ export class SdkUtils {
 				fuchsiaRoot && path.join(fuchsiaRoot, "lib/flutter"),
 				fuchsiaRoot && path.join(fuchsiaRoot, "third_party/dart-pkg/git/flutter"),
 				firstFlutterProject,
-				firstFlutterProject && extractFlutterSdkPathFromPackagesFile(firstFlutterProject),
 				firstFlutterProject && path.join(firstFlutterProject, ".flutter"),
 				firstFlutterProject && path.join(firstFlutterProject, "vendor/flutter"),
 				...paths,
+				// The SDK in .dart_tool/package_config.json is now used as a fallback _after_ the user's
+				// PATH, because they may have changed their SDK on PATH and expected us to use it. If
+				// these are different, `getPubWorkspaceStatus` detects it and prompts to re-run anyway.
+				firstFlutterProject && extractFlutterSdkPathFromPackagesFile(firstFlutterProject),
 				...fallbackSdkSearchPaths,
 			].filter(notUndefined);
 
