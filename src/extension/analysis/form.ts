@@ -43,7 +43,9 @@ export interface FormFieldTypeString {
 	 * Field validators only validate the input/answer to a field in isolation
 	 * and cannot depend on the answers to other fields. For example a string
 	 * field may have a regex validator, or a numeric field may have a range
-	 * validator.
+	 * validator. Multiple validators of the same kind are allowed.
+	 *
+	 * Answers must pass all (supported) validators to be considered valid.
 	 *
 	 * Clients must ignore validators they do not support.
 	 */
@@ -461,6 +463,64 @@ export interface InteractiveListEnumMiddleware {
 		param: InteractiveListEnumParams,
 		next: InteractiveListEnumSignature
 	) => vscode.ProviderResult<FormEnumEntry[]>;
+}
+
+/**
+ * The severity of a violation of a validator.
+ */
+export enum ValidationSeverity {
+	/**
+	 * An informational message that does not block submission of the value.
+	 */
+	Info = 1,
+	/**
+	 * A warning message that does not block submission of the value.
+	 */
+	Warning = 2,
+	/**
+	 * An error message that prevents submission of the value.
+	 */
+	Error = 3,
+}
+
+export interface Validator {
+	/**
+	 * The severity of a violation of this validator.
+	 */
+	severity: ValidationSeverity;
+}
+
+/**
+ * Validators applicable to string fields.
+ */
+export type StringValidator = RegexValidator /* | FooValidator */;
+
+/**
+ * A regex-based validator that ensures an answer matches a given
+ * regex.
+ */
+export interface RegexValidator extends Validator {
+	kind: 'regex';
+
+	/**
+	 * The regex pattern to validate the input.
+	 *
+	 * The server must only provide regular expressions for the engine supported by the client
+	 * in the `general.regularExpressions` client capability. If the server cannot provide an
+	 * appropriate regular expression it should not provide the regex validator.
+	 */
+	pattern: string;
+
+	/**
+	 * Whether the answer matching the pattern means it is valid (no message
+	 * reported) or invalid (message reported).
+	 */
+	matchIsValid: boolean;
+
+	/**
+	 * The message to show if the answer is not valid according to `pattern` and `matchIsValid`.
+	 */
+	message: string;
 }
 
 export class InteractiveFormsFeature implements StaticFeature {
@@ -1157,38 +1217,4 @@ export class InteractiveFormsFeature implements StaticFeature {
 				return undefined;
 		}
 	}
-}
-
-// The severity of a violation of a validator.
-export enum ValidationSeverity {
-	// An informational message that does not block submission of the value.
-	Info = 1,
-	// A warning message that does not block submission of the value.
-	Warning = 2,
-	// An error message that prevents submission of the value.
-	Error = 3,
-}
-
-export interface Validator {
-	// The severity of a violation of this validator.
-	severity: ValidationSeverity;
-}
-
-// Validators applicable to string fields.
-export type StringValidator = RegexValidator /* | FooValidator */;
-
-// A regex-based validator that ensures an answer matches a given
-// regex.
-export interface RegexValidator extends Validator {
-	kind: 'regex';
-
-	// The (JS) regex pattern to validate the input.
-	pattern: string;
-
-	// Whether the answer matching the pattern means it is valid (no message
-	// reported) or invalid (message reported).
-	matchIsValid: boolean;
-
-	// The message to show if the input does not match the pattern.
-	message: string;
 }
