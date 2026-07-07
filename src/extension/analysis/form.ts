@@ -488,6 +488,11 @@ export interface Validator {
 	 * The severity of a violation of this validator.
 	 */
 	severity: ValidationSeverity;
+
+	/**
+	 * The message to show if the answer fails this validator.
+	 */
+	message: string;
 }
 
 /**
