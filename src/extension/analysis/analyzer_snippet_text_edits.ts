@@ -99,7 +99,6 @@ export class SnippetTextEditFeature implements IAmDisposable {
 		await editor.insertSnippet(snippet, edit.range, { keepWhitespace: true, undoStopBefore: true, undoStopAfter: true });
 	}
 
-
 	public dispose(): void {
 		disposeAll(this.disposables);
 	}

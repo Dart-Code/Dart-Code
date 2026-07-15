@@ -475,25 +475,34 @@ export class LspAnalyzer extends Analyzer {
 			clientOptions,
 		);
 
+		const p2c = (client as any)._p2c as { // eslint-disable-line no-underscore-dangle
+			asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined>
+			asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>>
+			asCommand(item: ls.Command): vs.Command;
+			asUri(uri: string): vs.Uri;
+			asRange(range: ls.Range): vs.Range;
+			asTextEdits(edits: ls.TextEdit[], token?: vs.CancellationToken): Promise<vs.TextEdit[]>;
+			asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined>
+		};
 		// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
 		//       insertTextFormat from the protocol through to the middleware to handle snippets.
 		//       This can be removed when we have a better way to do this.
 		//       https://github.com/microsoft/vscode-languageserver-node/issues/1000
-		const p2c = (client as any)._p2c; // eslint-disable-line no-underscore-dangle
-		const originalAsWorkspaceEdit = p2c.asWorkspaceEdit as Function; // eslint-disable-line @typescript-eslint/no-unsafe-function-type
-		const originalAsCodeAction = p2c.asCodeAction as Function; // eslint-disable-line @typescript-eslint/no-unsafe-function-type
+		const originalAsCodeAction = p2c.asCodeAction; // eslint-disable-line @typescript-eslint/unbound-method
 
 		async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
-			const result = (await originalAsWorkspaceEdit(item, token)) as vs.WorkspaceEdit | undefined;
-			if (!result) return;
+			if (!item) return;
+
+			// Instead of the original asWorkspace, call our custom one that fixes keepWhitespace.
+			const result = await asWorkspaceEditWithKeepWhitespaceSnippets(item, token);
 
 			LspAnalyzer.rewriteUnofficialSnippetEdits(item, result);
 
 			return result;
 		}
 
-		async function asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
-			const result = (await originalAsCodeAction(item, token)) as vs.CodeAction | undefined;
+		async function asCodeAction(item: ls.CodeAction, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
+			const result = await originalAsCodeAction(item, token);
 			if (item?.edit !== undefined) {
 				(result as any).edit = await asWorkspaceEdit(item.edit, token);
 			}
@@ -503,11 +512,68 @@ export class LspAnalyzer extends Analyzer {
 		function asCodeActionResult(items: Array<ls.Command | ls.CodeAction>, token?: vs.CancellationToken): Promise<Array<vs.Command | vs.CodeAction>> {
 			return Promise.all(items.map(async (item): Promise<vs.Command | vs.CodeAction> => {
 				if (ls.Command.is(item)) {
-					return p2c.asCommand(item) as vs.Command;
+					return p2c.asCommand(item);
 				} else {
 					return (await asCodeAction(item, token))!;
 				}
 			}));
+		}
+
+		/**
+		 * A clone of the LSP client's asWorkspace() function, but that sets keepWhitespace=true on SnippetTextEdits
+		 * to prevent VS Code from messing with the indentation.
+		 *
+		 * See:
+		 *  - https://github.com/microsoft/language-server-protocol/issues/2290
+		 *  - https://github.com/Dart-Code/Dart-Code/issues/6120
+		 *  - https://github.com/dart-lang/sdk/issues/63790
+		 */
+		async function asWorkspaceEditWithKeepWhitespaceSnippets(item: ls.WorkspaceEdit, token: vs.CancellationToken | undefined) {
+			const metadata = new Map<string, vs.WorkspaceEditEntryMetadata>();
+			for (const [id, annotation] of Object.entries(item.changeAnnotations ?? {})) {
+				metadata.set(id, {
+					label: annotation.label,
+					needsConfirmation: !!annotation.needsConfirmation,
+					description: annotation.description,
+				});
+			}
+			const asMetadata = (annotation: ls.ChangeAnnotationIdentifier | undefined) => annotation === undefined ? undefined : metadata.get(annotation);
+
+			const result = new vs.WorkspaceEdit();
+			if (item.documentChanges) {
+				for (const change of item.documentChanges) {
+					if (ls.CreateFile.is(change)) {
+						result.createFile(p2c.asUri(change.uri), change.options, asMetadata(change.annotationId));
+					} else if (ls.RenameFile.is(change)) {
+						result.renameFile(p2c.asUri(change.oldUri), p2c.asUri(change.newUri), change.options, asMetadata(change.annotationId));
+					} else if (ls.DeleteFile.is(change)) {
+						result.deleteFile(p2c.asUri(change.uri), change.options, asMetadata(change.annotationId));
+					} else if (ls.TextDocumentEdit.is(change)) {
+						const edits: Array<[vs.TextEdit | vs.SnippetTextEdit, vs.WorkspaceEditEntryMetadata | undefined]> = [];
+						for (const edit of change.edits) {
+							if (ls.AnnotatedTextEdit.is(edit)) {
+								edits.push([new vs.TextEdit(p2c.asRange(edit.range), edit.newText), asMetadata(edit.annotationId)]);
+							} else if (ls.SnippetTextEdit.is(edit)) {
+								const snippetEdit = new vs.SnippetTextEdit(p2c.asRange(edit.range), new vs.SnippetString(edit.snippet.value));
+								// ############################################
+								// This is the change from the stock LSP client
+								// ############################################
+								snippetEdit.keepWhitespace = true;
+								edits.push([snippetEdit, asMetadata(edit.annotationId)]);
+							} else {
+								edits.push([new vs.TextEdit(p2c.asRange(edit.range), edit.newText), undefined]);
+							}
+						}
+						result.set(p2c.asUri(change.textDocument.uri), edits);
+					} else {
+						throw new Error(`Unknown workspace edit change received:\n${JSON.stringify(change, undefined, 4)}`);
+					}
+				}
+			} else if (item.changes) {
+				for (const [uri, edits] of Object.entries(item.changes))
+					result.set(p2c.asUri(uri), await p2c.asTextEdits(edits, token));
+			}
+			return result;
 		}
 
 		p2c.asWorkspaceEdit = asWorkspaceEdit;
