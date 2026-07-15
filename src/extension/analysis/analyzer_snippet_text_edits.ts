@@ -95,17 +95,10 @@ export class SnippetTextEditFeature implements IAmDisposable {
 		if (doc.version !== documentVersion)
 			void vs.window.showErrorMessage(`Unable to apply snippet, document was modified`);
 
-		const leadingIndentCharacters = doc.lineAt(edit.range.start.line).firstNonWhitespaceCharacterIndex;
-		const newText = this.compensateForVsCodeIndenting(edit.newText, leadingIndentCharacters);
-		const snippet = new vs.SnippetString(newText);
-		await editor.insertSnippet(snippet, edit.range);
+		const snippet = new vs.SnippetString(edit.newText);
+		await editor.insertSnippet(snippet, edit.range, { keepWhitespace: true, undoStopBefore: true, undoStopAfter: true });
 	}
 
-	private compensateForVsCodeIndenting(newText: string, leadingIndentCharacters: number) {
-		const indent = " ".repeat(leadingIndentCharacters);
-		const indentPattern = new RegExp(`\n${indent}`, "g");
-		return newText.replace(indentPattern, "\n");
-	}
 
 	public dispose(): void {
 		disposeAll(this.disposables);
