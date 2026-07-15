@@ -493,7 +493,7 @@ export class LspAnalyzer extends Analyzer {
 		async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
 			if (!item) return;
 
-			// Instead of the original asWorkspace, call our custom one that fixes keepWhitespace.
+			// Instead of the original asWorkspaceEdit, call our custom one that fixes keepWhitespace.
 			const result = await asWorkspaceEditWithKeepWhitespaceSnippets(item, token);
 
 			LspAnalyzer.rewriteUnofficialSnippetEdits(item, result);
@@ -501,9 +501,9 @@ export class LspAnalyzer extends Analyzer {
 			return result;
 		}
 
-		async function asCodeAction(item: ls.CodeAction, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
+		async function asCodeAction(item: ls.CodeAction | undefined | null, token?: vs.CancellationToken): Promise<vs.CodeAction | undefined> {
 			const result = await originalAsCodeAction(item, token);
-			if (item?.edit !== undefined) {
+			if (result && item?.edit !== undefined) {
 				(result as any).edit = await asWorkspaceEdit(item.edit, token);
 			}
 			return result;
@@ -520,7 +520,7 @@ export class LspAnalyzer extends Analyzer {
 		}
 
 		/**
-		 * A clone of the LSP client's asWorkspace() function, but that sets keepWhitespace=true on SnippetTextEdits
+		 * A clone of the LSP client's asWorkspaceEdit() function, but that sets keepWhitespace=true on SnippetTextEdits
 		 * to prevent VS Code from messing with the indentation.
 		 *
 		 * See:

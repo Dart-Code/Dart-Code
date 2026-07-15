@@ -7,7 +7,7 @@ describe("assist_code_action_provider", () => {
 	before("get packages", () => getPackages());
 	beforeEach("activate", () => activate());
 
-	it("sets selection correctly for code actions with legacy snippet text edits", async () => {
+	it("sets selection correctly for code actions with legacy snippet text edits", async function () {
 		await openFile(flutterEmptyFile);
 		await setTestContent(`
 import 'package:flutter/widgets.dart';
@@ -35,7 +35,7 @@ class Danny extends StatelessWidget {
 			//
 			// https://github.com/microsoft/vscode/issues/325990
 			// await vs.workspace.applyEdit(action.edit);
-			return;
+			this.skip();
 		}
 
 		// Execute the command if there is one (this could be the wrapped version for the legacy SnippetTextEdits).
