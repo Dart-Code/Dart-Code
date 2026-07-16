@@ -481,8 +481,8 @@ export class LspAnalyzer extends Analyzer {
 			asCommand(item: ls.Command): vs.Command;
 			asUri(uri: string): vs.Uri;
 			asRange(range: ls.Range): vs.Range;
-			asTextEdits(edits: ls.TextEdit[], token?: vs.CancellationToken): Promise<vs.TextEdit[]>;
-			asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined>
+			asTextEditsSync(items: ls.TextEdit[]): vs.TextEdit[];
+			asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined>;
 		};
 		// HACK: Override the asCodeActionResult result to use our own custom asWorkspaceEdit so we can carry
 		//       insertTextFormat from the protocol through to the middleware to handle snippets.
@@ -490,11 +490,11 @@ export class LspAnalyzer extends Analyzer {
 		//       https://github.com/microsoft/vscode-languageserver-node/issues/1000
 		const originalAsCodeAction = p2c.asCodeAction; // eslint-disable-line @typescript-eslint/unbound-method
 
-		async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
+		async function asWorkspaceEdit(item: ls.WorkspaceEdit | undefined | null, _token?: vs.CancellationToken): Promise<vs.WorkspaceEdit | undefined> {
 			if (!item) return;
 
 			// Instead of the original asWorkspaceEdit, call our custom one that fixes keepWhitespace.
-			const result = await asWorkspaceEditWithKeepWhitespaceSnippets(item, token);
+			const result = asWorkspaceEditWithKeepWhitespaceSnippets(item);
 
 			LspAnalyzer.rewriteUnofficialSnippetEdits(item, result);
 
@@ -528,7 +528,7 @@ export class LspAnalyzer extends Analyzer {
 		 *  - https://github.com/Dart-Code/Dart-Code/issues/6120
 		 *  - https://github.com/dart-lang/sdk/issues/63790
 		 */
-		async function asWorkspaceEditWithKeepWhitespaceSnippets(item: ls.WorkspaceEdit, token: vs.CancellationToken | undefined) {
+		function asWorkspaceEditWithKeepWhitespaceSnippets(item: ls.WorkspaceEdit): vs.WorkspaceEdit {
 			const metadata = new Map<string, vs.WorkspaceEditEntryMetadata>();
 			for (const [id, annotation] of Object.entries(item.changeAnnotations ?? {})) {
 				metadata.set(id, {
@@ -571,7 +571,7 @@ export class LspAnalyzer extends Analyzer {
 				}
 			} else if (item.changes) {
 				for (const [uri, edits] of Object.entries(item.changes))
-					result.set(p2c.asUri(uri), await p2c.asTextEdits(edits, token));
+					result.set(p2c.asUri(uri), p2c.asTextEditsSync(edits));
 			}
 			return result;
 		}
