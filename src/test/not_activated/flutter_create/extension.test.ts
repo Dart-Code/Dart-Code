@@ -31,23 +31,23 @@ describe("extension", () => {
 // Other tests must go in their own folders and be listed in test_all/launch.json individually.
 
 describe("command", () => {
-	it("Flutter: New Project can be invoked and creates app trigger file", async () => {
+	it("Flutter: Create New Project can be invoked and creates app trigger file", async () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "app", "application");
 	});
 
-	it("Flutter: New Project can be invoked and creates module trigger file", async () => {
+	it("Flutter: Create New Project can be invoked and creates module trigger file", async () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "module", "module");
 	});
 
-	it("Flutter: New Project can be invoked and creates package trigger file", async () => {
+	it("Flutter: Create New Project can be invoked and creates package trigger file", async () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "package", "package");
 	});
 
-	it("Flutter: New Project can be invoked and creates plugin trigger file", async () => {
+	it("Flutter: Create New Project can be invoked and creates plugin trigger file", async () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "plugin", "plugin");
 	});
 
-	it("Flutter: New Project can be invoked and creates skeleton trigger file", async function () {
+	it("Flutter: Create New Project can be invoked and creates skeleton trigger file", async function () {
 		// Skip this test if skeleton template is not supported
 		if (!privateApi?.flutterCapabilities?.supportsSkeleton)
 			this.skip();
@@ -55,11 +55,11 @@ describe("command", () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "skeleton", "application");
 	});
 
-	it("Flutter: New Project can be invoked and creates empty application trigger file", async () => {
+	it("Flutter: Create New Project can be invoked and creates empty application trigger file", async () => {
 		await projectContainsTriggerFileForExpectedTemplate("flutter.createProject", "app", "application", true);
 	});
 
-	it("Flutter: New Project allows modifying platforms during flow", async () => {
+	it("Flutter: Create New Project allows modifying platforms during flow", async () => {
 		const selectedPlatforms = ["android", "web"];
 		// Clear the current setting.
 		await setConfigForTest("dart", "flutterCreatePlatforms", undefined);
@@ -71,7 +71,7 @@ describe("command", () => {
 		assert.deepEqual(vs.workspace.getConfiguration("dart").get("flutterCreatePlatforms"), selectedPlatforms);
 	});
 
-	it("Flutter: New Project doesn't use selected platforms automatically next time by default", async () => {
+	it("Flutter: Create New Project doesn't use selected platforms automatically next time by default", async () => {
 		const selectedPlatforms = ["android", "web"];
 		await setConfigForTest("dart", "flutterCreatePlatforms", undefined);
 		await setConfigForTest("dart", "flutterCreatePromptForPlatforms", true);
@@ -89,7 +89,7 @@ describe("command", () => {
 		assert.equal(vs.workspace.getConfiguration("dart").get("flutterCreatePromptForPlatforms"), true);
 	});
 
-	it("Flutter: New Project uses selected platforms automatically next time if checked", async () => {
+	it("Flutter: Create New Project uses selected platforms automatically next time if checked", async () => {
 		const selectedPlatforms = ["android", "web"];
 		await setConfigForTest("dart", "flutterCreatePlatforms", undefined);
 		await setConfigForTest("dart", "flutterCreatePromptForPlatforms", true);

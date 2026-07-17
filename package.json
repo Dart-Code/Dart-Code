@@ -112,7 +112,7 @@
 		"commands": [
 			{
 				"command": "flutter.createProject",
-				"title": "New Project",
+				"title": "Create New Project",
 				"category": "Flutter"
 			},
 			{
@@ -123,7 +123,7 @@
 			},
 			{
 				"command": "dart.createProject",
-				"title": "New Project",
+				"title": "Create New Project",
 				"category": "Dart"
 			},
 			{
@@ -2395,7 +2395,7 @@
 							"kotlin"
 						],
 						"default": "kotlin",
-						"description": "The programming language to use for Android apps when creating new projects using the 'Flutter: New Project' command.",
+						"description": "The programming language to use for Android apps when creating new projects using the 'Flutter: Create New Project' command.",
 						"scope": "window"
 					},
 					"dart.flutterCreateIOSLanguage": {
@@ -2404,7 +2404,7 @@
 							"swift"
 						],
 						"default": "swift",
-						"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: New Project' command. This is only supported up until Flutter 3.22 after which it will be ignored.",
+						"description": "The programming language to use for iOS apps when creating new projects using the 'Flutter: Create New Project' command. This is only supported up until Flutter 3.22 after which it will be ignored.",
 						"scope": "window"
 					},
 					"dart.flutterCreatePlatforms": {
@@ -2413,19 +2413,19 @@
 							"type": "string"
 						},
 						"default": null,
-						"description": "The platforms to enable for new projects created using the 'Flutter: New Project' command. If unset, all platforms will be enabled.",
+						"description": "The platforms to enable for new projects created using the 'Flutter: Create New Project' command. If unset, all platforms will be enabled.",
 						"scope": "window"
 					},
 					"dart.flutterCreatePromptForPlatforms": {
 						"type": "boolean",
 						"default": true,
-						"description": "Whether to prompt for platforms when running 'Flutter: New Project'.",
+						"description": "Whether to prompt for platforms when running 'Flutter: Create New Project'.",
 						"scope": "window"
 					},
 					"dart.offline": {
 						"type": "boolean",
 						"default": false,
-						"description": "Whether to use the --offline switch for commands like 'pub get' and 'Flutter: New Project'.",
+						"description": "Whether to use the --offline switch for commands like 'pub get' and 'Flutter: Create New Project'.",
 						"scope": "window"
 					},
 					"dart.flutterCreateOrganization": {
@@ -2434,7 +2434,7 @@
 							"string"
 						],
 						"default": null,
-						"markdownDescription": "The organization responsible for your new Flutter project, in reverse domain name notation (e.g. `com.google`). This string is used in Java package names and as prefix in the iOS bundle identifier when creating new projects using the 'Flutter: New Project' command.",
+						"markdownDescription": "The organization responsible for your new Flutter project, in reverse domain name notation (e.g. `com.google`). This string is used in Java package names and as prefix in the iOS bundle identifier when creating new projects using the 'Flutter: Create New Project' command.",
 						"scope": "window"
 					},
 					"dart.flutterCustomEmulators": {

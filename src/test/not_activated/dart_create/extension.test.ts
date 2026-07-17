@@ -30,7 +30,7 @@ describe("extension", () => {
 // Other tests must go in their own folders and be listed in test_all/launch.json individually.
 
 describe("command", () => {
-	it("Dart: New Project can be invoked and creates trigger file", async () => {
+	it("Dart: Create New Project can be invoked and creates trigger file", async () => {
 		attachLoggingWhenExtensionAvailable();
 
 		const projectName = "my_test_dart_proj";
