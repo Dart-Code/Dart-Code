@@ -492,7 +492,7 @@ export class SdkUtils {
 
 		// If we still don't have a Dart SDK, but we do have a Flutter SDK and we did not already try to initialize, then
 		// try again here. This could happen if we were not in a Flutter project (so didn't try to initialize before) but
-		// still need a Dart SDK (for example, we were activated by running Flutter: New Project in an empty workspace.. we
+		// still need a Dart SDK (for example, we were activated by running Flutter: Create New Project in an empty workspace.. we
 		// wouldn't trigger the code above).
 		if (!hasAttemptedFlutterInitialization && flutterSdkPath && !dartSdkPath) {
 			await ensureFlutterInitialized(this.logger, path.join(flutterSdkPath, flutterPath));
