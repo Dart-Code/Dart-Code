@@ -6,13 +6,15 @@
 #^^^^^ source.dart keyword.declaration.dart
 #     ^ source.dart
 #      ^^^^^^^^^ source.dart support.class.dart
-#               ^^^^ source.dart
+#               ^ source.dart
+#                ^^^ source.dart
 >
 >class MyClass {
 #^^^^^ source.dart keyword.declaration.dart
 #     ^ source.dart
 #      ^^^^^^^ source.dart support.class.dart
-#             ^^^ source.dart
+#             ^ source.dart
+#              ^^ source.dart
 >  void method1() => print('Called method1!');
 #^^ source.dart
 #  ^^^^ source.dart storage.type.primitive.dart
@@ -309,7 +311,8 @@
 #    ^^ source.dart keyword.control.catch-exception.dart
 #      ^ source.dart
 #       ^^^^^^^^^ source.dart support.class.dart
-#                ^^^ source.dart
+#                ^ source.dart
+#                 ^^ source.dart
 >    throw Exception('test');
 #^^^^ source.dart
 #    ^^^^^ source.dart keyword.control.catch-exception.dart

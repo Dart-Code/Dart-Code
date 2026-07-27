@@ -364,7 +364,8 @@
 #^^^^^ source.dart keyword.declaration.dart
 #     ^ source.dart
 #      ^^^^^^^^^^^^^^^^^^^ source.dart support.class.dart
-#                         ^^^ source.dart
+#                         ^ source.dart
+#                          ^^ source.dart
 >  /* test /* test */ */
 #^^ source.dart
 #  ^^ source.dart comment.block.dart
