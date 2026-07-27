@@ -247,6 +247,10 @@ jobs:
           LOGS_NAME: ${{ matrix.build-version }}
           FLUTTER_REPO_PATH: ${{ steps.flutter.outputs.flutter-sdk }}
 
+      - name: npm run test-grammar
+        if: matrix.bot == 'misc'
+        run: npm run test-grammar
+
       - name: ps -x (after)
         if: matrix.os != 'windows-latest'
         run: ps -x
