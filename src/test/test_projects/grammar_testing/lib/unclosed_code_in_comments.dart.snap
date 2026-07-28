@@ -1,0 +1,54 @@
+>/// Text
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+>/// ```
+#^^^^^^^ source.dart comment.block.documentation.dart
+>/// code
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>///
+#^^^^ source.dart comment.block.documentation.dart
+>int? x1;
+#^^^ source.dart support.class.dart
+#   ^ source.dart keyword.operator.ternary.dart
+#    ^^^ source.dart
+#       ^ source.dart punctuation.terminator.dart
+>
+>/// ```
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^ source.dart comment.block.documentation.dart
+>/// code
+#^^^^^^^^^ source.dart comment.block.documentation.dart
+>///
+#^^^^ source.dart comment.block.documentation.dart
+>int? x2;
+#^^^ source.dart support.class.dart
+#   ^ source.dart keyword.operator.ternary.dart
+#    ^^^ source.dart
+#       ^ source.dart punctuation.terminator.dart
+>
+>/// Text
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^^ source.dart comment.block.documentation.dart
+>/// ```
+#^^^^^^^ source.dart comment.block.documentation.dart
+>/// code
+#^^^^ source.dart comment.block.documentation.dart
+#    ^^^^ source.dart comment.block.documentation.dart variable.other.source.dart
+>int? x3;
+#^^^ source.dart support.class.dart
+#   ^ source.dart keyword.operator.ternary.dart
+#    ^^^ source.dart
+#       ^ source.dart punctuation.terminator.dart
+>
+>/// ```
+#^^^ source.dart comment.block.documentation.dart
+#   ^^^^^ source.dart comment.block.documentation.dart
+>/// code
+#^^^^^^^^^ source.dart comment.block.documentation.dart
+>int? x4;
+#^^^ source.dart support.class.dart
+#   ^ source.dart keyword.operator.ternary.dart
+#    ^^^ source.dart
+#       ^ source.dart punctuation.terminator.dart
+>
