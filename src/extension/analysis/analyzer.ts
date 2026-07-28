@@ -41,6 +41,7 @@ import {
 
 // Globals so we only show these errors once per session.
 let hasShownAnalysisServerVersionMismatchError = false;
+let hasShownDartOsVersionError = false;
 
 export class LspAnalyzer extends Analyzer {
 	public readonly client: LanguageClient;
@@ -655,6 +656,10 @@ export class LspAnalyzer extends Analyzer {
 						severity: "ERROR",
 						restartReason: ExtensionRestartReason.AnalysisServerFromSourceMismatch
 					});
+				}
+				if (!hasShownDartOsVersionError && errorOutput.includes("Current Mac OS X version") && errorOutput.includes("is lower than minimum supported version")) {
+					hasShownDartOsVersionError = true;
+					vs.window.showErrorMessage(`Dart requires a new OS version: ${errorOutput}`);
 				}
 			}
 
