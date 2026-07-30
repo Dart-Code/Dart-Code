@@ -121,7 +121,10 @@ jobs:
         with:
           sdk: ${{ matrix.build-version }}
 
-      - run: sudo snap install flutter --classic
+      - name: Set up Flutter (snap) w/ DBUS_SESSION_BUS_ADDRESS fix
+        run: |
+          sudo snap install flutter --classic
+          echo "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus" >> $GITHUB_ENV
         if: matrix.bot == 'flutter_snap'
 
       - run: dart --disable-analytics
