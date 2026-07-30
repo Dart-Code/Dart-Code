@@ -111,6 +111,11 @@
 		],
 		"commands": [
 			{
+				"command": "dart.toggleShowTodos",
+				"title": "Toggle Show TODOs",
+				"category": "Dart"
+			},
+			{
 				"command": "flutter.createProject",
 				"title": "Create New Project",
 				"category": "Flutter"
