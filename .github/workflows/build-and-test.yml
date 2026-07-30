@@ -125,6 +125,7 @@ jobs:
         if: matrix.bot == 'flutter_snap'
 
       - run: dart --disable-analytics
+        if: matrix.bot != 'flutter_snap'
 
       - run: flutter config --no-analytics
         if: matrix.bot != 'flutter_snap' && !startsWith(matrix.bot, 'dart')
