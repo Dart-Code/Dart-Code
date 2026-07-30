@@ -7,6 +7,7 @@ import { Logger } from "../../shared/interfaces";
 import { getRandomInt } from "../../shared/utils/fs";
 import { envUtils } from "../../shared/vscode/utils";
 import { Analytics, AnalyticsEvent } from "../analytics";
+import { config } from "../config";
 import { ringLog } from "../extension";
 import { openLogContents } from "../utils";
 import { getLogHeader } from "../utils/log";
@@ -50,6 +51,20 @@ export class AnalyzerCommands {
 				this.showServerRestartPrompt().catch((e) => logger.error(e));
 			analytics.log(AnalyticsEvent.Command_ForceReanalyze);
 			await analyzer.forceReanalyze();
+		}));
+		context.subscriptions.push(vs.commands.registerCommand("dart.toggleShowTodos", async () => {
+			const settingName = "showTodos";
+			const currentValue = config.showTodos;
+			const newValue = !currentValue;
+
+			let target = vs.ConfigurationTarget.Global;
+			const configValue = vs.workspace.getConfiguration("dart").inspect(settingName);
+			if (configValue?.workspaceFolderValue !== undefined)
+				target = vs.ConfigurationTarget.WorkspaceFolder;
+			else if (configValue?.workspaceValue !== undefined)
+				target = vs.ConfigurationTarget.Workspace;
+
+			await config.setShowTodos(newValue, target);
 		}));
 	}
 
