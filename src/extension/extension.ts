@@ -601,7 +601,7 @@ export async function activate(context: vs.ExtensionContext, isRestart = false) 
 		try {
 			context.subscriptions.push(new McpTools(dartCapabilities, dartToolingDaemon));
 		} catch (e) {
-			// This is required to swallow the exception on Firebase Studio (older VS Code version)
+			// This is required to swallow the exception on older VS Code versions
 			// and prevent failure to activate.
 			// https://github.com/Dart-Code/Dart-Code/issues/5570
 			logger.warn("Failed to register LM Tool, ignoring - see https://github.com/Dart-Code/Dart-Code/issues/5570");

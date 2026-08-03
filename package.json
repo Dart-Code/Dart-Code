@@ -765,8 +765,6 @@
 		],
 		"languageModelTools": [
 			{
-				"NOTE": "This id currently required for Firebase Studio, despite producing a warning in VS Code - https://github.com/Dart-Code/Dart-Code/issues/5569",
-				"id": "get_dart_tooling_daemon_dtd_uri",
 				"name": "get_dart_tooling_daemon_dtd_uri",
 				"when": "dart-code:anyProjectLoaded",
 				"displayName": "Get the Dart Tooling Daemon (DTD) URI",
@@ -780,8 +778,6 @@
 				}
 			},
 			{
-				"NOTE": "This id currently required for Firebase Studio, despite producing a warning in VS Code - https://github.com/Dart-Code/Dart-Code/issues/5569",
-				"id": "dart_format",
 				"name": "dart_format",
 				"when": "dart-code:anyProjectLoaded",
 				"displayName": "Format a Dart document",
@@ -801,8 +797,6 @@
 				}
 			},
 			{
-				"NOTE": "This id currently required for Firebase Studio, despite producing a warning in VS Code - https://github.com/Dart-Code/Dart-Code/issues/5569",
-				"id": "dart_fix",
 				"name": "dart_fix",
 				"when": "dart-code:anyProjectLoaded",
 				"displayName": "Fix All in file/workspace",
