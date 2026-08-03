@@ -251,10 +251,15 @@ export interface DevToolsPage {
 	isStaticTool?: boolean;
 }
 
-export interface WidgetErrorInspectData {
+export interface LegacyWidgetErrorInspectData {
 	errorDescription: string;
 	devToolsUrl: string;
 	inspectorReference: string;
+}
+
+export interface DevToolsDeepLinkData {
+	summary: string;
+	deepLinkUrl: string;
 }
 
 export interface Range {

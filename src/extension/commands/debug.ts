@@ -5,7 +5,7 @@ import { FlutterCapabilities } from "../../shared/capabilities/flutter";
 import { CommandSource, debugLaunchProgressId, debugTerminatingProgressId, devToolsPages, doNotAskAgainAction, doNotShowAgainAction, moreInfoAction, widgetInspectorPage } from "../../shared/constants";
 import { isInDartDebugSessionContext, isInFlutterDebugModeDebugSessionContext, isInFlutterProfileModeDebugSessionContext, isInFlutterReleaseModeDebugSessionContext } from "../../shared/constants.contexts";
 import { DebugOption, DebuggerType, LogCategory, LogSeverity, VmService, VmServiceExtension, debugOptionNames } from "../../shared/enums";
-import { DartWorkspaceContext, IAmDisposable, LogMessage, Logger, WidgetErrorInspectData } from "../../shared/interfaces";
+import { DartWorkspaceContext, DevToolsDeepLinkData, IAmDisposable, LegacyWidgetErrorInspectData, LogMessage, Logger } from "../../shared/interfaces";
 import { PromiseCompleter, disposeAll } from "../../shared/utils";
 import { fsPath, isFlutterProjectFolder, isWithinPath } from "../../shared/utils/fs";
 import { ANALYSIS_FILTERS } from "../../shared/vscode/constants";
@@ -964,11 +964,11 @@ export class DebugCommands implements IAmDisposable {
 				}
 				progress.complete();
 			}
-		} else if (event === "dart.flutter.widgetErrorInspectData") {
+		} else if (event === "dart.flutter.widgetErrorInspectData") { // Legacy DAP deep links
 			if (this.suppressFlutterWidgetErrors || !config.showInspectorNotificationsForWidgetErrors)
 				return;
 
-			const data = e.body as WidgetErrorInspectData;
+			const data = e.body as LegacyWidgetErrorInspectData;
 			if (data.devToolsUrl !== (await this.devTools.devtoolsUrl))
 				return;
 
@@ -993,6 +993,41 @@ export class DebugCommands implements IAmDisposable {
 			}
 			clearTimeout(timer);
 			this.suppressFlutterWidgetErrors = false;
+		} else if (event === "dart.flutter.devToolsDeepLink") { // New DAP deep links
+			if (this.suppressFlutterWidgetErrors || !config.showInspectorNotificationsForWidgetErrors)
+				return;
+
+			// "event":"dart.flutter.devToolsDeepLink",
+			// "body":{
+			//   "summary":"A RenderFlex overflowed by 266 pixels on the right.",
+			//   "deepLinkUrl":"http://example.org/#/inspector?uri&inspectorRef=inspector-0"
+			// }
+			const data = e.body as DevToolsDeepLinkData;
+
+			// To avoid spam, when we show this dialog we will set a flag that prevents any more
+			// of these types of dialogs until it is dismissed or 5 seconds have passed.
+			this.suppressFlutterWidgetErrors = true;
+			const timer = setTimeout(() => this.suppressFlutterWidgetErrors = false, 5000);
+
+			const inspectAction = `Inspect Widget`;
+			const choice = await vs.window.showWarningMessage(data.summary, inspectAction, doNotAskAgainAction);
+			if (choice === inspectAction && session.vmServiceUri) {
+				const link = this.parseDeepLinkUri(data.deepLinkUrl);
+				if (link !== null) {
+					void this.devTools.spawn(
+						session as DartDebugSessionInformation & { vmServiceUri: string },
+						{
+							inspectorRef: link?.inspectorRef,
+							pageId: link?.pageId,
+						},
+						true,
+					);
+				}
+			} else if (choice === doNotAskAgainAction) {
+				void config.setShowInspectorNotificationsForWidgetErrors(false);
+			}
+			clearTimeout(timer);
+			this.suppressFlutterWidgetErrors = false;
 		} else if (event === "flutter.appStarted") {
 			session.hasStarted = true;
 			debugSessionChangedEmitter.fire(session);
@@ -1007,6 +1042,22 @@ export class DebugCommands implements IAmDisposable {
 			session.supportsHotReload = body?.supportsRestart;
 			debugSessionChangedEmitter.fire(session);
 			debugSessionsChangedEmitter.fire();
+		}
+	}
+
+	private parseDeepLinkUri(deepLinkUrl: string): { pageId: string, inspectorRef: string | undefined } | undefined {
+		try {
+			// http://example.org/#/inspector?uri&inspectorRef=inspector-0
+			const url = new URL(deepLinkUrl.replace("#/", ""));
+			const pageId = url.pathname.split("/")[1];
+			const inspectorRef = url.searchParams.get("inspectorRef") ?? undefined;
+			if (pageId !== "") {
+				return { pageId, inspectorRef };
+			}
+			return undefined;
+		} catch {
+			this.logger.error(`Failed to parse DevTools deep link URL: ${deepLinkUrl}`);
+			return undefined;
 		}
 	}
 
