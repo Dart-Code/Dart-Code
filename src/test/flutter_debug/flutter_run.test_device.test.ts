@@ -6,7 +6,7 @@ import { versionIsAtLeast } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureServiceExtensionValue, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureHasRunWithArgsStarting, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
+import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureHasRunWithArgsStarting, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldOverflowFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
 
 describe(`flutter run debugger (only test device)`, () => {
 	beforeEach("Skip test-device tests on web", function () {
@@ -600,5 +600,43 @@ describe(`flutter run debugger (only test device)`, () => {
 				dc.terminateRequest(),
 			);
 		});
+	});
+
+	it("shows deep link prompt for overflow errors", async function () {
+		// Currently this test fails on Chrome because we always lose the race
+		// with enabling structured errors versus the error occurring
+		if (flutterTestDeviceIsWeb)
+			return this.skip();
+
+		await openFile(flutterHelloWorldOverflowFile);
+		const config = await startDebugger(dc, flutterHelloWorldOverflowFile);
+
+		const showInformationMessage = sb.stub(vs.window, "showWarningMessage");
+
+		await waitAllThrowIfTerminates(dc,
+			dc.flutterAppStarted(),
+			// Disable breaking on exceptions so we don't have to resume.
+			dc.waitForEvent("initialized")
+				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
+				.then(() => dc.configurationDoneRequest()),
+			dc.launch(config),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForHotReload(),
+			Promise.resolve(vs.commands.executeCommand("flutter.hotReload")),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+
+		assert.ok(showInformationMessage.called);
+		const args = showInformationMessage.getCalls()[0].args;
+		const message = args[0] as string;
+		const buttons = args[1] as string[];
+		assert.ok(message.includes("A RenderFlex overflowed by"));
+		assert.ok(buttons[0], "Inspect Widget");
 	});
 });

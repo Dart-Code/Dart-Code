@@ -1013,12 +1013,12 @@ export class DebugCommands implements IAmDisposable {
 			const choice = await vs.window.showWarningMessage(data.summary, inspectAction, doNotAskAgainAction);
 			if (choice === inspectAction && session.vmServiceUri) {
 				const link = this.parseDeepLinkUri(data.deepLinkUrl);
-				if (link !== null) {
+				if (link) {
 					void this.devTools.spawn(
 						session as DartDebugSessionInformation & { vmServiceUri: string },
 						{
-							inspectorRef: link?.inspectorRef,
-							pageId: link?.pageId,
+							inspectorRef: link.inspectorRef,
+							pageId: link.pageId,
 						},
 						true,
 					);
@@ -1051,7 +1051,7 @@ export class DebugCommands implements IAmDisposable {
 			const url = new URL(deepLinkUrl.replace("#/", ""));
 			const pageId = url.pathname.split("/")[1];
 			const inspectorRef = url.searchParams.get("inspectorRef") ?? undefined;
-			if (pageId !== "") {
+			if (pageId) {
 				return { pageId, inspectorRef };
 			}
 			return undefined;
