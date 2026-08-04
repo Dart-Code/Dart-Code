@@ -126,6 +126,7 @@ export const flutterHelloWorldPubspec = vs.Uri.file(path.join(fsPath(flutterHell
 export const flutterHelloWorldCounterAppFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/counter.dart"));
 export const flutterHelloWorldOutlineFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/outline.dart"));
 export const flutterHelloWorldBrokenFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/broken.dart"));
+export const flutterHelloWorldOverflowFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/overflow.dart"));
 export const flutterHelloWorldHttpFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/http.dart"));
 export const flutterHelloWorldGettersFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/getters.dart"));
 export const flutterHelloWorldLocalPackageFile = vs.Uri.file(path.join(fsPath(flutterHelloWorldFolder), "lib/local_package.dart"));
