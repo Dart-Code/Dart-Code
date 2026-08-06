@@ -15,6 +15,7 @@ export class FlutterCapabilities {
 	get supportsSkeleton() { return !versionIsAtLeast(this.version, "3.29.0"); }
 	get supportsWidgetPreview() { return versionIsAtLeast(this.version, "3.36.0-1"); }
 	get supportsWidgetPreviewByDefault() { return versionIsAtLeast(this.version, "3.38.0-0"); }
+	get hasInspectorDeepLinkNotificationForwarding() { return versionIsAtLeast(this.version, "3.47.0-1"); }
 }
 
 export class DaemonCapabilities {

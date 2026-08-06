@@ -603,9 +603,8 @@ describe(`flutter run debugger (only test device)`, () => {
 	});
 
 	it("shows deep link prompt for overflow errors", async function () {
-		// Currently this test fails on Chrome because we always lose the race
-		// with enabling structured errors versus the error occurring
-		if (flutterTestDeviceIsWeb)
+		// Does the Flutter SDK support forwarding the new events?
+		if (!privateApi.flutterCapabilities.hasInspectorDeepLinkNotificationForwarding)
 			return this.skip();
 
 		await openFile(flutterHelloWorldOverflowFile);
