@@ -270,9 +270,17 @@ const suppressOutputPatterns = [
 	/depends on UNKNOWN service agentSessions/i,
 	/command 'antigravity\.isFileGitIgnored' not found/i,
 	/An unknown error occurred. Please consult the log for more details./i,
+	/DeprecationWarning:/i,
+	/--trace-deprecation/i,
+	/workbench#open\(\)/i,
 	// Verbose stack traces from VS Code errors
 	/resources\/app\/out/i,
 	/extensions\/github\.copilot-chat/i,
+	// New AgentHost spam
+	/AgentHostProcessManager/i,
+	/No token resolved for resource/i,
+	/Unknown channel: agentHost/i,
+	/AgentHost:renderer/i,
 ];
 const shouldIncludeOutputLine = (line: string) => !suppressOutputPatterns.some((pattern) => pattern.test(line));
 
