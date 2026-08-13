@@ -2,7 +2,6 @@ import * as vs from "vscode";
 import { isDartCodeTestRun } from "../../shared/constants";
 import { Logger, SpawnedProcess } from "../../shared/interfaces";
 import { RunProcessResult, runProcess, safeSpawn } from "../../shared/processes";
-import { getFixedToolEnvForCopilotMutation } from "../../shared/utils";
 import { dashIdeEnvironment, dashIdeName, dashIdeVersion, dashPluginName, dashPluginVersion, dashTool } from "../../shared/vscode/constants";
 
 // Environment used when spawning Dart and Flutter processes.
@@ -16,7 +15,7 @@ let globalFlutterArgs: string[] = [];
  * Mutations to toolEnv should be done via setupToolEnv/etc.
  */
 export function getToolEnv(): Record<string, string> {
-	return getFixedToolEnvForCopilotMutation({ processEnv: process.env, toolEnv: Object.assign({}, toolEnv) });
+	return Object.assign({}, toolEnv);
 }
 
 export function getGlobalFlutterArgs() {
