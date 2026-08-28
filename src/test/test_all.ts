@@ -273,6 +273,8 @@ const suppressOutputPatterns = [
 	/DeprecationWarning:/i,
 	/--trace-deprecation/i,
 	/workbench#open\(\)/i,
+	// DialogService refusales appear twice, once with and once without the prefix, so remove the dupe
+	/Error: DialogService/i,
 	// Verbose stack traces from VS Code errors
 	/resources\/app\/out/i,
 	/extensions\/github\.copilot-chat/i,
@@ -281,6 +283,8 @@ const suppressOutputPatterns = [
 	/No token resolved for resource/i,
 	/Unknown channel: agentHost/i,
 	/AgentHost:renderer/i,
+	/\[AgentHost\]/i,
+	/\[ChatModelSelection\]/i,
 ];
 const shouldIncludeOutputLine = (line: string) => !suppressOutputPatterns.some((pattern) => pattern.test(line));
 
