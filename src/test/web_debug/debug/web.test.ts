@@ -204,10 +204,7 @@ describe("web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		// Skipped due to a webdev regression where `dart_sdk` is not loaded in the browser,
-		// causing expression evaluation of Dart SDK types to fail.
-		// TODO: Re-enable when the webdev issue is resolved.
-		it.skip("complex expressions", async () => {
+		it("complex expressions", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -223,10 +220,7 @@ describe("web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		// Skipped due to a webdev regression where `dart_sdk` is not loaded in the browser,
-		// causing expression evaluation of Dart SDK types to fail.
-		// TODO: Re-enable when the webdev issue is resolved.
-		it.skip("an expression that returns a variable", async () => {
+		it("an expression that returns a variable", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -243,10 +237,7 @@ describe("web debugger", () => {
 			assert.ok(evaluateResult.variablesReference);
 		});
 
-		// Skipped due to a webdev regression where `dart_sdk` is not loaded in the browser,
-		// causing expression evaluation of Dart SDK types to fail.
-		// TODO: Re-enable when the webdev issue is resolved.
-		it.skip("complex expressions when in a top level function", async () => {
+		it("complex expressions when in a top level function", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -298,10 +289,7 @@ describe("web debugger", () => {
 		ensureVariable(variables, "$_threadException.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	// Skipped due to a webdev regression where `dart_sdk` is not loaded in the browser,
-	// causing expression evaluation of Dart SDK types in logpoints to fail.
-	// TODO: Re-enable when the webdev issue is resolved.
-	it.skip("logs expected text (and does not stop) at a logpoint", async () => {
+	it("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(webHelloWorldMainFile);
 		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(dc, webHelloWorldIndexFile));
 		await waitAllThrowIfTerminates(dc,
