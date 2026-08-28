@@ -68,8 +68,7 @@ export class LspAnalyzer extends Analyzer {
 
 		// Register all language client features.
 		this.client.registerFeature(new CommonCapabilitiesFeature().feature);
-		if (config.interactiveForms)
-			this.client.registerFeature(new InteractiveFormsFeature(this.client));
+		this.client.registerFeature(new InteractiveFormsFeature(this.client));
 		this.client.registerFeature(new AddDependencyCodeActionProvider(this.client).feature);
 		this.client.registerFeature(new LegacyRefactors(this.logger, this.client).feature);
 		this.client.registerFeature(this.refactors.feature);

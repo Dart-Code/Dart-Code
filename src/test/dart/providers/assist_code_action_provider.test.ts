@@ -1,17 +1,11 @@
 import { strict as assert } from "assert";
 import * as vs from "vscode";
-import { activate, currentDoc, emptyFile, ensureTestContentWithSelection, openFile, privateApi, rangeOf, setTestContent } from "../../helpers";
+import { activate, currentDoc, emptyFile, ensureTestContentWithSelection, openFile, rangeOf, setTestContent } from "../../helpers";
 
 describe("assist_code_action_provider", () => {
 	beforeEach("activate", () => activate());
 
 	it("handles Snippets in assists with choices", async function () {
-		// In SDK versions that support interactive forms, the "Assign value to new local variable"
-		// assist uses the interactive forms workflow rather than snippet text edits, so the
-		// snippet-based path tested here is no longer exercised.
-		if (privateApi.dartCapabilities.supportsInteractiveForms)
-			this.skip();
-
 		await openFile(emptyFile);
 		await setTestContent(`
 void f(String name) {
