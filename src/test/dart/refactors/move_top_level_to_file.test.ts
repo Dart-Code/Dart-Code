@@ -8,7 +8,14 @@ describe("move top level to file refactor", () => {
 	beforeEach("activate", () => activate());
 
 	describe("without interactive forms", () => {
-		it("can move a simple class", async () => {
+		it("can move a simple class", async function () {
+			// When the SDK supports interactive forms, the interactive forms feature is always
+			// registered at startup (before the runtime config can be changed), so setting
+			// interactiveForms=false at test time does not prevent the interactive forms
+			// mechanism from being used. Skip this test on those SDK versions.
+			if (privateApi.dartCapabilities.supportsInteractiveForms)
+				this.skip();
+
 			await setConfigForTest("dart", "interactiveForms", false);
 
 			const newFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/my_new_class.dart"));
