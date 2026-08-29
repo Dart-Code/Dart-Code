@@ -285,6 +285,11 @@ const suppressOutputPatterns = [
 	/AgentHost:renderer/i,
 	/\[AgentHost\]/i,
 	/\[ChatModelSelection\]/i,
+	// Multiline claude spam.
+	/\[RemoteAgentHostProtocol\]/i,
+	/code: -32603,/i,
+	/message: 'ProviderCatalogUnavailableError: Provider/i,
+	/^}$/i,
 ];
 const shouldIncludeOutputLine = (line: string) => !suppressOutputPatterns.some((pattern) => pattern.test(line));
 
