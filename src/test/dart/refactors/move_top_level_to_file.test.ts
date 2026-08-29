@@ -1,16 +1,20 @@
 import * as path from "path";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { activate, ensureFileContent, ensureTestContent, executeCodeAction, helloWorldFolder, privateApi, rangeOf, sb, setConfigForTest, setTestContent, tryDelete } from "../../helpers";
+import { activate, ensureFileContent, ensureTestContent, executeCodeAction, helloWorldFolder, privateApi, rangeOf, sb, setTestContent, tryDelete } from "../../helpers";
 
 describe("move top level to file refactor", () => {
 
 	beforeEach("activate", () => activate());
 
 	describe("without interactive forms", () => {
-		it("can move a simple class", async () => {
-			await setConfigForTest("dart", "interactiveForms", false);
+		beforeEach(function () {
+			// TODO(dantup): this is never the case so consider just removing these tests.
+			if (privateApi.dartCapabilities.supportsInteractiveForms)
+				this.skip();
+		});
 
+		it("can move a simple class", async () => {
 			const newFile = vs.Uri.file(path.join(fsPath(helloWorldFolder), "lib/my_new_class.dart"));
 			const showSaveDialog = sb.stub(vs.window, "showSaveDialog");
 			showSaveDialog.resolves(newFile);
@@ -38,12 +42,12 @@ class B {}
 	});
 
 	describe("with interactive forms", () => {
-		it("can move a simple class", async function () {
+		beforeEach(function () {
 			if (!privateApi.dartCapabilities.supportsInteractiveForms)
 				this.skip();
+		});
 
-			await setConfigForTest("dart", "interactiveForms", true);
-
+		it("can move a simple class", async function () {
 			// Stub the quick-pick to select the "Create New File" option.
 			sb.stub(vs.window, "showQuickPick").callsFake(async (items: vs.QuickPickItem[]) => {
 				const expectedLabel = "Create New File";
