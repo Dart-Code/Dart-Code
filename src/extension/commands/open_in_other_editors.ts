@@ -60,7 +60,7 @@ export class OpenInOtherEditorCommands implements IAmDisposable {
 		}
 
 		const file = path.join(folder, files[0].name);
-		safeToolSpawn(folder, "open", ["-a", "XCode", file]);
+		safeToolSpawn(folder, "open", ["-b", "com.apple.dt.Xcode", file]);
 	}
 
 	private async getAndroidStudioDir(folder: string): Promise<string> {
