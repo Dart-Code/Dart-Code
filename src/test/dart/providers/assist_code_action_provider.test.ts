@@ -15,11 +15,11 @@ void f(String name) {
 		assert.ok(actionResults);
 		assert.ok(actionResults.length);
 
-		const assignVarAction = actionResults.find(function (r) {
-			return r.title.includes("Assign value to new local variable")
-				// The word 'new' was dropped in Aug 2026 SDK release.
-				|| r.title.includes("Assign value to local variable");
-		});
+		const assignVarAction = actionResults.find((r) =>
+			r.title.includes("Assign value to new local variable")
+			// The word 'new' was dropped in Aug 2026 SDK release.
+			|| r.title.includes("Assign value to local variable")
+		);
 		assert.ok(assignVarAction, "Action was not found");
 
 		// Older servers have simple edit, but newer has snippets.
