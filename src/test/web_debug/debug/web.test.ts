@@ -204,7 +204,9 @@ describe("web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		it("complex expressions", async () => {
+		// Skipped due to "Module dart_sdk not loaded in the browser"
+		// https://github.com/dart-lang/webdev/issues/2869
+		it.skip("complex expressions", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -220,7 +222,9 @@ describe("web debugger", () => {
 			assert.equal(evaluateResult.variablesReference, 0);
 		});
 
-		it("an expression that returns a variable", async () => {
+		// Skipped due to "Module dart_sdk not loaded in the browser"
+		// https://github.com/dart-lang/webdev/issues/2869
+		it.skip("an expression that returns a variable", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -237,7 +241,9 @@ describe("web debugger", () => {
 			assert.ok(evaluateResult.variablesReference);
 		});
 
-		it("complex expressions when in a top level function", async () => {
+		// Skipped due to "Module dart_sdk not loaded in the browser"
+		// https://github.com/dart-lang/webdev/issues/2869
+		it.skip("complex expressions when in a top level function", async () => {
 			await openFile(webHelloWorldMainFile);
 			const config = await startDebugger(dc, webHelloWorldIndexFile);
 			await waitAllThrowIfTerminates(dc,
@@ -289,7 +295,9 @@ describe("web debugger", () => {
 		ensureVariable(variables, "$_threadException.message", "message", `"(TODO WHEN UNSKIPPING)"`);
 	});
 
-	it("logs expected text (and does not stop) at a logpoint", async () => {
+	// Skipped due to "Module dart_sdk not loaded in the browser"
+	// https://github.com/dart-lang/webdev/issues/2869
+	it.skip("logs expected text (and does not stop) at a logpoint", async () => {
 		await openFile(webHelloWorldMainFile);
 		const config = await watchPromise("logs_expected_text->startDebugger", startDebugger(dc, webHelloWorldIndexFile));
 		await waitAllThrowIfTerminates(dc,
