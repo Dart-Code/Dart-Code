@@ -6,7 +6,7 @@ import { CancellationToken, Logger, SpawnedProcess } from "./interfaces";
 import { logProcess } from "./logging";
 import { nullToUndefined } from "./utils";
 
-const simpleCommandRegex = new RegExp("^[\\w\\-.]+$");
+export const simpleCommandRegex = new RegExp("^[\\w\\-.]+$");
 
 export function safeSpawn(workingDirectory: string | undefined, binPath: string, args: string[], env: Record<string, string | undefined> | undefined): SpawnedProcess {
 	const customEnv = Object.assign({}, process.env, env);
@@ -25,7 +25,7 @@ export function safeSpawn(workingDirectory: string | undefined, binPath: string,
 	return child_process.spawn(binPath, args, { cwd: workingDirectory, env: customEnv }) satisfies SpawnedProcess;
 }
 
-function quoteAndEscapeArg(arg: string) {
+export function quoteAndEscapeArg(arg: string) {
 	// Spawning processes on Windows with funny symbols in the path requires quoting. However if you quote an
 	// executable with a space in its path and an argument also has a space, you have to then quote _all_ of the
 	// arguments!

@@ -1,96 +1,77 @@
-import { strict as assert } from "assert";
-import * as fs from "fs";
 import * as vs from "vscode";
 import { fsPath } from "../../../shared/utils/fs";
-import { waitFor } from "../../../shared/utils/promises";
-import { activate, defer, flutterHelloWorldFolder, flutterHelloWorldPubspec, privateApi, sb } from "../../helpers";
+import { activate, flutterHelloWorldFolder, privateApi, sb } from "../../helpers";
+import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("pub add", () => {
-	const pubspecPath = fsPath(flutterHelloWorldPubspec);
 	beforeEach("activate", () => activate());
-	beforeEach("ensure pubspec resets", () => {
-		const contents = fs.readFileSync(pubspecPath);
-		defer("Reset pubspec", () => fs.writeFileSync(pubspecPath, contents));
-	});
-
-	function pubspecContains(packageName: string) {
-		const contents = fs.readFileSync(pubspecPath);
-		return contents.includes(`  ${packageName}:`);
-	}
 
 	it("can add a dependency using command", async () => {
-		assert.equal(pubspecContains("collection"), false);
+		const spawn = ChildProcessSpawnStub.flutterPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(flutterHelloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContains("collection"));
-		assert.equal(pubspecContains("collection"), true);
+
+		spawn.assertFlutterCalls([{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "collection"] }]);
 	});
 
 	it("can add a dev-dependency using command", async () => {
-		assert.equal(pubspecContains("collection"), false);
+		const spawn = ChildProcessSpawnStub.flutterPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(flutterHelloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDevDependency");
-		await waitFor(() => pubspecContains("collection"));
-		assert.equal(pubspecContains("collection"), true);
+
+		spawn.assertFlutterCalls([{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "collection", "--dev"] }]);
 	});
 
 	it("can add a Flutter SDK dependency using command", async () => {
-		assert.equal(pubspecContains("flutter_localizations"), false);
+		const spawn = ChildProcessSpawnStub.flutterPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("flutter_localizations");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(flutterHelloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDevDependency");
-		await waitFor(() => pubspecContains("flutter_localizations"));
 
-		const fileContents = fs.readFileSync(pubspecPath).toString().replace(/[\s\r]*\n/g, "\n");
-		const expectedString = "flutter_localizations:\n    sdk: flutter";
-		assert.equal(
-			fileContents.includes(expectedString),
-			true,
-			`Did not find string "${expectedString}" in file contents:\n${fileContents}`,
-		);
+		spawn.assertFlutterCalls([{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "flutter_localizations", "--sdk", "flutter", "--dev"] }]);
 	});
 
 	it("runs without --sdk for a Pub package", async () => {
-		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+		const spawn = ChildProcessSpawnStub.flutterPub();
 
 		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "collection" }, false);
 
-		assert.equal(runFlutter.callCount, 1);
-		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "collection"], flutterHelloWorldFolder]);
+		spawn.assertFlutterCalls([{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "collection"] }]);
 	});
 
 	it("runs with --sdk for a Flutter SDK package", async () => {
-		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+		const spawn = ChildProcessSpawnStub.flutterPub();
 
 		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "flutter_test" }, false);
 
-		assert.equal(runFlutter.callCount, 1);
-		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "flutter_test", "--sdk", "flutter"], flutterHelloWorldFolder]);
+		spawn.assertFlutterCalls([{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "flutter_test", "--sdk", "flutter"] }]);
 	});
 
 	it("runs separate commands for multiple Flutter SDK packages", async () => {
-		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+		const spawn = ChildProcessSpawnStub.flutterPub();
 
 		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "flutter_test flutter_localizations" }, false);
 
-		assert.equal(runFlutter.callCount, 2);
-		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "flutter_test", "--sdk", "flutter"], flutterHelloWorldFolder]);
-		assert.deepStrictEqual(runFlutter.secondCall.args, [["pub", "add", "flutter_localizations", "--sdk", "flutter"], flutterHelloWorldFolder]);
+		spawn.assertFlutterCalls([
+			{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "flutter_test", "--sdk", "flutter"] },
+			{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "flutter_localizations", "--sdk", "flutter"] },
+		]);
 	});
 
 	it("runs multiple commands for a mix of Flutter SDK/Pub packages", async () => {
-		const runFlutter = sb.stub(privateApi.addDependencyCommand as any, "runFlutter").resolves(undefined);
+		const spawn = ChildProcessSpawnStub.flutterPub();
 
 		await vs.commands.executeCommand("_dart.addDependency", [flutterHelloWorldFolder], { marker: undefined, packageNames: "foo flutter_test bar flutter_driver" }, false);
 
-		assert.equal(runFlutter.callCount, 3);
-		assert.deepStrictEqual(runFlutter.firstCall.args, [["pub", "add", "foo", "bar"], flutterHelloWorldFolder]);
-		assert.deepStrictEqual(runFlutter.secondCall.args, [["pub", "add", "flutter_test", "--sdk", "flutter"], flutterHelloWorldFolder]);
-		assert.deepStrictEqual(runFlutter.thirdCall.args, [["pub", "add", "flutter_driver", "--sdk", "flutter"], flutterHelloWorldFolder]);
+		spawn.assertFlutterCalls([
+			{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "foo", "bar"] },
+			{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "flutter_test", "--sdk", "flutter"] },
+			{ cwd: fsPath(flutterHelloWorldFolder), args: ["pub", "add", "flutter_driver", "--sdk", "flutter"] },
+		]);
 	});
 });

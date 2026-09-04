@@ -6,7 +6,7 @@ import { CustomEmulatorDefinition, IAmDisposable, IFlutterDaemon } from "../../s
 import { UnknownResponse } from "../../shared/services/interfaces";
 import { FlutterDeviceManager, PickableDevice } from "../../shared/vscode/device_manager";
 import { activateWithoutAnalysis, delay, logger, privateApi, sb } from "../helpers";
-import { FakeProcessStdIOService } from "../services/fake_stdio_service";
+import { FakeProcessStdIOService } from "../mocks/fake_stdio_service";
 
 describe("device_manager", () => {
 	let dm: FlutterDeviceManager;
