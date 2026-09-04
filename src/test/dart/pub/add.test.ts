@@ -3,33 +3,16 @@ import * as fs from "fs";
 import * as vs from "vscode";
 import { PackageCacheData } from "../../../shared/pub/pub_add";
 import { fsPath } from "../../../shared/utils/fs";
-import { waitFor } from "../../../shared/utils/promises";
-import { activate, createTempPubPackage, currentDoc, defer, helloWorldExampleSubFolder, helloWorldExampleSubFolderPubspecFile, helloWorldFolder, helloWorldPubspec, privateApi, rangeOf, sb, setTestContent, waitForNextAnalysis } from "../../helpers";
+import { activate, createTempPubPackage, currentDoc, helloWorldExampleSubFolder, helloWorldFolder, helloWorldPubspec, privateApi, rangeOf, sb, setTestContent, waitForNextAnalysis } from "../../helpers";
+import { ChildProcessSpawnStub } from "../../mocks/child_process_spawn_stub";
 
 describe("pub add", () => {
 	const pubspecPath = fsPath(helloWorldPubspec);
-	const pubspec2Path = fsPath(helloWorldExampleSubFolderPubspecFile);
 	beforeEach("activate", () => activate());
-	beforeEach("ensure pubspecs reset", () => {
-		const contents = fs.readFileSync(pubspecPath);
-		defer("Reset pubspec", () => fs.writeFileSync(pubspecPath, contents));
-		const contents2 = fs.readFileSync(pubspec2Path);
-		defer("Reset pubspec2", () => fs.writeFileSync(pubspec2Path, contents2));
-	});
 
 	function pubspecContainsPackage(packageName: string) {
 		const contents = fs.readFileSync(pubspecPath);
 		return contents.includes(`\n  ${packageName}:`);
-	}
-
-	function pubspec2ContainsPackage(packageName: string) {
-		const contents = fs.readFileSync(pubspec2Path);
-		return contents.includes(`\n  ${packageName}:`);
-	}
-
-	function pubspecContainsText(text: string) {
-		const contents = fs.readFileSync(pubspecPath);
-		return contents.includes(text);
 	}
 
 	function stubQuickPick(result: string | { label: string; marker?: "PATH" | "GIT"; packageNames?: string } | undefined, userInput = "") {
@@ -70,18 +53,17 @@ describe("pub add", () => {
 	}
 
 	it("can add a dependency using command", async () => {
-		assert.equal(pubspecContainsPackage("collection"), false);
+		const spawn = ChildProcessSpawnStub.dartPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContainsPackage("collection"));
-		assert.equal(pubspecContainsPackage("collection"), true);
+
+		spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", "collection"] }]);
 	});
 
 	it("can add a dependency to multiple projects", async () => {
-		assert.equal(pubspecContainsPackage("collection"), false);
-		assert.equal(pubspec2ContainsPackage("collection"), false);
+		const spawn = ChildProcessSpawnStub.dartPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		sb.stub(vs.window, "showQuickPick").callsFake((items: Array<vs.QuickPickItem & { path: string }>) => {
 			// Ensure the `picked` fields are set correctly.
@@ -94,58 +76,55 @@ describe("pub add", () => {
 		});
 
 		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContainsPackage("collection"));
-		assert.equal(pubspecContainsPackage("collection"), true);
-		await waitFor(() => pubspec2ContainsPackage("collection"));
-		assert.equal(pubspec2ContainsPackage("collection"), true);
+
+		spawn.assertDartCalls([
+			{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", "collection"] },
+			{ cwd: fsPath(helloWorldExampleSubFolder), args: ["pub", "add", "collection"] },
+		]);
 	});
 
 	for (const separator of [",", " ", ", "]) {
 		it(`can add multiple dependencies separated by "${separator}" using command`, async () => {
-			assert.equal(pubspecContainsPackage("path"), false);
-			assert.equal(pubspecContainsPackage("crypto"), false);
+			const spawn = ChildProcessSpawnStub.dartPub();
 			sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves(`path${separator}crypto`);
 			sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
 
 			await vs.commands.executeCommand("dart.addDependency");
-			await waitFor(() => pubspecContainsPackage("path"));
-			await waitFor(() => pubspecContainsPackage("crypto"));
-			assert.equal(pubspecContainsPackage("path"), true);
-			assert.equal(pubspecContainsPackage("crypto"), true);
+
+			spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", "path", "crypto"] }]);
 		});
 	}
 
 	it("can add a dependency with trailing whitespace using command", async () => {
-		assert.equal(pubspecContainsPackage("collection"), false);
+		const spawn = ChildProcessSpawnStub.dartPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection ");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContainsPackage("collection"));
-		assert.equal(pubspecContainsPackage("collection"), true);
+
+		spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", "collection"] }]);
 	});
 
 	it("can add a dev-dependency using command", async () => {
-		assert.equal(pubspecContainsPackage("collection"), false);
+		const spawn = ChildProcessSpawnStub.dartPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("collection");
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDevDependency");
-		await waitFor(() => pubspecContainsPackage("collection"));
-		assert.equal(pubspecContainsPackage("collection"), true);
+
+		spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", "collection", "--dev"] }]);
 	});
 
 	it("can remove a dependency using the tree view command", async () => {
-		const runPub = sb.stub(privateApi.addDependencyCommand, "runPub").resolves(undefined);
+		const spawn = ChildProcessSpawnStub.dartPub();
 
 		await vs.commands.executeCommand("_dart.removeDependency", helloWorldFolder, "convert");
 
-		assert.equal(runPub.callCount, 1);
-		assert.deepStrictEqual(runPub.firstCall.args, [["remove", "convert"], helloWorldFolder]);
+		spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "remove", "convert"] }]);
 	});
 
 	it("can add a dependency by URL by pasting", async () => {
-		assert.equal(pubspecContainsPackage("timing"), false);
+		const spawn = ChildProcessSpawnStub.dartPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves("https://github.com/dart-lang/timing");
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageName").resolves("timing");
 		sb.stub(privateApi.addDependencyCommand, "promptForGitRef").resolves("");
@@ -153,13 +132,12 @@ describe("pub add", () => {
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContainsText("git: https://github.com/dart-lang/timing"));
-		assert.equal(pubspecContainsPackage("timing"), true);
-		assert.equal(pubspecContainsText("git: https://github.com/dart-lang/timing"), true);
+
+		spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", "timing", "--git-url=https://github.com/dart-lang/timing"] }]);
 	});
 
 	it("can add a dependency by URL by selecting the GIT option", async () => {
-		assert.equal(pubspecContainsPackage("timing"), false);
+		const spawn = ChildProcessSpawnStub.dartPub();
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageInfo").resolves({ marker: "GIT" });
 		sb.stub(privateApi.addDependencyCommand, "promptForGitUrl").resolves("https://github.com/dart-lang/timing");
 		sb.stub(privateApi.addDependencyCommand, "promptForPackageName").resolves("timing");
@@ -168,9 +146,8 @@ describe("pub add", () => {
 		sb.stub(vs.window, "showQuickPick").resolves([{ path: fsPath(helloWorldFolder) }]);
 
 		await vs.commands.executeCommand("dart.addDependency");
-		await waitFor(() => pubspecContainsText("git: https://github.com/dart-lang/timing"));
-		assert.equal(pubspecContainsPackage("timing"), true);
-		assert.equal(pubspecContainsText("git: https://github.com/dart-lang/timing"), true);
+
+		spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", "timing", "--git-url=https://github.com/dart-lang/timing"] }]);
 	});
 
 	it.skip("is available as a quick fix before the ignores", async () => {
@@ -198,7 +175,7 @@ describe("pub add", () => {
 		// Because we've enabled the depend_on_referenced_packages lint, we'll get two diagnostics
 		// for this, but expect only one fix.
 		const packageName = "built_value";
-		assert.equal(pubspecContainsPackage(packageName), false);
+		const spawn = ChildProcessSpawnStub.dartPub();
 		await waitForNextAnalysis(() => setTestContent(`import 'package:${packageName}/${packageName}.dart';`));
 
 		const fixResults = await vs.commands.executeCommand<vs.CodeAction[]>("vscode.executeCodeActionProvider", currentDoc().uri, rangeOf(`|package:${packageName}|`));
@@ -207,8 +184,7 @@ describe("pub add", () => {
 		const addDependencyFix = addDependencyFixes[0];
 
 		await vs.commands.executeCommand(addDependencyFix.command!.command, ...addDependencyFix.command!.arguments!); // eslint-disable-line @typescript-eslint/no-unsafe-argument
-		await waitFor(() => pubspecContainsText(packageName));
-		assert.equal(pubspecContainsPackage(packageName), true);
+		spawn.assertDartCalls([{ cwd: fsPath(helloWorldFolder), args: ["pub", "add", packageName] }]);
 	});
 
 	it("can add from a quick fix if listed only in dev_dependencies and imported from lib", async () => {
