@@ -8,7 +8,7 @@ import { fsPath } from "../../shared/utils/fs";
 import { resolvedPromise, waitFor } from "../../shared/utils/promises";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureFrameCategories, ensureMapEntry, ensureNoVariable, ensureVariable, ensureVariableEvaluateName, ensureVariableWithIndex, flutterTestDeviceId, flutterTestDeviceIsWeb, isExternalPackage, isLocalPackage, isSdkFrame, isUserCode, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, deferUntilLast, delay, flutterHelloWorldBrokenFile, flutterHelloWorldGettersFile, flutterHelloWorldHttpFile, flutterHelloWorldLocalPackageFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getPackages, myPackageFolder, openFile, positionOf, privateApi, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
+import { activateWithoutAnalysis, deferUntilLast, delay, flutterHelloWorldBrokenFile, flutterHelloWorldGettersFile, flutterHelloWorldMainFile, flutterHelloWorldThrowInExternalPackageFile, flutterHelloWorldThrowInLocalPackageFile, flutterHelloWorldThrowInSdkFile, getDefinition, getPackages, myPackageFolder, openFile, positionOf, privateApi, setConfigForTest, uriFor, waitForResult, watchPromise } from "../helpers";
 
 const deviceName = flutterTestDeviceIsWeb ? "Chrome" : "Flutter test device";
 
@@ -234,19 +234,19 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 
 	it("stops at a breakpoint in an external package");
 
-	it("steps into the SDK if debugSdkLibraries is true", async function () {
+	it("steps into the SDK and marks SDK frames debuggable when debugSdkLibraries is true", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip(); // Web doesn't support setLibraryDebuggable
 
-		await openFile(flutterHelloWorldMainFile);
+		await openFile(flutterHelloWorldThrowInSdkFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
 		const printDef = await getDefinition(printCall);
 		const expectedPrintDefinitionPath = fsPath(uriFor(printDef));
-		const config = await startDebugger(dc, flutterHelloWorldMainFile, { debugSdkLibraries: true });
+		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: true });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
-			path: fsPath(flutterHelloWorldMainFile),
+			path: fsPath(flutterHelloWorldThrowInSdkFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
@@ -262,64 +262,48 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 
 		await waitAllThrowIfTerminates(dc,
+			dc.waitForStop().then(async () => {
+				const stack = await dc.getStack();
+				ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, "from the SDK");
+				ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+			}),
+			dc.setExceptionBreakpointsRequest({ filters: ["All"] }).then(() => dc.resume()),
+		);
+
+		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
 	});
 
-	it("does not step into the SDK if debugSdkLibraries is false", async function () {
+	it("does not step into the SDK and marks SDK frames non-debuggable when debugSdkLibraries is false", async function () {
 		if (flutterTestDeviceIsWeb)
 			return this.skip(); // Web doesn't support setLibraryDebuggable
 
-		await openFile(flutterHelloWorldMainFile);
+		await openFile(flutterHelloWorldThrowInSdkFile);
 		// Get location for `print`
 		const printCall = positionOf("pri^nt(");
-		const config = await startDebugger(dc, flutterHelloWorldMainFile, { debugSdkLibraries: false });
+		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: false });
 		await dc.hitBreakpoint(config, {
 			line: printCall.line + 1,
-			path: fsPath(flutterHelloWorldMainFile),
+			path: fsPath(flutterHelloWorldThrowInSdkFile),
 		});
 		await waitAllThrowIfTerminates(dc,
 			dc.assertStoppedLocation("step", {
 				// Ensure we stayed in the current file
-				path: fsPath(flutterHelloWorldMainFile),
+				path: fsPath(flutterHelloWorldThrowInSdkFile),
 			}),
 			dc.stepIn(),
 		);
 
+		// Resume into the SDK assert failure and check the SDK frames are marked non-debuggable.
 		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("steps into an external library if debugExternalPackageLibraries is true", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // Web doesn't support setLibraryDebuggable
-
-		await openFile(flutterHelloWorldHttpFile);
-		// Get location for `http.read(`
-		const httpReadCall = positionOf("http.^read(");
-		const httpReadDef = await getDefinition(httpReadCall);
-		const expectedHttpReadDefinitionPath = fsPath(uriFor(httpReadDef));
-		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: true });
-		await dc.hitBreakpoint(config, {
-			column: httpReadCall.character + 1,
-			line: httpReadCall.line + 1,
-			path: fsPath(flutterHelloWorldHttpFile),
-		});
-		await waitAllThrowIfTerminates(dc,
-			dc.assertStoppedLocation("step", {
-				// Ensure we stepped into the external file
-				path: expectedHttpReadDefinitionPath,
-			}).then((response) => {
-				// Ensure the top stack frame matches
-				const frame = response.body.stackFrames[0];
-				assert.equal(frame.name, "read");
-				dc.assertPath(frame.source!.path, expectedHttpReadDefinitionPath);
-				assert.equal(frame.source!.name, "package:http/http.dart");
+			dc.waitForStop().then(async () => {
+				const stack = await dc.getStack();
+				ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the SDK");
+				ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
 			}),
-			dc.stepIn(),
+			dc.setExceptionBreakpointsRequest({ filters: ["All"] }).then(() => dc.resume()),
 		);
 
 		await waitAllThrowIfTerminates(dc,
@@ -328,148 +312,49 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("does not step into an external library if debugExternalPackageLibraries is false", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // Web doesn't support setLibraryDebuggable
-
-		await openFile(flutterHelloWorldHttpFile);
-		// Get location for `http.read(`
-		const httpReadCall = positionOf("http.re^ad(");
-		const config = await startDebugger(dc, flutterHelloWorldHttpFile, { debugExternalPackageLibraries: false });
-		await dc.hitBreakpoint(config, {
-			line: httpReadCall.line,
-			path: fsPath(flutterHelloWorldHttpFile),
-		});
-		await waitAllThrowIfTerminates(dc,
-			dc.assertStoppedLocation("step", {
-				// Ensure we stayed in the current file
-				path: fsPath(flutterHelloWorldHttpFile),
-			}),
-			dc.stepIn(),
-		);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("steps into a local library even if debugExternalPackageLibraries is false", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // Web doesn't support setLibraryDebuggable
-
-		await openFile(flutterHelloWorldLocalPackageFile);
-		// Get location for `printMyThing()`
-		const printMyThingCall = positionOf("printMy^Thing(");
-		const printMyThingDef = await getDefinition(printMyThingCall);
-		const expectedPrintThingDefinitionPath = fsPath(uriFor(printMyThingDef));
-		const config = await startDebugger(dc, flutterHelloWorldLocalPackageFile, {
-			// Override this since it's not really open in the workspace.
-			additionalProjectPaths: [fsPath(myPackageFolder)],
-			debugExternalPackageLibraries: false,
-		});
-		await dc.hitBreakpoint(config, {
-			line: printMyThingCall.line + 1,
-			path: fsPath(flutterHelloWorldLocalPackageFile),
-		});
-		await waitAllThrowIfTerminates(dc,
-			dc.assertStoppedLocation("step", {
-				// Ensure we stepped into the external file
-				path: expectedPrintThingDefinitionPath,
-			}).then((response) => {
-				// Ensure the top stack frame matches
-				const frame = response.body.stackFrames[0];
-				assert.equal(frame.name, "printMyThing");
-				dc.assertPath(frame.source!.path, expectedPrintThingDefinitionPath);
-				assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
-			}),
-			dc.stepIn(),
-		);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("downloads SDK source code from the VM");
-
-	it("correctly marks non-debuggable SDK frames when debugSdkLibraries is false", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // Web doesn't have any SDK frames here.
-
-		await openFile(flutterHelloWorldThrowInSdkFile);
-		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: false });
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized")
-				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
-				.then(() => dc.configurationDoneRequest()),
-			dc.waitForStop(),
-			dc.launch(config),
-		);
-		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), "deemphasize", "from the SDK");
-		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("correctly marks debuggable SDK frames when debugSdkLibraries is true", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // Web doesn't support setLibraryDebuggable so doesn't break in the SDK.
-
-		await openFile(flutterHelloWorldThrowInSdkFile);
-		const config = await startDebugger(dc, flutterHelloWorldThrowInSdkFile, { debugSdkLibraries: true });
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized")
-				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
-				.then(() => dc.configurationDoneRequest()),
-			dc.waitForStop(),
-			dc.launch(config),
-		);
-		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isSdkFrame), undefined, "from the SDK");
-		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("correctly marks non-debuggable external library frames when debugExternalPackageLibraries is false", async () => {
-		await openFile(flutterHelloWorldThrowInExternalPackageFile);
-		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized")
-				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
-				.then(() => dc.configurationDoneRequest()),
-			dc.waitForStop(),
-			dc.launch(config),
-		);
-		const stack = await dc.getStack();
-		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from external packages");
-		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("correctly marks debuggable external library frames when debugExternalPackageLibraries is true", async () => {
+	it("steps into external libraries and marks their frames debuggable when debugExternalPackageLibraries is true", async () => {
 		await openFile(flutterHelloWorldThrowInExternalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: true });
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized")
-				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
-				.then(() => dc.configurationDoneRequest()),
-			dc.waitForStop(),
-			dc.launch(config),
-		);
+
+		if (!flutterTestDeviceIsWeb) {
+			// Web doesn't support setLibraryDebuggable, so stepping is only checked on the test device.
+			// Get location for `http.read(`
+			const httpReadCall = positionOf("http.^read(");
+			const httpReadDef = await getDefinition(httpReadCall);
+			const expectedHttpReadDefinitionPath = fsPath(uriFor(httpReadDef));
+			await dc.hitBreakpoint(config, {
+				column: httpReadCall.character + 1,
+				line: httpReadCall.line + 1,
+				path: fsPath(flutterHelloWorldThrowInExternalPackageFile),
+			});
+			await waitAllThrowIfTerminates(dc,
+				dc.assertStoppedLocation("step", {
+					// Ensure we stepped into the external file
+					path: expectedHttpReadDefinitionPath,
+				}).then((response) => {
+					// Ensure the top stack frame matches
+					const frame = response.body.stackFrames[0];
+					assert.equal(frame.name, "read");
+					dc.assertPath(frame.source!.path, expectedHttpReadDefinitionPath);
+					assert.equal(frame.source!.name, "package:http/http.dart");
+				}),
+				dc.stepIn(),
+			);
+			// Break on all exceptions, then resume into the failed request.
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForStop(),
+				dc.setExceptionBreakpointsRequest({ filters: ["All"] }).then(() => dc.resume()),
+			);
+		} else {
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForEvent("initialized")
+					.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+					.then(() => dc.configurationDoneRequest()),
+				dc.waitForStop(),
+				dc.launch(config),
+			);
+		}
+
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), undefined, "from external packages");
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
@@ -480,20 +365,96 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("correctly marks debuggable local library frames even when debugExternalPackageLibraries is false", async () => {
+	it("does not step into external libraries and marks their frames non-debuggable when debugExternalPackageLibraries is false", async () => {
+		await openFile(flutterHelloWorldThrowInExternalPackageFile);
+		const config = await startDebugger(dc, flutterHelloWorldThrowInExternalPackageFile, { debugExternalPackageLibraries: false });
+
+		if (!flutterTestDeviceIsWeb) {
+			// Web doesn't support setLibraryDebuggable, so stepping is only checked on the test device.
+			// Get location for `http.read(`
+			const httpReadCall = positionOf("http.^read(");
+			await dc.hitBreakpoint(config, {
+				line: httpReadCall.line + 1,
+				path: fsPath(flutterHelloWorldThrowInExternalPackageFile),
+			});
+			await waitAllThrowIfTerminates(dc,
+				dc.assertStoppedLocation("step", {
+					// Ensure we stayed in the current file
+					path: fsPath(flutterHelloWorldThrowInExternalPackageFile),
+				}),
+				dc.stepIn(),
+			);
+			// Break on all exceptions, then resume into the failed request.
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForStop(),
+				dc.setExceptionBreakpointsRequest({ filters: ["All"] }).then(() => dc.resume()),
+			);
+		} else {
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForEvent("initialized")
+					.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+					.then(() => dc.configurationDoneRequest()),
+				dc.waitForStop(),
+				dc.launch(config),
+			);
+		}
+
+		const stack = await dc.getStack();
+		ensureFrameCategories(stack.body.stackFrames.filter(isExternalPackage), "deemphasize", "from external packages");
+		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
+
+	it("steps into a local library and marks its frames debuggable even when debugExternalPackageLibraries is false", async () => {
 		await openFile(flutterHelloWorldThrowInLocalPackageFile);
 		const config = await startDebugger(dc, flutterHelloWorldThrowInLocalPackageFile, {
 			// Override this since it's not really open in the workspace.
 			additionalProjectPaths: [fsPath(myPackageFolder)],
 			debugExternalPackageLibraries: false,
 		});
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("initialized")
-				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
-				.then(() => dc.configurationDoneRequest()),
-			dc.waitForStop(),
-			dc.launch(config),
-		);
+
+		if (!flutterTestDeviceIsWeb) {
+			// Web doesn't support setLibraryDebuggable, so stepping is only checked on the test device.
+			// Get location for `throwAnError()`
+			const throwAnErrorCall = positionOf("throwAn^Error(");
+			const throwAnErrorDef = await getDefinition(throwAnErrorCall);
+			const expectedThrowAnErrorDefinitionPath = fsPath(uriFor(throwAnErrorDef));
+			await dc.hitBreakpoint(config, {
+				line: throwAnErrorCall.line + 1,
+				path: fsPath(flutterHelloWorldThrowInLocalPackageFile),
+			});
+			await waitAllThrowIfTerminates(dc,
+				dc.assertStoppedLocation("step", {
+					// Ensure we stepped into the local package file
+					path: expectedThrowAnErrorDefinitionPath,
+				}).then((response) => {
+					// Ensure the top stack frame matches
+					const frame = response.body.stackFrames[0];
+					assert.equal(frame.name, "throwAnError");
+					dc.assertPath(frame.source!.path, expectedThrowAnErrorDefinitionPath);
+					assert.equal(frame.source!.name, "package:my_package/my_thing.dart");
+				}),
+				dc.stepIn(),
+			);
+			// Break on all exceptions, then resume into the error.
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForStop(),
+				dc.setExceptionBreakpointsRequest({ filters: ["All"] }).then(() => dc.resume()),
+			);
+		} else {
+			await waitAllThrowIfTerminates(dc,
+				dc.waitForEvent("initialized")
+					.then(() => dc.setExceptionBreakpointsRequest({ filters: ["All"] }))
+					.then(() => dc.configurationDoneRequest()),
+				dc.waitForStop(),
+				dc.launch(config),
+			);
+		}
+
 		const stack = await dc.getStack();
 		ensureFrameCategories(stack.body.stackFrames.filter(isLocalPackage), undefined, undefined);
 		ensureFrameCategories(stack.body.stackFrames.filter(isUserCode), undefined, undefined);
@@ -503,6 +464,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.terminateRequest(),
 		);
 	});
+
+	it("downloads SDK source code from the VM");
 
 	function testBreakpointCondition(condition: string, shouldStop: boolean, expectedError?: string) {
 		return async () => {
@@ -869,41 +832,9 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("writes exception to output and adds metadata for known files in call stacks", async function () {
-		if (flutterTestDeviceIsWeb)
-			return this.skip(); // https://github.com/dart-lang/webdev/issues/949
-
-		await openFile(flutterHelloWorldBrokenFile);
-		const config = await startDebugger(dc, flutterHelloWorldBrokenFile);
-
-		await waitAllThrowIfTerminates(dc,
-			// Disable breaking on exceptions so we don't have to resume.
-			dc.waitForEvent("initialized")
-				.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
-				.then(() => dc.configurationDoneRequest()),
-			watchPromise("writes_failure_output->assertOutputContainsException", dc.assertOutputContains(undefined, "Exception: Oops\n")),
-			watchPromise(
-				"writes_failure_output->assertOutputContains",
-				dc.assertOutputContains(undefined, "_throwAnException")
-					.then((event) => {
-						assert.equal(event.body.source!.name, "package:flutter_hello_world/broken.dart");
-						dc.assertPath(event.body.source!.path, fsPath(flutterHelloWorldBrokenFile));
-						assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
-						assert.equal(event.body.column, 5);
-					}),
-			),
-			watchPromise("writes_failure_output->launch", dc.launch(config)),
-		);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("renders correct output for structured errors", async function () {
-		// Currently this test fails on Chrome because we always lose the race
-		// with enabling structured errors versus the error occurring
+	it("writes exceptions to output with metadata and renders structured errors", async function () {
+		// https://github.com/dart-lang/webdev/issues/949, and structured errors also
+		// lose the race with being enabled versus the error occurring on web.
 		if (flutterTestDeviceIsWeb)
 			return this.skip();
 
@@ -928,7 +859,18 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 				dc.waitForEvent("initialized")
 					.then(() => dc.setExceptionBreakpointsRequest({ filters: ["None"] }))
 					.then(() => dc.configurationDoneRequest()),
-				dc.launch(config),
+				watchPromise("writes_failure_output->assertOutputContainsException", dc.assertOutputContains(undefined, "Exception: Oops\n")),
+				watchPromise(
+					"writes_failure_output->assertOutputContains",
+					dc.assertOutputContains(undefined, "_throwAnException")
+						.then((event) => {
+							assert.equal(event.body.source!.name, "package:flutter_hello_world/broken.dart");
+							dc.assertPath(event.body.source!.path, fsPath(flutterHelloWorldBrokenFile));
+							assert.equal(event.body.line, positionOf("^Oops").line + 1); // positionOf is 0-based, but seems to want 1-based
+							assert.equal(event.body.column, 5);
+						}),
+				),
+				watchPromise("writes_failure_output->launch", dc.launch(config)),
 			);
 
 			await waitForResult(

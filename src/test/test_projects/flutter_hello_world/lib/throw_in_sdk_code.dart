@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 main() {
+  print("Hello, world!");
+
   assert(false);
 
   runApp(MyApp());
