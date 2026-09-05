@@ -155,7 +155,7 @@ describe(`flutter run debugger (only test device)`, () => {
 		assert.equal(config!.program, fsPath(flutterHelloWorldMainFile));
 	});
 
-	it("can hot reload with customRequest, using command, on-save, on-save with custom glob, external modification", async () => {
+	it("can hot reload and restart with customRequest, command, on-save, on-save with custom glob, external modification", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
@@ -206,19 +206,6 @@ describe(`flutter run debugger (only test device)`, () => {
 			);
 		}
 
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("can hot restart using customRequest, command", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
 		await delayBeforeRestart();
 
 		// can hot restart using customRequest
