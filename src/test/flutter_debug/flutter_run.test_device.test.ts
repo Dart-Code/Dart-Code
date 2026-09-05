@@ -6,7 +6,7 @@ import { versionIsAtLeast } from "../../shared/utils";
 import { fsPath } from "../../shared/utils/fs";
 import { DartDebugClient } from "../dart_debug_client";
 import { createDebugClient, ensureServiceExtensionValue, flutterTestDeviceId, flutterTestDeviceIsWeb, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../debug_helpers";
-import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, ensureHasRunWithArgsStarting, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldOverflowFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, prepareHasRunFile, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
+import { activateWithoutAnalysis, closeAllOpenFiles, customScriptExt, defer, deferUntilLast, delay, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldNavigateFromFile, flutterHelloWorldNavigateToFile, flutterHelloWorldOverflowFile, flutterHelloWorldReadmeFile, flutterHelloWorldStack60File, getLaunchConfiguration, getPackages, makeTrivialChangeToFileDirectly, openFile, positionOf, privateApi, saveTrivialChangeToFile, sb, setConfigForTest, waitForResult, watchPromise } from "../helpers";
 
 describe(`flutter run debugger (only test device)`, () => {
 	beforeEach("Skip test-device tests on web", function () {
@@ -81,7 +81,7 @@ describe(`flutter run debugger (only test device)`, () => {
 		});
 	});
 
-	it("can override platform, toggle brightness/theme", async () => {
+	it("can override platform/brightness and re-sends theme on hot restart only if set by us", async () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
@@ -103,28 +103,6 @@ describe(`flutter run debugger (only test device)`, () => {
 		// Can toggle brightness/theme
 		// Wait for Brightness extension before trying to call it.
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Brightness override loaded");
-
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
-		await vs.commands.executeCommand("flutter.toggleBrightness");
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.dark", dc);
-		await vs.commands.executeCommand("flutter.toggleBrightness");
-		await ensureServiceExtensionValue(VmServiceExtension.BrightnessOverride, "Brightness.light", dc);
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("re-sends theme on hot restart only if set by us, not if set by someone else", async () => {
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await waitAllThrowIfTerminates(dc,
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
-
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.BrightnessOverride), "Waiting for BrightnessOverride extension", 60000);
 
 		// Re-sends theme on hot restart if set by us.
 		{
@@ -299,52 +277,41 @@ describe(`flutter run debugger (only test device)`, () => {
 		);
 	});
 
-	it("can run using a custom tool", async () => {
+	it("passes custom tool in the launch config", async () => {
+		// This only verifies the launch config (without spawning the app, which is slow).
+		// The debug adapter tests cover testing that the custom tool is invoked.
 		const root = fsPath(flutterHelloWorldFolder);
-		const hasRunFile = prepareHasRunFile(root, "flutter");
-
-		const config = await startDebugger(dc, flutterHelloWorldMainFile, {
-			customTool: path.join(root, `scripts/custom_flutter.${customScriptExt}`),
+		const customTool = path.join(root, `scripts/custom_flutter.${customScriptExt}`);
+		const config = await getLaunchConfiguration(flutterHelloWorldMainFile, {
+			customTool,
 			customToolReplacesArgs: 0,
+			deviceId: flutterTestDeviceId,
 		});
-		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
 
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-
-		ensureHasRunWithArgsStarting(root, hasRunFile, "run --machine --start-paused");
+		assert.equal(config!.customTool, customTool);
+		assert.equal(config!.customToolReplacesArgs, 0);
+		assert.ok(config!.toolArgs!.includes("-d"));
+		assert.ok(config!.toolArgs!.includes(flutterTestDeviceId));
 	});
 
-	it("can replace all args using custom tool", async () => {
+	it("passes custom tool args in the launch config", async () => {
+		// This only verifies the config the extension produces (without spawning the
+		// app, which is slow). The debug adapter replacing its args with these is
+		// covered by the adapter's own tests.
 		const root = fsPath(flutterHelloWorldFolder);
-		const hasRunFile = prepareHasRunFile(root, "flutter");
-
-		const config = await startDebugger(dc, flutterHelloWorldMainFile, {
-			customTool: path.join(root, `scripts/custom_flutter.${customScriptExt}`),
+		const customTool = path.join(root, `scripts/custom_flutter.${customScriptExt}`);
+		// These differ to the usual ones so we can detect they replaced them.
+		const toolArgs = ["run", "--ignore-deprecation", "--start-paused", "--machine"];
+		const config = await getLaunchConfiguration(flutterHelloWorldMainFile, {
+			customTool,
 			customToolReplacesArgs: 999999,
-			// These differ to the usual ones so we can detect they replaced them.
-			toolArgs: ["run", "--ignore-deprecation", "--start-paused", "--machine"],
+			deviceId: flutterTestDeviceId,
+			toolArgs,
 		});
-		await waitAllThrowIfTerminates(dc,
-			dc.assertOutputContains("console", `Launching lib${path.sep}main.dart on Flutter test device in debug mode...\n`),
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
 
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-
-		ensureHasRunWithArgsStarting(root, hasRunFile, "run --ignore-deprecation --start-paused --machine");
+		assert.equal(config!.customTool, customTool);
+		assert.equal(config!.customToolReplacesArgs, 999999);
+		assert.deepStrictEqual(config!.toolArgs!.slice(0, toolArgs.length), toolArgs);
 	});
 
 	it("can fetch slices of stack frames", async () => {
@@ -445,7 +412,7 @@ describe(`flutter run debugger (only test device)`, () => {
 	});
 
 	describe("can evaluate at breakpoint", () => {
-		it("simple expressions", async () => {
+		it("simple expressions, complex expressions, and expressions that return variables", async () => {
 			await openFile(flutterHelloWorldMainFile);
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 			await waitAllThrowIfTerminates(dc,
@@ -455,53 +422,30 @@ describe(`flutter run debugger (only test device)`, () => {
 				}),
 			);
 
-			const evaluateResult = await dc.evaluateForFrame(`"test"`);
-			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, `"test"`);
-			assert.equal(evaluateResult.variablesReference, 0);
+			// Simple expressions.
+			{
+				const evaluateResult = await dc.evaluateForFrame(`"test"`);
+				assert.ok(evaluateResult);
+				assert.equal(evaluateResult.result, `"test"`);
+				assert.equal(evaluateResult.variablesReference, 0);
+			}
 
-			await waitAllThrowIfTerminates(dc,
-				dc.waitForEvent("terminated"),
-				dc.terminateRequest(),
-			);
-		});
+			// Complex expressions.
+			{
+				const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
+				assert.ok(evaluateResult);
+				assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
+				assert.equal(evaluateResult.variablesReference, 0);
+			}
 
-		it("complex expressions", async () => {
-			await openFile(flutterHelloWorldMainFile);
-			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await waitAllThrowIfTerminates(dc,
-				dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line,
-					path: fsPath(flutterHelloWorldMainFile),
-				}),
-			);
-
-			const evaluateResult = await dc.evaluateForFrame(`(new DateTime.now()).year`);
-			assert.ok(evaluateResult);
-			assert.equal(evaluateResult.result, (new Date()).getFullYear().toString());
-			assert.equal(evaluateResult.variablesReference, 0);
-
-			await waitAllThrowIfTerminates(dc,
-				dc.waitForEvent("terminated"),
-				dc.terminateRequest(),
-			);
-		});
-
-		it("an expression that returns a variable", async () => {
-			await openFile(flutterHelloWorldMainFile);
-			const config = await startDebugger(dc, flutterHelloWorldMainFile);
-			await waitAllThrowIfTerminates(dc,
-				dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line,
-					path: fsPath(flutterHelloWorldMainFile),
-				}),
-			);
-
-			const evaluateResult = await dc.evaluateForFrame(`new DateTime.now()`);
-			const thisYear = new Date().getFullYear().toString();
-			assert.ok(evaluateResult);
-			assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
-			assert.ok(evaluateResult.variablesReference);
+			// An expression that returns a variable.
+			{
+				const evaluateResult = await dc.evaluateForFrame(`new DateTime.now()`);
+				const thisYear = new Date().getFullYear().toString();
+				assert.ok(evaluateResult);
+				assert.ok(evaluateResult.result.startsWith("DateTime (" + thisYear), `Result '${evaluateResult.result}' did not start with ${thisYear}`);
+				assert.ok(evaluateResult.variablesReference);
+			}
 
 			await waitAllThrowIfTerminates(dc,
 				dc.waitForEvent("terminated"),

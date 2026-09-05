@@ -68,27 +68,43 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		);
 	});
 
-	it("expected debugger services/extensions are available in noDebug mode", async () => {
+	it("does not stop at breakpoints and exposes only expected services in noDebug mode", async () => {
+		await openFile(flutterHelloWorldMainFile);
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		config.noDebug = true;
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForCustomEvent("flutter.appStarted"),
-			dc.flutterAppStarted(),
-			dc.configurationSequence(),
-			dc.launch(config),
-		);
+
+		let didStop = false;
+
+		dc.waitForEvent("stopped")
+			.then(() => didStop = true)
+			.catch(() => {
+				// Swallow errors, as we don't care if this times out, we're only using it
+				// to tell if we stopped by the time we hit the end of this test.
+			});
 
 		const expectHotReload = true;
 		const expectOtherServices = false;
 
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === expectHotReload, "Hot reload registered");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === expectOtherServices, "Debug paint loaded");
-		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === expectOtherServices, "Debug banner loaded");
-
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
+			dc.setBreakpointWithoutHitting(config, {
+				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(flutterHelloWorldMainFile),
+				// TODO: This should be false in noDebug mode in SDK DAPs too.
+				// verified: false,
+			}),
+			dc.flutterAppStarted()
+				// These waitForResults also ensure the app has started (and therefore passed
+				// the breakpoint location) before we check that we didn't stop.
+				.then(() => waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === expectHotReload, "Hot reload registered"))
+				.then(() => waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === expectOtherServices, "Debug paint loaded"))
+				.then(() => waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugBanner) === expectOtherServices, "Debug banner loaded"))
+				// Keep running for a short period to ensure we didn't stop unexpectedly.
+				.then(() => delay(1000))
+				.then(() => dc.terminateRequest()),
 		);
+
+		assert.equal(didStop, false);
 
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceIsRegistered(VmService.HotReload) === false, "Hot reload unregistered");
 		await waitForResult(() => privateApi.debugCommands.vmServices.serviceExtensionIsLoaded(VmServiceExtension.DebugPaint) === false, "Debug paint unloaded");
@@ -207,34 +223,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			dc.waitForEvent("terminated"),
 			dc.terminateRequest(),
 		);
-	});
-
-	it("does not stop at a breakpoint in noDebug mode", async () => {
-		await openFile(flutterHelloWorldMainFile);
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		config.noDebug = true;
-
-		let didStop = false;
-
-		dc.waitForEvent("stopped")
-			.then(() => didStop = true)
-			.catch(() => {
-				// Swallow errors, as we don't care if this times out, we're only using it
-				// to tell if we stopped by the time we hit the end of this test.
-			});
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.setBreakpointWithoutHitting(config, {
-				line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-				path: fsPath(flutterHelloWorldMainFile),
-				// TODO: This should be false in noDebug mode in SDK DAPs too.
-				// verified: false,
-			})
-				.then(() => delay(1000))
-				.then(() => dc.terminateRequest()),
-		);
-
-		assert.equal(didStop, false);
 	});
 
 	it("stops at a breakpoint in a part file");
@@ -569,11 +557,44 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		};
 	}
 
-	it("stops at a breakpoint with a condition returning true", testBreakpointCondition("1 == 1", true));
-	it("does not stop at a breakpoint with a condition returning false", testBreakpointCondition("1 == 0", false));
+	it("stops at a breakpoint with a condition returning true, but not one returning false", async () => {
+		await openFile(flutterHelloWorldMainFile);
+		const config = await startDebugger(dc, flutterHelloWorldMainFile);
+
+		// genericMethod (BREAKPOINT2) runs before BREAKPOINT1 during the build, so the
+		// false condition is evaluated first and must not stop, then the true condition
+		// stops. If the false condition incorrectly stopped, the location assertion below
+		// would fail because we'd be stopped at BREAKPOINT2 instead of BREAKPOINT1.
+		const breakpoint1Line = positionOf("^// BREAKPOINT1").line;
+		const breakpoint2Line = positionOf("^// BREAKPOINT2").line;
+
+		await waitAllThrowIfTerminates(
+			dc,
+			dc.waitForEvent("initialized")
+				.then(() => dc.setBreakpointsRequest({
+					// positionOf is 0-based, but seems to want 1-based
+					breakpoints: [
+						{ condition: "1 == 0", line: breakpoint2Line },
+						{ condition: "1 == 1", line: breakpoint1Line },
+					],
+					source: { path: fsPath(flutterHelloWorldMainFile) },
+				}))
+				.then(() => dc.configurationDoneRequest()),
+			dc.assertStoppedLocation("breakpoint", {
+				line: breakpoint1Line,
+				path: fsPath(flutterHelloWorldMainFile),
+			}),
+			dc.launch(config),
+		);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.waitForEvent("terminated"),
+			dc.terminateRequest(),
+		);
+	});
 	it("reports errors evaluating breakpoint conditions", testBreakpointCondition("1 + '1'", false, `Debugger failed to evaluate breakpoint condition "1 + '1'"`));
 
-	it("provides local variables when stopped at a breakpoint", async () => {
+	it("provides local variables and evaluateNames when stopped at a breakpoint", async () => {
 		await openFile(flutterHelloWorldMainFile);
 		const debugConfig = await startDebugger(dc, flutterHelloWorldMainFile);
 		await dc.hitBreakpoint(debugConfig, {
@@ -652,6 +673,14 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			key: { evaluateName: undefined, name: "key", value: "1.1" },
 			value: { evaluateName: `m[1.1]`, name: "value", value: `"one-point-one"` },
 		}, dc);
+
+		// The evaluateNames of the variables above should evaluate to the same values.
+		// Re-use the children already fetched above, except for the long strings whose
+		// children are skipped above on web because of truncated-value differences.
+		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
+		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
+
+		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
@@ -764,28 +793,6 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			assert.equal(evaluateResult.result, variable.value);
 			assert.equal(!!evaluateResult.variablesReference, !!variable.variablesReference);
 		}
-
-		await waitAllThrowIfTerminates(dc,
-			dc.waitForEvent("terminated"),
-			dc.terminateRequest(),
-		);
-	});
-
-	it("evaluateName evaluates to the expected value", async () => {
-		await openFile(flutterHelloWorldMainFile);
-		const config = await startDebugger(dc, flutterHelloWorldMainFile);
-		await dc.hitBreakpoint(config, {
-			line: positionOf("^// BREAKPOINT1").line,
-			path: fsPath(flutterHelloWorldMainFile),
-		});
-
-		const variables = await dc.getTopFrameVariables("Locals");
-		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
-		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
-		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
-		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
-
-		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("terminated"),
