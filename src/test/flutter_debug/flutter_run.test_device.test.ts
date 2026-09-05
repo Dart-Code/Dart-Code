@@ -159,8 +159,8 @@ describe(`flutter run debugger (only test device)`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 		await waitAllThrowIfTerminates(dc,
 			dc.flutterAppStarted(),
-			watchPromise("hot_reloads_successfully->configurationSequence", dc.configurationSequence()),
-			watchPromise("hot_reloads_successfully->launch", dc.launch(config)),
+			watchPromise("hot_reloads_and_restarts_successfully->configurationSequence", dc.configurationSequence()),
+			watchPromise("hot_reloads_and_restarts_successfully->launch", dc.launch(config)),
 		);
 		await delayBeforeRestart();
 
@@ -368,13 +368,7 @@ describe(`flutter run debugger (only test device)`, () => {
 		const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
 		let didStop = false;
-
-		dc.waitForStop()
-			.then(() => didStop = true)
-			.catch(() => {
-				// Swallow errors, as we don't care if this times out, we're only using it
-				// to tell if we stopped by the time we hit the end of this test.
-			});
+		dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
 
 		await waitAllThrowIfTerminates(dc,
 			dc.waitForEvent("initialized")

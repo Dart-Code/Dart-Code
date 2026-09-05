@@ -74,13 +74,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
-
-		dc.waitForEvent("stopped")
-			.then(() => didStop = true)
-			.catch(() => {
-				// Swallow errors, as we don't care if this times out, we're only using it
-				// to tell if we stopped by the time we hit the end of this test.
-			});
+		dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
 
 		const expectHotReload = true;
 		const expectOtherServices = false;
@@ -473,13 +467,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 			const config = await startDebugger(dc, flutterHelloWorldMainFile);
 
 			let didStop = false;
-
-			dc.waitForStop()
-				.then(() => didStop = true)
-				.catch(() => {
-					// Swallow errors, as we don't care if this times out, we're only using it
-					// to tell if we stopped by the time we hit the end of this test.
-				});
+			dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)
@@ -640,8 +628,8 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		// The evaluateNames of the variables above should evaluate to the same values.
 		// Re-use the children already fetched above, except for the long strings whose
 		// children are skipped above on web because of truncated-value differences.
-		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
-		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
+		const listLongStringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
+		const allVariables = listVariables.concat(listLongStringVariables).concat(mapVariables);
 
 		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
 
@@ -790,13 +778,7 @@ describe(`flutter run debugger (launch on ${flutterTestDeviceId})`, () => {
 		config.noDebug = true;
 
 		let didStop = false;
-
-		dc.waitForEvent("stopped")
-			.then(() => didStop = true)
-			.catch(() => {
-				// Swallow errors, as we don't care if this times out, we're only using it
-				// to tell if we stopped by the time we hit the end of this test.
-			});
+		dc.on("stopped", (e) => { if (e.body?.reason !== "entry") didStop = true; });
 
 		await waitAllThrowIfTerminates(dc,
 			dc.debuggerReady()
