@@ -10,8 +10,8 @@ import { waitFor } from "../../../shared/utils/promises";
 import { getLaunchConfig } from "../../../shared/utils/test";
 import { DartFileCoverage } from "../../../shared/vscode/coverage";
 import { DartDebugClient } from "../../dart_debug_client";
-import { createDebugClient, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
-import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, ensureHasRunWithArgsStarting, fakeCancellationToken, findSuiteNode, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, prepareHasRunFile, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
+import { createDebugClient, flutterTestDeviceId, killFlutterTester, startDebugger, waitAllThrowIfTerminates } from "../../debug_helpers";
+import { activateWithoutAnalysis, captureDebugSessionCustomEvents, checkTreeNodeResults, customScriptExt, deferUntilLast, delay, fakeCancellationToken, findSuiteNode, flutterHelloWorldCounterAppFile, flutterHelloWorldExamplePrinterFile, flutterHelloWorldExampleTestFile, flutterHelloWorldFolder, flutterHelloWorldMainFile, flutterHelloWorldPrinterFile, flutterIntegrationTestFile, flutterTestAnotherFile, flutterTestBrokenFile, flutterTestDriverAppFile, flutterTestDriverTestFile, flutterTestMainFile, flutterTestOtherFile, flutterTestSelective1File, flutterTestSelective2File, getCodeLens, getExpectedResults, getLaunchConfiguration, isTestDoneSuccessNotification, makeTestTextTree, openFile, positionOf, privateApi, sb, setConfigForTest, waitForResult, watchPromise } from "../../helpers";
 
 describe("flutter test debugger", () => {
 	beforeEach("activate flutterTestMainFile", () => activateWithoutAnalysis(flutterTestMainFile));
@@ -25,20 +25,275 @@ describe("flutter test debugger", () => {
 		dc = createDebugClient(DebuggerType.FlutterTest);
 	});
 
+	it("runs a Flutter test script to completion, including via a relative path", async () => {
+		const config = await startDebugger(dc, flutterTestMainFile);
+		config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertOutputContains("console", `✓ Hello world test`),
+			dc.assertPassingTest(`Hello world test`),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("runs the provided script regardless of what's open", async () => {
+		await openFile(flutterTestMainFile);
+		const config = await startDebugger(dc, flutterTestOtherFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertOutputContains("console", `✓ Other tests group Other test\n`),
+			dc.assertPassingTest(`Other tests group Other test`),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+	});
+
+	it("runs the open script if no file is provided", async () => {
+		// This only verifies the program the extension resolves (without running
+		// the tests, which is slow). Running the resolved script is covered above.
+		await openFile(flutterTestOtherFile);
+		const config = await getLaunchConfiguration(undefined);
+		assert.equal(config!.program, fsPath(flutterTestOtherFile));
+	});
+
+	it("runs all tests if given a folder", async () => {
+		const config = await startDebugger(dc, "./test/");
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.waitForEvent("terminated"),
+			dc.launch(config),
+		);
+
+		const testFiles = [
+			flutterTestMainFile,
+			flutterTestOtherFile,
+			flutterTestAnotherFile,
+			flutterTestBrokenFile,
+		];
+
+		for (const file of testFiles) {
+			await openFile(file);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			checkTreeNodeResults(actualResults, expectedResults);
+		}
+	});
+
+	it("runs all tests through Test: Run All Tests", async () => {
+		let startedSessions = 0;
+		let runningSessions = 0;
+
+		const startSub = vs.debug.onDidStartDebugSession((_s) => {
+			startedSessions++;
+			runningSessions++;
+		});
+		const endSub = vs.debug.onDidTerminateDebugSession((_s) => {
+			runningSessions--;
+		});
+
+		try {
+			await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
+			// Allow some time for sessions to start so the startedSessions check doesn't
+			// fire immediately after only creating the first session.
+			await delay(500);
+			await waitFor(
+				() => startedSessions >= 0 && runningSessions === 0,
+				50, // check every 50ms
+				60000, // wait up to 60 seconds
+			);
+		} finally {
+			startSub.dispose();
+			endSub.dispose();
+		}
+
+		// Allow some time for all events to be processed to try and reduce flakes?
+		await delay(50);
+
+		const testFiles = [
+			flutterTestMainFile,
+			flutterTestOtherFile,
+			flutterTestAnotherFile,
+			flutterTestBrokenFile,
+			flutterIntegrationTestFile,
+		];
+
+		for (const file of testFiles) {
+			await openFile(file);
+			const expectedResults = getExpectedResults();
+			const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
+
+			assert.ok(expectedResults);
+			assert.ok(actualResults);
+			checkTreeNodeResults(actualResults, expectedResults);
+		}
+	});
+
+	it("passes custom tool through to the launch config", async () => {
+		// This only verifies the config the extension produces (without running the
+		// tests, which is slow). The debug adapter invoking the custom tool is covered
+		// by the adapter's own tests.
+		const root = fsPath(flutterHelloWorldFolder);
+		const customTool = path.join(root, `scripts/custom_flutter_test.${customScriptExt}`);
+		const config = await getLaunchConfiguration(flutterTestMainFile, {
+			customTool,
+			customToolReplacesArgs: 0,
+			deviceId: flutterTestDeviceId,
+		});
+		assert.equal(config!.customTool, customTool);
+		assert.equal(config!.customToolReplacesArgs, 0);
+		// The device should still be passed through so the custom tool runs for the right device.
+		assert.ok(config!.toolArgs!.includes("-d"));
+		assert.ok(config!.toolArgs!.includes(flutterTestDeviceId));
+	});
+
+	it("passes custom tool args through to the launch config", async () => {
+		// This only verifies the config the extension produces (without running the
+		// tests, which is slow). The debug adapter replacing its args with these is
+		// covered by the adapter's own tests.
+		const root = fsPath(flutterHelloWorldFolder);
+		const customTool = path.join(root, `scripts/custom_flutter_test.${customScriptExt}`);
+		// These differ to the usual ones so we can detect they replaced them.
+		const toolArgs = ["test", "--total-shards", "1", "--shard-index", "0", "--start-paused", "--machine", "-d", "flutter-tester"];
+		const config = await getLaunchConfiguration(flutterTestMainFile, {
+			customTool,
+			customToolReplacesArgs: 999999,
+			deviceId: flutterTestDeviceId,
+			toolArgs,
+		});
+		assert.equal(config!.customTool, customTool);
+		assert.equal(config!.customToolReplacesArgs, 999999);
+		assert.deepStrictEqual(config!.toolArgs!.slice(0, toolArgs.length), toolArgs);
+	});
+
+	it("stops at a breakpoint", async () => {
+		await openFile(flutterTestMainFile);
+		const config = await startDebugger(dc, flutterTestMainFile);
+		await dc.hitBreakpoint(config, {
+			line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
+			path: fsPath(flutterTestMainFile),
+		});
+	});
+
+	it("stops on exception and provides exception details", async () => {
+		await openFile(flutterTestBrokenFile);
+		const config = await startDebugger(dc, flutterTestBrokenFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {}),
+			dc.launch(config),
+		);
+
+		const variables = await dc.getTopFrameVariables("Exceptions");
+		assert.ok(variables);
+		const v = variables.find((v) => v.name === "message");
+		assert.ok(v);
+		assert.equal(v.evaluateName, "$_threadException.message");
+		assert.ok(v.value.startsWith(`"Expected: exactly one matching`));
+	});
+
+	it.skip("stops at the correct location on exception", async () => {
+		// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
+		// as deemphasized.
+		await openFile(flutterTestBrokenFile);
+		const config = await startDebugger(dc, flutterTestBrokenFile);
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertStoppedLocation("exception", {
+				line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
+				path: fsPath(flutterTestBrokenFile),
+			}),
+			dc.launch(config),
+		);
+	});
+
+	it("send failure results for failing tests", async () => {
+		await openFile(flutterTestBrokenFile);
+		const config = await startDebugger(dc, flutterTestBrokenFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertErroringTest(`Hello world test`),
+			dc.assertOutput("stderr", "Test failed. See exception logs above.\n"),
+			dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
+			dc.launch(config),
+		);
+	});
+
+	it("can run test_driver tests", async () => {
+		// Start the instrumented app.
+		const appDc = createDebugClient(DebuggerType.Flutter);
+		const appConfig = await startDebugger(appDc, flutterTestDriverAppFile);
+		await waitAllThrowIfTerminates(appDc,
+			appDc.configurationSequence(),
+			appDc.launch(appConfig),
+		);
+
+		// Allow some time for the debug service to register its Driver extension so we can find it when
+		// looking for the app debug session later.
+		await waitFor(
+			() => privateApi.debugSessions.find((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver)),
+			100, // checkEveryMilliseconds
+			30000, // tryForMilliseconds
+		);
+
+		// Run the integration tests
+		const config = await startDebugger(dc, flutterTestDriverTestFile);
+		config.noDebug = true;
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertPassingTest(`Counter App increments the counter`),
+			dc.launch(config),
+		);
+	});
+
+	it("can run integration_test tests", async () => {
+		const config = await startDebugger(dc, flutterIntegrationTestFile);
+		config.noDebug = true;
+
+		await waitAllThrowIfTerminates(dc,
+			dc.configurationSequence(),
+			dc.assertPassingTest(`Counter App increments the counter`),
+			dc.launch(config),
+		);
+	});
+
+	it("stops at a breakpoint in test code in integration_test tests", async () => {
+		await openFile(flutterIntegrationTestFile);
+		const config = await startDebugger(dc, flutterIntegrationTestFile);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line,
+				path: fsPath(flutterIntegrationTestFile),
+			}),
+		);
+	});
+
+	it("stops at a breakpoint in app code in integration_test tests", async () => {
+		await openFile(flutterHelloWorldCounterAppFile);
+		const config = await startDebugger(dc, flutterIntegrationTestFile);
+
+		await waitAllThrowIfTerminates(dc,
+			dc.hitBreakpoint(config, {
+				line: positionOf("^// BREAKPOINT1").line,
+				path: fsPath(flutterHelloWorldCounterAppFile),
+			}),
+		);
+	});
+
 	for (const runByLine of [false, true]) {
 		describe(`when running tests by ${runByLine ? "line" : "name"}`, () => {
 			beforeEach("set config.testInvocationMode", async () => {
 				await setConfigForTest("dart", "testInvocationMode", runByLine ? "line" : "name");
 			});
 
-			it("runs a Flutter test script to completion", async () => {
-				const config = await startDebugger(dc, flutterTestMainFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-			});
+			// Only tests that pass a test selection are affected by the invocation
+			// mode, so only those run in both modes here.
 
 			it("can run tests from codelens", async function () {
 				const editor = await openFile(flutterTestMainFile);
@@ -136,80 +391,6 @@ describe("flutter test debugger", () => {
 				assert.equal(testDone.skipped, false); // Test should have run.
 			});
 
-			it("receives the expected events from a Flutter test script", async () => {
-				const config = await startDebugger(dc, flutterTestMainFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertOutputContains("console", `✓ Hello world test`),
-					dc.waitForEvent("terminated"),
-					dc.assertPassingTest(`Hello world test`),
-					dc.launch(config),
-				);
-			});
-
-			it("successfully runs a Flutter test script with a relative path", async () => {
-				const config = await startDebugger(dc, flutterTestMainFile);
-				config.program = path.relative(fsPath(flutterHelloWorldFolder), fsPath(flutterTestMainFile));
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertOutputContains("console", `✓ Hello world test`),
-					dc.assertPassingTest(`Hello world test`),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-			});
-
-			it("runs the provided script regardless of what's open", async () => {
-				await openFile(flutterTestMainFile);
-				const config = await startDebugger(dc, flutterTestOtherFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertOutputContains("console", `✓ Other tests group Other test\n`),
-					dc.assertPassingTest(`Other tests group Other test`),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-			});
-
-			it("runs the open script if no file is provided", async () => {
-				await openFile(flutterTestOtherFile);
-				const config = await startDebugger(dc, undefined);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertOutputContains("console", `✓ Other tests group Other test\n`),
-					dc.assertPassingTest(`Other tests group Other test`),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-			});
-
-			it("runs all tests if given a folder", async () => {
-				const config = await startDebugger(dc, "./test/");
-				config.noDebug = true;
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-
-				const testFiles = [
-					flutterTestMainFile,
-					flutterTestOtherFile,
-					flutterTestAnotherFile,
-					flutterTestBrokenFile,
-				];
-
-				for (const file of testFiles) {
-					await openFile(file);
-					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
-
-					assert.ok(expectedResults);
-					assert.ok(actualResults);
-					checkTreeNodeResults(actualResults, expectedResults);
-				}
-			});
-
 			it("can run a selection of tests across multiple files", async () => {
 				// Discover tests in these files.
 				await openFile(flutterTestSelective1File);
@@ -248,216 +429,6 @@ describe("flutter test debugger", () => {
 				]);
 			});
 
-			it("runs all tests through Test: Run All Tests", async () => {
-				let startedSessions = 0;
-				let runningSessions = 0;
-
-				const startSub = vs.debug.onDidStartDebugSession((_s) => {
-					startedSessions++;
-					runningSessions++;
-				});
-				const endSub = vs.debug.onDidTerminateDebugSession((_s) => {
-					runningSessions--;
-				});
-
-				try {
-					await captureDebugSessionCustomEvents(async () => vs.commands.executeCommand("testing.runAll"));
-					// Allow some time for sessions to start so the startedSessions check doesn't
-					// fire immediately after only creating the first session.
-					await delay(500);
-					await waitFor(
-						() => startedSessions >= 0 && runningSessions === 0,
-						50, // check every 50ms
-						60000, // wait up to 60 seconds
-					);
-				} finally {
-					startSub.dispose();
-					endSub.dispose();
-				}
-
-				// Allow some time for all events to be processed to try and reduce flakes?
-				await delay(50);
-
-				const testFiles = [
-					flutterTestMainFile,
-					flutterTestOtherFile,
-					flutterTestAnotherFile,
-					flutterTestBrokenFile,
-					flutterIntegrationTestFile,
-				];
-
-				for (const file of testFiles) {
-					await openFile(file);
-					const expectedResults = getExpectedResults();
-					const actualResults = makeTestTextTree({ uriFilter: file }).join("\n");
-
-					assert.ok(expectedResults);
-					assert.ok(actualResults);
-					checkTreeNodeResults(actualResults, expectedResults);
-				}
-			});
-
-			it("can run using a custom tool", async () => {
-				const root = fsPath(flutterHelloWorldFolder);
-				const hasRunFile = prepareHasRunFile(root, "flutter_test");
-
-				const config = await startDebugger(dc, flutterTestMainFile, {
-					customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
-					customToolReplacesArgs: 0,
-				});
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-
-				ensureHasRunWithArgsStarting(root, hasRunFile, "test --machine --start-paused");
-			});
-
-			it("can replace all args using custom tool", async () => {
-				const root = fsPath(flutterHelloWorldFolder);
-				const hasRunFile = prepareHasRunFile(root, "flutter_test");
-
-				const config = await startDebugger(dc, flutterTestMainFile, {
-					customTool: path.join(root, `scripts/custom_flutter_test.${customScriptExt}`),
-					customToolReplacesArgs: 999999,
-					// These differ to the usual ones so we can detect they replaced them.
-					toolArgs: ["test", "--total-shards", "1", "--shard-index", "0", "--start-paused", "--machine", "-d", "flutter-tester"],
-				});
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.waitForEvent("terminated"),
-					dc.launch(config),
-				);
-
-				ensureHasRunWithArgsStarting(root, hasRunFile, "test --total-shards 1 --shard-index 0 --start-paused --machine -d flutter-tester");
-			});
-
-			it("stops at a breakpoint", async () => {
-				await openFile(flutterTestMainFile);
-				const config = await startDebugger(dc, flutterTestMainFile);
-				await dc.hitBreakpoint(config, {
-					line: positionOf("^// BREAKPOINT1").line + 1, // positionOf is 0-based, but seems to want 1-based
-					path: fsPath(flutterTestMainFile),
-				});
-			});
-
-			it("stops on exception", async () => {
-				await openFile(flutterTestBrokenFile);
-				const config = await startDebugger(dc, flutterTestBrokenFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertStoppedLocation("exception", {}),
-					dc.launch(config),
-				);
-			});
-
-			it.skip("stops at the correct location on exception", async () => {
-				// TODO: Check the expected location is in the call stack, and that the frames above it are all marked
-				// as deemphasized.
-				await openFile(flutterTestBrokenFile);
-				const config = await startDebugger(dc, flutterTestBrokenFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertStoppedLocation("exception", {
-						line: positionOf("^won't find this").line + 1, // positionOf is 0-based, but seems to want 1-based
-						path: fsPath(flutterTestBrokenFile),
-					}),
-					dc.launch(config),
-				);
-			});
-
-			it("provides exception details when stopped on exception", async () => {
-				await openFile(flutterTestBrokenFile);
-				const config = await startDebugger(dc, flutterTestBrokenFile);
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertStoppedLocation("exception", {}),
-					dc.launch(config),
-				);
-
-				const variables = await dc.getTopFrameVariables("Exceptions");
-				assert.ok(variables);
-				const v = variables.find((v) => v.name === "message");
-				assert.ok(v);
-				assert.equal(v.evaluateName, "$_threadException.message");
-				assert.ok(v.value.startsWith(`"Expected: exactly one matching`));
-			});
-
-			it("send failure results for failing tests", async () => {
-				await openFile(flutterTestBrokenFile);
-				const config = await startDebugger(dc, flutterTestBrokenFile);
-				config.noDebug = true;
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertErroringTest(`Hello world test`),
-					dc.assertOutput("stderr", "Test failed. See exception logs above.\n"),
-					dc.assertOutputContains("stdout", "EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK"),
-					dc.launch(config),
-				);
-			});
-
-			it("can run test_driver tests", async () => {
-				// Start the instrumented app.
-				const appDc = createDebugClient(DebuggerType.Flutter);
-				const appConfig = await startDebugger(appDc, flutterTestDriverAppFile);
-				await waitAllThrowIfTerminates(appDc,
-					appDc.configurationSequence(),
-					appDc.launch(appConfig),
-				);
-
-				// Allow some time for the debug service to register its Driver extension so we can find it when
-				// looking for the app debug session later.
-				await waitFor(
-					() => privateApi.debugSessions.find((s) => s.loadedServiceExtensions.includes(VmServiceExtension.Driver)),
-					100, // checkEveryMilliseconds
-					30000, // tryForMilliseconds
-				);
-
-				// Run the integration tests
-				const config = await startDebugger(dc, flutterTestDriverTestFile);
-				config.noDebug = true;
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertPassingTest(`Counter App increments the counter`),
-					dc.launch(config),
-				);
-			});
-
-			it("can run integration_test tests", async () => {
-				const config = await startDebugger(dc, flutterIntegrationTestFile);
-				config.noDebug = true;
-
-				await waitAllThrowIfTerminates(dc,
-					dc.configurationSequence(),
-					dc.assertPassingTest(`Counter App increments the counter`),
-					dc.launch(config),
-				);
-			});
-
-			it("stops at a breakpoint in test code in integration_test tests", async () => {
-				await openFile(flutterIntegrationTestFile);
-				const config = await startDebugger(dc, flutterIntegrationTestFile);
-
-				await waitAllThrowIfTerminates(dc,
-					dc.hitBreakpoint(config, {
-						line: positionOf("^// BREAKPOINT1").line,
-						path: fsPath(flutterIntegrationTestFile),
-					}),
-				);
-			});
-
-			it("stops at a breakpoint in app code in integration_test tests", async () => {
-				await openFile(flutterHelloWorldCounterAppFile);
-				const config = await startDebugger(dc, flutterIntegrationTestFile);
-
-				await waitAllThrowIfTerminates(dc,
-					dc.hitBreakpoint(config, {
-						line: positionOf("^// BREAKPOINT1").line,
-						path: fsPath(flutterHelloWorldCounterAppFile),
-					}),
-				);
-			});
 		});
 	}
 
