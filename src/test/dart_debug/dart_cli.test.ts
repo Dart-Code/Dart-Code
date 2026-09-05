@@ -709,15 +709,7 @@ void printSomething() {
 			const config = await startDebugger(dc, helloWorldMainFile);
 
 			let didStop = false;
-
-			dc.waitForStop()
-				.then((e) => {
-					if (e.body?.reason === "breakpoint")
-						didStop = true;
-				}).catch(() => {
-					// Swallow errors, as we don't care if this times out, we're only using it
-					// to tell if we stopped by the time we hit the end of this test.
-				});
+			dc.on("stopped", (e) => { if (e.body?.reason === "breakpoint") didStop = true; });
 
 			let expectation: Promise<any> = resolvedPromise;
 			if (shouldStop)
@@ -984,9 +976,9 @@ void printSomething() {
 
 		const variables = await dc.getTopFrameVariables("Locals");
 		const listVariables = await dc.getVariables(variables.find((v) => v.name === "l")!.variablesReference);
-		const listLongstringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
+		const listLongStringVariables = await dc.getVariables(variables.find((v) => v.name === "longStrings")!.variablesReference);
 		const mapVariables = await dc.getVariables(variables.find((v) => v.name === "m")!.variablesReference);
-		const allVariables = listVariables.concat(listLongstringVariables).concat(mapVariables);
+		const allVariables = listVariables.concat(listLongStringVariables).concat(mapVariables);
 
 		await Promise.all(allVariables.map((v) => ensureVariableEvaluateName(dc, v)));
 

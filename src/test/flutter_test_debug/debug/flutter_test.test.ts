@@ -102,7 +102,7 @@ describe("flutter test debugger", () => {
 			// fire immediately after only creating the first session.
 			await delay(500);
 			await waitFor(
-				() => startedSessions >= 0 && runningSessions === 0,
+				() => startedSessions > 0 && runningSessions === 0,
 				50, // check every 50ms
 				60000, // wait up to 60 seconds
 			);
@@ -158,7 +158,7 @@ describe("flutter test debugger", () => {
 		const root = fsPath(flutterHelloWorldFolder);
 		const customTool = path.join(root, `scripts/custom_flutter_test.${customScriptExt}`);
 		// These differ to the usual ones so we can detect they replaced them.
-		const toolArgs = ["test", "--total-shards", "1", "--shard-index", "0", "--start-paused", "--machine", "-d", "flutter-tester"];
+		const toolArgs = ["test", "--total-shards", "1", "--shard-index", "0", "--start-paused", "--machine", "-d", "my-flutter-tester"];
 		const config = await getLaunchConfiguration(flutterTestMainFile, {
 			customTool,
 			customToolReplacesArgs: 999999,
