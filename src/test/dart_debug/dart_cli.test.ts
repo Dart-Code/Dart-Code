@@ -1323,17 +1323,6 @@ insp=<inspected variable>
 		await dc.terminateRequest();
 	});
 
-	it("does not stop on exception in noDebug mode", async () => {
-		await openFile(helloWorldBrokenFile);
-		const config = await startDebugger(dc, helloWorldBrokenFile);
-		config.noDebug = true;
-		await waitAllThrowIfTerminates(dc,
-			dc.configurationSequence(),
-			dc.waitForEvent("terminated"),
-			dc.launch(config),
-		);
-	});
-
 	it("provides exception details when stopped on exception", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(dc, helloWorldBrokenFile);
@@ -1353,7 +1342,7 @@ insp=<inspected variable>
 		await dc.terminateRequest();
 	});
 
-	it("writes exception to stderr", async () => {
+	it("does not stop on exception in noDebug mode and writes it to stderr", async () => {
 		await openFile(helloWorldBrokenFile);
 		const config = await startDebugger(dc, helloWorldBrokenFile);
 		config.noDebug = true;
